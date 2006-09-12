@@ -1,6 +1,141 @@
-<<<<<<< .mine
-Add typechecking rules here
-or here
-=======
-Aadadd typechecking rules here
->>>>>>> .r42
+\documentclass{article}
+\usepackage{mathpartir}
+\begin{document}
+
+\section{Language of Types}
+
+The language of types is described by the following grammar, where $A$ ranges over qualifier literals:
+
+\begin{math}
+\begin{array}{rcl}
+\sigma & ::= & \forall \alpha . \sigma\ |\ \omega \\
+
+\omega & ::= & \Lambda \kappa \le Q . \omega\ |\ \gamma \\
+
+Q & ::= & \top\ |\ \bot\ |\ A \\
+
+\gamma & ::= & \rho \tau\ |\ \rho (\gamma \rightarrow \gamma) \\
+
+\rho & ::= & Q\ |\ \kappa\ |\ \rho \sqcup \rho \\
+
+\tau & ::= & \alpha\ |\ \textrm{int}\ |\ \textrm{bool} \\
+
+\end{array}
+\end{math}
+
+We also restrict arrow types so that the first occurrence of a qualifier variable must be outside of a union, e.g., types like ${\kappa}_1 \sqcup {\kappa}_2 \tau \rightarrow {\kappa}_1 \tau$ and ${\kappa}_1 \rightarrow {\kappa}_1 \sqcup {\kappa}_2 \tau \rightarrow {\kappa}_2 \tau$ are not permitted, but types like ${\kappa}_1 \tau \rightarrow {\kappa}_2 \tau \rightarrow {\kappa}_1 \sqcup {\kappa}_2 \tau$ are.
+
+
+\section{Type Checking}
+
+The typing rules for System WTF are as follows, with each metavariable ranging over the types constructable from its production in the preceding grammar:
+
+
+\begin{mathpar}
+
+\inferrule[int]
+  { }
+  {\Gamma \vdash n : \textrm{int}}
+
+\inferrule[true]
+  { }
+  {\Gamma \vdash \textrm{true} : \textrm{bool}}
+
+\inferrule[false]
+  { }
+  {\Gamma \vdash \textrm{false} : \textrm{bool}}
+
+\end{mathpar}
+
+
+\begin{mathpar}
+
+\inferrule[sub-ty]
+  {\Gamma \vdash e : \rho' \tau \\ \rho' \sqsubseteq \rho}
+  {\Gamma \vdash e : \rho \tau}
+
+
+\inferrule[sub-func]
+  {\Gamma \vdash e : \rho' ({\gamma}_1' \rightarrow {\gamma}_2' ) \\ \rho' \sqsubseteq \rho \\ {\gamma}_1 \sqsubseteq {\gamma}_1' \\ {\gamma}_2' \sqsubseteq {\gamma}_2}
+  {\Gamma \vdash e : \rho ({\gamma}_1 \rightarrow {\gamma}_2)}
+
+\end{mathpar}
+
+
+\begin{mathpar}
+
+\inferrule[annot]
+  {\Gamma \vdash e : \rho \tau}
+  {\Gamma \vdash [A] e : (\rho \sqcap A) \tau}
+
+\inferrule[annot-tyabs]
+  {\Gamma \vdash e : \forall \alpha . \sigma' \\ \Gamma \vdash [A] e : \sigma}
+  {\Gamma \vdash [A] e : \forall \alpha . \sigma}
+
+\inferrule[annot-qualabs]
+  {\Gamma \vdash e : \Lambda \kappa \sqsubseteq Q . \omega' \\ \Gamma \vdash [A] e : \omega}
+  {\Gamma \vdash [A] e : \Lambda \kappa \sqsubseteq Q . \omega}
+
+\end{mathpar}
+
+Note that we define $\sqcap$ such that $A \sqcap \kappa = \kappa \sqcap A = A$.
+
+
+\begin{mathpar}
+
+\inferrule[if]
+  {\Gamma \vdash e_1 : \top \textrm{ bool} \\ \Gamma \vdash e_2 : \sigma \\ \Gamma \vdash e_3 : \sigma}
+  {\Gamma \vdash \textrm{if } e_1 \textrm{ then } e_2 \textrm{ else } e_3 : \sigma}
+
+\end{mathpar}
+
+
+\begin{mathpar}
+
+\inferrule[let]
+  {\Gamma \vdash e' : \omega \\ \Gamma, x:\omega \vdash e : \gamma}
+  {\Gamma \vdash \textrm{let } x:\omega = e' \textrm{ in } e : \gamma}
+
+\end{mathpar}
+
+
+\begin{mathpar}
+
+\inferrule[abs]
+  {\Gamma,x:\gamma \vdash e : \gamma'}
+  {\Gamma \vdash \textrm{fun } x : \gamma = e : \gamma \rightarrow \gamma'}
+
+\inferrule[app]
+  {\Gamma \vdash e_1 : \gamma \rightarrow \gamma' \\ \Gamma \vdash e_2 : \gamma}
+  {\Gamma \vdash e_1 e_2 : \gamma'}
+
+\end{mathpar}
+
+
+\begin{mathpar}
+
+\inferrule[tyabs]
+  {\Gamma \vdash e : \sigma}
+  {\Gamma \vdash \forall \alpha . e : \forall \alpha . \sigma}
+
+\inferrule[tyapp]
+  {\Gamma \vdash e : \forall \alpha . \sigma}
+  {\Gamma \vdash e[\gamma] : \sigma[\alpha \mapsto \gamma]}
+
+\end{mathpar}
+
+
+\begin{mathpar}
+
+\inferrule[qualabs]
+  {\Gamma \vdash e : \omega}
+  {\Gamma \vdash \Lambda \kappa \sqsubseteq Q . e : \Lambda \kappa \sqsubseteq Q . \omega}
+
+\inferrule[qualapp]
+  {\Gamma \vdash e : \Lambda \kappa \sqsubseteq Q . \omega \\ A \sqsubseteq Q}
+  {\Gamma \vdash e\{A\} : \omega[\kappa \mapsto A]}
+
+\end{mathpar}
+
+
+\end{document}
