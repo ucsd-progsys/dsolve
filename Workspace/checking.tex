@@ -28,6 +28,36 @@ We also restrict arrow types so that the first occurrence of a qualifier variabl
 
 \section{Type Checking}
 
+
+\subsection{Subtype Relation}
+
+\begin{mathpar}
+
+\inferrule[refl]
+  { }
+  {\sigma \le \sigma}
+
+\inferrule[sub-ty]
+  {\rho' \sqsubseteq \rho}
+  {\rho' \tau \le \rho \tau}
+
+\inferrule[sub-func]
+  {\rho' \sqsubseteq \rho \\ {\gamma}_1 \sqsubseteq {\gamma}_1' \\ {\gamma}_2' \sqsubseteq {\gamma}_2}
+  {\rho' ({\gamma}_1' \rightarrow {\gamma}_2') \le \rho ({\gamma}_1 \rightarrow {\gamma}_2)}
+
+\inferrule[sub-tyabs]
+  {\sigma' \le \sigma}
+  {\forall \alpha . \sigma' \le \forall \alpha . \sigma}
+
+\inferrule[sub-qualabs]
+  {Q \sqsubseteq Q' \\ \omega'[\kappa \mapsto Q'] \le \omega[\kappa \mapsto Q] }
+  {\Lambda \kappa \sqsubseteq Q' . \omega' \le \Lambda \kappa \sqsubseteq Q . \omega}
+
+\end{mathpar}
+
+
+\subsection{Typing Rules}
+
 The typing rules for System WTF are as follows, with each metavariable ranging over the types constructable from its production in the preceding grammar:
 
 
@@ -45,19 +75,18 @@ The typing rules for System WTF are as follows, with each metavariable ranging o
   { }
   {\Gamma \vdash \textrm{false} : \textrm{bool}}
 
+\inferrule[var]
+  { }
+  {\Gamma \vdash x : \Gamma(x)}
+
 \end{mathpar}
 
 
 \begin{mathpar}
 
-\inferrule[sub-ty]
-  {\Gamma \vdash e : \rho' \tau \\ \rho' \sqsubseteq \rho}
-  {\Gamma \vdash e : \rho \tau}
-
-
-\inferrule[sub-func]
-  {\Gamma \vdash e : \rho' ({\gamma}_1' \rightarrow {\gamma}_2' ) \\ \rho' \sqsubseteq \rho \\ {\gamma}_1 \sqsubseteq {\gamma}_1' \\ {\gamma}_2' \sqsubseteq {\gamma}_2}
-  {\Gamma \vdash e : \rho ({\gamma}_1 \rightarrow {\gamma}_2)}
+\inferrule[sub]
+  {\Gamma \vdash e : \sigma' \\ \sigma' \le \sigma}
+  {\Gamma \vdash e : \sigma}
 
 \end{mathpar}
 
@@ -77,7 +106,6 @@ The typing rules for System WTF are as follows, with each metavariable ranging o
   {\Gamma \vdash [A] e : \Lambda \kappa \sqsubseteq Q . \omega}
 
 \end{mathpar}
-
 Note that we define $\sqcap$ such that $A \sqcap \kappa = \kappa \sqcap A = A$.
 
 
@@ -106,7 +134,7 @@ Note that we define $\sqcap$ such that $A \sqcap \kappa = \kappa \sqcap A = A$.
   {\Gamma \vdash \textrm{fun } x : \gamma = e : \gamma \rightarrow \gamma'}
 
 \inferrule[app]
-  {\Gamma \vdash e_1 : \gamma \rightarrow \gamma' \\ \Gamma \vdash e_2 : \gamma}
+  {\Gamma \vdash e_1 : \rho (\gamma \rightarrow \gamma') \\ \Gamma \vdash e_2 : \gamma}
   {\Gamma \vdash e_1 e_2 : \gamma'}
 
 \end{mathpar}
@@ -120,7 +148,7 @@ Note that we define $\sqcap$ such that $A \sqcap \kappa = \kappa \sqcap A = A$.
 
 \inferrule[tyapp]
   {\Gamma \vdash e : \forall \alpha . \sigma}
-  {\Gamma \vdash e[\gamma] : \sigma[\alpha \mapsto \gamma]}
+  {\Gamma \vdash e[\tau] : \sigma[\alpha \mapsto \tau]}
 
 \end{mathpar}
 
