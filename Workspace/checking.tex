@@ -42,7 +42,7 @@ We also restrict arrow types so that the first occurrence of a qualifier variabl
   {\rho' \tau \le \rho \tau}
 
 \inferrule[sub-func]
-  {\rho' \sqsubseteq \rho \\ {\gamma}_1 \sqsubseteq {\gamma}_1' \\ {\gamma}_2' \sqsubseteq {\gamma}_2}
+  {\rho' \sqsubseteq \rho \\ {\gamma}_1' \le {\gamma}_1 \\ {\gamma}_2 \le {\gamma}_2'}
   {\rho' ({\gamma}_1' \rightarrow {\gamma}_2') \le \rho ({\gamma}_1 \rightarrow {\gamma}_2)}
 
 \inferrule[sub-tyabs]
@@ -50,7 +50,7 @@ We also restrict arrow types so that the first occurrence of a qualifier variabl
   {\forall \alpha . \sigma' \le \forall \alpha . \sigma}
 
 \inferrule[sub-qualabs]
-  {Q \sqsubseteq Q' \\ \omega'[\kappa \mapsto Q'] \le \omega[\kappa \mapsto Q] }
+  {Q \sqsubseteq Q' \\ \omega'[\kappa \mapsto Q] \le \omega[\kappa \mapsto Q] }
   {\Lambda \kappa \sqsubseteq Q' . \omega' \le \Lambda \kappa \sqsubseteq Q . \omega}
 
 \end{mathpar}
@@ -122,7 +122,7 @@ Note that we define $\sqcap$ such that $A \sqcap \kappa = \kappa \sqcap A = A$.
 
 \inferrule[let]
   {\Gamma \vdash e' : \sigma \\ \Gamma, x:\sigma \vdash e : \gamma}
-  {\Gamma \vdash \textrm{let } x:\omega = e' \textrm{ in } e : \gamma}
+  {\Gamma \vdash \textrm{let } x : \sigma = e' \textrm{ in } e : \gamma}
 
 \end{mathpar}
 
