@@ -14,7 +14,9 @@ The language of types is described by the following grammar, where $A$ ranges ov
 
 Q & ::= & \top\ |\ \bot\ |\ A \\
 
-\gamma & ::= & \rho \tau\ |\ \rho (\gamma \rightarrow \gamma) \\
+\gamma & ::= & \rho \eta \\
+
+\eta & ::= & \gamma \rightarrow \gamma\ |\ \tau \\
 
 \rho & ::= & Q\ |\ \kappa\ |\ \rho \sqcup \rho \\
 
@@ -28,6 +30,7 @@ We also restrict arrow types so that the first occurrence of a qualifier variabl
 
 \section{Type Checking}
 
+The typing checking rules for System WTF are as follows, with each metavariable ranging over the types constructable from its production in the preceding grammar:
 
 \subsection{Subtype Relation}
 
@@ -57,9 +60,6 @@ We also restrict arrow types so that the first occurrence of a qualifier variabl
 
 
 \subsection{Typing Rules}
-
-The typing rules for System WTF are as follows, with each metavariable ranging over the types constructable from its production in the preceding grammar:
-
 
 \begin{mathpar}
 
@@ -94,8 +94,8 @@ The typing rules for System WTF are as follows, with each metavariable ranging o
 \begin{mathpar}
 
 \inferrule[annot]
-  {\Gamma \vdash e : \rho \tau}
-  {\Gamma \vdash [A] e : (\rho \sqcap A) \tau}
+  {\Gamma \vdash e : \rho \eta}
+  {\Gamma \vdash [A] e : (\rho \sqcap A) \eta}
 
 \inferrule[annot-tyabs]
   {\Gamma \vdash e : \forall \alpha . \sigma' \\ \Gamma \vdash [A] e : \sigma}
@@ -164,6 +164,8 @@ Note that we define $\sqcap$ such that $A \sqcap \kappa = \kappa \sqcap A = A$.
   {\Gamma \vdash e\{A\} : \omega[\kappa \mapsto A]}
 
 \end{mathpar}
+Note that the rule \RefTirName{qualapp} substitutes $\kappa$ eagerly.  This is counter to what we would want in the inferred system, which is that we maintain the bound of $\kappa$ and keep track of which values it has taken, using the LUB of these values as the ``definitive'' version (i.e., the one to use in LUBs containing $\kappa$ when instantiation is complete).  However, with explicit qualifier application, it is easiest to simply instantiate $\kappa$ to this value in the first place and push aside all the tedious bookkeeping that would otherwise be required.
 
+This difficulty suggests a different system where bounds can be either literals or variables bound by an enclosing qualifier abstraction, which sidesteps these issues entirely and could be significantly easier to reason about.
 
 \end{document}
