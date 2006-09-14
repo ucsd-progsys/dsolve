@@ -59,6 +59,28 @@ The typing checking rules for System WTF are as follows, with each metavariable 
 \end{mathpar}
 
 
+\subsection{Annotation Rules}
+
+The following rules are used to formalize the notion that qualifier annotation occurs underneath type and qualifier abstractions.
+Note that we define $\sqcap$ such that $A \sqcap \kappa = \kappa \sqcap A = A$.
+
+\begin{mathpar}
+
+\inferrule[annot]
+  { }
+  {A \sqcap \rho \eta \hookrightarrow (A \sqcap \rho) \eta}
+
+\inferrule[annot-tyabs]
+  {A \sqcap \sigma \hookrightarrow \sigma'}
+  {A \sqcap \forall \alpha . \sigma \hookrightarrow \forall \alpha . \sigma'}
+
+\inferrule[annot-qualabs]
+  {A \sqcap \omega \hookrightarrow \omega'}
+  {A \sqcap \Lambda \kappa \le Q . \omega \hookrightarrow \Lambda \kappa \le Q . \omega'}
+
+\end{mathpar}
+
+
 \subsection{Typing Rules}
 
 \begin{mathpar}
@@ -94,19 +116,10 @@ The typing checking rules for System WTF are as follows, with each metavariable 
 \begin{mathpar}
 
 \inferrule[annot]
-  {\Gamma \vdash e : \rho \eta}
-  {\Gamma \vdash [A] e : (\rho \sqcap A) \eta}
-
-\inferrule[annot-tyabs]
-  {\Gamma \vdash e : \forall \alpha . \sigma' \\ \Gamma \vdash [A] e : \sigma}
-  {\Gamma \vdash [A] e : \forall \alpha . \sigma}
-
-\inferrule[annot-qualabs]
-  {\Gamma \vdash e : \Lambda \kappa \sqsubseteq Q . \omega' \\ \Gamma \vdash [A] e : \omega}
-  {\Gamma \vdash [A] e : \Lambda \kappa \sqsubseteq Q . \omega}
+  {\Gamma \vdash e : \sigma \\ \Gamma \vdash A \sqcap \sigma \hookrightarrow \sigma'}
+  {\Gamma \vdash [A] e : \sigma'}
 
 \end{mathpar}
-Note that we define $\sqcap$ such that $A \sqcap \kappa = \kappa \sqcap A = A$.
 
 
 \begin{mathpar}
