@@ -18,7 +18,7 @@ Q & ::= & \top\ |\ \bot\ |\ A \\
 
 \eta & ::= & \gamma \rightarrow \gamma\ |\ \tau \\
 
-\rho & ::= & Q\ |\ \kappa\ |\ \rho \sqcup \rho \\
+\rho & ::= & Q\ |\ \kappa\ |\ \rho \sqcup \rho\ |\ \rho \sqcap \rho \\
 
 \tau & ::= & \alpha\ |\ \textrm{int}\ |\ \textrm{bool} \\
 
@@ -26,6 +26,7 @@ Q & ::= & \top\ |\ \bot\ |\ A \\
 \end{math}
 
 We also restrict arrow types so that the first occurrence of a qualifier variable must be outside of a union, e.g., types like ${\kappa}_1 \sqcup {\kappa}_2 \tau \rightarrow {\kappa}_1 \tau$ and ${\kappa}_1 \rightarrow {\kappa}_1 \sqcup {\kappa}_2 \tau \rightarrow {\kappa}_2 \tau$ are not permitted, but types like ${\kappa}_1 \tau \rightarrow {\kappa}_2 \tau \rightarrow {\kappa}_1 \sqcup {\kappa}_2 \tau$ are.
+  The same restriction applies to intersection types.
 
 
 \section{Type Checking}
@@ -62,7 +63,6 @@ The typing checking rules for System WTF are as follows, with each metavariable 
 \subsection{Annotation Rules}
 
 The following rules are used to formalize the notion that qualifier annotation occurs underneath type and qualifier abstractions.
-Note that we define $\sqcap$ such that $A \sqcap \kappa = \kappa \sqcap A = A$.
 
 \begin{mathpar}
 
@@ -87,28 +87,19 @@ Note that we define $\sqcap$ such that $A \sqcap \kappa = \kappa \sqcap A = A$.
 
 \inferrule[int]
   { }
-  {\Gamma \vdash n : \textrm{int}}
+  {\Gamma \vdash n : \top \textrm{ int}}
 
 \inferrule[true]
   { }
-  {\Gamma \vdash \textrm{true} : \textrm{bool}}
+  {\Gamma \vdash \textrm{true} : \top \textrm{ bool}}
 
 \inferrule[false]
   { }
-  {\Gamma \vdash \textrm{false} : \textrm{bool}}
+  {\Gamma \vdash \textrm{false} : \top \textrm{ bool}}
 
 \inferrule[var]
   { }
   {\Gamma \vdash x : \Gamma(x)}
-
-\end{mathpar}
-
-
-\begin{mathpar}
-
-\inferrule[sub]
-  {\Gamma \vdash e : \sigma' \\ \sigma' \le \sigma}
-  {\Gamma \vdash e : \sigma}
 
 \end{mathpar}
 
@@ -125,7 +116,7 @@ Note that we define $\sqcap$ such that $A \sqcap \kappa = \kappa \sqcap A = A$.
 \begin{mathpar}
 
 \inferrule[if]
-  {\Gamma \vdash e_1 : \top \textrm{ bool} \\ \Gamma \vdash e_2 : \sigma \\ \Gamma \vdash e_3 : \sigma}
+  {\Gamma \vdash e_1 : \top \textrm{ bool} \\ \Gamma \vdash e_2 : {\sigma}_2 \\ \Gamma \vdash e_3 : {\sigma}_3 \\ {\sigma}_2 \le \sigma \\ {\sigma}_3 \le \sigma}
   {\Gamma \vdash \textrm{if } e_1 \textrm{ then } e_2 \textrm{ else } e_3 : \sigma}
 
 \end{mathpar}
@@ -134,7 +125,7 @@ Note that we define $\sqcap$ such that $A \sqcap \kappa = \kappa \sqcap A = A$.
 \begin{mathpar}
 
 \inferrule[let]
-  {\Gamma \vdash e' : \sigma \\ \Gamma, x:\sigma \vdash e : \gamma}
+  {\Gamma \vdash e' : \sigma' \\ \Gamma, x:\sigma \vdash e : \gamma \\ \sigma' \le \sigma}
   {\Gamma \vdash \textrm{let } x : \sigma = e' \textrm{ in } e : \gamma}
 
 \end{mathpar}
@@ -147,7 +138,7 @@ Note that we define $\sqcap$ such that $A \sqcap \kappa = \kappa \sqcap A = A$.
   {\Gamma \vdash \textrm{fun } x : \gamma = e : \gamma \rightarrow \gamma'}
 
 \inferrule[app]
-  {\Gamma \vdash e_1 : \rho (\gamma \rightarrow \gamma') \\ \Gamma \vdash e_2 : \gamma}
+  {\Gamma \vdash e_1 : \rho (\gamma \rightarrow \gamma') \\ \Gamma \vdash e_2 : \gamma_2 \\ {\gamma}_2 \le \gamma}
   {\Gamma \vdash e_1 e_2 : \gamma'}
 
 \end{mathpar}
@@ -177,8 +168,7 @@ Note that we define $\sqcap$ such that $A \sqcap \kappa = \kappa \sqcap A = A$.
   {\Gamma \vdash e\{A\} : \omega[\kappa \mapsto A]}
 
 \end{mathpar}
-Note that the rule \RefTirName{qualapp} substitutes $\kappa$ eagerly.  This is counter to what we would want in the inferred system, which is that we maintain the bound of $\kappa$ and keep track of which values it has taken, using the LUB of these values as the ``definitive'' version (i.e., the one to use in LUBs containing $\kappa$ when instantiation is complete).  However, with explicit qualifier application, it is easiest to simply instantiate $\kappa$ to this value in the first place and push aside all the tedious bookkeeping that would otherwise be required.
 
-This difficulty suggests a different system where bounds can be either literals or variables bound by an enclosing qualifier abstraction, which sidesteps these issues entirely and could be significantly easier to reason about.
+Note that we've changed our notion of qualifier application so that instantiation is final, i.e., exactly like in type application, where before there was some notion of there being several instantiations of a qualifier variable.
 
 \end{document}
