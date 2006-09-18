@@ -29,6 +29,25 @@ We also restrict arrow types so that the first occurrence of a qualifier variabl
   The same restriction applies to intersection types.
 
 
+\section{Expression Language}
+
+\begin{math}
+\begin{array}{rrl}
+
+e & ::= & n \\
+  & | & x \\
+  & | & \textrm{true} \\
+  & | & \textrm{false} \\
+  & | & \textrm{if } e \textrm{ then } e \textrm{ else } e \\
+  & | & \textrm{let } x:\sigma = e \textrm{ in } e \\
+  & | & \textrm{fun } x:\gamma = e \\
+  & | & e e \\
+  & | & [ A ] e \\
+
+\end{array}
+\end{math}
+
+
 \section{Type Checking}
 
 The typing checking rules for System WTF are as follows, with each metavariable ranging over the types constructable from its production in the preceding grammar:
@@ -36,10 +55,6 @@ The typing checking rules for System WTF are as follows, with each metavariable 
 \subsection{Subtype Relation}
 
 \begin{mathpar}
-
-\inferrule[refl]
-  { }
-  {\sigma \le \sigma}
 
 \inferrule[sub-ty]
   {\rho' \sqsubseteq \rho}
