@@ -43,7 +43,9 @@ e & ::= & n \\
   & | & \textrm{let } x:\sigma = e \textrm{ in } e \\
   & | & \textrm{fun } x:\gamma = e \\
   & | & e e \\
+  & | & \forall \alpha . e \\
   & | & e[\tau] \\
+  & | & \Lambda \kappa \sqsubseteq Q . e \\
   & | & e\{A\} \\
 
 \end{array}
@@ -167,7 +169,7 @@ The following rules are used to formalize the notion that qualifier annotation o
 
 \inferrule[tyabs]
   {\Gamma, C \vdash e : \sigma}
-  {\Gamma, C \vdash e : \forall \alpha . \sigma}
+  {\Gamma, C \vdash \forall \alpha . e : \forall \alpha . \sigma}
 
 \inferrule[tyapp]
   {\Gamma, C \vdash e : \forall \alpha . \sigma}
@@ -180,7 +182,7 @@ The following rules are used to formalize the notion that qualifier annotation o
 
 \inferrule[qualabs]
   {\Gamma, C[\kappa \sqsubseteq Q] \vdash e : \omega}
-  {\Gamma, C \vdash e : \Lambda \kappa \sqsubseteq Q . \omega}
+  {\Gamma, C \vdash \Lambda \kappa \sqsubseteq Q . e : \Lambda \kappa \sqsubseteq Q . \omega}
 
 \inferrule[qualapp]
   {\Gamma, C \vdash e : \Lambda \kappa \sqsubseteq Q . \omega \\ A \sqsubseteq Q}
