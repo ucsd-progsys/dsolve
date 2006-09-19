@@ -156,7 +156,7 @@ The following rules are used to formalize the notion that qualifier annotation o
 
 \inferrule[abs]
   {\Gamma[x \mapsto \gamma], C \vdash e : \gamma'}
-  {\Gamma, C \vdash \textrm{fun } x : \gamma = e : \gamma \rightarrow \gamma'}
+  {\Gamma, C \vdash \textrm{fun } x : \gamma = e : \top (\gamma \rightarrow \gamma')}
 
 \inferrule[app]
   {\Gamma, C \vdash e_1 : \rho (\gamma \rightarrow \gamma') \\ \Gamma, C \vdash e_2 : \gamma_2 \\ C \vdash {\gamma}_2 \le \gamma}
