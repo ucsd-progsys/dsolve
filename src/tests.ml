@@ -1,0 +1,1 @@
+check_type (TyAbs("a", QualAbs("k", Top, Abs("x", TyVar(QualVar("k"), "a"), Var("x"))))) (ForallTyp("a", QSchema(ForallQual("k", Top, MonoTyp(Arrow(ql Top, TyVar(QualVar "k", "a"), TyVar(QualVar "k", "a")))))));;

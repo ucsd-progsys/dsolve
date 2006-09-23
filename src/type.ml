@@ -1,0 +1,362 @@
+open Env
+open Expr
+
+
+(* Some convenient shorthands *)
+let qs s = QSchema s
+let mt m = qs (MonoTyp m)
+let ql l = QualLiteral l
+
+
+(* Type manipulation *)
+let annotate_type q t =
+  let rec annotate_typschema = function
+      ForallTyp(a, t) ->
+	ForallTyp(a, annotate_typschema t)
+    | QSchema(t) ->
+	QSchema(annotate_qualschema t)
+  and annotate_qualschema = function
+      ForallQual(k, q', t) ->
+	ForallQual(k, q', annotate_qualschema t)
+    | MonoTyp(t) ->
+	MonoTyp(annotate_monotyp t)
+  and annotate_monotyp = function
+      Arrow(q', t1, t2) ->
+	Arrow(QualMeet(q, q'), t1, t2)
+    | Int(q') ->
+	Int(QualMeet(q, q'))
+    | Bool(q') ->
+	Bool(QualMeet(q, q'))
+    | TyVar(q', a) ->
+	TyVar(QualMeet(q, q'), a)
+    | Nil ->
+	Nil
+  in
+    annotate_typschema t
+
+
+let subst_qualvar q k t =
+  let rec subst_q_typschema = function
+      ForallTyp(a, t) ->
+	ForallTyp(a, subst_q_typschema t)
+    | QSchema(t) ->
+	QSchema(subst_q_qualschema t)
+  and subst_q_qualschema = function
+      ForallQual(k', b, t) when k <> k' ->
+	ForallQual(k', b, subst_q_qualschema t)
+    | MonoTyp(t) ->
+	MonoTyp(subst_q_monotyp t)
+    | t ->
+	t
+  and subst_q_monotyp = function
+      Arrow(q', t, t') ->
+	Arrow(subst_q_qual q', subst_q_monotyp t, subst_q_monotyp t')
+    | Int(q) ->
+	Int(subst_q_qual q)
+    | Bool(q) ->
+	Bool(subst_q_qual q)
+    | TyVar(q, a) ->
+	TyVar(subst_q_qual q, a)
+    | Nil ->
+	Nil
+  and subst_q_qual = function
+    | QualVar(k') when k = k' ->
+	q
+    | QualMeet(q1, q2) ->
+	QualMeet(subst_q_qual q1, subst_q_qual q2)
+    | QualJoin(q1, q2) ->
+	QualJoin(subst_q_qual q1, subst_q_qual q2)
+    | q ->
+	q
+  in
+    subst_q_typschema t
+
+
+let subst_tyvar b a t =
+  let rec subst_ty_typschema = function
+      ForallTyp(a', t) when a <> a' ->
+	ForallTyp(a', subst_ty_typschema t)
+    | QSchema(t) ->
+	QSchema(subst_ty_qualschema t)
+    | t ->
+	t
+  and subst_ty_qualschema = function
+      ForallQual(k, q, t) ->
+	ForallQual(k, q, subst_ty_qualschema t)
+    | MonoTyp(t) ->
+	MonoTyp(subst_ty_monotyp t)
+  and subst_ty_monotyp = function
+      Arrow(q, t1, t2) ->
+	Arrow(q, subst_ty_monotyp t1, subst_ty_monotyp t2)
+    | TyVar(q, a') when a' = a ->
+	(* Preserve the existing qualifier and just replace the type variable portion *)
+	begin match b with
+	    TyVar(_, b) ->
+	      TyVar(q, b)
+	  | _ ->
+	      b
+	end
+    | t ->
+	t
+  in
+    subst_ty_typschema t
+
+
+let rec qualifier_less_equal q1 q2 cenv =
+  match (q1, q2) with
+      (QualJoin(j1, j2), _) ->
+	qualifier_less_equal j1 q2 cenv &&
+	  qualifier_less_equal j2 q2 cenv
+    | (QualMeet(m1, m2), _) ->
+	qualifier_less_equal m1 q2 cenv ||
+	  qualifier_less_equal m2 q2 cenv
+    | (_, QualJoin(j1, j2)) ->
+	qualifier_less_equal q1 j1 cenv ||
+	  qualifier_less_equal q1 j2 cenv
+    | (_, QualMeet(m1, m2)) ->
+	qualifier_less_equal q1 m1 cenv &&
+	  qualifier_less_equal q1 m2 cenv
+    | (QualVar(k1), QualVar(k2)) when k1 = k2 ->
+	true
+    | (QualVar(k), _) ->
+	begin try
+	  let q1 = env_lookup k cenv in
+	    qualifier_less_equal q1 q2 cenv
+	with UnboundVar _ ->
+	  false
+	end
+    | (_, QualVar(k)) ->
+	begin try
+	  let q2 = env_lookup k cenv in
+	    qualifier_less_equal q1 q2 cenv
+	with UnboundVar _ ->
+	  false
+	end
+    | (_, QualLiteral(Top)) ->
+	true
+    | (QualLiteral(Bottom), _) ->
+	true
+    | (QualLiteral(q1), QualLiteral(q2)) ->
+	q1 = q2
+
+
+(* Type checking *)
+exception TypeMismatch of expr * typschema
+
+
+let subtype t1 t2 cenv =
+  let rec subtype_mono t1 t2 cenv =
+    match (t1, t2) with
+	(Arrow(q1, t1, t1'), Arrow(q2, t2, t2')) ->
+	  qualifier_less_equal q1 q2 cenv &&
+	    subtype_mono t1' t2' cenv &&
+	    subtype_mono t2 t1 cenv
+      | (Int(q1), Int(q2)) ->
+	  qualifier_less_equal q1 q2 cenv
+      | (Bool(q1), Bool(q2)) ->
+	  qualifier_less_equal q1 q2 cenv
+      | (TyVar(q1, s1), TyVar(q2, s2)) when s1 = s2 ->
+	  qualifier_less_equal q1 q2 cenv
+      | _ ->
+	  false
+  and subtype_qualschema t1 t2 cenv =
+    match (t1, t2) with
+	(ForallQual(k1, q1, t1), ForallQual(k2, q2, t2)) ->
+	  if (qualifier_less_equal (ql q2) (ql q1) cenv) then
+	    let newcenv = env_add k1 (ql q2) cenv in
+	    let t2 = subst_qualvar (QualVar k1) k2 (qs t2) in
+	      begin match t2 with
+		  QSchema(t2) ->
+		    subtype_qualschema t1 t2 newcenv
+		| _ ->
+		    (* This case is unused *)
+		    false
+	      end
+	  else
+	    false
+      | (MonoTyp(t1), MonoTyp(t2)) ->
+	  subtype_mono t1 t2 cenv
+      | _ ->
+	  false
+  and subtype_typschema t1 t2 cenv =
+    match (t1, t2) with
+	(ForallTyp(a1, t1), ForallTyp(a2, t2)) ->
+	  let t2 = subst_tyvar (TyVar(ql Top, a1)) a2 t2 in
+	    subtype_typschema t1 t2 cenv
+      | (QSchema(t1), QSchema(t2)) ->
+	  subtype_qualschema t1 t2 cenv
+      | _ ->
+	  false
+  in
+    subtype_typschema t1 t2 cenv
+
+
+let qualifiers_equal q1 q2 =
+  qualifier_less_equal q1 q2 [] &&
+    qualifier_less_equal q2 q1 []
+
+
+let types_equal t1 t2 =
+  let rec typschemas_equal t1 t2 =
+    match (t1, t2) with
+	(ForallTyp(a1, t1), ForallTyp(a2, t2)) ->
+	  let t2 = subst_tyvar (TyVar(ql Top, a1)) a2 t2 in
+	    typschemas_equal t1 t2
+      | (QSchema(t1), QSchema(t2)) ->
+	  qualschemas_equal t1 t2
+      | _ ->
+	  false
+  and qualschemas_equal t1 t2 =
+    match (t1, t2) with
+	(ForallQual(k1, q1, t1), ForallQual(k2, q2, t2)) ->
+	  let t2 = subst_qualvar (QualVar k1) k2 (QSchema t2) in
+	    begin match t2 with
+		QSchema(t2) ->
+		  qualifiers_equal (ql q1) (ql q2) &&
+		    qualschemas_equal t1 t2
+	      | _ ->
+		  (* This case is unused *)
+		  false
+	    end
+      | (MonoTyp(t1), MonoTyp(t2)) ->
+	  monotyps_equal t1 t2
+      | _ ->
+	  false
+  and monotyps_equal t1 t2 =
+    match (t1, t2) with
+	(Arrow(q1, t1, t1'), Arrow(q2, t2, t2')) ->
+	  qualifiers_equal q1 q2 && monotyps_equal t1 t2 && monotyps_equal t1' t2'
+      | (Int(q1), Int(q2))
+      | (Bool(q1), Bool(q2)) ->
+	  qualifiers_equal q1 q2
+      | (TyVar(q1, a1), TyVar(q2, a2)) when a1 = a2 ->
+	  qualifiers_equal q1 q2
+      | _ ->
+	  false
+  in
+    typschemas_equal t1 t2
+
+
+
+let check_type e texp =
+  let monotyp_from_typschema t =
+    match t with
+	QSchema(MonoTyp(t)) ->
+	  t
+      | _ -> raise (TypeMismatch(e, texp))
+  and qschema_from_typschema t =
+    match t with
+	QSchema(t) ->
+	  t
+      | _ -> raise (TypeMismatch(e, texp))
+  in
+  let rec type_exp e texp tenv cenv  =
+  match e with
+      Num(_) ->
+	mt (Int(ql Top))
+    | True
+    | False ->
+	mt (Bool(ql Top))
+    | Var(x) ->
+	env_lookup x tenv
+    | Let(x, tx, ex, e) ->
+	let tx' = type_exp ex tx tenv cenv in
+	  if subtype tx' tx cenv then
+	    let newtenv = env_add x tx tenv in
+	      type_exp e texp newtenv cenv
+	  else
+	    raise (TypeMismatch(ex, tx))
+    | Abs(x, tx, e) ->
+	begin match monotyp_from_typschema texp with
+	    Arrow(_, _, returnexp) ->
+	      let newtenv = env_add x (mt tx) tenv in
+	      let t' = monotyp_from_typschema (type_exp e (mt returnexp) newtenv cenv) in
+		mt (Arrow(ql Top, tx, t'))
+	  | _ ->
+		raise (TypeMismatch(e, texp))
+	  end
+    | App(e1, e2) ->
+	(* Fake an expected type for the function being applied -
+	   all we're really interested in is a proper return type
+	   (see above) *)
+	let expected_t1 =
+	  mt (Arrow(ql Top, TyVar(QualVar("k"), "a"), monotyp_from_typschema texp))
+	in
+	  begin match monotyp_from_typschema (type_exp e1 expected_t1 tenv cenv) with
+	      Arrow(q, t, t') ->
+		let t2 = type_exp e2 (mt t) tenv cenv in
+		  if subtype t2 (mt t) cenv then
+		    mt t'
+		  else
+		    raise (TypeMismatch(e2, mt t'))
+	    | t ->
+		raise (TypeMismatch(e1, mt t))
+	  end
+    | QualAbs(k, q, e) ->
+	begin match qschema_from_typschema texp with
+	    ForallQual(_, q', t) ->
+	      if qualifiers_equal (ql q) (ql q') then
+		let newcenv = env_add k (ql q) cenv in
+		let t' = qschema_from_typschema (type_exp e (qs t) tenv newcenv) in
+		  qs (ForallQual(k, q, t'))
+	      else
+		raise (TypeMismatch(e, texp))
+	  | _ ->
+	      raise (TypeMismatch(e, texp))
+	end
+    | QualApp(e, q) ->
+	(* If we were calculating the type for this thing afresh, we'd need a precise
+	   expected type.  But since this has to appear in the body of a let, we're
+	   only deconstructing an existing type at this point and we're ok. *)
+	begin match qschema_from_typschema (type_exp e (mt Nil) tenv cenv) with
+	    ForallQual(k, q', t) ->
+	      if qualifier_less_equal (ql q) (ql q') cenv then
+		match subst_qualvar (ql q) k (qs t) with
+		    QSchema(t) ->
+		      qs t
+		  | _ ->
+		      raise (TypeMismatch(e, texp))
+	      else
+		raise (TypeMismatch(e, texp))
+	  | _ ->
+	      raise (TypeMismatch(e, texp))
+	end
+    |	Annot(q, e) ->
+	  (* XXX: *sniff* smells like...  bogitude - but we don't know what type's being annotated,
+	     so I have no idea what can be done about removing the annotation *)
+	  let t = type_exp e texp tenv cenv in
+	    annotate_type q t
+    | If(c, e1, e2) ->
+	begin match monotyp_from_typschema (type_exp c (mt (Bool(ql Top))) tenv cenv) with
+	    Bool(QualLiteral(Top)) ->
+	      let t1 = type_exp e1 texp tenv cenv in
+	      let t2 = type_exp e2 texp tenv cenv in
+		if (subtype t1 texp cenv) && (subtype t2 texp cenv) then
+		  texp
+		else
+		  raise (TypeMismatch(e, texp))
+   	  | _ ->
+	      raise (TypeMismatch(e, texp))
+	end
+    | TyAbs(a, e) ->
+	begin match texp with
+	    ForallTyp(_, t) ->
+	      ForallTyp(a, type_exp e t tenv cenv)
+	  | _ ->
+	      raise (TypeMismatch(e, texp))
+	end
+    | TyApp(e, t) ->
+	(* We can get away with faking the expected type for the same reasons it's ok for
+	   QualApp *)
+	begin match (type_exp e (mt Nil) tenv cenv) with
+	    ForallTyp(a, s) ->
+	      subst_tyvar t a s
+	  | t ->
+	      raise (TypeMismatch(e, t))
+	end
+  in
+    try
+      let t = type_exp e texp [] [] in
+	types_equal t texp
+    with _ ->
+      false
