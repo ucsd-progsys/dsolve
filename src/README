@@ -1,0 +1,79 @@
+About
+-----
+
+This program implements a typechecker for System WTF.  To compile, run "omake" in the src directory.
+
+
+Usage
+-----
+
+Queries are entered at the command line in the form "exp ? type"; the typechecker outputs "true" if a
+derivation of that type exists for that expression and "false" if the expression cannot be proven
+to have the given type.
+
+The expression language is described by
+
+e ::= n (integers)
+    | x (variables)
+    | True
+    | False
+    | if e then e else e
+    | let x : s = e in e
+    | fun x : t = e
+    | e e
+    | 'a. e       (type abstraction over type variable 'a)
+    | e[t]        (type application of monotype t)
+    | 'K <= Q. e  (qualifier abstraction over qualifier variable 'K with constant bound Q)
+    | e{A}        (qualifier application of concrete qualifier A)
+    | (e)
+
+The type language is described by
+
+(Polymorphic types over monotypes)
+s ::= 'a. q
+    | q
+
+(Polymorphic types over qualifiers)
+q ::= 'K <= Q. m
+    | m
+
+(Monomorphic types)
+m ::= p m
+    | m -> m
+    | int
+    | bool
+    | 'a
+    | (m)
+
+p ::= p | p  (union of qualifiers)
+    | p & p  (intersection of qualifiers)
+    | 'K
+    | Q
+    | (p)
+
+Q ::= top
+    | bottom
+    | A      (concrete qualifiers)
+
+
+Examples
+--------
+
+A simple monomorphic function:
+
+fun x : int = fun y : int = if true then x else y ? int -> int -> int
+
+
+Polymorphic identity:
+
+'a. 'K <= top. fun x : 'K 'a = x ? 'a. 'K <= top. 'K 'a -> 'K 'a
+
+
+A function returning one of its two parameters, depending on the third:
+
+'a. 'K <= top. 'Q <= top. fun x : 'K 'a = fun y : 'Q 'a = fun z : bool = if z then x else y ? 'a. 'K <= top. 'Q <= top. 'K 'a -> 'Q 'a -> bool -> 'K | 'Q 'a
+
+
+A higher-order function that applies its first parameter to the second two:
+
+'a. 'K <= top. 'Q <= top. fun f : 'K 'a -> 'Q 'a -> 'K | 'Q 'a = fun x : 'K 'a = fun y : 'Q 'a = (f x) y ? 'a. 'K <= top. 'Q <= top. ('K 'a -> 'Q 'a -> 'K | 'Q 'a) -> 'K 'a -> 'Q 'a -> 'K | 'Q 'a

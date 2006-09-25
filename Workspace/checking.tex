@@ -58,25 +58,25 @@ The typing checking rules for System WTF are as follows, with each metavariable 
 
 \subsection{Subtype Relation}
 
-In the following relations, $C \Rightarrow \rho \sqsubseteq \rho'$ denotes that $\rho \sqsubseteq \rho'$ is implied by the constraints in $C$, which are always of the form $\kappa \sqsubseteq Q$ for some qualifier variable $\kappa$ and qualifier literal $Q$.
+In the following relations, $\kappa \sqsubseteq \delta$ is understood to be undefined, though comparisons like $\kappa \sqsubseteq \kappa \sqcup \delta$ are valid.
 
 \begin{mathpar}
 
 \inferrule[sub-ty]
-  {C \Rightarrow \rho' \sqsubseteq \rho}
-  {C \vdash \rho' \tau \le \rho \tau}
+  {\rho' \sqsubseteq \rho}
+  {\rho' \tau \le \rho \tau}
 
 \inferrule[sub-func]
-  {C \Rightarrow \rho' \sqsubseteq \rho \\ C \vdash {\gamma}_1' \le {\gamma}_1 \\ C \vdash {\gamma}_2 \le {\gamma}_2'}
-  {C \vdash \rho' ({\gamma}_1' \rightarrow {\gamma}_2') \le \rho ({\gamma}_1 \rightarrow {\gamma}_2)}
+  {\rho' \sqsubseteq \rho \\ {\gamma}_1' \le {\gamma}_1 \\ {\gamma}_2 \le {\gamma}_2'}
+  {\rho' ({\gamma}_1' \rightarrow {\gamma}_2') \le \rho ({\gamma}_1 \rightarrow {\gamma}_2)}
 
 \inferrule[sub-tyabs]
-  {C \vdash \sigma' \le \sigma}
-  {C \vdash \forall \alpha . \sigma' \le \forall \alpha . \sigma}
+  {\sigma' \le \sigma}
+  {\forall \alpha . \sigma' \le \forall \alpha . \sigma}
 
 \inferrule[sub-qualabs]
-  {Q \sqsubseteq Q' \\ C[\kappa \sqsubseteq Q] \vdash \omega' \le \omega }
-  {C \vdash \Lambda \kappa \sqsubseteq Q' . \omega' \le \Lambda \kappa \sqsubseteq Q . \omega}
+  {Q \sqsubseteq Q' \\ \omega'[\kappa \mapsto Q] \le \omega[\kappa \mapsto Q] }
+  {\Lambda \kappa \sqsubseteq Q' . \omega' \le \Lambda \kappa \sqsubseteq Q . \omega}
 
 \end{mathpar}
 
@@ -108,19 +108,19 @@ The following rules are used to formalize the notion that qualifier annotation o
 
 \inferrule[int]
   { }
-  {\Gamma, C \vdash n : \top \textrm{ int}}
+  {\Gamma \vdash n : \top \textrm{ int}}
 
 \inferrule[true]
   { }
-  {\Gamma, C \vdash \textrm{true} : \top \textrm{ bool}}
+  {\Gamma \vdash \textrm{true} : \top \textrm{ bool}}
 
 \inferrule[false]
   { }
-  {\Gamma, C \vdash \textrm{false} : \top \textrm{ bool}}
+  {\Gamma \vdash \textrm{false} : \top \textrm{ bool}}
 
 \inferrule[var]
   { }
-  {\Gamma, C \vdash x : \Gamma(x)}
+  {\Gamma \vdash x : \Gamma(x)}
 
 \end{mathpar}
 
@@ -128,8 +128,8 @@ The following rules are used to formalize the notion that qualifier annotation o
 \begin{mathpar}
 
 \inferrule[annot]
-  {\Gamma, C \vdash e : \sigma \\ \Gamma, C \vdash A \sqcap \sigma \hookrightarrow \sigma'}
-  {\Gamma, C \vdash [A] e : \sigma'}
+  {\Gamma \vdash e : \sigma \\ \Gamma \vdash A \sqcap \sigma \hookrightarrow \sigma'}
+  {\Gamma \vdash [A] e : \sigma'}
 
 \end{mathpar}
 
@@ -137,8 +137,8 @@ The following rules are used to formalize the notion that qualifier annotation o
 \begin{mathpar}
 
 \inferrule[if]
-  {\Gamma, C \vdash e_1 : \top \textrm{ bool} \\ \Gamma, C \vdash e_2 : {\sigma}_2 \\ \Gamma, C \vdash e_3 : {\sigma}_3 \\ C \vdash {\sigma}_2 \le \sigma \\ C \vdash {\sigma}_3 \le \sigma}
-  {\Gamma, C \vdash \textrm{if } e_1 \textrm{ then } e_2 \textrm{ else } e_3 : \sigma}
+  {\Gamma \vdash e_1 : \top \textrm{ bool} \\ \Gamma \vdash e_2 : {\sigma}_2 \\ \Gamma \vdash e_3 : {\sigma}_3 \\ {\sigma}_2 \le \sigma \\ {\sigma}_3 \le \sigma}
+  {\Gamma \vdash \textrm{if } e_1 \textrm{ then } e_2 \textrm{ else } e_3 : \sigma}
 
 \end{mathpar}
 
@@ -146,8 +146,8 @@ The following rules are used to formalize the notion that qualifier annotation o
 \begin{mathpar}
 
 \inferrule[let]
-  {\Gamma, C \vdash e' : \sigma' \\ \Gamma[x \mapsto \sigma], C \vdash e : \gamma \\ C \vdash \sigma' \le \sigma}
-  {\Gamma, C \vdash \textrm{let } x : \sigma = e' \textrm{ in } e : \gamma}
+  {\Gamma \vdash e' : \sigma' \\ \Gamma[x \mapsto \sigma] \vdash e : \gamma \\ \sigma' \le \sigma}
+  {\Gamma \vdash \textrm{let } x : \sigma = e' \textrm{ in } e : \gamma}
 
 \end{mathpar}
 
@@ -155,12 +155,12 @@ The following rules are used to formalize the notion that qualifier annotation o
 \begin{mathpar}
 
 \inferrule[abs]
-  {\Gamma[x \mapsto \gamma], C \vdash e : \gamma'}
-  {\Gamma, C \vdash \textrm{fun } x : \gamma = e : \top (\gamma \rightarrow \gamma')}
+  {\Gamma[x \mapsto \gamma] \vdash e : \gamma'}
+  {\Gamma \vdash \textrm{fun } x : \gamma = e : \top (\gamma \rightarrow \gamma')}
 
 \inferrule[app]
-  {\Gamma, C \vdash e_1 : \rho (\gamma \rightarrow \gamma') \\ \Gamma, C \vdash e_2 : \gamma_2 \\ C \vdash {\gamma}_2 \le \gamma}
-  {\Gamma, C \vdash e_1 e_2 : \gamma'}
+  {\Gamma \vdash e_1 : \rho (\gamma \rightarrow \gamma') \\ \Gamma \vdash e_2 : \gamma_2 \\ {\gamma}_2 \le \gamma}
+  {\Gamma \vdash e_1 e_2 : \gamma'}
 
 \end{mathpar}
 
@@ -168,12 +168,12 @@ The following rules are used to formalize the notion that qualifier annotation o
 \begin{mathpar}
 
 \inferrule[tyabs]
-  {\Gamma, C \vdash e : \sigma}
-  {\Gamma, C \vdash \forall \alpha . e : \forall \alpha . \sigma}
+  {\Gamma \vdash e : \sigma}
+  {\Gamma \vdash \forall \alpha . e : \forall \alpha . \sigma}
 
 \inferrule[tyapp]
-  {\Gamma, C \vdash e : \forall \alpha . \sigma}
-  {\Gamma, C \vdash e[\tau] : \sigma[\alpha \mapsto \tau]}
+  {\Gamma \vdash e : \forall \alpha . \sigma}
+  {\Gamma \vdash e[\tau] : \sigma[\alpha \mapsto \tau]}
 
 \end{mathpar}
 
@@ -181,12 +181,12 @@ The following rules are used to formalize the notion that qualifier annotation o
 \begin{mathpar}
 
 \inferrule[qualabs]
-  {\Gamma, C[\kappa \sqsubseteq Q] \vdash e : \omega}
-  {\Gamma, C \vdash \Lambda \kappa \sqsubseteq Q . e : \Lambda \kappa \sqsubseteq Q . \omega}
+  {\Gamma \vdash e : \omega}
+  {\Gamma \vdash \Lambda \kappa \sqsubseteq Q . e : \Lambda \kappa \sqsubseteq Q . \omega}
 
 \inferrule[qualapp]
-  {\Gamma, C \vdash e : \Lambda \kappa \sqsubseteq Q . \omega \\ A \sqsubseteq Q}
-  {\Gamma, C \vdash e\{A\} : \omega[\kappa \mapsto A]}
+  {\Gamma \vdash e : \Lambda \kappa \sqsubseteq Q . \omega \\ A \sqsubseteq Q}
+  {\Gamma \vdash e\{A\} : \omega[\kappa \mapsto A]}
 
 \end{mathpar}
 

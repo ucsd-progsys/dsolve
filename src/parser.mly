@@ -53,11 +53,13 @@ query:
 | exp QUESTION tschema EOL {
     
     let (e, t) = ($1, $3) in
+      Printf.printf(">> ");
       if check_type e t then
-	Printf.printf("true\n")
+	Printf.printf("true")
       else
-	Printf.printf("false\n")
+	Printf.printf("false")
       ;
+      Printf.printf("\n\n");
       flush stdout
 
   }
