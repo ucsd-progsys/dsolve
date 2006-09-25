@@ -35,10 +35,6 @@ rule token = parse
       { EQUAL }
   | "false"
       { FALSE }
-  | "\\"
-      { FORALLTYPE }
-  | "/"
-      { FORALLQUAL }
   | "fun"
       { FUN }
   | "if"

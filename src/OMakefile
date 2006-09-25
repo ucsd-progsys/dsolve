@@ -62,11 +62,11 @@ BYTE_ENABLED = true
 # Build an OCaml program
 #
 
-FILES = microml expr type env lexer parser
+FILES = microml expr type env parser lexer 
 PROGRAM = microml
 # OCAML_LIBS +=
 # OCAML_CLIBS +=
 # OCAML_OTHER_LIBS +=
 # OCAML_LIB_FLAGS +=
 OCamlProgram($(PROGRAM), $(FILES))
-.DEFAULT: $(PROGRAM).run
+.DEFAULT: $(PROGRAM)

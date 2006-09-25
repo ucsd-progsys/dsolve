@@ -8,8 +8,6 @@ type token =
   | EOL
   | EQUAL
   | FALSE
-  | FORALLTYPE
-  | FORALLQUAL
   | FUN
   | IF
   | IN

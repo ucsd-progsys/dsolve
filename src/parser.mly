@@ -15,8 +15,6 @@ open Type
 %token EOL
 %token EQUAL
 %token FALSE
-%token FORALLTYPE
-%token FORALLQUAL
 %token FUN
 %token IF
 %token IN
@@ -66,12 +64,12 @@ query:
 ;
 
 tschema:
-  FORALLTYPE TVAR DOT tschema { ForallTyp($2, $4) }
+  TVAR DOT tschema { ForallTyp($1, $3) }
 | qschema { QSchema($1) }
 ;
 
 qschema:
-  FORALLQUAL QVAR LESSEQ qualliteral DOT qschema { ForallQual($2, $4, $6) }
+  QVAR LESSEQ qualliteral DOT qschema { ForallQual($1, $3, $5) }
 | mtype { MonoTyp($1) }
 ;
 
@@ -115,8 +113,8 @@ exp:
 | IF exp THEN exp ELSE exp { If($2, $4, $6) }
 | LET VAR COLON tschema EQUAL exp IN exp { Let($2, $4, $6, $8) }
 | FUN VAR COLON mtype EQUAL exp { Abs($2, $4, $6) }
-| FORALLTYPE TVAR DOT exp { TyAbs($2, $4) }
-| FORALLQUAL QVAR LESSEQ qualliteral DOT exp { QualAbs($2, $4, $6) }
+| TVAR DOT exp { TyAbs($1, $3) }
+| QVAR LESSEQ qualliteral DOT exp { QualAbs($1, $3, $5) }
 | exp LSQUARE mtype RSQUARE { TyApp($1, $3) }
 | exp LCURLY qualliteral RCURLY { QualApp($1, $3) }
 | exp exp { App($1, $2) }
