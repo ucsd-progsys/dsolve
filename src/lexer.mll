@@ -85,5 +85,7 @@ rule token = parse
 	  TVAR name }
   | lowercase as name
       { VAR (String.make 1 name) }
+  | eof
+      { raise End_of_file }
   | _
       { token lexbuf }
