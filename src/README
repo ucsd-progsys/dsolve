@@ -25,6 +25,7 @@ e ::= n (integers)
     | e[t]        (type application of monotype t)
     | 'K <= Q. e  (qualifier abstraction over qualifier variable 'K with constant bound Q)
     | e{A}        (qualifier application of concrete qualifier A)
+    | {[ A ]} e   (annotate expression e with qualifier literal A)
     | (e)
 
 The type language is described by

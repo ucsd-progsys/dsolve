@@ -53,16 +53,30 @@ query:
 | exp QUESTION tschema EOL {
     
     let (e, t) = ($1, $3) in
-      Printf.printf(">> ");
+      Printf.printf ">> ";
       if check_type e t then
-	Printf.printf("true")
+	Printf.printf "true"
       else
-	Printf.printf("false")
+	Printf.printf "false"
       ;
-      Printf.printf("\n\n");
+      Printf.printf "\n\n";
       flush stdout
 
   }
+| QUESTION exp EOL {
+
+    let e = $2 in
+      Printf.printf(">> ");
+      begin try
+	let t = infer_type e in
+	  Printf.printf "%s" (pprint_type t)
+      with _ ->
+	Printf.printf "Cannot infer type"
+      end;
+      Printf.printf "\n\n";
+      flush stdout
+  }
+	
 ;
 
 tschema:
@@ -117,6 +131,7 @@ exp:
 | FUN VAR COLON mtype EQUAL exp { Abs($2, $4, $6) }
 | TVAR DOT exp { TyAbs($1, $3) }
 | QVAR LESSEQ qualliteral DOT exp { QualAbs($1, $3, $5) }
+| LCURLY LSQUARE qual RSQUARE RCURLY exp { Annot($3, $6) }
 | exp LSQUARE mtype RSQUARE { TyApp($1, $3) }
 | exp LCURLY qualliteral RCURLY { QualApp($1, $3) }
 | exp exp { App($1, $2) }

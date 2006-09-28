@@ -1,5 +1,6 @@
 open Env
 open Expr
+open Printf
 
 
 exception TypeMismatch of expr * typschema
@@ -340,3 +341,88 @@ let check_type e texp =
 	types_equal t texp
     with _ ->
       false
+
+
+exception Unify
+
+
+(* XXX: the following are incomplete, to say the least *)
+
+let unify t1 t2 meet join =
+  if types_equal t1 t2 then
+    t1
+  else
+    raise Unify
+
+
+let type_meet t1 t2 = t1
+
+
+let type_join t1 t2 = t1
+
+
+let infer_type e =
+  let rec infer_rec e tenv =
+    match e with
+	Num(_) ->
+	  mt (Int(ql Top))
+      | True
+      | False ->
+	  mt (Bool(ql Top))
+      | Var(x) ->
+	  env_lookup x tenv
+      | Annot(q, e) ->
+	  annotate_type q (infer_rec e tenv)
+      | If(c, e1, e2) ->
+	  begin match monotyp_from_typschema(infer_rec c tenv) with
+	      Bool(_) ->
+		let t1 = infer_rec e1 tenv in
+		let t2 = infer_rec e2 tenv in
+		  unify t1 t2 type_meet type_join
+	    | _ ->
+		raise Unify
+	  end
+      | App(e1, e2) ->
+	  let t1 = infer_rec e1 tenv in
+	  let t2 = infer_rec e2 tenv in
+	    begin match monotyp_from_typschema(t1) with
+		Arrow(_, t, t') ->
+		  if subtype t2 (mt t) then
+		    mt t'
+		  else
+		    raise Unify
+	      | _ ->
+		  raise Unify
+	    end
+      | _ ->
+	  raise Unify
+  in
+    infer_rec e []
+
+
+let pprint_type t =
+  let rec pprint_qualliteral = function
+      Top -> "top"
+    | Bottom -> "bottom"
+    | Qual q -> q
+  and pprint_qual = function
+      QualVar k -> sprintf "'%s" k
+    | QualMeet(q1, q2) -> sprintf "%s & %s" (pprint_qual q1) (pprint_qual q2)
+    | QualJoin(q1, q2) -> sprintf "%s | %s" (pprint_qual q1) (pprint_qual q2)
+    | QualLiteral q -> pprint_qualliteral q
+  and pprint_monotyp = function
+      Arrow(q, t1, t2) -> sprintf "%s (%s -> %s)" (pprint_qual q) (pprint_monotyp t1) (pprint_monotyp t2)
+    | Int(q) -> sprintf "%s int" (pprint_qual q)
+    | Bool(q) -> sprintf "%s bool" (pprint_qual q)
+    | TyVar(q, x) -> sprintf "%s '%s" (pprint_qual q) x
+    | Nil -> "[nil]"
+  and pprint_qualschema = function
+      ForallQual(k, q, t) -> sprintf "'%s <= %s. %s" k (pprint_qualliteral q) (pprint_qualschema t)
+    | MonoTyp(t) -> pprint_monotyp t
+  and pprint_typschema = function
+      ForallTyp(a, t) -> sprintf "'%s. %s" a (pprint_typschema t)
+    | QSchema(t) -> pprint_qualschema t
+  in
+    pprint_typschema t
+	
+      
