@@ -70,6 +70,11 @@ Polymorphic identity:
 'a. 'K <= top. fun x : 'K 'a = x ? 'a. 'K <= top. 'K 'a -> 'K 'a
 
 
+Applying the polymorphic identity to a positive integer:
+
+let f : 'a. 'K <= top. 'K 'a -> 'K 'a = 'a. 'K <= top. fun x : 'K 'a = x in f[int]{POS} ({[ POS ]} 3) ? POS int
+
+
 A function returning one of its two parameters, depending on the third:
 
 'a. 'K <= top. 'Q <= top. fun x : 'K 'a = fun y : 'Q 'a = fun z : bool = if z then x else y ? 'a. 'K <= top. 'Q <= top. 'K 'a -> 'Q 'a -> bool -> 'K | 'Q 'a

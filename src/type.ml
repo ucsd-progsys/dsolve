@@ -110,8 +110,12 @@ let subst_tyvar b a t =
 	begin match b with
 	    TyVar(_, b) ->
 	      TyVar(q, b)
-	  | _ ->
-	      b
+	  | Int(_) ->
+	      Int(q)
+	  | Bool(_) ->
+	      Bool(q)
+	  | t ->
+	      t
 	end
     | t ->
 	t
