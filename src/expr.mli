@@ -1,31 +1,22 @@
 open Env
 
 
-type qualliteral =
+type qual =
     Top
   | Bottom
   | Qual of string
-
-type qual =
-    QualLiteral of qualliteral
   | QualVar of string
   | QualMeet of qual * qual
   | QualJoin of qual * qual
 
-type monotyp =
-    Arrow of qual * monotyp * monotyp
+type typ =
+    Arrow of qual * typ * typ
   | Int of qual
   | Bool of qual
   | TyVar of qual * string
   | Nil
-
-type qualschema =
-    ForallQual of string * qualliteral * qualschema
-  | MonoTyp of monotyp
-
-type typschema =
-    ForallTyp of string * typschema
-  | QSchema of qualschema
+  | ForallQual of string * qual * typ
+  | ForallTyp of string * typ
 
 
 type expr =
@@ -35,13 +26,13 @@ type expr =
   | Var of string
   | If of expr * expr * expr
   | Annot of qual * expr
-  | Let of string * typschema * expr * expr
-  | Abs of string * monotyp * expr
+  | Let of string * typ option * expr * expr
+  | Abs of string * typ option * expr
   | App of expr * expr
   | TyAbs of string * expr
-  | TyApp of expr * monotyp
-  | QualAbs of string * qualliteral * expr
-  | QualApp of expr * qualliteral
+  | TyApp of expr * typ
+  | QualAbs of string * qual * expr
+  | QualApp of expr * qual
 
 type value =
     NumVal of int
