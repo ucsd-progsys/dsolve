@@ -62,7 +62,7 @@ BYTE_ENABLED = true
 # Build an OCaml program
 #
 
-FILES = microml expr type env parser lexer 
+FILES = lexer expr type env parser lexer microml 
 PROGRAM = microml
 # OCAML_LIBS +=
 # OCAML_CLIBS +=
