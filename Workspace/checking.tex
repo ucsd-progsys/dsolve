@@ -287,4 +287,88 @@ As before, annotation occurs underneath qualifiers.
 \end{mathpar}
 
 
+\section{Constraint-Based Inference Under Banshee}
+
+Constructors:
+
+\begin{itemize}
+\item All cubes of qualifiers, literal and variable; $[\![Q]\!]$ denotes the set of cubes representing qualifier $Q$
+\item int(): term
+\item bool(): term
+\item arrow(=term, +term): term
+\item type(+setIF, =term): term
+\end{itemize}
+
+\begin{mathpar}
+
+\inferrule[var]
+  { }
+  {\Gamma \vdash x : \Gamma(x); \emptyset}
+
+\end{mathpar}
+
+
+\begin{mathpar}
+
+\inferrule[int]
+  { }
+  {\Gamma \vdash n : \texttt{type}([\![\top]\!], \texttt{int}()); \emptyset}
+
+\end{mathpar}
+
+
+\begin{mathpar}
+
+\inferrule[true]
+  { }
+  {\Gamma \vdash \textrm{true} : \texttt{type}([\![\top]\!], \texttt{bool}()); \emptyset}
+
+\end{mathpar}
+
+
+\begin{mathpar}
+
+\inferrule[false]
+  { }
+  {\Gamma \vdash \textrm{false} : \texttt{type}([\![\top]\!], \texttt{bool}()); \emptyset}
+
+\end{mathpar}
+
+
+\begin{mathpar}
+
+\inferrule[annot]
+  {\Gamma \vdash e : {\tau}_e; C_e \\ '{\alpha} \notin \Gamma}
+  {\Gamma \vdash |[ Q ]| e : {\tau}_a; C_e \cup \{{\tau}_a \leq \texttt{type}([\![Q]\!], '{\alpha}), {\tau}_e \leq {\tau}_a\}}
+
+\end{mathpar}
+
+
+\begin{mathpar}
+
+\inferrule[if]
+  {\Gamma \vdash e_1 : {\tau}_1; C_1 \\ \Gamma \vdash e_2 : {\tau}_2; C_2 \\ \Gamma \vdash e_3 : {\tau}_3; C_3}
+  {\Gamma \vdash \textrm{if } e_1 \textrm{ then } e_2 \textrm{ else } e_3 : {\tau}_{if}; C_1 \cup C_2 \cup C_3 \cup \{{\tau}_1 \leq \texttt{type}([\![\top]\!], \texttt{bool}()), {\tau}_2 \leq {\tau}_{if}, {\tau}_3 \leq {\tau}_{if}\}}
+
+\end{mathpar}
+
+
+\begin{mathpar}
+
+\inferrule[abs]
+  {\Gamma[x \mapsto {\tau}_x] \vdash e : {\tau}_e; C_e}
+  {\Gamma \vdash \textrm{fun } x = e : \texttt{arrow}({\tau}_x, {\tau}_e); C_e \cup \{\texttt{type}('q_x, 't_x) \leq {\tau}_x\}}
+
+\end{mathpar}
+
+
+\begin{mathpar}
+
+\inferrule[app]
+  {\Gamma \vdash e_1 : {\tau}_1; C_1 \\ \Gamma \vdash e_2 : {\tau}_2; C_2}
+  {\Gamma \vdash e_1 e_2 : 't; C_1 \cup C_2 \cup \{\texttt{arrow}('s, 't) \leq {\tau}_1, 's \leq {\tau}_2\}}
+
+\end{mathpar}
+
+
 \end{document}
