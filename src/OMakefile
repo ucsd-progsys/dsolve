@@ -40,7 +40,7 @@
 #
 # Include path
 #
-OCAMLINCLUDES += .
+OCAMLINCLUDES += . /usr/lib/ocaml/3.09.2/ocamlgraph/
 
 #
 # Compile native or byte code?
@@ -62,11 +62,11 @@ BYTE_ENABLED = true
 # Build an OCaml program
 #
 
-FILES = lexer expr type env parser lexer microml 
+FILES = lexer expr type env parser flowgraph microml 
 PROGRAM = microml
-# OCAML_LIBS +=
+OCAML_LIBS += /usr/lib/ocaml/3.09.2/ocamlgraph/graph
 # OCAML_CLIBS +=
-# OCAML_OTHER_LIBS +=
-# OCAML_LIB_FLAGS +=
+# OCAML_OTHER_LIBS += Graph
+# OCAML_LIB_FLAGS += -lgraph
 OCamlProgram($(PROGRAM), $(FILES))
 .DEFAULT: $(PROGRAM).run
