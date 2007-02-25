@@ -20,7 +20,7 @@
 # If so, define the subdirectory targets and uncomment this section.
 #
 
-.SUBDIRS: test/
+# .SUBDIRS:
 
 ################################################
 # Configuration.  You may want to modify any of these configuration
@@ -40,7 +40,7 @@
 #
 # Include path
 #
-OCAMLINCLUDES += . /usr/lib/ocaml/3.09.2/ocamlgraph/
+OCAMLINCLUDES += . ../ /usr/lib/ocaml/3.09.2/ocamlgraph/ /usr/lib/ocaml/3.09.2/oUnit/
 
 #
 # Compile native or byte code?
@@ -62,11 +62,11 @@ BYTE_ENABLED = true
 # Build an OCaml program
 #
 
-FILES = lexer expr type env parser flowgraph microml 
-PROGRAM = microml
-OCAML_LIBS += /usr/lib/ocaml/3.09.2/ocamlgraph/graph
+FILES = ../flowgraph test_flowgraph suite
+PROGRAM = suite
+OCAML_LIBS += /usr/lib/ocaml/3.09.2/ocamlgraph/graph /usr/lib/ocaml/3.09.2/oUnit/oUnit
 # OCAML_CLIBS +=
-# OCAML_OTHER_LIBS += 
-# OCAML_LIB_FLAGS += 
+OCAML_OTHER_LIBS += unix
+# OCAML_LIB_FLAGS += -lgraph
 OCamlProgram($(PROGRAM), $(FILES))
 .DEFAULT: $(PROGRAM).run
