@@ -51,8 +51,15 @@ let edge_call edge =
 	false
 
 
+let vertex_quals qmap v =
+  try
+    QualMap.find v qmap
+  with Not_found ->
+    LabelledQualSet.empty
+
+
 let get_edge_source_quals qmap e =
-  QualMap.find (FlowGraph.E.src e) qmap  
+  vertex_quals qmap (FlowGraph.E.src e)
 
 
 let relabel_quals qualset orig_edge =
@@ -137,7 +144,7 @@ let rec propagate_vertex_qualifiers fg qmap = function
     v::w ->
       let w' = (FlowGraph.succ fg v)@w in
       let qmap' =
-	QualMap.add v (LabelledQualSet.union (QualMap.find v qmap)
+	QualMap.add v (LabelledQualSet.union (vertex_quals qmap v)
 			 (collect_qualifiers qmap (FlowGraph.pred_e fg v))) qmap
       in
 	propagate_vertex_qualifiers fg qmap' w'
