@@ -140,13 +140,21 @@ let collect_qualifiers qmap inedges =
       return_quals
 
 
+(* Propagate qualifiers in flowgraph fg using vertex -> qualifier map qmap
+   to nodes in given worklist *)
 let rec propagate_vertex_qualifiers fg qmap = function
     v::w ->
-      let w' = (FlowGraph.succ fg v)@w in
-      let qmap' =
-	QualMap.add v (LabelledQualSet.union (vertex_quals qmap v)
-			 (collect_qualifiers qmap (FlowGraph.pred_e fg v))) qmap
+      let old_quals = vertex_quals qmap v in
+      let new_quals = collect_qualifiers qmap (FlowGraph.pred_e fg v) in
+      let qmap' = QualMap.add v (LabelledQualSet.union new_quals old_quals)
+	qmap
+      in
+      let w' =
+	if LabelledQualSet.equal new_quals old_quals then
+	  (FlowGraph.succ fg v)@w
+	else
+	  w
       in
 	propagate_vertex_qualifiers fg qmap' w'
-  | [] ->
-      qmap
+    | [] ->
+	qmap
