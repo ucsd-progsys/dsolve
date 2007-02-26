@@ -25,6 +25,13 @@ let rec qualmap = function
       QualMap.add v qset (qualmap m)
 
 
+let rec qualset = function
+    [] ->
+      LabelledQualSet.empty
+  | q::qs ->
+      LabelledQualSet.add q (qualset qs)
+
+
 let test_regular_flow _ =
   let (v1, v2) = (vertex "v1", vertex "v2") in
   let e = edge v1 None v2 in
@@ -63,9 +70,35 @@ let test_multiple_call _ =
     assert_bool "Return edge for crossed calls have incorrect qualifiers"
       ((LabelledQualSet.equal c1_qset (QualMap.find r1 result))
        && (LabelledQualSet.equal c2_qset (QualMap.find r2 result)))
-    
+
+
+let test_qualifying_function _ =
+  let (f, c, r) = (vertex "f", vertex "c", vertex "r") in
+  let (ce, re) = (edge c (Some(Call 1)) f, edge f (Some(Return 1)) r) in
+  let graph = make_graph ([f; c; r], [ce; re]) in
+  let f_qset = LabelledQualSet.singleton (QualFrom("F", None)) in
+  let qmap = qualmap [(f, f_qset)] in
+  let result = propagate_vertex_qualifiers graph qmap [f] in
+    assert_bool "Qualifier incorrect propagated out of function"
+      (LabelledQualSet.equal f_qset (QualMap.find r result))
+
+
+let test_qualifier_intersection _ =
+  let (l, r, c) = (vertex "l", vertex "r", vertex "c") in
+  let (le, re) = (edge l None c, edge r None c) in
+  let graph = make_graph ([l; r; c], [le; re]) in
+  let l_qset = qualset [QualFrom("Q1", None); QualFrom("Q2", None)] in
+  let r_qset = qualset [QualFrom("Q1", None); QualFrom("Q3", None)] in
+  let qmap = qualmap [(l, l_qset); (r, r_qset)] in
+  let result = propagate_vertex_qualifiers graph qmap [l; r] in
+    assert_bool "Child qualifier not intersection of parents"
+      (LabelledQualSet.equal (LabelledQualSet.inter l_qset r_qset)
+	 (QualMap.find c result))
+
 
 let suite = "Test Flowgraph" >:::
   ["test_regular_flow" >:: test_regular_flow;
    "test_cycle_termination" >:: test_cycle_termination;
-   "test_multiple_call" >:: test_multiple_call]
+   "test_multiple_call" >:: test_multiple_call;
+   "test_qualifying_function" >:: test_qualifying_function;
+   "test_qualifier_intersection" >:: test_qualifier_intersection]
