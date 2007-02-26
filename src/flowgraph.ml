@@ -149,7 +149,7 @@ let propagate_vertex_qualifiers fg qmap w =
 	  qmap
 	in
 	let w' =
-	  if LabelledQualSet.equal new_quals old_quals then
+	  if not(LabelledQualSet.equal new_quals old_quals) then
 	    (FlowGraph.succ fg v)@w
 	  else
 	    w

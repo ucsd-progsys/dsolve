@@ -54,6 +54,17 @@ let test_cycle_termination _ =
       (LabelledQualSet.equal v1_qset (QualMap.find v2 result))
 
 
+let test_single_call _ =
+  let (c, f, r) = (vertex "c", vertex "f", vertex "r") in
+  let (ce, re) = (edge c (Some(Call 1)) f, edge f (Some(Return 1)) r) in
+  let graph = make_graph ([c; f; r], [ce; re]) in
+  let c_qset = LabelledQualSet.singleton (QualFrom("C", None)) in
+  let qmap = qualmap [(c, c_qset)] in
+  let result = propagate_vertex_qualifiers graph qmap [c] in
+    assert_bool "Qualifier did not make it across call"
+      (LabelledQualSet.equal c_qset (QualMap.find r result))
+
+
 (* Create two function call sites and ensure that the result of each call
    has the proper qualifier *)
 let test_multiple_call _ =
@@ -99,6 +110,7 @@ let test_qualifier_intersection _ =
 let suite = "Test Flowgraph" >:::
   ["test_regular_flow" >:: test_regular_flow;
    "test_cycle_termination" >:: test_cycle_termination;
+   "test_single_call" >:: test_single_call;
    "test_multiple_call" >:: test_multiple_call;
    "test_qualifying_function" >:: test_qualifying_function;
    "test_qualifier_intersection" >:: test_qualifier_intersection]
