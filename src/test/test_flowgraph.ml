@@ -2,42 +2,70 @@ open OUnit
 open Flowgraph
 
 
-(* Create a simple graph with v1 l-> v2 *)
-let create_simple_graph v1 l v2 =
-  let graph = FlowGraph.empty in
-  let vgraph = FlowGraph.add_vertex (FlowGraph.add_vertex graph v1) v2 in
-  let edge = FlowGraph.E.create v1 l v2 in
-    FlowGraph.add_edge_e vgraph edge
+let vertex =
+  FlowGraph.V.create
+
+let edge v1 l v2 =
+  FlowGraph.E.create v1 l v2
+
+
+let rec make_graph = function
+    ([], []) ->
+      FlowGraph.empty
+  | (v::vs, es) ->
+      FlowGraph.add_vertex (make_graph (vs, es)) v
+  | ([], e::es) ->
+      FlowGraph.add_edge_e (make_graph ([], es)) e
+
+
+let rec qualmap = function
+    [] ->
+      QualMap.empty
+  | (v, qset)::m ->
+      QualMap.add v qset (qualmap m)
 
 
 let test_regular_flow _ =
-  let v1 = FlowGraph.V.create "v1" in
-  let v2 = FlowGraph.V.create "v2" in
-  let graph = create_simple_graph v1 None v2 in
+  let (v1, v2) = (vertex "v1", vertex "v2") in
+  let e = edge v1 None v2 in
+  let graph = make_graph ([v1; v2], [e]) in
   let v1_qset = LabelledQualSet.singleton (QualFrom("Q", None)) in
-  let qmap = QualMap.add v1 v1_qset QualMap.empty in
-  let result = propagate_vertex_qualifiers graph qmap [v2] in
+  let qmap = qualmap [(v1, v1_qset)] in
+  let result = propagate_vertex_qualifiers graph qmap [v1] in
     assert_bool "Did not propagate qualifier across simple edge"
       (LabelledQualSet.equal v1_qset (QualMap.find v2 result))
 
 
 let test_cycle_termination _ =
-  let v1 = FlowGraph.V.create "v1" in
-  let v2 = FlowGraph.V.create "v2" in
-  let forward_edge = FlowGraph.E.create v1 None v2 in
-  let backward_edge = FlowGraph.E.create v2 None v1 in
-  let graph = FlowGraph.empty in
-  let vgraph = FlowGraph.add_vertex (FlowGraph.add_vertex graph v1) v2 in
-  let egraph = FlowGraph.add_edge_e (FlowGraph.add_edge_e vgraph forward_edge)
-    backward_edge
-  in
+  let (v1, v2) = (vertex "v1", vertex "v2") in
+  let (forward_edge, backward_edge) = (edge v1 None v2, edge v2 None v1) in
+  let graph = make_graph ([v1; v2], [forward_edge; backward_edge]) in
   let v1_qset = LabelledQualSet.singleton (QualFrom("Q", None)) in
-  let qmap = QualMap.add v1 v1_qset QualMap.empty in
-  let result = propagate_vertex_qualifiers egraph qmap [v2] in
+  let qmap = qualmap [(v1, v1_qset)] in
+  let result = propagate_vertex_qualifiers graph qmap [v1] in
     assert_bool "Terminated without propagating qualifier in cycle"
       (LabelledQualSet.equal v1_qset (QualMap.find v2 result))
 
 
+(* Create two function call sites and ensure that the result of each call
+   has the proper qualifier *)
+let test_multiple_call _ =
+  let f = vertex "f" in
+  let (c1, c2) = (vertex "c1", vertex "c2") in
+  let (ce1, ce2) = (edge c1 (Some(Call 1)) f, edge c2 (Some(Call 2)) f) in
+  let (r1, r2) = (vertex "r1", vertex "r2") in
+  let (re1, re2) = (edge f (Some(Return 1)) r1, edge f (Some(Return 2)) r2) in
+  let graph = make_graph ([c1; c2; f; r1; r2], [ce1; ce2; re1; re2]) in
+  let c1_qset = LabelledQualSet.singleton (QualFrom("C1", None)) in
+  let c2_qset = LabelledQualSet.singleton (QualFrom("C2", None)) in
+  let qmap = qualmap [(c1, c1_qset); (c2, c2_qset)] in
+  let result = propagate_vertex_qualifiers graph qmap [c1; c2] in
+    assert_bool "Return edge for crossed calls have incorrect qualifiers"
+      ((LabelledQualSet.equal c1_qset (QualMap.find r1 result))
+       && (LabelledQualSet.equal c2_qset (QualMap.find r2 result)))
+    
+
 let suite = "Test Flowgraph" >:::
   ["test_regular_flow" >:: test_regular_flow;
-   "test_cycle_termination" >:: test_cycle_termination]
+   "test_cycle_termination" >:: test_cycle_termination;
+   "test_multiple_call" >:: test_multiple_call]

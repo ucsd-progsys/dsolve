@@ -84,14 +84,14 @@ let unlabel_quals qmap qualset return_edge =
 	  raise InvalidReturnEdge
   in      
   let rec unlabel_quals_rec = function
-      (QualFrom(qual, Some e) as q)::qs ->
+      QualFrom(qual, Some e)::qs ->
 	begin match FlowGraph.E.label e with
 	    Some(Call i) when i = j ->
 	      LabelledQualSet.union
 		(get_edge_source_quals qmap e)
 		(unlabel_quals_rec qs)
 	  | _ ->
-	      LabelledQualSet.add q (unlabel_quals_rec qs)
+	      unlabel_quals_rec qs
 	end
     | q::qs ->
 	LabelledQualSet.add q (unlabel_quals_rec qs)
@@ -140,21 +140,26 @@ let collect_qualifiers qmap inedges =
       return_quals
 
 
-(* Propagate qualifiers in flowgraph fg using vertex -> qualifier map qmap
-   to nodes in given worklist *)
-let rec propagate_vertex_qualifiers fg qmap = function
-    v::w ->
-      let old_quals = vertex_quals qmap v in
-      let new_quals = collect_qualifiers qmap (FlowGraph.pred_e fg v) in
-      let qmap' = QualMap.add v (LabelledQualSet.union new_quals old_quals)
-	qmap
-      in
-      let w' =
-	if LabelledQualSet.equal new_quals old_quals then
-	  (FlowGraph.succ fg v)@w
-	else
-	  w
-      in
-	propagate_vertex_qualifiers fg qmap' w'
+let propagate_vertex_qualifiers fg qmap w =
+  let rec propagate_vertex_qualifiers_rec qmap = function
+      v::w ->
+	let old_quals = vertex_quals qmap v in
+	let new_quals = collect_qualifiers qmap (FlowGraph.pred_e fg v) in
+	let qmap' = QualMap.add v (LabelledQualSet.union new_quals old_quals)
+	  qmap
+	in
+	let w' =
+	  if LabelledQualSet.equal new_quals old_quals then
+	    (FlowGraph.succ fg v)@w
+	  else
+	    w
+	in
+	  propagate_vertex_qualifiers_rec qmap' w'
     | [] ->
 	qmap
+  in
+    (* To the user, it's easier to provide the nodes to propagate from;
+       internally, it works better if we think of the nodes to propagate
+       to *)
+  let ws = List.flatten(List.map (FlowGraph.succ fg) w) in
+    propagate_vertex_qualifiers_rec qmap ws
