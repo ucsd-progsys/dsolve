@@ -33,7 +33,7 @@ module FlowGraph = struct
     []
 
   let default_edge_attributes g =
-    [ `Arrowsize 12.2 ]
+    []
 
   let vertex_name v =
     V.label v
