@@ -1,5 +1,6 @@
 type token =
   | ARROW
+  | BANG
   | BOOL
   | BOTTOM
   | COLON

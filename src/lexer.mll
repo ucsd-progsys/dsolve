@@ -19,6 +19,8 @@ rule token = parse
       { token lexbuf }
   | "->"
       { ARROW }
+  | "!"
+      { BANG }
   | "bool"
       { BOOL }
   | "bot"

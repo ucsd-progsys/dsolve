@@ -21,7 +21,39 @@ module Edge = struct
   let default = None
 end
 
-module FlowGraph = Persistent.Digraph.AbstractLabeled(Vertex)(Edge)
+module SimpleFlowGraph = Persistent.Digraph.AbstractLabeled(Vertex)(Edge)
+
+module FlowGraph = struct
+  include SimpleFlowGraph
+
+  let graph_attributes g =
+    []
+
+  let default_vertex_attributes g =
+    []
+
+  let default_edge_attributes g =
+    [ `Arrowsize 12.2 ]
+
+  let vertex_name v =
+    V.label v
+
+  let vertex_attributes v =
+    [ `Label (V.label v) ]
+
+  let edge_attributes e =
+    match E.label e with
+	None -> []
+      | Some(Call i) ->
+	  [ `Label("(" ^ string_of_int i) ]
+      | Some(Return i) ->
+	  [ `Label(")" ^ string_of_int i) ]
+
+  let get_subgraph v =
+    None
+end
+
+module FlowGraphPrinter = Graphviz.Dot(FlowGraph)
 
 
 type labelled_qual = QualFrom of qual * (FlowGraph.E.t option)

@@ -83,6 +83,20 @@ module FlowGraph :
     val add_edge_e : t -> edge -> t
     val remove_edge : t -> vertex -> vertex -> t
     val remove_edge_e : t -> edge -> t
+
+    val graph_attributes : t -> Graphviz.DotAttributes.graph list
+    val default_vertex_attributes : t -> Graphviz.DotAttributes.vertex list
+    val default_edge_attributes : t -> Graphviz.DotAttributes.edge list
+    val vertex_name : vertex -> string
+    val vertex_attributes : vertex -> Graphviz.DotAttributes.vertex list
+    val edge_attributes : edge -> Graphviz.DotAttributes.edge list
+    val get_subgraph : t -> Graphviz.DotAttributes.subgraph option
+  end
+
+module FlowGraphPrinter :
+  sig
+    val fprint_graph : Format.formatter -> FlowGraph.t -> unit
+    val output_graph : Pervasives.out_channel -> FlowGraph.t -> unit
   end
 
 
