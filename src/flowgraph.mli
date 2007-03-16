@@ -154,6 +154,7 @@ module QualMap :
     val fold : (key -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b
     val compare : ('a -> 'a -> int) -> 'a t -> 'a t -> int
     val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
+    val union_disjoint : 'a t -> 'a t -> 'a t
   end
 
 

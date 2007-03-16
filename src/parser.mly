@@ -80,9 +80,10 @@ query:
       flush stdout
   }
 | BANG exp EOL {
+
     let e = $2 in
       Printf.printf(">> Graph:\n");
-      let graph = expr_qualgraph e in
+      let (graph, _) = expr_qualgraph e in
 	FlowGraphPrinter.output_graph stdout graph;
       Printf.printf("\n<< EOG\n\n");
       flush stdout

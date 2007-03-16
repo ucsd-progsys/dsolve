@@ -49,11 +49,11 @@ let reshape_constraints c =
 	c
     | ((FlowsTo(t1, p, i, t2) as f)::ws) as w ->
 	begin match(t1, t2) with
-	    (ConstArrow(t1_in, t1_out), ((ConstVertex v2) as t2)) ->
+	    (ConstArrow(_, _), ((ConstVertex v2) as t2)) ->
 	      let t2' = split_vertex_into_arrow v2 in
 	      let w' = subst_graph t2' t2 (w@c) in
 		reshape_constraints_rec [] w'
-	  | (((ConstVertex v1) as t1), ConstArrow(t2_in, t2_out)) ->
+	  | (((ConstVertex v1) as t1), ConstArrow(_, _)) ->
 	      let t1' = split_vertex_into_arrow v1 in
 	      let w' = subst_graph t1' t1 (w@c) in
 		reshape_constraints_rec [] w'
@@ -82,7 +82,7 @@ let rec make_qualgraph = function
 		      Positive -> Some(Return j)
 		    | Negative -> Some(Call j)
 		  end
-	      | _ ->
+	      | None ->
 		  None
 	    in
 	    let new_edge = FlowGraph.E.create v1 edge_label v2 in
@@ -94,14 +94,16 @@ let rec make_qualgraph = function
       FlowGraph.empty
 
 
-let top_vertex = ConstVertex(FlowGraph.V.create "TOP")
+let const_vertex = ConstVertex(FlowGraph.V.create "CONST")
 
 
 let nextvertex = ref 0
 let fresh_vertex v_label =
-  let full_label = v_label ^ string_of_int !nextvertex in
-    incr nextvertex;
-    ConstVertex(FlowGraph.V.create full_label)
+  incr nextvertex;
+  FlowGraph.V.create (v_label ^ string_of_int !nextvertex)
+
+let fresh_const_vertex v_label =
+  ConstVertex(fresh_vertex v_label)
 
 
 let nextinst = ref 0
@@ -117,52 +119,54 @@ let rec expr_constraints e env =
       Num _
     | True
     | False ->
-	(top_vertex, [])
+	(const_vertex, [], QualMap.empty)
     | Var x ->
-	(env_lookup x env, [])
+	(env_lookup x env, [], QualMap.empty)
     | If(b, e1, e2) ->
-	let (_, cb) = expr_constraints b env in
-	let (t1, c1) = expr_constraints e1 env in
-	let (t2, c2) = expr_constraints e2 env in
-	let tif = fresh_vertex "if" in
+	let (_, cb, mb) = expr_constraints b env in
+	let (t1, c1, m1) = expr_constraints e1 env in
+	let (t2, c2, m2) = expr_constraints e2 env in
+	let tif = fresh_const_vertex "if" in
 	let t1c = FlowsTo(t1, Positive, None, tif) in
 	let t2c = FlowsTo(t2, Positive, None, tif) in
-	  (tif, t1c::t2c::(c1@c2@cb))
+	  (tif, t1c::t2c::(c1@c2@cb),
+	   QualMap.union_disjoint (QualMap.union_disjoint m1 m2) mb)
       (* pmr: this is obviously not very general, but qual needs to change *)
     | Annot(Qual(q), e) ->
-	let (t, c) = expr_constraints e env in
-	  (* pmr: make sure this doesn't create duplicates *)
-	let tq = ConstVertex(FlowGraph.V.create q) in
-	let tqe = fresh_vertex "annot" in
-	let tqc = FlowsTo(tq, Positive, None, tqe) in
+	let (t, c, m) = expr_constraints e env in
+	  (* pmr: note that if this vertex gets split into an arrow later we
+	     will lose the annotation that happened on the function *)
+	let vqe = fresh_vertex "annot" in
+	let tqe = ConstVertex(vqe) in
 	let tec = FlowsTo(t, Positive, None, tqe) in
-	  (tqe, tqc::tec::c)
+	  (tqe, tec::c,
+	   QualMap.add vqe (LabelledQualSet.singleton (QualFrom(q, None))) m)
     | Abs(x, _, e) ->
-	let tx = fresh_vertex x in
+	let tx = fresh_const_vertex x in
 	let env' = env_add x tx env in
-	let (te, ce) = expr_constraints e env' in
-	  (ConstArrow(tx, te), ce)
+	let (te, ce, me) = expr_constraints e env' in
+	  (ConstArrow(tx, te), ce, me)
     | App(e1, e2) ->
-	let (t1, c1) = expr_constraints e1 env in
-	let (t2, c2) = expr_constraints e2 env in
-	let (t_in, t_out) = (fresh_vertex "in", fresh_vertex "out") in
+	let (t1, c1, m1) = expr_constraints e1 env in
+	let (t2, c2, m2) = expr_constraints e2 env in
+	let (t_in, t_out) = (fresh_const_vertex "in", fresh_const_vertex "out") in
 	let funcc = FlowsTo(t1, Positive, Some(fresh_inst_site ()), ConstArrow(t_in, t_out)) in
 	let argc = FlowsTo(t2, Negative, None, t_in) in
-	let t = fresh_vertex "ret" in
+	let t = fresh_const_vertex "ret" in
 	let retc = FlowsTo(t_out, Positive, None, t) in
-	  (t, retc::argc::funcc::(c1@c2))
+	  (t, retc::argc::funcc::(c1@c2), QualMap.union_disjoint m1 m2)
     | Let(x, _, ex, e) ->
-	let (tx, cx) = expr_constraints ex env in
-	let txb = fresh_vertex "let" in
+	let (tx, cx, mx) = expr_constraints ex env in
+	let txb = fresh_const_vertex "let" in
 	let env' = env_add x txb env in
-	let (t, c) = expr_constraints e env' in
+	let (t, c, m) = expr_constraints e env' in
 	let instc = FlowsTo(tx, Negative, None, txb) in
-	  (t, instc::(c@cx))
+	  (t, instc::(c@cx), QualMap.union_disjoint m mx)
     | _ ->
 	raise ExprNotHandled
 
 
 let expr_qualgraph e =
-  let (_, cs) = expr_constraints e [] in
+  let (_, cs, m) = expr_constraints e [] in
   let rs = reshape_constraints cs in
-    make_qualgraph rs
+    (make_qualgraph rs, m)

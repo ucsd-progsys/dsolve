@@ -64,7 +64,17 @@ module LabelledQual = struct
 end
 
 module LabelledQualSet = Set.Make(LabelledQual)
-module QualMap = Map.Make(FlowGraph.V)
+module SimpleQualMap = Map.Make(FlowGraph.V)
+
+module QualMap = struct
+  include SimpleQualMap
+  
+  let union_disjoint m1 m2 =
+    let folder = (fun k d r -> (k, d)::r) in
+    let b1 = fold folder m1 [] in
+    let b2 = fold folder m1 b1 in
+      List.fold_right (fun (k, d) -> add k d) b2 empty
+end
 
 
 let edge_labelled edge =
