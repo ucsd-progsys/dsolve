@@ -85,8 +85,8 @@ rule token = parse
       { let s = Lexing.lexeme lexbuf in
 	let name = String.sub s 1 (String.length s - 1) in
 	  TVAR name }
-  | lowercase as name
-      { VAR (String.make 1 name) }
+  | lowercase + as name
+      { VAR name }
   | eof
       { raise End_of_file }
   | _
