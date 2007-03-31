@@ -38,8 +38,8 @@ let rec subst_graph v x = function
 
 let split_vertex_into_arrow v =
   let v_label = FlowGraph.V.label v in
-  let (v_in, v_out) = (FlowGraph.V.create (v_label ^ " in "),
-		       FlowGraph.V.create (v_label ^ " out ")) in
+  let (v_in, v_out) = (FlowGraph.V.create (v_label ^ "_in"),
+		       FlowGraph.V.create (v_label ^ "_out")) in
     ConstArrow(ConstVertex v_in, ConstVertex v_out)
 
 
@@ -58,8 +58,8 @@ let reshape_constraints c =
 	      let w' = subst_graph t1' t1 (w@c) in
 		reshape_constraints_rec [] w'
 	  | (ConstArrow(t1_in, t1_out), ConstArrow(t2_in, t2_out)) ->
-	      let w1 = FlowsTo(t2_in, negate p, i, t1_in) in
-	      let w2 = FlowsTo(t1_out, p, i, t2_out) in
+	      let w1 = FlowsTo(t2_in, Negative, i, t1_in) in
+	      let w2 = FlowsTo(t1_out, Positive, i, t2_out) in
 		reshape_constraints_rec [] (w1::w2::(ws@c))
 	  | (ConstVertex _, ConstVertex _) ->
 	      reshape_constraints_rec (f::c) ws
@@ -150,10 +150,11 @@ let rec expr_constraints e env =
 	let (t1, c1, m1) = expr_constraints e1 env in
 	let (t2, c2, m2) = expr_constraints e2 env in
 	let (t_in, t_out) = (fresh_const_vertex "in", fresh_const_vertex "out") in
-	let funcc = FlowsTo(t1, Positive, Some(fresh_inst_site ()), ConstArrow(t_in, t_out)) in
-	let argc = FlowsTo(t2, Negative, None, t_in) in
+	let funcc = FlowsTo(t1, Positive, None, ConstArrow(t_in, t_out)) in
+	let inst_site = Some(fresh_inst_site ()) in
+	let argc = FlowsTo(t2, Negative, inst_site, t_in) in
 	let t = fresh_const_vertex "ret" in
-	let retc = FlowsTo(t_out, Positive, None, t) in
+	let retc = FlowsTo(t_out, Positive, inst_site, t) in
 	  (t, retc::argc::funcc::(c1@c2), QualMap.union_disjoint m1 m2)
     | Let(x, _, ex, e) ->
 	let (tx, cx, mx) = expr_constraints ex env in
