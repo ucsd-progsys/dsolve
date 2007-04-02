@@ -5,6 +5,20 @@ open Flowgraph
 open Expr
 open Type
 
+
+let print_qualmap qm =
+  let print_labelled_qual = function
+    QualFrom(q, _) -> Printf.printf "%s, " q
+  in
+  let print_kv k v =
+    Printf.printf "%s: " (FlowGraph.V.label k);
+    LabelledQualSet.iter print_labelled_qual v;
+    Printf.printf "\n"
+  in
+    QualMap.iter print_kv qm;
+    Printf.printf "\n"
+    
+
 %}
 
 
@@ -83,10 +97,15 @@ query:
 
     let e = $2 in
       Printf.printf(">> Graph:\n");
-      let (graph, _) = expr_qualgraph e in
+      let (graph, qm) = expr_qualgraph e in
 	FlowGraphPrinter.output_graph stdout graph;
-      Printf.printf("\n<< EOG\n\n");
-      flush stdout
+	Printf.printf "\n<< EOG\n\n";
+	Printf.printf "Initial qualmap:\n";
+	print_qualmap qm;
+	let qm' = propagate_vertex_qualifiers graph qm (FlowGraph.vertices graph) in
+	  Printf.printf "Final qualmap:\n";
+	  print_qualmap qm';
+	  flush stdout
   }
 	
 ;

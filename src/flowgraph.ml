@@ -26,6 +26,9 @@ module SimpleFlowGraph = Persistent.Digraph.AbstractLabeled(Vertex)(Edge)
 module FlowGraph = struct
   include SimpleFlowGraph
 
+  let vertices g =
+    fold_vertex (fun v l -> v::l) g []
+
   let graph_attributes g =
     []
 
@@ -72,7 +75,7 @@ module QualMap = struct
   let union_disjoint m1 m2 =
     let folder = (fun k d r -> (k, d)::r) in
     let b1 = fold folder m1 [] in
-    let b2 = fold folder m1 b1 in
+    let b2 = fold folder m2 b1 in
       List.fold_right (fun (k, d) -> add k d) b2 empty
 end
 

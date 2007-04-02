@@ -84,6 +84,8 @@ module FlowGraph :
     val remove_edge : t -> vertex -> vertex -> t
     val remove_edge_e : t -> edge -> t
 
+    val vertices : t -> vertex list
+
     val graph_attributes : t -> Graphviz.DotAttributes.graph list
     val default_vertex_attributes : t -> Graphviz.DotAttributes.vertex list
     val default_edge_attributes : t -> Graphviz.DotAttributes.edge list
