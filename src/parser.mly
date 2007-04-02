@@ -8,7 +8,15 @@ open Type
 
 let print_qualmap qm =
   let print_labelled_qual = function
-    QualFrom(q, _) -> Printf.printf "%s, " q
+      QualFrom(q, None) -> Printf.printf "%s, " q
+    | QualFrom(q, Some e) ->
+	let lab = FlowGraph.E.label e in
+	let site_str = match lab with
+	    None -> ""
+	  | Some(Call i) -> "(" ^ string_of_int i ^ " "
+	  | Some(Return i) -> ")" ^ string_of_int i ^ " "
+	in
+	  Printf.printf "%s%s, " site_str q
   in
   let print_kv k v =
     Printf.printf "%s: " (FlowGraph.V.label k);
