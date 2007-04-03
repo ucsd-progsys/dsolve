@@ -122,6 +122,10 @@ let rec expr_constraints e env =
 	(const_vertex, [], QualMap.empty)
     | Var x ->
 	(env_lookup x env, [], QualMap.empty)
+    | BinOp(o, e1, e2) ->
+	let (_, c1, m1) = expr_constraints e1 env in
+	let (_, c2, m2) = expr_constraints e2 env in
+	  (fresh_const_vertex "op", c1@c2, QualMap.union_disjoint m1 m2)
     | If(b, e1, e2) ->
 	let (_, cb, mb) = expr_constraints b env in
 	let (t1, c1, m1) = expr_constraints e1 env in
