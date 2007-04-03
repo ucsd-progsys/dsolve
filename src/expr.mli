@@ -19,11 +19,19 @@ type typ =
   | ForallTyp of string * typ
 
 
+type binoper =
+    Plus
+  | Minus
+  | Times
+  | Equal
+  | Less
+
 type expr =
     Num of int
   | True
   | False
   | Var of string
+  | BinOp of binoper * expr * expr
   | If of expr * expr * expr
   | Annot of qual * expr
   | Let of string * typ option * expr * expr
@@ -44,4 +52,6 @@ type value =
 exception BogusEvalError
 
 
-val eval: expr -> value
+val eval : expr -> value
+
+val pprint_value : value -> string

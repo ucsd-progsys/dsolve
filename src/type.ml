@@ -252,11 +252,39 @@ let check_type e texp =
 	  | _ ->
 	      raise (TypeMismatch(e, texp))
 	end
-    |	Annot(q, e) ->
+    | Annot(q, e) ->
 	  (* XXX: *sniff* smells like...  bogitude - but we don't know what type's being annotated,
 	     so I have no idea what can be done about removing the annotation *)
 	  let t = type_exp e texp tenv in
 	    annotate_type t q
+    | BinOp(o, e1, e2) ->
+	let type_int_op e1 e2 rtype =
+	  begin match (type_exp e1 (Int(Top)) tenv, type_exp e2 (Int(Top)) tenv) with
+	      (Int(_), Int(_)) ->
+		rtype
+	    | (Int(_), _) ->
+		raise (TypeMismatch(e1, Int(Top)))
+	    | _ ->
+		raise (TypeMismatch(e2, Int(Top)))
+	  end
+	in
+	begin match o with
+	    Plus
+	  | Minus
+	  | Times ->
+	      type_int_op e1 e2 (Int(Top))
+	  | Less ->
+	      type_int_op e1 e2 (Bool(Top))
+	  | Equal ->
+	      let (t1, t2) = (type_exp e1 Nil tenv, type_exp e2 Nil tenv) in
+		begin match (t1, t2) with
+		    (Int(_), Int(_))
+		  | (Bool(_), Bool(_)) ->
+		      Bool(Top)
+		  | _ ->
+		      raise (TypeMismatch(e, t1))
+		end
+	end
     | If(c, e1, e2) ->
 	begin match type_exp c (Bool(Top)) tenv with
 	    Bool(Top) ->
@@ -578,6 +606,24 @@ let infer_type e =
       | Annot(q, e) ->
 	  let (t, constrs) = infer_rec e tenv in
 	    (annotate_type t q, constrs)
+      | BinOp(o, e1, e2) ->
+	  let (t1, constrs1) = infer_rec e1 tenv in
+	  let (t2, constrs2) = infer_rec e2 tenv in
+	  let infer_int_op rtype =
+	    (rtype,
+	     TypEq(t1, Int(getfreshqualvar()))::TypEq(t2, Int(getfreshqualvar()))::constrs1@constrs2)
+	  in
+	    begin match o with
+		Plus
+	      | Minus
+	      | Times ->
+		  infer_int_op (Int(Top))
+	      | Less ->
+		  infer_int_op (Bool(Top))
+	      | Equal ->
+		  (Bool(Top),
+		   TypEq(t1, t2)::constrs1@constrs2)
+	    end
       | If(c, e1, e2) ->
 	  let (tc, constrsc) = infer_rec c tenv in
 	  let (t1, constrs1) = infer_rec e1 tenv in

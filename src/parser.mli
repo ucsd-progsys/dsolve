@@ -16,11 +16,14 @@ type token =
   | INTLITERAL of (int)
   | JOIN
   | LCURLY
-  | LET
+  | LESS
   | LESSEQ
+  | LET
   | LPAREN
   | LSQUARE
   | MEET
+  | MINUS
+  | PLUS
   | QLITERAL of (string)
   | QUESTION
   | QVAR of (string)
@@ -28,6 +31,7 @@ type token =
   | RPAREN
   | RSQUARE
   | THEN
+  | TIMES
   | TOP
   | TRUE
   | TVAR of (string)

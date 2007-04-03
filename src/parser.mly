@@ -10,8 +10,7 @@ let print_qualmap qm =
   let print_labelled_qual = function
       QualFrom(q, None) -> Printf.printf "%s, " q
     | QualFrom(q, Some e) ->
-	let lab = FlowGraph.E.label e in
-	let site_str = match lab with
+	let site_str = match FlowGraph.E.label e with
 	    None -> ""
 	  | Some(Call i) -> "(" ^ string_of_int i ^ " "
 	  | Some(Return i) -> ")" ^ string_of_int i ^ " "
@@ -47,11 +46,14 @@ let print_qualmap qm =
 %token <int> INTLITERAL
 %token JOIN
 %token LCURLY
-%token LET
+%token LESS
 %token LESSEQ
+%token LET
 %token LPAREN
 %token LSQUARE
 %token MEET
+%token MINUS
+%token PLUS
 %token <string> QLITERAL
 %token QUESTION
 %token <string> QVAR
@@ -59,6 +61,7 @@ let print_qualmap qm =
 %token RPAREN
 %token RSQUARE
 %token THEN
+%token TIMES
 %token TOP
 %token TRUE
 %token <string> TVAR
@@ -66,7 +69,9 @@ let print_qualmap qm =
 
 %right ARROW
 %left  MEET JOIN
-%nonassoc QUALIFY
+%left  PLUS MINUS
+%right TIMES
+%right QUALIFY
 
 %type <unit> query
 %start query
@@ -114,6 +119,17 @@ query:
 	  Printf.printf "Final qualmap:\n";
 	  print_qualmap qm';
 	  flush stdout
+  }
+| exp EOL {
+
+    let e = $1 in
+      try
+	let (v, t) = (eval e, infer_type e) in
+	  Printf.printf "> %s: %s\n\n" (pprint_value v) (pprint_type t);
+	  flush stdout
+      with _ ->
+	Printf.printf "Cannot evaluate expression\n\n";
+	flush stdout	  
   }
 	
 ;
@@ -166,6 +182,11 @@ exp:
 | FALSE { False }
 | VAR { Var($1) }
 | INTLITERAL { Num($1) }
+| exp PLUS exp { BinOp(Plus, $1, $3) }
+| exp MINUS exp { BinOp(Minus, $1, $3) }
+| exp TIMES exp { BinOp(Times, $1, $3) }
+| exp EQUAL exp { BinOp(Equal, $1, $3) }
+| exp LESS exp { BinOp(Less, $1, $3) }
 | IF exp THEN exp ELSE exp { If($2, $4, $6) }
 | LET VAR COLON tschema EQUAL exp IN exp { Let($2, Some $4, $6, $8) }
 | LET VAR EQUAL exp IN exp { Let($2, None, $4, $6) }
@@ -177,4 +198,6 @@ exp:
 | exp LSQUARE mtype RSQUARE { TyApp($1, $3) }
 | exp LCURLY qualliteral RCURLY { QualApp($1, $3) }
 | exp exp { App($1, $2) }
+;
+
 %%

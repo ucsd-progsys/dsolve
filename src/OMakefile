@@ -62,7 +62,7 @@ BYTE_ENABLED = true
 # Build an OCaml program
 #
 
-FILES = lexer expr type env parser flowgraph qualgraph microml
+FILES = parser lexer expr type env flowgraph qualgraph microml
 PROGRAM = microml
 OCAML_LIBS += /usr/lib/ocaml/3.09.2/ocamlgraph/graph
 # OCAML_CLIBS +=

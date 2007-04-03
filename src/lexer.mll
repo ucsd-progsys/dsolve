@@ -51,6 +51,8 @@ rule token = parse
       { JOIN }
   | "{"
       { LCURLY }
+  | "<"
+      { LESS }
   | "<="
       { LESSEQ }
   | "let"
@@ -61,6 +63,10 @@ rule token = parse
       { LSQUARE }
   | "&"
       { MEET }
+  | "-"
+      { MINUS }
+  | "+"
+      { PLUS }
   | uppercase +
       { QLITERAL (Lexing.lexeme lexbuf) }
   | "?"
@@ -77,6 +83,8 @@ rule token = parse
       { RSQUARE }
   | "then"
       { THEN }
+  | "*"
+      { TIMES }
   | "top"
       { TOP }
   | "true"
