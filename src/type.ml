@@ -175,144 +175,144 @@ let rec types_equal t1 t2 =
 
 let check_type e texp =
   let rec type_exp e texp tenv =
-  match e with
-      Num(_) ->
-	Int(Top)
-    | True
-    | False ->
-	Bool(Top)
-    | Var(x) ->
-	env_lookup x tenv
-    | Let(x, tx, ex, e) ->
-	let tx = match tx with
-	    None ->
-	      raise (TypeMismatch(e, texp))
-	  | Some tx ->
-	      tx
-	in
-	let tx' = type_exp ex tx tenv in
-	  if subtype tx' tx then
-	    let newtenv = env_add x tx tenv in
-	      type_exp e texp newtenv
-	  else
-	    raise (TypeMismatch(ex, tx))
-    | Abs(x, tx, e) ->
-	let tx = match tx with
-	    None ->
-	      raise (TypeMismatch(e, texp))
-	  | Some tx ->
-	      tx
-	in
-	begin match texp with
-	    Arrow(_, _, returnexp) ->
-	      let newtenv = env_add x tx tenv in
-	      let t' = type_exp e returnexp newtenv in
-		Arrow(Top, tx, t')
-	  | _ ->
-		raise (TypeMismatch(e, texp))
-	  end
-    | App(e1, e2) ->
-	(* Fake an expected type for the function being applied -
-	   all we're really interested in is a proper return type
-	   (see above) *)
-	let expected_t1 =
-	  Arrow(Top, TyVar(QualVar("k"), "a"), texp)
-	in
-	  begin match type_exp e1 expected_t1 tenv with
-	      Arrow(q, t, t') ->
-		let t2 = type_exp e2 t tenv in
-		  if subtype t2 t then
-		    t'
-		  else
-		    raise (TypeMismatch(e2, t'))
-	    | t ->
-		raise (TypeMismatch(e1, t))
-	  end
-    | QualAbs(k, q, e) ->
-	begin match texp with
-	    ForallQual(_, q', t) ->
-	      if qualifiers_equal q q' then
-		let t' = type_exp e t tenv in
-		  ForallQual(k, q, t')
-	      else
-		raise (TypeMismatch(e, texp))
-	  | _ ->
-	      raise (TypeMismatch(e, texp))
-	end
-    | QualApp(e, q) ->
-	(* If we were calculating the type for this thing afresh, we'd need a precise
-	   expected type.  But since this has to appear in the body of a let, we're
-	   only deconstructing an existing type at this point and we're ok. *)
-	begin match type_exp e Nil tenv with
-	    ForallQual(k, q', t) ->
-	      if qualifier_less_equal q q' then
-		typ_subst_qualvar q k t
-	      else
-		raise (TypeMismatch(e, texp))
-	  | _ ->
-	      raise (TypeMismatch(e, texp))
-	end
-    | Annot(q, e) ->
-	  (* XXX: *sniff* smells like...  bogitude - but we don't know what type's being annotated,
-	     so I have no idea what can be done about removing the annotation *)
-	  let t = type_exp e texp tenv in
-	    annotate_type t q
-    | BinOp(o, e1, e2) ->
-	let type_int_op e1 e2 rtype =
-	  begin match (type_exp e1 (Int(Top)) tenv, type_exp e2 (Int(Top)) tenv) with
-	      (Int(_), Int(_)) ->
-		rtype
-	    | (Int(_), _) ->
-		raise (TypeMismatch(e1, Int(Top)))
-	    | _ ->
-		raise (TypeMismatch(e2, Int(Top)))
-	  end
-	in
-	begin match o with
-	    Plus
-	  | Minus
-	  | Times ->
-	      type_int_op e1 e2 (Int(Top))
-	  | Less ->
-	      type_int_op e1 e2 (Bool(Top))
-	  | Equal ->
-	      let (t1, t2) = (type_exp e1 Nil tenv, type_exp e2 Nil tenv) in
-		begin match (t1, t2) with
-		    (Int(_), Int(_))
-		  | (Bool(_), Bool(_)) ->
-		      Bool(Top)
-		  | _ ->
-		      raise (TypeMismatch(e, t1))
-		end
-	end
-    | If(c, e1, e2) ->
-	begin match type_exp c (Bool(Top)) tenv with
-	    Bool(Top) ->
-	      let t1 = type_exp e1 texp tenv in
-	      let t2 = type_exp e2 texp tenv in
-		if (subtype t1 texp) && (subtype t2 texp) then
-		  texp
-		else
+    let type_int_op e1 e2 rtype =
+      begin match (type_exp e1 (Int(Top)) tenv, type_exp e2 (Int(Top)) tenv) with
+	  (Int(_), Int(_)) ->
+	    rtype
+	| (Int(_), _) ->
+	    raise (TypeMismatch(e1, Int(Top)))
+	| _ ->
+	    raise (TypeMismatch(e2, Int(Top)))
+      end
+    in
+      match e with
+	  Num(_, _) ->
+	    Int(Top)
+	| TrueExp(_)
+	| FalseExp(_) ->
+	    Bool(Top)
+	| ExpVar(x, _) ->
+	    env_lookup x tenv
+	| Let(x, tx, ex, e, _) ->
+	    let tx = match tx with
+		None ->
 		  raise (TypeMismatch(e, texp))
-   	  | _ ->
-	      raise (TypeMismatch(e, texp))
-	end
-    | TyAbs(a, e) ->
-	begin match texp with
-	    ForallTyp(_, t) ->
-	      ForallTyp(a, type_exp e t tenv)
-	  | _ ->
-	      raise (TypeMismatch(e, texp))
-	end
-    | TyApp(e, t) ->
-	(* We can get away with faking the expected type for the same reasons it's ok for
-	   QualApp *)
-	begin match (type_exp e Nil tenv) with
-	    ForallTyp(a, s) ->
-	      typ_subst_tyvar t a s
-	  | t ->
-	      raise (TypeMismatch(e, t))
-	end
+	      | Some tx ->
+		  tx
+	    in
+	    let tx' = type_exp ex tx tenv in
+	      if subtype tx' tx then
+		let newtenv = env_add x tx tenv in
+		  type_exp e texp newtenv
+	      else
+		raise (TypeMismatch(ex, tx))
+	| Abs(x, tx, e, _) ->
+	    let tx = match tx with
+		None ->
+		  raise (TypeMismatch(e, texp))
+	      | Some tx ->
+		  tx
+	    in
+	      begin match texp with
+		  Arrow(_, _, returnexp) ->
+		    let newtenv = env_add x tx tenv in
+		    let t' = type_exp e returnexp newtenv in
+		      Arrow(Top, tx, t')
+		| _ ->
+		    raise (TypeMismatch(e, texp))
+	      end
+	| App(e1, e2, _) ->
+	    (* Fake an expected type for the function being applied -
+	       all we're really interested in is a proper return type
+	       (see above) *)
+	    let expected_t1 =
+	      Arrow(Top, TyVar(QualVar("k"), "a"), texp)
+	    in
+	      begin match type_exp e1 expected_t1 tenv with
+		  Arrow(q, t, t') ->
+		    let t2 = type_exp e2 t tenv in
+		      if subtype t2 t then
+			t'
+		      else
+			raise (TypeMismatch(e2, t'))
+		| t ->
+		    raise (TypeMismatch(e1, t))
+	      end
+	| QualAbs(k, q, e, _) ->
+	    begin match texp with
+		ForallQual(_, q', t) ->
+		  if qualifiers_equal q q' then
+		    let t' = type_exp e t tenv in
+		      ForallQual(k, q, t')
+		  else
+		    raise (TypeMismatch(e, texp))
+	      | _ ->
+		  raise (TypeMismatch(e, texp))
+	    end
+	| QualApp(e, q, _) ->
+	    (* If we were calculating the type for this thing afresh, we'd need a precise
+	       expected type.  But since this has to appear in the body of a let, we're
+	       only deconstructing an existing type at this point and we're ok. *)
+	    begin match type_exp e Nil tenv with
+		ForallQual(k, q', t) ->
+		  if qualifier_less_equal q q' then
+		    typ_subst_qualvar q k t
+		  else
+		    raise (TypeMismatch(e, texp))
+	      | _ ->
+		  raise (TypeMismatch(e, texp))
+	    end
+	| Annot(q, e, _) ->
+	    (* XXX: *sniff* smells like...  bogitude - but we don't know what type's being annotated,
+	       so I have no idea what can be done about removing the annotation *)
+	    let t = type_exp e texp tenv in
+	      annotate_type t q
+	| BinOp(_, e1, e2, _) ->
+	    type_int_op e1 e2 (Int(Top))
+	| BinRel(r, e1, e2, _) ->
+	    begin match r with
+		Lt
+	      | Le ->
+		  type_int_op e1 e2 (Bool(Top))
+	      | Eq
+	      | Ne ->
+		  let (t1, t2) = (type_exp e1 Nil tenv, type_exp e2 Nil tenv) in
+		    begin match (t1, t2) with
+			(Int(_), Int(_))
+		      | (Bool(_), Bool(_)) ->
+			  Bool(Top)
+		      | _ ->
+			  raise (TypeMismatch(e, t1))
+		    end
+	    end
+	| If(c, e1, e2, _) ->
+	    begin match type_exp c (Bool(Top)) tenv with
+		Bool(Top) ->
+		  let t1 = type_exp e1 texp tenv in
+		  let t2 = type_exp e2 texp tenv in
+		    if (subtype t1 texp) && (subtype t2 texp) then
+		      texp
+		    else
+		      raise (TypeMismatch(e, texp))
+   	      | _ ->
+		  raise (TypeMismatch(e, texp))
+	    end
+	| TyAbs(a, e, _) ->
+	    begin match texp with
+		ForallTyp(_, t) ->
+		  ForallTyp(a, type_exp e t tenv)
+	      | _ ->
+		  raise (TypeMismatch(e, texp))
+	    end
+	| TyApp(e, t, _) ->
+	    (* We can get away with faking the expected type for the same reasons it's ok for
+	       QualApp *)
+	    begin match (type_exp e Nil tenv) with
+		ForallTyp(a, s) ->
+		  typ_subst_tyvar t a s
+	      | t ->
+		  raise (TypeMismatch(e, t))
+	    end
   in
     try
       let t = type_exp e texp [] in
@@ -592,46 +592,48 @@ let rec type_lub t1 t2 =
 
 
 let infer_type e =
+  let infer_int_op rtype t1 constrs1 t2 constrs2 =
+    (rtype,
+     TypEq(t1, Int(getfreshqualvar()))::TypEq(t2, Int(getfreshqualvar()))::constrs1@constrs2)
+  in
   let rec infer_rec e tenv =
     match e with
-	Num(_) ->
+	Num(_, _) ->
 	  (Int(Top), [])
-      | True
-      | False ->
+      | TrueExp(_)
+      | FalseExp(_) ->
 	  (Bool(Top), [])
-      | Var(x) ->
+      | ExpVar(x, _) ->
 	  let tx' = env_lookup x tenv in
 	  let (tx, constrs) = instantiate_type tx' in
 	    (tx, constrs)
-      | Annot(q, e) ->
+      | Annot(q, e, _) ->
 	  let (t, constrs) = infer_rec e tenv in
 	    (annotate_type t q, constrs)
-      | BinOp(o, e1, e2) ->
+      | BinOp(_, e1, e2, _) ->
 	  let (t1, constrs1) = infer_rec e1 tenv in
 	  let (t2, constrs2) = infer_rec e2 tenv in
-	  let infer_int_op rtype =
-	    (rtype,
-	     TypEq(t1, Int(getfreshqualvar()))::TypEq(t2, Int(getfreshqualvar()))::constrs1@constrs2)
-	  in
-	    begin match o with
-		Plus
-	      | Minus
-	      | Times ->
-		  infer_int_op (Int(Top))
-	      | Less ->
-		  infer_int_op (Bool(Top))
-	      | Equal ->
+	    infer_int_op (Int(Top)) t1 constrs1 t2 constrs2
+      | BinRel(r, e1, e2, _) ->
+	  let (t1, constrs1) = infer_rec e1 tenv in
+	  let (t2, constrs2) = infer_rec e2 tenv in
+	    begin match r with
+		Lt
+	      | Le ->
+		  infer_int_op (Bool(Top)) t1 constrs1 t2 constrs2
+	      | Eq
+	      | Ne ->
 		  (Bool(Top),
 		   TypEq(t1, t2)::constrs1@constrs2)
 	    end
-      | If(c, e1, e2) ->
+      | If(c, e1, e2, _) ->
 	  let (tc, constrsc) = infer_rec c tenv in
 	  let (t1, constrs1) = infer_rec e1 tenv in
 	  let (t2, constrs2) = infer_rec e2 tenv in
 	  let t = type_lub t1 t2 in
 	    (t,
 	     TypEq(t1, t2)::TypEq(tc, Bool(getfreshqualvar()))::(constrsc @ constrs1 @ constrs2))
-      | App(e1, e2) ->
+      | App(e1, e2, _) ->
 	  let (t1, constrs1) = infer_rec e1 tenv in
 	  let (t2, constrs2) = infer_rec e2 tenv in
 	    begin match t1 with
@@ -641,7 +643,7 @@ let infer_type e =
 	      | _ ->
 		  raise Unify
 	    end
-      | Abs(x, _, e) ->
+      | Abs(x, _, e, _) ->
 	  let tx = getfreshvar() in
 	  let newtenv = env_add x tx tenv in
 	  let (t', constrs) = infer_rec e newtenv in
@@ -651,7 +653,7 @@ let infer_type e =
 	      | _ ->
 		  raise Unify
 	    end
-      | Let(x, _, ex, e) ->
+      | Let(x, _, ex, e, _) ->
 	  let (tx, constrsx) = infer_rec ex tenv in
 	  let tx = generalize_type tx tenv in
 	  let newtenv = env_add x tx tenv in

@@ -17,6 +17,8 @@ let digit = ['0'-'9']
 rule token = parse
   | blank +
       { token lexbuf }
+  | "and"
+      { AND }
   | "->"
       { ARROW }
   | "!"
@@ -65,8 +67,16 @@ rule token = parse
       { MEET }
   | "-"
       { MINUS }
+  | "!="
+      { NEQUAL }
+  | "not"
+      { NOT }
+  | "or"
+      { OR }
   | "+"
       { PLUS }
+  | "pred"
+      { PRED }
   | uppercase +
       { QLITERAL (Lexing.lexeme lexbuf) }
   | "?"

@@ -40,7 +40,7 @@
 #
 # Include path
 #
-OCAMLINCLUDES += . /usr/lib/ocaml/3.09.2/ocamlgraph/
+OCAMLINCLUDES += . /usr/lib/ocaml/3.09.2/ocamlgraph/ ./yices/lib/
 
 #
 # Compile native or byte code?
@@ -55,17 +55,17 @@ BYTE_ENABLED = true
 # OCAMLCFLAGS   +=
 # OCAMLOPTFLAGS +=
 # OCAML_LINK_FLAGS +=
-# OCAML_BYTE_LINK_FLAGS +=
-# OCAML_NATIVE_LINK_FLAGS +=
+OCAML_BYTE_LINK_FLAGS += -ccopt -L./yices/lib/ -cclib -loyices -cclib -lyices -cclib -lgmp
+OCAML_NATIVE_LINK_FLAGS += -lstdc++ -lgmp
 
 ################################################
 # Build an OCaml program
 #
 
-FILES = parser lexer expr type env flowgraph qualgraph microml
+FILES = parser lexer expr type env flowgraph qualgraph misc predicate theoremProver microml
 PROGRAM = microml
-OCAML_LIBS += /usr/lib/ocaml/3.09.2/ocamlgraph/graph
-# OCAML_CLIBS +=
+OCAML_LIBS += /usr/lib/ocaml/3.09.2/ocamlgraph/graph ./yices/lib/oyices
+#OCAML_CLIBS += ./yices/lib/liboyices
 # OCAML_OTHER_LIBS += 
 # OCAML_LIB_FLAGS += 
 OCamlProgram($(PROGRAM), $(FILES))

@@ -10,6 +10,7 @@ type qual =
   | QualMeet of qual * qual
   | QualJoin of qual * qual
 
+
 type typ =
     Arrow of qual * typ * typ
   | Int of qual
@@ -21,28 +22,35 @@ type typ =
 
 
 (* Expression language *)
-type binoper =
+type binop =
     Plus
   | Minus
   | Times
-  | Equal
-  | Less
+
+type binrel =
+    Eq
+  | Ne
+  | Lt
+  | Le 
+
+type expr_id = int
 
 type expr =
-    Num of int
-  | True
-  | False
-  | Var of string
-  | BinOp of binoper * expr * expr
-  | If of expr * expr * expr
-  | Annot of qual * expr
-  | Let of string * typ option * expr * expr
-  | Abs of string * typ option * expr
-  | App of expr * expr
-  | TyAbs of string * expr
-  | TyApp of expr * typ
-  | QualAbs of string * qual * expr
-  | QualApp of expr * qual
+    Num of int * expr_id
+  | TrueExp of expr_id
+  | FalseExp of expr_id
+  | ExpVar of string * expr_id
+  | BinOp of binop * expr * expr * expr_id
+  | BinRel of binrel * expr * expr * expr_id
+  | If of expr * expr * expr * expr_id
+  | Annot of qual * expr * expr_id
+  | Let of string * typ option * expr * expr * expr_id
+  | Abs of string * typ option * expr * expr_id
+  | App of expr * expr * expr_id
+  | TyAbs of string * expr * expr_id
+  | TyApp of expr * typ * expr_id
+  | QualAbs of string * qual * expr * expr_id
+  | QualApp of expr * qual * expr_id
 
 
 (* Values resulting from evalutation *)
@@ -67,11 +75,11 @@ let bool_to_val b =
 let eval exp =
   let rec eval_rec exp env =
     match exp with
-	Num(n) -> NumVal(n)
-      | True -> TrueVal
-      | False -> FalseVal
-      | Var(x) -> env_lookup x env
-      | BinOp(o, e1, e2) ->
+	Num(n, _) -> NumVal(n)
+      | TrueExp(_) -> TrueVal
+      | FalseExp(_) -> FalseVal
+      | ExpVar(x, _) -> env_lookup x env
+      | BinOp(o, e1, e2, _) ->
 	  let (v1, v2) = (eval_rec e1 env, eval_rec e2 env) in
 	    begin match (o, v1, v2) with
 		(Plus, NumVal n1, NumVal n2) ->
@@ -80,26 +88,36 @@ let eval exp =
 		  NumVal (n1 - n2)
 	      | (Times, NumVal n1, NumVal n2) ->
 		  NumVal (n1 * n2)
-	      | (Equal, _, _) ->
-		  bool_to_val (v1 = v2)
-	      | (Less, NumVal n1, NumVal n2) ->
-		  bool_to_val (n1 < n2)
 	      | _ ->
 		  raise BogusEvalError
 	    end
-      | If(c, e1, e2) ->
+      | BinRel(r, e1, e2, _) ->
+	  let (v1, v2) = (eval_rec e1 env, eval_rec e2 env) in
+	    begin match (r, v1, v2) with
+		(Eq, _, _) ->
+		  bool_to_val (v1 = v2)
+	      | (Lt, NumVal n1, NumVal n2) ->
+		  bool_to_val (n1 < n2)
+	      | (Le, NumVal n1, NumVal n2) ->
+		  bool_to_val (n1 <= n2)
+	      | (Ne, _, _) ->
+		  bool_to_val (v1 != v2)
+	      | _ ->
+		  raise BogusEvalError
+	    end
+      | If(c, e1, e2, _) ->
 	  begin match (eval_rec c env) with
 	      TrueVal -> eval_rec e1 env
 	    | FalseVal -> eval_rec e2 env
 	    | _ -> raise BogusEvalError
 	  end
-      | Annot(_, e) -> eval_rec e env
-      | Let(x, _, e, e') ->
+      | Annot(_, e, _) -> eval_rec e env
+      | Let(x, _, e, e', _) ->
 	  let xv = eval_rec e env in
 	  let newenv = env_add x xv env in
 	    eval_rec e' newenv
-      | Abs(x, _, e) -> Closure(x, e, env)
-      | App(e1, e2) ->
+      | Abs(x, _, e, _) -> Closure(x, e, env)
+      | App(e1, e2, _) ->
 	  let e2' = eval_rec e2 env in
 	    begin match eval_rec e1 env with
 		Closure(x, e, cenv) ->
@@ -111,6 +129,25 @@ let eval exp =
       | _ -> raise BogusEvalError
   in
     eval_rec exp []
+
+
+let expr_get_id = function
+    Num(_, id)
+  | TrueExp(id)
+  | FalseExp(id)
+  | ExpVar(_, id)
+  | BinOp(_, _, _, id)
+  | BinRel(_, _, _, id)
+  | If(_, _, _, id)
+  | Annot(_, _, id)
+  | Let(_, _, _, _, id)
+  | Abs(_, _, _, id)
+  | App(_, _, id)
+  | TyAbs(_, _, id)
+  | TyApp(_, _, id)
+  | QualAbs(_, _, _, id)
+  | QualApp(_, _, id) ->
+      id
 
 
 let pprint_value = function

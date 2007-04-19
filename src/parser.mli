@@ -1,4 +1,5 @@
 type token =
+  | AND
   | ARROW
   | BANG
   | BOOL
@@ -23,7 +24,11 @@ type token =
   | LSQUARE
   | MEET
   | MINUS
+  | NEQUAL
+  | NOT
+  | OR
   | PLUS
+  | PRED
   | QLITERAL of (string)
   | QUESTION
   | QVAR of (string)

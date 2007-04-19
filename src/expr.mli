@@ -19,28 +19,35 @@ type typ =
   | ForallTyp of string * typ
 
 
-type binoper =
+type binop =
     Plus
   | Minus
-  | Times
-  | Equal
-  | Less
+  | Times 
+
+type binrel =
+    Eq
+  | Ne
+  | Lt
+  | Le 
+
+type expr_id = int
 
 type expr =
-    Num of int
-  | True
-  | False
-  | Var of string
-  | BinOp of binoper * expr * expr
-  | If of expr * expr * expr
-  | Annot of qual * expr
-  | Let of string * typ option * expr * expr
-  | Abs of string * typ option * expr
-  | App of expr * expr
-  | TyAbs of string * expr
-  | TyApp of expr * typ
-  | QualAbs of string * qual * expr
-  | QualApp of expr * qual
+    Num of int * expr_id
+  | TrueExp of expr_id
+  | FalseExp of expr_id
+  | ExpVar of string * expr_id
+  | BinOp of binop * expr * expr * expr_id
+  | BinRel of binrel * expr * expr * expr_id
+  | If of expr * expr * expr * expr_id
+  | Annot of qual * expr * expr_id
+  | Let of string * typ option * expr * expr * expr_id
+  | Abs of string * typ option * expr * expr_id
+  | App of expr * expr * expr_id
+  | TyAbs of string * expr * expr_id
+  | TyApp of expr * typ * expr_id
+  | QualAbs of string * qual * expr * expr_id
+  | QualApp of expr * qual * expr_id
 
 type value =
     NumVal of int
@@ -53,5 +60,5 @@ exception BogusEvalError
 
 
 val eval : expr -> value
-
+val expr_get_id : expr -> expr_id
 val pprint_value : value -> string

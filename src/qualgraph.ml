@@ -116,17 +116,17 @@ exception ExprNotHandled
 
 let rec expr_constraints e env =
   match e with
-      Num _
-    | True
-    | False ->
+      Num(_, _)
+    | TrueExp(_)
+    | FalseExp(_) ->
 	(const_vertex, [], QualMap.empty)
-    | Var x ->
+    | ExpVar(x, _) ->
 	(env_lookup x env, [], QualMap.empty)
-    | BinOp(o, e1, e2) ->
+    | BinOp(o, e1, e2, _) ->
 	let (_, c1, m1) = expr_constraints e1 env in
 	let (_, c2, m2) = expr_constraints e2 env in
 	  (fresh_const_vertex "op", c1@c2, QualMap.union_disjoint m1 m2)
-    | If(b, e1, e2) ->
+    | If(b, e1, e2, _) ->
 	let (_, cb, mb) = expr_constraints b env in
 	let (t1, c1, m1) = expr_constraints e1 env in
 	let (t2, c2, m2) = expr_constraints e2 env in
@@ -136,7 +136,7 @@ let rec expr_constraints e env =
 	  (tif, t1c::t2c::(c1@c2@cb),
 	   QualMap.union_disjoint (QualMap.union_disjoint m1 m2) mb)
       (* pmr: this is obviously not very general, but qual needs to change *)
-    | Annot(Qual(q), e) ->
+    | Annot(Qual(q), e, _) ->
 	let (t, c, m) = expr_constraints e env in
 	  (* pmr: note that if this vertex gets split into an arrow later we
 	     will lose the annotation that happened on the function *)
@@ -145,12 +145,12 @@ let rec expr_constraints e env =
 	let tec = FlowsTo(t, Positive, None, tqe) in
 	  (tqe, tec::c,
 	   QualMap.add vqe (LabelledQualSet.singleton (QualFrom(q, None))) m)
-    | Abs(x, _, e) ->
+    | Abs(x, _, e, _) ->
 	let tx = fresh_const_vertex x in
 	let env' = env_add x tx env in
 	let (te, ce, me) = expr_constraints e env' in
 	  (ConstArrow(tx, te), ce, me)
-    | App(e1, e2) ->
+    | App(e1, e2, _) ->
 	let (t1, c1, m1) = expr_constraints e1 env in
 	let (t2, c2, m2) = expr_constraints e2 env in
 	let (t_in, t_out) = (fresh_const_vertex "in", fresh_const_vertex "out") in
@@ -160,7 +160,7 @@ let rec expr_constraints e env =
 	let t = fresh_const_vertex "ret" in
 	let retc = FlowsTo(t_out, Positive, inst_site, t) in
 	  (t, retc::argc::funcc::(c1@c2), QualMap.union_disjoint m1 m2)
-    | Let(x, _, ex, e) ->
+    | Let(x, _, ex, e, _) ->
 	let (tx, cx, mx) = expr_constraints ex env in
 	let txb = fresh_const_vertex "let" in
 	let env' = env_add x txb env in

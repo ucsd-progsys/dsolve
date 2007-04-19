@@ -2,6 +2,7 @@
 
 open Qualgraph
 open Flowgraph
+open Predicate
 open Expr
 open Type
 
@@ -24,11 +25,21 @@ let print_qualmap qm =
   in
     QualMap.iter print_kv qm;
     Printf.printf "\n"
-    
+
+
+let next_id = ref 0
+let get_next_expr_id () =
+  incr next_id;
+  !next_id
+
+
+let active_preds = ref []
+
 
 %}
 
 
+%token AND
 %token ARROW
 %token BANG
 %token BOOL
@@ -53,7 +64,11 @@ let print_qualmap qm =
 %token LSQUARE
 %token MEET
 %token MINUS
+%token NEQUAL
+%token NOT
+%token OR
 %token PLUS
+%token PRED
 %token <string> QLITERAL
 %token QUESTION
 %token <string> QVAR
@@ -131,7 +146,18 @@ query:
 	Printf.printf "Cannot evaluate expression\n\n";
 	flush stdout	  
   }
-	
+| PRED QLITERAL LPAREN VAR RPAREN COLON pred EOL {
+
+    active_preds := PredOver($2, $4, $7)::(!active_preds);
+    let pprint_param_pred = function
+	PredOver(name, x, p) ->
+	  name ^ "(" ^ x ^ "): " ^ pprint_predicate p
+    in
+    let activestrs = List.map pprint_param_pred !active_preds in
+    let activepredlist = Misc.join activestrs "\n" in
+      Printf.printf "%s\n\n" activepredlist;
+      flush stdout
+  }
 ;
 
 tschema:
@@ -178,26 +204,49 @@ qualliteral:
 
 exp:
   LPAREN exp RPAREN { $2 }
-| TRUE { True }
-| FALSE { False }
-| VAR { Var($1) }
-| INTLITERAL { Num($1) }
-| exp PLUS exp { BinOp(Plus, $1, $3) }
-| exp MINUS exp { BinOp(Minus, $1, $3) }
-| exp TIMES exp { BinOp(Times, $1, $3) }
-| exp EQUAL exp { BinOp(Equal, $1, $3) }
-| exp LESS exp { BinOp(Less, $1, $3) }
-| IF exp THEN exp ELSE exp { If($2, $4, $6) }
-| LET VAR COLON tschema EQUAL exp IN exp { Let($2, Some $4, $6, $8) }
-| LET VAR EQUAL exp IN exp { Let($2, None, $4, $6) }
-| FUN VAR COLON mtype EQUAL exp { Abs($2, Some $4, $6) }
-| FUN VAR EQUAL exp { Abs($2, None, $4) }
-| TVAR DOT exp { TyAbs($1, $3) }
-| QVAR LESSEQ qualliteral DOT exp { QualAbs($1, $3, $5) }
-| LCURLY LSQUARE qual RSQUARE RCURLY exp { Annot($3, $6) }
-| exp LSQUARE mtype RSQUARE { TyApp($1, $3) }
-| exp LCURLY qualliteral RCURLY { QualApp($1, $3) }
-| exp exp { App($1, $2) }
+| TRUE { TrueExp(get_next_expr_id()) }
+| FALSE { FalseExp(get_next_expr_id()) }
+| VAR { ExpVar($1, get_next_expr_id()) }
+| INTLITERAL { Num($1, get_next_expr_id()) }
+| exp PLUS exp { BinOp(Plus, $1, $3, get_next_expr_id()) }
+| exp MINUS exp { BinOp(Minus, $1, $3, get_next_expr_id()) }
+| exp TIMES exp { BinOp(Times, $1, $3, get_next_expr_id()) }
+| exp EQUAL exp { BinRel(Eq, $1, $3, get_next_expr_id()) }
+| exp NEQUAL exp { BinRel(Ne, $1, $3, get_next_expr_id()) }
+| exp LESS exp { BinRel(Lt, $1, $3, get_next_expr_id()) }
+| exp LESSEQ exp { BinRel(Le, $1, $3, get_next_expr_id()) }
+| IF exp THEN exp ELSE exp { If($2, $4, $6, get_next_expr_id()) }
+| LET VAR COLON tschema EQUAL exp IN exp { Let($2, Some $4, $6, $8, get_next_expr_id()) }
+| LET VAR EQUAL exp IN exp { Let($2, None, $4, $6, get_next_expr_id()) }
+| FUN VAR COLON mtype EQUAL exp { Abs($2, Some $4, $6, get_next_expr_id()) }
+| FUN VAR EQUAL exp { Abs($2, None, $4, get_next_expr_id()) }
+| TVAR DOT exp { TyAbs($1, $3, get_next_expr_id()) }
+| QVAR LESSEQ qualliteral DOT exp { QualAbs($1, $3, $5, get_next_expr_id()) }
+| LCURLY LSQUARE qual RSQUARE RCURLY exp { Annot($3, $6, get_next_expr_id()) }
+| exp LSQUARE mtype RSQUARE { TyApp($1, $3, get_next_expr_id()) }
+| exp LCURLY qualliteral RCURLY { QualApp($1, $3, get_next_expr_id()) }
+| exp exp { App($1, $2, get_next_expr_id()) }
+;
+
+predexp:
+  INTLITERAL { Predicate.Int($1) }
+| LPAREN predexp RPAREN { $2 }
+| VAR { Predicate.Var($1) }
+| predexp PLUS predexp { Predicate.Binop($1, Plus, $3) }
+| predexp MINUS predexp { Predicate.Binop($1, Minus, $3) }
+| predexp TIMES predexp { Predicate.Binop($1, Times, $3) }
+;
+
+pred:
+  TRUE { Predicate.True }
+| LPAREN pred RPAREN { $2 }
+| predexp EQUAL predexp { Predicate.Atom($1, Eq, $3) }
+| predexp NEQUAL predexp { Predicate.Atom($1, Ne, $3) }
+| predexp LESS predexp { Predicate.Atom($1, Lt, $3) }
+| predexp LESSEQ predexp { Predicate.Atom($1, Le, $3) }
+| NOT pred { Predicate.Not($2) }
+| pred AND pred { Predicate.And($1, $3) }
+| pred OR pred { Predicate.Or($1, $3) }
 ;
 
 %%
