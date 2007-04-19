@@ -49,20 +49,25 @@ module type PROVER =
 
 module Y = Oyices
 
-module YicesProver : PROVER = 
+module YicesProver  = 
   struct
     
     type yices_instance = { 
       c : Y.yices_context;
       t : Y.yices_type;
       d : (string,Y.yices_var_decl) Hashtbl.t;
+      mutable ds : string list ;
       mutable count : int
     }
+
+    let barrier = "0" 
 
     let yicesVar me s =
       let decl = 
         Misc.do_memo me.d
-        (fun () -> Y.yices_mk_var_decl me.c s me.t) () s in
+        (fun () -> 
+          let rv = Y.yices_mk_var_decl me.c s me.t in
+          me.ds <- s::me.ds;rv) () s in
       Y.yices_mk_var_from_decl me.c decl
     
     let rec yicesExp me e =
@@ -96,23 +101,35 @@ module YicesProver : PROVER =
       let c = Y.yices_mk_context () in
       let t = Y.yices_mk_type c "object" in
       let d = Hashtbl.create 37 in
-      { c = c; t = t; d = d; count = 0 }
+        { c = c; t = t; d = d; ds = []; count = 0 }
 
     let push p =
       me.count <- me.count + 1;
+      me.ds <- barrier :: me.ds;
       Y.yices_push me.c;
       Y.yices_assert me.c (yicesPred me p)
+      
+    let rec vpop (cs,s) =
+      match s with [] -> (cs,s)
+      | h::t when h = barrier -> (cs,t)
+      | h::t -> vpop (h::cs,t)
 
     let pop () = 
+      let (cs,ds') = vpop ([],me.ds) in
+      me.ds <- ds';
       me.count <- me.count - 1;
+      List.iter (Hashtbl.remove me.d) cs;
       Y.yices_pop me.c
 
     let reset () =
       Misc.repeat_fn pop me.count
 
+    let unsat () = 
+      Y.yices_inconsistent me.c = 1
+
     let valid p =
       let _ = push (Not p) in
-      let rv = Y.yices_inconsistent me.c = 1 in
+      let rv = unsat () in
       let _ = pop () in
       rv
 
