@@ -1,8 +1,10 @@
 %{
 
+open TheoremProver
 open Qualgraph
 open Flowgraph
 open Predicate
+open Annotate
 open Expr
 open Type
 
@@ -79,6 +81,7 @@ let active_preds = ref []
 %token TIMES
 %token TOP
 %token TRUE
+%token TYPE
 %token <string> TVAR
 %token <string> VAR
 
@@ -108,7 +111,7 @@ query:
       flush stdout
 
   }
-| QUESTION exp EOL {
+| TYPE exp EOL {
 
     let e = $2 in
       Printf.printf(">> ");
@@ -154,9 +157,21 @@ query:
 	  name ^ "(" ^ x ^ "): " ^ pprint_predicate p
     in
     let activestrs = List.map pprint_param_pred !active_preds in
-    let activepredlist = Misc.join activestrs "\n" in
-      Printf.printf "%s\n\n" activepredlist;
+    let active_predstr = Misc.join activestrs "\n" in
+      Printf.printf "%s\n\n" active_predstr;
       flush stdout
+  }
+| QUESTION exp EOL {
+
+    let exp = $2 in
+    let exp_pred = expr_predicate exp in
+      Prover.push(exp_pred);
+      let annotated_exp = List.fold_left annotate exp !active_preds in
+      let expstr = pprint_expr annotated_exp in
+	Printf.printf "%s\n\n" (pprint_predicate exp_pred);
+	Printf.printf "%s\n\n" expstr;
+	flush stdout;
+	Prover.pop()
   }
 ;
 

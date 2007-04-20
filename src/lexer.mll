@@ -99,6 +99,8 @@ rule token = parse
       { TOP }
   | "true"
       { TRUE }
+  | "type"
+      { TYPE }
   | "'" lowercase
       { let s = Lexing.lexeme lexbuf in
 	let name = String.sub s 1 (String.length s - 1) in

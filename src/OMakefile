@@ -62,7 +62,7 @@ OCAML_NATIVE_LINK_FLAGS += -lstdc++ -lgmp
 # Build an OCaml program
 #
 
-FILES = parser lexer expr type env flowgraph qualgraph misc predicate theoremProver microml
+FILES = parser lexer expr type env flowgraph qualgraph misc predicate theoremProver annotate microml
 PROGRAM = microml
 OCAML_LIBS += /usr/lib/ocaml/3.09.2/ocamlgraph/graph ./yices/lib/oyices
 #OCAML_CLIBS += ./yices/lib/liboyices

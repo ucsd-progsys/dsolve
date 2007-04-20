@@ -18,5 +18,10 @@ type predicate =
 
 type parameterized_pred = PredOver of string * string * predicate
 
+val predicate_subst: expression -> string -> predicate -> predicate
 
+val expr_predicate: expr -> predicate
+
+val value_var: expr -> expression
+val branch_active: expr -> predicate
 val pprint_predicate: predicate -> string

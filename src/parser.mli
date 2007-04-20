@@ -39,6 +39,7 @@ type token =
   | TIMES
   | TOP
   | TRUE
+  | TYPE
   | TVAR of (string)
   | VAR of (string)
 

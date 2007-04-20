@@ -121,7 +121,7 @@ let rec branch_predicate e =
       | If(e1, e2, e3, _) ->
 	  let child_bps = List.map branch_predicate [e1; e2; e3] in
 	  let v1 = value_var e1 in
-	  let (b1, b2, b3) = (branch_predicate e1, branch_predicate e2, branch_predicate e3) in
+	  let (b1, b2, b3) = (branch_active e1, branch_active e2, branch_active e3) in
 	    big_and ([implies(b1, be);
 		      implies(b2, And(equals(v1, Int 1), be));
 		      implies(b3, And(equals(v1, Int 0), be))]@child_bps)
@@ -141,29 +141,14 @@ let rec pprint_expression = function
   | Pvar(x, n) ->
       x ^ "_" ^ (string_of_int n)
   | Binop(e1, op, e2) ->
-      let opstr =
-	match op with
-	    Plus -> "+"
-	  | Minus -> "-"
-	  | Times -> "*"
-      in
-      let (str1, str2) = (pprint_expression e1, pprint_expression e2) in
-	Misc.join [str1; opstr; str2] " "
+      pprint_binop pprint_expression e1 op e2
 
 
 let rec pprint_predicate = function
     True ->
       "true"
   | Atom(e1, rel, e2) ->
-      let relstr =
-	match rel with
-	    Eq -> "="
-	  | Ne -> "!="
-	  | Lt -> "<"
-	  | Le -> "<="
-      in
-      let (str1, str2) = (pprint_expression e1, pprint_expression e2) in
-	Misc.join [str1; relstr; str2] " "
+      pprint_binrel pprint_expression e1 rel e2
   | Not(p) ->
       "(not " ^ pprint_predicate p ^ ")"
   | And(p, q) ->

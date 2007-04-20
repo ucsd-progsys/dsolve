@@ -61,4 +61,8 @@ exception BogusEvalError
 
 val eval : expr -> value
 val expr_get_id : expr -> expr_id
+
+val pprint_binop: ('a -> string) -> 'a -> binop -> 'a -> string
+val pprint_binrel: ('a -> string) -> 'a -> binrel -> 'a -> string
+val pprint_expr: expr -> string
 val pprint_value : value -> string

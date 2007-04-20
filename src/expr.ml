@@ -150,6 +150,56 @@ let expr_get_id = function
       id
 
 
+let pprint_binop frec e1 op e2 =
+  let opstr =
+    match op with
+	Plus -> "+"
+      | Minus -> "-"
+      | Times -> "*"
+  in
+  let (str1, str2) = (frec e1, frec e2) in
+    Misc.join [str1; opstr; str2] " "
+
+
+let pprint_binrel frec e1 rel e2 =
+  let relstr =
+    match rel with
+	Eq -> "="
+      | Ne -> "!="
+      | Lt -> "<"
+      | Le -> "<="
+  in
+  let (str1, str2) = (frec e1, frec e2) in
+    Misc.join [str1; relstr; str2] " "
+
+
+let rec pprint_expr = function
+    Num(n, _) ->
+      string_of_int n
+  | TrueExp _ ->
+      "true"
+  | FalseExp _ ->
+      "false"
+  | ExpVar(x, _) ->
+      x
+  | BinOp(op, e1, e2, _) ->
+      pprint_binop pprint_expr e1 op e2
+  | BinRel(rel, e1, e2, _) ->
+      pprint_binrel pprint_expr e1 rel e2
+  | If(e1, e2, e3, _) ->
+      "if " ^ pprint_expr e1 ^ " then " ^ pprint_expr e2 ^ " else " ^ pprint_expr e3
+  | Annot(Qual(q), e, _) ->
+      "{[" ^ q ^ "]} " ^ pprint_expr e
+  | Let(x, _, e1, e2, _) ->
+      "let " ^ x ^ " = " ^ pprint_expr e1 ^ " in " ^ pprint_expr e2
+  | Abs(x, _, e, _) ->
+      "fun " ^ x ^ " = " ^ pprint_expr e
+  | App(e1, e2, _) ->
+      pprint_expr e1 ^ " " ^ pprint_expr e2
+  | _ ->
+      ""
+
+
 let pprint_value = function
     NumVal n ->
       string_of_int n

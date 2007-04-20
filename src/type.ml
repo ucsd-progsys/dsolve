@@ -667,15 +667,16 @@ let infer_type e =
     sub t
 
 
+let rec pprint_qual = function
+    Top -> "top"
+  | Bottom -> "bottom"
+  | Qual q -> q
+  | QualVar k -> sprintf "'%s" k
+  | QualMeet(q1, q2) -> sprintf "%s & %s" (pprint_qual q1) (pprint_qual q2)
+  | QualJoin(q1, q2) -> sprintf "%s | %s" (pprint_qual q1) (pprint_qual q2)
+
+
 let rec pprint_type t =
-  let rec pprint_qual = function
-      Top -> "top"
-    | Bottom -> "bottom"
-    | Qual q -> q
-    | QualVar k -> sprintf "'%s" k
-    | QualMeet(q1, q2) -> sprintf "%s & %s" (pprint_qual q1) (pprint_qual q2)
-    | QualJoin(q1, q2) -> sprintf "%s | %s" (pprint_qual q1) (pprint_qual q2)
-  in
     match t with
 	Arrow(q, t1, t2) -> sprintf "%s (%s -> %s)" (pprint_qual q) (pprint_type t1) (pprint_type t2)
       | Int(q) -> sprintf "%s int" (pprint_qual q)
@@ -684,4 +685,3 @@ let rec pprint_type t =
       | Nil -> "[nil]"
       | ForallQual(k, q, t) -> sprintf "'%s <= %s. %s" k (pprint_qual q) (pprint_type t)
       | ForallTyp(a, t) -> sprintf "'%s. %s" a (pprint_type t)
-
