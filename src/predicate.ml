@@ -92,6 +92,9 @@ let rec value_predicate e =
 	  let child_vps = List.map value_predicate [e1; e2] in
 	  let (v1, v2) = (value_var e1, value_var e2) in
 	    big_and ([equals(Var x, v1); equals(ve, v2)]@child_vps)
+      | Abs(x, _, e, _) ->
+	  let child_vp = value_predicate e in
+	    child_vp
       | _ ->
 	  raise NoPredicate
 
@@ -125,6 +128,9 @@ let rec branch_predicate e =
 	    big_and ([implies(b1, be);
 		      implies(b2, And(equals(v1, Int 1), be));
 		      implies(b3, And(equals(v1, Int 0), be))]@child_bps)
+      | Abs(_, _, e, _) ->
+	  let child_bp = branch_predicate e in
+	    big_and [implies(branch_active e, be); child_bp]
       | _ ->
 	  raise NoPredicate
 

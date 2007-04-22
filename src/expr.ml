@@ -189,7 +189,7 @@ let rec pprint_expr = function
   | If(e1, e2, e3, _) ->
       "if " ^ pprint_expr e1 ^ " then " ^ pprint_expr e2 ^ " else " ^ pprint_expr e3
   | Annot(Qual(q), e, _) ->
-      "{[" ^ q ^ "]} " ^ pprint_expr e
+      "({[" ^ q ^ "]} " ^ pprint_expr e ^ ")"
   | Let(x, _, e1, e2, _) ->
       "let " ^ x ^ " = " ^ pprint_expr e1 ^ " in " ^ pprint_expr e2
   | Abs(x, _, e, _) ->

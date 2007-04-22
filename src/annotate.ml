@@ -22,6 +22,8 @@ let rec annotate exp p =
 	  Annot(q, annotate e p, id)
       | Let(x, t, e1, e2, id) ->
 	  Let(x, t, annotate e1 p, annotate e2 p, id)
+      | Abs(x, t, e, id) ->
+	  Abs(x, t, annotate e p, id)
       | _ ->
 	  (* pmr: obviously this needs to be filled in *)
 	  exp
