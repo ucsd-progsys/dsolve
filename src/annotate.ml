@@ -17,7 +17,7 @@ let rec annotate exp p =
       | BinRel(rel, e1, e2, id) ->
 	  BinRel(rel, annotate e1 p, annotate e2 p, id)
       | If(e1, e2, e3, id) ->
-	    If(annotate e1 p, annotate e2 p, annotate e3 p, id)
+	  If(annotate e1 p, annotate e2 p, annotate e3 p, id)
       | Annot(q, e, id) ->
 	  Annot(q, annotate e p, id)
       | Let(x, t, e1, e2, id) ->
@@ -33,14 +33,15 @@ let rec annotate exp p =
 	  let (ve, be) = (value_var exp, branch_active exp) in
 	  let test_predicate = predicate_subst ve x r in
 	    (* pmr: We should totally make a -debug flag *)
-(*	    Printf.printf "Examining %s\n" (pprint_expr exp);
+(*	    Printf.printf "\nExamining %s\n" (pprint_expr exp);
 	    Printf.printf "Testing: %s\n" (pprint_predicate test_predicate);
 	    Printf.printf "Branch predicate: %s\n" (pprint_predicate be); *)
-	    if Prover.valid (Or(Not be, test_predicate)) then
+	    if Prover.implies be test_predicate then
 	      begin
 (*		Printf.printf "True!\n"; *)
 		Annot(Qual(q), subexp_annotated, expr_get_id exp)
 	      end
 	    else
 	      subexp_annotated
+
 	

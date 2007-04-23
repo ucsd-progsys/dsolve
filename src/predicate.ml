@@ -154,10 +154,10 @@ let rec pprint_predicate = function
     True ->
       "true"
   | Atom(e1, rel, e2) ->
-      pprint_binrel pprint_expression e1 rel e2
+      "(" ^ pprint_binrel pprint_expression e1 rel e2 ^ ")"
   | Not(p) ->
       "(not " ^ pprint_predicate p ^ ")"
   | And(p, q) ->
-      "(" ^ pprint_predicate p ^ " and " ^ pprint_predicate q ^ ")"
+      "(and " ^ pprint_predicate p ^ " " ^ pprint_predicate q ^ ")"
   | Or(p, q) ->
-      "(" ^ pprint_predicate p ^ " or " ^ pprint_predicate q ^ ")"
+      "(or " ^ pprint_predicate p ^ " " ^ pprint_predicate q ^ ")"

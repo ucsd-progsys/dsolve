@@ -67,7 +67,7 @@ module YicesProver  =
         Misc.do_memo me.d
         (fun () -> 
           let rv = Y.yices_mk_var_decl me.c s me.t in
-          me.ds <- s::me.ds;rv) () s in
+            me.ds <- s::me.ds;rv) () s in
       Y.yices_mk_var_from_decl me.c decl
     
     let rec yicesExp me e =
@@ -124,8 +124,8 @@ module YicesProver  =
     let reset () =
       Misc.repeat_fn pop me.count
 
-    let unsat () = 
-      Y.yices_inconsistent me.c = 1
+    let unsat () =
+      Y.yices_check me.c = -1
 
     let valid p =
       let _ = push (Not p) in

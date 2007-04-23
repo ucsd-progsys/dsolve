@@ -168,7 +168,7 @@ query:
       Prover.push(exp_pred);
       let annotated_exp = List.fold_left annotate exp !active_preds in
       let expstr = pprint_expr annotated_exp in
-	Printf.printf "%s\n\n" (pprint_predicate exp_pred);
+(*	Printf.printf "%s\n\n" (pprint_predicate exp_pred); *)
 	Printf.printf "%s\n\n" expstr;
 	flush stdout;
 	Prover.pop()
