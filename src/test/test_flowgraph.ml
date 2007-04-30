@@ -2,8 +2,8 @@ open OUnit
 open Flowgraph
 
 
-let vertex =
-  FlowGraph.V.create
+let vertex s =
+  FlowGraph.V.create (ExprId(s))
 
 let edge v1 l v2 =
   FlowGraph.E.create v1 l v2

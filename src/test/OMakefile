@@ -62,7 +62,7 @@ BYTE_ENABLED = true
 # Build an OCaml program
 #
 
-FILES = ../flowgraph test_flowgraph suite
+FILES = ../env ../misc ../expr ../flowgraph test_flowgraph suite
 PROGRAM = suite
 OCAML_LIBS += /usr/lib/ocaml/3.09.2/ocamlgraph/graph /usr/lib/ocaml/3.09.2/oUnit/oUnit
 # OCAML_CLIBS +=

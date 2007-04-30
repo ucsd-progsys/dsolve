@@ -1,5 +1,6 @@
 %{
 
+open Toplevel
 open TheoremProver
 open Qualgraph
 open Flowgraph
@@ -21,7 +22,7 @@ let print_qualmap qm =
 	  Printf.printf "%s%s, " site_str q
   in
   let print_kv k v =
-    Printf.printf "%s: " (FlowGraph.V.label k);
+    Printf.printf "%s: " (string_of_vlabel (FlowGraph.V.label k));
     LabelledQualSet.iter print_labelled_qual v;
     Printf.printf "\n"
   in
@@ -32,7 +33,7 @@ let print_qualmap qm =
 let next_id = ref 0
 let get_next_expr_id () =
   incr next_id;
-  !next_id
+  string_of_int !next_id
 
 
 let active_preds = ref []
@@ -151,9 +152,9 @@ query:
   }
 | PRED QLITERAL LPAREN VAR RPAREN COLON pred EOL {
 
-    active_preds := PredOver($2, $4, $7)::(!active_preds);
+    active_preds := ($2, PredOver($4, $7))::(!active_preds);
     let pprint_param_pred = function
-	PredOver(name, x, p) ->
+	(name, PredOver(x, p)) ->
 	  name ^ "(" ^ x ^ "): " ^ pprint_predicate p
     in
     let activestrs = List.map pprint_param_pred !active_preds in
@@ -166,12 +167,10 @@ query:
     let exp = $2 in
     let exp_pred = expr_predicate exp in
       Prover.push(exp_pred);
-      let annotated_exp = List.fold_left annotate exp !active_preds in
-      let expstr = pprint_expr annotated_exp in
-(*	Printf.printf "%s\n\n" (pprint_predicate exp_pred); *)
-	Printf.printf "%s\n\n" expstr;
-	flush stdout;
-	Prover.pop()
+      let qmap = fixedpoint_annotate exp !active_preds in
+	Printf.printf "%s\n\n" (pprint_annotated_expr (expr_quals qmap) exp);
+	Prover.reset();
+	flush stdout
   }
 ;
 

@@ -57,7 +57,8 @@ module YicesProver  =
       t : Y.yices_type;
       d : (string,Y.yices_var_decl) Hashtbl.t;
       mutable ds : string list ;
-      mutable count : int
+      mutable count : int;
+      mutable i : int;
     }
 
     let barrier = "0" 
@@ -101,25 +102,35 @@ module YicesProver  =
       let c = Y.yices_mk_context () in
       let t = Y.yices_mk_type c "object" in
       let d = Hashtbl.create 37 in
-        { c = c; t = t; d = d; ds = []; count = 0 }
+        { c = c; t = t; d = d; ds = []; count = 0; i = 0 }
 
     let push p =
       me.count <- me.count + 1;
-      me.ds <- barrier :: me.ds;
-      Y.yices_push me.c;
-      Y.yices_assert me.c (yicesPred me p)
+      if Y.yices_inconsistent me.c = 1 then
+	me.i <- me.i + 1
+      else
+	begin
+	  me.ds <- barrier :: me.ds;
+	  Y.yices_push me.c;
+	  Y.yices_assert me.c (yicesPred me p)
+	end
       
     let rec vpop (cs,s) =
       match s with [] -> (cs,s)
       | h::t when h = barrier -> (cs,t)
       | h::t -> vpop (h::cs,t)
 
-    let pop () = 
-      let (cs,ds') = vpop ([],me.ds) in
-      me.ds <- ds';
+    let pop () =
       me.count <- me.count - 1;
-      List.iter (Hashtbl.remove me.d) cs;
-      Y.yices_pop me.c
+      if me.i > 0 then
+	me.i <- me.i - 1
+      else
+	begin
+	  let (cs,ds') = vpop ([],me.ds) in
+	    me.ds <- ds';
+	    List.iter (Hashtbl.remove me.d) cs;
+	    Y.yices_pop me.c
+	end
 
     let reset () =
       Misc.repeat_fn pop me.count

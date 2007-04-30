@@ -99,3 +99,27 @@ let rec join l s =
 	h
     | h::t ->
 	h ^ s ^ (join t s)
+
+let rec search_list test = function
+    h::t ->
+      begin
+	try
+	  test h
+	with Not_found ->
+	  search_list test t
+      end
+  | [] ->
+      raise Not_found
+
+let rec mapfilter f = function
+    h::t ->
+      let rest = mapfilter f t in
+	begin match f h with
+	    Some r ->
+	      r::rest
+	  | None ->
+	      rest
+	end
+  | [] ->
+      []
+	      

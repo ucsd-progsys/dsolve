@@ -1,4 +1,5 @@
 open Expr
+open Flowgraph
 
 
 type expression =
@@ -16,7 +17,8 @@ type predicate =
   | Or of predicate * predicate
 
 
-type parameterized_pred = PredOver of string * string * predicate
+type parameterized_pred = PredOver of (string * predicate)
+type named_pred = string * parameterized_pred
 
 
 let rec predexpr_subst v x = function
@@ -42,11 +44,45 @@ let rec predicate_subst v x = function
 
 
 let value_var e =
-  Var("v" ^ (string_of_int (expr_get_id e)))
+  Var("v" ^ (expr_get_id e))
 
 
 let branch_var e =
-  Var("b" ^ (string_of_int (expr_get_id e)))
+  Var("b" ^ (expr_get_id e))
+
+
+exception NoValueExpression
+
+(* pmr: is this the right place for this? *)
+let vertex_value_expression v =
+  let varname =
+    match FlowGraph.V.label v with
+	ExprId(id) ->
+	  "v" ^ id
+      | VarName(x) ->
+	  x
+      | NonExpr(_) ->
+	  raise NoValueExpression
+  in
+    Var(varname)
+
+
+let qualmap_to_predicates qm preds =
+  let make_qualifier_pred e q =
+    match List.assoc q preds with
+	PredOver(x, p) ->
+	  predicate_subst e x p
+  in
+  let definite_quals_to_predicates = function
+      (v, qs) ->
+	try
+	  let e = vertex_value_expression v in
+	    List.map (make_qualifier_pred e) qs
+	with NoValueExpression ->
+	  []
+  in
+  let definite_quals = qualmap_definite_quals qm in
+    List.flatten (List.map definite_quals_to_predicates definite_quals)
 
 
 let equals(p, q) =
@@ -95,6 +131,9 @@ let rec value_predicate e =
       | Abs(x, _, e, _) ->
 	  let child_vp = value_predicate e in
 	    child_vp
+      | App(e1, e2, _) ->
+	  let child_vps = List.map value_predicate [e1; e2] in
+	    big_and child_vps
       | _ ->
 	  raise NoPredicate
 
@@ -117,7 +156,8 @@ let rec branch_predicate e =
 	  True
       | BinOp(_, e1, e2, _)
       | BinRel(_, e1, e2, _)
-      | Let(_, _, e1, e2, _) ->
+      | Let(_, _, e1, e2, _)
+      | App(e1, e2, _) ->
 	  let child_bps = List.map branch_predicate [e1; e2] in
 	  let (b1, b2) = (branch_active e1, branch_active e2) in
 	    big_and ([implies(b1, be); implies(b2, be)]@child_bps)

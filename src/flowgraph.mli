@@ -1,19 +1,33 @@
 open Graph
+open Expr
 
 
 type qual = string
 
 type callsite = int
 
-type label =
+type elabel =
       Call of callsite
     | Return of callsite
 
-module Vertex : sig type t = string end
+
+type vlabel =
+    ExprId of expr_id
+  | VarName of string
+  | NonExpr of string
+
+module Vertex:
+sig
+  type t = vlabel
+  val compare : 'a -> 'a -> int
+  val hash : 'a -> int
+  val equal : 'a -> 'a -> bool
+  val default : 'a option
+end
 
 module Edge :
 sig
-  type t = label option
+  type t = elabel option
   val compare : 'a -> 'a -> int
   val hash : 'a -> int
   val equal : 'a -> 'a -> bool
@@ -23,10 +37,10 @@ end
 (* pmr: should these signatures be fixed? *)
 module FlowGraph :
   sig
-    type t = Graph.Persistent.Digraph.AbstractLabeled(Vertex)(Edge).t
+    type t = Graph.Persistent.Digraph.ConcreteLabeled(Vertex)(Edge).t
     module V :
       sig
-        type t = Graph.Persistent.Digraph.AbstractLabeled(Vertex)(Edge).V.t
+        type t = Graph.Persistent.Digraph.ConcreteLabeled(Vertex)(Edge).V.t
         val compare : t -> t -> int
         val hash : t -> int
         val equal : t -> t -> bool
@@ -37,7 +51,7 @@ module FlowGraph :
     type vertex = V.t
     module E :
       sig
-        type t = Graph.Persistent.Digraph.AbstractLabeled(Vertex)(Edge).E.t
+        type t = Graph.Persistent.Digraph.ConcreteLabeled(Vertex)(Edge).E.t
         val compare : t -> t -> int
         type vertex = V.t
         val src : t -> vertex
@@ -153,6 +167,7 @@ module QualMap :
     val iter : (key -> 'a -> unit) -> 'a t -> unit
     val map : ('a -> 'b) -> 'a t -> 'b t
     val mapi : (key -> 'a -> 'b) -> 'a t -> 'b t
+    val maplist: (key -> 'a -> 'b) -> 'a t -> 'b list
     val fold : (key -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b
     val compare : ('a -> 'a -> int) -> 'a t -> 'a t -> int
     val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
@@ -164,3 +179,11 @@ exception InvalidReturnEdge
 
 
 val propagate_vertex_qualifiers: FlowGraph.t -> LabelledQualSet.t QualMap.t -> FlowGraph.V.t list -> LabelledQualSet.t QualMap.t
+
+val string_of_vlabel: vlabel -> string
+
+val var_vertex: string -> FlowGraph.V.t
+val expr_vertex: expr -> FlowGraph.V.t
+(*val vertex_expr: FlowGraph.V.t -> expr -> expr*)
+val expr_quals: LabelledQualSet.t QualMap.t -> expr -> qual list
+val qualmap_definite_quals: LabelledQualSet.t QualMap.t -> (FlowGraph.V.t * qual list) list

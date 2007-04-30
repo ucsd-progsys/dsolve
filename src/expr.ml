@@ -33,7 +33,7 @@ type binrel =
   | Lt
   | Le 
 
-type expr_id = int
+type expr_id = string
 
 type expr =
     Num of int * expr_id
@@ -150,6 +150,35 @@ let expr_get_id = function
       id
 
 
+let expr_get_subexprs = function
+    Num(_, _)
+  | TrueExp(_)
+  | FalseExp(_)
+  | ExpVar(_) ->
+      []
+  | BinOp(_, e1, e2, _)
+  | BinRel(_, e1, e2, _) ->
+      [e1; e2]
+  | If(e1, e2, e3, _) ->
+      [e1; e2; e3]
+  | Annot(_, e, _) ->
+      [e]
+  | Let(_, _, e1, e2, _) ->
+      [e1; e2]
+  | Abs(_, _, e, _) ->
+      [e]
+  | App(e1, e2, _) ->
+      [e1; e2]
+  | TyAbs(_, e, _) ->
+      [e]
+  | TyApp(e, _, _) ->
+      [e]
+  | QualAbs(_, _, e, _) ->
+      [e]
+  | QualApp(e, _, _) ->
+      [e]
+
+
 let pprint_binop frec e1 op e2 =
   let opstr =
     match op with
@@ -173,31 +202,37 @@ let pprint_binrel frec e1 rel e2 =
     Misc.join [str1; relstr; str2] " "
 
 
-let rec pprint_expr = function
-    Num(n, _) ->
-      string_of_int n
-  | TrueExp _ ->
-      "true"
-  | FalseExp _ ->
-      "false"
-  | ExpVar(x, _) ->
-      x
-  | BinOp(op, e1, e2, _) ->
-      pprint_binop pprint_expr e1 op e2
-  | BinRel(rel, e1, e2, _) ->
-      pprint_binrel pprint_expr e1 rel e2
-  | If(e1, e2, e3, _) ->
-      "if " ^ pprint_expr e1 ^ " then " ^ pprint_expr e2 ^ " else " ^ pprint_expr e3
-  | Annot(Qual(q), e, _) ->
-      "({[" ^ q ^ "]} " ^ pprint_expr e ^ ")"
-  | Let(x, _, e1, e2, _) ->
-      "let " ^ x ^ " = " ^ pprint_expr e1 ^ " in " ^ pprint_expr e2
-  | Abs(x, _, e, _) ->
-      "fun " ^ x ^ " = " ^ pprint_expr e
-  | App(e1, e2, _) ->
-      pprint_expr e1 ^ " " ^ pprint_expr e2
-  | _ ->
-      ""
+let rec pprint_annotated_expr annotator exp =
+  let pprint_rec = pprint_annotated_expr annotator in
+  let pprint_expr_simple = function
+      Num(n, _) ->
+	string_of_int n
+    | TrueExp _ ->
+	"true"
+    | FalseExp _ ->
+	"false"
+    | ExpVar(x, _) ->
+	x
+    | BinOp(op, e1, e2, _) ->
+	pprint_binop pprint_rec e1 op e2
+    | BinRel(rel, e1, e2, _) ->
+	pprint_binrel pprint_rec e1 rel e2
+    | If(e1, e2, e3, _) ->
+	"if " ^ pprint_rec e1 ^ " then " ^ pprint_rec e2 ^ " else " ^ pprint_rec e3
+    | Annot(Qual(q), e, _) ->
+	"({[" ^ q ^ "]} " ^ pprint_rec e ^ ")"
+    | Let(x, _, e1, e2, _) ->
+	"let " ^ x ^ " = " ^ pprint_rec e1 ^ " in " ^ pprint_rec e2
+    | Abs(x, _, e, _) ->
+	"fun " ^ x ^ " = " ^ pprint_rec e
+    | App(e1, e2, _) ->
+	pprint_rec e1 ^ " " ^ pprint_rec e2
+    | _ ->
+	""
+  in
+  let quals = annotator exp in
+  let qualstrs = List.map (fun s -> "{[" ^ s ^ "]}") quals in
+    "(" ^ (Misc.join qualstrs " ") ^ " " ^ pprint_expr_simple exp ^ ")"
 
 
 let pprint_value = function

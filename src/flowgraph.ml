@@ -1,27 +1,43 @@
 open Graph
+open Expr
 
 
 type qual = string
 
 type callsite = int
 
-type label =
+type elabel =
       Call of callsite
     | Return of callsite
 
-module Vertex = struct
-  type t = string
-end
+type vlabel =
+    ExprId of expr_id
+  | VarName of string
+  | NonExpr of string
 
-module Edge = struct
-  type t = label option
+let string_of_vlabel = function
+    ExprId s
+  | VarName s
+  | NonExpr s ->
+      s
+
+module Vertex = struct
+  type t = vlabel
   let compare = compare
   let hash = Hashtbl.hash
   let equal = (=)
   let default = None
 end
 
-module SimpleFlowGraph = Persistent.Digraph.AbstractLabeled(Vertex)(Edge)
+module Edge = struct
+  type t = elabel option
+  let compare = compare
+  let hash = Hashtbl.hash
+  let equal = (=)
+  let default = None
+end
+
+module SimpleFlowGraph = Persistent.Digraph.ConcreteLabeled(Vertex)(Edge)
 
 module FlowGraph = struct
   include SimpleFlowGraph
@@ -39,10 +55,10 @@ module FlowGraph = struct
     []
 
   let vertex_name v =
-    V.label v
+    string_of_vlabel (V.label v)
 
   let vertex_attributes v =
-    [ `Label (V.label v) ]
+    [ `Label (vertex_name v) ]
 
   let edge_attributes e =
     match E.label e with
@@ -66,11 +82,24 @@ module LabelledQual = struct
   let compare = compare
 end
 
+
+let qual_is_labelled = function
+    QualFrom(_, Some(_)) ->
+      true
+  | _ ->
+      false
+
+
 module LabelledQualSet = Set.Make(LabelledQual)
 module SimpleQualMap = Map.Make(FlowGraph.V)
 
 module QualMap = struct
   include SimpleQualMap
+
+
+  let maplist f qm =
+    fold (fun k v r -> (f k v)::r) qm []
+
   
   let union_disjoint m1 m2 =
     let folder = (fun k d r -> (k, d)::r) in
@@ -208,3 +237,42 @@ let propagate_vertex_qualifiers fg qmap w =
        to *)
   let ws = List.flatten(List.map (FlowGraph.succ fg) w) in
     propagate_vertex_qualifiers_rec qmap ws
+
+
+let var_vertex varname =
+  FlowGraph.V.create (VarName varname)
+
+
+let expr_vertex = function
+    ExpVar(x, _) ->
+      var_vertex x
+  | e ->
+      FlowGraph.V.create (ExprId(expr_get_id e))
+
+
+let get_definite_qual = function
+    QualFrom(q, None) ->
+      Some q
+  | _ ->
+      None
+
+
+let qual_to_str_list =
+  Misc.mapfilter get_definite_qual
+
+
+let expr_quals qmap exp =
+  let quals =
+    try
+      QualMap.find (expr_vertex exp) qmap
+    with Not_found ->
+      LabelledQualSet.empty
+  in
+    qual_to_str_list (LabelledQualSet.elements quals)
+
+
+let qualmap_definite_quals qm =
+  let qualset_definite_quals qs =
+    Misc.mapfilter get_definite_qual (LabelledQualSet.elements qs)
+  in
+    QualMap.maplist (fun v qs -> (v, qualset_definite_quals qs)) qm
