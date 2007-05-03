@@ -10,6 +10,7 @@ type token =
   | EOL
   | EQUAL
   | FALSE
+  | FIX
   | FUN
   | IF
   | IN

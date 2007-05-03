@@ -53,6 +53,7 @@ let active_preds = ref []
 %token EOL
 %token EQUAL
 %token FALSE
+%token FIX
 %token FUN
 %token IF
 %token IN
@@ -143,7 +144,7 @@ query:
 
     let e = $1 in
       try
-	let (v, t) = (eval e, infer_type e) in
+	let (v, t) = (eval e, Int(Top)) in
 	  Printf.printf "> %s: %s\n\n" (pprint_value v) (pprint_type t);
 	  flush stdout
       with _ ->
@@ -234,6 +235,7 @@ exp:
 | LET VAR EQUAL exp IN exp { Let($2, None, $4, $6, get_next_expr_id()) }
 | FUN VAR COLON mtype EQUAL exp { Abs($2, Some $4, $6, get_next_expr_id()) }
 | FUN VAR EQUAL exp { Abs($2, None, $4, get_next_expr_id()) }
+| FIX VAR DOT exp { Fix($2, $4, get_next_expr_id()) }
 | TVAR DOT exp { TyAbs($1, $3, get_next_expr_id()) }
 | QVAR LESSEQ qualliteral DOT exp { QualAbs($1, $3, $5, get_next_expr_id()) }
 | LCURLY LSQUARE qual RSQUARE RCURLY exp { Annot($3, $6, get_next_expr_id()) }

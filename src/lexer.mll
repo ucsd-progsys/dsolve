@@ -39,6 +39,8 @@ rule token = parse
       { EQUAL }
   | "false"
       { FALSE }
+  | "fix"
+      { FIX }
   | "fun"
       { FUN }
   | "if"

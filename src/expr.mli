@@ -44,6 +44,7 @@ type expr =
   | Let of string * typ option * expr * expr * expr_id
   | Abs of string * typ option * expr * expr_id
   | App of expr * expr * expr_id
+  | Fix of string * expr * expr_id
   | TyAbs of string * expr * expr_id
   | TyApp of expr * typ * expr_id
   | QualAbs of string * qual * expr * expr_id
@@ -53,7 +54,7 @@ type value =
     NumVal of int
   | TrueVal
   | FalseVal
-  | Closure of string * expr * value env
+  | Closure of string * expr * string option * value env
 
 
 exception BogusEvalError

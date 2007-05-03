@@ -313,6 +313,9 @@ let check_type e texp =
 	      | t ->
 		  raise (TypeMismatch(e, t))
 	    end
+	| _ ->
+	    (* pmr: want to handle fix here *)
+	    raise Not_found
   in
     try
       let t = type_exp e texp [] in

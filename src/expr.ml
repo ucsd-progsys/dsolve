@@ -47,6 +47,7 @@ type expr =
   | Let of string * typ option * expr * expr * expr_id
   | Abs of string * typ option * expr * expr_id
   | App of expr * expr * expr_id
+  | Fix of string * expr * expr_id
   | TyAbs of string * expr * expr_id
   | TyApp of expr * typ * expr_id
   | QualAbs of string * qual * expr * expr_id
@@ -58,7 +59,7 @@ type value =
     NumVal of int
   | TrueVal
   | FalseVal
-  | Closure of string * expr * value env
+  | Closure of string * expr * string option * value env
 
 
 (* Expression evaluator *)
@@ -116,16 +117,30 @@ let eval exp =
 	  let xv = eval_rec e env in
 	  let newenv = env_add x xv env in
 	    eval_rec e' newenv
-      | Abs(x, _, e, _) -> Closure(x, e, env)
+      | Abs(x, _, e, _) -> Closure(x, e, None, env)
       | App(e1, e2, _) ->
 	  let e2' = eval_rec e2 env in
 	    begin match eval_rec e1 env with
-		Closure(x, e, cenv) ->
-		  let newenv = env_add x e2' cenv in
+		Closure(x, e, fix, cenv) as c ->
+		  let fixenv = match fix with
+		      None ->
+			cenv
+		    | Some f ->
+			env_add f c cenv
+		  in
+		  let newenv = env_add x e2' fixenv in
 		    eval_rec e newenv
 	      | _ -> raise BogusEvalError
 	    end
 	      (* XXX: needs type/qual abs and apps *)
+      | Fix(f, e, _) ->
+	  let e' = eval_rec e env in
+	    begin match e' with
+		Closure(x, e, None, env) ->
+		  Closure(x, e, Some f, env)
+	      | _ ->
+		  e'
+	    end
       | _ -> raise BogusEvalError
   in
     eval_rec exp []
@@ -143,6 +158,7 @@ let expr_get_id = function
   | Let(_, _, _, _, id)
   | Abs(_, _, _, id)
   | App(_, _, id)
+  | Fix(_, _, id)
   | TyAbs(_, _, id)
   | TyApp(_, _, id)
   | QualAbs(_, _, _, id)
@@ -169,6 +185,8 @@ let expr_get_subexprs = function
       [e]
   | App(e1, e2, _) ->
       [e1; e2]
+  | Fix(_, e, _) ->
+      [e]
   | TyAbs(_, e, _) ->
       [e]
   | TyApp(e, _, _) ->
@@ -242,5 +260,5 @@ let pprint_value = function
       "true"
   | FalseVal ->
       "false"
-  | Closure(name, _, _) ->
+  | Closure(name, _, _, _) ->
       "<fun (" ^ name ^ ")>"
