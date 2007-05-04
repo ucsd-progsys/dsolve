@@ -18,18 +18,12 @@ let rec make_graph = function
       FlowGraph.add_edge_e (make_graph ([], es)) e
 
 
-let rec qualmap = function
-    [] ->
-      QualMap.empty
-  | (v, qset)::m ->
-      QualMap.add v qset (qualmap m)
+let qualmap =
+  List.fold_left (fun qm (v, qs) -> QualMap.add v qs qm) QualMap.empty 
 
 
-let rec qualset = function
-    [] ->
-      LabelledQualSet.empty
-  | q::qs ->
-      LabelledQualSet.add q (qualset qs)
+let qualset =
+  fun l -> List.fold_right LabelledQualSet.add l LabelledQualSet.empty
 
 
 let test_regular_flow _ =
