@@ -115,14 +115,28 @@ let var_const_vertex x =
 
 exception ExprNotHandled
 
+(* pmr: this whole thing could probably make good use of subexp_constraints *)
 let rec expr_constraints e =
+  let subexp_constraints exps =
+    let (vs, cs, ms) = List.fold_right (fun e (vl, cl, ml) ->
+					  let (v, c, m) = expr_constraints e in
+					    (v::vl, c@cl, m::ml)) exps ([], [], []) in
+    let mu = List.fold_right QualMap.union_disjoint ms QualMap.empty in
+      (vs, cs, mu)
+  in
   let ve = ConstVertex(expr_vertex e) in
   match e with
       Num(_, _)
     | TrueExp(_)
-    | FalseExp(_)
-    | ExpVar(_, _) ->
+    | FalseExp(_) ->
 	(ve, [], QualMap.empty)
+    | ExpVar(x, _) ->
+	let vx = ConstVertex(var_vertex x) in
+	  (ve, [FlowsTo(vx, Positive, None, ve)], QualMap.empty)
+    | TyCon(_, exps, _) ->
+	let (vs, cs, ms) = subexp_constraints exps in
+	let branch_flow = List.map (fun v -> FlowsTo(v, Positive, None, ve)) vs in
+	  (ve, branch_flow@cs, ms)
     | BinRel(_, e1, e2, _)
     | BinOp(_, e1, e2, _) ->
 	let (_, c1, m1) = expr_constraints e1 in
@@ -138,6 +152,14 @@ let rec expr_constraints e =
 	   QualMap.union_disjoint (QualMap.union_disjoint m1 m2) mb)
       (* pmr: this is obviously not very general, but qual needs to change *)
       (* pmr: this case is basically deprecated *)
+(*    | Match(e, pexps, _) ->
+	let (vm, cm, mm) = expr_constraints e in
+	let (pats, exps) = List.split pexps in
+	let pattern_vars = Misc.flap pattern_get_vars pats in
+	let (vs, cs, ms) = subexp_constraints exps in
+	let varflow = List.map (fun v -> FlowsTo(var_vertex vm, Positive, None, var_vertex v)) pattern_vars in
+	let branchflow = List.map (fun v -> FlowsTo(var_vertex v, Positive, None, var_vertex ve)) vs in
+	  (ve, varflow@cs, ms) *)
     | Annot(Qual(q), e, _) ->
 	let (t, c, m) = expr_constraints e in
 	  (* pmr: note that if this vertex gets split into an arrow later we
@@ -156,9 +178,8 @@ let rec expr_constraints e =
 	let (v2, c2, m2) = expr_constraints e2 in
 	let (v_in, v_out) = (fresh_const_vertex "in", fresh_const_vertex "out") in
 	let funcc = FlowsTo(v1, Positive, None, ConstArrow(v_in, v_out)) in
-	let inst_site = Some(fresh_inst_site ()) in
-	let argc = FlowsTo(v2, Negative, inst_site, v_in) in
-	let retc = FlowsTo(v_out, Positive, inst_site, ve) in
+	let argc = FlowsTo(v2, Negative, None, v_in) in
+	let retc = FlowsTo(v_out, Positive, None, ve) in
 	  (ve, retc::argc::funcc::(c1@c2), QualMap.union_disjoint m1 m2)
     | Let(x, _, ex, e', _) ->
 	let (vx, cx, mx) = expr_constraints ex in

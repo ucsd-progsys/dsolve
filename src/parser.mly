@@ -48,6 +48,7 @@ let active_preds = ref []
 %token BOOL
 %token BOTTOM
 %token COLON
+%token COMMA
 %token DOT
 %token ELSE
 %token EOL
@@ -66,6 +67,7 @@ let active_preds = ref []
 %token LET
 %token LPAREN
 %token LSQUARE
+%token MATCH
 %token MEET
 %token MINUS
 %token NEQUAL
@@ -79,6 +81,7 @@ let active_preds = ref []
 %token RCURLY
 %token RPAREN
 %token RSQUARE
+%token <string> TAG 
 %token THEN
 %token TIMES
 %token TOP
@@ -86,6 +89,7 @@ let active_preds = ref []
 %token TYPE
 %token <string> TVAR
 %token <string> VAR
+%token WITH
 
 %right ARROW
 %left  MEET JOIN
@@ -135,7 +139,7 @@ query:
 	Printf.printf "\n<< EOG\n\n";
 	Printf.printf "Initial qualmap:\n";
 	print_qualmap qm;
-	let qm' = propagate_vertex_qualifiers graph qm (FlowGraph.vertices graph) in
+	let qm' = propagate_vertex_qualifiers graph qm in
 	  Printf.printf "Final qualmap:\n";
 	  print_qualmap qm';
 	  flush stdout
@@ -223,6 +227,7 @@ exp:
 | FALSE { FalseExp(get_next_expr_id()) }
 | VAR { ExpVar($1, get_next_expr_id()) }
 | INTLITERAL { Num($1, get_next_expr_id()) }
+| TAG LPAREN exp_list RPAREN { TyCon($1, $3, get_next_expr_id()) }
 | exp PLUS exp { BinOp(Plus, $1, $3, get_next_expr_id()) }
 | exp MINUS exp { BinOp(Minus, $1, $3, get_next_expr_id()) }
 | exp TIMES exp { BinOp(Times, $1, $3, get_next_expr_id()) }
@@ -231,6 +236,7 @@ exp:
 | exp LESS exp { BinRel(Lt, $1, $3, get_next_expr_id()) }
 | exp LESSEQ exp { BinRel(Le, $1, $3, get_next_expr_id()) }
 | IF exp THEN exp ELSE exp { If($2, $4, $6, get_next_expr_id()) }
+| MATCH exp WITH pattern_expr_list { Match($2, $4, get_next_expr_id()) }
 | LET VAR COLON tschema EQUAL exp IN exp { Let($2, Some $4, $6, $8, get_next_expr_id()) }
 | LET VAR EQUAL exp IN exp { Let($2, None, $4, $6, get_next_expr_id()) }
 | FUN VAR COLON mtype EQUAL exp { Abs($2, Some $4, $6, get_next_expr_id()) }
@@ -243,6 +249,37 @@ exp:
 | exp LCURLY qualliteral RCURLY { QualApp($1, $3, get_next_expr_id()) }
 | exp exp { App($1, $2, get_next_expr_id()) }
 ;
+
+
+exp_list:
+  exp COMMA exp_list { $1::$3 }
+| exp { [$1] }
+;
+
+
+pattern_expr_list:
+  pattern_expr JOIN pattern_expr_list { $1::$3 }
+| pattern_expr { [$1] }
+;
+
+
+pattern_expr:
+  pattern ARROW exp { ($1, $3) }
+;
+
+
+pattern:
+  TAG { PatternTyCon($1, []) }
+| TAG LPAREN pattern_args RPAREN { PatternTyCon($1, $3) }
+| VAR { PatternVar($1) }
+;
+
+
+pattern_args:
+  pattern COMMA pattern_args { $1::$3 }
+| pattern { [$1] }
+;
+
 
 predexp:
   INTLITERAL { Predicate.Int($1) }

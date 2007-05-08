@@ -5,6 +5,7 @@ type token =
   | BOOL
   | BOTTOM
   | COLON
+  | COMMA
   | DOT
   | ELSE
   | EOL
@@ -23,6 +24,7 @@ type token =
   | LET
   | LPAREN
   | LSQUARE
+  | MATCH
   | MEET
   | MINUS
   | NEQUAL
@@ -36,6 +38,7 @@ type token =
   | RCURLY
   | RPAREN
   | RSQUARE
+  | TAG of (string)
   | THEN
   | TIMES
   | TOP
@@ -43,6 +46,7 @@ type token =
   | TYPE
   | TVAR of (string)
   | VAR of (string)
+  | WITH
 
 val query :
   (Lexing.lexbuf  -> token) -> Lexing.lexbuf -> unit

@@ -19,6 +19,11 @@ type typ =
   | ForallTyp of string * typ
 
 
+type pattern =
+    PatternTyCon of string * pattern list
+  | PatternVar of string
+
+
 type binop =
     Plus
   | Minus
@@ -37,9 +42,11 @@ type expr =
   | TrueExp of expr_id
   | FalseExp of expr_id
   | ExpVar of string * expr_id
+  | TyCon of string * expr list * expr_id
   | BinOp of binop * expr * expr * expr_id
   | BinRel of binrel * expr * expr * expr_id
   | If of expr * expr * expr * expr_id
+  | Match of expr * (pattern * expr) list * expr_id
   | Annot of qual * expr * expr_id
   | Let of string * typ option * expr * expr * expr_id
   | Abs of string * typ option * expr * expr_id
@@ -55,6 +62,7 @@ type value =
   | TrueVal
   | FalseVal
   | Closure of string * expr * string option * value env
+  | Abstract of string * value list
 
 
 exception BogusEvalError
@@ -64,6 +72,7 @@ val eval : expr -> value
 val expr_get_id : expr -> expr_id
 val expr_get_subexprs: expr -> expr list
 
+val pattern_get_vars: pattern -> string list
 
 val pprint_binop: ('a -> string) -> 'a -> binop -> 'a -> string
 val pprint_binrel: ('a -> string) -> 'a -> binrel -> 'a -> string

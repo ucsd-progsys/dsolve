@@ -51,7 +51,7 @@ let branch_var e =
   Var("b" ^ (expr_get_id e))
 
 
-exception NoValueExpression
+exception NoExpression
 
 (* pmr: is this the right place for this? *)
 let vertex_value_expression v =
@@ -62,23 +62,34 @@ let vertex_value_expression v =
       | VarName(x) ->
 	  x
       | NonExpr(_) ->
-	  raise NoValueExpression
+	  raise NoExpression
   in
     Var(varname)
 
 
+let vertex_branch_expression v =
+  match FlowGraph.V.label v with
+      ExprId(id) ->
+	Var("b" ^ id)
+    | VarName(x) ->
+	Int(1)
+    | NonExpr(_) ->
+	raise NoExpression
+
+
 let qualmap_to_predicates qm preds =
-  let make_qualifier_pred e q =
+  let make_qualifier_pred be ve q =
     match List.assoc q preds with
 	PredOver(x, p) ->
-	  predicate_subst e x p
+	  Or(Not(Atom(be, Eq, Int(1))), predicate_subst ve x p)
   in
   let definite_quals_to_predicates = function
       (v, qs) ->
 	try
-	  let e = vertex_value_expression v in
-	    List.map (make_qualifier_pred e) qs
-	with NoValueExpression ->
+	  let be = vertex_branch_expression v in
+	  let ve = vertex_value_expression v in
+	    List.map (make_qualifier_pred be ve) qs
+	with NoExpression ->
 	  []
   in
   let definite_quals = qualmap_definite_quals qm in
@@ -92,6 +103,11 @@ let equals(p, q) =
 let big_and cs =
   let combine p q = And(p, q) in
     List.fold_right combine cs True
+
+
+let big_or cs =
+  let combine p q = And(p, q) in
+    List.fold_right combine cs (Not(True))
 
 
 exception NoPredicate
@@ -108,6 +124,8 @@ let rec value_predicate e =
 	  equals(ve, Int 0)
       | ExpVar(x, _) ->
 	  equals(ve, Var x)
+      | TyCon(_, exps, _) ->
+	  big_and (List.map value_predicate exps)
       | BinOp(op, e1, e2, _) ->
 	  let child_vps = List.map value_predicate [e1; e2] in
 	  let (v1, v2) = (value_var e1, value_var e2) in
@@ -129,11 +147,9 @@ let rec value_predicate e =
 	  let (v1, v2) = (value_var e1, value_var e2) in
 	    big_and ([equals(Var x, v1); equals(ve, v2)]@child_vps)
       | Abs(x, _, e, _) ->
-	  let child_vp = value_predicate e in
-	    child_vp
+	  value_predicate e
       | App(e1, e2, _) ->
-	  let child_vps = List.map value_predicate [e1; e2] in
-	    big_and child_vps
+	  big_and (List.map value_predicate [e1; e2])
       | _ ->
 	  raise NoPredicate
 
@@ -154,23 +170,28 @@ let rec branch_predicate e =
       | FalseExp(_)
       | ExpVar(_, _) ->
 	  True
+      | TyCon(_, exps, _) ->
+	  let child_bps = List.map branch_predicate exps in
+	  let bs = List.map branch_active exps in
+	    big_and ([implies(big_or bs, be); implies(be, big_and bs)]@child_bps)	    
       | BinOp(_, e1, e2, _)
       | BinRel(_, e1, e2, _)
       | Let(_, _, e1, e2, _)
       | App(e1, e2, _) ->
 	  let child_bps = List.map branch_predicate [e1; e2] in
 	  let (b1, b2) = (branch_active e1, branch_active e2) in
-	    big_and ([implies(b1, be); implies(b2, be)]@child_bps)
+	    big_and ([implies(Or(b1, b2), be); implies(be, And(b1, b2))]@child_bps)
       | If(e1, e2, e3, _) ->
 	  let child_bps = List.map branch_predicate [e1; e2; e3] in
 	  let v1 = value_var e1 in
 	  let (b1, b2, b3) = (branch_active e1, branch_active e2, branch_active e3) in
 	    big_and ([implies(b1, be);
 		      implies(b2, And(equals(v1, Int 1), be));
-		      implies(b3, And(equals(v1, Int 0), be))]@child_bps)
+		      implies(b3, And(equals(v1, Int 0), be));
+		      implies(be, b1);
+		      implies(be, Or(b2, b3))]@child_bps)
       | Abs(_, _, e, _) ->
-	  let child_bp = branch_predicate e in
-	    big_and [implies(branch_active e, be); child_bp]
+	  big_and [implies(branch_active e, be); branch_predicate e]
       | _ ->
 	  raise NoPredicate
 

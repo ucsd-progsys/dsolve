@@ -32,7 +32,7 @@ let test_regular_flow _ =
   let graph = make_graph ([v1; v2], [e]) in
   let v1_qset = LabelledQualSet.singleton (QualFrom("Q", None)) in
   let qmap = qualmap [(v1, v1_qset)] in
-  let result = propagate_vertex_qualifiers graph qmap [v1] in
+  let result = propagate_vertex_qualifiers graph qmap in
     assert_bool "Did not propagate qualifier across simple edge"
       (LabelledQualSet.equal v1_qset (QualMap.find v2 result))
 
@@ -43,18 +43,29 @@ let test_cycle_termination _ =
   let graph = make_graph ([v1; v2], [forward_edge; backward_edge]) in
   let v1_qset = LabelledQualSet.singleton (QualFrom("Q", None)) in
   let qmap = qualmap [(v1, v1_qset)] in
-  let result = propagate_vertex_qualifiers graph qmap [v1] in
+  let result = propagate_vertex_qualifiers graph qmap in
     assert_bool "Terminated without propagating qualifier in cycle"
       (LabelledQualSet.equal v1_qset (QualMap.find v2 result))
 
 
+let test_loop_propagation _ =
+  let (vin, vhead, vloop) = (vertex "in", vertex "head", vertex "loop") in
+  let (in_edge, prop_edge, loop_edge) = (edge vin None vhead, edge vhead None vloop, edge vloop None vhead) in
+  let graph = make_graph ([vin; vhead; vloop], [in_edge; prop_edge; loop_edge]) in
+  let vin_qset = LabelledQualSet.singleton (QualFrom("Q", None)) in
+  let qmap = qualmap [(vin, vin_qset)] in
+  let result = propagate_vertex_qualifiers graph qmap in
+    assert_bool "Did not propagate qualifier through loop"
+      (LabelledQualSet.equal vin_qset (QualMap.find vhead result))
+
+(*
 let test_single_call _ =
   let (c, f, r) = (vertex "c", vertex "f", vertex "r") in
   let (ce, re) = (edge c (Some(Call 1)) f, edge f (Some(Return 1)) r) in
   let graph = make_graph ([c; f; r], [ce; re]) in
   let c_qset = LabelledQualSet.singleton (QualFrom("C", None)) in
   let qmap = qualmap [(c, c_qset)] in
-  let result = propagate_vertex_qualifiers graph qmap [c] in
+  let result = propagate_vertex_qualifiers graph qmap in
     assert_bool "Qualifier did not make it across call"
       (LabelledQualSet.equal c_qset (QualMap.find r result))
 
@@ -68,7 +79,7 @@ let test_serial_call _ =
   let graph = make_graph ([c1; c2; f; r2; r1], [ce1; ce2; re2; re1]) in
   let c1_qset = LabelledQualSet.singleton (QualFrom("C1", None)) in
   let qmap = qualmap [(c1, c1_qset)] in
-  let result = propagate_vertex_qualifiers graph qmap [c1] in
+  let result = propagate_vertex_qualifiers graph qmap in
     assert_bool "Qualifier did not make it across serial calls"
       (LabelledQualSet.equal c1_qset (QualMap.find r1 result))
 
@@ -85,7 +96,7 @@ let test_multiple_call _ =
   let c1_qset = LabelledQualSet.singleton (QualFrom("C1", None)) in
   let c2_qset = LabelledQualSet.singleton (QualFrom("C2", None)) in
   let qmap = qualmap [(c1, c1_qset); (c2, c2_qset)] in
-  let result = propagate_vertex_qualifiers graph qmap [c1; c2] in
+  let result = propagate_vertex_qualifiers graph qmap in
     assert_bool "Return edge for crossed calls have incorrect qualifiers"
       ((LabelledQualSet.equal c1_qset (QualMap.find r1 result))
        && (LabelledQualSet.equal c2_qset (QualMap.find r2 result)))
@@ -97,10 +108,10 @@ let test_qualifying_function _ =
   let graph = make_graph ([f; c; r], [ce; re]) in
   let f_qset = LabelledQualSet.singleton (QualFrom("F", None)) in
   let qmap = qualmap [(f, f_qset)] in
-  let result = propagate_vertex_qualifiers graph qmap [f] in
+  let result = propagate_vertex_qualifiers graph qmap in
     assert_bool "Qualifier incorrect propagated out of function"
       (LabelledQualSet.equal f_qset (QualMap.find r result))
-
+*)
 
 let test_qualifier_intersection _ =
   let (l, r, c) = (vertex "l", vertex "r", vertex "c") in
@@ -109,7 +120,7 @@ let test_qualifier_intersection _ =
   let l_qset = qualset [QualFrom("Q1", None); QualFrom("Q2", None)] in
   let r_qset = qualset [QualFrom("Q1", None); QualFrom("Q3", None)] in
   let qmap = qualmap [(l, l_qset); (r, r_qset)] in
-  let result = propagate_vertex_qualifiers graph qmap [l; r] in
+  let result = propagate_vertex_qualifiers graph qmap in
     assert_bool "Child qualifier not intersection of parents"
       (LabelledQualSet.equal (LabelledQualSet.inter l_qset r_qset)
 	 (QualMap.find c result))
@@ -118,8 +129,5 @@ let test_qualifier_intersection _ =
 let suite = "Test Flowgraph" >:::
   ["test_regular_flow" >:: test_regular_flow;
    "test_cycle_termination" >:: test_cycle_termination;
-   "test_single_call" >:: test_single_call;
-   "test_serial_call" >:: test_serial_call;
-   "test_multiple_call" >:: test_multiple_call;
-   "test_qualifying_function" >:: test_qualifying_function;
+   "test_loop_propagation" >:: test_loop_propagation;
    "test_qualifier_intersection" >:: test_qualifier_intersection]

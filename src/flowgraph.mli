@@ -174,16 +174,15 @@ module QualMap :
     val union_disjoint : 'a t -> 'a t -> 'a t
   end
 
-
 exception InvalidReturnEdge
 
 
-val propagate_vertex_qualifiers: FlowGraph.t -> LabelledQualSet.t QualMap.t -> FlowGraph.V.t list -> LabelledQualSet.t QualMap.t
+val propagate_vertex_qualifiers: FlowGraph.t -> LabelledQualSet.t QualMap.t -> LabelledQualSet.t QualMap.t
 
 val string_of_vlabel: vlabel -> string
 
 val var_vertex: string -> FlowGraph.V.t
 val expr_vertex: expr -> FlowGraph.V.t
-(*val vertex_expr: FlowGraph.V.t -> expr -> expr*)
+val vertex_quals: LabelledQualSet.t QualMap.t -> FlowGraph.V.t -> LabelledQualSet.t
 val expr_quals: LabelledQualSet.t QualMap.t -> expr -> qual list
 val qualmap_definite_quals: LabelledQualSet.t QualMap.t -> (FlowGraph.V.t * qual list) list

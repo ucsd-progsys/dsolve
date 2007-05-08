@@ -17,6 +17,8 @@ let digit = ['0'-'9']
 rule token = parse
   | blank +
       { token lexbuf }
+  | newline +
+      { token lexbuf }
   | "and"
       { AND }
   | "->"
@@ -29,11 +31,13 @@ rule token = parse
       { BOTTOM }
   | ":"
       { COLON }
+  | ","
+      { COMMA }
   | "."
       { DOT }
   | "else"
       { ELSE }
-  | newline
+  | ";;"
       { EOL }
   | "="
       { EQUAL }
@@ -65,6 +69,8 @@ rule token = parse
       { LPAREN }
   | "["
       { LSQUARE }
+  | "match"
+      { MATCH }
   | "&"
       { MEET }
   | "-"
@@ -93,6 +99,8 @@ rule token = parse
       { RPAREN }
   | "]"
       { RSQUARE }
+  | uppercase alpha +
+      { TAG (Lexing.lexeme lexbuf) }
   | "then"
       { THEN }
   | "*"
@@ -107,6 +115,8 @@ rule token = parse
       { let s = Lexing.lexeme lexbuf in
 	let name = String.sub s 1 (String.length s - 1) in
 	  TVAR name }
+  | "with"
+      { WITH }
   | lowercase + as name
       { VAR name }
   | eof

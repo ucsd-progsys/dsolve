@@ -29,6 +29,8 @@ module Vertex = struct
   let default = None
 end
 
+module VertexSet = Set.Make(Vertex)
+
 module Edge = struct
   type t = elabel option
   let compare = compare
@@ -174,7 +176,7 @@ let unlabel_quals qmap qualset return_edge =
   in
     unlabel_quals_rec (LabelledQualSet.elements qualset)
 
-	
+(*	
 let collect_qualifiers qmap inedges =
   (* Split edges into three classes: call site, return site, regular edges *)
   let (labelled, unlabelled) = List.partition edge_labelled inedges in
@@ -212,42 +214,48 @@ let collect_qualifiers qmap inedges =
     LabelledQualSet.union
       (LabelledQualSet.union unlabelled_quals call_quals)
       return_quals
+*)
 
 
-let propagate_vertex_qualifiers fg qmap w =
-  let rec propagate_vertex_qualifiers_rec qmap = function
+let collect_qualifiers qmap inedges combiner =
+  try
+    List.fold_left
+      (fun q e ->
+	 combiner q (get_edge_source_quals qmap e))
+      (get_edge_source_quals qmap (List.hd inedges))
+      inedges
+  with _ ->
+    LabelledQualSet.empty
+
+
+let propagate_vertex_qualifiers fg iqmap =
+  let rec propagate_vertex_qualifiers_rec qmap qual_combiner = function
       v::w ->
+	let new_quals = collect_qualifiers qmap (FlowGraph.pred_e fg v) qual_combiner in
+	let orig_quals = vertex_quals iqmap v in
+	let qmap' = QualMap.add v (LabelledQualSet.union new_quals orig_quals) qmap in
 	let old_quals = vertex_quals qmap v in
-	let new_quals = collect_qualifiers qmap (FlowGraph.pred_e fg v) in
-	let qmap' = QualMap.add v (LabelledQualSet.union new_quals old_quals)
-	  qmap
-	in
 	let w' =
 	  if not(LabelledQualSet.equal new_quals old_quals) then
 	    (FlowGraph.succ fg v)@w
 	  else
 	    w
 	in
-	  propagate_vertex_qualifiers_rec qmap' w'
+	  propagate_vertex_qualifiers_rec qmap' qual_combiner w'
     | [] ->
 	qmap
   in
-    (* To the user, it's easier to provide the nodes to propagate from;
-       internally, it works better if we think of the nodes to propagate
-       to *)
-  let ws = List.flatten(List.map (FlowGraph.succ fg) w) in
-    propagate_vertex_qualifiers_rec qmap ws
+  let all_vertices = FlowGraph.vertices fg in
+  let qmap' = propagate_vertex_qualifiers_rec iqmap LabelledQualSet.union all_vertices in
+    propagate_vertex_qualifiers_rec qmap' LabelledQualSet.inter all_vertices
 
 
 let var_vertex varname =
   FlowGraph.V.create (VarName varname)
 
 
-let expr_vertex = function
-    ExpVar(x, _) ->
-      var_vertex x
-  | e ->
-      FlowGraph.V.create (ExprId(expr_get_id e))
+let expr_vertex e =
+  FlowGraph.V.create (ExprId(expr_get_id e))
 
 
 let get_definite_qual = function

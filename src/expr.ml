@@ -21,6 +21,11 @@ type typ =
   | ForallTyp of string * typ
 
 
+type pattern =
+    PatternTyCon of string * pattern list
+  | PatternVar of string
+
+
 (* Expression language *)
 type binop =
     Plus
@@ -40,9 +45,11 @@ type expr =
   | TrueExp of expr_id
   | FalseExp of expr_id
   | ExpVar of string * expr_id
+  | TyCon of string * expr list * expr_id
   | BinOp of binop * expr * expr * expr_id
   | BinRel of binrel * expr * expr * expr_id
   | If of expr * expr * expr * expr_id
+  | Match of expr * (pattern * expr) list * expr_id
   | Annot of qual * expr * expr_id
   | Let of string * typ option * expr * expr * expr_id
   | Abs of string * typ option * expr * expr_id
@@ -60,10 +67,12 @@ type value =
   | TrueVal
   | FalseVal
   | Closure of string * expr * string option * value env
+  | Abstract of string * value list
 
 
 (* Expression evaluator *)
 exception BogusEvalError
+exception NoMatch
 
 
 let bool_to_val b =
@@ -73,6 +82,22 @@ let bool_to_val b =
     FalseVal
 
 
+let rec bind_pattern v p env  =
+  match (v, p) with
+      (Abstract(vc, vals), PatternTyCon(pc, patterns))
+	when vc = pc ->
+	  begin
+	    try
+	      List.fold_right2 bind_pattern vals patterns env
+	    with Invalid_argument _ ->
+	      raise Not_found
+	  end
+    | (v, PatternVar(x)) ->
+	env_add x v env
+    | _ ->
+	raise Not_found
+	  
+
 let eval exp =
   let rec eval_rec exp env =
     match exp with
@@ -80,6 +105,9 @@ let eval exp =
       | TrueExp(_) -> TrueVal
       | FalseExp(_) -> FalseVal
       | ExpVar(x, _) -> env_lookup x env
+      | TyCon(c, exps, _) ->
+	  let vals = List.map (fun e -> eval_rec e env) exps in
+	    Abstract(c, vals)
       | BinOp(o, e1, e2, _) ->
 	  let (v1, v2) = (eval_rec e1 env, eval_rec e2 env) in
 	    begin match (o, v1, v2) with
@@ -112,6 +140,15 @@ let eval exp =
 	    | FalseVal -> eval_rec e2 env
 	    | _ -> raise BogusEvalError
 	  end
+      | Match(e, pexps, _) ->
+	  let v = eval_rec e env in
+	    begin
+	      try
+		let (menv, me) = Misc.search_list (fun (p, e) -> (bind_pattern v p env, e)) pexps in
+		  eval_rec me menv
+	      with Not_found ->
+		raise NoMatch
+	    end
       | Annot(_, e, _) -> eval_rec e env
       | Let(x, _, e, e', _) ->
 	  let xv = eval_rec e env in
@@ -151,9 +188,11 @@ let expr_get_id = function
   | TrueExp(id)
   | FalseExp(id)
   | ExpVar(_, id)
+  | TyCon(_, _, id)
   | BinOp(_, _, _, id)
   | BinRel(_, _, _, id)
   | If(_, _, _, id)
+  | Match(_, _, id)
   | Annot(_, _, id)
   | Let(_, _, _, _, id)
   | Abs(_, _, _, id)
@@ -172,11 +211,16 @@ let expr_get_subexprs = function
   | FalseExp(_)
   | ExpVar(_) ->
       []
+  | TyCon(_, es, _) ->
+      es
   | BinOp(_, e1, e2, _)
   | BinRel(_, e1, e2, _) ->
       [e1; e2]
   | If(e1, e2, e3, _) ->
       [e1; e2; e3]
+  | Match(e, pexps, _) ->
+      let matchexps = List.fold_right (fun (_, e) l -> e::l) pexps [] in
+	e::matchexps
   | Annot(_, e, _) ->
       [e]
   | Let(_, _, e1, e2, _) ->
@@ -195,6 +239,13 @@ let expr_get_subexprs = function
       [e]
   | QualApp(e, _, _) ->
       [e]
+
+
+let rec pattern_get_vars = function
+    PatternTyCon(_, pats) ->
+      Misc.flap pattern_get_vars pats
+  | PatternVar(x) ->
+      [x]
 
 
 let pprint_binop frec e1 op e2 =
@@ -231,6 +282,9 @@ let rec pprint_annotated_expr annotator exp =
 	"false"
     | ExpVar(x, _) ->
 	x
+    | TyCon(c, es, _) ->
+	let subexps = List.map pprint_rec es in
+	  c ^ "(" ^ (Misc.join subexps " ") ^ ")"
     | BinOp(op, e1, e2, _) ->
 	pprint_binop pprint_rec e1 op e2
     | BinRel(rel, e1, e2, _) ->
@@ -253,7 +307,7 @@ let rec pprint_annotated_expr annotator exp =
     "(" ^ (Misc.join qualstrs " ") ^ " " ^ pprint_expr_simple exp ^ ")"
 
 
-let pprint_value = function
+let rec pprint_value = function
     NumVal n ->
       string_of_int n
   | TrueVal ->
@@ -262,3 +316,6 @@ let pprint_value = function
       "false"
   | Closure(name, _, _, _) ->
       "<fun (" ^ name ^ ")>"
+  | Abstract(c, vs) ->
+      let vals = List.map pprint_value vs in
+	c ^ "(" ^ (Misc.join vals ", ") ^ ")"
