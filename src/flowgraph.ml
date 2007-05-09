@@ -29,8 +29,6 @@ module Vertex = struct
   let default = None
 end
 
-module VertexSet = Set.Make(Vertex)
-
 module Edge = struct
   type t = elabel option
   let compare = compare
@@ -75,6 +73,8 @@ module FlowGraph = struct
 end
 
 module FlowGraphPrinter = Graphviz.Dot(FlowGraph)
+
+module EdgeSet = Set.Make(FlowGraph.E)
 
 
 type labelled_qual = QualFrom of qual * (FlowGraph.E.t option)
@@ -215,6 +215,19 @@ let collect_qualifiers qmap inedges =
       (LabelledQualSet.union unlabelled_quals call_quals)
       return_quals
 *)
+
+
+let find_backedges fg =
+  let rec find_backedges_rec stack v edges =
+    if List.mem v stack then
+      EdgeSet.add (FlowGraph.E.create (List.hd stack) None v) edges
+    else
+      let stack' = v::stack in
+      let succs = FlowGraph.succ fg v in
+	List.fold_right (find_backedges_rec stack') succs edges
+  in
+  let all_vertices = FlowGraph.vertices fg in
+    List.fold_right (find_backedges_rec []) all_vertices EdgeSet.empty
 
 
 let collect_qualifiers qmap inedges combiner =

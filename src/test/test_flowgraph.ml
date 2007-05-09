@@ -58,6 +58,16 @@ let test_loop_propagation _ =
     assert_bool "Did not propagate qualifier through loop"
       (LabelledQualSet.equal vin_qset (QualMap.find vhead result))
 
+
+let test_simple_backedge _ =
+  let (v1, v2) = (vertex "v1", vertex "v2") in
+  let (e1, e2) = (edge v1 None v2, edge v2 None v1) in
+  let graph = make_graph ([v1; v2], [e1; e2]) in
+  let backedges = find_backedges graph in
+    assert_bool "Did not find backedge"
+      (EdgeSet.mem e1 backedges or EdgeSet.mem e2 backedges)
+
+
 (*
 let test_single_call _ =
   let (c, f, r) = (vertex "c", vertex "f", vertex "r") in
@@ -130,4 +140,5 @@ let suite = "Test Flowgraph" >:::
   ["test_regular_flow" >:: test_regular_flow;
    "test_cycle_termination" >:: test_cycle_termination;
    "test_loop_propagation" >:: test_loop_propagation;
+   "test_simple_backedge" >:: test_simple_backedge;
    "test_qualifier_intersection" >:: test_qualifier_intersection]
