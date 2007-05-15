@@ -23,7 +23,7 @@ type named_pred = string * parameterized_pred
 val predicate_subst: expression -> string -> predicate -> predicate
 
 val expr_predicate: expr -> predicate
-val qualmap_to_predicates: LabelledQualSet.t QualMap.t -> named_pred list -> predicate list
+val qualmap_to_predicates: QualMap.t -> named_pred list -> predicate list
 
 val value_var: expr -> expression
 val branch_active: expr -> predicate

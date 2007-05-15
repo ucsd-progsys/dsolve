@@ -83,17 +83,16 @@ let qualmap_to_predicates qm preds =
 	PredOver(x, p) ->
 	  Or(Not(Atom(be, Eq, Int(1))), predicate_subst ve x p)
   in
-  let definite_quals_to_predicates = function
-      (v, qs) ->
-	try
-	  let be = vertex_branch_expression v in
-	  let ve = vertex_value_expression v in
-	    List.map (make_qualifier_pred be ve) qs
-	with NoExpression ->
-	  []
+  let quals_to_predicates v qs =
+    try
+      let be = vertex_branch_expression v in
+      let ve = vertex_value_expression v in
+      let quals = QualSet.elements qs in
+	List.map (make_qualifier_pred be ve) quals
+    with NoExpression ->
+      []
   in
-  let definite_quals = qualmap_definite_quals qm in
-    List.flatten (List.map definite_quals_to_predicates definite_quals)
+    List.flatten (QualMap.map quals_to_predicates qm)
 
 
 let equals(p, q) =

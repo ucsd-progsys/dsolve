@@ -4,11 +4,9 @@ open Expr
 
 type qual = string
 
-type callsite = int
-
-type elabel =
-      Call of callsite
-    | Return of callsite
+type edge_type =
+    Flow
+  | Depend
 
 
 type vlabel =
@@ -27,20 +25,20 @@ end
 
 module Edge :
 sig
-  type t = elabel option
+  type t = edge_type
   val compare : 'a -> 'a -> int
   val hash : 'a -> int
   val equal : 'a -> 'a -> bool
-  val default : 'a option
+  val default : edge_type
 end
 
 (* pmr: should these signatures be fixed? *)
 module FlowGraph :
   sig
-    type t = Graph.Persistent.Digraph.ConcreteLabeled(Vertex)(Edge).t
+    type t
     module V :
       sig
-        type t = Graph.Persistent.Digraph.ConcreteLabeled(Vertex)(Edge).V.t
+	type t
         val compare : t -> t -> int
         val hash : t -> int
         val equal : t -> t -> bool
@@ -51,7 +49,7 @@ module FlowGraph :
     type vertex = V.t
     module E :
       sig
-        type t = Graph.Persistent.Digraph.ConcreteLabeled(Vertex)(Edge).E.t
+        type t
         val compare : t -> t -> int
         type vertex = V.t
         val src : t -> vertex
@@ -116,18 +114,10 @@ module FlowGraphPrinter :
   end
 
 
-type labelled_qual = QualFrom of qual * (FlowGraph.E.t option)
-
-module LabelledQual :
+module QualSet :
   sig
-    type t = labelled_qual
-    val compare : 'a -> 'a -> int
-  end
-
-module LabelledQualSet :
-  sig
-    type elt = LabelledQual.t
-    type t = Set.Make(LabelledQual).t
+    type elt = qual
+    type t
     val empty : t
     val is_empty : t -> bool
     val mem : elt -> t -> bool
@@ -185,36 +175,28 @@ module EdgeSet:
   end
 
 
-module QualMap :
+module QualMap:
   sig
-    type key = FlowGraph.V.t
-    type 'a t = 'a Map.Make(FlowGraph.V).t
-    val empty : 'a t
-    val is_empty : 'a t -> bool
-    val add : key -> 'a -> 'a t -> 'a t
-    val find : key -> 'a t -> 'a
-    val remove : key -> 'a t -> 'a t
-    val mem : key -> 'a t -> bool
-    val iter : (key -> 'a -> unit) -> 'a t -> unit
-    val map : ('a -> 'b) -> 'a t -> 'b t
-    val mapi : (key -> 'a -> 'b) -> 'a t -> 'b t
-    val maplist: (key -> 'a -> 'b) -> 'a t -> 'b list
-    val fold : (key -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b
-    val compare : ('a -> 'a -> int) -> 'a t -> 'a t -> int
-    val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
-    val union_disjoint : 'a t -> 'a t -> 'a t
-  end
+    type t
 
-exception InvalidReturnEdge
+    val empty: t
 
-val find_backedges: FlowGraph.t -> EdgeSet.t
+    val vertex_quals: FlowGraph.V.t -> t -> QualSet.t
+    val add_vertex_quals: FlowGraph.V.t -> QualSet.t -> t -> t
+    val obsolete_quals: FlowGraph.V.t -> QualSet.t -> t -> t
+    val map: (FlowGraph.V.t -> QualSet.t -> 'a) -> t -> 'a list
+    val equal: t -> t -> bool
+end
 
-val propagate_vertex_qualifiers: FlowGraph.t -> LabelledQualSet.t QualMap.t -> LabelledQualSet.t QualMap.t
+
+type backedge_flow =
+    FlowBackedges
+  | IgnoreBackedges
+
+val flow_qualifiers: FlowGraph.t -> backedge_flow -> QualMap.t -> QualMap.t -> QualMap.t
 
 val string_of_vlabel: vlabel -> string
 
 val var_vertex: string -> FlowGraph.V.t
 val expr_vertex: expr -> FlowGraph.V.t
-val vertex_quals: LabelledQualSet.t QualMap.t -> FlowGraph.V.t -> LabelledQualSet.t
-val expr_quals: LabelledQualSet.t QualMap.t -> expr -> qual list
-val qualmap_definite_quals: LabelledQualSet.t QualMap.t -> (FlowGraph.V.t * qual list) list
+val expr_quals: QualMap.t -> expr -> qual list

@@ -22,10 +22,8 @@ let annotate exp p qm =
 	      if Prover.implies be test_predicate then
 		begin
 		  let expv = expr_vertex e in
-		  let qa = QualFrom(q, None) in
 		    (* Printf.printf "True!\n"; *)
-		    let qs = vertex_quals subexp_map expv in 
-		      QualMap.add expv (LabelledQualSet.add qa qs) subexp_map
+		    QualMap.add_vertex_quals expv (QualSet.singleton q) subexp_map
 		end
 	      else
 		subexp_map
@@ -37,8 +35,8 @@ let fixedpoint_annotate exp predlist =
   let (graph, qmap) = expr_qualgraph exp in
   let rec fixpoint_annotate_rec qm =
     let qm' = List.fold_right (annotate exp) predlist qm in
-    let qm'' = propagate_vertex_qualifiers graph qm' in
-      if qm = qm'' then
+    let qm'' = flow_qualifiers graph FlowBackedges qm' qm' in
+      if QualMap.equal qm qm'' then
 	qm''
       else
 	let new_predicates = qualmap_to_predicates qm'' predlist in

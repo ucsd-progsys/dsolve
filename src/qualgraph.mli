@@ -3,4 +3,4 @@ open Expr
 open Env
 
 
-val expr_qualgraph: expr -> (FlowGraph.t * LabelledQualSet.t QualMap.t)
+val expr_qualgraph: expr -> (FlowGraph.t * QualMap.t)

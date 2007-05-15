@@ -4,11 +4,11 @@ open Expr
 
 type qual = string
 
-type callsite = int
 
-type elabel =
-      Call of callsite
-    | Return of callsite
+type edge_type =
+    Flow
+  | Depend
+
 
 type vlabel =
     ExprId of expr_id
@@ -30,11 +30,11 @@ module Vertex = struct
 end
 
 module Edge = struct
-  type t = elabel option
+  type t = edge_type
   let compare = compare
   let hash = Hashtbl.hash
   let equal = (=)
-  let default = None
+  let default = Flow
 end
 
 module SimpleFlowGraph = Persistent.Digraph.ConcreteLabeled(Vertex)(Edge)
@@ -62,11 +62,8 @@ module FlowGraph = struct
 
   let edge_attributes e =
     match E.label e with
-	None -> []
-      | Some(Call i) ->
-	  [ `Label("(" ^ string_of_int i) ]
-      | Some(Return i) ->
-	  [ `Label(")" ^ string_of_int i) ]
+	Flow -> []
+      | Depend -> [ `Style `Dashed ]
 
   let get_subgraph v =
     None
@@ -77,190 +74,175 @@ module FlowGraphPrinter = Graphviz.Dot(FlowGraph)
 module EdgeSet = Set.Make(FlowGraph.E)
 
 
-type labelled_qual = QualFrom of qual * (FlowGraph.E.t option)
+let is_flow_edge e =
+  match FlowGraph.E.label e with
+      Flow ->
+	true
+    | Depend ->
+	false
 
-module LabelledQual = struct
-  type t = labelled_qual
+
+module Qual = struct
+  type t = qual
   let compare = compare
 end
 
 
-let qual_is_labelled = function
-    QualFrom(_, Some(_)) ->
-      true
-  | _ ->
-      false
+module QualSet = Set.Make(Qual)
 
+module DumbVertexMap = Map.Make(FlowGraph.V)
 
-module LabelledQualSet = Set.Make(LabelledQual)
-module SimpleQualMap = Map.Make(FlowGraph.V)
-
-module QualMap = struct
-  include SimpleQualMap
+module VertexMap = struct
+  include DumbVertexMap
 
 
   let maplist f qm =
     fold (fun k v r -> (f k v)::r) qm []
-
-  
-  let union_disjoint m1 m2 =
-    let folder = (fun k d r -> (k, d)::r) in
-    let b1 = fold folder m1 [] in
-    let b2 = fold folder m2 b1 in
-      List.fold_right (fun (k, d) -> add k d) b2 empty
 end
 
 
-let edge_labelled edge =
-  match FlowGraph.E.label edge with
-      Some(_) ->
-	true
-    | None ->
-	false
+module QualMap = struct
+  type history = (Vertex.t * QualSet.t) list
+  type t = QualSet.t VertexMap.t * history
 
 
-let edge_call edge =
-  match FlowGraph.E.label edge with
-      Some(Call _) ->
-	true
-    | _ ->
-	false
+  let empty = (VertexMap.empty, [])
 
 
-let vertex_quals qmap v =
-  try
-    QualMap.find v qmap
-  with Not_found ->
-    LabelledQualSet.empty
-
-
-let get_edge_source_quals qmap e =
-  vertex_quals qmap (FlowGraph.E.src e)
-
-
-let relabel_quals qualset orig_edge =
-  let rec relabel_quals_rec = function
-      QualFrom(qual, _)::qs ->
-	LabelledQualSet.add (QualFrom(qual, Some orig_edge))
-	  (relabel_quals_rec qs)
-    | [] ->
-	LabelledQualSet.empty
-  in
-    relabel_quals_rec (LabelledQualSet.elements qualset)
-
-
-exception InvalidReturnEdge
-
-let unlabel_quals qmap qualset return_edge =
-  let j =
-    match FlowGraph.E.label return_edge with
-	Some(Return n) ->
-	  n
-      | _ ->
-	  raise InvalidReturnEdge
-  in      
-  let rec unlabel_quals_rec = function
-      QualFrom(qual, Some e)::qs ->
-	begin match FlowGraph.E.label e with
-	    Some(Call i) when i = j ->
-	      LabelledQualSet.union
-		(get_edge_source_quals qmap e)
-		(unlabel_quals_rec qs)
-	  | _ ->
-	      unlabel_quals_rec qs
-	end
-    | q::qs ->
-	LabelledQualSet.add q (unlabel_quals_rec qs)
-    | [] ->
-	LabelledQualSet.empty
-  in
-    unlabel_quals_rec (LabelledQualSet.elements qualset)
-
-(*	
-let collect_qualifiers qmap inedges =
-  (* Split edges into three classes: call site, return site, regular edges *)
-  let (labelled, unlabelled) = List.partition edge_labelled inedges in
-  let (call, return) = List.partition edge_call labelled in
-  (* Intersect qualifiers that occur along regular edges *)
-  let unlabelled_quals =
+  let vertex_quals v (vmap, _) =
     try
-      List.fold_left
-	(fun q e ->
-	   LabelledQualSet.inter q (get_edge_source_quals qmap e))
-	(get_edge_source_quals qmap (List.hd unlabelled))
-	unlabelled
-    with Failure _ ->
-      LabelledQualSet.empty
-  in
-  (* Propagate qualifiers from call sites, noting the origin of the qualifier *)
-  let call_quals =
-    List.fold_left
-      (fun q e ->
-	 LabelledQualSet.union q
-	   (relabel_quals (get_edge_source_quals qmap e) e))
-      LabelledQualSet.empty
-      call
-  in
-  (* "Undo" the call for qualifiers at return sites, restoring the qualifiers
-     that existed before the call *)
-  let return_quals = List.fold_left
-    (fun q e ->
-       LabelledQualSet.union q
-	 (unlabel_quals qmap (get_edge_source_quals qmap e) e))
-    LabelledQualSet.empty
-    return
-  in
-    (* Smash all the results together *)
-    LabelledQualSet.union
-      (LabelledQualSet.union unlabelled_quals call_quals)
-      return_quals
-*)
+      VertexMap.find v vmap
+    with Not_found ->
+      QualSet.empty
+
+
+  let add_vertex_quals v quals ((vmap, hist) as qmap) =
+    let old_quals = vertex_quals v qmap in
+    let all_quals = QualSet.union quals old_quals in
+    let new_quals = QualSet.diff quals old_quals in
+    let hist' = (v, new_quals)::hist in
+    let vmap' = VertexMap.add v all_quals vmap in
+      (vmap', hist')
+
+
+  (* pmr: don't export this, I have no idea how to reconcile
+     with history...  meant to be used by obsolete_quals only *)
+  let remove_vertex_quals v quals vmap =
+    let old_quals = vertex_quals v (vmap, []) in
+    let new_quals = QualSet.diff old_quals quals in
+    let vmap' = VertexMap.add v new_quals vmap in
+      vmap'
+
+
+  let obsolete_quals v quals (vmap, hist) =
+    if QualSet.is_empty quals then
+      (vmap, hist)
+    else
+    let rec obsolete_history ordered_hist hist' =
+      match ordered_hist with
+	[] ->
+	  ([], hist')
+      | ((v, qs) as h)::hs ->
+	  let dead = QualSet.inter qs quals in
+	  if QualSet.is_empty dead then
+	    obsolete_history hs (h::hist')
+	  else
+	    let live = QualSet.diff qs dead in
+	    let hist'' =
+	      if QualSet.is_empty live then
+		hist'
+	      else
+		(v, live)::hist'
+	    in
+	      ((v, dead)::hs, hist'')
+    in
+    let ordered_hist = List.rev hist in
+    let (dead, hist') = obsolete_history ordered_hist [] in
+    let vmap' = List.fold_right (fun (v, qs) -> remove_vertex_quals v qs) dead vmap in
+     (vmap', hist')
+
+
+  let map f (vmap, _) =
+    VertexMap.maplist f vmap
+
+
+  let equal (vmap1, _) (vmap2, _) =
+    vmap1 = vmap2
+end
 
 
 let find_backedges fg =
-  let rec find_backedges_rec stack v edges =
-    if List.mem v stack then
-      EdgeSet.add (FlowGraph.E.create (List.hd stack) None v) edges
-    else
-      let stack' = v::stack in
-      let succs = FlowGraph.succ fg v in
-	List.fold_right (find_backedges_rec stack') succs edges
+  let find_backedges_from head init_edges =
+    let rec find_backedges_rec stack v edges =
+      if List.mem v stack then
+	if v != head then
+	  (* By design, every backedge is a flow edge - backedges correspond to
+	     parameter passing, which is a flow from a value to a parameter (i.e., the
+	     paramter is never going to the the target of a dependency edge) *)
+	  EdgeSet.add (FlowGraph.E.create (List.hd stack) Flow v) edges
+	else
+	  edges
+      else
+	let stack' = v::stack in
+	let succs = FlowGraph.succ fg v in
+	  List.fold_right (find_backedges_rec stack') succs edges
+    in
+      find_backedges_rec [] head init_edges
   in
   let all_vertices = FlowGraph.vertices fg in
-    List.fold_right (find_backedges_rec []) all_vertices EdgeSet.empty
+    List.fold_right find_backedges_from all_vertices EdgeSet.empty
 
 
-let collect_qualifiers qmap inedges combiner =
+let get_edge_source_quals qmap e =
+  QualMap.vertex_quals (FlowGraph.E.src e) qmap
+
+
+type backedge_flow =
+    FlowBackedges
+  | IgnoreBackedges
+
+
+let collect_qualifiers qmap inedges =
   try
     List.fold_left
       (fun q e ->
-	 combiner q (get_edge_source_quals qmap e))
+	 QualSet.inter q (get_edge_source_quals qmap e))
       (get_edge_source_quals qmap (List.hd inedges))
       inedges
   with _ ->
-    LabelledQualSet.empty
+    QualSet.empty
 
 
-let propagate_vertex_qualifiers fg iqmap =
-  let rec propagate_vertex_qualifiers_rec qmap qual_combiner = function
+let flow_qualifiers fg backflow base_qmap init_qmap =
+  let excluded_edges =
+    match backflow with
+	FlowBackedges ->
+	  EdgeSet.empty
+      | IgnoreBackedges ->
+	  find_backedges fg
+  in
+  let rec flow_qualifiers_rec qmap = function
       v::w ->
-	let new_quals = collect_qualifiers qmap (FlowGraph.pred_e fg v) qual_combiner in
-	let orig_quals = vertex_quals iqmap v in
-	let qmap' = QualMap.add v (LabelledQualSet.union new_quals orig_quals) qmap in
-	let old_quals = vertex_quals qmap v in
+	let flow_edges = List.filter is_flow_edge (FlowGraph.pred_e fg v) in
+	let propagation_edges = List.filter (fun e -> not (EdgeSet.mem e excluded_edges)) flow_edges in
+	let new_quals = collect_qualifiers qmap propagation_edges in
+	let old_quals = QualMap.vertex_quals v qmap in
+	let base_quals = QualMap.vertex_quals v base_qmap in
+	let dead_quals = QualSet.diff (QualSet.diff old_quals base_quals) new_quals in
+	let qmap'' = QualMap.obsolete_quals v dead_quals qmap in
+	let qmap' = QualMap.add_vertex_quals v new_quals qmap'' in
 	let w' =
-	  if not(LabelledQualSet.equal new_quals old_quals) then
+	  if not (QualSet.equal new_quals old_quals) then
 	    (FlowGraph.succ fg v)@w
 	  else
 	    w
 	in
-	  propagate_vertex_qualifiers_rec qmap' qual_combiner w'
+	  flow_qualifiers_rec qmap' w'
     | [] ->
 	qmap
   in
   let all_vertices = FlowGraph.vertices fg in
-  let qmap' = propagate_vertex_qualifiers_rec iqmap LabelledQualSet.union all_vertices in
-    propagate_vertex_qualifiers_rec qmap' LabelledQualSet.inter all_vertices
+    flow_qualifiers_rec init_qmap all_vertices
 
 
 let var_vertex varname =
@@ -271,29 +253,6 @@ let expr_vertex e =
   FlowGraph.V.create (ExprId(expr_get_id e))
 
 
-let get_definite_qual = function
-    QualFrom(q, None) ->
-      Some q
-  | _ ->
-      None
-
-
-let qual_to_str_list =
-  Misc.mapfilter get_definite_qual
-
-
 let expr_quals qmap exp =
-  let quals =
-    try
-      QualMap.find (expr_vertex exp) qmap
-    with Not_found ->
-      LabelledQualSet.empty
-  in
-    qual_to_str_list (LabelledQualSet.elements quals)
-
-
-let qualmap_definite_quals qm =
-  let qualset_definite_quals qs =
-    Misc.mapfilter get_definite_qual (LabelledQualSet.elements qs)
-  in
-    QualMap.maplist (fun v qs -> (v, qualset_definite_quals qs)) qm
+  let quals = QualMap.vertex_quals (expr_vertex exp) qmap in
+    QualSet.elements quals
