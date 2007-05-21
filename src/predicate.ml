@@ -57,7 +57,7 @@ exception NoExpression
 let vertex_value_expression v =
   let varname =
     match FlowGraph.V.label v with
-	ExprId(id) ->
+	ExprId(id, _) ->
 	  "v" ^ id
       | VarName(x) ->
 	  x
@@ -69,7 +69,7 @@ let vertex_value_expression v =
 
 let vertex_branch_expression v =
   match FlowGraph.V.label v with
-      ExprId(id) ->
+      ExprId(id, _) ->
 	Var("b" ^ id)
     | VarName(x) ->
 	Int(1)

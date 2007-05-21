@@ -11,12 +11,19 @@ type edge_type =
 
 
 type vlabel =
-    ExprId of expr_id
+    ExprId of expr_id * expr
   | VarName of string
   | NonExpr of string
 
 let string_of_vlabel = function
-    ExprId s
+    ExprId(s, _)
+  | VarName s
+  | NonExpr s ->
+      s
+
+let label_of_vlabel = function
+    ExprId(_, e) ->
+      pprint_expr e
   | VarName s
   | NonExpr s ->
       s
@@ -58,7 +65,7 @@ module FlowGraph = struct
     string_of_vlabel (V.label v)
 
   let vertex_attributes v =
-    [ `Label (vertex_name v) ]
+    [ `Label (label_of_vlabel (V.label v)) ]
 
   let edge_attributes e =
     match E.label e with
@@ -168,6 +175,14 @@ module QualMap = struct
 
   let equal (vmap1, _) (vmap2, _) =
     vmap1 = vmap2
+
+
+  let dump (vmap, _) =
+    let print_mapping v qs =
+      let label = label_of_vlabel (FlowGraph.V.label v) in
+	Printf.printf "%s |-> %s\n" label (Misc.join (QualSet.elements qs) ", ")
+    in
+    VertexMap.iter print_mapping vmap
 end
 
 
@@ -175,11 +190,24 @@ let find_backedges fg =
   let find_backedges_from head init_edges =
     let rec find_backedges_rec stack v edges =
       if List.mem v stack then
-	if v != head then
+	if not (FlowGraph.V.equal v  head) then
 	  (* By design, every backedge is a flow edge - backedges correspond to
 	     parameter passing, which is a flow from a value to a parameter (i.e., the
 	     paramter is never going to the the target of a dependency edge) *)
-	  EdgeSet.add (FlowGraph.E.create (List.hd stack) Flow v) edges
+	  let vf = FlowGraph.V.label (List.hd stack) in
+	  let vt = FlowGraph.V.label v in
+	  let h = FlowGraph.V.label head in
+	    begin
+	      Printf.printf "Backedge: %s -> %s (%s)\n" (label_of_vlabel vf) (label_of_vlabel vt) (label_of_vlabel h);
+	  let edge = FlowGraph.E.create (List.hd stack) Flow v in
+	    (* pmr: dirty hack to work around the fact that sometimes we generate a backedge
+	       for theorem prover edges --- create a regular edge and see if it exists; if not,
+	       we found a theorem prover edge and we don't add it *)
+	    if FlowGraph.mem_edge_e fg edge then
+	      EdgeSet.add edge edges
+	    else
+	      edges
+	    end
 	else
 	  edges
       else
@@ -221,14 +249,39 @@ let flow_qualifiers fg backflow base_qmap init_qmap =
       | IgnoreBackedges ->
 	  find_backedges fg
   in
+  let unstable_vertices =
+    match backflow with
+	IgnoreBackedges ->
+	  []
+      | FlowBackedges ->
+	  let backedges = EdgeSet.elements (find_backedges fg) in
+	    List.map FlowGraph.E.dst backedges
+  in
   let rec flow_qualifiers_rec qmap = function
       v::w ->
+(*	let _ =
+	  let ins = List.map (fun e -> label_of_vlabel (FlowGraph.V.label (FlowGraph.E.src e))) (FlowGraph.pred_e fg v) in
+	    Printf.printf "Inedges for %s: %s\n" (label_of_vlabel (FlowGraph.V.label v)) (Misc.join ins ", ")
+	in *)
 	let flow_edges = List.filter is_flow_edge (FlowGraph.pred_e fg v) in
+(*	let _ =
+	  let ins = List.map (fun e -> label_of_vlabel (FlowGraph.V.label (FlowGraph.E.src e))) flow_edges in
+	    Printf.printf "Flow for %s: %s\n" (label_of_vlabel (FlowGraph.V.label v)) (Misc.join ins ", ")
+	in *)
 	let propagation_edges = List.filter (fun e -> not (EdgeSet.mem e excluded_edges)) flow_edges in
+(*	let _ =
+	  let ins = List.map (fun e -> label_of_vlabel (FlowGraph.V.label (FlowGraph.E.src e))) propagation_edges in
+	    Printf.printf "Prop for %s: %s\n" (label_of_vlabel (FlowGraph.V.label v)) (Misc.join ins ", ")
+	in *)
 	let new_quals = collect_qualifiers qmap propagation_edges in
 	let old_quals = QualMap.vertex_quals v qmap in
-	let base_quals = QualMap.vertex_quals v base_qmap in
-	let dead_quals = QualSet.diff (QualSet.diff old_quals base_quals) new_quals in
+(*	let base_quals = QualMap.vertex_quals v base_qmap in *)
+	let dead_quals =
+	  if List.mem v unstable_vertices then
+	    QualSet.diff old_quals new_quals
+	  else
+	    QualSet.empty
+	in
 	let qmap'' = QualMap.obsolete_quals v dead_quals qmap in
 	let qmap' = QualMap.add_vertex_quals v new_quals qmap'' in
 	let w' =
@@ -250,7 +303,7 @@ let var_vertex varname =
 
 
 let expr_vertex e =
-  FlowGraph.V.create (ExprId(expr_get_id e))
+  FlowGraph.V.create (ExprId(expr_get_id e, e))
 
 
 let expr_quals qmap exp =

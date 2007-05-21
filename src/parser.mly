@@ -113,10 +113,9 @@ query:
 | BANG exp EOL {
 
     let e = $2 in
-      Printf.printf(">> Graph:\n");
       let (graph, qm) = expr_qualgraph e in
 	FlowGraphPrinter.output_graph stdout graph;
-	Printf.printf "\n<< EOG\n\n";
+	Printf.printf "\n";
 	flush stdout
   }
 | exp EOL {
@@ -145,8 +144,6 @@ query:
 | QUESTION exp EOL {
 
     let exp = $2 in
-    let exp_pred = expr_predicate exp in
-      Prover.push(exp_pred);
       let qmap = fixedpoint_annotate exp !active_preds in
 	Printf.printf "%s\n\n" (pprint_annotated_expr (expr_quals qmap) exp);
 	Prover.reset();

@@ -77,4 +77,5 @@ val pattern_get_vars: pattern -> string list
 val pprint_binop: ('a -> string) -> 'a -> binop -> 'a -> string
 val pprint_binrel: ('a -> string) -> 'a -> binrel -> 'a -> string
 val pprint_annotated_expr: (expr -> string list) -> expr -> string
+val pprint_expr: expr -> string
 val pprint_value : value -> string

@@ -10,7 +10,7 @@ type edge_type =
 
 
 type vlabel =
-    ExprId of expr_id
+    ExprId of expr_id * expr
   | VarName of string
   | NonExpr of string
 
@@ -186,6 +186,7 @@ module QualMap:
     val obsolete_quals: FlowGraph.V.t -> QualSet.t -> t -> t
     val map: (FlowGraph.V.t -> QualSet.t -> 'a) -> t -> 'a list
     val equal: t -> t -> bool
+    val dump: t -> unit
 end
 
 
@@ -196,6 +197,7 @@ type backedge_flow =
 val flow_qualifiers: FlowGraph.t -> backedge_flow -> QualMap.t -> QualMap.t -> QualMap.t
 
 val string_of_vlabel: vlabel -> string
+val label_of_vlabel: vlabel -> string
 
 val var_vertex: string -> FlowGraph.V.t
 val expr_vertex: expr -> FlowGraph.V.t

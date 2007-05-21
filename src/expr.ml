@@ -307,6 +307,10 @@ let rec pprint_annotated_expr annotator exp =
     "(" ^ (Misc.join qualstrs " ") ^ " " ^ pprint_expr_simple exp ^ ")"
 
 
+let pprint_expr =
+  pprint_annotated_expr (fun e -> [])
+
+
 let rec pprint_value = function
     NumVal n ->
       string_of_int n

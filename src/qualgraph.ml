@@ -13,6 +13,20 @@ type graph_constraint =
       constraint_vertex * polarity * edge_type * constraint_vertex
 
 
+let rec pprint_vertex = function
+    ConstVertex v ->
+      label_of_vlabel (FlowGraph.V.label v)
+  | ConstArrow(v1, v2) ->
+      Printf.sprintf "%s -> %s" (pprint_vertex v1) (pprint_vertex v2)
+
+
+let rec pprint_constrs = function
+    [] ->
+      ""
+  | (FlowsTo(v1, p, t, v2))::cs ->
+      Printf.sprintf "%s => %s \n %s" (pprint_vertex v1) (pprint_vertex v2) (pprint_constrs cs)
+
+
 let negate = function
     Positive -> Negative
   | Negative -> Positive
@@ -36,16 +50,22 @@ let rec subst_graph v x = function
 
 let split_vertex_into_arrow v =
   let v_label = string_of_vlabel (FlowGraph.V.label v) in
-  let (v_in, v_out) = (FlowGraph.V.create (NonExpr(v_label ^ "_in")),
-		       FlowGraph.V.create (NonExpr(v_label ^ "_out"))) in
+  (*let _ =
+    Printf.printf "Splitting %s into arrow...\n" v_label
+  in*)
+  let (v_in, v_out) = (FlowGraph.V.create (NonExpr("In" ^ v_label)),
+		       FlowGraph.V.create (NonExpr("Out" ^ v_label))) in
     ConstArrow(ConstVertex v_in, ConstVertex v_out)
 
 
 let reshape_constraints c =
-  let rec reshape_constraints_rec c = function
+  let rec reshape_constraints_rec c w =
+    (*let _ = Printf.printf "\n\nContraints: %s\n" (pprint_constrs c) in
+    let _ = Printf.printf "\nWorklist: %s\n" (pprint_constrs w) in*)
+    match w with
       [] ->
 	c
-    | ((FlowsTo(t1, p, t, t2) as f)::ws) as w ->
+    | (FlowsTo(t1, p, t, t2) as f)::ws ->
 	begin match(t1, t2) with
 	    (ConstArrow(_, _), ((ConstVertex v2) as t2)) ->
 	      let t2' = split_vertex_into_arrow v2 in

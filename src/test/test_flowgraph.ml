@@ -3,7 +3,7 @@ open Flowgraph
 
 
 let vertex s =
-  FlowGraph.V.create (ExprId(s))
+  FlowGraph.V.create (NonExpr(s))
 
 let edge v1 l v2 =
   FlowGraph.E.create v1 l v2

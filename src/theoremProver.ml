@@ -100,7 +100,7 @@ module YicesProver  =
 
     let me = 
       let c = Y.yices_mk_context () in
-      let t = Y.yices_mk_type c "object" in
+      let t = Y.yices_mk_type c "int" in
       let d = Hashtbl.create 37 in
         { c = c; t = t; d = d; ds = []; count = 0; i = 0 }
 
