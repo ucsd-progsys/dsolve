@@ -10,7 +10,7 @@ type constraint_vertex = ConstArrow of constraint_vertex * constraint_vertex
 
 type graph_constraint =
     FlowsTo of
-      constraint_vertex * polarity * edge_type * constraint_vertex
+      constraint_vertex * polarity * flowlabel * constraint_vertex
 
 
 let rec pprint_vertex = function
@@ -112,10 +112,10 @@ let fresh_const_vertex v_label =
   ConstVertex(fresh_vertex v_label)
 
 
-let nextinst = ref 0
-let fresh_inst_site () =
-  incr nextinst;
-  !nextinst
+let nextcall = ref 0
+let fresh_callsite () =
+  incr nextcall;
+  !nextcall
 
 
 let var_const_vertex x =
@@ -187,8 +187,9 @@ let expr_constraints exp =
 	    let (v2, c2, qm2) = expr_constraints_rec e2 qm1 in
 	    let (v_in, v_out) = (fresh_const_vertex "in", fresh_const_vertex "out") in
 	    let funcc = FlowsTo(v1, Positive, Flow, ConstArrow(v_in, v_out)) in
-	    let argc = FlowsTo(v2, Negative, Flow, v_in) in
-	    let retc = FlowsTo(v_out, Positive, Flow, ve) in
+	    let c = fresh_callsite () in
+	    let argc = FlowsTo(v2, Negative, Call c, v_in) in
+	    let retc = FlowsTo(v_out, Positive, Return c, ve) in
 	      (ve, retc::argc::funcc::(c1@c2), qm2)
 	| Let(x, _, ex, e', _) ->
 	    let (vx, cx, qmx) = expr_constraints_rec ex qm in

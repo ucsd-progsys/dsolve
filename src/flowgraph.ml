@@ -5,9 +5,11 @@ open Expr
 type qual = string
 
 
-type edge_type =
+type flowlabel =
     Flow
   | Depend
+  | Call of int
+  | Return of int
 
 
 type vlabel =
@@ -28,6 +30,12 @@ let label_of_vlabel = function
   | NonExpr s ->
       s
 
+let is_expr_vertex = function
+    NonExpr _ ->
+      false
+  | _ ->
+      true
+
 module Vertex = struct
   type t = vlabel
   let compare = compare
@@ -37,7 +45,7 @@ module Vertex = struct
 end
 
 module Edge = struct
-  type t = edge_type
+  type t = flowlabel
   let compare = compare
   let hash = Hashtbl.hash
   let equal = (=)
@@ -71,6 +79,8 @@ module FlowGraph = struct
     match E.label e with
 	Flow -> []
       | Depend -> [ `Style `Dashed ]
+      | Call i -> [ `Label ("(" ^ string_of_int i) ]
+      | Return i -> [ `Label (")" ^ string_of_int i) ]
 
   let get_subgraph v =
     None
@@ -78,15 +88,18 @@ end
 
 module FlowGraphPrinter = Graphviz.Dot(FlowGraph)
 
+module FlowGraphSCC = Components.Make(FlowGraph)
+
+module VertexSet = Set.Make(FlowGraph.V)
 module EdgeSet = Set.Make(FlowGraph.E)
 
 
 let is_flow_edge e =
   match FlowGraph.E.label e with
-      Flow ->
-	true
-    | Depend ->
+      Depend ->
 	false
+    | _ ->
+	true
 
 
 module Qual = struct
@@ -125,10 +138,9 @@ module QualMap = struct
 
   let add_vertex_quals v quals ((vmap, hist) as qmap) =
     let old_quals = vertex_quals v qmap in
-    let all_quals = QualSet.union quals old_quals in
     let new_quals = QualSet.diff quals old_quals in
     let hist' = (v, new_quals)::hist in
-    let vmap' = VertexMap.add v all_quals vmap in
+    let vmap' = VertexMap.add v quals vmap in
       (vmap', hist')
 
 
@@ -186,6 +198,117 @@ module QualMap = struct
 end
 
 
+let dfs_fold fg empty f u =
+  let rec dfs_fold_rec stack v result =
+    if VertexSet.mem v stack then
+      result
+    else
+      let stack' = VertexSet.add v stack in
+      let result' = f v result in
+      let succs = FlowGraph.succ fg v in
+	List.fold_right (dfs_fold_rec stack') succs result'
+  in
+    dfs_fold_rec VertexSet.empty u empty
+
+
+let sort_sccs fg sccs =
+  let label_vertex v vmap =
+    let c =
+      try
+	VertexMap.find v vmap
+      with Not_found ->
+	0
+    in
+      VertexMap.add v (c + 1) vmap
+  in
+  let label_from_scc scc vmap =
+    let v = List.hd scc in
+      dfs_fold fg vmap label_vertex v
+  in
+  let vmap = List.fold_right label_from_scc sccs VertexMap.empty in
+  let compare_sccs scc1 scc2 =
+    let (v1, v2) = (List.hd scc1, List.hd scc2) in
+      compare (VertexMap.find v1 vmap) (VertexMap.find v2 vmap)
+  in
+    List.sort compare_sccs sccs
+
+
+let find_backedges fg =
+  EdgeSet.empty
+
+
+let fix_scc fg prove push pop scc_vertices (init_qmap, init_visited) =
+  let scc = List.fold_right VertexSet.add scc_vertices VertexSet.empty in
+  let _ = Printf.printf "\n\nFixing SCC [%s]...\n" (Misc.join (List.map (fun v -> label_of_vlabel (FlowGraph.V.label v)) scc_vertices) ", ") in
+  let rec df_flow stack v (qmap, visited) =
+    let _ = Printf.printf "Flowing at %s\n" (label_of_vlabel (FlowGraph.V.label v)) in
+    if VertexSet.mem v stack then
+      (qmap, visited)
+    else
+      let visited_flow_edge_quals e =
+	let src = FlowGraph.E.src e in
+	if (is_flow_edge e) && (VertexSet.mem src visited) then
+	  Some (QualMap.vertex_quals src qmap)
+	else
+	  None
+      in
+      let pred_quals = Misc.mapfilter visited_flow_edge_quals (FlowGraph.pred_e fg v) in
+      let flowed_quals =
+	match pred_quals with
+	    [] -> QualSet.empty
+	  | _ -> List.fold_right QualSet.inter pred_quals (List.hd pred_quals) in
+      (* we can only prove facts about expressions and variables, not intermediate nodes *)
+      let should_prove = is_expr_vertex v in
+      let proved_quals =
+	if should_prove then
+	  prove v
+	else
+	  QualSet.empty
+      in
+      let quals = QualSet.union flowed_quals proved_quals in
+      let _ =
+	if should_prove then
+	  push v quals
+	else
+	  ()
+      in
+      let qmap' = QualMap.add_vertex_quals v quals qmap in
+      let visited' = VertexSet.add v visited in
+      let stack' = VertexSet.add v stack in
+      let scc_succs = List.filter (fun u -> VertexSet.mem u scc) (FlowGraph.succ fg v) in
+      let (qmap'', visited'') = List.fold_right (df_flow stack') scc_succs (qmap', visited') in
+      let _ =
+	if should_prove then
+	  pop ()
+	else
+	  ()
+      in
+	(qmap'', visited'')
+  in
+  let is_base_case v =
+    let pred_edges = FlowGraph.pred_e fg v in
+    let flows_from_outside_scc e = (is_flow_edge e) && (not (VertexSet.mem (FlowGraph.E.src e) scc)) in
+      List.exists flows_from_outside_scc pred_edges
+  in
+  let base =
+    try
+      List.find is_base_case scc_vertices
+    with Not_found ->
+      (* SCCs without outside predecessors are degenerate - it makes no difference what we choose here *)
+      (* pmr: we could probably just ignore these altogether *)
+      VertexSet.choose scc
+  in
+  let rec fix_scc_rec qmap visited =
+    let (qmap', visited') = df_flow VertexSet.empty base (qmap, visited) in
+      if QualMap.equal qmap qmap' then
+	(qmap', visited')
+      else
+	fix_scc_rec qmap' visited'
+  in
+    fix_scc_rec init_qmap init_visited
+    
+
+(*
 let find_backedges fg =
   let find_backedges_from head init_edges =
     let rec find_backedges_rec stack v edges =
@@ -219,7 +342,7 @@ let find_backedges fg =
   in
   let all_vertices = FlowGraph.vertices fg in
     List.fold_right find_backedges_from all_vertices EdgeSet.empty
-
+*)
 
 let get_edge_source_quals qmap e =
   QualMap.vertex_quals (FlowGraph.E.src e) qmap

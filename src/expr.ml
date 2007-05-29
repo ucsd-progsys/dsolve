@@ -296,7 +296,7 @@ let rec pprint_annotated_expr annotator exp =
     | Let(x, _, e1, e2, _) ->
 	"let " ^ x ^ " = " ^ pprint_rec e1 ^ " in " ^ pprint_rec e2
     | Abs(x, _, e, _) ->
-	"fun " ^ x ^ " = " ^ pprint_rec e
+	"fun " ^ x ^ " -> " ^ pprint_rec e
     | App(e1, e2, _) ->
 	pprint_rec e1 ^ " " ^ pprint_rec e2
     | _ ->

@@ -21,6 +21,20 @@ type parameterized_pred = PredOver of (string * predicate)
 type named_pred = string * parameterized_pred
 
 
+let equals(p, q) =
+  Atom(p, Eq, q)
+
+
+let big_and cs =
+  let combine p q = And(p, q) in
+    List.fold_right combine cs True
+
+
+let big_or cs =
+  let combine p q = And(p, q) in
+    List.fold_right combine cs (Not(True))
+
+
 let rec predexpr_subst v x = function
     Var y when y = x ->
       v
@@ -51,6 +65,17 @@ let branch_var e =
   Var("b" ^ (expr_get_id e))
 
 
+exception NoVar
+
+let vertex_value_var v =
+  match FlowGraph.V.label v with
+      ExprId(_, e) ->
+	value_var e
+    | VarName x ->
+	Var(x)
+    | _ ->
+	raise NoVar
+
 exception NoExpression
 
 (* pmr: is this the right place for this? *)
@@ -77,13 +102,13 @@ let vertex_branch_expression v =
 	raise NoExpression
 
 
-let qualmap_to_predicates qm preds =
+let quals_to_predicate preds v qs =
   let make_qualifier_pred be ve q =
     match List.assoc q preds with
 	PredOver(x, p) ->
 	  Or(Not(Atom(be, Eq, Int(1))), predicate_subst ve x p)
   in
-  let quals_to_predicates v qs =
+  let predicates =
     try
       let be = vertex_branch_expression v in
       let ve = vertex_value_expression v in
@@ -92,24 +117,28 @@ let qualmap_to_predicates qm preds =
     with NoExpression ->
       []
   in
-    List.flatten (QualMap.map quals_to_predicates qm)
-
-
-let equals(p, q) =
-  Atom(p, Eq, q)
-
-
-let big_and cs =
-  let combine p q = And(p, q) in
-    List.fold_right combine cs True
-
-
-let big_or cs =
-  let combine p q = And(p, q) in
-    List.fold_right combine cs (Not(True))
+    big_and predicates
 
 
 exception NoPredicate
+
+
+let implies(p, q) =
+  Or(Not p, q)
+
+
+let branch_active(e) =
+  Atom(branch_var e, Eq, Int 1)
+
+
+let vertex_branch_active v =
+  match FlowGraph.V.label v with
+      ExprId(_, e) ->
+	branch_active e
+    | VarName _ ->
+	True
+    | _ ->
+	raise NoExpression
 
 
 let rec value_predicate e =
@@ -122,7 +151,8 @@ let rec value_predicate e =
       | FalseExp(_) ->
 	  equals(ve, Int 0)
       | ExpVar(x, _) ->
-	  equals(ve, Var x)
+	  let be = branch_active e in
+	    big_and ([implies(be, equals(ve, Var x)); implies(equals(ve, Var x), be)])
       | TyCon(_, exps, _) ->
 	  big_and (List.map value_predicate exps)
       | BinOp(op, e1, e2, _) ->
@@ -151,14 +181,6 @@ let rec value_predicate e =
 	  big_and (List.map value_predicate [e1; e2])
       | _ ->
 	  raise NoPredicate
-
-
-let implies(p, q) =
-  Or(Not p, q)
-
-
-let branch_active(e) =
-  Atom(branch_var e, Eq, Int 1)
 
 
 let rec branch_predicate e =

@@ -20,11 +20,14 @@ type predicate =
 type parameterized_pred = PredOver of (string * predicate)
 type named_pred = string * parameterized_pred
 
+val big_and: predicate list -> predicate
+
 val predicate_subst: expression -> string -> predicate -> predicate
 
 val expr_predicate: expr -> predicate
-val qualmap_to_predicates: QualMap.t -> named_pred list -> predicate list
 
 val value_var: expr -> expression
 val branch_active: expr -> predicate
+val vertex_value_var: FlowGraph.V.t -> expression
+val vertex_branch_active: FlowGraph.V.t -> predicate
 val pprint_predicate: predicate -> string

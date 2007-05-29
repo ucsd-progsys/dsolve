@@ -4,9 +4,11 @@ open Expr
 
 type qual = string
 
-type edge_type =
+type flowlabel =
     Flow
   | Depend
+  | Call of int
+  | Return of int
 
 
 type vlabel =
@@ -25,11 +27,11 @@ end
 
 module Edge :
 sig
-  type t = edge_type
+  type t = flowlabel
   val compare : 'a -> 'a -> int
   val hash : 'a -> int
   val equal : 'a -> 'a -> bool
-  val default : edge_type
+  val default : flowlabel
 end
 
 (* pmr: should these signatures be fixed? *)
@@ -113,6 +115,11 @@ module FlowGraphPrinter :
     val output_graph : Pervasives.out_channel -> FlowGraph.t -> unit
   end
 
+module FlowGraphSCC :
+  sig         
+    val scc : FlowGraph.t -> FlowGraph.V.t -> int
+    val scc_list : FlowGraph.t -> FlowGraph.V.t list list
+  end
 
 module QualSet :
   sig
@@ -144,10 +151,40 @@ module QualSet :
     val split : elt -> t -> t * bool * t
   end
 
+module VertexSet:
+  sig
+    type elt = FlowGraph.V.t
+    type t
+    val empty : t
+    val is_empty : t -> bool
+    val mem : elt -> t -> bool
+    val add : elt -> t -> t
+    val singleton : elt -> t
+    val remove : elt -> t -> t
+    val union : t -> t -> t
+    val inter : t -> t -> t
+    val diff : t -> t -> t
+    val compare : t -> t -> int
+    val equal : t -> t -> bool
+    val subset : t -> t -> bool
+    val iter : (elt -> unit) -> t -> unit
+    val fold : (elt -> 'a -> 'a) -> t -> 'a -> 'a
+    val for_all : (elt -> bool) -> t -> bool
+    val exists : (elt -> bool) -> t -> bool
+    val filter : (elt -> bool) -> t -> t
+    val partition : (elt -> bool) -> t -> t * t
+    val cardinal : t -> int
+    val elements : t -> elt list
+    val min_elt : t -> elt
+    val max_elt : t -> elt
+    val choose : t -> elt
+    val split : elt -> t -> t * bool * t
+  end
+
 module EdgeSet:
   sig
     type elt = FlowGraph.E.t
-    type t = Set.Make(FlowGraph.E).t
+    type t
     val empty : t
     val is_empty : t -> bool
     val mem : elt -> t -> bool
@@ -194,7 +231,9 @@ type backedge_flow =
     FlowBackedges
   | IgnoreBackedges
 
-val flow_qualifiers: FlowGraph.t -> backedge_flow -> QualMap.t -> QualMap.t -> QualMap.t
+val sort_sccs: FlowGraph.t -> FlowGraph.V.t list list -> FlowGraph.V.t list list
+
+val fix_scc: FlowGraph.t -> (FlowGraph.V.t -> QualSet.t) -> (FlowGraph.V.t -> QualSet.t -> unit) -> (unit -> unit) -> FlowGraph.V.t list -> (QualMap.t * VertexSet.t) -> (QualMap.t * VertexSet.t)
 
 val string_of_vlabel: vlabel -> string
 val label_of_vlabel: vlabel -> string
@@ -202,3 +241,6 @@ val label_of_vlabel: vlabel -> string
 val var_vertex: string -> FlowGraph.V.t
 val expr_vertex: expr -> FlowGraph.V.t
 val expr_quals: QualMap.t -> expr -> qual list
+
+val is_expr_vertex: FlowGraph.V.t -> bool
+val is_flow_edge: FlowGraph.E.t -> bool

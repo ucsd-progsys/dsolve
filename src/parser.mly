@@ -144,7 +144,7 @@ query:
 | QUESTION exp EOL {
 
     let exp = $2 in
-      let qmap = fixedpoint_annotate exp !active_preds in
+      let qmap = annotate exp !active_preds in
 	Printf.printf "%s\n\n" (pprint_annotated_expr (expr_quals qmap) exp);
 	Prover.reset();
 	flush stdout
@@ -211,8 +211,8 @@ exp:
 | MATCH exp WITH pattern_expr_list { Match($2, $4, get_next_expr_id()) }
 | LET VAR COLON tschema EQUAL exp IN exp { Let($2, Some $4, $6, $8, get_next_expr_id()) }
 | LET VAR EQUAL exp IN exp { Let($2, None, $4, $6, get_next_expr_id()) }
-| FUN VAR COLON mtype EQUAL exp { Abs($2, Some $4, $6, get_next_expr_id()) }
-| FUN VAR EQUAL exp { Abs($2, None, $4, get_next_expr_id()) }
+| FUN VAR COLON mtype ARROW exp { Abs($2, Some $4, $6, get_next_expr_id()) }
+| FUN VAR ARROW exp { Abs($2, None, $4, get_next_expr_id()) }
 | FIX VAR DOT exp { Fix($2, $4, get_next_expr_id()) }
 | TVAR DOT exp { TyAbs($1, $3, get_next_expr_id()) }
 | QVAR LESSEQ qualliteral DOT exp { QualAbs($1, $3, $5, get_next_expr_id()) }

@@ -1,9 +1,10 @@
 open OUnit
 open Flowgraph
+open Expr
 
 
 let vertex s =
-  FlowGraph.V.create (NonExpr(s))
+  FlowGraph.V.create (ExprId(s, TrueExp(s)))
 
 let edge v1 l v2 =
   FlowGraph.E.create v1 l v2
@@ -25,13 +26,26 @@ let qualset =
   fun l -> List.fold_right QualSet.add l QualSet.empty
 
 
+let flow_qualifiers graph qmap =
+  let prove v = QualMap.vertex_quals v qmap in
+  let push _ _ = () in
+  let pop () = () in
+  let flow_scc (qmap, visited) scc =
+    fix_scc graph prove push pop scc (qmap, visited)
+  in
+  let sccs = FlowGraphSCC.scc_list graph in
+  let sorted_sccs = sort_sccs graph sccs in
+  let (qmap', _) = List.fold_left flow_scc (qmap, VertexSet.empty) sorted_sccs in
+    qmap'
+
+
 let test_regular_flow _ =
   let (v1, v2) = (vertex "v1", vertex "v2") in
   let e = edge v1 Flow v2 in
   let graph = make_graph ([v1; v2], [e]) in
   let v1_qset = QualSet.singleton "Q" in
   let qmap = qualmap [(v1, v1_qset)] in
-  let result = flow_qualifiers graph FlowBackedges qmap qmap in
+  let result = flow_qualifiers graph qmap in
     assert_bool "Did not propagate qualifier across simple edge"
       (QualSet.equal v1_qset (QualMap.vertex_quals v2 result))
 
@@ -42,7 +56,7 @@ let test_cycle_termination _ =
   let graph = make_graph ([v1; v2], [forward_edge; backward_edge]) in
   let v1_qset = QualSet.singleton "Q" in
   let qmap = qualmap [(v1, v1_qset)] in
-  let result = flow_qualifiers graph FlowBackedges qmap qmap in
+  let result = flow_qualifiers graph qmap in
     assert_bool "Terminated without propagating qualifier in cycle"
       (QualSet.equal v1_qset (QualMap.vertex_quals v2 result))
 
@@ -72,8 +86,7 @@ let test_loop_propagation _ =
   let graph = make_graph ([vin; vhead; vloop], [in_edge; prop_edge; loop_edge]) in
   let vin_qset = qualset ["Q"] in
   let qmap = qualmap [(vin, vin_qset)] in
-  let qmap' = flow_qualifiers graph IgnoreBackedges qmap qmap in
-  let result = flow_qualifiers graph FlowBackedges qmap qmap' in
+  let result = flow_qualifiers graph qmap in
     assert_bool "Did not propagate qualifier through loop"
       (QualSet.equal vin_qset (QualMap.vertex_quals vhead result))
 
@@ -141,7 +154,7 @@ let test_qualifier_intersection _ =
   let l_qset = qualset ["Q1"; "Q2"] in
   let r_qset = qualset ["Q1"; "Q3"] in
   let qmap = qualmap [(l, l_qset); (r, r_qset)] in
-  let result = flow_qualifiers graph FlowBackedges qmap qmap in
+  let result = flow_qualifiers graph qmap in
     assert_bool "Child qualifier not intersection of parents"
       (QualSet.equal (QualSet.inter l_qset r_qset)
 	 (QualMap.vertex_quals c result))
@@ -153,56 +166,34 @@ let test_no_depend_propagate _ =
   let graph = make_graph ([vfrom; vto], [e]) in
   let from_qset = qualset ["Q"] in
   let qmap = qualmap [(vfrom, from_qset)] in
-  let result = flow_qualifiers graph FlowBackedges qmap qmap in
+  let result = flow_qualifiers graph qmap in
     assert_bool "Propagated across dependency edge"
       (QualSet.is_empty (QualMap.vertex_quals vto result))
 
 
-let test_simple_obsolete _ =
-  let v = vertex "v" in
-  let qset_init = qualset ["Qi"] in
-  let qmap = qualmap [(v, qset_init)] in
-  let obs_quals = qualset ["Qo"] in
-  let qmap' = QualMap.add_vertex_quals v obs_quals qmap in
-  let qmap'' = QualMap.add_vertex_quals v (qualset ["Q2"]) qmap' in
-  let result = QualMap.obsolete_quals v obs_quals qmap'' in
-    assert_bool "Did not correctly obsolete quals in simple case"
-      (QualMap.equal result qmap)
-
-
-let test_partial_obsolete _ =
-  let v = vertex "v" in
-  let qmap = qualmap [(v, qualset ["Qi"; "Qs"])] in
-  let qmap' = QualMap.add_vertex_quals v (qualset ["Qo"]) qmap in
-  let expected = qualmap [(v, qualset ["Qs"])] in
-  let result = QualMap.obsolete_quals v (qualset ["Qi"]) qmap' in
-    assert_bool "Did not correctly partially obsolete quals"
-      (QualMap.equal result expected)
-
-
-let test_idempotent_add _ =
-  let v = vertex "v" in
-  let qmap = qualmap [(v, qualset ["Q"; "R"])] in
-  let qmap'' = QualMap.add_vertex_quals v (qualset ["Q"]) qmap in
-  let qmap' = QualMap.add_vertex_quals v (qualset ["P"]) qmap'' in
-  let expected = qualmap [(v, qualset ["Q"])] in
-  let result = QualMap.obsolete_quals v (qualset ["R"]) qmap' in
-    assert_bool "May have removed redundantly-added qualifier"
-      (QualMap.equal result expected)
-
-
-let test_cycle_obsolete _ =
+let test_two_scc_sort _ =
   let (vin, vhead, vloop) = (vertex "in", vertex "head", vertex "loop") in
   let (in_edge, prop_edge, loop_edge) = (edge vin Flow vhead, edge vhead Depend vloop, edge vloop Flow vhead) in
   let graph = make_graph ([vin; vhead; vloop], [in_edge; prop_edge; loop_edge]) in
-  let vin_qset = qualset ["Q"] in
-  let qmap = qualmap [(vin, vin_qset)] in
-  let qmap' = flow_qualifiers graph IgnoreBackedges qmap qmap in
-    assert_bool "Did not propagate qualifier to loop head"
-      (QualSet.equal vin_qset (QualMap.vertex_quals vhead qmap'));
-    let result = flow_qualifiers graph FlowBackedges qmap qmap' in
-      assert_bool "Propagated obsolete qualifier through loop"
-	(QualSet.is_empty (QualMap.vertex_quals vhead result))
+  let sccs = FlowGraphSCC.scc_list graph in
+  let sorted_sccs = sort_sccs graph sccs in
+  let sorted =
+    match sorted_sccs with
+	[[v1]; [v2; v3]] when v1 = vin && v2 != v3 ->
+	  true
+      | _ ->
+	  false
+  in
+    assert_bool "SCCs out of order" sorted
+
+
+let test_single_scc_sort _ =
+  let (vhead, vloop) = (vertex "head", vertex "loop") in
+  let (prop_edge, loop_edge) = (edge vhead Flow vloop, edge vloop Flow vhead) in
+  let graph = make_graph ([vhead; vloop], [prop_edge; loop_edge]) in
+  let sccs = FlowGraphSCC.scc_list graph in
+  let sorted_sccs = sort_sccs graph sccs in
+    assert_bool "SCC destroyed magically" (sccs = sorted_sccs)
 
 
 let suite = "Test Flowgraph" >:::
@@ -211,7 +202,5 @@ let suite = "Test Flowgraph" >:::
    "test_loop_propagation" >:: test_loop_propagation;
    "test_qualifier_intersection" >:: test_qualifier_intersection;
    "test_no_depend_propagate" >:: test_no_depend_propagate;
-   "test_simple_obsolete" >:: test_simple_obsolete;
-   "test_partial_obsolete" >:: test_partial_obsolete;
-   "test_idempotent_add" >:: test_idempotent_add;
-   "test_cycle_obsolete" >:: test_cycle_obsolete]
+   "test_two_scc_sort" >:: test_two_scc_sort;
+   "test_single_scc_sort" >:: test_single_scc_sort]
