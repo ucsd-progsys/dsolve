@@ -252,37 +252,37 @@ let fix_scc fg prove push pop scc_vertices (init_qmap, init_visited) =
 	else
 	  None
       in
-      let pred_quals = Misc.mapfilter visited_flow_edge_quals (FlowGraph.pred_e fg v) in
+      let pred_edges = FlowGraph.pred_e fg v in
+      let pred_quals = Misc.mapfilter visited_flow_edge_quals pred_edges in
       let flowed_quals =
 	match pred_quals with
 	    [] -> QualSet.empty
 	  | _ -> List.fold_right QualSet.inter pred_quals (List.hd pred_quals) in
-      (* we can only prove facts about expressions and variables, not intermediate nodes *)
-      let should_prove = is_expr_vertex v in
       let proved_quals =
-	if should_prove then
-	  prove v
+        (* we can only prove facts about expressions and variables, not intermediate nodes *)
+	if is_expr_vertex v then
+	  (* push the quals for the expressions on which we depend *)
+	  let filter_depend e =
+	    let src = FlowGraph.E.src e in
+	      if (not (is_flow_edge e)) && (VertexSet.mem src visited) then
+		Some src
+	      else
+		None
+	  in
+	  let vertex_dependencies = Misc.mapfilter filter_depend pred_edges in
+	  let _ = List.iter (fun u -> push u (QualMap.vertex_quals u qmap)) vertex_dependencies in
+	  let proved = prove v in
+	  let _ = List.iter (fun _ -> pop ()) vertex_dependencies in
+	    proved
 	else
 	  QualSet.empty
       in
       let quals = QualSet.union flowed_quals proved_quals in
-      let _ =
-	if should_prove then
-	  push v quals
-	else
-	  ()
-      in
       let qmap' = QualMap.add_vertex_quals v quals qmap in
       let visited' = VertexSet.add v visited in
       let stack' = VertexSet.add v stack in
       let scc_succs = List.filter (fun u -> VertexSet.mem u scc) (FlowGraph.succ fg v) in
       let (qmap'', visited'') = List.fold_right (df_flow stack') scc_succs (qmap', visited') in
-      let _ =
-	if should_prove then
-	  pop ()
-	else
-	  ()
-      in
 	(qmap'', visited'')
   in
   let is_base_case v =
