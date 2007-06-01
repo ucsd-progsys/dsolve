@@ -122,74 +122,32 @@ end
 
 
 module QualMap = struct
-  type history = (Vertex.t * QualSet.t) list
-  type t = QualSet.t VertexMap.t * history
+  type t = QualSet.t VertexMap.t
 
 
-  let empty = (VertexMap.empty, [])
+  let empty = VertexMap.empty
 
 
-  let vertex_quals v (vmap, _) =
+  let vertex_quals v vmap =
     try
       VertexMap.find v vmap
     with Not_found ->
       QualSet.empty
 
 
-  let add_vertex_quals v quals ((vmap, hist) as qmap) =
-    let old_quals = vertex_quals v qmap in
-    let new_quals = QualSet.diff quals old_quals in
-    let hist' = (v, new_quals)::hist in
-    let vmap' = VertexMap.add v quals vmap in
-      (vmap', hist')
+  let add_vertex_quals v quals vmap =
+    VertexMap.add v quals vmap
 
 
-  (* pmr: don't export this, I have no idea how to reconcile
-     with history...  meant to be used by obsolete_quals only *)
-  let remove_vertex_quals v quals vmap =
-    let old_quals = vertex_quals v (vmap, []) in
-    let new_quals = QualSet.diff old_quals quals in
-    let vmap' = VertexMap.add v new_quals vmap in
-      vmap'
-
-
-  let obsolete_quals v quals (vmap, hist) =
-    if QualSet.is_empty quals then
-      (vmap, hist)
-    else
-    let rec obsolete_history ordered_hist hist' =
-      match ordered_hist with
-	[] ->
-	  ([], hist')
-      | ((v, qs) as h)::hs ->
-	  let dead = QualSet.inter qs quals in
-	  if QualSet.is_empty dead then
-	    obsolete_history hs (h::hist')
-	  else
-	    let live = QualSet.diff qs dead in
-	    let hist'' =
-	      if QualSet.is_empty live then
-		hist'
-	      else
-		(v, live)::hist'
-	    in
-	      ((v, dead)::hs, hist'')
-    in
-    let ordered_hist = List.rev hist in
-    let (dead, hist') = obsolete_history ordered_hist [] in
-    let vmap' = List.fold_right (fun (v, qs) -> remove_vertex_quals v qs) dead vmap in
-     (vmap', hist')
-
-
-  let map f (vmap, _) =
+  let map f vmap =
     VertexMap.maplist f vmap
 
 
-  let equal (vmap1, _) (vmap2, _) =
+  let equal vmap1 vmap2 =
     vmap1 = vmap2
 
 
-  let dump (vmap, _) =
+  let dump vmap =
     let print_mapping v qs =
       let label = label_of_vlabel (FlowGraph.V.label v) in
 	Printf.printf "%s |-> %s\n" label (Misc.join (QualSet.elements qs) ", ")
@@ -231,10 +189,6 @@ let sort_sccs fg sccs =
       compare (VertexMap.find v1 vmap) (VertexMap.find v2 vmap)
   in
     List.sort compare_sccs sccs
-
-
-let find_backedges fg =
-  EdgeSet.empty
 
 
 let fix_scc fg prove push pop scc_vertices (init_qmap, init_visited) =
@@ -306,119 +260,6 @@ let fix_scc fg prove push pop scc_vertices (init_qmap, init_visited) =
 	fix_scc_rec qmap' visited'
   in
     fix_scc_rec init_qmap init_visited
-    
-
-(*
-let find_backedges fg =
-  let find_backedges_from head init_edges =
-    let rec find_backedges_rec stack v edges =
-      if List.mem v stack then
-	if not (FlowGraph.V.equal v  head) then
-	  (* By design, every backedge is a flow edge - backedges correspond to
-	     parameter passing, which is a flow from a value to a parameter (i.e., the
-	     paramter is never going to the the target of a dependency edge) *)
-	  let vf = FlowGraph.V.label (List.hd stack) in
-	  let vt = FlowGraph.V.label v in
-	  let h = FlowGraph.V.label head in
-	    begin
-	      Printf.printf "Backedge: %s -> %s (%s)\n" (label_of_vlabel vf) (label_of_vlabel vt) (label_of_vlabel h);
-	  let edge = FlowGraph.E.create (List.hd stack) Flow v in
-	    (* pmr: dirty hack to work around the fact that sometimes we generate a backedge
-	       for theorem prover edges --- create a regular edge and see if it exists; if not,
-	       we found a theorem prover edge and we don't add it *)
-	    if FlowGraph.mem_edge_e fg edge then
-	      EdgeSet.add edge edges
-	    else
-	      edges
-	    end
-	else
-	  edges
-      else
-	let stack' = v::stack in
-	let succs = FlowGraph.succ fg v in
-	  List.fold_right (find_backedges_rec stack') succs edges
-    in
-      find_backedges_rec [] head init_edges
-  in
-  let all_vertices = FlowGraph.vertices fg in
-    List.fold_right find_backedges_from all_vertices EdgeSet.empty
-*)
-
-let get_edge_source_quals qmap e =
-  QualMap.vertex_quals (FlowGraph.E.src e) qmap
-
-
-type backedge_flow =
-    FlowBackedges
-  | IgnoreBackedges
-
-
-let collect_qualifiers qmap inedges =
-  try
-    List.fold_left
-      (fun q e ->
-	 QualSet.inter q (get_edge_source_quals qmap e))
-      (get_edge_source_quals qmap (List.hd inedges))
-      inedges
-  with _ ->
-    QualSet.empty
-
-
-let flow_qualifiers fg backflow base_qmap init_qmap =
-  let excluded_edges =
-    match backflow with
-	FlowBackedges ->
-	  EdgeSet.empty
-      | IgnoreBackedges ->
-	  find_backedges fg
-  in
-  let unstable_vertices =
-    match backflow with
-	IgnoreBackedges ->
-	  []
-      | FlowBackedges ->
-	  let backedges = EdgeSet.elements (find_backedges fg) in
-	    List.map FlowGraph.E.dst backedges
-  in
-  let rec flow_qualifiers_rec qmap = function
-      v::w ->
-(*	let _ =
-	  let ins = List.map (fun e -> label_of_vlabel (FlowGraph.V.label (FlowGraph.E.src e))) (FlowGraph.pred_e fg v) in
-	    Printf.printf "Inedges for %s: %s\n" (label_of_vlabel (FlowGraph.V.label v)) (Misc.join ins ", ")
-	in *)
-	let flow_edges = List.filter is_flow_edge (FlowGraph.pred_e fg v) in
-(*	let _ =
-	  let ins = List.map (fun e -> label_of_vlabel (FlowGraph.V.label (FlowGraph.E.src e))) flow_edges in
-	    Printf.printf "Flow for %s: %s\n" (label_of_vlabel (FlowGraph.V.label v)) (Misc.join ins ", ")
-	in *)
-	let propagation_edges = List.filter (fun e -> not (EdgeSet.mem e excluded_edges)) flow_edges in
-(*	let _ =
-	  let ins = List.map (fun e -> label_of_vlabel (FlowGraph.V.label (FlowGraph.E.src e))) propagation_edges in
-	    Printf.printf "Prop for %s: %s\n" (label_of_vlabel (FlowGraph.V.label v)) (Misc.join ins ", ")
-	in *)
-	let new_quals = collect_qualifiers qmap propagation_edges in
-	let old_quals = QualMap.vertex_quals v qmap in
-(*	let base_quals = QualMap.vertex_quals v base_qmap in *)
-	let dead_quals =
-	  if List.mem v unstable_vertices then
-	    QualSet.diff old_quals new_quals
-	  else
-	    QualSet.empty
-	in
-	let qmap'' = QualMap.obsolete_quals v dead_quals qmap in
-	let qmap' = QualMap.add_vertex_quals v new_quals qmap'' in
-	let w' =
-	  if not (QualSet.equal new_quals old_quals) then
-	    (FlowGraph.succ fg v)@w
-	  else
-	    w
-	in
-	  flow_qualifiers_rec qmap' w'
-    | [] ->
-	qmap
-  in
-  let all_vertices = FlowGraph.vertices fg in
-    flow_qualifiers_rec init_qmap all_vertices
 
 
 let var_vertex varname =

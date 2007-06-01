@@ -220,16 +220,11 @@ module QualMap:
 
     val vertex_quals: FlowGraph.V.t -> t -> QualSet.t
     val add_vertex_quals: FlowGraph.V.t -> QualSet.t -> t -> t
-    val obsolete_quals: FlowGraph.V.t -> QualSet.t -> t -> t
     val map: (FlowGraph.V.t -> QualSet.t -> 'a) -> t -> 'a list
     val equal: t -> t -> bool
     val dump: t -> unit
 end
 
-
-type backedge_flow =
-    FlowBackedges
-  | IgnoreBackedges
 
 val sort_sccs: FlowGraph.t -> FlowGraph.V.t list list -> FlowGraph.V.t list list
 
