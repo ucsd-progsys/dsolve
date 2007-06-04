@@ -200,6 +200,7 @@ exp:
 | VAR { ExpVar($1, get_next_expr_id()) }
 | INTLITERAL { Num($1, get_next_expr_id()) }
 | TAG LPAREN exp_list RPAREN { TyCon($1, $3, get_next_expr_id()) }
+| TAG { TyCon($1, [], get_next_expr_id()) }
 | exp PLUS exp { BinOp(Plus, $1, $3, get_next_expr_id()) }
 | exp MINUS exp { BinOp(Minus, $1, $3, get_next_expr_id()) }
 | exp TIMES exp { BinOp(Times, $1, $3, get_next_expr_id()) }

@@ -4,7 +4,7 @@ open Expr
 
 
 let vertex s =
-  FlowGraph.V.create (ExprId(s, TrueExp(s)))
+  FlowGraph.V.create (ExprId(s, ExpVar(s, s)))
 
 let edge v1 l v2 =
   FlowGraph.E.create v1 l v2
@@ -26,17 +26,11 @@ let qualset =
   fun l -> List.fold_right QualSet.add l QualSet.empty
 
 
-let flow_qualifiers graph qmap =
-  let prove v = QualMap.vertex_quals v qmap in
+let flow graph bot qmap =
+  let prove v = QualMap.vertex_quals v QualSet.empty qmap in
   let push _ _ = () in
   let pop () = () in
-  let flow_scc (qmap, visited) scc =
-    fix_scc graph prove push pop scc (qmap, visited)
-  in
-  let sccs = FlowGraphSCC.scc_list graph in
-  let sorted_sccs = sort_sccs graph sccs in
-  let (qmap', _) = List.fold_left flow_scc (qmap, VertexSet.empty) sorted_sccs in
-    qmap'
+    flow_qualifiers graph prove push pop bot qmap
 
 
 let test_regular_flow _ =
@@ -45,9 +39,9 @@ let test_regular_flow _ =
   let graph = make_graph ([v1; v2], [e]) in
   let v1_qset = QualSet.singleton "Q" in
   let qmap = qualmap [(v1, v1_qset)] in
-  let result = flow_qualifiers graph qmap in
+  let result = flow graph v1_qset qmap in
     assert_bool "Did not propagate qualifier across simple edge"
-      (QualSet.equal v1_qset (QualMap.vertex_quals v2 result))
+      (QualSet.equal v1_qset (QualMap.vertex_quals v2 QualSet.empty result))
 
 
 let test_cycle_termination _ =
@@ -56,9 +50,9 @@ let test_cycle_termination _ =
   let graph = make_graph ([v1; v2], [forward_edge; backward_edge]) in
   let v1_qset = QualSet.singleton "Q" in
   let qmap = qualmap [(v1, v1_qset)] in
-  let result = flow_qualifiers graph qmap in
+  let result = flow graph v1_qset qmap in
     assert_bool "Terminated without propagating qualifier in cycle"
-      (QualSet.equal v1_qset (QualMap.vertex_quals v2 result))
+      (QualSet.equal v1_qset (QualMap.vertex_quals v2 QualSet.empty result))
 
 (*
 let test_cycle_no_backedge _ =
@@ -86,9 +80,9 @@ let test_loop_propagation _ =
   let graph = make_graph ([vin; vhead; vloop], [in_edge; prop_edge; loop_edge]) in
   let vin_qset = qualset ["Q"] in
   let qmap = qualmap [(vin, vin_qset)] in
-  let result = flow_qualifiers graph qmap in
+  let result = flow graph vin_qset qmap in
     assert_bool "Did not propagate qualifier through loop"
-      (QualSet.equal vin_qset (QualMap.vertex_quals vhead result))
+      (QualSet.equal vin_qset (QualMap.vertex_quals vhead QualSet.empty result))
 
 
 (*
@@ -153,11 +147,12 @@ let test_qualifier_intersection _ =
   let graph = make_graph ([l; r; c], [le; re]) in
   let l_qset = qualset ["Q1"; "Q2"] in
   let r_qset = qualset ["Q1"; "Q3"] in
+  let bot = QualSet.union l_qset r_qset in
   let qmap = qualmap [(l, l_qset); (r, r_qset)] in
-  let result = flow_qualifiers graph qmap in
+  let result = flow graph bot qmap in
     assert_bool "Child qualifier not intersection of parents"
       (QualSet.equal (QualSet.inter l_qset r_qset)
-	 (QualMap.vertex_quals c result))
+	 (QualMap.vertex_quals c QualSet.empty result))
 
 
 let test_no_depend_propagate _ =
@@ -166,11 +161,11 @@ let test_no_depend_propagate _ =
   let graph = make_graph ([vfrom; vto], [e]) in
   let from_qset = qualset ["Q"] in
   let qmap = qualmap [(vfrom, from_qset)] in
-  let result = flow_qualifiers graph qmap in
+  let result = flow graph from_qset qmap in
     assert_bool "Propagated across dependency edge"
-      (QualSet.is_empty (QualMap.vertex_quals vto result))
+      (QualSet.is_empty (QualMap.vertex_quals vto QualSet.empty result))
 
-
+(*
 let test_two_scc_sort _ =
   let (vin, vhead, vloop) = (vertex "in", vertex "head", vertex "loop") in
   let (in_edge, prop_edge, loop_edge) = (edge vin Flow vhead, edge vhead Depend vloop, edge vloop Flow vhead) in
@@ -194,13 +189,13 @@ let test_single_scc_sort _ =
   let sccs = FlowGraphSCC.scc_list graph in
   let sorted_sccs = sort_sccs graph sccs in
     assert_bool "SCC destroyed magically" (sccs = sorted_sccs)
-
+*)
 
 let suite = "Test Flowgraph" >:::
   ["test_regular_flow" >:: test_regular_flow;
    "test_cycle_termination" >:: test_cycle_termination;
    "test_loop_propagation" >:: test_loop_propagation;
    "test_qualifier_intersection" >:: test_qualifier_intersection;
-   "test_no_depend_propagate" >:: test_no_depend_propagate;
-   "test_two_scc_sort" >:: test_two_scc_sort;
-   "test_single_scc_sort" >:: test_single_scc_sort]
+   "test_no_depend_propagate" >:: test_no_depend_propagate]
+(*   "test_two_scc_sort" >:: test_two_scc_sort;
+   "test_single_scc_sort" >:: test_single_scc_sort] *)

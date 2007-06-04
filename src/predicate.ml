@@ -31,7 +31,7 @@ let big_and cs =
 
 
 let big_or cs =
-  let combine p q = And(p, q) in
+  let combine p q = Or(p, q) in
     List.fold_right combine cs (Not(True))
 
 

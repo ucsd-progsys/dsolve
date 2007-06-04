@@ -37,22 +37,11 @@ let push preds v quals =
 let pop () = Prover.pop ()
 
 
-(* Precondition: The theorem prover must already have the expression predicate pushed. *)
 let annotate exp preds =
   let (graph, init_qmap) = expr_qualgraph exp in
   let exp_pred = expr_predicate exp in
   let _ = Prover.push exp_pred in
-  let sccs = FlowGraphSCC.scc_list graph in
-  let sorted_sccs = sort_sccs graph sccs in
-  let fix_and_push (qmap, visited) scc =
-    let (qmap', visited') = fix_scc graph (prove preds) (push preds) pop scc (qmap, visited) in
-    let push_vertex_quals v = push preds v (QualMap.vertex_quals v qmap') in
-    let expr_vertices = List.filter is_expr_vertex scc in
-      List.iter push_vertex_quals expr_vertices;
-      QualMap.dump qmap';
-      (qmap', visited')
+  let bot =
+    List.fold_right (fun (q, _) qs -> QualSet.add q qs) preds QualSet.empty
   in
-  let (qmap, _) =
-    List.fold_left fix_and_push (init_qmap, VertexSet.empty) sorted_sccs
-  in
-    qmap
+    flow_qualifiers graph (prove preds) (push preds) pop bot init_qmap

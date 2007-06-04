@@ -115,12 +115,6 @@ module FlowGraphPrinter :
     val output_graph : Pervasives.out_channel -> FlowGraph.t -> unit
   end
 
-module FlowGraphSCC :
-  sig         
-    val scc : FlowGraph.t -> FlowGraph.V.t -> int
-    val scc_list : FlowGraph.t -> FlowGraph.V.t list list
-  end
-
 module QualSet :
   sig
     type elt = qual
@@ -218,7 +212,7 @@ module QualMap:
 
     val empty: t
 
-    val vertex_quals: FlowGraph.V.t -> t -> QualSet.t
+    val vertex_quals: FlowGraph.V.t -> QualSet.t -> t -> QualSet.t
     val add_vertex_quals: FlowGraph.V.t -> QualSet.t -> t -> t
     val map: (FlowGraph.V.t -> QualSet.t -> 'a) -> t -> 'a list
     val equal: t -> t -> bool
@@ -226,9 +220,7 @@ module QualMap:
 end
 
 
-val sort_sccs: FlowGraph.t -> FlowGraph.V.t list list -> FlowGraph.V.t list list
-
-val fix_scc: FlowGraph.t -> (FlowGraph.V.t -> QualSet.t) -> (FlowGraph.V.t -> QualSet.t -> unit) -> (unit -> unit) -> FlowGraph.V.t list -> (QualMap.t * VertexSet.t) -> (QualMap.t * VertexSet.t)
+val flow_qualifiers: FlowGraph.t -> (FlowGraph.V.t -> QualSet.t) -> (FlowGraph.V.t -> QualSet.t -> unit) -> (unit -> unit) -> QualSet.t -> QualMap.t -> QualMap.t
 
 val string_of_vlabel: vlabel -> string
 val label_of_vlabel: vlabel -> string
