@@ -159,8 +159,8 @@ let flow_qualifiers fg prove push pop bot init_qmap =
       [] ->
 	qmap
     | v::vs ->
-	(*let _ = Printf.printf "\nDumping..." in
-	let _ = QualMap.dump qmap in *)
+	let _ = Printf.printf "\nDumping..." in
+	let _ = QualMap.dump qmap in
 	let flow_edge_quals e =
 	  let src = FlowGraph.E.src e in
 	    if is_flow_edge e then
@@ -195,9 +195,10 @@ let flow_qualifiers fg prove push pop bot init_qmap =
 	in
 	let init_quals = QualMap.vertex_quals v QualSet.empty init_qmap in
 	let quals = List.fold_right QualSet.union [flowed_quals; proved_quals] init_quals in
+	let old_quals = QualMap.vertex_quals v bot qmap in
 	let qmap' = QualMap.add_vertex_quals v quals qmap in
 	let w' =
-	  if not (QualMap.equal qmap qmap') then
+	  if not (QualSet.equal quals old_quals) then
 	    (FlowGraph.succ fg v)@vs
 	  else
 	    vs
