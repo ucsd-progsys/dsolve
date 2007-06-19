@@ -73,6 +73,7 @@ let active_preds = ref []
 
 %right ARROW
 %left  MEET JOIN
+%left  ARG
 %left  PLUS MINUS
 %right TIMES
 %right QUALIFY
@@ -113,7 +114,7 @@ query:
 | BANG exp EOL {
 
     let e = $2 in
-      let (graph, qm) = expr_qualgraph e in
+      let (graph, qm) = expr_qualgraph e QualSet.empty in
 	FlowGraphPrinter.output_graph stdout graph;
 	Printf.printf "\n";
 	flush stdout
@@ -145,7 +146,7 @@ query:
 
     let exp = $2 in
       let qmap = annotate exp !active_preds in
-	Printf.printf "%s\n\n" (pprint_annotated_expr (expr_quals qmap) exp);
+	Printf.printf "%s\n\n" (pprint_annotated_expr (expr_quals qmap) 0 exp);
 	Prover.reset();
 	flush stdout
   }
@@ -192,8 +193,12 @@ qualliteral:
 | QLITERAL { Qual($1) }
 ;
 
-
 exp:
+  simple_exp param_list { List.fold_left (fun f g -> App(f, g, get_next_expr_id())) $1 $2 }
+| simple_exp { $1 }
+;
+
+simple_exp:
   LPAREN exp RPAREN { $2 }
 | TRUE { TrueExp(get_next_expr_id()) }
 | FALSE { FalseExp(get_next_expr_id()) }
@@ -220,9 +225,12 @@ exp:
 | LCURLY LSQUARE qual RSQUARE RCURLY exp { Annot($3, $6, get_next_expr_id()) }
 | exp LSQUARE mtype RSQUARE { TyApp($1, $3, get_next_expr_id()) }
 | exp LCURLY qualliteral RCURLY { QualApp($1, $3, get_next_expr_id()) }
-| exp exp { App($1, $2, get_next_expr_id()) }
 ;
 
+param_list:
+  simple_exp param_list { $1::$2 }
+| simple_exp { [$1] }
+;
 
 exp_list:
   exp COMMA exp_list { $1::$3 }
