@@ -220,11 +220,9 @@ let rec branch_predicate e =
 	  let (_, exps) = List.split pexps in
 	  let child_bps = List.map branch_predicate exps in
 	  let actives = List.map branch_active exps in
-	  let vex = value_var ex in
 	  let bex = branch_active ex in
-	  let up = big_and (implies(bex, be)::(Misc.mapi (fun i b -> implies(b, And(equals(vex, Int i), be))) actives)) in
-	  let down = implies(be, And(bex, big_or actives)) in
-	    big_and (up::down::child_bps)
+	  let up = big_and (implies(bex, be)::(List.map (fun b -> implies(b, bex)) actives)) in
+	    big_and (implies(be, bex)::up::child_bps)
       | Abs(_, _, e, _) ->
 	  big_and [implies(branch_active e, be); branch_predicate e]
       | _ ->
