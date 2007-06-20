@@ -15,6 +15,6 @@ pred L(x): 0 <= x;;
     else
       None
   in
-    look 0 (alen - 1)
+    look 0 alen
 in
   bsearch c r;;

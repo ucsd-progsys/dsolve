@@ -4,7 +4,6 @@ pred DEC(y): y <= x;;
   if x <= 0 then
     s
   else
-    sum (x - 1) (x + s)
+    sum (x + 1) (x + s)
 in
   sum 10 5;;
-      

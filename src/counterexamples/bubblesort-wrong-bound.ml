@@ -3,7 +3,7 @@ pred L(x): 0 <= x;;
 
 ? let bubsort = fun a -> fun l ->
   let sorted = fun i ->
-    if (i + 1) <= l then
+    if i + 1 <= l then
       if Ref(a, i) <= Ref(a, (i + 1)) then
 	sorted (i + 1)
       else
@@ -27,4 +27,4 @@ pred L(x): 0 <= x;;
       let k = bubble 0 in
 	bubsort a l
 in
-  bubsort r (rlen - 1);;
+  bubsort r rlen;;

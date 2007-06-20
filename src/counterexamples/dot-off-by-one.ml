@@ -8,5 +8,4 @@ let dot = fun u -> fun v -> fun i -> fun n -> fun s ->
   else
     dot u v (i + 1) n (s + Ref(u, i) + Ref(v, i))
 in
-  dot a b 0 (min (alen - 1) (blen - 1)) 0;;
-
+  dot a b 0 (min alen blen) 0;;

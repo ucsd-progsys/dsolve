@@ -4,7 +4,7 @@ pred L(x): 0 <= x;;
 ? let bsearch = fun k -> fun a ->
   let look = fun l -> fun h ->
     if l <= h then
-      let m = l + (h - l) in
+      let m = l + h in
 	if Ref(a, m) = k then
 	  Some(m, x)
 	else

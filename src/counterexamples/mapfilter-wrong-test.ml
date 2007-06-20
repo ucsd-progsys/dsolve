@@ -14,7 +14,7 @@ pred P(x): 0 < x;;
 		r
 in
 let pos = fun y ->
-  if 0 < y then
+  if -1 < y then
     Some(y)
   else
     None
