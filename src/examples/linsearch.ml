@@ -5,7 +5,7 @@ pred U(j): j < alen;;
   if alen <= i then
     None
   else
-    if r = x then
+    if Ref(a, i) = x then
       Some(i)
-    else (((find a) x) (i + 1))
-  in (((find b) y) 0);;
+    else find a x (i + 1)
+  in find b y 0;;

@@ -50,9 +50,9 @@ let rec subst_graph v x = function
 
 let split_vertex_into_arrow v =
   let v_label = string_of_vlabel (FlowGraph.V.label v) in
-  (*let _ =
-    Printf.printf "Splitting %s into arrow...\n" v_label
-  in*)
+
+  let _ = Printf.printf "Splitting %s into arrow...\n" v_label in
+
   let (v_in, v_out) = (FlowGraph.V.create (NonExpr("In" ^ v_label)),
 		       FlowGraph.V.create (NonExpr("Out" ^ v_label))) in
     ConstArrow(ConstVertex v_in, ConstVertex v_out)
@@ -65,6 +65,10 @@ let reshape_constraints c =
     match w with
       [] ->
 	c
+    | FlowsTo(ConstArrow(_), _, Depend, _)::ws ->
+	reshape_constraints_rec c ws
+    | FlowsTo(_, _, Depend, ConstArrow(_))::ws ->
+	reshape_constraints_rec c ws
     | (FlowsTo(t1, p, t, t2) as f)::ws ->
 	begin match(t1, t2) with
 	    (ConstArrow(_, _), ((ConstVertex v2) as t2)) ->
@@ -122,53 +126,78 @@ let var_const_vertex x =
   ConstVertex(var_vertex x)
 
 
+let expr_const_vertex e =
+  ConstVertex(expr_vertex e)
+
+
 exception ExprNotHandled
 
+let no_exclusions _ = false
+  
+let exclude_tycons_and_abs = function
+    TyCon(_)
+  | Abs(_) ->
+      true
+  | _ ->
+      false
+
+let map_subexprs f efrom eto =
+  List.flatten (expr_map exclude_tycons_and_abs (fun ex -> expr_map no_exclusions (f ex) eto) efrom)
+
+
 (* pmr: this whole thing could probably make good use of subexp_constraints *)
-let expr_constraints exp =
+let expr_constraints exp bot =
   let rec expr_constraints_rec e qm =
-    let ve = ConstVertex(expr_vertex e) in
+    let subexp_constraints exps qmap =
+      List.fold_right (fun e (vl, cl, qm) ->
+			 let (v, c, qm') = expr_constraints_rec e qm in
+			   (v::vl, c@cl, qm')) exps ([], [], qmap)
+    in
+    let ve = expr_const_vertex e in
       match e with
 	  Num(_, _)
 	| TrueExp(_)
 	| FalseExp(_) ->
 	    (ve, [], qm)
 	| ExpVar(x, _) ->
-	    let vx = ConstVertex(var_vertex x) in
+	    let vx = var_const_vertex x in
 	      (ve, [FlowsTo(vx, Positive, Flow, ve)], qm)
 	| TyCon(_, exps, _) ->
-	    let subexp_constraints exps =
-	      List.fold_right (fun e (vl, cl, qm) ->
-				 let (v, c, qm') = expr_constraints_rec e qm in
-				   (v::vl, c@cl, qm')) exps ([], [], qm)
-	    in
-	    let (vs, cs, qm') = subexp_constraints exps in
+	    let (vs, cs, qm') = subexp_constraints exps qm in
 	    let branch_flow = List.map (fun v -> FlowsTo(v, Positive, Flow, ve)) vs in
-	      (ve, branch_flow@cs, qm')
+	    let qm'' =
+	      match exps with
+		  [] -> QualMap.add_vertex_quals (expr_vertex e) bot qm'
+		| _ -> qm'
+	    in
+	      (ve, branch_flow@cs, qm'')
 	| BinRel(_, e1, e2, _)
 	| BinOp(_, e1, e2, _) ->
 	    let (v1, c1, qm1) = expr_constraints_rec e1 qm in
 	    let (v2, c2, qm2) = expr_constraints_rec e2 qm1 in
+            (* we don't exclude tycons here because they shouldn't show up in arithmetic expressions *)
+	    let sexpdeps = Misc.flap (expr_map no_exclusions (fun ex -> FlowsTo(expr_const_vertex ex, Positive, Depend, ve))) [e1; e2] in
 	    let v1c = FlowsTo(v1, Positive, Depend, ve) in
 	    let v2c = FlowsTo(v2, Positive, Depend, ve) in
-	      (ve, v1c::v2c::c1@c2, qm2)
+	      (ve, v1c::v2c::sexpdeps@c1@c2, qm2)
 	| If(b, e1, e2, _) ->
 	    let (_, cb, qmb) = expr_constraints_rec b qm in
 	    let (v1, c1, qm1) = expr_constraints_rec e1 qmb in
 	    let (v2, c2, qm2) = expr_constraints_rec e2 qm1 in
+	    let guarddeps = Misc.flap (map_subexprs (fun f t -> FlowsTo(expr_const_vertex f, Positive, Depend, expr_const_vertex t)) b) [e1; e2] in
 	    let v1c = FlowsTo(v1, Positive, Flow, ve) in
 	    let v2c = FlowsTo(v2, Positive, Flow, ve) in
-	      (ve, v1c::v2c::(c1@c2@cb), qm2)
+	      (ve, v1c::v2c::(guarddeps@c1@c2@cb), qm2)
+	| Match(e, pexps, _) ->
+	    let (vm, cm, qm') = expr_constraints_rec e qm in
+	    let (pats, exps) = List.split pexps in
+	    let pattern_vars = Misc.flap pattern_get_vars pats in
+	    let (vs, cs, qm'') = subexp_constraints exps qm' in
+	    let varflow = List.map (fun v -> FlowsTo(vm, Positive, Flow, var_const_vertex v)) pattern_vars in
+	    let branchflow = List.map (fun v -> FlowsTo(v, Positive, Flow, ve)) vs in
+	      (ve, varflow@branchflow@cs@cm, qm'')
       (* pmr: this is obviously not very general, but qual needs to change *)
       (* pmr: this case is basically deprecated *)
-(*    | Match(e, pexps, _) ->
-	let (vm, cm, mm) = expr_constraints e in
-	let (pats, exps) = List.split pexps in
-	let pattern_vars = Misc.flap pattern_get_vars pats in
-	let (vs, cs, ms) = subexp_constraints exps in
-	let varflow = List.map (fun v -> FlowsTo(var_vertex vm, Positive, None, var_vertex v)) pattern_vars in
-	let branchflow = List.map (fun v -> FlowsTo(var_vertex v, Positive, None, var_vertex ve)) vs in
-	  (ve, varflow@cs, ms) *)
 	| Annot(Qual(q), e, _) ->
 	    let (t, c, qm') = expr_constraints_rec e qm in
 	    (* pmr: note that if this vertex gets split into an arrow later we
@@ -196,15 +225,16 @@ let expr_constraints exp =
 	    let vxb = var_const_vertex x in
 	    let instc = FlowsTo(vx, Negative, Flow, vxb) in
 	    let (v', c, qm') = expr_constraints_rec e' qmx in
+	    let letdeps = map_subexprs (fun f t -> FlowsTo(expr_const_vertex f, Positive, Depend, expr_const_vertex t)) ex e' in
 	    let retc = FlowsTo(v', Positive, Flow, ve) in
-	      (ve, instc::retc::(c@cx), qm')
+	      (ve, instc::retc::(letdeps@c@cx), qm')
 	| _ ->
 	    raise ExprNotHandled
   in
     expr_constraints_rec exp QualMap.empty
 
 
-let expr_qualgraph e =
-  let (_, cs, m) = expr_constraints e in
+let expr_qualgraph e bot =
+  let (_, cs, m) = expr_constraints e bot in
   let rs = reshape_constraints cs in
     (make_qualgraph rs, m)

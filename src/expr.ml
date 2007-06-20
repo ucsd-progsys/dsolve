@@ -241,6 +241,18 @@ let expr_get_subexprs = function
       [e]
 
 
+let rec expr_map exclude f e =
+  (* pmr: this can be done in a somewhat more general way, but this
+     is good enough for now - we're just trying to have an easy way not
+     to push subexps from type constructors *)
+  if exclude e then
+    []
+  else
+    let rv = f e in
+    let rest = Misc.flap (expr_map exclude f) (expr_get_subexprs e) in
+      rv::rest
+
+
 let rec pattern_get_vars = function
     PatternTyCon(_, pats) ->
       Misc.flap pattern_get_vars pats
@@ -271,9 +283,21 @@ let pprint_binrel frec e1 rel e2 =
     Misc.join [str1; relstr; str2] " "
 
 
-let rec pprint_annotated_expr annotator exp =
-  let pprint_rec = pprint_annotated_expr annotator in
-  let pprint_expr_simple = function
+let rec pprint_pattern = function
+    PatternVar(x) -> x
+  | PatternTyCon(cons, pats) ->
+      Printf.sprintf "%s(%s)" cons (Misc.join (List.map pprint_pattern pats) ", ")
+
+
+let rec pprint_annotated_expr annotator indent exp =
+  let indstr = String.make indent ' ' in
+  let pprint_rec = pprint_annotated_expr annotator 0 in
+  let pprint_ind = pprint_annotated_expr annotator (indent + 2) in
+  let pprint_pexp (pat, exp) =
+    Printf.sprintf "%s ->\n%s%s" (pprint_pattern pat) indstr (pprint_ind exp)
+  in
+  let pprint_expr_simple e =
+    match e with
       Num(n, _) ->
 	string_of_int n
     | TrueExp _ ->
@@ -284,31 +308,40 @@ let rec pprint_annotated_expr annotator exp =
 	x
     | TyCon(c, es, _) ->
 	let subexps = List.map pprint_rec es in
-	  c ^ "(" ^ (Misc.join subexps " ") ^ ")"
+	  Printf.sprintf "%s(%s)" c (Misc.join subexps ", ")
     | BinOp(op, e1, e2, _) ->
 	pprint_binop pprint_rec e1 op e2
     | BinRel(rel, e1, e2, _) ->
 	pprint_binrel pprint_rec e1 rel e2
     | If(e1, e2, e3, _) ->
-	"if " ^ pprint_rec e1 ^ " then " ^ pprint_rec e2 ^ " else " ^ pprint_rec e3
+	Printf.sprintf "if %s then\n%s\n%selse\n%s" (pprint_rec e1) (pprint_ind e2) indstr (pprint_ind e3)
+    | Match(e, pexps, _) ->
+	Printf.sprintf "match %s with\n%s%s" (pprint_rec e) indstr (Misc.join (List.map pprint_pexp pexps) ("\n" ^ indstr ^ "| "))
     | Annot(Qual(q), e, _) ->
-	"({[" ^ q ^ "]} " ^ pprint_rec e ^ ")"
+	"({" ^ q ^ "} " ^ pprint_rec e ^ ")"
     | Let(x, _, e1, e2, _) ->
-	"let " ^ x ^ " = " ^ pprint_rec e1 ^ " in " ^ pprint_rec e2
+	Printf.sprintf "let %s = %s in\n%s" x (pprint_rec e1) (pprint_ind e2)
     | Abs(x, _, e, _) ->
-	"fun " ^ x ^ " -> " ^ pprint_rec e
+	Printf.sprintf "fun %s ->\n%s" x (pprint_ind e)
     | App(e1, e2, _) ->
-	pprint_rec e1 ^ " " ^ pprint_rec e2
+	Printf.sprintf "%s(%s)" (pprint_rec e1) (pprint_rec e2)
     | _ ->
 	""
   in
   let quals = annotator exp in
-  let qualstrs = List.map (fun s -> "{[" ^ s ^ "]}") quals in
-    "(" ^ (Misc.join qualstrs " ") ^ " " ^ pprint_expr_simple exp ^ ")"
+  let qualstrs = List.map (fun s -> "{" ^ s ^ "}") quals in
+  let expstr = pprint_expr_simple exp in
+  let qualexpstr =
+    match qualstrs with
+	[] -> expstr
+      | _ ->
+	  Printf.sprintf "(%s %s)" (Misc.join qualstrs " ") expstr
+  in
+    Printf.sprintf "%s%s" (String.make indent ' ') qualexpstr
 
 
 let pprint_expr =
-  pprint_annotated_expr (fun e -> [])
+  pprint_annotated_expr (fun e -> []) 0
 
 
 let rec pprint_value = function

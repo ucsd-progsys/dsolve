@@ -38,10 +38,10 @@ let pop () = Prover.pop ()
 
 
 let annotate exp preds =
-  let (graph, init_qmap) = expr_qualgraph exp in
-  let exp_pred = expr_predicate exp in
-  let _ = Prover.push exp_pred in
   let bot =
     List.fold_right (fun (q, _) qs -> QualSet.add q qs) preds QualSet.empty
   in
+  let (graph, init_qmap) = expr_qualgraph exp bot in
+  let exp_pred = expr_predicate exp in
+  let _ = Prover.push exp_pred in
     flow_qualifiers graph (prove preds) (push preds) pop bot init_qmap

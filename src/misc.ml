@@ -78,6 +78,12 @@ let iteri f xs =
     | h::t -> ((f i h);(_m (i+1) t)) in
   _m 0 xs
 
+let mapi f xs =
+  let rec _m i l =
+    match l with [] -> []
+    | h::t -> (f i h)::(_m (i+1) t) in
+  _m 0 xs
+
 exception FalseException
 let rec intmap_for_all f m =
   try 

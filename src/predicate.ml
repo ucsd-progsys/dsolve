@@ -171,6 +171,11 @@ let rec value_predicate e =
 	  let true_branch = And(equals(v1, Int 1), equals(ve, v2)) in
 	  let false_branch = And(equals(v1, Int 0), equals(ve, v3)) in
 	    big_and ((Or(true_branch, false_branch))::child_vps)
+      | Match(e, pexps, _) ->
+	  let (_, exps) = List.split pexps in
+	  let child_vps = List.map value_predicate (e::exps) in
+	  let values = List.map (fun e -> equals(ve, value_var e)) exps in
+	    big_and ((big_or values)::child_vps)
       | Let(x, _, e1, e2, _) ->
 	  let child_vps = List.map value_predicate [e1; e2] in
 	  let (v1, v2) = (value_var e1, value_var e2) in
@@ -211,6 +216,15 @@ let rec branch_predicate e =
 		      implies(b3, And(equals(v1, Int 0), be));
 		      implies(be, b1);
 		      implies(be, Or(b2, b3))]@child_bps)
+      | Match(ex, pexps, _) ->
+	  let (_, exps) = List.split pexps in
+	  let child_bps = List.map branch_predicate exps in
+	  let actives = List.map branch_active exps in
+	  let vex = value_var ex in
+	  let bex = branch_active ex in
+	  let up = big_and (implies(bex, be)::(Misc.mapi (fun i b -> implies(b, And(equals(vex, Int i), be))) actives)) in
+	  let down = implies(be, And(bex, big_or actives)) in
+	    big_and (up::down::child_bps)
       | Abs(_, _, e, _) ->
 	  big_and [implies(branch_active e, be); branch_predicate e]
       | _ ->
