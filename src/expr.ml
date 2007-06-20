@@ -324,7 +324,7 @@ let rec pprint_annotated_expr annotator indent exp =
     | Abs(x, _, e, _) ->
 	Printf.sprintf "fun %s ->\n%s" x (pprint_ind e)
     | App(e1, e2, _) ->
-	Printf.sprintf "%s(%s)" (pprint_rec e1) (pprint_rec e2)
+	Printf.sprintf "%s (%s)" (pprint_rec e1) (pprint_rec e2)
     | _ ->
 	""
   in
