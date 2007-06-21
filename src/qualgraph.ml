@@ -225,9 +225,8 @@ let expr_constraints exp bot =
 	    let vxb = var_const_vertex x in
 	    let instc = FlowsTo(vx, Negative, Flow, vxb) in
 	    let (v', c, qm') = expr_constraints_rec e' qmx in
-	    let letdeps = map_subexprs (fun f t -> FlowsTo(expr_const_vertex f, Positive, Depend, expr_const_vertex t)) ex e' in
 	    let retc = FlowsTo(v', Positive, Flow, ve) in
-	      (ve, instc::retc::(letdeps@c@cx), qm')
+	      (ve, instc::retc::(c@cx), qm')
 	| _ ->
 	    raise ExprNotHandled
   in
