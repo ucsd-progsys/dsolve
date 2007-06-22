@@ -74,6 +74,7 @@ let active_preds = ref []
 %right ARROW
 %left  MEET JOIN
 %left  ARG
+%right LESS LESSEQ EQ
 %left  PLUS MINUS
 %right TIMES
 %right QUALIFY
