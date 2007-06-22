@@ -241,16 +241,10 @@ let expr_get_subexprs = function
       [e]
 
 
-let rec expr_map exclude f e =
-  (* pmr: this can be done in a somewhat more general way, but this
-     is good enough for now - we're just trying to have an easy way not
-     to push subexps from type constructors *)
-  if exclude e then
-    []
-  else
-    let rv = f e in
-    let rest = Misc.flap (expr_map exclude f) (expr_get_subexprs e) in
-      rv::rest
+let rec expr_map f e =
+  let rv = f e in
+  let rest = Misc.flap (expr_map f) (expr_get_subexprs e) in
+    rv::rest
 
 
 let rec pattern_get_vars = function

@@ -71,7 +71,7 @@ exception BogusEvalError
 val eval : expr -> value
 val expr_get_id : expr -> expr_id
 val expr_get_subexprs: expr -> expr list
-val expr_map: (expr -> bool) -> (expr -> 'b) -> expr -> 'b list
+val expr_map: (expr -> 'b) -> expr -> 'b list
 
 val pattern_get_vars: pattern -> string list
 

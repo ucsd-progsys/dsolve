@@ -132,18 +132,6 @@ let expr_const_vertex e =
 
 exception ExprNotHandled
 
-let no_exclusions _ = false
-  
-let exclude_tycons_and_abs = function
-    TyCon(_)
-  | Abs(_) ->
-      true
-  | _ ->
-      false
-
-let map_subexprs f efrom eto =
-  List.flatten (expr_map exclude_tycons_and_abs (fun ex -> expr_map no_exclusions (f ex) eto) efrom)
-
 
 (* pmr: this whole thing could probably make good use of subexp_constraints *)
 let expr_constraints exp bot =
@@ -167,7 +155,7 @@ let expr_constraints exp bot =
 	    let branch_flow = List.map (fun v -> FlowsTo(v, Positive, Flow, ve)) vs in
 	    let qm'' =
 	      match exps with
-		  [] -> QualMap.add_vertex_quals (expr_vertex e) bot qm'
+		  [] -> QualMap.add_vertex_quals (expr_vertex e) QualSet.ghost qm'
 		| _ -> qm'
 	    in
 	      (ve, branch_flow@cs, qm'')
@@ -175,8 +163,8 @@ let expr_constraints exp bot =
 	| BinOp(_, e1, e2, _) ->
 	    let (v1, c1, qm1) = expr_constraints_rec e1 qm in
 	    let (v2, c2, qm2) = expr_constraints_rec e2 qm1 in
-            (* we don't exclude tycons here because they shouldn't show up in arithmetic expressions *)
-	    let sexpdeps = Misc.flap (expr_map no_exclusions (fun ex -> FlowsTo(expr_const_vertex ex, Positive, Depend, ve))) [e1; e2] in
+	    let make_depend subexp = FlowsTo(expr_const_vertex subexp, Positive, Depend, ve) in
+	    let sexpdeps = Misc.flap (expr_map make_depend) [e1; e2] in
 	    let v1c = FlowsTo(v1, Positive, Depend, ve) in
 	    let v2c = FlowsTo(v2, Positive, Depend, ve) in
 	      (ve, v1c::v2c::sexpdeps@c1@c2, qm2)
@@ -184,7 +172,14 @@ let expr_constraints exp bot =
 	    let (_, cb, qmb) = expr_constraints_rec b qm in
 	    let (v1, c1, qm1) = expr_constraints_rec e1 qmb in
 	    let (v2, c2, qm2) = expr_constraints_rec e2 qm1 in
-	    let guarddeps = Misc.flap (map_subexprs (fun f t -> FlowsTo(expr_const_vertex f, Positive, Depend, expr_const_vertex t)) b) [e1; e2] in
+	    (* Take every subexpression in the guard of the if, and make every subexpression in both body
+	       portions have a logical dependence on it.  This allows us to use the guard more effectively -
+	       e.g., combining the guard n != 0 with {NonNegative} n. *)
+	    let map_subexprs f efrom eto =
+	      List.flatten (expr_map (fun ex -> expr_map (f ex) eto) efrom) in
+	    let make_depend efrom eto =
+	      FlowsTo(expr_const_vertex efrom, Positive, Depend, expr_const_vertex eto) in
+	    let guarddeps = Misc.flap (map_subexprs make_depend b) [e1; e2] in
 	    let v1c = FlowsTo(v1, Positive, Flow, ve) in
 	    let v2c = FlowsTo(v2, Positive, Flow, ve) in
 	      (ve, v1c::v2c::(guarddeps@c1@c2@cb), qm2)
