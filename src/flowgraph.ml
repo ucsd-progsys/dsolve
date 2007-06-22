@@ -99,15 +99,6 @@ let is_flow_edge e =
     | _ ->
 	true
 
-
-module Qual = struct
-  type t = qual
-  let compare = compare
-end
-
-
-module QualSet = Set.Make(Qual)
-
 module DumbVertexMap = Map.Make(FlowGraph.V)
 
 module VertexMap = struct
@@ -116,6 +107,73 @@ module VertexMap = struct
 
   let maplist f qm =
     fold (fun k v r -> (f k v)::r) qm []
+end
+
+
+
+module Qual = struct
+  type t = qual
+  let compare = compare
+end
+
+
+module QualSet = struct
+  module QSet = Set.Make(Qual)
+
+
+  type t =
+      Ghost
+    | Quals of QSet.t
+
+  type elt = Qual.t
+
+
+  let empty = Quals (QSet.empty)
+
+
+  let ghost = Ghost
+
+
+  let elements = function
+      Ghost -> []
+    | Quals s -> QSet.elements s
+
+
+  let union a b =
+    match (a, b) with
+	(Ghost, s)
+      | (s, Ghost) -> Ghost
+      | (Quals c, Quals d) -> Quals (QSet.union c d)
+
+
+  let inter a b =
+    match (a, b) with
+	(Ghost, s)
+      | (s, Ghost) -> s
+      | (Quals c, Quals d) -> Quals (QSet.inter c d)
+
+
+  let add e s =
+    match s with
+	Ghost -> Ghost
+      | Quals t -> Quals (QSet.add e t)
+
+
+  let singleton e =
+    Quals (QSet.singleton e)
+
+
+  let equal a b =
+    match (a, b) with
+	(Ghost, Ghost) -> true
+      | (_, Ghost)
+      | (Ghost, _) -> false
+      | (Quals c, Quals d) -> QSet.equal c d
+
+
+  let is_empty = function
+      Ghost -> false
+    | Quals s -> QSet.is_empty s
 end
 
 
