@@ -1,5 +1,6 @@
 pred U(x): x < rlen;;
 pred L(x): 0 <= x;;
+pred N(x): x < 0;;
 
 ? let bubsort = fun a -> fun l ->
   let sorted = fun i ->

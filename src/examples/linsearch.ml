@@ -1,5 +1,6 @@
 pred L(j): 0 <= j;;
 pred U(j): j < alen;;
+pred N(j): j < 0;;
 
 ? let find = fun a -> fun x -> fun i ->
   if alen <= i then

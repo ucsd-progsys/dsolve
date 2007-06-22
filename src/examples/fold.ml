@@ -1,4 +1,5 @@
 pred NNEG(x): 0 <= x;;
+pred N(x): x < 0;;
 
 ? let fold = fun f -> fun l -> fun b ->
   match l with

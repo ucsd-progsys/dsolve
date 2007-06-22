@@ -1,5 +1,6 @@
 pred U(x): x < alen;;
 pred L(x): 0 <= x;;
+pred N(x): x < 0;;
 
 ? let bsearch = fun k -> fun a ->
   let look = fun l -> fun h ->
