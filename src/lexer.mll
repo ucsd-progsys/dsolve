@@ -33,6 +33,8 @@ rule token = parse
       { COLON }
   | ","
       { COMMA }
+  | "#" (alpha | blank) *
+      { token lexbuf }
   | "."
       { DOT }
   | "else"
