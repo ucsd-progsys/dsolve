@@ -35,7 +35,7 @@ let flow graph bot qmap =
 
 let test_regular_flow _ =
   let (v1, v2) = (vertex "v1", vertex "v2") in
-  let e = edge v1 Flow v2 in
+  let e = edge v1 (Positive, Flow) v2 in
   let graph = make_graph ([v1; v2], [e]) in
   let v1_qset = QualSet.singleton "Q" in
   let qmap = qualmap [(v1, v1_qset)] in
@@ -46,7 +46,7 @@ let test_regular_flow _ =
 
 let test_cycle_termination _ =
   let (v1, v2) = (vertex "v1", vertex "v2") in
-  let (forward_edge, backward_edge) = (edge v1 Flow v2, edge v2 Flow v1) in
+  let (forward_edge, backward_edge) = (edge v1 (Positive, Flow) v2, edge v2 (Positive, Flow) v1) in
   let graph = make_graph ([v1; v2], [forward_edge; backward_edge]) in
   let v1_qset = QualSet.singleton "Q" in
   let qmap = qualmap [(v1, v1_qset)] in
@@ -76,7 +76,9 @@ let test_simple_backedge _ =
 
 let test_loop_propagation _ =
   let (vin, vhead, vloop) = (vertex "in", vertex "head", vertex "loop") in
-  let (in_edge, prop_edge, loop_edge) = (edge vin Flow vhead, edge vhead Flow vloop, edge vloop Flow vhead) in
+  let (in_edge, prop_edge, loop_edge) = (edge vin (Positive, Flow) vhead,
+					 edge vhead (Positive, Flow) vloop,
+					 edge vloop (Positive, Flow) vhead) in
   let graph = make_graph ([vin; vhead; vloop], [in_edge; prop_edge; loop_edge]) in
   let vin_qset = qualset ["Q"] in
   let qmap = qualmap [(vin, vin_qset)] in
@@ -143,7 +145,7 @@ let test_qualifying_function _ =
 
 let test_qualifier_intersection _ =
   let (l, r, c) = (vertex "l", vertex "r", vertex "c") in
-  let (le, re) = (edge l Flow c, edge r Flow c) in
+  let (le, re) = (edge l (Positive, Flow) c, edge r (Positive, Flow) c) in
   let graph = make_graph ([l; r; c], [le; re]) in
   let l_qset = qualset ["Q1"; "Q2"] in
   let r_qset = qualset ["Q1"; "Q3"] in
@@ -157,7 +159,7 @@ let test_qualifier_intersection _ =
 
 let test_no_depend_propagate _ =
   let (vfrom, vto) = (vertex "from", vertex "to") in
-  let e = edge vfrom Depend vto in
+  let e = edge vfrom (Positive, Depend) vto in
   let graph = make_graph ([vfrom; vto], [e]) in
   let from_qset = qualset ["Q"] in
   let qmap = qualmap [(vfrom, from_qset)] in

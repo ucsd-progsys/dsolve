@@ -5,11 +5,16 @@ open Expr
 type qual = string
 
 
-type flowlabel =
+type polarity = Positive | Negative
+
+
+type flowtype =
     Flow
   | Depend
   | Call of int
-  | Return of int
+
+
+type flowlabel = polarity * flowtype
 
 
 type vlabel =
@@ -49,7 +54,7 @@ module Edge = struct
   let compare = compare
   let hash = Hashtbl.hash
   let equal = (=)
-  let default = Flow
+  let default = (Positive, Flow)
 end
 
 module SimpleFlowGraph = Persistent.Digraph.ConcreteLabeled(Vertex)(Edge)
@@ -77,10 +82,11 @@ module FlowGraph = struct
 
   let edge_attributes e =
     match E.label e with
-	Flow -> []
-      | Depend -> [ `Style `Dashed ]
-      | Call i -> [ `Label ("(" ^ string_of_int i) ]
-      | Return i -> [ `Label (")" ^ string_of_int i) ]
+	(_, Flow) -> []
+      | (_, Depend) -> [ `Style `Dashed ]
+      | (p, Call i) ->
+	  [ let paren = match p with Negative -> "(" | Positive -> ")" in
+	      `Label (paren ^ string_of_int i) ]
 
   let get_subgraph v =
     None
@@ -94,7 +100,7 @@ module EdgeSet = Set.Make(FlowGraph.E)
 
 let is_flow_edge e =
   match FlowGraph.E.label e with
-      Depend ->
+      (_, Depend) ->
 	false
     | _ ->
 	true

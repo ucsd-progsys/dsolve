@@ -4,12 +4,14 @@ open Expr
 
 type qual = string
 
-type flowlabel =
+type polarity = Positive | Negative
+
+type flowtype =
     Flow
   | Depend
   | Call of int
-  | Return of int
 
+type flowlabel = polarity * flowtype
 
 type vlabel =
     ExprId of expr_id * expr
