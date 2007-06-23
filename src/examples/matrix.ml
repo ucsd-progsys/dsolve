@@ -3,7 +3,7 @@ pred AR(x): x < arows;;
 pred AC(x): x < acols;;
 pred BR(x): x < brows;;
 pred BC(x): x < bcols;;
-
+pred N(x): x < 0;;
 
 ? let matmult = fun a -> fun ar -> fun ac -> fun b -> fun br -> fun bc -> fun d ->
   if ar = bc then

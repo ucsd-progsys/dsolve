@@ -1,4 +1,5 @@
 pred P(x): 0 < x;;
+pred N(x): x < 0;;
 
 ? let mapfilter = fun f -> fun l ->
   match l with
