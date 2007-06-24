@@ -229,4 +229,6 @@ let expr_constraints exp bot =
 let expr_qualgraph e bot =
   let (_, cs, m) = expr_constraints e bot in
   let rs = reshape_constraints cs in
-    (make_qualgraph rs, m)
+  let g' = make_qualgraph rs in
+  let g = canonicalize_flowgraph g' in
+    (g, m)

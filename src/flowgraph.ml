@@ -105,6 +105,44 @@ let is_flow_edge e =
     | _ ->
 	true
 
+
+(* Remove redundant flow edges in the graph. *)
+let canonicalize_flowgraph fg =
+  let remove_vertex g v =
+    match FlowGraph.V.label v with
+	NonExpr _ ->
+	  begin match (FlowGraph.pred_e g v, FlowGraph.succ_e g v) with
+	      ([ein], [eout]) ->
+		begin match (FlowGraph.E.label ein, FlowGraph.E.label eout) with
+		    ((_, Call _), (_, Call _)) ->
+		      None
+		  | (((p, Call _) as label), (p', Flow))
+		  | ((p', Flow), ((p, Call _) as label)) ->
+		      Some (FlowGraph.E.create (FlowGraph.E.src ein) label (FlowGraph.E.dst eout))
+		  | _ ->
+		      None
+		end
+	    | _ ->
+		None
+	  end
+      | _ ->
+	  None
+  in
+  let rec canon_rec g = function
+      [] ->
+	g
+    | v::vs ->
+	match remove_vertex g v with
+	    None ->
+	      canon_rec g vs
+	  | Some e ->
+	      let g'' = FlowGraph.remove_vertex g v in
+	      let g' = FlowGraph.add_edge_e g'' e in
+		canon_rec g' (FlowGraph.vertices g')
+  in
+    canon_rec fg (FlowGraph.vertices fg)
+
+
 module DumbVertexMap = Map.Make(FlowGraph.V)
 
 module VertexMap = struct

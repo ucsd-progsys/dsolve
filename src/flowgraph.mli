@@ -206,6 +206,7 @@ module QualMap:
     val dump: t -> unit
 end
 
+val canonicalize_flowgraph : FlowGraph.t -> FlowGraph.t
 
 val flow_qualifiers: FlowGraph.t -> (FlowGraph.V.t -> QualSet.t) -> (FlowGraph.V.t -> QualSet.t -> unit) -> (unit -> unit) -> QualSet.t -> QualMap.t -> QualMap.t
 
