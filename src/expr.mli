@@ -1,27 +1,5 @@
 open Env
-
-
-type qual =
-    Top
-  | Bottom
-  | Qual of string
-  | QualVar of string
-  | QualMeet of qual * qual
-  | QualJoin of qual * qual
-
-type typ =
-    Arrow of qual * typ * typ
-  | Int of qual
-  | Bool of qual
-  | TyVar of qual * string
-  | Nil
-  | ForallQual of string * qual * typ
-  | ForallTyp of string * typ
-
-
-type pattern =
-    PatternTyCon of string * pattern list
-  | PatternVar of string
+open Type
 
 
 type binop =
@@ -39,30 +17,18 @@ type expr_id = string
 
 type expr =
     Num of int * expr_id
-  | TrueExp of expr_id
-  | FalseExp of expr_id
   | ExpVar of string * expr_id
-  | TyCon of string * expr list * expr_id
   | BinOp of binop * expr * expr * expr_id
   | BinRel of binrel * expr * expr * expr_id
   | If of expr * expr * expr * expr_id
-  | Match of expr * (pattern * expr) list * expr_id
-  | Annot of qual * expr * expr_id
   | Let of string * typ option * expr * expr * expr_id
   | Abs of string * typ option * expr * expr_id
   | App of expr * expr * expr_id
-  | Fix of string * expr * expr_id
-  | TyAbs of string * expr * expr_id
-  | TyApp of expr * typ * expr_id
-  | QualAbs of string * qual * expr * expr_id
-  | QualApp of expr * qual * expr_id
+
 
 type value =
     NumVal of int
-  | TrueVal
-  | FalseVal
   | Closure of string * expr * string option * value env
-  | Abstract of string * value list
 
 
 exception BogusEvalError
@@ -72,8 +38,6 @@ val eval : expr -> value
 val expr_get_id : expr -> expr_id
 val expr_get_subexprs: expr -> expr list
 val expr_map: (expr -> 'b) -> expr -> 'b list
-
-val pattern_get_vars: pattern -> string list
 
 val pprint_binop: ('a -> string) -> 'a -> binop -> 'a -> string
 val pprint_binrel: ('a -> string) -> 'a -> binrel -> 'a -> string

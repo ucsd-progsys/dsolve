@@ -1,8 +1,10 @@
-open Expr
+type typ =
+    Arrow of typ * typ
+  | Int
+  | TyVar of string
+  | Nil
 
 
-val check_type: expr -> typ -> bool
-val infer_type: expr -> typ
-val pprint_qual: qual -> string
+val typ_subst_tyvar: typ -> string -> typ -> typ
+
 val pprint_type: typ -> string
-

@@ -1,13 +1,8 @@
 %{
 
-open Toplevel
-open TheoremProver
-open Qualgraph
-open Flowgraph
-open Predicate
-open Annotate
 open Expr
 open Type
+open Infer
 
 
 let next_id = ref 0
@@ -86,8 +81,8 @@ let active_preds = ref []
 %%
 query:
   EOL {}
-| exp QUESTION tschema EOL {
-    
+| exp QUESTION mtype EOL {
+(*    
     let (e, t) = ($1, $3) in
       Printf.printf ">> ";
       if check_type e t then
@@ -97,7 +92,7 @@ query:
       ;
       Printf.printf "\n\n";
       flush stdout
-
+*)
   }
 | TYPE exp EOL {
 
@@ -113,26 +108,26 @@ query:
       flush stdout
   }
 | BANG exp EOL {
-
+(*
     let e = $2 in
       let (graph, qm) = expr_qualgraph e QualSet.empty in
 	FlowGraphPrinter.output_graph stdout graph;
 	Printf.printf "\n";
-	flush stdout
+	flush stdout *)
   }
 | exp EOL {
 
     let e = $1 in
       try
-	let (v, t) = (eval e, Int(Top)) in
+	let (v, t) = (eval e, Int) in
 	  Printf.printf "> %s: %s\n\n" (pprint_value v) (pprint_type t);
 	  flush stdout
       with _ ->
 	Printf.printf "Cannot evaluate expression\n\n";
 	flush stdout	  
   }
-| PRED QLITERAL LPAREN VAR RPAREN COLON pred EOL {
-
+/* | PRED QLITERAL LPAREN VAR RPAREN COLON pred EOL {
+(*
     active_preds := ($2, PredOver($4, $7))::(!active_preds);
     let pprint_param_pred = function
 	(name, PredOver(x, p)) ->
@@ -141,57 +136,23 @@ query:
     let activestrs = List.map pprint_param_pred !active_preds in
     let active_predstr = Misc.join activestrs "\n" in
       Printf.printf "%s\n\n" active_predstr;
-      flush stdout
-  }
+      flush stdout *)
+  } */
 | QUESTION exp EOL {
-
+(*
     let exp = $2 in
       let qmap = annotate exp !active_preds in
 	Printf.printf "%s\n\n" (pprint_annotated_expr (expr_quals qmap) 0 exp);
 	Prover.reset();
-	flush stdout
+	flush stdout *)
   }
-;
-
-tschema:
-  TVAR DOT tschema { ForallTyp($1, $3) }
-| qschema { $1 }
-;
-
-qschema:
-  QVAR LESSEQ qualliteral DOT qschema { ForallQual($1, $3, $5) }
-| mtype { $1 }
 ;
 
 mtype:
-  qual mtype %prec QUALIFY {
-    match $2 with
-	Int(_) -> Int($1)
-      | Bool(_) -> Bool($1)
-      | TyVar(_, a) -> TyVar($1, a)
-      | Arrow(_, t1, t2) -> Arrow($1, t1, t2)
-      | Nil -> Nil
-      | t -> t
-  }
-| mtype ARROW mtype { Arrow(Top, $1, $3) }
-| INT { Int(Top) }
-| BOOL { Bool(Top) }
-| TVAR { TyVar(Top, $1) }
+| mtype ARROW mtype { Arrow($1, $3) }
+| INT { Int }
+| TVAR { TyVar $1 }
 | LPAREN mtype RPAREN { $2 }
-;
-
-qual:
-  qual JOIN qual { QualJoin($1, $3) }
-| qual MEET qual { QualMeet($1, $3) }
-| QVAR { QualVar($1) }
-| qualliteral { $1 }
-| LPAREN qual RPAREN { $2 }
-;
-
-qualliteral:
-  TOP { Top }
-| BOTTOM { Bottom }
-| QLITERAL { Qual($1) }
 ;
 
 exp:
@@ -201,12 +162,8 @@ exp:
 
 simple_exp:
   LPAREN exp RPAREN { $2 }
-| TRUE { TrueExp(get_next_expr_id()) }
-| FALSE { FalseExp(get_next_expr_id()) }
 | VAR { ExpVar($1, get_next_expr_id()) }
 | INTLITERAL { Num($1, get_next_expr_id()) }
-| TAG LPAREN exp_list RPAREN { TyCon($1, $3, get_next_expr_id()) }
-| TAG { TyCon($1, [], get_next_expr_id()) }
 | exp PLUS exp { BinOp(Plus, $1, $3, get_next_expr_id()) }
 | exp MINUS exp { BinOp(Minus, $1, $3, get_next_expr_id()) }
 | exp TIMES exp { BinOp(Times, $1, $3, get_next_expr_id()) }
@@ -215,17 +172,10 @@ simple_exp:
 | exp LESS exp { BinRel(Lt, $1, $3, get_next_expr_id()) }
 | exp LESSEQ exp { BinRel(Le, $1, $3, get_next_expr_id()) }
 | IF exp THEN exp ELSE exp { If($2, $4, $6, get_next_expr_id()) }
-| MATCH exp WITH pattern_expr_list { Match($2, $4, get_next_expr_id()) }
-| LET VAR COLON tschema EQUAL exp IN exp { Let($2, Some $4, $6, $8, get_next_expr_id()) }
+| LET VAR COLON mtype EQUAL exp IN exp { Let($2, Some $4, $6, $8, get_next_expr_id()) }
 | LET VAR EQUAL exp IN exp { Let($2, None, $4, $6, get_next_expr_id()) }
 | FUN VAR COLON mtype ARROW exp { Abs($2, Some $4, $6, get_next_expr_id()) }
 | FUN VAR ARROW exp { Abs($2, None, $4, get_next_expr_id()) }
-| FIX VAR DOT exp { Fix($2, $4, get_next_expr_id()) }
-| TVAR DOT exp { TyAbs($1, $3, get_next_expr_id()) }
-| QVAR LESSEQ qualliteral DOT exp { QualAbs($1, $3, $5, get_next_expr_id()) }
-| LCURLY LSQUARE qual RSQUARE RCURLY exp { Annot($3, $6, get_next_expr_id()) }
-| exp LSQUARE mtype RSQUARE { TyApp($1, $3, get_next_expr_id()) }
-| exp LCURLY qualliteral RCURLY { QualApp($1, $3, get_next_expr_id()) }
 ;
 
 param_list:
@@ -237,32 +187,7 @@ exp_list:
   exp COMMA exp_list { $1::$3 }
 | exp { [$1] }
 ;
-
-
-pattern_expr_list:
-  pattern_expr JOIN pattern_expr_list { $1::$3 }
-| pattern_expr { [$1] }
-;
-
-
-pattern_expr:
-  pattern ARROW exp { ($1, $3) }
-;
-
-
-pattern:
-  TAG { PatternTyCon($1, []) }
-| TAG LPAREN pattern_args RPAREN { PatternTyCon($1, $3) }
-| VAR { PatternVar($1) }
-;
-
-
-pattern_args:
-  pattern COMMA pattern_args { $1::$3 }
-| pattern { [$1] }
-;
-
-
+/*
 predexp:
   INTLITERAL { Predicate.Int($1) }
 | LPAREN predexp RPAREN { $2 }
@@ -283,5 +208,5 @@ pred:
 | pred AND pred { Predicate.And($1, $3) }
 | pred OR pred { Predicate.Or($1, $3) }
 ;
-
+*/
 %%
