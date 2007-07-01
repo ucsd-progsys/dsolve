@@ -85,10 +85,10 @@ rule token = parse
       { OR }
   | "+"
       { PLUS }
-  | "pred"
-      { PRED }
   | uppercase +
       { QLITERAL (Lexing.lexeme lexbuf) }
+  | "qual"
+      { QUAL }
   | "?"
       { QUESTION }
   | "'" uppercase

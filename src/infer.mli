@@ -1,4 +1,4 @@
 open Expr
 open Type
 
-val infer_type: expr -> typ
+val pprint_shapes: expr -> string

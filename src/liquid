@@ -1,0 +1,5 @@
+#!/bin/bash
+
+echo -e "LIQUID: Logically Qualified Inference of Datatypes";
+echo -e "(C) 2007 UC Maquiladora\n";
+rlwrap ./microml.run

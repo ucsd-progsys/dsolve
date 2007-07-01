@@ -1,22 +1,33 @@
-open Env
 open Printf
+open Predicate
+open TheoremProver
 
 
 (* Type language *)
+type qualifier = string * parameterized_pred
+
+
 type typ =
-    Arrow of typ * typ
-  | Int
+    Arrow of string * typ * typ
+  | Int of qualifier list
   | TyVar of string
-  | Nil
 
 
 let rec typ_subst_tyvar b a = function
-  | Arrow(t1, t2) ->
-      Arrow(typ_subst_tyvar b a t1, typ_subst_tyvar b a t2)
+  | Arrow(x, t1, t2) ->
+      Arrow(x, typ_subst_tyvar b a t1, typ_subst_tyvar b a t2)
   | TyVar a' when a' = a ->
       b
   | t ->
       t
+
+
+let type_const_int quals n =
+  let n_exp = PInt n in
+  let n_satisfies (_, PredOver(x, p)) =
+    Prover.valid (predicate_subst n_exp x p)
+  in
+    Int (List.filter n_satisfies quals)
 
 
 (*
@@ -173,13 +184,13 @@ let check_type e texp =
 
 
 let rec pprint_type = function
-    Arrow(Arrow _ as t1, t2) ->
-      sprintf "(%s) -> %s" (pprint_type t1) (pprint_type t2)
-  | Arrow(t1, t2) ->
-      sprintf "%s -> %s" (pprint_type t1) (pprint_type t2)
-  | Int ->
-      sprintf "int"
+    Arrow(x, (Arrow _ as t1), t2) ->
+      sprintf "%s: (%s) -> %s" x (pprint_type t1) (pprint_type t2)
+  | Arrow(x, t1, t2) ->
+      sprintf "%s: %s -> %s" x (pprint_type t1) (pprint_type t2)
+  | Int quals ->
+      let qual_name (name, _) = name in
+      let qual_names = Misc.join (List.map qual_name quals) " " in
+      sprintf "%s int" qual_names
   | TyVar a ->
       sprintf "'%s" a
-  | Nil ->
-      "[nil]"

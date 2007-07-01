@@ -23,7 +23,6 @@
 
 (* This file is part of the SIMPLE Project.*)
 
-open Expr
 open Predicate
 
 
@@ -73,7 +72,7 @@ module YicesProver  =
     
     let rec yicesExp me e =
       match e with 
-        Int i -> Y.yices_mk_num me.c i 
+        PInt i -> Y.yices_mk_num me.c i 
       | Var s -> yicesVar me s 
       | Pvar (s,i) -> yicesVar me (Printf.sprintf "%sprime%d" s i) 
       | Binop (e1,op,e2) ->

@@ -31,8 +31,8 @@ type token =
   | NOT
   | OR
   | PLUS
-  | PRED
   | QLITERAL of (string)
+  | QUAL
   | QUESTION
   | QVAR of (string)
   | RCURLY

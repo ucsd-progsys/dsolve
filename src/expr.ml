@@ -1,26 +1,13 @@
-open Env
 open Type
+open Predicate
 
 
 (* Expression language *)
-type binop =
-    Plus
-  | Minus
-  | Times
-
-type binrel =
-    Eq
-  | Ne
-  | Lt
-  | Le 
-
 type expr_id = string
 
 type expr =
     Num of int * expr_id
   | ExpVar of string * expr_id
-  | BinOp of binop * expr * expr * expr_id
-  | BinRel of binrel * expr * expr * expr_id
   | If of expr * expr * expr * expr_id
   | Let of string * typ option * expr * expr * expr_id
   | Abs of string * typ option * expr * expr_id
@@ -30,7 +17,7 @@ type expr =
 (* Values resulting from evalutation *)
 type value =
     NumVal of int
-  | Closure of string * expr * string option * value env
+  | Closure of string * expr * string option * (string * value) list
 
 
 (* Expression evaluator *)
@@ -47,34 +34,10 @@ let bool_to_val b =
 let eval exp =
   let rec eval_rec exp env =
     match exp with
-	Num(n, _) -> NumVal(n)
-      | ExpVar(x, _) -> env_lookup x env
-      | BinOp(o, e1, e2, _) ->
-	  let (v1, v2) = (eval_rec e1 env, eval_rec e2 env) in
-	    begin match (o, v1, v2) with
-		(Plus, NumVal n1, NumVal n2) ->
-		  NumVal (n1 + n2)
-	      | (Minus, NumVal n1, NumVal n2) ->
-		  NumVal (n1 - n2)
-	      | (Times, NumVal n1, NumVal n2) ->
-		  NumVal (n1 * n2)
-	      | _ ->
-		  raise BogusEvalError
-	    end
-      | BinRel(r, e1, e2, _) ->
-	  let (v1, v2) = (eval_rec e1 env, eval_rec e2 env) in
-	    begin match (r, v1, v2) with
-		(Eq, _, _) ->
-		  bool_to_val (v1 = v2)
-	      | (Lt, NumVal n1, NumVal n2) ->
-		  bool_to_val (n1 < n2)
-	      | (Le, NumVal n1, NumVal n2) ->
-		  bool_to_val (n1 <= n2)
-	      | (Ne, _, _) ->
-		  bool_to_val (v1 != v2)
-	      | _ ->
-		  raise BogusEvalError
-	    end
+	Num(n, _) ->
+	  NumVal(n)
+      | ExpVar(x, _) ->
+	  List.assoc x env
       | If(c, e1, e2, _) ->
 	  begin match (eval_rec c env) with
 	      NumVal 0 -> eval_rec e2 env
@@ -83,7 +46,7 @@ let eval exp =
 	  end
       | Let(x, _, e, e', _) ->
 	  let xv = eval_rec e env in
-	  let newenv = env_add x xv env in
+	  let newenv = (x, xv)::env in
 	    eval_rec e' newenv
       | Abs(x, _, e, _) ->
 	  Closure(x, e, None, env)
@@ -95,9 +58,9 @@ let eval exp =
 		      None ->
 			cenv
 		    | Some f ->
-			env_add f c cenv
+			(f, c)::cenv
 		  in
-		  let newenv = env_add x e2' fixenv in
+		  let newenv = (x, e2')::fixenv in
 		    eval_rec e newenv
 	      | _ -> raise BogusEvalError
 	    end
@@ -108,8 +71,6 @@ let eval exp =
 let expr_get_id = function
     Num(_, id)
   | ExpVar(_, id)
-  | BinOp(_, _, _, id)
-  | BinRel(_, _, _, id)
   | If(_, _, _, id)
   | Let(_, _, _, _, id)
   | Abs(_, _, _, id)
@@ -121,9 +82,6 @@ let expr_get_subexprs = function
     Num(_, _)
   | ExpVar(_) ->
       []
-  | BinOp(_, e1, e2, _)
-  | BinRel(_, e1, e2, _) ->
-      [e1; e2]
   | If(e1, e2, e3, _) ->
       [e1; e2; e3]
   | Let(_, _, e1, e2, _) ->
@@ -140,29 +98,6 @@ let rec expr_map f e =
     rv::rest
 
 
-let pprint_binop frec e1 op e2 =
-  let opstr =
-    match op with
-	Plus -> "+"
-      | Minus -> "-"
-      | Times -> "*"
-  in
-  let (str1, str2) = (frec e1, frec e2) in
-    Misc.join [str1; opstr; str2] " "
-
-
-let pprint_binrel frec e1 rel e2 =
-  let relstr =
-    match rel with
-	Eq -> "="
-      | Ne -> "!="
-      | Lt -> "<"
-      | Le -> "<="
-  in
-  let (str1, str2) = (frec e1, frec e2) in
-    Misc.join [str1; relstr; str2] " "
-
-
 let rec pprint_annotated_expr annotator indent exp =
   let indstr = String.make indent ' ' in
   let pprint_rec = pprint_annotated_expr annotator 0 in
@@ -173,10 +108,6 @@ let rec pprint_annotated_expr annotator indent exp =
 	string_of_int n
     | ExpVar(x, _) ->
 	x
-    | BinOp(op, e1, e2, _) ->
-	pprint_binop pprint_rec e1 op e2
-    | BinRel(rel, e1, e2, _) ->
-	pprint_binrel pprint_rec e1 rel e2
     | If(e1, e2, e3, _) ->
 	Printf.sprintf "if %s then\n%s\n%selse\n%s" (pprint_rec e1) (pprint_ind e2) indstr (pprint_ind e3)
     | Let(x, _, e1, e2, _) ->

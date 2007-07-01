@@ -1,13 +1,11 @@
 open Expr
 open Type
-open Env
 
 
 exception Unify
 
 
-type typconst =
-    TypEq of typ * typ
+type typconst = TypEq of typ * typ
 
 
 let rec const_subst_tyvar b a = function
@@ -21,10 +19,9 @@ let rec const_subst_tyvar b a = function
 let rec occurs a = function
     TyVar a' ->
       a = a'
-  | Int
-  | Nil ->
+  | Int _ ->
       false
-  | Arrow(t, t') ->
+  | Arrow(_, t, t') ->
       (occurs a t) || (occurs a t')
 
 
@@ -41,9 +38,9 @@ let rec unify = function
 		fun t' -> unifsub (typ_subst_tyvar t a t')
 	    else
 	      raise Unify
-	| (Arrow(t1, t1'), Arrow(t2, t2')) ->
+	| (Arrow(_, t1, t1'), Arrow(_, t2, t2')) ->
 	    unify (TypEq(t1, t2)::TypEq(t1', t2')::cs)
-	| (Int, Int) ->
+	| (Int _, Int _) ->
 	    unify cs
 	| _ ->
 	    raise Unify
@@ -54,60 +51,75 @@ let type_vars typ =
     match t with
 	TyVar a ->
 	  a::vars
-      | Nil
-      | Int ->
+      | Int _ ->
 	  []
-      | Arrow(t1, t2) ->
+      | Arrow(_, t1, t2) ->
 	  let vars' = type_vars_rec t1 vars in
 	    type_vars_rec t2 vars'
   in
     type_vars_rec typ []
 
 
-let nexttyvar = ref (Char.code 'a')
-let get_fresh_tyvar () =
-  let id = Char.escaped (Char.chr !nexttyvar) in
-    incr nexttyvar;
-    TyVar id
+let fresh_tyvar = Misc.make_get_fresh (fun x -> TyVar x)
+let fresh_bindvar = Misc.make_get_fresh (fun x -> "_" ^ x)
 
 
-let infer_type e =
-  let rec infer_rec e tenv constrs =
-    match e with
-	Num(_, _) ->
-	  (Int, constrs)
-      | ExpVar(x, _) ->
-	  let tx = env_lookup x tenv in
-	    (tx, constrs)
-      | BinOp(_, e1, e2, _)
-      | BinRel(_, e1, e2, _) ->
-	  let (t1, constrs1) = infer_rec e1 tenv constrs in
-	  let (t2, constrs2) = infer_rec e2 tenv constrs1 in
-	    (Int, TypEq(t1, Int)::TypEq(t2, Int)::constrs2)
-      | If(c, e1, e2, _) ->
-	  let (tc, constrsc) = infer_rec c tenv constrs in
-	  let (t1, constrs1) = infer_rec e1 tenv constrsc in
-	  let (t2, constrs2) = infer_rec e2 tenv constrs1 in
-	  let t = get_fresh_tyvar () in
-	    (t, TypEq(t1, t)::TypEq(t2, t)::TypEq(tc, Int)::constrs2)
-      | App(e1, e2, _) ->
-	  let (t1, constrs1) = infer_rec e1 tenv constrs in
-	  let (t2, constrs2) = infer_rec e2 tenv constrs1 in
-	  let returnty = get_fresh_tyvar () in
-	  let funty = Arrow(t2, returnty) in
-	    (returnty, TypEq(t1, funty)::constrs2)
-      | Abs(x, _, e, _) ->
-	  let t = get_fresh_tyvar () in
-	  let newtenv = env_add x t tenv in
-	  let (t', constrs) = infer_rec e newtenv constrs in
-	    (Arrow(t, t'), constrs)
-      | Let(x, _, ex, e, _) ->
-	  let (tx, constrsx) = infer_rec ex tenv constrs in
-	  let newtenv = env_add x tx tenv in
-	  let (te, constrse) = infer_rec e newtenv constrsx in
-	    (te, constrse)
+module Expr = struct
+  type t = expr
+  let compare = compare
+  let hash = Hashtbl.hash
+  let equal = (==)
+end
+
+
+module ShapeMap = Map.Make(Expr)
+
+
+let infer_shape exp =
+  let rec infer_rec e tenv constrs shapemap =
+    let (t, cs, sm) =
+      match e with
+	  Num(_, _) ->
+	    (Int [], constrs, shapemap)
+	| ExpVar(x, _) ->
+	    let tx = List.assoc x tenv in
+	      (tx, constrs, shapemap)
+	| If(c, e1, e2, _) ->
+	    let (tc, constrsc, sm) = infer_rec c tenv constrs shapemap in
+	    let (t1, constrs1, sm') = infer_rec e1 tenv constrsc sm in
+	    let (t2, constrs2, sm'') = infer_rec e2 tenv constrs1 sm' in
+	    let t = fresh_tyvar() in
+	      (t, TypEq(t1, t)::TypEq(t2, t)::TypEq(tc, Int [])::constrs2, sm'')
+	| App(e1, e2, _) ->
+	    let (t1, constrs1, sm') = infer_rec e1 tenv constrs shapemap in
+	    let (t2, constrs2, sm'') = infer_rec e2 tenv constrs1 sm' in
+	    let returnty = fresh_tyvar() in
+	    let funty = Arrow(fresh_bindvar(), t2, returnty) in
+	      (returnty, TypEq(t1, funty)::constrs2, sm'')
+	| Abs(x, _, e, _) ->
+	    let t = fresh_tyvar () in
+	    let newtenv = (x, t)::tenv in
+	    let (t', constrs, sm') = infer_rec e newtenv constrs shapemap in
+	      (Arrow(x, t, t'), constrs, sm')
+	| Let(x, _, ex, e, _) ->
+	    let (tx, constrsx, sm') = infer_rec ex tenv constrs shapemap in
+	    let newtenv = (x, tx)::tenv in
+	    let (te, constrse, sm'') = infer_rec e newtenv constrsx sm' in
+	      (te, constrse, sm'')
+    in
+      (t, cs, ShapeMap.add e t sm)
   in
-  let (t, constrs) = infer_rec e [] [] in
+  let (t, constrs, smap') = infer_rec exp [] [] ShapeMap.empty in
   let sub = unify constrs in
-    sub t
+  let smap = ShapeMap.map sub smap' in
+    smap
 
+
+let maplist f sm =
+  ShapeMap.fold (fun k v r -> (f k v)::r) sm []
+
+
+let pprint_shapes exp =
+  let smap = infer_shape exp in
+  let shapes = maplist (fun e t -> (pprint_expr e) ^ "\n::> " ^ (pprint_type t)) smap in
+    Misc.join shapes "\n\n"

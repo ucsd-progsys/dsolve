@@ -1,9 +1,17 @@
-open Expr
-open Flowgraph
+type binop =
+    Plus
+  | Minus
+  | Times
 
+
+type binrel =
+    Eq
+  | Ne
+  | Lt
+  | Le 
 
 type expression =   
-    Int of int 
+    PInt of int 
   | Var of string
   | Pvar of string * int
   | Binop of expression * binop * expression 
@@ -18,16 +26,11 @@ type predicate =
 
 
 type parameterized_pred = PredOver of (string * predicate)
-type named_pred = string * parameterized_pred
 
 val big_and: predicate list -> predicate
+val big_or: predicate list -> predicate
+val equals: (expression * expression) -> predicate
 
 val predicate_subst: expression -> string -> predicate -> predicate
 
-val expr_predicate: expr -> predicate
-
-val value_var: expr -> expression
-val branch_active: expr -> predicate
-val vertex_value_var: FlowGraph.V.t -> expression
-val vertex_branch_active: FlowGraph.V.t -> predicate
 val pprint_predicate: predicate -> string

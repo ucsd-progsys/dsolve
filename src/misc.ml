@@ -128,4 +128,12 @@ let rec mapfilter f = function
 	end
   | [] ->
       []
-	      
+
+let make_get_fresh bind =
+  let nextvar = ref (Char.code 'a') in
+  let get_fresh() =
+    let id = Char.escaped (Char.chr !nextvar) in
+      incr nextvar;
+      bind id
+  in
+    get_fresh

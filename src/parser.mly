@@ -2,7 +2,9 @@
 
 open Expr
 open Type
+open Check
 open Infer
+open Predicate
 
 
 let next_id = ref 0
@@ -11,7 +13,12 @@ let get_next_expr_id () =
   string_of_int !next_id
 
 
-let active_preds = ref []
+let active_quals = ref Builtins.quals
+
+
+let make_binapp f x y =
+  App(App(ExpVar(f, get_next_expr_id()), x, get_next_expr_id()),
+      y, get_next_expr_id())
 
 
 %}
@@ -49,8 +56,8 @@ let active_preds = ref []
 %token NOT
 %token OR
 %token PLUS
-%token PRED
 %token <string> QLITERAL
+%token QUAL
 %token QUESTION
 %token <string> QVAR
 %token RCURLY
@@ -81,26 +88,32 @@ let active_preds = ref []
 %%
 query:
   EOL {}
+| error EOL {
+
+    (* Dig the FORTRAN-style error message. *)
+    Printf.printf "> SYNTAX ERROR\n\n";
+    flush stdout
+}
 | exp QUESTION mtype EOL {
-(*    
+
     let (e, t) = ($1, $3) in
       Printf.printf ">> ";
-      if check_type e t then
-	Printf.printf "true"
+      if check_type !active_quals e t then
+	Printf.printf "OK"
       else
-	Printf.printf "false"
+	Printf.printf "NO"
       ;
       Printf.printf "\n\n";
       flush stdout
-*)
+
   }
 | TYPE exp EOL {
 
     let e = $2 in
-      Printf.printf(">> ");
+      Printf.printf(">>\n");
       begin try
-	let t = infer_type e in
-	  Printf.printf "%s" (pprint_type t)
+	let s = pprint_shapes e in
+	  Printf.printf "%s" s
       with _ ->
 	Printf.printf "Cannot infer type"
       end;
@@ -119,25 +132,24 @@ query:
 
     let e = $1 in
       try
-	let (v, t) = (eval e, Int) in
+	let (v, t) = (eval e, Int []) in
 	  Printf.printf "> %s: %s\n\n" (pprint_value v) (pprint_type t);
 	  flush stdout
       with _ ->
 	Printf.printf "Cannot evaluate expression\n\n";
 	flush stdout	  
   }
-/* | PRED QLITERAL LPAREN VAR RPAREN COLON pred EOL {
-(*
-    active_preds := ($2, PredOver($4, $7))::(!active_preds);
+ | QUAL QLITERAL LPAREN VAR RPAREN COLON pred EOL {
+
+    active_quals := ($2, PredOver($4, $7))::(!active_quals);
     let pprint_param_pred = function
 	(name, PredOver(x, p)) ->
 	  name ^ "(" ^ x ^ "): " ^ pprint_predicate p
     in
-    let activestrs = List.map pprint_param_pred !active_preds in
-    let active_predstr = Misc.join activestrs "\n" in
-      Printf.printf "%s\n\n" active_predstr;
-      flush stdout *)
-  } */
+    let activestrs = List.map pprint_param_pred !active_quals in
+      Printf.printf "%s\n\n" (Misc.join activestrs "\n");
+      flush stdout
+  }
 | QUESTION exp EOL {
 (*
     let exp = $2 in
@@ -149,10 +161,18 @@ query:
 ;
 
 mtype:
-| mtype ARROW mtype { Arrow($1, $3) }
-| INT { Int }
+| mtype COLON VAR ARROW mtype { Arrow($3, $1, $5) }
+| qualifier_list INT { Int $1 }
 | TVAR { TyVar $1 }
 | LPAREN mtype RPAREN { $2 }
+;
+
+qualifier_list:
+  qualifier { [$1] }
+| qualifier qualifier_list { $1::$2 }
+
+qualifier:
+  QLITERAL { ($1, List.assoc $1 !active_quals) }
 ;
 
 exp:
@@ -164,13 +184,13 @@ simple_exp:
   LPAREN exp RPAREN { $2 }
 | VAR { ExpVar($1, get_next_expr_id()) }
 | INTLITERAL { Num($1, get_next_expr_id()) }
-| exp PLUS exp { BinOp(Plus, $1, $3, get_next_expr_id()) }
-| exp MINUS exp { BinOp(Minus, $1, $3, get_next_expr_id()) }
-| exp TIMES exp { BinOp(Times, $1, $3, get_next_expr_id()) }
-| exp EQUAL exp { BinRel(Eq, $1, $3, get_next_expr_id()) }
-| exp NEQUAL exp { BinRel(Ne, $1, $3, get_next_expr_id()) }
-| exp LESS exp { BinRel(Lt, $1, $3, get_next_expr_id()) }
-| exp LESSEQ exp { BinRel(Le, $1, $3, get_next_expr_id()) }
+| exp PLUS exp { make_binapp "+" $1 $3 }
+| exp MINUS exp { make_binapp "-" $1 $3 }
+| exp TIMES exp { make_binapp "*" $1 $3 }
+| exp EQUAL exp { make_binapp "=" $1 $3 }
+| exp NEQUAL exp { make_binapp "!=" $1 $3 }
+| exp LESS exp { make_binapp "<" $1 $3 }
+| exp LESSEQ exp { make_binapp "<=" $1 $3 }
 | IF exp THEN exp ELSE exp { If($2, $4, $6, get_next_expr_id()) }
 | LET VAR COLON mtype EQUAL exp IN exp { Let($2, Some $4, $6, $8, get_next_expr_id()) }
 | LET VAR EQUAL exp IN exp { Let($2, None, $4, $6, get_next_expr_id()) }
@@ -187,9 +207,9 @@ exp_list:
   exp COMMA exp_list { $1::$3 }
 | exp { [$1] }
 ;
-/*
+
 predexp:
-  INTLITERAL { Predicate.Int($1) }
+  INTLITERAL { Predicate.PInt($1) }
 | LPAREN predexp RPAREN { $2 }
 | VAR { Predicate.Var($1) }
 | predexp PLUS predexp { Predicate.Binop($1, Plus, $3) }
@@ -208,5 +228,5 @@ pred:
 | pred AND pred { Predicate.And($1, $3) }
 | pred OR pred { Predicate.Or($1, $3) }
 ;
-*/
+
 %%
