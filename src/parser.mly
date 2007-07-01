@@ -112,8 +112,8 @@ query:
     let e = $2 in
       Printf.printf(">>\n");
       begin try
-	let s = pprint_shapes e in
-	  Printf.printf "%s" s
+	let ty = infer_type e !active_quals in
+	  Printf.printf "%s" (pprint_type ty)
       with _ ->
 	Printf.printf "Cannot infer type"
       end;

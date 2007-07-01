@@ -1,5 +1,6 @@
 open Expr
 open Type
+open Predicate
 
 
 exception Unify
@@ -123,3 +124,64 @@ let pprint_shapes exp =
   let smap = infer_shape exp in
   let shapes = maplist (fun e t -> (pprint_expr e) ^ "\n::> " ^ (pprint_type t)) smap in
     Misc.join shapes "\n\n"
+
+
+type subst = (string * expr) list
+
+
+let apply_subst (x, e) ((q, PredOver(a, p)) as qual) =
+  if x = a then
+    qual
+  else
+    let pexp = expr_to_predicate_expression e in
+      (q, PredOver(a, predicate_subst pexp x p))
+
+
+type framebase =
+    FVar of subst * string
+  | FInt of subst * qualifier list
+
+
+type frame =
+    FArrow of string * frame * frame
+  | FBase of framebase
+
+
+let rec frame_to_type f =
+  let framebase_to_type = function
+      FVar(_, x) ->
+	TyVar x
+    | FInt(_, quals) ->
+	Int quals
+  in
+    match f with
+	FArrow(x, f, f') ->
+	  Arrow(x, frame_to_type f, frame_to_type f')
+      | FBase f ->
+	  framebase_to_type f
+
+
+type subtypconst = SubType of (string * expr) list * predicate * frame * frame
+
+
+let subtype_constraints exp quals =
+  let constraints_rec e env guard constrs =
+    match e with
+	Num(n, _) ->
+	  (FBase(FInt([], const_int_quals quals guard n)), [])
+      | ExpVar(x, _) ->
+	  (List.assoc x env, [])
+      | _ ->
+	  failwith "Constraints for this expression not yet implemented"
+  in
+    constraints_rec exp [] True []
+
+
+let solve_subtype_constraints constrs =
+  fun x -> x
+
+
+let infer_type exp quals =
+  let (ty, constrs) = subtype_constraints exp quals in
+  let typemap = solve_subtype_constraints constrs in
+    frame_to_type (typemap ty)

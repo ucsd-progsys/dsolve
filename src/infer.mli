@@ -1,4 +1,5 @@
 open Expr
 open Type
 
-val pprint_shapes: expr -> string
+
+val infer_type: expr -> qualifier list -> typ

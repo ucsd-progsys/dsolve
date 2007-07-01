@@ -1,6 +1,3 @@
-open Expr
-
-
 type binop =
     Plus
   | Minus
@@ -70,6 +67,9 @@ let rec predicate_subst v x = function
 
 let implies(p, q) =
   Or(Not p, q)
+
+
+let fresh_expressionvar = Misc.make_get_fresh (fun x -> Var x)
 
 
 let pprint_binop frec e1 op e2 =

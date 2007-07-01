@@ -1,5 +1,6 @@
 open Env
 open Type
+open Predicate
 
 
 type expr_id = string
@@ -25,6 +26,8 @@ val eval : expr -> value
 val expr_get_id : expr -> expr_id
 val expr_get_subexprs: expr -> expr list
 val expr_map: (expr -> 'b) -> expr -> 'b list
+
+val expr_to_predicate_expression: expr -> expression
 
 val pprint_annotated_expr: (expr -> string list) -> int -> expr -> string
 val pprint_expr: expr -> string

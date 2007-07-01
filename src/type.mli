@@ -12,6 +12,6 @@ type typ =
 
 val typ_subst_tyvar: typ -> string -> typ -> typ
 
-val type_const_int: qualifier list -> int -> typ
+val const_int_quals: qualifier list -> predicate -> int -> qualifier list
 
 val pprint_type: typ -> string

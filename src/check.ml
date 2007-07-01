@@ -1,11 +1,12 @@
 open Type
 open Expr
+open Predicate
 
 
 let check_type quals exp ty =
   let rec typeof env = function
       Num(n, _) ->
-	type_const_int quals n
+	Int(const_int_quals quals True n)
     | ExpVar(x, _) ->
 	List.assoc x env
     | _ ->

@@ -22,12 +22,12 @@ let rec typ_subst_tyvar b a = function
       t
 
 
-let type_const_int quals n =
+let const_int_quals quals guard n =
   let n_exp = PInt n in
   let n_satisfies (_, PredOver(x, p)) =
-    Prover.valid (predicate_subst n_exp x p)
+    Prover.implies guard (predicate_subst n_exp x p)
   in
-    Int (List.filter n_satisfies quals)
+    List.filter n_satisfies quals
 
 
 (*

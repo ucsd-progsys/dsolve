@@ -98,6 +98,15 @@ let rec expr_map f e =
     rv::rest
 
 
+let expr_to_predicate_expression = function
+    Num(n, _) ->
+      PInt n
+  | ExpVar(x, _) ->
+      Var x
+  | _ ->
+      fresh_expressionvar()
+
+
 let rec pprint_annotated_expr annotator indent exp =
   let indstr = String.make indent ' ' in
   let pprint_rec = pprint_annotated_expr annotator 0 in
