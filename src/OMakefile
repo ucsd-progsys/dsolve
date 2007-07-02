@@ -20,7 +20,7 @@
 # If so, define the subdirectory targets and uncomment this section.
 #
 
-.SUBDIRS:
+.SUBDIRS: test/
 
 ################################################
 # Configuration.  You may want to modify any of these configuration
@@ -62,7 +62,7 @@ OCAML_NATIVE_LINK_FLAGS += -lstdc++ -lgmp
 # Build an OCaml program
 #
 
-FILES = predicate theoremProver expr type builtins check infer misc parser lexer microml
+FILES = predicate theoremProver constraint expr type builtins check infer misc parser lexer microml
 PROGRAM = microml
 OCAML_LIBS += /usr/lib/ocaml/3.09.2/ocamlgraph/graph ./yices/lib/oyices
 #OCAML_CLIBS += ./yices/lib/liboyices

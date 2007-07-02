@@ -35,4 +35,5 @@ val fresh_expressionvar: unit -> expression
 
 val predicate_subst: expression -> string -> predicate -> predicate
 
+val pprint_expression: expression -> string
 val pprint_predicate: predicate -> string

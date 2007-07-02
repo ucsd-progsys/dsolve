@@ -1,6 +1,7 @@
 open Expr
 open Type
 open Predicate
+open Constraint
 
 
 exception Unify
@@ -126,51 +127,41 @@ let pprint_shapes exp =
     Misc.join shapes "\n\n"
 
 
-type subst = (string * expr) list
-
-
-let apply_subst (x, e) ((q, PredOver(a, p)) as qual) =
-  if x = a then
-    qual
-  else
-    let pexp = expr_to_predicate_expression e in
-      (q, PredOver(a, predicate_subst pexp x p))
-
-
-type framebase =
-    FVar of subst * string
-  | FInt of subst * qualifier list
-
-
-type frame =
-    FArrow of string * frame * frame
-  | FBase of framebase
-
-
-let rec frame_to_type f =
-  let framebase_to_type = function
-      FVar(_, x) ->
-	TyVar x
-    | FInt(_, quals) ->
-	Int quals
+let subtype_constraints exp quals shapemap =
+  let rec fresh_frame e =
+    let rec fresh_frame_rec = function
+	Arrow(x, t, t') ->
+	  FArrow(x, fresh_frame_rec t, fresh_frame_rec t')
+      | _ ->
+	  fresh_framevar()
+    in
+      fresh_frame_rec (ShapeMap.find e shapemap)
   in
-    match f with
-	FArrow(x, f, f') ->
-	  Arrow(x, frame_to_type f, frame_to_type f')
-      | FBase f ->
-	  framebase_to_type f
-
-
-type subtypconst = SubType of (string * expr) list * predicate * frame * frame
-
-
-let subtype_constraints exp quals =
-  let constraints_rec e env guard constrs =
+  let rec constraints_rec e env guard constrs =
     match e with
 	Num(n, _) ->
-	  (FBase(FInt([], const_int_quals quals guard n)), [])
+	  (FInt([], const_int_quals quals guard n), [])
       | ExpVar(x, _) ->
 	  (List.assoc x env, [])
+      | Abs(x, _, e', _) ->
+	  begin match fresh_frame e with
+	      FArrow(_, f, _) ->
+		let env' = (x, f)::env in
+		let (f', constrs') = constraints_rec e' env' guard constrs in
+		  (FArrow(x, f, f'), constrs')
+	    | _ ->
+		failwith "Fresh frame has wrong shape - expected arrow"
+	  end
+      | App(e1, e2, _) ->
+	  begin match constraints_rec e1 env guard constrs with
+	      (FArrow(x, f, f'), constrs') ->
+		let (f2, constrs'') = constraints_rec e2 env guard constrs' in
+		let pe2 = expr_to_predicate_expression e2 in
+		let f'' = frame_apply_subst pe2 x f' in
+		  (f'', SubType(env, guard, f2, f)::constrs'')
+	    | _ ->
+		failwith "Subexpression frame has wrong shape - expected arrow"
+	  end
       | _ ->
 	  failwith "Constraints for this expression not yet implemented"
   in
@@ -182,6 +173,7 @@ let solve_subtype_constraints constrs =
 
 
 let infer_type exp quals =
-  let (ty, constrs) = subtype_constraints exp quals in
+  let shapemap = infer_shape exp in
+  let (ty, constrs) = subtype_constraints exp quals shapemap in
   let typemap = solve_subtype_constraints constrs in
     frame_to_type (typemap ty)

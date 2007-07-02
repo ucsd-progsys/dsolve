@@ -30,6 +30,10 @@ let const_int_quals quals guard n =
     List.filter n_satisfies quals
 
 
+let qualify x (q, PredOver(y, p)) =
+  predicate_subst (Var x) y p
+
+
 (*
 let check_type e texp =
   let rec type_exp e texp tenv =
@@ -183,14 +187,17 @@ let check_type e texp =
 *)
 
 
+let pprint_quals quals =
+  let qual_name (name, _) = name in
+    Misc.join (List.map qual_name quals) " "
+
+
 let rec pprint_type = function
     Arrow(x, (Arrow _ as t1), t2) ->
       sprintf "%s: (%s) -> %s" x (pprint_type t1) (pprint_type t2)
   | Arrow(x, t1, t2) ->
       sprintf "%s: %s -> %s" x (pprint_type t1) (pprint_type t2)
   | Int quals ->
-      let qual_name (name, _) = name in
-      let qual_names = Misc.join (List.map qual_name quals) " " in
-      sprintf "%s int" qual_names
+      sprintf "%s int" (pprint_quals quals)
   | TyVar a ->
       sprintf "'%s" a
