@@ -80,13 +80,20 @@ end
 module QualifierSet = Set.Make(Qualifier)
 
 
-module Solution = Map.Make(String)
+module Solution = struct
+  let create base =
+    fun _ -> base
+
+
+  let add k v solution =
+    fun k' -> if k = k' then v else solution k'
+end
 
 
 let rec frame_predicate solution (x, f) =
   let (subs, quals) = match f with
       FVar(subst, k) ->
-	(subst, QualifierSet.elements (Solution.find k solution))
+	(subst, QualifierSet.elements (solution k))
     | FInt(subst, qs) ->
 	(subst, qs)
     | FArrow(_) ->

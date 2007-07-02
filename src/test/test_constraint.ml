@@ -3,30 +3,33 @@ open Predicate
 open Constraint
 
 
+let empty_solution = Solution.create QualifierSet.empty
+
+
 let simple_guard_succeed () =
   let greater_than_x = FInt([("y", PInt 4)], [("GREATERX", PredOver("a", Atom(Var "x", Lt, Var "y")))]) in
   let constr = SubType([], equals(Var "x", PInt 3), FInt([], []), greater_than_x) in
-    assert_bool "y = 4 <= x = 3  ='(" (constraint_sat Solution.empty constr)
+    assert_bool "y = 4 <= x = 3  ='(" (constraint_sat empty_solution constr)
 
 
 let simple_guard_fail () =
   let greater_than_x = FInt([("y", PInt 2)], [("GREATERX", PredOver("a", Atom(Var "x", Lt, Var "y")))]) in
   let constr = SubType([], equals(Var "x", PInt 3), FInt([], []), greater_than_x) in
-    assert_bool "y = 2 > x = 3  ='(" (not (constraint_sat Solution.empty constr))
+    assert_bool "y = 2 > x = 3  ='(" (not (constraint_sat empty_solution constr))
 
 
 let simple_subtype_succeed () =
   let nneg = FInt([], [("NNEG", PredOver("a", Atom(PInt 0, Le, Var "a")))]) in
   let pos = FInt([], [("POS", PredOver("b", Atom(PInt 0, Lt, Var "b")))]) in
   let constr = SubType([], True, pos, nneg) in
-    assert_bool "POS not a subtype of NNEG in empty context" (constraint_sat Solution.empty constr)
+    assert_bool "POS not a subtype of NNEG in empty context" (constraint_sat empty_solution constr)
 
 
 let simple_subtype_fail () =
   let nneg = FInt([], [("NNEG", PredOver("a", Atom(PInt 0, Le, Var "a")))]) in
   let pos = FInt([], [("POS", PredOver("b", Atom(PInt 0, Lt, Var "b")))]) in
   let constr = SubType([], True, nneg, pos) in
-    assert_bool "POS is a subtype of NNEG in empty context" (not (constraint_sat Solution.empty constr))
+    assert_bool "POS is a subtype of NNEG in empty context" (not (constraint_sat empty_solution constr))
 
 
 let subtype_from_environment_succeed () =
@@ -34,7 +37,7 @@ let subtype_from_environment_succeed () =
   let eqx = FInt([], [("EQX", PredOver("a", Atom(Var "a", Eq, Var "x")))]) in
   let pos = FInt([], [("POS", PredOver("b", Atom(PInt 0, Lt, Var "b")))]) in
   let constr = SubType(env, True, eqx, pos) in
-    assert_bool "EQX not a subtype of POS when x -> {a | 0 < a}" (constraint_sat Solution.empty constr)
+    assert_bool "EQX not a subtype of POS when x -> {a | 0 < a}" (constraint_sat empty_solution constr)
 
 
 let subtype_from_environment_fail () =
@@ -42,11 +45,11 @@ let subtype_from_environment_fail () =
   let eqx = FInt([], [("EQX", PredOver("a", Atom(Var "a", Eq, Var "x")))]) in
   let pos = FInt([], [("POS", PredOver("b", Atom(PInt 0, Lt, Var "b")))]) in
   let constr = SubType(env, True, eqx, pos) in
-    assert_bool "EQX a subtype of POS when x -> {a | 0 <= a}" (not (constraint_sat Solution.empty constr))
+    assert_bool "EQX a subtype of POS when x -> {a | 0 <= a}" (not (constraint_sat empty_solution constr))
 
 
 let make_solution bindings =
-  List.fold_right (fun (k, v) s -> Solution.add k v s) bindings Solution.empty
+  List.fold_right (fun (k, v) s -> Solution.add k v s) bindings empty_solution
 
 
 let make_qualifierset quals =
