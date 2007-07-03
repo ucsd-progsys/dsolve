@@ -77,7 +77,14 @@ module Qualifier = struct
 end
 
 
-module QualifierSet = Set.Make(Qualifier)
+module SimpleQualifierSet = Set.Make(Qualifier)
+
+module QualifierSet = struct
+  include SimpleQualifierSet
+
+  let from_list quals =
+    List.fold_right add quals empty
+end
 
 
 module Solution = struct
@@ -90,6 +97,24 @@ module Solution = struct
 end
 
 
+let frame_apply_solution solution fr =
+  let rec apply_rec = function
+      FArrow(x, f, f') ->
+        FArrow(x, apply_rec f, apply_rec f')
+    | FVar(ss, x) ->
+        FInt(ss, QualifierSet.elements (solution x))
+    | f ->
+        f
+  in
+    apply_rec fr
+
+
+let subst_quals_predicate x subs quals =
+  let unsubst = big_and (List.map (qualify x) quals) in
+  let substitute (x, e) p = predicate_subst e x p in
+    List.fold_right substitute subs unsubst
+
+
 let rec frame_predicate solution (x, f) =
   let (subs, quals) = match f with
       FVar(subst, k) ->
@@ -99,9 +124,7 @@ let rec frame_predicate solution (x, f) =
     | FArrow(_) ->
 	([], [])
   in
-  let unsubst = big_and (List.map (qualify x) quals) in
-  let substitute (x, e) p = predicate_subst e x p in
-    List.fold_right substitute subs unsubst
+    subst_quals_predicate x subs quals
 
 
 let environment_predicate solution env =
@@ -109,7 +132,44 @@ let environment_predicate solution env =
 
 
 let constraint_sat solution (SubType(env, guard, f1, f2)) =
+  let envp = environment_predicate solution env in
+  let p1 = frame_predicate solution ("A", f1) in
+  let p2 = frame_predicate solution ("A", f2) in
+    Prover.implies (big_and [envp; guard; p1]) p2
+
+
+exception Unsatisfiable
+
+
+let refine solution quals = function
+    SubType(env, guard, f1, FVar(subs, k2)) ->
       let envp = environment_predicate solution env in
       let p1 = frame_predicate solution ("A", f1) in
-      let p2 = frame_predicate solution ("A", f2) in
-	Prover.implies (big_and [envp; guard; p1]) p2
+        Prover.push (big_and [envp; guard; p1]);
+        let qual_holds q =
+          let qp = subst_quals_predicate "A" subs [q] in
+            Prover.valid qp
+        in
+        let qset = QualifierSet.from_list (List.filter qual_holds quals) in
+          Prover.pop();
+          Solution.add k2 (QualifierSet.inter qset (solution k2)) solution
+  | SubType(_, _, _, _) ->
+      (* If we have a literal RHS and we're unsatisfied, we're hosed -
+         either the LHS is a literal and we can't do anything, or it's
+         a var which has been pushed up by other constraints and, again,
+         we can't do anything *)
+      raise Unsatisfiable
+
+
+let solve_constraints quals constrs =
+  let rec solve_rec solution =
+    try
+      let unsat_constr =
+        List.find (fun c -> not (constraint_sat solution c)) constrs in
+        solve_rec (refine solution quals unsat_constr)
+    with Not_found ->
+      solution
+  in
+  let qset = QualifierSet.from_list quals in
+    solve_rec (Solution.create qset)
+

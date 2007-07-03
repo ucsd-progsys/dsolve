@@ -52,13 +52,9 @@ let make_solution bindings =
   List.fold_right (fun (k, v) s -> Solution.add k v s) bindings empty_solution
 
 
-let make_qualifierset quals =
-  List.fold_right QualifierSet.add quals QualifierSet.empty
-
-
 let simple_subtype_from_solution_succeed () =
-  let nneg = make_qualifierset [("NNEG", PredOver("a", Atom(PInt 0, Le, Var "a")))] in
-  let pos = make_qualifierset [("POS", PredOver("b", Atom(PInt 0, Lt, Var "b")))] in
+  let nneg = QualifierSet.from_list [("NNEG", PredOver("a", Atom(PInt 0, Le, Var "a")))] in
+  let pos = QualifierSet.from_list [("POS", PredOver("b", Atom(PInt 0, Lt, Var "b")))] in
   let solution = make_solution [("k1", pos); ("k2", nneg)] in
   let constr = SubType([], True, FVar([], "k1"), FVar([], "k2")) in
     assert_bool "k1 = POS not a subtype of k2 = NNEG with partial solution"
@@ -66,8 +62,8 @@ let simple_subtype_from_solution_succeed () =
 
 
 let simple_subtype_from_solution_fail () =
-  let nneg = make_qualifierset [("NNEG", PredOver("a", Atom(PInt 0, Le, Var "a")))] in
-  let pos = make_qualifierset [("POS", PredOver("b", Atom(PInt 0, Lt, Var "b")))] in
+  let nneg = QualifierSet.from_list [("NNEG", PredOver("a", Atom(PInt 0, Le, Var "a")))] in
+  let pos = QualifierSet.from_list [("POS", PredOver("b", Atom(PInt 0, Lt, Var "b")))] in
   let solution = make_solution [("k1", pos); ("k2", nneg)] in
   let constr = SubType([], True, FVar([], "k2"), FVar([], "k1")) in
     assert_bool "k2 = NNEG is a subtype of k1 = POS with partial solution"

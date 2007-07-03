@@ -168,12 +168,8 @@ let subtype_constraints exp quals shapemap =
     constraints_rec exp [] True []
 
 
-let solve_subtype_constraints constrs =
-  fun x -> x
-
-
 let infer_type exp quals =
   let shapemap = infer_shape exp in
-  let (ty, constrs) = subtype_constraints exp quals shapemap in
-  let typemap = solve_subtype_constraints constrs in
-    frame_to_type (typemap ty)
+  let (fr, constrs) = subtype_constraints exp quals shapemap in
+  let solution = solve_constraints quals constrs in
+    frame_to_type (frame_apply_solution solution fr)

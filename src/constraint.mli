@@ -15,7 +15,6 @@ type frame =
 type subtypconst = SubType of (string * frame) list * predicate * frame * frame
 
 val frame_to_type: frame -> typ
-
 val fresh_framevar: unit -> frame
 
 val frame_apply_subst: expression -> string -> frame -> frame
@@ -30,6 +29,7 @@ module QualifierSet: sig
   type elt = qualifier
   type t
   val empty : t
+  val from_list : elt list -> t
   val add : elt -> t -> t
   val singleton : elt -> t
   val union : t -> t -> t
@@ -45,5 +45,7 @@ module Solution: sig
   val add: 'a -> 'b -> ('a -> 'b) -> ('a -> 'b)
 end
 
+val frame_apply_solution: (string -> QualifierSet.t) -> frame -> frame
 
 val constraint_sat: (string -> QualifierSet.t) -> subtypconst -> bool
+val solve_constraints: qualifier list -> subtypconst list -> (string -> QualifierSet.t)
