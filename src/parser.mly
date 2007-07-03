@@ -169,7 +169,6 @@ simple_exp:
 | INTLITERAL { Num($1, get_next_expr_id()) }
 | exp PLUS exp { make_binapp "+" $1 $3 }
 | exp MINUS exp { make_binapp "-" $1 $3 }
-| exp TIMES exp { make_binapp "*" $1 $3 }
 | exp EQUAL exp { make_binapp "=" $1 $3 }
 | exp NEQUAL exp { make_binapp "!=" $1 $3 }
 | exp LESS exp { make_binapp "<" $1 $3 }

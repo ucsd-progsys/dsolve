@@ -165,7 +165,7 @@ let subtype_constraints exp quals shapemap =
       | _ ->
 	  failwith "Constraints for this expression not yet implemented"
   in
-    constraints_rec exp [] True []
+    constraints_rec exp Builtins.frames True []
 
 
 let infer_type exp quals =
