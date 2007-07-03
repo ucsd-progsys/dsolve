@@ -166,10 +166,11 @@ let refine solution quals = function
 
 
 let solve_constraints quals constrs =
+  let cs = split_constraints constrs in
   let rec solve_rec solution =
     try
       let unsat_constr =
-        List.find (fun c -> not (constraint_sat solution c)) constrs in
+        List.find (fun c -> not (constraint_sat solution c)) cs in
         solve_rec (refine solution quals unsat_constr)
     with Not_found ->
       solution
