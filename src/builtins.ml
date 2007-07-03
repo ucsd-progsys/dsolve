@@ -3,8 +3,13 @@ open Predicate
 open Constraint
 
 
+let xv = "_X"
+let yv = "_Y"
+let zv = "z"
+
+
 let op_shape name =
-  (name, Arrow("x", Int [], Arrow("y", Int[], Int [])))
+  (name, Arrow(xv, Int [], Arrow(yv, Int[], Int [])))
 
 let types = [
   op_shape "+";
@@ -17,13 +22,13 @@ let types = [
 
 
 let binop_qual name op =
-  (name, PredOver("z", equals(Var "z", Binop(Var "x", op, Var "y"))))
+  (name, PredOver(zv, equals(Var zv, Binop(Var xv, op, Var yv))))
 
 
 let binrel_qual name rel =
-  let truepred = Atom(Var "x", rel, Var "y") in
-    (name, PredOver("z", Or(And(equals(Var "z", PInt 1), truepred),
-                            And(equals(Var "z", PInt 0), Not(truepred)))))
+  let truepred = Atom(Var xv, rel, Var yv) in
+    (name, PredOver(zv, Or(And(equals(Var zv, PInt 1), truepred),
+                           And(equals(Var zv, PInt 0), Not(truepred)))))
 
 
 let qplus = binop_qual "PLUS" Plus
@@ -44,7 +49,7 @@ let quals = [
 
 
 let op_frame op qual =
-  (op, FArrow("x", FInt([], []), FArrow("y", FInt([], []), FInt([], [qual]))))
+  (op, FArrow(xv, FInt([], []), FArrow(yv, FInt([], []), FInt([], [qual]))))
 
 
 let frames = [
