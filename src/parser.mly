@@ -107,7 +107,7 @@ query:
       flush stdout
 
   }
-| TYPE exp EOL {
+| QUESTION exp EOL {
 
     let e = $2 in
       Printf.printf(">>\n");
@@ -149,14 +149,6 @@ query:
     let activestrs = List.map pprint_param_pred !active_quals in
       Printf.printf "%s\n\n" (Misc.join activestrs "\n");
       flush stdout
-  }
-| QUESTION exp EOL {
-(*
-    let exp = $2 in
-      let qmap = annotate exp !active_preds in
-	Printf.printf "%s\n\n" (pprint_annotated_expr (expr_quals qmap) 0 exp);
-	Prover.reset();
-	flush stdout *)
   }
 ;
 
