@@ -1,20 +1,15 @@
-I think the way we're handling pushing logical dependencies around is wrong and stupid.  Right now, we say, "Oh, jeez, I'm sorry, you're an if or an expression or whatever.  I bet you'd like to know some things about my constituents."  Why are we waiting so long?!  Why can't we just do this at name binding time?
-The only major reason I see that this could be problematic is in the case of recursive functions.  What if we push that n is positive down to where we instantiate n again?  Is it going to always be positive?  We shall see...
-This looks kosher.  Implement whenever...
+An issue with EQX(y): y = x
+---------------------------
 
-Handling formal relations as n-ary properties:
-An n-ary property relates only a function's formal parameters, e.g., P(x1, ..., xn).
-Of course, our types are meant to express properties about a single parameter, and this relation holds over several.  Oh noes!
-So what we do is "close" the relation over the other parameters.
-P(x, y): x = y
-Suppose that x and y satisfy this relation.  Then we have two new predicates
-Px(y): x = y
-Py(x): x = y
-We assign these predicates to x and y, respectively.
+It doesn't friggin' work.  In particular, we're going to get something like this:
+(fun x -> fun y -> y) 3 3;;
+[] <: [x -> 3] a	(y -> 3)
+[] <: b			(x -> 3)
 
-Passing qualifiers into/out of functions...
-e.g., let f x = x + 1 in f a, and we have a >= a going in, we want f a >= a coming out.
-Howto: at the return site for the call, check out your qualifiers.  Look at the corresponding call site to see what the formal is called.  Assert the following to the theorem prover after the ) edge:
-Whatever facts about the return value
-This node = return value (i.e., this vertex = predecessor, so a ->) b => a = b)
-Formals = actuals
+Final type is [x -> 3; y -> 3] a.  What're we missing?  That a is the type of y?
+One possible solution is to throw in a qualifier that describes y in terms of x.
+Then we'll have the first constraint as
+[] something about y <: [x -> ...] a
+Note we'd actually probably want a pair of qualifiers that describe x and y, then
+a third qual that describes the relationship.  But this would require us to say
+something about x in the environment at application time, which is annoying...
