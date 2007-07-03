@@ -108,6 +108,12 @@ let infer_shape exp =
 	    let newtenv = (x, tx)::tenv in
 	    let (te, constrse, sm'') = infer_rec e newtenv constrsx sm' in
 	      (te, constrse, sm'')
+        | LetRec(f, _, ex, e, _) ->
+            let tf = fresh_tyvar() in
+            let tenv' = (f, tf)::tenv in
+            let (tf', constrs'', sm'') = infer_rec ex tenv' constrs shapemap in
+            let (te, constrs', sm') = infer_rec e tenv' constrs'' sm'' in
+              (te, TypEq(tf, tf')::constrs', sm')
     in
       (t, cs, ShapeMap.add e t sm)
   in
@@ -162,6 +168,17 @@ let subtype_constraints exp quals shapemap =
 	    | _ ->
 		failwith "Subexpression frame has wrong shape - expected arrow"
 	  end
+      | If(e1, e2, e3, _) ->
+          let f = fresh_frame e in
+          let (f1, constrs''') = constraints_rec e1 env guard constrs in
+          let guardvar = fresh_bindvar() in
+          let env' = (guardvar, f1)::env in
+          let guardp = equals(Var guardvar, PInt 1) in
+          let guard2 = And(guardp, guard) in
+          let (f2, constrs'') = constraints_rec e2 env' guard2 constrs''' in
+          let guard3 = And(Not(guardp), guard) in
+          let (f3, constrs') = constraints_rec e3 env' guard3 constrs'' in
+            (f, SubType(env', guard2, f2, f)::SubType(env', guard3, f3, f)::constrs')
       | Let(x, _, e1, e2, _) ->
           let (f1, constrs'') = constraints_rec e1 env guard constrs in
           let env' = (x, f1)::env in
@@ -169,8 +186,12 @@ let subtype_constraints exp quals shapemap =
           let guard' = And(equals(Var x, xp), guard) in
           let (f2, constrs') = constraints_rec e2 env' guard' constrs'' in
             (f2, constrs')
-      | _ ->
-	  failwith "Constraints for this expression not yet implemented"
+      | LetRec(f, _, e1, e2, _) ->
+          let f1 = fresh_frame e1 in
+          let env' = (f, f1)::env in
+          let (f1', constrs'') = constraints_rec e1 env' guard constrs in
+          let (f2, constrs') = constraints_rec e2 env' guard constrs'' in
+            (f2, SubType(env', guard, f1', f1)::constrs')
   in
     constraints_rec exp Builtins.frames True []
 

@@ -22,6 +22,7 @@ type token =
   | LESS
   | LESSEQ
   | LET
+  | LETREC
   | LPAREN
   | LSQUARE
   | MATCH

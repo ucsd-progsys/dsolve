@@ -10,6 +10,7 @@ type expr =
   | ExpVar of string * expr_id
   | If of expr * expr * expr * expr_id
   | Let of string * typ option * expr * expr * expr_id
+  | LetRec of string * typ option * expr * expr * expr_id
   | Abs of string * typ option * expr * expr_id
   | App of expr * expr * expr_id
 
@@ -46,8 +47,14 @@ let eval exp =
 	  end
       | Let(x, _, e, e', _) ->
 	  let xv = eval_rec e env in
-	  let newenv = (x, xv)::env in
-	    eval_rec e' newenv
+	  let env' = (x, xv)::env in
+	    eval_rec e' env'
+      | LetRec(f, _, Abs(x, _, e, _), e', _) ->
+          let fv = Closure(x, e, Some f, env) in
+          let env' = (f, fv)::env in
+            eval_rec e' env'
+      | LetRec(_) ->
+          raise BogusEvalError
       | Abs(x, _, e, _) ->
 	  Closure(x, e, None, env)
       | App(e1, e2, _) ->
@@ -68,16 +75,6 @@ let eval exp =
     eval_rec exp []
 
 
-let expr_get_id = function
-    Num(_, id)
-  | ExpVar(_, id)
-  | If(_, _, _, id)
-  | Let(_, _, _, _, id)
-  | Abs(_, _, _, id)
-  | App(_, _, id) ->
-      id
-
-
 let expr_get_subexprs = function
     Num(_, _)
   | ExpVar(_) ->
@@ -85,6 +82,8 @@ let expr_get_subexprs = function
   | If(e1, e2, e3, _) ->
       [e1; e2; e3]
   | Let(_, _, e1, e2, _) ->
+      [e1; e2]
+  | LetRec(_, _, e1, e2, _) ->
       [e1; e2]
   | Abs(_, _, e, _) ->
       [e]
@@ -121,6 +120,8 @@ let rec pprint_annotated_expr annotator indent exp =
 	Printf.sprintf "if %s then\n%s\n%selse\n%s" (pprint_rec e1) (pprint_ind e2) indstr (pprint_ind e3)
     | Let(x, _, e1, e2, _) ->
 	Printf.sprintf "let %s = %s in\n%s" x (pprint_rec e1) (pprint_ind e2)
+    | LetRec(f, _, e1, e2, _) ->
+        Printf.sprintf "letrec %s = %s in\n%s" f (pprint_rec e1) (pprint_rec e2)
     | Abs(x, _, e, _) ->
 	Printf.sprintf "fun %s ->\n%s" x (pprint_ind e)
     | App(e1, e2, _) ->

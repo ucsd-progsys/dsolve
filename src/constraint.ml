@@ -13,7 +13,7 @@ type frame =
   | FInt of subst * qualifier list
 
 
-let fresh_framevar = Misc.make_get_fresh (fun x -> FVar([], x))
+let fresh_framevar = Misc.make_get_fresh (fun x -> FVar([], String.uppercase x))
 
 
 let rec frame_to_type = function
@@ -61,8 +61,8 @@ let pprint_env env =
 
 
 let pprint_constraint (SubType(env, guard, f1, f2)) =
-  Printf.sprintf "%s |- %s <: %s"
-    (pprint_predicate guard) (pprint_frame f1) (pprint_frame f2)
+  Printf.sprintf "[%s] %s |- %s <: %s"
+    (pprint_env env) (pprint_predicate guard) (pprint_frame f1) (pprint_frame f2)
 
 
 let split_constraints constrs =
@@ -177,13 +177,12 @@ let solve_constraints quals constrs =
     try
       let unsat_constr =
         List.find (fun c -> not (constraint_sat solution c)) cs in
-      let _ = Printf.printf "Solving %s\n" (pprint_constraint unsat_constr) in
+      let _ = Printf.printf "Solving %s\n\n" (pprint_constraint unsat_constr) in
         solve_rec (refine solution quals unsat_constr)
     with Not_found ->
-      let _ = Printf.printf "Done!\n\n" in
       solution
   in
   let qset = QualifierSet.from_list quals in
   let _ = Printf.printf "Constraints:\n\n" in
-  let _ = List.iter (fun c -> Printf.printf "%s\n" (pprint_constraint c)) constrs in
+  let _ = List.iter (fun c -> Printf.printf "%s\n\n" (pprint_constraint c)) constrs in
     solve_rec (Solution.create qset)

@@ -67,6 +67,8 @@ rule token = parse
       { LESSEQ }
   | "let"
       { LET }
+  | "letrec"
+      { LETREC }
   | "("
       { LPAREN }
   | "["

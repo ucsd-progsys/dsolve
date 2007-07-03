@@ -47,6 +47,7 @@ let make_binapp f x y =
 %token LESS
 %token LESSEQ
 %token LET
+%token LETREC
 %token LPAREN
 %token LSQUARE
 %token MATCH
@@ -113,8 +114,9 @@ query:
       begin try
 	let ty = infer_type e !active_quals in
 	  Printf.printf ">> %s" (pprint_type ty)
-      with _ ->
-	Printf.printf "Cannot infer type"
+      with e ->
+	Printf.printf "Cannot infer type";
+        raise e
       end;
       Printf.printf "\n\n";
       flush stdout
@@ -176,6 +178,10 @@ simple_exp:
 | IF exp THEN exp ELSE exp { If($2, $4, $6, get_next_expr_id()) }
 | LET VAR COLON mtype EQUAL exp IN exp { Let($2, Some $4, $6, $8, get_next_expr_id()) }
 | LET VAR EQUAL exp IN exp { Let($2, None, $4, $6, get_next_expr_id()) }
+| LETREC VAR EQUAL FUN VAR ARROW exp IN exp {
+    let expf = Abs($5, None, $7, get_next_expr_id()) in
+      LetRec($2, None, expf, $9, get_next_expr_id())
+  }
 | FUN VAR COLON mtype ARROW exp { Abs($2, Some $4, $6, get_next_expr_id()) }
 | FUN VAR ARROW exp { Abs($2, None, $4, get_next_expr_id()) }
 ;
