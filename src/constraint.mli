@@ -12,6 +12,9 @@ type frame =
   | FInt of subst * qualifier list
 
 
+val pprint_frame: frame -> string
+
+
 type subtypconst = SubType of (string * frame) list * predicate * frame * frame
 
 val frame_to_type: frame -> typ

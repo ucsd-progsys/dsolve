@@ -110,10 +110,9 @@ query:
 | QUESTION exp EOL {
 
     let e = $2 in
-      Printf.printf(">>\n");
       begin try
 	let ty = infer_type e !active_quals in
-	  Printf.printf "%s" (pprint_type ty)
+	  Printf.printf ">> %s" (pprint_type ty)
       with _ ->
 	Printf.printf "Cannot infer type"
       end;

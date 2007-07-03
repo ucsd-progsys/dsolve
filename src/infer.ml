@@ -111,7 +111,7 @@ let infer_shape exp =
     in
       (t, cs, ShapeMap.add e t sm)
   in
-  let (t, constrs, smap') = infer_rec exp [] [] ShapeMap.empty in
+  let (t, constrs, smap') = infer_rec exp Builtins.types [] ShapeMap.empty in
   let sub = unify constrs in
   let smap = ShapeMap.map sub smap' in
     smap
@@ -140,9 +140,9 @@ let subtype_constraints exp quals shapemap =
   let rec constraints_rec e env guard constrs =
     match e with
 	Num(n, _) ->
-	  (FInt([], const_int_quals quals guard n), [])
+	  (FInt([], const_int_quals quals guard n), constrs)
       | ExpVar(x, _) ->
-	  (List.assoc x env, [])
+	  (List.assoc x env, constrs)
       | Abs(x, _, e', _) ->
 	  begin match fresh_frame e with
 	      FArrow(_, f, _) ->
@@ -172,4 +172,5 @@ let infer_type exp quals =
   let shapemap = infer_shape exp in
   let (fr, constrs) = subtype_constraints exp quals shapemap in
   let solution = solve_constraints quals constrs in
+  let _ = Printf.printf "%s\n\n" (pprint_frame fr) in
     frame_to_type (frame_apply_solution solution fr)

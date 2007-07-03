@@ -55,6 +55,10 @@ and pprint_subst ss =
 type subtypconst = SubType of (string * frame) list * predicate * frame * frame
 
 
+let pprint_constraint (SubType(env, guard, f1, f2)) =
+  Printf.sprintf "%s <: %s" (pprint_frame f1) (pprint_frame f2)
+
+
 let split_constraints constrs =
   let rec flatten_rec cs flat =
     match cs with
@@ -171,5 +175,5 @@ let solve_constraints quals constrs =
       solution
   in
   let qset = QualifierSet.from_list quals in
+  let _ = List.iter (fun c -> Printf.printf "%s\n" (pprint_constraint c)) constrs in
     solve_rec (Solution.create qset)
-
