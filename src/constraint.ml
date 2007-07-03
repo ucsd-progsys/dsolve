@@ -61,7 +61,7 @@ let pprint_env env =
 
 
 let pprint_constraint (SubType(env, guard, f1, f2)) =
-  Printf.sprintf " %s |- %s <: %s"
+  Printf.sprintf "%s |- %s <: %s"
     (pprint_predicate guard) (pprint_frame f1) (pprint_frame f2)
 
 
