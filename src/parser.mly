@@ -120,14 +120,6 @@ query:
       Printf.printf "\n\n";
       flush stdout
   }
-| BANG exp EOL {
-(*
-    let e = $2 in
-      let (graph, qm) = expr_qualgraph e QualSet.empty in
-	FlowGraphPrinter.output_graph stdout graph;
-	Printf.printf "\n";
-	flush stdout *)
-  }
 | exp EOL {
 
     let e = $1 in
