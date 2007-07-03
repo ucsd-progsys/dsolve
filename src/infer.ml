@@ -162,6 +162,13 @@ let subtype_constraints exp quals shapemap =
 	    | _ ->
 		failwith "Subexpression frame has wrong shape - expected arrow"
 	  end
+      | Let(x, _, e1, e2, _) ->
+          let (f1, constrs'') = constraints_rec e1 env guard constrs in
+          let env' = (x, f1)::env in
+          let xp = expr_to_predicate_expression e1 in
+          let guard' = And(equals(Var x, xp), guard) in
+          let (f2, constrs') = constraints_rec e2 env' guard' constrs'' in
+            (f2, constrs')
       | _ ->
 	  failwith "Constraints for this expression not yet implemented"
   in

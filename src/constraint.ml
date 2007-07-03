@@ -46,17 +46,23 @@ let rec pprint_frame = function
   | FVar(subs, x) ->
       Printf.sprintf "[%s] %s" (pprint_subst subs) x
 and pprint_subst ss =
-  let pprint_single_subst (x, pexp) =
-    Printf.sprintf "%s -> %s" x (pprint_expression pexp)
-  in
-    Misc.join (List.map pprint_single_subst ss) "; "
+  let pprint_mapping (x, pexp) =
+    Printf.sprintf "%s -> %s" x (pprint_expression pexp) in
+    Misc.join (List.map pprint_mapping ss) "; "
 
 
 type subtypconst = SubType of (string * frame) list * predicate * frame * frame
 
 
+let pprint_env env =
+  let pprint_mapping (x, f) =
+    Printf.sprintf "%s -> %s" x (pprint_frame f) in
+    Misc.join (List.map pprint_mapping env) "; "
+
+
 let pprint_constraint (SubType(env, guard, f1, f2)) =
-  Printf.sprintf "%s <: %s" (pprint_frame f1) (pprint_frame f2)
+  Printf.sprintf " %s |- %s <: %s"
+    (pprint_predicate guard) (pprint_frame f1) (pprint_frame f2)
 
 
 let split_constraints constrs =
@@ -171,10 +177,13 @@ let solve_constraints quals constrs =
     try
       let unsat_constr =
         List.find (fun c -> not (constraint_sat solution c)) cs in
+      let _ = Printf.printf "Solving %s\n" (pprint_constraint unsat_constr) in
         solve_rec (refine solution quals unsat_constr)
     with Not_found ->
+      let _ = Printf.printf "Done!\n\n" in
       solution
   in
   let qset = QualifierSet.from_list quals in
+  let _ = Printf.printf "Constraints:\n\n" in
   let _ = List.iter (fun c -> Printf.printf "%s\n" (pprint_constraint c)) constrs in
     solve_rec (Solution.create qset)
