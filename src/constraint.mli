@@ -18,6 +18,7 @@ val pprint_frame: frame -> string
 type subtypconst = SubType of (string * frame) list * predicate * frame * frame
 
 val frame_to_type: frame -> typ
+val type_to_frame: typ -> frame
 val fresh_framevar: unit -> frame
 
 val frame_apply_subst: expression -> string -> frame -> frame

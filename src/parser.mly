@@ -114,9 +114,8 @@ query:
       begin try
 	let ty = infer_type e !active_quals in
 	  Printf.printf ">> %s" (pprint_type ty)
-      with e ->
+      with _ ->
 	Printf.printf "Cannot infer type";
-        raise e
       end;
       Printf.printf "\n\n";
       flush stdout
@@ -184,6 +183,7 @@ simple_exp:
   }
 | FUN VAR COLON mtype ARROW exp { Abs($2, Some $4, $6, get_next_expr_id()) }
 | FUN VAR ARROW exp { Abs($2, None, $4, get_next_expr_id()) }
+| LPAREN mtype BANG mtype RPAREN exp { Cast($2, $4, $6, get_next_expr_id()) }
 ;
 
 param_list:

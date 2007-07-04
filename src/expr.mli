@@ -13,6 +13,7 @@ type expr =
   | LetRec of string * typ option * expr * expr * expr_id
   | Abs of string * typ option * expr * expr_id
   | App of expr * expr * expr_id
+  | Cast of typ * typ * expr * expr_id
 
 
 type value =

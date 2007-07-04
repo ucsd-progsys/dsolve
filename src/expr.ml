@@ -13,6 +13,7 @@ type expr =
   | LetRec of string * typ option * expr * expr * expr_id
   | Abs of string * typ option * expr * expr_id
   | App of expr * expr * expr_id
+  | Cast of typ * typ * expr * expr_id
 
 
 (* Values resulting from evalutation *)
@@ -71,6 +72,8 @@ let eval exp =
 		    eval_rec e newenv
 	      | _ -> raise BogusEvalError
 	    end
+      | Cast(_, _, e, _) ->
+          eval_rec e env
   in
     eval_rec exp []
 
@@ -89,6 +92,8 @@ let expr_get_subexprs = function
       [e]
   | App(e1, e2, _) ->
       [e1; e2]
+  | Cast(_, _, e, _) ->
+      [e]
 
 
 let rec expr_map f e =
@@ -126,6 +131,8 @@ let rec pprint_annotated_expr annotator indent exp =
 	Printf.sprintf "fun %s ->\n%s" x (pprint_ind e)
     | App(e1, e2, _) ->
 	Printf.sprintf "%s (%s)" (pprint_rec e1) (pprint_rec e2)
+    | Cast(t1, t2, e, _) ->
+        Printf.sprintf "(%s ! %s) %s" (pprint_type t1) (pprint_type t2) (pprint_rec e)
   in
   let quals = annotator exp in
   let qualstrs = List.map (fun s -> "{" ^ s ^ "}") quals in

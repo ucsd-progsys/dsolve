@@ -114,6 +114,8 @@ let infer_shape exp =
             let (tf', constrs'', sm'') = infer_rec ex tenv' constrs shapemap in
             let (te, constrs', sm') = infer_rec e tenv' constrs'' sm'' in
               (te, TypEq(tf, tf')::constrs', sm')
+        | Cast(_, _, e, _) ->
+            infer_rec e tenv constrs shapemap
     in
       (t, cs, ShapeMap.add e t sm)
   in
@@ -192,6 +194,10 @@ let subtype_constraints exp quals shapemap =
           let (f1', constrs'') = constraints_rec e1 env' guard constrs in
           let (f2, constrs') = constraints_rec e2 env' guard constrs'' in
             (f2, SubType(env', guard, f1', f1)::constrs')
+      | Cast(t1, t2, e, _) ->
+          let (f, constrs') = constraints_rec e env guard constrs in
+          let (f1, f2) = (type_to_frame t1, type_to_frame t2) in
+            (f2, SubType(env, guard, f, f1)::constrs')
   in
     constraints_rec exp Builtins.frames True []
 

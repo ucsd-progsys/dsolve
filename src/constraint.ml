@@ -25,6 +25,15 @@ let rec frame_to_type = function
       Int quals
 
 
+let rec type_to_frame = function
+    Arrow(x, t, t') ->
+      FArrow(x, type_to_frame t, type_to_frame t')
+  | TyVar x ->
+      FVar([], x)
+  | Int quals ->
+      FInt([], quals)
+
+
 let frame_apply_subst pexp x fr =
   let s = (x, pexp) in
   let rec apply_subst_rec = function
