@@ -170,8 +170,9 @@ let subtype_constraints exp quals shapemap =
 	  begin match fresh_frame e with
 	      FArrow(_, f, _) ->
 		let env' = (x, f)::env in
-		let (f', constrs') = constraints_rec e' env' guard constrs in
-		  (FArrow(x, f, f'), constrs')
+		let (f'', constrs') = constraints_rec e' env' guard constrs in
+                let f' = fresh_frame e' in
+		  (FArrow(x, f, f'), SubType(env, guard, f'', f')::constrs')
 	    | _ ->
 		failwith "Fresh frame has wrong shape - expected arrow"
 	  end
@@ -199,16 +200,16 @@ let subtype_constraints exp quals shapemap =
       | Let(x, _, e1, e2, _) ->
           let (f1, constrs'') = constraints_rec e1 env guard constrs in
           let env' = (x, f1)::env in
-          let xp = expr_to_predicate_expression e1 in
-          let guard' = And(equals(Var x, xp), guard) in
-          let (f2, constrs') = constraints_rec e2 env' guard' constrs'' in
-            (f2, constrs')
+          let (f2, constrs') = constraints_rec e2 env' guard constrs'' in
+          let f = fresh_frame e in
+            (f, SubType(env', guard, f2, f)::constrs')
       | LetRec(f, _, e1, e2, _) ->
           let f1 = fresh_frame e1 in
           let env' = (f, f1)::env in
           let (f1', constrs'') = constraints_rec e1 env' guard constrs in
           let (f2, constrs') = constraints_rec e2 env' guard constrs'' in
-            (f2, SubType(env', guard, f1', f1)::constrs')
+          let f = fresh_frame e in
+            (f, SubType(env', guard, f2, f)::SubType(env', guard, f1', f1)::constrs')
       | Cast(t1, t2, e, _) ->
           let (f, constrs') = constraints_rec e env guard constrs in
           let (f1, f2) = (type_to_frame t1, type_to_frame t2) in
