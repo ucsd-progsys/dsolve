@@ -144,29 +144,28 @@ let subtype_constraints exp quals shapemap =
     in
       fresh_frame_rec (ShapeMap.find e shapemap)
   in
-  let expression_frame e =
-    match e with
-        Num(n, _) ->
-          FInt([], [("inty", PredOver("_X", equals(Var "_X", PInt n)))])
-      | ExpVar(x, _) ->
-          begin match ShapeMap.find e shapemap with
-              Int _ ->
-                FInt([], [("var-y", PredOver("_X", equals(Var "_X", Var x)))])
-            | _ ->
-                fresh_frame e
-          end
-      | _ ->
-          fresh_frame e
-  in
   let rec constraints_rec e env guard constrs =
+    let expression_frame e =
+      match e with
+          Num(n, _) ->
+            FInt([], [("inteq", PredOver("_X", equals(Var "_X", PInt n)))])
+        | ExpVar(x, _) ->
+            begin match ShapeMap.find e shapemap with
+                Int _ ->
+                  FInt([], [("vareq", PredOver("_X", equals(Var "_X", Var x)))])
+              | _ ->
+                  List.assoc x env
+            end
+        | _ ->
+            fresh_frame e
+    in
     match e with
 	Num(n, _) ->
 	  (expression_frame e, constrs)
       | ExpVar(x, _) ->
           let feq = expression_frame e in
-          let fx = List.assoc x env in
           let f = fresh_frame e in
-	    (f, SubType(env, guard, f, feq)::SubType(env, guard, f, fx)::constrs)
+	    (f, SubType(env, guard, feq, f)::constrs)
       | Abs(x, _, e', _) ->
 	  begin match fresh_frame e with
 	      FArrow(_, f, _) ->

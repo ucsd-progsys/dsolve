@@ -37,6 +37,7 @@ let qequal = binrel_qual "EQUAL" Eq
 let qnequal = binrel_qual "NEQUAL" Ne
 let qless = binrel_qual "LESS" Lt
 let qlesseq = binrel_qual "LESSEQ" Le
+let qfalse = ("FALSE", PredOver("x", Not(True)))
 
 let quals = [
   qplus;
@@ -45,6 +46,7 @@ let quals = [
   qnequal;
   qless;
   qlesseq;
+  qfalse
 ]
 
 
