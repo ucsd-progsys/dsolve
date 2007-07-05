@@ -171,6 +171,7 @@ let refine solution quals = function
         in
         let qset = QualifierSet.from_list (List.filter qual_holds quals) in
           Prover.pop();
+          Printf.printf "%s has quals: %s\n" k2 (pprint_quals (QualifierSet.elements (QualifierSet.inter qset (solution k2))));
           Solution.add k2 (QualifierSet.inter qset (solution k2)) solution
   | SubType(_, _, _, _) ->
       (* If we have a literal RHS and we're unsatisfied, we're hosed -

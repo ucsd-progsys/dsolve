@@ -6,7 +6,7 @@ open Predicate
 let check_type quals exp ty =
   let rec typeof env = function
       Num(n, _) ->
-	Int(const_int_quals quals True n)
+	Int([])
     | ExpVar(x, _) ->
 	List.assoc x env
     | _ ->

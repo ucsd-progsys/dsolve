@@ -77,6 +77,15 @@ end
 module ShapeMap = Map.Make(Expr)
 
 
+let maplist f sm =
+  ShapeMap.fold (fun k v r -> (f k v)::r) sm []
+
+
+let pprint_shapemap smap =
+  let shapes = maplist (fun e t -> (pprint_expr e) ^ "\n::> " ^ (pprint_type t)) smap in
+    Misc.join shapes "\n\n"
+
+
 let infer_shape exp =
   let rec infer_rec e tenv constrs shapemap =
     let (t, cs, sm) =
@@ -125,18 +134,8 @@ let infer_shape exp =
     smap
 
 
-let maplist f sm =
-  ShapeMap.fold (fun k v r -> (f k v)::r) sm []
-
-
-let pprint_shapes exp =
-  let smap = infer_shape exp in
-  let shapes = maplist (fun e t -> (pprint_expr e) ^ "\n::> " ^ (pprint_type t)) smap in
-    Misc.join shapes "\n\n"
-
-
 let subtype_constraints exp quals shapemap =
-  let rec fresh_frame e =
+  let fresh_frame e =
     let rec fresh_frame_rec = function
 	Arrow(x, t, t') ->
 	  FArrow(x, fresh_frame_rec t, fresh_frame_rec t')
@@ -145,12 +144,29 @@ let subtype_constraints exp quals shapemap =
     in
       fresh_frame_rec (ShapeMap.find e shapemap)
   in
+  let expression_frame e =
+    match e with
+        Num(n, _) ->
+          FInt([], [("inty", PredOver("_X", equals(Var "_X", PInt n)))])
+      | ExpVar(x, _) ->
+          begin match ShapeMap.find e shapemap with
+              Int _ ->
+                FInt([], [("var-y", PredOver("_X", equals(Var "_X", Var x)))])
+            | _ ->
+                fresh_frame e
+          end
+      | _ ->
+          fresh_frame e
+  in
   let rec constraints_rec e env guard constrs =
     match e with
 	Num(n, _) ->
-	  (FInt([], const_int_quals quals guard n), constrs)
+	  (expression_frame e, constrs)
       | ExpVar(x, _) ->
-	  (List.assoc x env, constrs)
+          let feq = expression_frame e in
+          let fx = List.assoc x env in
+          let f = fresh_frame e in
+	    (f, SubType(env, guard, f, feq)::SubType(env, guard, f, fx)::constrs)
       | Abs(x, _, e', _) ->
 	  begin match fresh_frame e with
 	      FArrow(_, f, _) ->
