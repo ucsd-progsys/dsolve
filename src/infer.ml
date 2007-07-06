@@ -148,13 +148,14 @@ let subtype_constraints exp quals shapemap =
     let (f, cs, fm) =
       match e with
 	  Num(n, _) ->
-            let f = FInt([], [("inteq", PredOver("_X", equals(Var "_X", PInt n)))]) in
-	      (f, constrs, framemap)
+            let f' = FInt([], [Builtins.equality_qualifier (PInt n)]) in
+            let f = fresh_frame e in
+	      (f, SubType(env, guard, f', f)::constrs, framemap)
         | ExpVar(x, _) ->
             let feq =
               match ExprMap.find e shapemap with
                   Int _ ->
-                    FInt([], [("vareq", PredOver("_X", equals(Var "_X", Var x)))])
+                    FInt([], [Builtins.equality_qualifier (Var x)])
                 | _ ->
                     List.assoc x env
             in
@@ -216,8 +217,10 @@ let subtype_constraints exp quals shapemap =
 
 let infer_types exp quals =
   let shapemap = infer_shape exp in
-  let (fr, constrs, fmap) = subtype_constraints exp quals shapemap in
-  let solution = solve_constraints quals constrs in
+  let builtin_quals = expr_required_builtin_quals exp in
+  let qs = builtin_quals@quals in
+  let (fr, constrs, fmap) = subtype_constraints exp qs shapemap in
+  let solution = solve_constraints qs constrs in
   let _ = Printf.printf "%s\n\n" (pprint_frame fr) in
   let expr_to_type e =
     frame_to_type (frame_apply_solution solution (ExprMap.find e fmap))

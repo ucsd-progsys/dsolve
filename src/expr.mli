@@ -30,6 +30,8 @@ val expr_map: (expr -> 'b) -> expr -> 'b list
 
 val expr_to_predicate_expression: expr -> expression
 
+val expr_required_builtin_quals: expr -> qualifier list
+
 val pprint_annotated_expr: (expr -> string) -> int -> expr -> string
 val pprint_expr: expr -> string
 val pprint_value : value -> string

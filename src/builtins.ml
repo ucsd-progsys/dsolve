@@ -62,3 +62,7 @@ let frames = [
   op_frame "<" qless;
   op_frame "<=" qlesseq;
 ]
+
+
+let equality_qualifier exp =
+  ("__EQ" ^ pprint_expression exp, PredOver(xv, equals(Var xv, exp)))

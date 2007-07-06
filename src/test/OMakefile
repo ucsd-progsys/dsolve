@@ -62,7 +62,7 @@ OCAML_NATIVE_LINK_FLAGS += -lstdc++ -lgmp
 # Build an OCaml program
 #
 
-FILES = ../misc ../theoremProver ../predicate ../expr ../type ../constraint test_constraint suite
+FILES = ../misc ../theoremProver ../predicate ../type ../builtins ../expr ../constraint test_constraint suite
 PROGRAM = suite
 OCAML_LIBS += /usr/lib/ocaml/3.09.2/ocamlgraph/graph /usr/lib/ocaml/3.09.2/oUnit/oUnit ../yices/lib/oyices
 # OCAML_CLIBS +=

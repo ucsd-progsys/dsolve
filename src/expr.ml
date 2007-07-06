@@ -111,6 +111,24 @@ let expr_to_predicate_expression = function
       fresh_expressionvar()
 
 
+let expr_builtin_qualifier exp =
+  match exp with
+      Num(n, _) ->
+        Some(Builtins.equality_qualifier (PInt n))
+    | ExpVar(x, _) ->
+        if List.mem_assoc x Builtins.types then
+          None
+        else
+          Some(Builtins.equality_qualifier (Var x))
+    | _ ->
+        None
+
+
+let expr_required_builtin_quals exp =
+  let quals = expr_map expr_builtin_qualifier exp in
+    Misc.mapfilter (fun x -> x) quals
+
+
 let rec pprint_annotated_expr annotator indent exp =
   let indstr = String.make indent ' ' in
   let pprint_rec = pprint_annotated_expr annotator 0 in
@@ -122,13 +140,13 @@ let rec pprint_annotated_expr annotator indent exp =
     | ExpVar(x, _) ->
 	x
     | If(e1, e2, e3, _) ->
-	Printf.sprintf "if %s then\n%s\n%selse\n%s" (pprint_rec e1) (pprint_ind e2) indstr (pprint_ind e3)
+	Printf.sprintf "if %s then\n%s\n%selse\n%s\n" (pprint_rec e1) (pprint_ind e2) indstr (pprint_ind e3)
     | Let(x, _, e1, e2, _) ->
-	Printf.sprintf "let %s = %s in\n%s" x (pprint_rec e1) (pprint_ind e2)
+	Printf.sprintf "let %s = %s in\n%s\n" x (pprint_rec e1) (pprint_ind e2)
     | LetRec(f, _, e1, e2, _) ->
-        Printf.sprintf "letrec %s = %s in\n%s" f (pprint_rec e1) (pprint_rec e2)
+        Printf.sprintf "letrec %s = %s in\n%s\n" f (pprint_rec e1) (pprint_rec e2)
     | Abs(x, _, e, _) ->
-	Printf.sprintf "fun %s ->\n%s" x (pprint_ind e)
+	Printf.sprintf "fun %s ->\n%s\n" x (pprint_ind e)
     | App(e1, e2, _) ->
 	Printf.sprintf "%s %s" (pprint_rec e1) (pprint_rec e2)
     | Cast(t1, t2, e, _) ->
