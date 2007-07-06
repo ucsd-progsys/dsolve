@@ -74,11 +74,11 @@ module Expr = struct
 end
 
 
-module ShapeMap = Map.Make(Expr)
+module ExprMap = Map.Make(Expr)
 
 
 let maplist f sm =
-  ShapeMap.fold (fun k v r -> (f k v)::r) sm []
+  ExprMap.fold (fun k v r -> (f k v)::r) sm []
 
 
 let pprint_shapemap smap =
@@ -126,11 +126,11 @@ let infer_shape exp =
         | Cast(_, _, e, _) ->
             infer_rec e tenv constrs shapemap
     in
-      (t, cs, ShapeMap.add e t sm)
+      (t, cs, ExprMap.add e t sm)
   in
-  let (t, constrs, smap') = infer_rec exp Builtins.types [] ShapeMap.empty in
+  let (t, constrs, smap') = infer_rec exp Builtins.types [] ExprMap.empty in
   let sub = unify constrs in
-  let smap = ShapeMap.map sub smap' in
+  let smap = ExprMap.map sub smap' in
     smap
 
 
@@ -142,78 +142,84 @@ let subtype_constraints exp quals shapemap =
       | _ ->
 	  fresh_framevar()
     in
-      fresh_frame_rec (ShapeMap.find e shapemap)
+      fresh_frame_rec (ExprMap.find e shapemap)
   in
-  let rec constraints_rec e env guard constrs =
-    match e with
-	Num(n, _) ->
-          let f = FInt([], [("inteq", PredOver("_X", equals(Var "_X", PInt n)))]) in
-	  (f, constrs)
-      | ExpVar(x, _) ->
-          let feq =
-            match ShapeMap.find e shapemap with
-                Int _ ->
-                  FInt([], [("vareq", PredOver("_X", equals(Var "_X", Var x)))])
-              | _ ->
-                  List.assoc x env
-          in
-          let f = fresh_frame e in
-	    (f, SubType(env, guard, feq, f)::constrs)
-      | Abs(x, _, e', _) ->
-	  begin match fresh_frame e with
-	      FArrow(_, f, _) ->
-		let env' = (x, f)::env in
-		let (f'', constrs') = constraints_rec e' env' guard constrs in
-                let f' = fresh_frame e' in
-		  (FArrow(x, f, f'), SubType(env, guard, f'', f')::constrs')
-	    | _ ->
-		failwith "Fresh frame has wrong shape - expected arrow"
-	  end
-      | App(e1, e2, _) ->
-	  begin match constraints_rec e1 env guard constrs with
-	      (FArrow(x, f, f'), constrs') ->
-		let (f2, constrs'') = constraints_rec e2 env guard constrs' in
-		let pe2 = expr_to_predicate_expression e2 in
-		let f'' = frame_apply_subst pe2 x f' in
-		  (f'', SubType(env, guard, f2, f)::constrs'')
-	    | _ ->
-		failwith "Subexpression frame has wrong shape - expected arrow"
-	  end
-      | If(e1, e2, e3, _) ->
-          let f = fresh_frame e in
-          let (f1, constrs''') = constraints_rec e1 env guard constrs in
-          let guardvar = fresh_bindvar() in
-          let env' = (guardvar, f1)::env in
-          let guardp = equals(Var guardvar, PInt 1) in
-          let guard2 = And(guardp, guard) in
-          let (f2, constrs'') = constraints_rec e2 env' guard2 constrs''' in
-          let guard3 = And(Not(guardp), guard) in
-          let (f3, constrs') = constraints_rec e3 env' guard3 constrs'' in
-            (f, SubType(env', guard2, f2, f)::SubType(env', guard3, f3, f)::constrs')
-      | Let(x, _, e1, e2, _) ->
-          let (f1, constrs'') = constraints_rec e1 env guard constrs in
-          let env' = (x, f1)::env in
-          let (f2, constrs') = constraints_rec e2 env' guard constrs'' in
-          let f = fresh_frame e in
-            (f, SubType(env', guard, f2, f)::constrs')
-      | LetRec(f, _, e1, e2, _) ->
-          let f1 = fresh_frame e1 in
-          let env' = (f, f1)::env in
-          let (f1', constrs'') = constraints_rec e1 env' guard constrs in
-          let (f2, constrs') = constraints_rec e2 env' guard constrs'' in
-          let f = fresh_frame e in
-            (f, SubType(env', guard, f2, f)::SubType(env', guard, f1', f1)::constrs')
-      | Cast(t1, t2, e, _) ->
-          let (f, constrs') = constraints_rec e env guard constrs in
-          let (f1, f2) = (type_to_frame t1, type_to_frame t2) in
-            (f2, SubType(env, guard, f, f1)::constrs')
+  let rec constraints_rec e env guard constrs framemap =
+    let (f, cs, fm) =
+      match e with
+	  Num(n, _) ->
+            let f = FInt([], [("inteq", PredOver("_X", equals(Var "_X", PInt n)))]) in
+	      (f, constrs, framemap)
+        | ExpVar(x, _) ->
+            let feq =
+              match ExprMap.find e shapemap with
+                  Int _ ->
+                    FInt([], [("vareq", PredOver("_X", equals(Var "_X", Var x)))])
+                | _ ->
+                    List.assoc x env
+            in
+            let f = fresh_frame e in
+	      (f, SubType(env, guard, feq, f)::constrs, framemap)
+        | Abs(x, _, e', _) ->
+	    begin match fresh_frame e with
+	        FArrow(_, f, _) ->
+		  let env' = (x, f)::env in
+		  let (f'', constrs', fm') = constraints_rec e' env' guard constrs framemap in
+                  let f' = fresh_frame e' in
+		    (FArrow(x, f, f'), SubType(env, guard, f'', f')::constrs', fm')
+	      | _ ->
+		  failwith "Fresh frame has wrong shape - expected arrow"
+	    end
+        | App(e1, e2, _) ->
+	    begin match constraints_rec e1 env guard constrs framemap with
+	        (FArrow(x, f, f'), constrs', fm') ->
+		  let (f2, constrs'', fm'') = constraints_rec e2 env guard constrs' fm' in
+		  let pe2 = expr_to_predicate_expression e2 in
+		  let f'' = frame_apply_subst pe2 x f' in
+		    (f'', SubType(env, guard, f2, f)::constrs'', fm'')
+	      | _ ->
+		  failwith "Subexpression frame has wrong shape - expected arrow"
+	    end
+        | If(e1, e2, e3, _) ->
+            let f = fresh_frame e in
+            let (f1, constrs''', fm''') = constraints_rec e1 env guard constrs framemap in
+            let guardvar = fresh_bindvar() in
+            let env' = (guardvar, f1)::env in
+            let guardp = equals(Var guardvar, PInt 1) in
+            let guard2 = And(guardp, guard) in
+            let (f2, constrs'', fm'') = constraints_rec e2 env' guard2 constrs''' fm''' in
+            let guard3 = And(Not(guardp), guard) in
+            let (f3, constrs', fm') = constraints_rec e3 env' guard3 constrs'' fm'' in
+              (f, SubType(env', guard2, f2, f)::SubType(env', guard3, f3, f)::constrs', fm')
+        | Let(x, _, e1, e2, _) ->
+            let (f1, constrs'', fm'') = constraints_rec e1 env guard constrs framemap in
+            let env' = (x, f1)::env in
+            let (f2, constrs', fm') = constraints_rec e2 env' guard constrs'' fm'' in
+            let f = fresh_frame e in
+              (f, SubType(env', guard, f2, f)::constrs', fm')
+        | LetRec(f, _, e1, e2, _) ->
+            let f1 = fresh_frame e1 in
+            let env' = (f, f1)::env in
+            let (f1', constrs'', fm'') = constraints_rec e1 env' guard constrs framemap in
+            let (f2, constrs', fm') = constraints_rec e2 env' guard constrs'' fm'' in
+            let f = fresh_frame e in
+              (f, SubType(env', guard, f2, f)::SubType(env', guard, f1', f1)::constrs', fm')
+        | Cast(t1, t2, e, _) ->
+            let (f, constrs', fm') = constraints_rec e env guard constrs framemap in
+            let (f1, f2) = (type_to_frame t1, type_to_frame t2) in
+              (f2, SubType(env, guard, f, f1)::constrs', fm')
+    in
+      (f, cs, ExprMap.add e f fm)
   in
-    constraints_rec exp Builtins.frames True []
+    constraints_rec exp Builtins.frames True [] ExprMap.empty
 
 
-let infer_type exp quals =
+let infer_types exp quals =
   let shapemap = infer_shape exp in
-  let (fr, constrs) = subtype_constraints exp quals shapemap in
+  let (fr, constrs, fmap) = subtype_constraints exp quals shapemap in
   let solution = solve_constraints quals constrs in
   let _ = Printf.printf "%s\n\n" (pprint_frame fr) in
-    frame_to_type (frame_apply_solution solution fr)
+  let expr_to_type e =
+    frame_to_type (frame_apply_solution solution (ExprMap.find e fmap))
+  in
+    expr_to_type

@@ -130,24 +130,17 @@ let rec pprint_annotated_expr annotator indent exp =
     | Abs(x, _, e, _) ->
 	Printf.sprintf "fun %s ->\n%s" x (pprint_ind e)
     | App(e1, e2, _) ->
-	Printf.sprintf "%s (%s)" (pprint_rec e1) (pprint_rec e2)
+	Printf.sprintf "%s %s" (pprint_rec e1) (pprint_rec e2)
     | Cast(t1, t2, e, _) ->
         Printf.sprintf "(%s ! %s) %s" (pprint_type t1) (pprint_type t2) (pprint_rec e)
   in
-  let quals = annotator exp in
-  let qualstrs = List.map (fun s -> "{" ^ s ^ "}") quals in
+  let annot = annotator exp in
   let expstr = pprint_expr_simple exp in
-  let qualexpstr =
-    match qualstrs with
-	[] -> expstr
-      | _ ->
-	  Printf.sprintf "(%s %s)" (Misc.join qualstrs " ") expstr
-  in
-    Printf.sprintf "%s%s" (String.make indent ' ') qualexpstr
+    Printf.sprintf "%s(%s: %s)" (String.make indent ' ') expstr annot
 
 
 let pprint_expr =
-  pprint_annotated_expr (fun e -> []) 0
+  pprint_annotated_expr (fun e -> "") 0
 
 
 let rec pprint_value = function

@@ -112,8 +112,10 @@ query:
 
     let e = $2 in
       begin try
-	let ty = infer_type e !active_quals in
-	  Printf.printf ">> %s" (pprint_type ty)
+	let typemap = infer_types e !active_quals in
+        let annotator e = pprint_type (typemap e) in
+	  Printf.printf ">> %s\n\n" (pprint_type (typemap e));
+          Printf.printf "%s" (pprint_annotated_expr annotator 0 e)
       with _ ->
 	Printf.printf "Cannot infer type";
       end;

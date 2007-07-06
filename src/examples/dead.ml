@@ -1,10 +1,15 @@
-pred DEAD(x): not(true);;
+qual DEAD(x): not(true);;
 
-? if y = x then
+? let y = 3 in
+let x = 3 in
+  if y = x then
     let k = y + 1 in
       if x < k then
-        1
+        (fun w -> w) 1
       else
-        0
+        (fun z -> z) 0
   else
-    -1;;
+    (fun n -> n) -1;;
+
+# This is highly suspicious doping; we need to pass through a function to
+# make sure that we get the implications out of the frame.
