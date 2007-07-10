@@ -4,9 +4,6 @@ open Predicate
 open Constraint
 
 
-exception Unify
-
-
 type typconst = TypEq of typ * typ
 
 
@@ -21,23 +18,34 @@ let rec const_subst_tyvar b a = function
 let rec occurs a = function
     TyVar a' ->
       a = a'
+  | GenVar _ ->
+      false
   | Int _ ->
       false
   | Arrow(_, t, t') ->
       (occurs a t) || (occurs a t')
 
 
+
+let id_subst t = t
+
+let update_subst t a subst = fun t' -> subst (typ_subst_tyvar t a t')
+
+exception Unify
+
 let rec unify = function
     [] ->
-      fun t -> t
+      id_subst
   | TypEq(t1, t2)::cs ->
       match (t1, t2) with
-	  (TyVar a, t)
+          (GenVar _, _)
+        | (_, GenVar _) ->
+            failwith "We have no business unifying genvars"
+	| (TyVar a, t)
 	| (t, TyVar a) ->
 	    if (not (occurs a t)) || t1 = t2 then
 	      let cs' = const_subst_tyvar t a cs in
-	      let unifsub = unify cs' in
-		fun t' -> unifsub (typ_subst_tyvar t a t')
+                update_subst t a (unify cs')
 	    else
 	      raise Unify
 	| (Arrow(_, t1, t1'), Arrow(_, t2, t2')) ->
@@ -48,21 +56,6 @@ let rec unify = function
 	    raise Unify
 
 
-let type_vars typ =
-  let rec type_vars_rec t vars =
-    match t with
-	TyVar a ->
-	  a::vars
-      | Int _ ->
-	  []
-      | Arrow(_, t1, t2) ->
-	  let vars' = type_vars_rec t1 vars in
-	    type_vars_rec t2 vars'
-  in
-    type_vars_rec typ []
-
-
-let fresh_tyvar = Misc.make_get_fresh (fun x -> TyVar x)
 let fresh_bindvar = Misc.make_get_fresh (fun x -> "_" ^ x)
 
 
@@ -88,58 +81,67 @@ let pprint_shapemap smap =
 
 let infer_shape exp =
   let rec infer_rec e tenv constrs shapemap =
-    let (t, cs, sm) =
-      match e with
-	  Num(_, _) ->
-	    (Int [], constrs, shapemap)
-	| ExpVar(x, _) ->
-	    let tx = List.assoc x tenv in
-	      (tx, constrs, shapemap)
-	| If(c, e1, e2, _) ->
-	    let (tc, constrsc, sm) = infer_rec c tenv constrs shapemap in
-	    let (t1, constrs1, sm') = infer_rec e1 tenv constrsc sm in
-	    let (t2, constrs2, sm'') = infer_rec e2 tenv constrs1 sm' in
-	    let t = fresh_tyvar() in
-	      (t, TypEq(t1, t)::TypEq(t2, t)::TypEq(tc, Int [])::constrs2, sm'')
-	| App(e1, e2, _) ->
-	    let (t1, constrs1, sm') = infer_rec e1 tenv constrs shapemap in
-	    let (t2, constrs2, sm'') = infer_rec e2 tenv constrs1 sm' in
-	    let returnty = fresh_tyvar() in
-	    let funty = Arrow(fresh_bindvar(), t2, returnty) in
-	      (returnty, TypEq(t1, funty)::constrs2, sm'')
-	| Abs(x, _, e, _) ->
-	    let t = fresh_tyvar () in
-	    let newtenv = (x, t)::tenv in
-	    let (t', constrs, sm') = infer_rec e newtenv constrs shapemap in
-	      (Arrow(x, t, t'), constrs, sm')
-	| Let(x, _, ex, e, _) ->
-	    let (tx, constrsx, sm') = infer_rec ex tenv constrs shapemap in
-	    let newtenv = (x, tx)::tenv in
-	    let (te, constrse, sm'') = infer_rec e newtenv constrsx sm' in
-	      (te, constrse, sm'')
-        | LetRec(f, _, ex, e, _) ->
-            let tf = fresh_tyvar() in
-            let tenv' = (f, tf)::tenv in
-            let (tf', constrs'', sm'') = infer_rec ex tenv' constrs shapemap in
-            let (te, constrs', sm') = infer_rec e tenv' constrs'' sm'' in
-              (te, TypEq(tf, tf')::constrs', sm')
-        | Cast(_, _, e, _) ->
-            infer_rec e tenv constrs shapemap
-    in
+    match e with
+	Num(_, _) ->
+	  (Int [], constrs, shapemap)
+      | ExpVar(x, _) ->
+	  let tx = instantiate_type (List.assoc x tenv) in
+	    (tx, constrs, shapemap)
+      | If(c, e1, e2, _) ->
+	  let (tc, constrsc, sm) = infer_mono c tenv constrs shapemap in
+	  let (t1, constrs1, sm') = infer_mono e1 tenv constrsc sm in
+	  let (t2, constrs2, sm'') = infer_mono e2 tenv constrs1 sm' in
+	  let t = fresh_tyvar() in
+	    (t, TypEq(t1, t)::TypEq(t2, t)::TypEq(tc, Int [])::constrs2, sm'')
+      | App(e1, e2, _) ->
+	  let (t1, constrs1, sm') = infer_mono e1 tenv constrs shapemap in
+	  let (t2, constrs2, sm'') = infer_mono e2 tenv constrs1 sm' in
+	  let returnty = fresh_tyvar() in
+	  let funty = Arrow(fresh_bindvar(), t2, returnty) in
+	    (returnty, TypEq(t1, funty)::constrs2, sm'')
+      | Abs(x, _, e, _) ->
+	  let t = fresh_tyvar () in
+	  let newtenv = (x, t)::tenv in
+	  let (t', constrs, sm') = infer_mono e newtenv constrs shapemap in
+	    (Arrow(x, t, t'), constrs, sm')
+      | Let(x, _, ex, e, _) ->
+	  let (tx, constrsx, sm') = infer_general ex tenv constrs shapemap in
+	  let newtenv = (x, tx)::tenv in
+	  let (te, constrse, sm'') = infer_mono e newtenv constrsx sm' in
+	    (te, constrse, sm'')
+      | LetRec(f, _, ex, e, _) ->
+          let tf = fresh_tyvar() in
+          let tenv' = (f, tf)::tenv in
+          let (tf', constrs'', sm'') = infer_mono ex tenv' constrs shapemap in
+          let (te, constrs', sm') = infer_mono e tenv' constrs'' sm'' in
+            (te, TypEq(tf, tf')::constrs', sm')
+      | Cast(_, _, e, _) ->
+          infer_mono e tenv constrs shapemap
+  and infer_mono e tenv constrs shapemap =
+    let (t, cs, sm) = infer_rec e tenv constrs shapemap in
+      (t, cs, ExprMap.add e t sm)
+  and infer_general e tenv constrs shapemap =
+    let (t'', cs, sm) = infer_rec e tenv constrs shapemap in
+    let sub = unify cs in
+    let (t', tenv') = (sub t'', List.map (fun (a, ty) -> (a, sub ty)) tenv) in
+    let t = generalize_type t' tenv' in
       (t, cs, ExprMap.add e t sm)
   in
-  let (t, constrs, smap') = infer_rec exp Builtins.types [] ExprMap.empty in
+  let (_, constrs, smap') = infer_mono exp Builtins.types [] ExprMap.empty in
   let sub = unify constrs in
-  let smap = ExprMap.map sub smap' in
-    smap
+    ExprMap.map sub smap'
 
 
 let subtype_constraints exp quals shapemap =
   let fresh_frame e =
     let rec fresh_frame_rec = function
-	Arrow(x, t, t') ->
+        Arrow(x, t, t') ->
 	  FArrow(x, fresh_frame_rec t, fresh_frame_rec t')
-      | _ ->
+      | TyVar a ->
+          FVar([], a)
+      | GenVar a ->
+          FGenVar a
+      | Int _ ->
 	  fresh_framevar()
     in
       fresh_frame_rec (ExprMap.find e shapemap)
@@ -157,16 +159,15 @@ let subtype_constraints exp quals shapemap =
                   Int _ ->
                     FInt([], [Builtins.equality_qualifier (Var x)])
                 | _ ->
-                    List.assoc x env
+                    instantiate_frame (List.assoc x env)
             in
             let f = fresh_frame e in
 	      (f, SubType(env, guard, feq, f)::constrs, framemap)
         | Abs(x, _, e', _) ->
 	    begin match fresh_frame e with
-	        FArrow(_, f, _) ->
+	        FArrow(_, f, f') ->
 		  let env' = (x, f)::env in
 		  let (f'', constrs', fm') = constraints_rec e' env' guard constrs framemap in
-                  let f' = fresh_frame e' in
 		    (FArrow(x, f, f'), SubType(env, guard, f'', f')::constrs', fm')
 	      | _ ->
 		  failwith "Fresh frame has wrong shape - expected arrow"
@@ -193,6 +194,9 @@ let subtype_constraints exp quals shapemap =
             let (f3, constrs', fm') = constraints_rec e3 env' guard3 constrs'' fm'' in
               (f, SubType(env', guard2, f2, f)::SubType(env', guard3, f3, f)::constrs', fm')
         | Let(x, _, e1, e2, _) ->
+            (* We don't need to generalize here because it's already been done
+               by fresh_frame - whatever genvars are in the shape are passed
+               over to the new frame *)
             let (f1, constrs'', fm'') = constraints_rec e1 env guard constrs framemap in
             let env' = (x, f1)::env in
             let (f2, constrs', fm') = constraints_rec e2 env' guard constrs'' fm'' in

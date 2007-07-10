@@ -117,7 +117,7 @@ query:
 	  Printf.printf ">> %s\n\n" (pprint_type (typemap e));
           Printf.printf "%s" (pprint_annotated_expr annotator 0 e)
       with _ ->
-	Printf.printf "Cannot infer type";
+	Printf.printf "Cannot infer type"
       end;
       Printf.printf "\n\n";
       flush stdout

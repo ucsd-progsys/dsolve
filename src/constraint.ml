@@ -1,7 +1,6 @@
 open Predicate
 open TheoremProver
 open Type
-open Graph
 
 
 type subst = (string * expression) list
@@ -10,26 +9,46 @@ type subst = (string * expression) list
 type frame =
     FArrow of string * frame * frame
   | FVar of subst * string
+  | FGenVar of string
   | FInt of subst * qualifier list
 
 
 let fresh_framevar = Misc.make_get_fresh (fun x -> FVar([], String.uppercase x))
 
 
-let rec frame_to_type = function
+let rec pprint_frame = function
     FArrow(x, f, f') ->
-      Arrow(x, frame_to_type f, frame_to_type f')
-  | FVar(_, x) ->
-      TyVar x
+      Printf.sprintf "%s: %s -> %s" x (pprint_frame f) (pprint_frame f')
+  | FInt(subs, quals) ->
+      Printf.sprintf "[%s] %s" (pprint_subst subs) (pprint_quals quals)
+  | FVar(subs, x) ->
+      Printf.sprintf "[%s] %s" (pprint_subst subs) x
+  | FGenVar a ->
+      Printf.sprintf "'%s" a
+and pprint_subst ss =
+  let pprint_mapping (x, pexp) =
+    Printf.sprintf "%s -> %s" x (pprint_expression pexp) in
+    Misc.join (List.map pprint_mapping ss) "; "
+
+
+let rec frame_to_type = function
+    FArrow(x, f1, f2) ->
+      Arrow(x, frame_to_type f1, frame_to_type f2)
+  | FVar(_, a) ->
+      TyVar a
+  | FGenVar a ->
+      GenVar a
   | FInt(_, quals) ->
       Int quals
 
 
 let rec type_to_frame = function
-    Arrow(x, t, t') ->
-      FArrow(x, type_to_frame t, type_to_frame t')
-  | TyVar x ->
-      FVar([], x)
+    Arrow(x, t1, t2) ->
+      FArrow(x, type_to_frame t1, type_to_frame t2)
+  | TyVar a ->
+      FVar([], a)
+  | GenVar a ->
+      FGenVar a
   | Int quals ->
       FInt([], quals)
 
@@ -43,21 +62,32 @@ let frame_apply_subst pexp x fr =
 	FVar(s::ss, y)
     | FInt(ss, quals) ->
 	FInt(s::ss, quals)
+    | FGenVar _ ->
+        failwith "Cannot apply subst to genvar"
   in
     apply_subst_rec fr
 
 
-let rec pprint_frame = function
-    FArrow(x, f, f') ->
-      Printf.sprintf "%s: %s -> %s" x (pprint_frame f) (pprint_frame f')
-  | FInt(subs, quals) ->
-      Printf.sprintf "[%s] %s" (pprint_subst subs) (pprint_quals quals)
-  | FVar(subs, x) ->
-      Printf.sprintf "[%s] %s" (pprint_subst subs) x
-and pprint_subst ss =
-  let pprint_mapping (x, pexp) =
-    Printf.sprintf "%s -> %s" x (pprint_expression pexp) in
-    Misc.join (List.map pprint_mapping ss) "; "
+let instantiate_frame fr =
+  let rec instantiate_rec vars = function
+      FArrow(x, f1, f2) ->
+        let (f1', vars'') = instantiate_rec vars f1 in
+        let (f2', vars') = instantiate_rec vars'' f2 in
+          (FArrow(x, f1', f2'), vars')
+    | FGenVar a ->
+        let (f', vars') =
+          try
+            (List.assoc a vars, vars)
+          with Not_found ->
+            let f = fresh_framevar () in
+              (f, (a, f)::vars)
+        in
+          (f', vars')
+    | f ->
+        (f, vars)
+  in
+  let (f, _) = instantiate_rec [] fr in
+    f
 
 
 type subtypconst = SubType of (string * frame) list * predicate * frame * frame
@@ -82,6 +112,8 @@ let split_constraints constrs =
 	  let env' = (x, f2)::env in
 	  let ret = SubType(env', guard, f1', f2') in
 	    flatten_rec (param::ret::cs) flat
+      | SubType(_, _, FGenVar _, FGenVar _)::cs ->
+          flatten_rec cs flat
       | f::cs ->
 	  flatten_rec cs (f::flat)
       | [] ->
@@ -122,7 +154,9 @@ let frame_apply_solution solution fr =
         FArrow(x, apply_rec f, apply_rec f')
     | FVar(ss, x) ->
         FInt(ss, QualifierSet.elements (solution x))
-    | f ->
+    | (FInt _) as f ->
+        f
+    | (FGenVar _) as f ->
         f
   in
     apply_rec fr
@@ -134,13 +168,13 @@ let subst_quals_predicate x subs quals =
     List.fold_right substitute subs unsubst
 
 
-let rec frame_predicate solution (x, f) =
+let frame_predicate solution (x, f) =
   let (subs, quals) = match f with
       FVar(subst, k) ->
 	(subst, QualifierSet.elements (solution k))
     | FInt(subst, qs) ->
 	(subst, qs)
-    | FArrow(_) ->
+    | _ ->
 	([], [])
   in
     subst_quals_predicate x subs quals
@@ -187,12 +221,12 @@ let solve_constraints quals constrs =
     try
       let unsat_constr =
         List.find (fun c -> not (constraint_sat solution c)) cs in
-      let _ = Printf.printf "Solving %s\n\n" (pprint_constraint unsat_constr) in
+        Printf.printf "Solving %s\n\n" (pprint_constraint unsat_constr);
         solve_rec (refine solution quals unsat_constr)
     with Not_found ->
       solution
   in
   let qset = QualifierSet.from_list quals in
-  let _ = Printf.printf "Constraints:\n\n" in
-  let _ = List.iter (fun c -> Printf.printf "%s\n\n" (pprint_constraint c)) constrs in
+    Printf.printf "Constraints:\n\n";
+    List.iter (fun c -> Printf.printf "%s\n\n" (pprint_constraint c)) constrs;
     solve_rec (Solution.create qset)

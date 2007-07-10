@@ -137,3 +137,9 @@ let make_get_fresh bind =
       bind id
   in
     get_fresh
+
+let flip f =
+  (fun x -> fun y -> f y x)
+
+let list_diff l1 l2 =
+  List.filter (fun x -> not (List.mem x l2)) l1

@@ -9,6 +9,7 @@ type subst = (string * expression) list
 type frame =
     FArrow of string * frame * frame
   | FVar of subst * string
+  | FGenVar of string
   | FInt of subst * qualifier list
 
 
@@ -22,6 +23,8 @@ val type_to_frame: typ -> frame
 val fresh_framevar: unit -> frame
 
 val frame_apply_subst: expression -> string -> frame -> frame
+
+val instantiate_frame: frame -> frame
 
 
 module Qualifier: sig
