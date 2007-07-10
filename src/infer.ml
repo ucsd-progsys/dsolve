@@ -4,11 +4,8 @@ open Predicate
 open Constraint
 
 
-let rec const_subst_tyvar b a = function
-    [] ->
-      []
-  | (t1, t2)::cs ->
-      (typ_subst_tyvar b a t1, typ_subst_tyvar b a t2)::(const_subst_tyvar b a cs)
+let rec const_subst_tyvar b a (t1, t2) =
+  (typ_subst_tyvar b a t1, typ_subst_tyvar b a t2)
 
 
 let rec occurs a = function
@@ -20,7 +17,6 @@ let rec occurs a = function
       false
   | Arrow(_, t, t') ->
       (occurs a t) || (occurs a t')
-
 
 
 let id_subst t = t
@@ -40,7 +36,7 @@ let rec unify = function
 	| (TyVar a, t)
 	| (t, TyVar a) ->
 	    if (not (occurs a t)) || t1 = t2 then
-	      let cs' = const_subst_tyvar t a cs in
+	      let cs' = List.map (const_subst_tyvar t a) cs in
                 update_subst t a (unify cs')
 	    else
 	      raise Unify
@@ -87,8 +83,7 @@ let infer_shape exp =
 	  let (tc, constrsc, sm) = infer_mono c tenv constrs shapemap in
 	  let (t1, constrs1, sm') = infer_mono e1 tenv constrsc sm in
 	  let (t2, constrs2, sm'') = infer_mono e2 tenv constrs1 sm' in
-	  let t = fresh_tyvar() in
-	    (t, (t1, t)::(t2, t)::(tc, Int [])::constrs2, sm'')
+	    (t1, (t1, t2)::(tc, Int [])::constrs2, sm'')
       | App(e1, e2, _) ->
 	  let (t1, constrs1, sm') = infer_mono e1 tenv constrs shapemap in
 	  let (t2, constrs2, sm'') = infer_mono e2 tenv constrs1 sm' in
@@ -101,24 +96,37 @@ let infer_shape exp =
 	  let (t', constrs, sm') = infer_mono e newtenv constrs shapemap in
 	    (Arrow(x, t, t'), constrs, sm')
       | Let(x, _, ex, e, _) ->
-	  let (tx, constrsx, sm') = infer_general ex tenv constrs shapemap in
+	  let (tx, constrsx, sm') = infer_general ex tenv constrs shapemap None in
 	  let newtenv = (x, tx)::tenv in
 	  let (te, constrse, sm'') = infer_mono e newtenv constrsx sm' in
 	    (te, constrse, sm'')
       | LetRec(f, _, ex, e, _) ->
           let tf = fresh_tyvar() in
-          let tenv' = (f, tf)::tenv in
-          let (tf', constrs'', sm'') = infer_mono ex tenv' constrs shapemap in
+          let tenv'' = (f, tf)::tenv in
+          let (tf', constrs'', sm'') = infer_general ex tenv'' constrs shapemap (Some tf) in
+          let tenv' = (f, tf')::tenv in
           let (te, constrs', sm') = infer_mono e tenv' constrs'' sm'' in
-            (te, (tf, tf')::constrs', sm')
+            (te, constrs', sm')
       | Cast(_, _, e, _) ->
           infer_mono e tenv constrs shapemap
   and infer_mono e tenv constrs shapemap =
     let (t, cs, sm) = infer_rec e tenv constrs shapemap in
       (t, cs, ExprMap.add e t sm)
-  and infer_general e tenv constrs shapemap =
-    let (t'', cs, sm) = infer_rec e tenv constrs shapemap in
+  and infer_general e tenv constrs shapemap rec_close =
+    let (t''', cs', sm) = infer_rec e tenv constrs shapemap in
+    let cs =
+      match rec_close with
+          None -> cs'
+        | Some t ->
+            (* If this is a letrec, we have to ensure that the type we infer
+               in the body matches up with the externally-visible type
+               (note that I'm doing this here to avoid ever having to unify
+                genvars - I am a major sissy)
+            *)
+            (t, t''')::cs'
+    in
     let sub = unify cs in
+    let t'' = sub t''' in
     let (t', tenv') = (sub t'', List.map (fun (a, ty) -> (a, sub ty)) tenv) in
     let t = generalize_type t' tenv' in
       (t, cs, ExprMap.add e t sm)
