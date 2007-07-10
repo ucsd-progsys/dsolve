@@ -4,15 +4,11 @@ open Predicate
 open Constraint
 
 
-type typconst = TypEq of typ * typ
-
-
 let rec const_subst_tyvar b a = function
     [] ->
       []
-  | TypEq(t1, t2)::cs ->
-      TypEq(typ_subst_tyvar b a t1,
-	    typ_subst_tyvar b a t2)::(const_subst_tyvar b a cs)
+  | (t1, t2)::cs ->
+      (typ_subst_tyvar b a t1, typ_subst_tyvar b a t2)::(const_subst_tyvar b a cs)
 
 
 let rec occurs a = function
@@ -36,7 +32,7 @@ exception Unify
 let rec unify = function
     [] ->
       id_subst
-  | TypEq(t1, t2)::cs ->
+  | (t1, t2)::cs ->
       match (t1, t2) with
           (GenVar _, _)
         | (_, GenVar _) ->
@@ -49,7 +45,7 @@ let rec unify = function
 	    else
 	      raise Unify
 	| (Arrow(_, t1, t1'), Arrow(_, t2, t2')) ->
-	    unify (TypEq(t1, t2)::TypEq(t1', t2')::cs)
+	    unify ((t1, t2)::(t1', t2')::cs)
 	| (Int _, Int _) ->
 	    unify cs
 	| _ ->
@@ -92,13 +88,13 @@ let infer_shape exp =
 	  let (t1, constrs1, sm') = infer_mono e1 tenv constrsc sm in
 	  let (t2, constrs2, sm'') = infer_mono e2 tenv constrs1 sm' in
 	  let t = fresh_tyvar() in
-	    (t, TypEq(t1, t)::TypEq(t2, t)::TypEq(tc, Int [])::constrs2, sm'')
+	    (t, (t1, t)::(t2, t)::(tc, Int [])::constrs2, sm'')
       | App(e1, e2, _) ->
 	  let (t1, constrs1, sm') = infer_mono e1 tenv constrs shapemap in
 	  let (t2, constrs2, sm'') = infer_mono e2 tenv constrs1 sm' in
 	  let returnty = fresh_tyvar() in
 	  let funty = Arrow(fresh_bindvar(), t2, returnty) in
-	    (returnty, TypEq(t1, funty)::constrs2, sm'')
+	    (returnty, (t1, funty)::constrs2, sm'')
       | Abs(x, _, e, _) ->
 	  let t = fresh_tyvar () in
 	  let newtenv = (x, t)::tenv in
@@ -114,7 +110,7 @@ let infer_shape exp =
           let tenv' = (f, tf)::tenv in
           let (tf', constrs'', sm'') = infer_mono ex tenv' constrs shapemap in
           let (te, constrs', sm') = infer_mono e tenv' constrs'' sm'' in
-            (te, TypEq(tf, tf')::constrs', sm')
+            (te, (tf, tf')::constrs', sm')
       | Cast(_, _, e, _) ->
           infer_mono e tenv constrs shapemap
   and infer_mono e tenv constrs shapemap =
