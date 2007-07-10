@@ -112,21 +112,21 @@ let infer_shape exp =
   and infer_mono e tenv constrs shapemap =
     let (t, cs, sm) = infer_rec e tenv constrs shapemap in
       (t, cs, ExprMap.add e t sm)
-  and infer_general e tenv constrs shapemap rec_close =
-    let (t''', cs', sm) = infer_rec e tenv constrs shapemap in
+  and infer_general e tenv constrs shapemap rec_fix =
+    let (t'', cs', sm) = infer_rec e tenv constrs shapemap in
     let cs =
-      match rec_close with
+      match rec_fix with
           None -> cs'
-        | Some t ->
+        | Some ty ->
             (* If this is a letrec, we have to ensure that the type we infer
-               in the body matches up with the externally-visible type
-               (note that I'm doing this here to avoid ever having to unify
-                genvars - I am a major sissy)
+               for the uses of the function matches the type we infer for
+               its definition.
+               We must do this here because it's too late later - the type
+               will have already been added to the type map.
             *)
-            (t, t''')::cs'
+            (ty, t'')::cs'
     in
     let sub = unify cs in
-    let t'' = sub t''' in
     let (t', tenv') = (sub t'', List.map (fun (a, ty) -> (a, sub ty)) tenv) in
     let t = generalize_type t' tenv' in
       (t, cs, ExprMap.add e t sm)
