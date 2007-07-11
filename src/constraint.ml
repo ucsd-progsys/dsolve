@@ -203,7 +203,8 @@ let refine solution quals = function
           let qp = subst_quals_predicate "A" subs [q] in
             Prover.valid qp
         in
-        let qset = QualifierSet.from_list (List.filter qual_holds quals) in
+        let well_formed_quals = List.filter (qualifier_well_formed env) quals in
+        let qset = QualifierSet.from_list (List.filter qual_holds well_formed_quals) in
           Prover.pop();
           Printf.printf "%s has quals: %s\n" k2 (pprint_quals (QualifierSet.elements (QualifierSet.inter qset (solution k2))));
           Solution.add k2 (QualifierSet.inter qset (solution k2)) solution

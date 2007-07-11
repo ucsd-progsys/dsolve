@@ -19,6 +19,7 @@ val instantiate_type: typ -> typ
 
 val qualify: string -> qualifier -> predicate
 val qualifier_subst: expression -> string -> qualifier -> qualifier
+val qualifier_well_formed: (string * 'a) list -> qualifier -> bool
 
 val pprint_quals: qualifier list -> string
 val pprint_type: typ -> string

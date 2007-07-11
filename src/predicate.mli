@@ -34,6 +34,7 @@ val equals: (expression * expression) -> predicate
 val fresh_expressionvar: unit -> expression
 
 val predicate_subst: expression -> string -> predicate -> predicate
+val predicate_vars: predicate -> string list
 
 val pprint_expression: expression -> string
 val pprint_predicate: predicate -> string

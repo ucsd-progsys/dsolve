@@ -4,7 +4,7 @@ qual NNEG(x): 0 <= x;;
 
 ? let f = fun n ->
   if n = 0 then
-    n
+    1
   else
     n
 in

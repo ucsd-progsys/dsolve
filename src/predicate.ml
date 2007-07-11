@@ -65,6 +65,34 @@ let rec predicate_subst v x = function
       Or(predicate_subst v x p, predicate_subst v x q)
 
 
+let predicate_vars p =
+  let rec exp_vars_rec vars = function
+      PInt _ ->
+        vars
+    | Var x ->
+        x::vars
+    | Pvar(x, _) ->
+        x::vars
+    | Binop(e1, _, e2) ->
+        let vars' = exp_vars_rec vars e1 in
+          exp_vars_rec vars' e2
+  in
+  let rec vars_rec vars = function
+      True ->
+        vars
+    | Atom(e1, _, e2) ->
+        let vars' = exp_vars_rec vars e1 in
+          exp_vars_rec vars' e2
+    | Not p ->
+        vars_rec vars p
+    | And(p1, p2)
+    | Or(p1, p2) ->
+        let vars' = vars_rec vars p1 in
+          vars_rec vars' p2
+  in
+    vars_rec [] p
+
+
 let implies(p, q) =
   Or(Not p, q)
 

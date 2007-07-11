@@ -88,3 +88,9 @@ let qualifier_subst e x ((q, PredOver(y, p)) as qual) =
     qual
   else
     (q, PredOver(y, predicate_subst e x p))
+
+
+let qualifier_well_formed env (_, PredOver(x, p)) =
+  let (env_dom, _) = List.split env in
+  let scoped_vars = x::env_dom in
+    List.for_all (fun v -> List.mem v scoped_vars) (predicate_vars p)
