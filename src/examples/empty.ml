@@ -1,5 +1,5 @@
-pred ISEMPTY(x): not(true);;
+qual ISEMPTY(x): not(true);;
 
-? let n = Nil in
-  let l = Cons(5, Nil) in
+? let n = [] in
+  let l = 5::[] in
    l;;

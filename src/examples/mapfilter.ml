@@ -1,23 +1,23 @@
-pred P(x): 0 < x;;
-pred N(x): x < 0;;
+qual P(x): 0 < x;;
+qual N(x): x < 0;;
 
-? let mapfilter = fun f -> fun l ->
+? letrec mapfilter = fun f -> fun l ->
   match l with
-      Nil ->
-	Nil
-    | Cons(h, t) ->
+      [] ->
+	[]
+    | h::t ->
 	let r = mapfilter f t in
 	let x = f h in
 	  match x with
-	      Some(z) ->
-		Cons(z, r)
-	    | None ->
-		r
+              [] ->
+                r
+            | z::e ->
+                z::r
 in
 let pos = fun y ->
   if 0 < y then
-    Some(y)
+    y::[]
   else
-    None
+    []
 in
-  mapfilter pos k;;
+  mapfilter pos 1::2::-1::[];;

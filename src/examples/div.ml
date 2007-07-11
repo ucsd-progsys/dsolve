@@ -9,5 +9,5 @@ qual NNEG(x): 0 <= x;;
       if aj <= ai then j else aj
   in
   let s = trunc 0 0 in
-  let t = trunc -10 1 in
+  let t = trunc 10 1 in
     s;;
