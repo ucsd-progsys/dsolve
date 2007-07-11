@@ -44,12 +44,26 @@ let rec typ_subst_tyvar b a = function
       t
 
 
+let typ_free_vars =
+  let rec free_rec vars = function
+      Arrow(_, t1, t2) ->
+        let vars' = free_rec vars t1 in
+          free_rec vars' t2
+    | TyVar a ->
+        a::vars
+    | _ ->
+        vars
+  in
+    free_rec []
+
+
 let generalize_type ty env =
-  let (env_dom, _) = List.split env in
+  let (_, env_range) = List.split env in
+  let env_free_tyvars = Misc.flap typ_free_vars env_range in
   let rec generalize_rec = function
       Arrow(x, t1, t2) ->
         Arrow(x, generalize_rec t1, generalize_rec t2)
-    | TyVar a when not (List.mem a env_dom) ->
+    | TyVar a when not (List.mem a env_free_tyvars) ->
         GenVar a
     | t ->
         t

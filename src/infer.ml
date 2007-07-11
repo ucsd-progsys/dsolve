@@ -96,14 +96,12 @@ let infer_shape exp =
 	  let (t', constrs, sm') = infer_mono e newtenv constrs shapemap in
 	    (Arrow(x, t, t'), constrs, sm')
       | Let(x, _, ex, e, _) ->
-	  let (tx, constrsx, sm') = infer_general ex tenv constrs shapemap None in
+	  let (tx, constrsx, sm') = infer_general ex tenv constrs shapemap in
 	  let newtenv = (x, tx)::tenv in
 	  let (te, constrse, sm'') = infer_mono e newtenv constrsx sm' in
 	    (te, constrse, sm'')
       | LetRec(f, _, ex, e, _) ->
-          let tf = fresh_tyvar() in
-          let tenv'' = (f, tf)::tenv in
-          let (tf', constrs'', sm'') = infer_general ex tenv'' constrs shapemap (Some tf) in
+          let (tf', constrs'', sm'') = infer_rec_general ex f tenv constrs shapemap in
           let tenv' = (f, tf')::tenv in
           let (te, constrs', sm') = infer_mono e tenv' constrs'' sm'' in
             (te, constrs', sm')
@@ -112,20 +110,20 @@ let infer_shape exp =
   and infer_mono e tenv constrs shapemap =
     let (t, cs, sm) = infer_rec e tenv constrs shapemap in
       (t, cs, ExprMap.add e t sm)
-  and infer_general e tenv constrs shapemap rec_fix =
-    let (t'', cs', sm) = infer_rec e tenv constrs shapemap in
-    let cs =
-      match rec_fix with
-          None -> cs'
-        | Some ty ->
-            (* If this is a letrec, we have to ensure that the type we infer
-               for the uses of the function matches the type we infer for
-               its definition.
-               We must do this here because it's too late later - the type
-               will have already been added to the type map.
-            *)
-            (ty, t'')::cs'
-    in
+  and infer_general e tenv constrs shapemap =
+    let (t'', cs, sm) = infer_rec e tenv constrs shapemap in
+    let sub = unify cs in
+    let (t', tenv') = (sub t'', List.map (fun (a, ty) -> (a, sub ty)) tenv) in
+    let t = generalize_type t' tenv' in
+      (t, cs, ExprMap.add e t sm)
+  and infer_rec_general e f tenv constrs shapemap =
+    (* A version of infer_general which makes sure to leave the tyvars introduced
+       by the let out of the environment while generalizing (otherwise stuff breaks).
+    *)
+    let tf = fresh_tyvar() in
+    let tenv'' = (f, tf)::tenv in
+    let (t'', cs', sm) = infer_rec e tenv'' constrs shapemap in
+    let cs = (tf, t'')::cs' in
     let sub = unify cs in
     let (t', tenv') = (sub t'', List.map (fun (a, ty) -> (a, sub ty)) tenv) in
     let t = generalize_type t' tenv' in
