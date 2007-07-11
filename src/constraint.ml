@@ -8,6 +8,7 @@ type subst = (string * expression) list
 
 type frame =
     FArrow of string * frame * frame
+  | FList of frame
   | FVar of subst * string
   | FGenVar of string
   | FInt of subst * qualifier list
@@ -19,6 +20,8 @@ let fresh_framevar = Misc.make_get_fresh (fun x -> FVar([], String.uppercase x))
 let rec pprint_frame = function
     FArrow(x, f, f') ->
       Printf.sprintf "%s: %s -> %s" x (pprint_frame f) (pprint_frame f')
+  | FList f ->
+      Printf.sprintf "%s list" (pprint_frame f)
   | FInt(subs, quals) ->
       Printf.sprintf "[%s] %s" (pprint_subst subs) (pprint_quals quals)
   | FVar(subs, x) ->
@@ -34,6 +37,8 @@ and pprint_subst ss =
 let rec frame_to_type = function
     FArrow(x, f1, f2) ->
       Arrow(x, frame_to_type f1, frame_to_type f2)
+  | FList f ->
+      List(frame_to_type f)
   | FVar(_, a) ->
       TyVar a
   | FGenVar a ->
@@ -45,6 +50,8 @@ let rec frame_to_type = function
 let rec type_to_frame = function
     Arrow(x, t1, t2) ->
       FArrow(x, type_to_frame t1, type_to_frame t2)
+  | List t ->
+      FList(type_to_frame t)
   | TyVar a ->
       FVar([], a)
   | GenVar a ->
@@ -58,6 +65,8 @@ let frame_apply_subst pexp x fr =
   let rec apply_subst_rec = function
       FArrow(y, f, f') ->
 	FArrow(y, apply_subst_rec f, apply_subst_rec f')
+    | FList f ->
+        FList(apply_subst_rec f)
     | FVar(ss, y) ->
 	FVar(s::ss, y)
     | FInt(ss, quals) ->
@@ -74,6 +83,9 @@ let instantiate_frame fr =
         let (f1', vars'') = instantiate_rec vars f1 in
         let (f2', vars') = instantiate_rec vars'' f2 in
           (FArrow(x, f1', f2'), vars')
+    | FList f ->
+        let (f', vars') = instantiate_rec vars f in
+          (FList f', vars')
     | FGenVar a ->
         let (f', vars') =
           try
@@ -112,6 +124,8 @@ let split_constraints constrs =
 	  let env' = (x, f2)::env in
 	  let ret = SubType(env', guard, f1', f2') in
 	    flatten_rec (param::ret::cs) flat
+      | SubType(env, guard, FList f1, FList f2)::cs ->
+          flatten_rec (SubType(env, guard, f1, f2)::cs) flat
       | SubType(_, _, FGenVar _, FGenVar _)::cs ->
           flatten_rec cs flat
       | f::cs ->
@@ -152,6 +166,8 @@ let frame_apply_solution solution fr =
   let rec apply_rec = function
       FArrow(x, f, f') ->
         FArrow(x, apply_rec f, apply_rec f')
+    | FList f ->
+        FList(apply_rec f)
     | FVar(ss, x) ->
         FInt(ss, QualifierSet.elements (solution x))
     | (FInt _) as f ->

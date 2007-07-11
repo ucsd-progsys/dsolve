@@ -6,6 +6,7 @@ type qualifier = string * parameterized_pred
 
 type typ =
     Arrow of string * typ * typ
+  | List of typ
   | Int of qualifier list
   | TyVar of string
   | GenVar of string

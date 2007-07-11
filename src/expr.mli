@@ -2,12 +2,13 @@ open Env
 open Type
 open Predicate
 
-
 type expr_id = string
 
 type expr =
     Num of int * expr_id
   | ExpVar of string * expr_id
+  | Nil of expr_id
+  | Cons of expr * expr * expr_id
   | If of expr * expr * expr * expr_id
   | Let of string * typ option * expr * expr * expr_id
   | LetRec of string * typ option * expr * expr * expr_id
@@ -15,9 +16,9 @@ type expr =
   | App of expr * expr * expr_id
   | Cast of typ * typ * expr * expr_id
 
-
 type value =
     NumVal of int
+  | ListVal of value list
   | Closure of string * expr * string option * (string * value) list
 
 

@@ -31,6 +31,8 @@ rule token = parse
       { BOTTOM }
   | ":"
       { COLON }
+  | "::"
+      { COLONCOLON }
   | ","
       { COMMA }
   | "#" (alpha | blank) *
@@ -39,6 +41,8 @@ rule token = parse
       { DOT }
   | "else"
       { ELSE }
+  | "[]"
+      { EMPTYSQBRACKETS }
   | ";;"
       { EOL }
   | "="

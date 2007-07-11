@@ -9,6 +9,7 @@ type qualifier = string * parameterized_pred
 
 type typ =
     Arrow of string * typ * typ
+  | List of typ
   | Int of qualifier list
   | TyVar of string
   | GenVar of string
@@ -27,6 +28,8 @@ let rec pprint_type = function
       sprintf "%s: (%s) -> %s" x (pprint_type t1) (pprint_type t2)
   | Arrow(x, t1, t2) ->
       sprintf "%s: %s -> %s" x (pprint_type t1) (pprint_type t2)
+  | List t ->
+      sprintf "%s list" (pprint_type t)
   | Int quals ->
       sprintf "%s int" (pprint_quals quals)
   | TyVar a ->
@@ -38,6 +41,8 @@ let rec pprint_type = function
 let rec typ_subst_tyvar b a = function
     Arrow(x, t1, t2) ->
       Arrow(x, typ_subst_tyvar b a t1, typ_subst_tyvar b a t2)
+  | List t ->
+      List(typ_subst_tyvar b a t)
   | TyVar a' when a' = a ->
       b
   | t ->
@@ -49,6 +54,8 @@ let typ_free_vars =
       Arrow(_, t1, t2) ->
         let vars' = free_rec vars t1 in
           free_rec vars' t2
+    | List t ->
+        free_rec vars t
     | TyVar a ->
         a::vars
     | _ ->
@@ -63,6 +70,8 @@ let generalize_type ty env =
   let rec generalize_rec = function
       Arrow(x, t1, t2) ->
         Arrow(x, generalize_rec t1, generalize_rec t2)
+    | List t ->
+        List(generalize_rec t)
     | TyVar a when not (List.mem a env_free_tyvars) ->
         GenVar a
     | t ->
@@ -77,6 +86,9 @@ let instantiate_type ty =
         let (t1', vars'') = instantiate_rec vars t1 in
         let (t2', vars') = instantiate_rec vars'' t2 in
           (Arrow(x, t1', t2'), vars')
+    | List t ->
+        let (t', vars') = instantiate_rec vars t in
+          (List t', vars')
     | GenVar a ->
         let (t', vars') =
           try

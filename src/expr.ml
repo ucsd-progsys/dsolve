@@ -8,6 +8,8 @@ type expr_id = string
 type expr =
     Num of int * expr_id
   | ExpVar of string * expr_id
+  | Nil of expr_id
+  | Cons of expr * expr * expr_id
   | If of expr * expr * expr * expr_id
   | Let of string * typ option * expr * expr * expr_id
   | LetRec of string * typ option * expr * expr * expr_id
@@ -15,10 +17,10 @@ type expr =
   | App of expr * expr * expr_id
   | Cast of typ * typ * expr * expr_id
 
-
 (* Values resulting from evalutation *)
 type value =
     NumVal of int
+  | ListVal of value list
   | Closure of string * expr * string option * (string * value) list
 
 
@@ -37,9 +39,17 @@ let eval exp =
   let rec eval_rec exp env =
     match exp with
 	Num(n, _) ->
-	  NumVal(n)
+	  NumVal n
       | ExpVar(x, _) ->
 	  List.assoc x env
+      | Nil _ ->
+          ListVal []
+      | Cons(e1, e2, _) ->
+          begin match eval_rec e2 env with
+              ListVal l ->
+                ListVal ((eval_rec e1 env)::l)
+            | _ -> raise BogusEvalError
+          end
       | If(c, e1, e2, _) ->
 	  begin match (eval_rec c env) with
 	      NumVal 0 -> eval_rec e2 env
@@ -54,7 +64,7 @@ let eval exp =
           let fv = Closure(x, e, Some f, env) in
           let env' = (f, fv)::env in
             eval_rec e' env'
-      | LetRec(_) ->
+      | LetRec _ ->
           raise BogusEvalError
       | Abs(x, _, e, _) ->
 	  Closure(x, e, None, env)
@@ -79,9 +89,12 @@ let eval exp =
 
 
 let expr_get_subexprs = function
-    Num(_, _)
-  | ExpVar(_) ->
+    Num _
+  | ExpVar _
+  | Nil _ ->
       []
+  | Cons(e1, e2, _) ->
+      [e1; e2]
   | If(e1, e2, e3, _) ->
       [e1; e2; e3]
   | Let(_, _, e1, e2, _) ->
@@ -139,6 +152,10 @@ let rec pprint_annotated_expr annotator indent exp =
 	string_of_int n
     | ExpVar(x, _) ->
 	x
+    | Nil _ ->
+        "Nil"
+    | Cons(e1, e2, _) ->
+        Printf.sprintf "%s::%s" (pprint_rec e1) (pprint_rec e2)
     | If(e1, e2, e3, _) ->
 	Printf.sprintf "if %s then\n%s\n%selse\n%s\n" (pprint_rec e1) (pprint_ind e2) indstr (pprint_ind e3)
     | Let(x, _, e1, e2, _) ->
@@ -164,5 +181,7 @@ let pprint_expr =
 let rec pprint_value = function
     NumVal n ->
       string_of_int n
+  | ListVal l ->
+      Printf.sprintf "[%s]" (Misc.join (List.map pprint_value l) "; ")
   | Closure(name, _, _, _) ->
       "<fun (" ^ name ^ ")>"

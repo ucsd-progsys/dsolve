@@ -15,6 +15,8 @@ let rec occurs a = function
       false
   | Int _ ->
       false
+  | List t ->
+      occurs a t
   | Arrow(_, t, t') ->
       (occurs a t) || (occurs a t')
 
@@ -42,6 +44,8 @@ let rec unify = function
 	      raise Unify
 	| (Arrow(_, t1, t1'), Arrow(_, t2, t2')) ->
 	    unify ((t1, t2)::(t1', t2')::cs)
+        | (List t1, List t2) ->
+            unify ((t1, t2)::cs)
 	| (Int _, Int _) ->
 	    unify cs
 	| _ ->
@@ -74,11 +78,18 @@ let pprint_shapemap smap =
 let infer_shape exp =
   let rec infer_rec e tenv constrs shapemap =
     match e with
-	Num(_, _) ->
+	Num _ ->
 	  (Int [], constrs, shapemap)
       | ExpVar(x, _) ->
 	  let tx = instantiate_type (List.assoc x tenv) in
 	    (tx, constrs, shapemap)
+      | Nil _ ->
+          (List (fresh_tyvar ()), constrs, shapemap)
+      | Cons(e1, e2, _) ->
+          let (t1, constrs'', sm'') = infer_mono e1 tenv constrs shapemap in
+          let (t2, constrs', sm') = infer_mono e2 tenv constrs'' sm'' in
+          let t = List t1 in
+            (t, (t, t2)::constrs', sm')
       | If(c, e1, e2, _) ->
 	  let (tc, constrsc, sm) = infer_mono c tenv constrs shapemap in
 	  let (t1, constrs1, sm') = infer_mono e1 tenv constrsc sm in
@@ -139,6 +150,8 @@ let subtype_constraints exp quals shapemap =
     let rec fresh_frame_rec = function
         Arrow(x, t, t') ->
 	  FArrow(x, fresh_frame_rec t, fresh_frame_rec t')
+      | List t ->
+          FList(fresh_frame_rec t)
       | TyVar a ->
           FVar([], a)
       | GenVar a ->
@@ -165,6 +178,21 @@ let subtype_constraints exp quals shapemap =
             in
             let f = fresh_frame e in
 	      (f, SubType(env, guard, feq, f)::constrs, framemap)
+        | Nil _ ->
+            (fresh_frame e, constrs, framemap)
+        | Cons(e1, e2, _) ->
+            begin match fresh_frame e with
+                FList f ->
+                  let (f1, constrs'', fm'') = constraints_rec e1 env guard constrs framemap in
+                    begin match constraints_rec e2 env guard constrs'' fm'' with
+                        (FList f2, constrs', fm') ->
+                          (FList f, SubType(env, guard, f1, f)::SubType(env, guard, f2, f)::constrs', fm')
+                      | _ ->
+                          failwith "List tail frame has wrong shape"
+                    end
+              | _ ->
+                  failwith "Fresh frame has wrong shape - expected list"
+            end
         | Abs(x, _, e', _) ->
 	    begin match fresh_frame e with
 	        FArrow(_, f, f') ->

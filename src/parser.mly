@@ -30,9 +30,11 @@ let make_binapp f x y =
 %token BOOL
 %token BOTTOM
 %token COLON
+%token COLONCOLON
 %token COMMA
 %token DOT
 %token ELSE
+%token EMPTYSQBRACKETS
 %token EOL
 %token EQUAL
 %token FALSE
@@ -170,6 +172,8 @@ simple_exp:
   LPAREN exp RPAREN { $2 }
 | VAR { ExpVar($1, get_next_expr_id()) }
 | INTLITERAL { Num($1, get_next_expr_id()) }
+| EMPTYSQBRACKETS { Nil(get_next_expr_id()) }
+| exp COLONCOLON exp { Cons($1, $3, get_next_expr_id()) }
 | exp PLUS exp { make_binapp "+" $1 $3 }
 | exp MINUS exp { make_binapp "-" $1 $3 }
 | exp EQUAL exp { make_binapp "=" $1 $3 }
