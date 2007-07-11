@@ -11,6 +11,7 @@ type expr =
   | Nil of expr_id
   | Cons of expr * expr * expr_id
   | If of expr * expr * expr * expr_id
+  | Match of expr * expr * (string * string) * expr * expr_id
   | Let of string * typ option * expr * expr * expr_id
   | LetRec of string * typ option * expr * expr * expr_id
   | Abs of string * typ option * expr * expr_id
@@ -56,6 +57,15 @@ let eval exp =
 	    | NumVal 1 -> eval_rec e1 env
 	    | _ -> raise BogusEvalError
 	  end
+      | Match(e1, e2, (h, t), e3, _) ->
+          begin match eval_rec e1 env with
+              ListVal([]) ->
+                eval_rec e2 env
+            | ListVal(hd::tl) ->
+                eval_rec e3 ((h, hd)::(t, ListVal tl)::env)
+            | _ ->
+                raise BogusEvalError
+          end
       | Let(x, _, e, e', _) ->
 	  let xv = eval_rec e env in
 	  let env' = (x, xv)::env in
@@ -96,6 +106,8 @@ let expr_get_subexprs = function
   | Cons(e1, e2, _) ->
       [e1; e2]
   | If(e1, e2, e3, _) ->
+      [e1; e2; e3]
+  | Match(e1, e2, _, e3, _) ->
       [e1; e2; e3]
   | Let(_, _, e1, e2, _) ->
       [e1; e2]
@@ -158,6 +170,9 @@ let rec pprint_annotated_expr annotator indent exp =
         Printf.sprintf "%s::%s" (pprint_rec e1) (pprint_rec e2)
     | If(e1, e2, e3, _) ->
 	Printf.sprintf "if %s then\n%s\n%selse\n%s\n" (pprint_rec e1) (pprint_ind e2) indstr (pprint_ind e3)
+    | Match(e1, e2, (h, t), e3, _) ->
+        Printf.sprintf "match %s with\n%sNil ->\n%s\n%s| Cons(%s, %s) ->\n%s"
+          (pprint_rec e1) indstr (pprint_ind e2) indstr h t (pprint_ind e3)
     | Let(x, _, e1, e2, _) ->
 	Printf.sprintf "let %s = %s in\n%s\n" x (pprint_rec e1) (pprint_ind e2)
     | LetRec(f, _, e1, e2, _) ->

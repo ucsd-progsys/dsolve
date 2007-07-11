@@ -10,6 +10,7 @@ type expr =
   | Nil of expr_id
   | Cons of expr * expr * expr_id
   | If of expr * expr * expr * expr_id
+  | Match of expr * expr * (string * string) * expr * expr_id
   | Let of string * typ option * expr * expr * expr_id
   | LetRec of string * typ option * expr * expr * expr_id
   | Abs of string * typ option * expr * expr_id

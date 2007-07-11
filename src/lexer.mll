@@ -61,8 +61,6 @@ rule token = parse
       { INT }
   | sign? digit+ as intstring
       {	INTLITERAL(int_of_string intstring) }
-  | "|"
-      { JOIN }
   | "{"
       { LCURLY }
   | "<"
@@ -89,6 +87,8 @@ rule token = parse
       { NOT }
   | "or"
       { OR }
+  | "|"
+      { PIPE }
   | "+"
       { PLUS }
   | uppercase +

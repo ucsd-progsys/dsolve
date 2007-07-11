@@ -44,7 +44,6 @@ let make_binapp f x y =
 %token IN
 %token INT
 %token <int> INTLITERAL
-%token JOIN
 %token LCURLY
 %token LESS
 %token LESSEQ
@@ -58,6 +57,7 @@ let make_binapp f x y =
 %token NEQUAL
 %token NOT
 %token OR
+%token PIPE
 %token PLUS
 %token <string> QLITERAL
 %token QUAL
@@ -77,7 +77,6 @@ let make_binapp f x y =
 %token WITH
 
 %right ARROW
-%left  MEET JOIN
 %left  ARG
 %right LESS LESSEQ EQ
 %left  PLUS MINUS
@@ -181,6 +180,9 @@ simple_exp:
 | exp LESS exp { make_binapp "<" $1 $3 }
 | exp LESSEQ exp { make_binapp "<=" $1 $3 }
 | IF exp THEN exp ELSE exp { If($2, $4, $6, get_next_expr_id()) }
+| MATCH exp WITH EMPTYSQBRACKETS ARROW exp PIPE VAR COLONCOLON VAR ARROW exp {
+    Match($2, $6, ($8, $10), $12, get_next_expr_id())
+  }
 | LET VAR COLON mtype EQUAL exp IN exp { Let($2, Some $4, $6, $8, get_next_expr_id()) }
 | LET VAR EQUAL exp IN exp { Let($2, None, $4, $6, get_next_expr_id()) }
 | LETREC VAR EQUAL FUN VAR ARROW exp IN exp {

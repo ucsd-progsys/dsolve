@@ -95,6 +95,12 @@ let infer_shape exp =
 	  let (t1, constrs1, sm') = infer_mono e1 tenv constrsc sm in
 	  let (t2, constrs2, sm'') = infer_mono e2 tenv constrs1 sm' in
 	    (t1, (t1, t2)::(tc, Int [])::constrs2, sm'')
+      | Match(e1, e2, (h, t), e3, _) ->
+          let (t1, constrs''', sm''') = infer_mono e1 tenv constrs shapemap in
+          let (t2, constrs'', sm'') = infer_mono e2 tenv constrs''' sm''' in
+          let tl = fresh_tyvar () in
+          let (t3, constrs', sm') = infer_mono e3 ((h, tl)::(t, List tl)::tenv ) constrs'' sm'' in
+            (t3, (t1, List tl)::(t2, t3)::constrs', sm')
       | App(e1, e2, _) ->
 	  let (t1, constrs1, sm') = infer_mono e1 tenv constrs shapemap in
 	  let (t2, constrs2, sm'') = infer_mono e2 tenv constrs1 sm' in
@@ -223,6 +229,17 @@ let subtype_constraints exp quals shapemap =
             let guard3 = And(Not(guardp), guard) in
             let (f3, constrs', fm') = constraints_rec e3 env' guard3 constrs'' fm'' in
               (f, SubType(env', guard2, f2, f)::SubType(env', guard3, f3, f)::constrs', fm')
+        | Match(e1, e2, (h, t), e3, _) ->
+            begin match constraints_rec e1 env guard constrs framemap with
+                (FList f1, constrs''', fm''') ->
+                  let (f2, constrs'', fm'') = constraints_rec e2 env guard constrs''' fm''' in
+                  let env' = (h, f1)::(t, FList f1)::env in
+                  let (f3, constrs', fm') = constraints_rec e3 env' guard constrs'' fm'' in
+                  let f = fresh_frame e in
+                    (f, SubType(env, guard, f2, f)::SubType(env', guard, f3, f)::constrs', fm')
+              | _ ->
+                  failwith "Wrong shape for match guard - expected list"
+            end
         | Let(x, _, e1, e2, _) ->
             (* We don't need to generalize here because it's already been done
                by fresh_frame - whatever genvars are in the shape are passed
