@@ -14,6 +14,7 @@ type expression =
     PInt of int 
   | Var of string
   | Pvar of string * int
+  | FunApp of string * expression
   | Binop of expression * binop * expression 
 
 

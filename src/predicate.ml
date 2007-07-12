@@ -15,6 +15,7 @@ type expression =
     PInt of int 
   | Var of string
   | Pvar of string * int
+  | FunApp of string * expression
   | Binop of expression * binop * expression 
 
 
@@ -46,6 +47,8 @@ let big_or cs =
 let rec predexpr_subst v x = function
     Var y when y = x ->
       v
+  | FunApp(f, e) ->
+      FunApp(f, predexpr_subst v x e)
   | Binop(e1, op, e2) ->
       Binop(predexpr_subst v x e1, op, predexpr_subst v x e2)
   | e ->
@@ -73,6 +76,8 @@ let predicate_vars p =
         x::vars
     | Pvar(x, _) ->
         x::vars
+    | FunApp(_, e) ->
+        exp_vars_rec vars e
     | Binop(e1, _, e2) ->
         let vars' = exp_vars_rec vars e1 in
           exp_vars_rec vars' e2
@@ -130,6 +135,8 @@ let rec pprint_expression = function
       x
   | Pvar(x, n) ->
       x ^ "_" ^ (string_of_int n)
+  | FunApp(f, e) ->
+      Printf.sprintf "%s(%s)" f (pprint_expression e)
   | Binop(e1, op, e2) ->
       pprint_binop pprint_expression e1 op e2
 

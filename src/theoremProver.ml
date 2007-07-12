@@ -54,6 +54,7 @@ module YicesProver  =
     type yices_instance = { 
       c : Y.yices_context;
       t : Y.yices_type;
+      f : Y.yices_type;
       d : (string,Y.yices_var_decl) Hashtbl.t;
       mutable ds : string list ;
       mutable count : int;
@@ -62,19 +63,22 @@ module YicesProver  =
 
     let barrier = "0" 
 
-    let yicesVar me s =
+    let yicesVar me s ty =
       let decl = 
         Misc.do_memo me.d
         (fun () -> 
-          let rv = Y.yices_mk_var_decl me.c s me.t in
+          let rv = Y.yices_mk_var_decl me.c s ty in
             me.ds <- s::me.ds;rv) () s in
       Y.yices_mk_var_from_decl me.c decl
     
     let rec yicesExp me e =
       match e with 
         PInt i -> Y.yices_mk_num me.c i 
-      | Var s -> yicesVar me s 
-      | Pvar (s,i) -> yicesVar me (Printf.sprintf "%sprime%d" s i) 
+      | Var s -> yicesVar me s me.t
+      | Pvar (s,i) -> yicesVar me (Printf.sprintf "%sprime%d" s i) me.t
+      | FunApp (f,e) ->
+          let (fn, e') = (yicesVar me f me.f, yicesExp me e) in
+            Y.yices_mk_app me.c fn [|e'|]
       | Binop (e1,op,e2) ->
           let es' = Array.map (yicesExp me) [|e1;e2|] in
           (match op with 
@@ -100,8 +104,10 @@ module YicesProver  =
     let me = 
       let c = Y.yices_mk_context () in
       let t = Y.yices_mk_type c "int" in
+      let unknown = Y.yices_mk_type c "unk" in
+      let f = Y.yices_mk_function_type c [| unknown |] t in
       let d = Hashtbl.create 37 in
-        { c = c; t = t; d = d; ds = []; count = 0; i = 0 }
+        { c = c; t = t; f = f; d = d; ds = []; count = 0; i = 0 }
 
     let push p =
       me.count <- me.count + 1;
