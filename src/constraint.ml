@@ -102,6 +102,24 @@ let instantiate_frame fr =
     f
 
 
+(* pmr: This is associated with Project Terrible Hack and should be removed
+   ASAP
+*)
+let frame_genvars f =
+  let rec genvars_rec vars = function
+      FArrow(_, f1, f2) ->
+        let vars' = genvars_rec vars f1 in
+          genvars_rec vars' f2
+    | FList f ->
+        genvars_rec vars f
+    | FGenVar a ->
+        a::vars
+    | _ ->
+        vars
+  in
+    genvars_rec [] f
+
+
 type subtypconst = SubType of (string * frame) list * predicate * frame * frame
 
 
@@ -119,9 +137,10 @@ let pprint_constraint (SubType(env, guard, f1, f2)) =
 let split_constraints constrs =
   let rec flatten_rec cs flat =
     match cs with
-	SubType(env, guard, FArrow(x, f1, f1'), FArrow(y, f2, f2'))::cs ->
+        SubType(env, guard, FArrow(x, f1, f1'), FArrow(y, f2, f2'))::cs ->
 	  let param = SubType(env, guard, f2, f1) in
 	  let env' = (x, f2)::env in
+          let _ = Printf.printf "Inserting crap %s -> %s into env\n" x (pprint_frame f2) in
 	  let ret = SubType(env', guard, f1', f2') in
 	    flatten_rec (param::ret::cs) flat
       | SubType(env, guard, FList f1, FList f2)::cs ->
@@ -184,9 +203,9 @@ let subst_quals_predicate x subs quals =
     List.fold_right substitute subs unsubst
 
 
-let frame_predicate solution (x, f) =
+let frame_predicate solution genvars (x, f) =
   let (subs, quals) = match f with
-      FVar(subst, k) ->
+      FVar(subst, k) when not (List.mem k genvars) ->
 	(subst, QualifierSet.elements (solution k))
     | FInt(subst, qs) ->
 	(subst, qs)
@@ -196,24 +215,24 @@ let frame_predicate solution (x, f) =
     subst_quals_predicate x subs quals
 
 
-let environment_predicate solution env =
-  big_and (List.map (frame_predicate solution) env)
+let environment_predicate solution env genvars =
+  big_and (List.map (frame_predicate solution genvars) env)
 
 
-let constraint_sat solution (SubType(env, guard, f1, f2)) =
-  let envp = environment_predicate solution env in
-  let p1 = frame_predicate solution ("A", f1) in
-  let p2 = frame_predicate solution ("A", f2) in
+let constraint_sat solution (SubType(env, guard, f1, f2)) genvars =
+  let envp = environment_predicate solution env genvars in
+  let p1 = frame_predicate solution genvars ("A", f1) in
+  let p2 = frame_predicate solution genvars ("A", f2) in
     Prover.implies (big_and [envp; guard; p1]) p2
 
 
 exception Unsatisfiable
 
 
-let refine solution quals = function
+let refine solution quals genvars = function
     SubType(env, guard, f1, FVar(subs, k2)) ->
-      let envp = environment_predicate solution env in
-      let p1 = frame_predicate solution ("A", f1) in
+      let envp = environment_predicate solution env genvars in
+      let p1 = frame_predicate solution genvars ("A", f1) in
         Prover.push (big_and [envp; guard; p1]);
         let qual_holds q =
           let qp = subst_quals_predicate "A" subs [q] in
@@ -232,18 +251,19 @@ let refine solution quals = function
       raise Unsatisfiable
 
 
-let solve_constraints quals constrs =
+(* pmr: genvars is part of Project Terrible Hack and needs to go away *)
+let solve_constraints quals constrs genvars =
   let cs = split_constraints constrs in
   let rec solve_rec solution =
     try
       let unsat_constr =
-        List.find (fun c -> not (constraint_sat solution c)) cs in
+        List.find (fun c -> not (constraint_sat solution c genvars)) cs in
         Printf.printf "Solving %s\n\n" (pprint_constraint unsat_constr);
-        solve_rec (refine solution quals unsat_constr)
+        solve_rec (refine solution quals genvars unsat_constr)
     with Not_found ->
       solution
   in
   let qset = QualifierSet.from_list quals in
     Printf.printf "Constraints:\n\n";
-    List.iter (fun c -> Printf.printf "%s\n\n" (pprint_constraint c)) constrs;
+    List.iter (fun c -> Printf.printf "%s\n\n" (pprint_constraint c)) cs;
     solve_rec (Solution.create qset)

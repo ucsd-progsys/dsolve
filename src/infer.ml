@@ -266,12 +266,31 @@ let subtype_constraints exp quals shapemap =
     constraints_rec exp Builtins.frames True [] ExprMap.empty
 
 
+(* pmr: This is an awful, awful hack.  If a variable has been generalized,
+   we don't want to assert anything about it to the TP because it's going
+   to be unconstrained for-ev-er.  However, it's a lot of work to rearrange
+   the data structures such that we can easily tell the difference between
+   genvars and gentypes (which we cannot now; a type with a genvar is a
+   gentype).  So this will have to do until after the POPL deadline.
+
+   The right way to do this might involve making all vars introduced in the
+   binding of a let (by funabs, inner lets, etc.) genvars by default; they
+   can then lose their genvar status by being unified with something that
+   isn't a genvar.  We would also still need to have a separate GenType
+   designation.  Additionally, it would probably help to split tyabs into
+   its own expression kind.  This way, we could keep the rules for fresh
+   frames as they are in the constraint generation above.
+*)
+let framemap_genvars fmap =
+  List.flatten (maplist (fun _ f -> frame_genvars f) fmap)
+
+
 let infer_types exp quals =
   let shapemap = infer_shape exp in
   let builtin_quals = expr_required_builtin_quals exp in
   let qs = builtin_quals@quals in
   let (fr, constrs, fmap) = subtype_constraints exp qs shapemap in
-  let solution = solve_constraints qs constrs in
+  let solution = solve_constraints qs constrs (framemap_genvars fmap) in
   let _ = Printf.printf "%s\n\n" (pprint_frame fr) in
   let expr_to_type e =
     frame_to_type (frame_apply_solution solution (ExprMap.find e fmap))

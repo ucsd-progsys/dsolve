@@ -8,5 +8,5 @@ qual N(x): x < 0;;
     e::(makelist e (n - 1))
 in
 let a = makelist 10 8 in
-let b = makelist -10 8 in
+let b = makelist -10 1 in
   a;;

@@ -26,6 +26,7 @@ val fresh_framevar: unit -> frame
 val frame_apply_subst: expression -> string -> frame -> frame
 
 val instantiate_frame: frame -> frame
+val frame_genvars: frame -> string list
 
 
 module Qualifier: sig
@@ -55,5 +56,5 @@ end
 
 val frame_apply_solution: (string -> QualifierSet.t) -> frame -> frame
 
-val constraint_sat: (string -> QualifierSet.t) -> subtypconst -> bool
-val solve_constraints: qualifier list -> subtypconst list -> (string -> QualifierSet.t)
+val constraint_sat: (string -> QualifierSet.t) -> subtypconst -> string list -> bool
+val solve_constraints: qualifier list -> subtypconst list -> string list -> (string -> QualifierSet.t)
