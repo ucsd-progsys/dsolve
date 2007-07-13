@@ -141,11 +141,9 @@ let infer_shape exp =
     let tf = fresh_tyvar() in
     let tenv'' = Env.add f tf tenv in
     let (t'', cs', sm) = infer_rec e tenv'' constrs shapemap in
-    let _ = Printf.printf "Found type %s\n" (pprint_type t'') in
     let cs = (tf, t'')::cs' in
     let sub = unify cs in
     let (t', tenv') = (sub t'', Env.mapi (fun a ty -> sub ty) tenv) in
-    let _ = Printf.printf "Generalizing %s\n" (pprint_type t') in
     let t = generalize_type t' tenv' in
       (t, cs, ExprMap.add e t sm)
   in
