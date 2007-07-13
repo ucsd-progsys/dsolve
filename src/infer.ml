@@ -205,7 +205,7 @@ let subtype_constraints exp quals shapemap =
 	        FArrow(_, f, f') ->
 		  let env' = Env.add x f env in
 		  let (f'', constrs', fm') = constraints_rec e' env' guard constrs framemap in
-		    (FArrow(x, f, f'), SubType(env, guard, f'', f')::constrs', fm')
+		    (FArrow(x, f, f'), SubType(env', guard, f'', f')::constrs', fm')
 	      | _ ->
 		  failwith "Fresh frame has wrong shape - expected arrow"
 	    end
