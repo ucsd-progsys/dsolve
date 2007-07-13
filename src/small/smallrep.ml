@@ -7,7 +7,7 @@ qual LN(x): x < n;;
     let k = i + 1 in
       foo n k f d
   else
-    i
+    c
 in
 let g = fun s -> fun t -> s + t in
   foo 10 0 g 0;;
