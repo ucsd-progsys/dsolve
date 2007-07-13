@@ -15,12 +15,12 @@ val fresh_tyvar: unit -> typ
 
 val typ_subst_tyvar: typ -> string -> typ -> typ
 
-val generalize_type: typ -> (string * typ) list -> typ
+val generalize_type: typ -> typ Env.t -> typ
 val instantiate_type: typ -> typ
 
 val qualify: string -> qualifier -> predicate
 val qualifier_subst: expression -> string -> qualifier -> qualifier
-val qualifier_well_formed: (string * 'a) list -> qualifier -> bool
+val qualifier_well_formed: string list -> qualifier -> bool
 
 val pprint_quals: qualifier list -> string
 val pprint_type: typ -> string

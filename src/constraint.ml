@@ -2,7 +2,6 @@ open Predicate
 open TheoremProver
 open Type
 
-
 type subst = (string * expression) list
 
 
@@ -120,13 +119,13 @@ let frame_genvars f =
     genvars_rec [] f
 
 
-type subtypconst = SubType of (string * frame) list * predicate * frame * frame
+type subtypconst = SubType of frame Env.t * predicate * frame * frame
 
 
 let pprint_env env =
-  let pprint_mapping (x, f) =
+  let pprint_mapping x f =
     Printf.sprintf "%s -> %s" x (pprint_frame f) in
-    Misc.join (List.map pprint_mapping env) "; "
+    Misc.join (Env.maplist pprint_mapping env) "; "
 
 
 let pprint_constraint (SubType(env, guard, f1, f2)) =
@@ -139,8 +138,7 @@ let split_constraints constrs =
     match cs with
         SubType(env, guard, FArrow(x, f1, f1'), FArrow(y, f2, f2'))::cs ->
 	  let param = SubType(env, guard, f2, f1) in
-	  let env' = (x, f2)::env in
-          let _ = Printf.printf "Inserting crap %s -> %s into env\n" x (pprint_frame f2) in
+          let env' = Env.add x f2 env in
 	  let ret = SubType(env', guard, f1', f2') in
 	    flatten_rec (param::ret::cs) flat
       | SubType(env, guard, FList f1, FList f2)::cs ->
@@ -203,7 +201,7 @@ let subst_quals_predicate x subs quals =
     List.fold_right substitute subs unsubst
 
 
-let frame_predicate solution genvars (x, f) =
+let frame_predicate solution genvars x f =
   let (subs, quals) = match f with
       FVar(subst, k) when not (List.mem k genvars) ->
 	(subst, QualifierSet.elements (solution k))
@@ -216,14 +214,22 @@ let frame_predicate solution genvars (x, f) =
 
 
 let environment_predicate solution env genvars =
-  big_and (List.map (frame_predicate solution genvars) env)
+  big_and (Env.maplist (frame_predicate solution genvars) env)
 
 
 let constraint_sat solution (SubType(env, guard, f1, f2)) genvars =
   let envp = environment_predicate solution env genvars in
-  let p1 = frame_predicate solution genvars ("A", f1) in
-  let p2 = frame_predicate solution genvars ("A", f2) in
-    Prover.implies (big_and [envp; guard; p1]) p2
+  let p1 = frame_predicate solution genvars "A" f1 in
+  let p2 = frame_predicate solution genvars "A" f2 in
+(*    Printf.printf "Testing %s <: %s\n" (pprint_frame f1) (pprint_frame f2);
+    Printf.printf "envp: %s\n\np1: %s\n\np2: %s\n\n" (pprint_predicate envp) (pprint_predicate p1) (pprint_predicate p2);*)
+    if Prover.implies (big_and [envp; guard; p1]) p2 then
+      begin
+(*        Printf.printf "TRU!\n\n";*)
+        true
+      end
+    else
+      false
 
 
 exception Unsatisfiable
@@ -232,14 +238,22 @@ exception Unsatisfiable
 let refine solution quals genvars = function
     SubType(env, guard, f1, FVar(subs, k2)) ->
       let envp = environment_predicate solution env genvars in
-      let p1 = frame_predicate solution genvars ("A", f1) in
+      let p1 = frame_predicate solution genvars "A" f1 in
         Prover.push (big_and [envp; guard; p1]);
-        let qual_holds q =
-          let qp = subst_quals_predicate "A" subs [q] in
-            Prover.valid qp
+        let subs_dom = List.map (fun (s, _) -> s) subs in
+        let env_dom = Env.maplist (fun k _ -> k) env in
+        let qual_dom = subs_dom@env_dom in
+        let qual_holds q p =
+          if not (qualifier_well_formed qual_dom (q, p)) then
+            None
+          else
+            let qp = subst_quals_predicate "A" subs [("q", p)] in
+              if Prover.valid qp then
+                Some (q, p)
+              else
+                None
         in
-        let well_formed_quals = List.filter (qualifier_well_formed env) quals in
-        let qset = QualifierSet.from_list (List.filter qual_holds well_formed_quals) in
+        let qset = QualifierSet.from_list (Env.mapfilter qual_holds quals) in
           Prover.pop();
           Printf.printf "%s has quals: %s\n" k2 (pprint_quals (QualifierSet.elements (QualifierSet.inter qset (solution k2))));
           Solution.add k2 (QualifierSet.inter qset (solution k2)) solution
@@ -263,7 +277,7 @@ let solve_constraints quals constrs genvars =
     with Not_found ->
       solution
   in
-  let qset = QualifierSet.from_list quals in
+  let qset = QualifierSet.from_list (Env.maplist (fun q p -> (q, p)) quals) in
     Printf.printf "Constraints:\n\n";
     List.iter (fun c -> Printf.printf "%s\n\n" (pprint_constraint c)) cs;
     solve_rec (Solution.create qset)

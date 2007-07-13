@@ -136,12 +136,11 @@ query:
   }
  | QUAL QLITERAL LPAREN VAR RPAREN COLON pred EOL {
 
-    active_quals := ($2, PredOver($4, $7))::(!active_quals);
-    let pprint_param_pred = function
-	(name, PredOver(x, p)) ->
+    active_quals := Env.add $2 (PredOver($4, $7)) (!active_quals);
+    let pprint_param_pred name (PredOver(x, p)) =
 	  name ^ "(" ^ x ^ "): " ^ pprint_predicate p
     in
-    let activestrs = List.map pprint_param_pred !active_quals in
+    let activestrs = Env.maplist pprint_param_pred !active_quals in
       Printf.printf "%s\n\n" (Misc.join activestrs "\n");
       flush stdout
   }
@@ -159,7 +158,7 @@ qualifier_list:
 | qualifier qualifier_list { $1::$2 }
 
 qualifier:
-  QLITERAL { ($1, List.assoc $1 !active_quals) }
+  QLITERAL { ($1, Env.find $1 !active_quals) }
 ;
 
 exp:

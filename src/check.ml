@@ -8,7 +8,7 @@ let check_type quals exp ty =
       Num(n, _) ->
 	Int([])
     | ExpVar(x, _) ->
-	List.assoc x env
+	Env.find x env
     | _ ->
 	raise Not_found
   and check_rec env e t =

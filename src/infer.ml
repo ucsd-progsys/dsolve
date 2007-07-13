@@ -81,7 +81,7 @@ let infer_shape exp =
 	Num _ ->
 	  (Int [], constrs, shapemap)
       | ExpVar(x, _) ->
-	  let tx = instantiate_type (List.assoc x tenv) in
+	  let tx = instantiate_type (Env.find x tenv) in
 	    (tx, constrs, shapemap)
       | Nil _ ->
           (List (fresh_tyvar ()), constrs, shapemap)
@@ -99,7 +99,8 @@ let infer_shape exp =
           let (t1, constrs''', sm''') = infer_mono e1 tenv constrs shapemap in
           let (t2, constrs'', sm'') = infer_mono e2 tenv constrs''' sm''' in
           let tl = fresh_tyvar () in
-          let (t3, constrs', sm') = infer_mono e3 ((h, tl)::(t, List tl)::tenv ) constrs'' sm'' in
+          let tenv' = Env.addn [(h, tl); (t, List tl)] tenv in
+          let (t3, constrs', sm') = infer_mono e3 tenv' constrs'' sm'' in
             (t3, (t1, List tl)::(t2, t3)::constrs', sm')
       | App(e1, e2, _) ->
 	  let (t1, constrs1, sm') = infer_mono e1 tenv constrs shapemap in
@@ -109,17 +110,17 @@ let infer_shape exp =
 	    (returnty, (t1, funty)::constrs2, sm'')
       | Abs(x, _, e, _) ->
 	  let t = fresh_tyvar () in
-	  let newtenv = (x, t)::tenv in
+	  let newtenv = Env.add x t tenv in
 	  let (t', constrs, sm') = infer_mono e newtenv constrs shapemap in
 	    (Arrow(x, t, t'), constrs, sm')
       | Let(x, _, ex, e, _) ->
 	  let (tx, constrsx, sm') = infer_general ex tenv constrs shapemap in
-	  let newtenv = (x, tx)::tenv in
+	  let newtenv = Env.add x tx tenv in
 	  let (te, constrse, sm'') = infer_mono e newtenv constrsx sm' in
 	    (te, constrse, sm'')
       | LetRec(f, _, ex, e, _) ->
           let (tf', constrs'', sm'') = infer_rec_general ex f tenv constrs shapemap in
-          let tenv' = (f, tf')::tenv in
+          let tenv' = Env.add f tf' tenv in
           let (te, constrs', sm') = infer_mono e tenv' constrs'' sm'' in
             (te, constrs', sm')
       | Cast(_, _, e, _) ->
@@ -130,7 +131,7 @@ let infer_shape exp =
   and infer_general e tenv constrs shapemap =
     let (t'', cs, sm) = infer_rec e tenv constrs shapemap in
     let sub = unify cs in
-    let (t', tenv') = (sub t'', List.map (fun (a, ty) -> (a, sub ty)) tenv) in
+    let (t', tenv') = (sub t'', Env.mapi (fun a ty -> sub ty) tenv) in
     let t = generalize_type t' tenv' in
       (t, cs, ExprMap.add e t sm)
   and infer_rec_general e f tenv constrs shapemap =
@@ -138,17 +139,20 @@ let infer_shape exp =
        by the let out of the environment while generalizing (otherwise stuff breaks).
     *)
     let tf = fresh_tyvar() in
-    let tenv'' = (f, tf)::tenv in
+    let tenv'' = Env.add f tf tenv in
     let (t'', cs', sm) = infer_rec e tenv'' constrs shapemap in
+    let _ = Printf.printf "Found type %s\n" (pprint_type t'') in
     let cs = (tf, t'')::cs' in
     let sub = unify cs in
-    let (t', tenv') = (sub t'', List.map (fun (a, ty) -> (a, sub ty)) tenv) in
+    let (t', tenv') = (sub t'', Env.mapi (fun a ty -> sub ty) tenv) in
+    let _ = Printf.printf "Generalizing %s\n" (pprint_type t') in
     let t = generalize_type t' tenv' in
       (t, cs, ExprMap.add e t sm)
   in
   let (_, constrs, smap') = infer_mono exp Builtins.types [] ExprMap.empty in
   let sub = unify constrs in
-    ExprMap.map sub smap'
+  let r = ExprMap.map sub smap' in
+    r
 
 
 let subtype_constraints exp quals shapemap =
@@ -171,19 +175,16 @@ let subtype_constraints exp quals shapemap =
     let (f, cs, fm) =
       match e with
 	  Num(n, _) ->
-            let f' = FInt([], [Builtins.equality_qualifier (PInt n)]) in
-            let f = fresh_frame e in
-	      (f, SubType(env, guard, f', f)::constrs, framemap)
+	    (FInt([], [Builtins.equality_qualifier (PInt n)]), constrs, framemap)
         | ExpVar(x, _) ->
-            let feq =
+            let f =
               match ExprMap.find e shapemap with
                   Int _ ->
                     FInt([], [Builtins.equality_qualifier (Var x)])
                 | _ ->
-                    instantiate_frame (List.assoc x env)
+                    instantiate_frame (Env.find x env)
             in
-            let f = fresh_frame e in
-	      (f, SubType(env, guard, feq, f)::constrs, framemap)
+	      (f, constrs, framemap)
         | Nil _ ->
             (fresh_frame e, constrs, framemap)
         | Cons(e1, e2, _) ->
@@ -202,7 +203,7 @@ let subtype_constraints exp quals shapemap =
         | Abs(x, _, e', _) ->
 	    begin match fresh_frame e with
 	        FArrow(_, f, f') ->
-		  let env' = (x, f)::env in
+		  let env' = Env.add x f env in
 		  let (f'', constrs', fm') = constraints_rec e' env' guard constrs framemap in
 		    (FArrow(x, f, f'), SubType(env, guard, f'', f')::constrs', fm')
 	      | _ ->
@@ -222,7 +223,7 @@ let subtype_constraints exp quals shapemap =
             let f = fresh_frame e in
             let (f1, constrs''', fm''') = constraints_rec e1 env guard constrs framemap in
             let guardvar = fresh_bindvar() in
-            let env' = (guardvar, f1)::env in
+            let env' = Env.add guardvar f1 env in
             let guardp = equals(Var guardvar, PInt 1) in
             let guard2 = And(guardp, guard) in
             let (f2, constrs'', fm'') = constraints_rec e2 env' guard2 constrs''' fm''' in
@@ -233,7 +234,7 @@ let subtype_constraints exp quals shapemap =
             begin match constraints_rec e1 env guard constrs framemap with
                 (FList f1, constrs''', fm''') ->
                   let (f2, constrs'', fm'') = constraints_rec e2 env guard constrs''' fm''' in
-                  let env' = (h, f1)::(t, FList f1)::env in
+                  let env' = Env.addn [(h, f1); (t, FList f1)] env in
                   let (f3, constrs', fm') = constraints_rec e3 env' guard constrs'' fm'' in
                   let f = fresh_frame e in
                     (f, SubType(env, guard, f2, f)::SubType(env', guard, f3, f)::constrs', fm')
@@ -245,13 +246,13 @@ let subtype_constraints exp quals shapemap =
                by fresh_frame - whatever genvars are in the shape are passed
                over to the new frame *)
             let (f1, constrs'', fm'') = constraints_rec e1 env guard constrs framemap in
-            let env' = (x, f1)::env in
+            let env' = Env.add x f1 env in
             let (f2, constrs', fm') = constraints_rec e2 env' guard constrs'' fm'' in
             let f = fresh_frame e in
               (f, SubType(env', guard, f2, f)::constrs', fm')
         | LetRec(f, _, e1, e2, _) ->
             let f1 = fresh_frame e1 in
-            let env' = (f, f1)::env in
+            let env' = Env.add f f1 env in
             let (f1', constrs'', fm'') = constraints_rec e1 env' guard constrs framemap in
             let (f2, constrs', fm') = constraints_rec e2 env' guard constrs'' fm'' in
             let f = fresh_frame e in
@@ -288,7 +289,7 @@ let framemap_genvars fmap =
 let infer_types exp quals =
   let shapemap = infer_shape exp in
   let builtin_quals = expr_required_builtin_quals exp in
-  let qs = builtin_quals@quals in
+  let qs = Env.addn builtin_quals quals in
   let (fr, constrs, fmap) = subtype_constraints exp qs shapemap in
   let solution = solve_constraints qs constrs (framemap_genvars fmap) in
   let _ = Printf.printf "%s\n\n" (pprint_frame fr) in

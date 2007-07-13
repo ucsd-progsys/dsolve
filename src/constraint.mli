@@ -17,7 +17,7 @@ type frame =
 val pprint_frame: frame -> string
 
 
-type subtypconst = SubType of (string * frame) list * predicate * frame * frame
+type subtypconst = SubType of frame Env.t * predicate * frame * frame
 
 val frame_to_type: frame -> typ
 val type_to_frame: typ -> frame
@@ -57,4 +57,4 @@ end
 val frame_apply_solution: (string -> QualifierSet.t) -> frame -> frame
 
 val constraint_sat: (string -> QualifierSet.t) -> subtypconst -> string list -> bool
-val solve_constraints: qualifier list -> subtypconst list -> string list -> (string -> QualifierSet.t)
+val solve_constraints: parameterized_pred Env.t -> subtypconst list -> string list -> (string -> QualifierSet.t)

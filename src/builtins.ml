@@ -11,7 +11,7 @@ let zv = "z"
 let op_shape name =
   (name, Arrow(xv, Int [], Arrow(yv, Int[], Int [])))
 
-let types = [
+let _types = [
   op_shape "+";
   op_shape "-";
   op_shape "=";
@@ -19,6 +19,8 @@ let types = [
   op_shape "<";
   op_shape "<=";
 ]
+
+let types = Env.addn _types Env.empty
 
 
 let binop_qual name op =
@@ -39,7 +41,7 @@ let qless = binrel_qual "LESS" Lt
 let qlesseq = binrel_qual "LESSEQ" Le
 let qfalse = ("FALSE", PredOver("x", Not(True)))
 
-let quals = [
+let _quals = [
   qplus;
   qminus;
   qequal;
@@ -49,12 +51,14 @@ let quals = [
   qfalse
 ]
 
+let quals = Env.addn _quals Env.empty
+
 
 let op_frame op qual =
   (op, FArrow(xv, FInt([], []), FArrow(yv, FInt([], []), FInt([], [qual]))))
 
 
-let frames = [
+let _frames = [
   op_frame "+" qplus;
   op_frame "-" qminus;
   op_frame "=" qequal;
@@ -62,6 +66,8 @@ let frames = [
   op_frame "<" qless;
   op_frame "<=" qlesseq;
 ]
+
+let frames = Env.addn _frames Env.empty
 
 
 let equality_qualifier exp =

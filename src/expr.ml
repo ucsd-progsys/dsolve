@@ -141,7 +141,7 @@ let expr_builtin_qualifier exp =
       Num(n, _) ->
         Some(Builtins.equality_qualifier (PInt n))
     | ExpVar(x, _) ->
-        if List.mem_assoc x Builtins.types then
+        if Env.mem x Builtins.types then
           None
         else
           Some(Builtins.equality_qualifier (Var x))

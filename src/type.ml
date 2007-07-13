@@ -65,7 +65,7 @@ let typ_free_vars =
 
 
 let generalize_type ty env =
-  let (_, env_range) = List.split env in
+  let env_range = Env.maplist (fun _ t -> t) env in
   let env_free_tyvars = Misc.flap typ_free_vars env_range in
   let rec generalize_rec = function
       Arrow(x, t1, t2) ->
@@ -116,7 +116,5 @@ let qualifier_subst e x ((q, PredOver(y, p)) as qual) =
     (q, PredOver(y, predicate_subst e x p))
 
 
-let qualifier_well_formed env (_, PredOver(x, p)) =
-  let (env_dom, _) = List.split env in
-  let scoped_vars = x::env_dom in
-    List.for_all (fun v -> List.mem v scoped_vars) (predicate_vars p)
+let qualifier_well_formed domain (_, PredOver(x, p)) =
+  List.for_all (fun v -> List.mem v (x::domain)) (predicate_vars p)

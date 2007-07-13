@@ -1,5 +1,6 @@
 open Expr
 open Type
+open Predicate
 
 
-val infer_types: expr -> qualifier list -> (expr -> typ)
+val infer_types: expr -> parameterized_pred Env.t -> (expr -> typ)
