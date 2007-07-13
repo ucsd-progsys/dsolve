@@ -149,8 +149,7 @@ let infer_shape exp =
   in
   let (_, constrs, smap') = infer_mono exp Builtins.types [] ExprMap.empty in
   let sub = unify constrs in
-  let r = ExprMap.map sub smap' in
-    r
+    ExprMap.map sub smap'
 
 
 let subtype_constraints exp quals shapemap =
