@@ -1,5 +1,7 @@
 qual LEN(x): x <= n;;
 qual LN(x): x < n;;
+qual LT(x): x < 10;;
+qual LET(x): x <= 10;;
 
 ? letrec foo = fun n -> fun i -> fun f -> fun c ->
   if i < n then
