@@ -221,15 +221,7 @@ let constraint_sat solution (SubType(env, guard, f1, f2)) genvars =
   let envp = environment_predicate solution env genvars in
   let p1 = frame_predicate solution genvars "A" f1 in
   let p2 = frame_predicate solution genvars "A" f2 in
-(*    Printf.printf "Testing %s <: %s\n" (pprint_frame f1) (pprint_frame f2);
-    Printf.printf "envp: %s\n\np1: %s\n\np2: %s\n\n" (pprint_predicate envp) (pprint_predicate p1) (pprint_predicate p2);*)
-    if Prover.implies (big_and [envp; guard; p1]) p2 then
-      begin
-(*        Printf.printf "TRU!\n\n";*)
-        true
-      end
-    else
-      false
+    Prover.implies (big_and [envp; guard; p1]) p2
 
 
 exception Unsatisfiable
@@ -240,6 +232,7 @@ let refine solution quals genvars = function
       let envp = environment_predicate solution env genvars in
       let p1 = frame_predicate solution genvars "A" f1 in
         Prover.push (big_and [envp; guard; p1]);
+        (* pmr: WF should be rolled in as its own set of constraints *)
         let subs_dom = List.map (fun (s, _) -> s) subs in
         let env_dom = Env.maplist (fun k _ -> k) env in
         let qual_dom = subs_dom@env_dom in

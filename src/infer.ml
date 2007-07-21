@@ -4,8 +4,7 @@ open Predicate
 open Constraint
 
 
-let rec const_subst_tyvar b a (t1, t2) =
-  (typ_subst_tyvar b a t1, typ_subst_tyvar b a t2)
+let rec const_subst_tyvar b a (t1, t2) = Misc.tmap2 (typ_subst_tyvar b a) (t1, t2)
 
 
 let rec occurs a = function

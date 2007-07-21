@@ -151,6 +151,7 @@ let expr_builtin_qualifier exp =
 
 let expr_required_builtin_quals exp =
   let quals = expr_map expr_builtin_qualifier exp in
+    (* pmr: gross *)
     Misc.mapfilter (fun x -> x) quals
 
 
