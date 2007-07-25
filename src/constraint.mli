@@ -1,32 +1,10 @@
 open Predicate
 open Type
+open Frame
 open Graph
 
 
-type subst = (string * expression) list
-
-
-type frame =
-    FArrow of string * frame * frame
-  | FList of frame
-  | FVar of subst * string
-  | FGenVar of string
-  | FInt of subst * qualifier list
-
-
-val pprint_frame: frame -> string
-
-
 type subtypconst = SubType of frame Env.t * predicate * frame * frame
-
-val frame_to_type: frame -> typ
-val type_to_frame: typ -> frame
-val fresh_framevar: unit -> frame
-
-val frame_apply_subst: expression -> string -> frame -> frame
-
-val instantiate_frame: frame -> frame
-val frame_genvars: frame -> string list
 
 
 module Qualifier: sig
@@ -54,7 +32,8 @@ module Solution: sig
   val add: 'a -> 'b -> ('a -> 'b) -> ('a -> 'b)
 end
 
+
 val frame_apply_solution: (string -> QualifierSet.t) -> frame -> frame
 
-val constraint_sat: (string -> QualifierSet.t) -> subtypconst -> string list -> bool
-val solve_constraints: parameterized_pred Env.t -> subtypconst list -> string list -> (string -> QualifierSet.t)
+val constraint_sat: (string -> QualifierSet.t) -> subtypconst -> bool
+val solve_constraints: parameterized_pred Env.t -> subtypconst list -> (string -> QualifierSet.t)

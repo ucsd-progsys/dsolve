@@ -1,6 +1,6 @@
 open Type
+open Frame
 open Predicate
-open Constraint
 
 
 let xv = "_X"
@@ -9,7 +9,7 @@ let zv = "z"
 
 
 let op_shape name =
-  (name, Arrow(xv, Int [], Arrow(yv, Int[], Int [])))
+  (name, Arrow(xv, Int, Arrow(yv, Int, Int)))
 
 let _types = [
   op_shape "+";

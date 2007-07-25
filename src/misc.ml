@@ -111,32 +111,24 @@ let rec search_list test = function
       begin
 	try
 	  test h
-	with Not_found ->
-	  search_list test t
+	with Not_found -> search_list test t
       end
-  | [] ->
-      raise Not_found
+  | [] -> raise Not_found
 
-let rec mapfilter f = function
-    h::t ->
-      let rest = mapfilter f t in
-	begin match f h with
-	    Some r ->
-	      r::rest
-	  | None ->
-	      rest
-	end
-  | [] ->
-      []
+let rec mapfilter f l =
+  List.fold_right (fun h t -> match f h with Some h' -> h'::t | None -> t) l []
 
-let make_get_fresh bind =
+let make_get_fresh_and_reset bind =
   let nextvar = ref (Char.code 'a') in
-  let get_fresh() =
+  let reset () = nextvar := Char.code 'a' in
+  let get_fresh () =
     let id = Char.escaped (Char.chr !nextvar) in
       incr nextvar;
       bind id
-  in
-    get_fresh
+  in (get_fresh, reset)
+
+let make_get_fresh bind =
+  let (get_fresh, _) = make_get_fresh_and_reset bind in get_fresh
 
 let flip f =
   (fun x -> fun y -> f y x)

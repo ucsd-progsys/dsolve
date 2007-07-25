@@ -2,27 +2,41 @@ open Type
 open Predicate
 
 
-(* Expression language *)
-type expr_id = string
+let next_exp_id = ref 0
+let get_next_exp_id () =
+  incr next_exp_id;
+  string_of_int !next_exp_id
 
-type expr =
-    Num of int * expr_id
-  | ExpVar of string * expr_id
-  | Nil of expr_id
-  | Cons of expr * expr * expr_id
-  | If of expr * expr * expr * expr_id
-  | Match of expr * expr * (string * string) * expr * expr_id
-  | Let of string * typ option * expr * expr * expr_id
-  | LetRec of string * typ option * expr * expr * expr_id
-  | Abs of string * typ option * expr * expr_id
-  | App of expr * expr * expr_id
-  | Cast of typ * typ * expr * expr_id
+
+(* Expression language *)
+module Exp = struct
+  type expr_id = string
+
+  type t =
+      Num of int * expr_id
+    | Var of string * expr_id
+    | Nil of expr_id
+    | Cons of t * t * expr_id
+    | If of t * t * t * expr_id
+    | Match of t * t * (string * string) * t * expr_id
+    | Let of string * typ option * t * t * expr_id
+    | LetRec of string * typ option * t * t * expr_id
+    | Abs of string * typ option * t * expr_id
+    | App of t * t * expr_id
+
+  let compare = compare
+  let hash = Hashtbl.hash
+  let equal = (==)
+end
+
+
+module ExpMap = Map.Make(Exp)
 
 (* Values resulting from evalutation *)
 type value =
     NumVal of int
   | ListVal of value list
-  | Closure of string * expr * string option * (string * value) list
+  | Closure of string * Exp.t * string option * (string * value) list
 
 
 (* Expression evaluator *)
@@ -39,25 +53,25 @@ let bool_to_val b =
 let eval exp =
   let rec eval_rec exp env =
     match exp with
-	Num(n, _) ->
+	Exp.Num(n, _) ->
 	  NumVal n
-      | ExpVar(x, _) ->
+      | Exp.Var(x, _) ->
 	  List.assoc x env
-      | Nil _ ->
+      | Exp.Nil _ ->
           ListVal []
-      | Cons(e1, e2, _) ->
+      | Exp.Cons(e1, e2, _) ->
           begin match eval_rec e2 env with
               ListVal l ->
                 ListVal ((eval_rec e1 env)::l)
             | _ -> raise BogusEvalError
           end
-      | If(c, e1, e2, _) ->
+      | Exp.If(c, e1, e2, _) ->
 	  begin match (eval_rec c env) with
 	      NumVal 0 -> eval_rec e2 env
 	    | NumVal 1 -> eval_rec e1 env
 	    | _ -> raise BogusEvalError
 	  end
-      | Match(e1, e2, (h, t), e3, _) ->
+      | Exp.Match(e1, e2, (h, t), e3, _) ->
           begin match eval_rec e1 env with
               ListVal([]) ->
                 eval_rec e2 env
@@ -66,19 +80,19 @@ let eval exp =
             | _ ->
                 raise BogusEvalError
           end
-      | Let(x, _, e, e', _) ->
+      | Exp.Let(x, _, e, e', _) ->
 	  let xv = eval_rec e env in
 	  let env' = (x, xv)::env in
 	    eval_rec e' env'
-      | LetRec(f, _, Abs(x, _, e, _), e', _) ->
+      | Exp.LetRec(f, _, Exp.Abs(x, _, e, _), e', _) ->
           let fv = Closure(x, e, Some f, env) in
           let env' = (f, fv)::env in
             eval_rec e' env'
-      | LetRec _ ->
+      | Exp.LetRec _ ->
           raise BogusEvalError
-      | Abs(x, _, e, _) ->
+      | Exp.Abs(x, _, e, _) ->
 	  Closure(x, e, None, env)
-      | App(e1, e2, _) ->
+      | Exp.App(e1, e2, _) ->
 	  let e2' = eval_rec e2 env in
 	    begin match eval_rec e1 env with
 		Closure(x, e, fix, cenv) as c ->
@@ -92,33 +106,48 @@ let eval exp =
 		    eval_rec e newenv
 	      | _ -> raise BogusEvalError
 	    end
-      | Cast(_, _, e, _) ->
-          eval_rec e env
-  in
-    eval_rec exp []
+  in eval_rec exp []
+
+
+let expr_to_predicate_expression = function
+    Exp.Num(n, _) ->
+      PInt n
+  | Exp.Var(x, _) ->
+      Var x
+  | _ -> fresh_expressionvar()
+
+
+let expr_builtin_qualifier exp =
+  match exp with
+      Exp.Num(n, _) ->
+        Some(Builtins.equality_qualifier (PInt n))
+    | Exp.Var(x, _) ->
+        if Env.mem x Builtins.types then
+          None
+        else
+          Some(Builtins.equality_qualifier (Var x))
+    | _ -> None
 
 
 let expr_get_subexprs = function
-    Num _
-  | ExpVar _
-  | Nil _ ->
+    Exp.Num _
+  | Exp.Var _
+  | Exp.Nil _ ->
       []
-  | Cons(e1, e2, _) ->
+  | Exp.Cons(e1, e2, _) ->
       [e1; e2]
-  | If(e1, e2, e3, _) ->
+  | Exp.If(e1, e2, e3, _) ->
       [e1; e2; e3]
-  | Match(e1, e2, _, e3, _) ->
+  | Exp.Match(e1, e2, _, e3, _) ->
       [e1; e2; e3]
-  | Let(_, _, e1, e2, _) ->
+  | Exp.Let(_, _, e1, e2, _) ->
       [e1; e2]
-  | LetRec(_, _, e1, e2, _) ->
+  | Exp.LetRec(_, _, e1, e2, _) ->
       [e1; e2]
-  | Abs(_, _, e, _) ->
+  | Exp.Abs(_, _, e, _) ->
       [e]
-  | App(e1, e2, _) ->
+  | Exp.App(e1, e2, _) ->
       [e1; e2]
-  | Cast(_, _, e, _) ->
-      [e]
 
 
 let rec expr_map f e =
@@ -127,32 +156,10 @@ let rec expr_map f e =
     rv::rest
 
 
-let expr_to_predicate_expression = function
-    Num(n, _) ->
-      PInt n
-  | ExpVar(x, _) ->
-      Var x
-  | _ ->
-      fresh_expressionvar()
-
-
-let expr_builtin_qualifier exp =
-  match exp with
-      Num(n, _) ->
-        Some(Builtins.equality_qualifier (PInt n))
-    | ExpVar(x, _) ->
-        if Env.mem x Builtins.types then
-          None
-        else
-          Some(Builtins.equality_qualifier (Var x))
-    | _ ->
-        None
-
-
 let expr_required_builtin_quals exp =
-  let quals = expr_map expr_builtin_qualifier exp in
-    (* pmr: gross *)
-    Misc.mapfilter (fun x -> x) quals
+  (* pmr: gross misuse of mapfilter - some expressions are going to return None if
+     they have no built-in quals *)
+  let quals = expr_map expr_builtin_qualifier exp in Misc.mapfilter (fun x -> x) quals
 
 
 let rec pprint_annotated_expr annotator indent exp =
@@ -161,29 +168,27 @@ let rec pprint_annotated_expr annotator indent exp =
   let pprint_ind = pprint_annotated_expr annotator (indent + 2) in
   let pprint_expr_simple e =
     match e with
-      Num(n, _) ->
+      Exp.Num(n, _) ->
 	string_of_int n
-    | ExpVar(x, _) ->
+    | Exp.Var(x, _) ->
 	x
-    | Nil _ ->
+    | Exp.Nil _ ->
         "Nil"
-    | Cons(e1, e2, _) ->
+    | Exp.Cons(e1, e2, _) ->
         Printf.sprintf "%s::%s" (pprint_rec e1) (pprint_rec e2)
-    | If(e1, e2, e3, _) ->
+    | Exp.If(e1, e2, e3, _) ->
 	Printf.sprintf "if %s then\n%s\n%selse\n%s\n" (pprint_rec e1) (pprint_ind e2) indstr (pprint_ind e3)
-    | Match(e1, e2, (h, t), e3, _) ->
+    | Exp.Match(e1, e2, (h, t), e3, _) ->
         Printf.sprintf "match %s with\n%sNil ->\n%s\n%s| Cons(%s, %s) ->\n%s"
           (pprint_rec e1) indstr (pprint_ind e2) indstr h t (pprint_ind e3)
-    | Let(x, _, e1, e2, _) ->
+    | Exp.Let(x, _, e1, e2, _) ->
 	Printf.sprintf "let %s = %s in\n%s\n" x (pprint_rec e1) (pprint_ind e2)
-    | LetRec(f, _, e1, e2, _) ->
+    | Exp.LetRec(f, _, e1, e2, _) ->
         Printf.sprintf "letrec %s = %s in\n%s\n" f (pprint_rec e1) (pprint_rec e2)
-    | Abs(x, _, e, _) ->
+    | Exp.Abs(x, _, e, _) ->
 	Printf.sprintf "fun %s ->\n%s\n" x (pprint_ind e)
-    | App(e1, e2, _) ->
+    | Exp.App(e1, e2, _) ->
 	Printf.sprintf "%s %s" (pprint_rec e1) (pprint_rec e2)
-    | Cast(t1, t2, e, _) ->
-        Printf.sprintf "(%s ! %s) %s" (pprint_type t1) (pprint_type t2) (pprint_rec e)
   in
   let annot = annotator exp in
   let expstr = pprint_expr_simple exp in
