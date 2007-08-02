@@ -71,4 +71,4 @@ let frames = Env.addn _frames Env.empty
 
 
 let equality_qualifier exp =
-  ("__EQ" ^ pprint_expression exp, PredOver(xv, equals(Var xv, exp)))
+  ("__EQ" ^ pprint_pexpr exp, PredOver(xv, equals(Var xv, exp)))

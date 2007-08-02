@@ -40,7 +40,7 @@
 #
 # Include path
 #
-OCAMLINCLUDES += . ../ /usr/lib/ocaml/3.09.2/ocamlgraph/ /usr/lib/ocaml/3.09.2/oUnit/
+OCAMLINCLUDES += . ../
 
 #
 # Compile native or byte code?
@@ -55,18 +55,17 @@ NATIVE_ENABLED = false
 # OCAMLCFLAGS   +=
 # OCAMLOPTFLAGS +=
 # OCAML_LINK_FLAGS +=
-OCAML_BYTE_LINK_FLAGS += -ccopt -L../yices/lib/ -cclib -loyices -cclib -lyices -cclib -lgmp
-OCAML_NATIVE_LINK_FLAGS += -lstdc++ -lgmp
+# OCAML_BYTE_LINK_FLAGS +=
+# OCAML_NATIVE_LINK_FLAGS +=
 
 ################################################
 # Build an OCaml program
 #
 
-FILES = ../misc ../theoremProver ../predicate ../env ../type ../builtins ../expr ../frame ../constraint ../infer test_constraint test_ml_infer suite
-PROGRAM = suite
-OCAML_LIBS += /usr/lib/ocaml/3.09.2/oUnit/oUnit ../yices/lib/oyices
+FILES = ../predicate warnings terminfo clflags misc linenum location longident syntaxerr lexer parser
+PROGRAM = microml
+# OCAML_LIBS +=
 # OCAML_CLIBS +=
-OCAML_OTHER_LIBS += unix
-# OCAML_LIB_FLAGS += -lgraph
-OCamlProgram($(PROGRAM), $(FILES))
-.DEFAULT: $(PROGRAM).run
+# OCAML_OTHER_LIBS += 
+# OCAML_LIB_FLAGS += 
+.DEFAULT: parser.ml

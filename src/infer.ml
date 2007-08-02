@@ -1,4 +1,7 @@
+open Asttypes
 open Expr
+open Parsetree
+open Longident
 open Type
 open Frame
 open Predicate
@@ -54,52 +57,55 @@ let fresh_bindvar = Misc.make_get_fresh (fun x -> "_" ^ x)
 let maplist f sm = ExpMap.fold (fun k v r -> (f k v)::r) sm []
 
 let pprint_shapemap smap =
-  let shapes = maplist (fun e t -> (pprint_expr e) ^ "\n::> " ^ (pprint_typ t)) smap in
+  let shapes = maplist (fun e t -> (pprint_expression e) ^ "\n::> " ^ (pprint_typ t)) smap in
     Misc.join shapes "\n\n"
 
 
 let infer_shapes exp =
   let rec infer_rec e tenv constrs shapemap =
-    match e with
-	Exp.Num _ ->
+    match e.pexp_desc with
+	Pexp_constant(Const_int _) ->
 	  (Int, constrs, shapemap)
-      | Exp.Var(x, _) ->
+      | Pexp_ident(Lident x) ->
 	  (instantiate_typ (Env.find x tenv), constrs, shapemap)
-      | Exp.Nil _ ->
+      | Pexp_construct(Lident "[]", _, _) ->
           (List (fresh_tyvar ()), constrs, shapemap)
-      | Exp.Cons(e1, e2, _) ->
+      | Pexp_construct(Lident "::", Some {pexp_desc = Pexp_tuple [e1; e2]}, _) ->
           let (t1, constrs'', sm'') = infer_mono e1 tenv constrs shapemap in
           let (t2, constrs', sm') = infer_mono e2 tenv constrs'' sm'' in
           let t = List t1 in
             (t, (t, t2)::constrs', sm')
-      | Exp.If(c, e1, e2, _) ->
+      | Pexp_ifthenelse(c, e1, Some e2) ->
 	  let (tc, constrsc, sm) = infer_mono c tenv constrs shapemap in
 	  let (t1, constrs1, sm') = infer_mono e1 tenv constrsc sm in
 	  let (t2, constrs2, sm'') = infer_mono e2 tenv constrs1 sm' in
 	    (t1, (t1, t2)::(tc, Int)::constrs2, sm'')
-      | Exp.Match(e1, e2, (h, t), e3, _) ->
+(* pmr: well, this could be tedious... *)
+(*      | Exp.Match(e1, e2, (h, t), e3, _) ->
           let (t1, constrs''', sm''') = infer_mono e1 tenv constrs shapemap in
           let (t2, constrs'', sm'') = infer_mono e2 tenv constrs''' sm''' in
           let tl = fresh_tyvar () in
           let tenv' = Env.addn [(h, tl); (t, List tl)] tenv in
           let (t3, constrs', sm') = infer_mono e3 tenv' constrs'' sm'' in
-            (t3, (t1, List tl)::(t2, t3)::constrs', sm')
-      | Exp.App(e1, e2, _) ->
-	  let (t1, constrs1, sm') = infer_mono e1 tenv constrs shapemap in
-	  let (t2, constrs2, sm'') = infer_mono e2 tenv constrs1 sm' in
-	  let returnty = fresh_tyvar() in
-	  let funty = Arrow(fresh_bindvar(), t2, returnty) in
-	    (returnty, (t1, funty)::constrs2, sm'')
-      | Exp.Abs(x, _, e, _) ->
+            (t3, (t1, List tl)::(t2, t3)::constrs', sm') *)
+      | Pexp_apply(e, exps) ->
+	  let type_application (t1, cs, sm) (_, e2) =
+	    let (t2, cs'', sm'') = infer_mono e2 tenv cs sm in
+	    let returnty = fresh_tyvar() in
+	    let funty = Arrow(fresh_bindvar(), t2, returnty) in
+	      (returnty, (t1, funty)::cs'', sm'')
+	  in List.fold_left type_application (infer_mono e tenv constrs shapemap) exps
+      | Pexp_function(_, _, [({ppat_desc = Ppat_var x}, e)]) ->
 	  let t = fresh_tyvar () in
 	  let (t', constrs, sm') = infer_mono e (Env.add x t tenv) constrs shapemap in
 	    (Arrow(x, t, t'), constrs, sm')
-      | Exp.Let(x, _, ex, e, _) ->
+      | Pexp_let(Nonrecursive, [({ppat_desc = Ppat_var x}, ex)], e) ->
 	  let (tx, constrsx, sm') = infer_general ex tenv constrs shapemap in
             infer_mono e (Env.add x tx tenv) constrsx sm'
-      | Exp.LetRec(f, _, ex, e, _) ->
-          let (tf', constrs'', sm'') = infer_rec_general ex f tenv constrs shapemap in
+      | Pexp_let(Recursive, [({ppat_desc = Ppat_var f}, ef)], e) ->
+          let (tf', constrs'', sm'') = infer_rec_general ef f tenv constrs shapemap in
             infer_mono e (Env.add f tf' tenv) constrs'' sm''
+      | _ -> raise ExpressionNotSupported
   and infer_mono e tenv constrs shapemap =
     let (t, cs, sm) = infer_rec e tenv constrs shapemap in (t, cs, ExpMap.add e t sm)
   and infer_general e tenv constrs shapemap =
@@ -126,10 +132,10 @@ let subtype_constraints exp quals shapemap =
   let fresh_frame e = fresh_frame_from_typ (ExpMap.find e shapemap) in
   let rec constraints_rec e env guard constrs framemap =
     let (f, cs, fm) =
-      match e with
-	  Exp.Num(n, _) ->
+      match e.pexp_desc with
+	  Pexp_constant(Const_int n) ->
 	    (FInt([], [Builtins.equality_qualifier (PInt n)]), constrs, framemap)
-        | Exp.Var(x, _) ->
+	| Pexp_ident(Lident x) ->
             let f =
               match ExpMap.find e shapemap with
                   Int ->
@@ -137,9 +143,9 @@ let subtype_constraints exp quals shapemap =
                 | _ ->
                     instantiate_frame (Env.find x env)
             in (f, constrs, framemap)
-        | Exp.Nil _ ->
+	| Pexp_construct(Lident "[]", _, _) ->
             (fresh_frame e, constrs, framemap)
-        | Exp.Cons(e1, e2, _) ->
+	| Pexp_construct(Lident "::", Some {pexp_desc = Pexp_tuple [e1; e2]}, _) ->
             begin match fresh_frame e with
                 FList f ->
                   let (f1, constrs'', fm'') = constraints_rec e1 env guard constrs framemap in
@@ -150,7 +156,7 @@ let subtype_constraints exp quals shapemap =
                     end
               | _ -> failwith "Fresh frame has wrong shape - expected list"
             end
-        | Exp.Abs(x, _, e', _) ->
+	| Pexp_function(_, _, [({ppat_desc = Ppat_var x}, e')]) ->
 	    begin match fresh_frame e with
 	        FArrow(_, f, f') ->
 		  let env' = Env.add x f env in
@@ -158,16 +164,17 @@ let subtype_constraints exp quals shapemap =
 		    (FArrow(x, f, f'), SubType(env', guard, f'', f')::constrs', fm')
 	      | _ -> failwith "Fresh frame has wrong shape - expected arrow"
 	    end
-        | Exp.App(e1, e2, _) ->
-	    begin match constraints_rec e1 env guard constrs framemap with
-	        (FArrow(x, f, f'), constrs', fm') ->
-		  let (f2, constrs'', fm'') = constraints_rec e2 env guard constrs' fm' in
-		  let pe2 = expr_to_predicate_expression e2 in
-		  let f'' = frame_apply_subst (x, pe2) f' in
-		    (f'', SubType(env, guard, f2, f)::constrs'', fm'')
-	      | _ -> failwith "Subexpression frame has wrong shape - expected arrow"
-	    end
-        | Exp.If(e1, e2, e3, _) ->
+	| Pexp_apply(e1, exps) ->
+	    let constrain_application (f, cs, fm) (_, e2) =
+	      match f with
+		  FArrow(x, f, f') ->
+		    let (f2, cs', fm') = constraints_rec e2 env guard cs fm in
+		    let pe2 = expression_to_pexpr e2 in
+		    let f'' = frame_apply_subst (x, pe2) f' in
+		      (f'', SubType(env, guard, f2, f)::cs', fm')
+		| _ -> failwith "Subexpression frame has wrong shape - expected arrow"
+	    in List.fold_left constrain_application (constraints_rec e1 env guard constrs framemap) exps
+	| Pexp_ifthenelse(e1, e2, Some e3) ->
             let f = fresh_frame e in
             let (f1, constrs''', fm''') = constraints_rec e1 env guard constrs framemap in
             let guardvar = fresh_bindvar() in
@@ -178,7 +185,7 @@ let subtype_constraints exp quals shapemap =
             let guard3 = And(Not(guardp), guard) in
             let (f3, constrs', fm') = constraints_rec e3 env' guard3 constrs'' fm'' in
               (f, SubType(env', guard2, f2, f)::SubType(env', guard3, f3, f)::constrs', fm')
-        | Exp.Match(e1, e2, (h, t), e3, _) ->
+(*        | Exp.Match(e1, e2, (h, t), e3, _) ->
             begin match constraints_rec e1 env guard constrs framemap with
                 (FList f1, constrs''', fm''') ->
                   let (f2, constrs'', fm'') = constraints_rec e2 env guard constrs''' fm''' in
@@ -187,14 +194,14 @@ let subtype_constraints exp quals shapemap =
                   let f = fresh_frame e in
                     (f, SubType(env, guard, f2, f)::SubType(env', guard, f3, f)::constrs', fm')
               | _ -> failwith "Wrong shape for match guard - expected list"
-            end
-        | Exp.Let(x, _, e1, e2, _) ->
+            end *)
+	| Pexp_let(Nonrecursive, [({ppat_desc = Ppat_var x}, e1)], e2) ->
             let (f1, constrs'', fm'') = constraints_rec e1 env guard constrs framemap in
             let env' = Env.add x (generalize_frame_like_typ f1 (ExpMap.find e1 shapemap)) env in
             let (f2, constrs', fm') = constraints_rec e2 env' guard constrs'' fm'' in
             let f = fresh_frame e in
               (f, SubType(env', guard, f2, f)::constrs', fm')
-        | Exp.LetRec(f, _, e1, e2, _) ->
+	| Pexp_let(Recursive, [({ppat_desc = Ppat_var f}, e1)], e2) ->
             let f1'' = fresh_frame e1 in
             let env'' = Env.add f f1'' env in
             let (f1', constrs'', fm'') = constraints_rec e1 env'' guard constrs framemap in
@@ -202,14 +209,14 @@ let subtype_constraints exp quals shapemap =
             let (f2, constrs', fm') = constraints_rec e2 env' guard constrs'' fm'' in
             let f = fresh_frame e in
               (f, SubType(env', guard, f2, f)::SubType(env'', guard, f1', f1'')::constrs', fm')
+	| _ -> raise ExpressionNotSupported
     in (f, cs, ExpMap.add e f fm)
   in constraints_rec exp Builtins.frames True [] ExpMap.empty
 
 
 let infer_frames exp quals =
   let shapemap = infer_shapes exp in
-  let qs = Env.addn (expr_required_builtin_quals exp) quals in
+  let qs = Env.addn (expression_required_builtin_quals exp) quals in
   let (fr, constrs, fmap) = subtype_constraints exp qs shapemap in
   let solution = solve_constraints qs constrs in
-  let _ = Printf.printf "%s\n\n" (pprint_frame fr) in
-    (fun e -> frame_apply_solution solution (ExpMap.find e fmap))
+    ExpMap.map (frame_apply_solution solution) fmap

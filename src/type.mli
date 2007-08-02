@@ -21,7 +21,7 @@ val generalize_typ: typ -> typ Env.t -> typ
 val instantiate_typ: typ -> typ
 
 val qualify: string -> qualifier -> predicate
-val qualifier_subst: expression -> string -> qualifier -> qualifier
+val qualifier_subst: pexpr -> string -> qualifier -> qualifier
 val qualifier_well_formed: string list -> qualifier -> bool
 
 val pprint_typ: typ -> string

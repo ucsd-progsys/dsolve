@@ -20,7 +20,7 @@
 # If so, define the subdirectory targets and uncomment this section.
 #
 
-.SUBDIRS: test/
+.SUBDIRS: ocaml-parser/
 
 ################################################
 # Configuration.  You may want to modify any of these configuration
@@ -40,7 +40,7 @@
 #
 # Include path
 #
-OCAMLINCLUDES += . /usr/lib/ocaml/3.09.2/ocamlgraph/ ./yices/lib/
+OCAMLINCLUDES += . ./ocaml-parser/ /usr/lib/ocaml/3.09.2/ocamlgraph/ ./yices/lib/
 
 #
 # Compile native or byte code?
@@ -62,7 +62,10 @@ OCAML_NATIVE_LINK_FLAGS += -lstdc++ -lgmp
 # Build an OCaml program
 #
 
-FILES = predicate theoremProver env frame constraint type builtins expr infer misc parser lexer microml
+FILES = misc predicate theoremProver env frame constraint type builtins expr infer \
+        ocaml-parser/warnings ocaml-parser/linenum ocaml-parser/syntaxerr ocaml-parser/clflags \
+        ocaml-parser/printast \
+	ocaml-parser/location ocaml-parser/opmisc ocaml-parser/lexer ocaml-parser/parser ocaml-parser/parse microml
 PROGRAM = microml
 OCAML_LIBS += ./yices/lib/oyices
 #OCAML_CLIBS += ./yices/lib/liboyices

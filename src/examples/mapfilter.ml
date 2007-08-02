@@ -20,4 +20,12 @@ let pos = fun y ->
   else
     []
 in
-  mapfilter pos 1::2::-1::[];;
+let neg = fun w ->
+  if w < 0 then
+    w::[]
+  else
+    []
+in
+let i = mapfilter pos 1::2::-1::[] in
+let h = mapfilter neg 1::2::-1::[] in
+  3;;

@@ -2,7 +2,7 @@ open Predicate
 open Type
 
 
-type subst = (string * expression) list
+type subst = (string * pexpr) list
 
 type frame =
     FArrow of string * frame * frame
@@ -14,7 +14,7 @@ type frame =
 
 
 val pprint_frame: frame -> string
-val frame_apply_subst: (string * expression) -> frame -> frame
+val frame_apply_subst: (string * pexpr) -> frame -> frame
 
 val fresh_frame_from_typ: typ -> frame
 

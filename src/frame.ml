@@ -2,7 +2,7 @@ open Predicate
 open Type
 
 
-type subst = (string * expression) list
+type subst = (string * pexpr) list
 
 type frame =
     FArrow of string * frame * frame
@@ -16,7 +16,7 @@ let fresh_framevar = Misc.make_get_fresh (fun x -> FVar([], String.uppercase x))
 
 
 let pprint_subst subs =
-  Misc.join (List.map (fun (x, e) -> Printf.sprintf "%s -> %s" x (pprint_expression e)) subs) "; "
+  Misc.join (List.map (fun (x, e) -> Printf.sprintf "%s -> %s" x (pprint_pexpr e)) subs) "; "
 
 
 let rec pprint_frame = function

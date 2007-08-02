@@ -11,17 +11,17 @@ type binrel =
   | Le 
 
 
-type expression =
+type pexpr =
     PInt of int 
   | Var of string
   | Pvar of string * int
-  | FunApp of string * expression
-  | Binop of expression * binop * expression 
+  | FunApp of string * pexpr
+  | Binop of pexpr * binop * pexpr 
 
 
 type predicate =
     True
-  | Atom of expression * binrel * expression 
+  | Atom of pexpr * binrel * pexpr 
   | Not of predicate
   | And of predicate * predicate 
   | Or of predicate * predicate
@@ -102,7 +102,7 @@ let implies(p, q) =
   Or(Not p, q)
 
 
-let fresh_expressionvar = Misc.make_get_fresh (fun x -> Var ("__" ^ x))
+let fresh_pexprvar = Misc.make_get_fresh (fun x -> Var ("__" ^ x))
 
 
 let pprint_binop frec e1 op e2 =
@@ -128,7 +128,7 @@ let pprint_binrel frec e1 rel e2 =
     Misc.join [str1; relstr; str2] " "
 
 
-let rec pprint_expression = function
+let rec pprint_pexpr = function
     PInt(n) ->
       string_of_int n
   | Var x ->
@@ -136,16 +136,16 @@ let rec pprint_expression = function
   | Pvar(x, n) ->
       x ^ "_" ^ (string_of_int n)
   | FunApp(f, e) ->
-      Printf.sprintf "%s(%s)" f (pprint_expression e)
+      Printf.sprintf "%s(%s)" f (pprint_pexpr e)
   | Binop(e1, op, e2) ->
-      pprint_binop pprint_expression e1 op e2
+      pprint_binop pprint_pexpr e1 op e2
 
 
 let rec pprint_predicate = function
     True ->
       "true"
   | Atom(e1, rel, e2) ->
-      "(" ^ pprint_binrel pprint_expression e1 rel e2 ^ ")"
+      "(" ^ pprint_binrel pprint_pexpr e1 rel e2 ^ ")"
   | Not(p) ->
       "(not " ^ pprint_predicate p ^ ")"
   | And(p, q) ->

@@ -1,21 +1,23 @@
-pred U(x): x < alen;;
-pred L(x): 0 <= x;;
-pred N(x): x < 0;;
+qual U(x): x < a;;
+qual L(x): 0 <= x;;
 
 ? let bsearch = fun k -> fun a ->
-  let look = fun l -> fun h ->
+  letrec look = fun l -> fun h ->
     if l <= h then
-      let m = l + (h - l) in
-	if Ref(a, m) = k then
-	  Some(m, x)
+      let f = h - l in
+      let m = l + f in
+	if m = k then
+	  (fun z -> z) m
 	else
-	  if Ref(a, m) < k then
+	  if m < k then
 	    look l (m - 1)
 	  else
 	    look (m + 1) h
     else
-      None
+      -1
   in
-    look 0 (alen - 1)
+    look 0 (a - 1)
 in
-  bsearch c r;;
+let w = bsearch 0 10 in
+let b = bsearch 5 12 in
+  w;;
