@@ -361,6 +361,7 @@ The precedences must be listed from low to high.
 %nonassoc SHARP                         /* simple_expr/toplevel_directive */
 %nonassoc below_DOT
 %nonassoc DOT
+%nonassoc NOT
 /* Finally, the first tokens of simple_expr are above everything else. */
 %nonassoc BACKQUOTE BEGIN CHAR FALSE FLOAT INT INT32 INT64
           LBRACE LBRACELESS LBRACKET LBRACKETBAR LIDENT LPAREN
@@ -1395,7 +1396,7 @@ label:
 /* Qualifiers */
 
 qualifier_declaration:
-    LIDENT LPAREN LIDENT RPAREN EQUAL predicate
+    UIDENT LPAREN LIDENT RPAREN EQUAL predicate
       { (Pstr_qual($1, mkqual(Pqual($3, $6)))) }
 
 /* Predicates */
@@ -1405,13 +1406,13 @@ predicate:
   | pexpression LESS pexpression		{ mkpred (Ppred_atom($1, Pred_lt, $3)) }
   | pexpression LESSEQ pexpression		{ mkpred (Ppred_atom($1, Pred_le, $3)) }
   | pexpression EQUAL pexpression		{ mkpred (Ppred_atom($1, Pred_eq, $3)) }
-  | NOT pexpression				{ mkpred (Ppred_not $2) }
-  | pexpression AND pexpression			{ mkpred (Ppred_and($1, $3)) }
-  | pexpression OR pexpression			{ mkpred (Ppred_or($1, $3)) }
+  | NOT predicate				{ mkpred (Ppred_not $2) }
+  | predicate AND predicate			{ mkpred (Ppred_and($1, $3)) }
+  | predicate OR predicate			{ mkpred (Ppred_or($1, $3)) }
 
 pexpression:
     INT						{ mkpredexp (Ppredexp_int $1) }
-  | UIDENT					{ mkpredexp (Ppredexp_var $1) }
+  | LIDENT					{ mkpredexp (Ppredexp_var $1) }
   | pexpression PLUS pexpression		{ mkpredexp (Ppredexp_binop($1, Predexp_plus, $3)) }
   | pexpression MINUS pexpression		{ mkpredexp (Ppredexp_binop($1, Predexp_minus, $3)) }
   | pexpression STAR pexpression		{ mkpredexp (Ppredexp_binop($1, Predexp_times, $3)) }

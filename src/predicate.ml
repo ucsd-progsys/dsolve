@@ -1,3 +1,7 @@
+open Parsetree
+open Asttypes
+
+
 type binop =
     Plus
   | Minus
@@ -103,6 +107,46 @@ let implies(p, q) =
 
 
 let fresh_pexprvar = Misc.make_get_fresh (fun x -> Var ("__" ^ x))
+
+
+let rec parse_predicate p =
+  let parse_op = function
+      Predexp_plus -> Plus
+    | Predexp_minus -> Minus
+    | Predexp_times -> Times
+  in
+  let rec parse_pexpression pexp =
+    match pexp.ppredexp_desc with
+	Ppredexp_int (n) ->
+	  PInt n
+      | Ppredexp_var (y) ->
+	  Var y
+      | Ppredexp_pvar (y, n) ->
+	  Pvar (y, n)
+      | Ppredexp_app (f, e) ->
+	  FunApp (f, parse_pexpression e)
+      | Ppredexp_binop (e1, op, e2) ->
+	  Binop (parse_pexpression e1, parse_op op, parse_pexpression e2)
+  in
+  let parse_rel = function
+      Pred_eq -> Eq
+    | Pred_ne -> Ne
+    | Pred_lt -> Lt
+    | Pred_le -> Le
+  in
+  let rec parse_pred_rec pred =
+    match pred.ppred_desc with
+	Ppred_true ->
+	  True
+      | Ppred_atom (e1, rel, e2) ->
+	  Atom (parse_pexpression e1, parse_rel rel, parse_pexpression e2)
+      | Ppred_not (p) ->
+	  Not (parse_predicate p)
+      | Ppred_and (p1, p2) ->
+	  And (parse_predicate p1, parse_predicate p2)
+      | Ppred_or (p1, p2) ->
+	  Or (parse_predicate p1, parse_predicate p2)
+  in parse_pred_rec p
 
 
 let pprint_binop frec e1 op e2 =

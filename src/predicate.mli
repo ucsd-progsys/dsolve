@@ -37,5 +37,7 @@ val fresh_pexprvar: unit -> pexpr
 val predicate_subst: pexpr -> string -> predicate -> predicate
 val predicate_vars: predicate -> string list
 
+val parse_predicate: Parsetree.predicate -> predicate
+
 val pprint_pexpr: pexpr -> string
 val pprint_predicate: predicate -> string

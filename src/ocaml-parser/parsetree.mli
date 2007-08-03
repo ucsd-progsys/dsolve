@@ -157,9 +157,9 @@ and predicate =
 and pred_desc =
     Ppred_true
   | Ppred_atom of pexpression * pred_rel * pexpression
-  | Ppred_not of pexpression
-  | Ppred_and of pexpression * pexpression
-  | Ppred_or of pexpression * pexpression
+  | Ppred_not of predicate
+  | Ppred_and of predicate * predicate
+  | Ppred_or of predicate * predicate
 
 (* Qualifier declarations *)
 
