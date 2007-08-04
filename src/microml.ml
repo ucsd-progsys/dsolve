@@ -39,14 +39,11 @@ let main () =
   Location.input_lexbuf := Some lb;
   while true do
     try
-      Lexing.flush_input lb;
-      Location.reset();
       let phr = try Parse.toplevel_phrase lb with Exit -> raise PPerror in
 	match phr with
 	    Ptop_def (is) ->
 	      Printf.printf "%s\n" (Misc.join (List.map eval_structure_item is) "\n")
 	  | _ -> raise PPerror
-
     with
     | End_of_file -> exit 0
     | PPerror -> ()
