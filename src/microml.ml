@@ -42,6 +42,7 @@ let main () =
       let phr = try Parse.toplevel_phrase lb with Exit -> raise PPerror in
 	match phr with
 	    Ptop_def (is) ->
+	      Printast.top_phrase Format.std_formatter phr;
 	      Printf.printf "%s\n" (Misc.join (List.map eval_structure_item is) "\n")
 	  | _ -> raise PPerror
     with

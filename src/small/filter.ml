@@ -1,6 +1,6 @@
-qual LX(x): x <= n;;
+qualifier LX(x) = x <= n;;
 
-? letrec filter = fun f -> fun n ->
+let rec filter f n =
   if n = 0 then
     n
   else
@@ -12,6 +12,6 @@ qual LX(x): x <= n;;
       else
         filter f k
 in
-let t = fun s -> s in
+let t s = s in
   filter t 10;;
   

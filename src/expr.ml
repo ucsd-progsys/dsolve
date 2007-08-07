@@ -47,6 +47,8 @@ let expr_get_subexprs e =
     | Pexp_constant _
     | Pexp_construct(_, None, _) ->
 	[]
+    | Pexp_ifthenelse(e1, e2, Some e3) ->
+	[e1; e2; e3]
     | Pexp_let(_, pexps, e) ->
 	e::(exprs_of_expr_pairs pexps)
     | Pexp_function(_, _, pexps) ->

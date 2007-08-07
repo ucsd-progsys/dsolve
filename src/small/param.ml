@@ -1,3 +1,3 @@
-qual EQX(y): y = x;;
+qualifier EQX(y) = y = x;;
 
-? (fun x -> fun y -> y) 3 3;;
+(fun x y -> y) 3 3;;

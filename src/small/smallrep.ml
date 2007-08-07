@@ -1,9 +1,9 @@
-qual LEN(x): x <= n;;
-qual LN(x): x < n;;
-qual LT(x): x < 10;;
-qual LET(x): x <= 10;;
+qualifier LEN(x) = x <= n;;
+qualifier LN(x) = x < n;;
+qualifier LT(x) = x < 10;;
+qualifier LET(x) = x <= 10;;
 
-? letrec foo = fun n -> fun i -> fun f -> fun c ->
+let rec foo n i f c =
   if i < n then
     let d = f i c in
     let k = i + 1 in
@@ -11,5 +11,5 @@ qual LET(x): x <= 10;;
   else
     c
 in
-let g = fun s -> fun t -> s + t in
+let g s t = s + t in
   foo 10 0 g 0;;
