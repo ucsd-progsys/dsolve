@@ -5,6 +5,7 @@ open Graph
 
 
 type subtypconst = SubType of frame Env.t * predicate * frame * frame
+type subrefinementconst = SubRef of frame Env.t * predicate * refinement * refinement
 
 
 module Qualifier: sig
@@ -35,5 +36,5 @@ end
 
 val frame_apply_solution: (string -> QualifierSet.t) -> frame -> frame
 
-val constraint_sat: (string -> QualifierSet.t) -> subtypconst -> bool
+val constraint_sat: (string -> QualifierSet.t) -> subrefinementconst -> bool
 val solve_constraints: parameterized_pred Env.t -> subtypconst list -> (string -> QualifierSet.t)

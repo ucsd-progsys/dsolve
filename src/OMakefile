@@ -20,7 +20,7 @@
 # If so, define the subdirectory targets and uncomment this section.
 #
 
-.SUBDIRS: ocaml-parser/
+.SUBDIRS: ocaml-parser/ test/
 
 ################################################
 # Configuration.  You may want to modify any of these configuration

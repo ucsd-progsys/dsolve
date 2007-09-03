@@ -8,44 +8,44 @@ let empty_solution = Solution.create QualifierSet.empty
 
 
 let simple_guard_succeed () =
-  let greater_than_x = FInt([("y", PInt 4)], [("GREATERX", PredOver("a", Atom(Var "x", Lt, Var "y")))]) in
-  let constr = SubType(Env.empty, equals(Var "x", PInt 3), FInt([], []), greater_than_x) in
+  let greater_than_x = ([("y", PInt 4)], RQuals [("GREATERX", PredOver("a", Atom(Var "x", Lt, Var "y")))]) in
+  let constr = SubRef(Env.empty, equals(Var "x", PInt 3), ([], RQuals []), greater_than_x) in
     assert_bool "y = 4 <= x = 3  ='(" (constraint_sat empty_solution constr)
 
 
 let simple_guard_fail () =
-  let greater_than_x = FInt([("y", PInt 2)], [("GREATERX", PredOver("a", Atom(Var "x", Lt, Var "y")))]) in
-  let constr = SubType(Env.empty, equals(Var "x", PInt 3), FInt([], []), greater_than_x) in
+  let greater_than_x = ([("y", PInt 2)], RQuals [("GREATERX", PredOver("a", Atom(Var "x", Lt, Var "y")))]) in
+  let constr = SubRef(Env.empty, equals(Var "x", PInt 3), ([], RQuals []), greater_than_x) in
     assert_bool "y = 2 > x = 3  ='(" (not (constraint_sat empty_solution constr))
 
 
 let simple_subtype_succeed () =
-  let nneg = FInt([], [("NNEG", PredOver("a", Atom(PInt 0, Le, Var "a")))]) in
-  let pos = FInt([], [("POS", PredOver("b", Atom(PInt 0, Lt, Var "b")))]) in
-  let constr = SubType(Env.empty, True, pos, nneg) in
+  let nneg = ([], RQuals [("NNEG", PredOver("a", Atom(PInt 0, Le, Var "a")))]) in
+  let pos = ([], RQuals [("POS", PredOver("b", Atom(PInt 0, Lt, Var "b")))]) in
+  let constr = SubRef(Env.empty, True, pos, nneg) in
     assert_bool "POS not a subtype of NNEG in empty context" (constraint_sat empty_solution constr)
 
 
 let simple_subtype_fail () =
-  let nneg = FInt([], [("NNEG", PredOver("a", Atom(PInt 0, Le, Var "a")))]) in
-  let pos = FInt([], [("POS", PredOver("b", Atom(PInt 0, Lt, Var "b")))]) in
-  let constr = SubType(Env.empty, True, nneg, pos) in
+  let nneg = ([], RQuals [("NNEG", PredOver("a", Atom(PInt 0, Le, Var "a")))]) in
+  let pos = ([], RQuals [("POS", PredOver("b", Atom(PInt 0, Lt, Var "b")))]) in
+  let constr = SubRef(Env.empty, True, nneg, pos) in
     assert_bool "POS is a subtype of NNEG in empty context" (not (constraint_sat empty_solution constr))
 
 
 let subtype_from_environment_succeed () =
-  let env = Env.add "x" (FInt([], [("NNEG", PredOver("a", Atom(PInt 0, Lt, Var "a")))])) Env.empty in
-  let eqx = FInt([], [("EQX", PredOver("a", Atom(Var "a", Eq, Var "x")))]) in
-  let pos = FInt([], [("POS", PredOver("b", Atom(PInt 0, Lt, Var "b")))]) in
-  let constr = SubType(env, True, eqx, pos) in
+  let env = Env.add "x" (FInt([], RQuals [("NNEG", PredOver("a", Atom(PInt 0, Lt, Var "a")))])) Env.empty in
+  let eqx = ([], RQuals [("EQX", PredOver("a", Atom(Var "a", Eq, Var "x")))]) in
+  let pos = ([], RQuals [("POS", PredOver("b", Atom(PInt 0, Lt, Var "b")))]) in
+  let constr = SubRef(env, True, eqx, pos) in
     assert_bool "EQX not a subtype of POS when x -> {a | 0 < a}" (constraint_sat empty_solution constr)
 
 
 let subtype_from_environment_fail () =
-  let env = Env.add "x" (FInt([], [("NNEG", PredOver("a", Atom(PInt 0, Le, Var "a")))])) Env.empty in
-  let eqx = FInt([], [("EQX", PredOver("a", Atom(Var "a", Eq, Var "x")))]) in
-  let pos = FInt([], [("POS", PredOver("b", Atom(PInt 0, Lt, Var "b")))]) in
-  let constr = SubType(env, True, eqx, pos) in
+  let env = Env.add "x" (FInt([], RQuals [("NNEG", PredOver("a", Atom(PInt 0, Le, Var "a")))])) Env.empty in
+  let eqx = ([], RQuals [("EQX", PredOver("a", Atom(Var "a", Eq, Var "x")))]) in
+  let pos = ([], RQuals [("POS", PredOver("b", Atom(PInt 0, Lt, Var "b")))]) in
+  let constr = SubRef(env, True, eqx, pos) in
     assert_bool "EQX a subtype of POS when x -> {a | 0 <= a}" (not (constraint_sat empty_solution constr))
 
 
@@ -57,7 +57,7 @@ let simple_subtype_from_solution_succeed () =
   let nneg = QualifierSet.from_list [("NNEG", PredOver("a", Atom(PInt 0, Le, Var "a")))] in
   let pos = QualifierSet.from_list [("POS", PredOver("b", Atom(PInt 0, Lt, Var "b")))] in
   let solution = make_solution [("k1", pos); ("k2", nneg)] in
-  let constr = SubType(Env.empty, True, FVar([], "k1"), FVar([], "k2")) in
+  let constr = SubRef(Env.empty, True, ([], RVar "k1"), ([], RVar "k2")) in
     assert_bool "k1 = POS not a subtype of k2 = NNEG with partial solution"
       (constraint_sat solution constr)
 
@@ -66,7 +66,7 @@ let simple_subtype_from_solution_fail () =
   let nneg = QualifierSet.from_list [("NNEG", PredOver("a", Atom(PInt 0, Le, Var "a")))] in
   let pos = QualifierSet.from_list [("POS", PredOver("b", Atom(PInt 0, Lt, Var "b")))] in
   let solution = make_solution [("k1", pos); ("k2", nneg)] in
-  let constr = SubType(Env.empty, True, FVar([], "k2"), FVar([], "k1")) in
+  let constr = SubRef(Env.empty, True, ([], RVar "k2"), ([], RVar "k1")) in
     assert_bool "k2 = NNEG is a subtype of k1 = POS with partial solution"
       (not (constraint_sat solution constr))
 

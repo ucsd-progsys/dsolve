@@ -1,6 +1,6 @@
-qual DEAD(x): not(true);;
+qualifier DEAD(x) = not(true);;
 
-? let y = 3 in
+let y = 3 in
 let x = 3 in
   if y = x then
     let k = y + 1 in

@@ -1,4 +1,7 @@
 open OUnit
+open Asttypes
+open Parsetree
+open Longident
 open Type
 open Expr
 open Infer
@@ -34,12 +37,14 @@ let typs_equal t1 t2 =
 
 let infer_exp_typ e = ExpMap.find e (infer_shapes e)
 
+let mkexp desc = {pexp_desc = desc; pexp_loc = Location.none}
+let mkpat desc = {ppat_desc = desc; ppat_loc = Location.none}
 
-let mklet (x, e1, e2) = Exp.Let(x, None, e1, e2, get_next_exp_id())
-let mkfun (x, e) = Exp.Abs(x, None, e, get_next_exp_id())
-let mkapp (e1, e2) = Exp.App(e1, e2, get_next_exp_id())
-let mkvar x = Exp.Var(x, get_next_exp_id())
-let mknum n = Exp.Num(n, get_next_exp_id())
+let mklet (x, e1, e2) = mkexp (Pexp_let(Nonrecursive, [mkpat (Ppat_var x), e1], e2))
+let mkfun (x, e) = mkexp (Pexp_function("", None, [mkpat (Ppat_var x), e]))
+let mkapp (e1, e2) = mkexp (Pexp_apply(e1, ["", e2]))
+let mkvar x = mkexp (Pexp_ident (Lident x))
+let mknum n = mkexp (Pexp_constant(Const_int n))
 
 
 let test_unif_scaffold () =
@@ -60,7 +65,7 @@ let test_unif_scaffold_generic_neq () =
 
 
 let test_int_inference () =
-  let e = Exp.Num(2, get_next_exp_id()) in
+  let e = mknum 2 in
     assert_bool "2 does not have int type" (typs_equal Int (infer_exp_typ e))
 
 

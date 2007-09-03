@@ -40,7 +40,7 @@
 #
 # Include path
 #
-OCAMLINCLUDES += . ../ /usr/lib/ocaml/3.09.2/ocamlgraph/ /usr/lib/ocaml/3.09.2/oUnit/
+OCAMLINCLUDES += . ../ ../ocaml-parser/ /usr/lib/ocaml/3.09.2/ocamlgraph/ /usr/lib/ocaml/3.09.2/oUnit/
 
 #
 # Compile native or byte code?
@@ -62,7 +62,8 @@ OCAML_NATIVE_LINK_FLAGS += -lstdc++ -lgmp
 # Build an OCaml program
 #
 
-FILES = ../misc ../theoremProver ../predicate ../env ../type ../builtins ../expr ../frame ../constraint ../infer test_constraint test_ml_infer suite
+FILES = ../misc ../theoremProver ../predicate ../env ../type ../builtins ../expr ../frame ../constraint ../infer test_constraint \
+        ../ocaml-parser/warnings ../ocaml-parser/linenum ../ocaml-parser/opmisc ../ocaml-parser/location test_ml_infer suite
 PROGRAM = suite
 OCAML_LIBS += /usr/lib/ocaml/3.09.2/oUnit/oUnit ../yices/lib/oyices
 # OCAML_CLIBS +=

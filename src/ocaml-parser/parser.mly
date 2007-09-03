@@ -1403,6 +1403,7 @@ qualifier_declaration:
 
 predicate:
     TRUE					{ mkpred Ppred_true }
+  | LPAREN predicate RPAREN			{ $2 }
   | pexpression LESS pexpression		{ mkpred (Ppred_atom($1, Pred_lt, $3)) }
   | pexpression LESSEQ pexpression		{ mkpred (Ppred_atom($1, Pred_le, $3)) }
   | pexpression EQUAL pexpression		{ mkpred (Ppred_atom($1, Pred_eq, $3)) }

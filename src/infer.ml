@@ -134,14 +134,15 @@ let subtype_constraints exp quals shapemap =
     let (f, cs, fm) =
       match e.pexp_desc with
 	  Pexp_constant(Const_int n) ->
-	    (FInt([], [Builtins.equality_qualifier (PInt n)]), constrs, framemap)
+	    (FInt([], RQuals [Builtins.equality_qualifier (PInt n)]), constrs, framemap)
 	| Pexp_ident(Lident x) ->
             let f =
-              match ExpMap.find e shapemap with
+              let ty = ExpMap.find e shapemap in
+              match ty with
                   Int ->
-                    FInt([], [Builtins.equality_qualifier (Var x)])
+                    FInt([], RQuals [Builtins.equality_qualifier (Var x)])
                 | _ ->
-                    instantiate_frame (Env.find x env)
+                    instantiate_frame_like_typ (Env.find x env) ty
             in (f, constrs, framemap)
 	| Pexp_construct(Lident "[]", _, _) ->
             (fresh_frame e, constrs, framemap)
@@ -197,7 +198,7 @@ let subtype_constraints exp quals shapemap =
             end *)
 	| Pexp_let(Nonrecursive, [({ppat_desc = Ppat_var x}, e1)], e2) ->
             let (f1, constrs'', fm'') = constraints_rec e1 env guard constrs framemap in
-            let env' = Env.add x (generalize_frame_like_typ f1 (ExpMap.find e1 shapemap)) env in
+            let env' = Env.add x f1 env in
             let (f2, constrs', fm') = constraints_rec e2 env' guard constrs'' fm'' in
             let f = fresh_frame e in
               (f, SubType(env', guard, f2, f)::constrs', fm')
@@ -205,7 +206,7 @@ let subtype_constraints exp quals shapemap =
             let f1'' = fresh_frame e1 in
             let env'' = Env.add f f1'' env in
             let (f1', constrs'', fm'') = constraints_rec e1 env'' guard constrs framemap in
-            let env' = Env.add f (generalize_frame_like_typ f1' (ExpMap.find e1 shapemap)) env in
+            let env' = Env.add f f1' env in
             let (f2, constrs', fm') = constraints_rec e2 env' guard constrs'' fm'' in
             let f = fresh_frame e in
               (f, SubType(env', guard, f2, f)::SubType(env'', guard, f1', f1'')::constrs', fm')

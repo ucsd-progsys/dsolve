@@ -55,7 +55,7 @@ let quals = Env.addn _quals Env.empty
 
 
 let op_frame op qual =
-  (op, FArrow(xv, FInt([], []), FArrow(yv, FInt([], []), FInt([], [qual]))))
+  (op, FArrow(xv, FInt([], RQuals []), FArrow(yv, FInt([], RQuals []), FInt([], RQuals [qual]))))
 
 
 let _frames = [

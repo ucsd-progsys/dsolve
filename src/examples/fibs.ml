@@ -1,7 +1,7 @@
-qual P(x): 0 < x;;
-qual N(x): x < 0;;
+qualifier P(x) = 0 < x;;
+qualifier N(x) = x < 0;;
 
-? letrec fibs = fun n ->
+let rec fibs n =
   if n = 0 then
     []
   else
@@ -15,4 +15,4 @@ qual N(x): x < 0;;
               match l with
                   [] -> []
                 | s::m -> (r + s)::p
-  in fibs 10;;
+in fibs 10;;

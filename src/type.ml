@@ -15,9 +15,7 @@ type typ =
 
 let (fresh_tyvar, reset_fresh_tyvar) = Misc.make_get_fresh_and_reset (fun x -> TyVar x)
 
-let pprint_qual (x, _) = x
-
-let pprint_quals quals = Misc.join (List.map pprint_qual quals) " "
+let pprint_quals quals = Misc.join (List.map (fun (x, _) -> x) quals) " "
 
 let rec pprint_typ = function
     Arrow(x, (Arrow _ as t1), t2) ->
