@@ -14,7 +14,7 @@ type frame =
     FArrow of string * frame * frame
   | FList of frame
   | FTyVar of string
-  | FInt of refinement
+  | FBase of basetyp * refinement
 
 
 val pprint_refinement: refinement -> string

@@ -1,6 +1,7 @@
 open OUnit
 open Predicate
 open Constraint
+open Type
 open Frame
 
 
@@ -34,7 +35,7 @@ let simple_subtype_fail () =
 
 
 let subtype_from_environment_succeed () =
-  let env = Env.add "x" (FInt([], RQuals [("NNEG", PredOver("a", Atom(PInt 0, Lt, Var "a")))])) Env.empty in
+  let env = Env.add "x" (FBase(Int, ([], RQuals [("NNEG", PredOver("a", Atom(PInt 0, Lt, Var "a")))]))) Env.empty in
   let eqx = ([], RQuals [("EQX", PredOver("a", Atom(Var "a", Eq, Var "x")))]) in
   let pos = ([], RQuals [("POS", PredOver("b", Atom(PInt 0, Lt, Var "b")))]) in
   let constr = SubRef(env, True, eqx, pos) in
@@ -42,7 +43,7 @@ let subtype_from_environment_succeed () =
 
 
 let subtype_from_environment_fail () =
-  let env = Env.add "x" (FInt([], RQuals [("NNEG", PredOver("a", Atom(PInt 0, Le, Var "a")))])) Env.empty in
+  let env = Env.add "x" (FBase(Int, ([], RQuals [("NNEG", PredOver("a", Atom(PInt 0, Le, Var "a")))]))) Env.empty in
   let eqx = ([], RQuals [("EQX", PredOver("a", Atom(Var "a", Eq, Var "x")))]) in
   let pos = ([], RQuals [("POS", PredOver("b", Atom(PInt 0, Lt, Var "b")))]) in
   let constr = SubRef(env, True, eqx, pos) in

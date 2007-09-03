@@ -4,10 +4,14 @@ open TheoremProver
 
 type qualifier = string * parameterized_pred
 
+type basetyp =
+    Int
+  | Bool
+
 type typ =
     Arrow of string * typ * typ
   | List of typ
-  | Int
+  | Base of basetyp
   | TyVar of string
   | GenTy of string list * typ
 
@@ -24,5 +28,6 @@ val qualify: string -> qualifier -> predicate
 val qualifier_subst: pexpr -> string -> qualifier -> qualifier
 val qualifier_well_formed: string list -> qualifier -> bool
 
+val pprint_basetyp: basetyp -> string
 val pprint_typ: typ -> string
 val pprint_quals: qualifier list -> string

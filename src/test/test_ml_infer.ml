@@ -28,7 +28,7 @@ let typs_equal t1 t2 =
         with Not_found ->
           ((b, a)::vars, true)
         end
-    | (Int, Int) ->
+    | (Base b1, Base b2) when b1 = b2 ->
         (vars, true)
     | _ ->
         (vars, false)
@@ -49,7 +49,7 @@ let mknum n = mkexp (Pexp_constant(Const_int n))
 
 let test_unif_scaffold () =
   assert_bool "Int and arrow types equal"
-    (not (typs_equal Int (Arrow("x", Int, Int))))
+    (not (typs_equal (Base(Int)) (Arrow("x", Base(Int), Base(Int)))))
 
 
 let test_unif_scaffold_generic () =
@@ -66,7 +66,7 @@ let test_unif_scaffold_generic_neq () =
 
 let test_int_inference () =
   let e = mknum 2 in
-    assert_bool "2 does not have int type" (typs_equal Int (infer_exp_typ e))
+    assert_bool "2 does not have int type" (typs_equal (Base(Int)) (infer_exp_typ e))
 
 
 let test_id_inference () =
@@ -80,7 +80,7 @@ let test_instanitation_type () =
   let e = mklet("id", mkfun("x", mkvar "x"), mkapp(einst, mknum 2)) in
   let smap = infer_shapes e in
     assert_bool "id instantation does not have type int -> int"
-      (typs_equal (ExpMap.find einst smap) (Arrow("x", Int, Int)))
+      (typs_equal (ExpMap.find einst smap) (Arrow("x", Base(Int), Base(Int))))
 
 
 let suite = "Test ML Type Inference" >:::

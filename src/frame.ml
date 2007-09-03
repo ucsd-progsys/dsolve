@@ -16,7 +16,7 @@ type frame =
     FArrow of string * frame * frame
   | FList of frame
   | FTyVar of string
-  | FInt of refinement
+  | FBase of basetyp * refinement
 
 
 let pprint_subst subs =
@@ -35,8 +35,8 @@ let rec pprint_frame = function
       Printf.sprintf "%s: %s -> %s" x (pprint_frame f) (pprint_frame f')
   | FList f ->
       Printf.sprintf "%s list" (pprint_frame f)
-  | FInt r ->
-      Printf.sprintf "%s int" (pprint_refinement r)
+  | FBase(b, r) ->
+      Printf.sprintf "%s %s" (pprint_refinement r) (pprint_basetyp b)
   | FTyVar a ->
       Printf.sprintf "'%s" a
 
@@ -47,8 +47,8 @@ let frame_apply_subst s fr =
 	FArrow(y, apply_subst_rec f, apply_subst_rec f')
     | FList f ->
         FList(apply_subst_rec f)
-    | FInt (ss, rexpr) ->
-	FInt(s::ss, rexpr)
+    | FBase(b, (ss, rexpr)) ->
+	FBase(b, (s::ss, rexpr))
     | FTyVar a ->
         FTyVar a
   in apply_subst_rec fr
@@ -75,7 +75,7 @@ let rec fresh_frame_from_typ = function
       FTyVar a
   | GenTy(_, t) ->
       fresh_frame_from_typ t
-  | Int -> FInt([], fresh_refinementvar())
+  | Base b -> FBase(b, ([], fresh_refinementvar()))
 
 
 (* For each instantiated variable in the frame, replace all instances of that
@@ -89,7 +89,7 @@ let instantiate_frame_like_typ fr ty =
         instantiate_rec sub (f, t)
     | (FTyVar a, t) ->
         (fun f -> frame_subst_ftyvar (fresh_frame_from_typ t) a (sub f))
-    | (FInt _, _) ->
+    | (FBase _, _) ->
         sub
     | _ -> failwith "Mismatched frame/type in instantiate_frame_like_typ"
   in

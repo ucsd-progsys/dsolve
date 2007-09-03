@@ -16,7 +16,7 @@ let rec occurs a = function
       a = a'
   | GenTy _ ->
       failwith "Should not be trying to unify gentypes"
-  | Int ->
+  | Base _ ->
       false
   | List t ->
       occurs a t
@@ -46,7 +46,7 @@ let rec unify = function
 	    unify ((t1, t2)::(t1', t2')::cs)
         | (List t1, List t2) ->
             unify ((t1, t2)::cs)
-	| (Int, Int) ->
+	| (Base _, Base _) ->
 	    unify cs
 	| _ -> raise Unify
 
@@ -65,7 +65,7 @@ let infer_shapes exp =
   let rec infer_rec e tenv constrs shapemap =
     match e.pexp_desc with
 	Pexp_constant(Const_int _) ->
-	  (Int, constrs, shapemap)
+	  (Base(Int), constrs, shapemap)
       | Pexp_ident(Lident x) ->
 	  (instantiate_typ (Env.find x tenv), constrs, shapemap)
       | Pexp_construct(Lident "[]", _, _) ->
@@ -79,7 +79,7 @@ let infer_shapes exp =
 	  let (tc, constrsc, sm) = infer_mono c tenv constrs shapemap in
 	  let (t1, constrs1, sm') = infer_mono e1 tenv constrsc sm in
 	  let (t2, constrs2, sm'') = infer_mono e2 tenv constrs1 sm' in
-	    (t1, (t1, t2)::(tc, Int)::constrs2, sm'')
+	    (t1, (t1, t2)::(tc, Base(Bool))::constrs2, sm'')
 (* pmr: well, this could be tedious... *)
 (*      | Exp.Match(e1, e2, (h, t), e3, _) ->
           let (t1, constrs''', sm''') = infer_mono e1 tenv constrs shapemap in
@@ -134,13 +134,14 @@ let subtype_constraints exp quals shapemap =
     let (f, cs, fm) =
       match e.pexp_desc with
 	  Pexp_constant(Const_int n) ->
-	    (FInt([], RQuals [Builtins.equality_qualifier (PInt n)]), constrs, framemap)
+	    (FBase(Int, ([], RQuals [Builtins.equality_qualifier (PInt n)])),
+             constrs, framemap)
 	| Pexp_ident(Lident x) ->
             let f =
               let ty = ExpMap.find e shapemap in
               match ty with
-                  Int ->
-                    FInt([], RQuals [Builtins.equality_qualifier (Var x)])
+                  Base(b) ->
+                    FBase(b, ([], RQuals [Builtins.equality_qualifier (Var x)]))
                 | _ ->
                     instantiate_frame_like_typ (Env.find x env) ty
             in (f, constrs, framemap)

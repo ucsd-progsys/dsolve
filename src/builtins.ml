@@ -9,15 +9,17 @@ let zv = "z"
 
 
 let op_shape name =
-  (name, Arrow(xv, Int, Arrow(yv, Int, Int)))
+  (name, Arrow(xv, Base(Int), Arrow(yv, Base(Int), Base(Int))))
+let rel_shape name =
+  (name, Arrow(xv, Base(Int), Arrow(yv, Base(Int), Base(Bool))))
 
 let _types = [
   op_shape "+";
   op_shape "-";
-  op_shape "=";
-  op_shape "!=";
-  op_shape "<";
-  op_shape "<=";
+  rel_shape "=";
+  rel_shape "!=";
+  rel_shape "<";
+  rel_shape "<=";
 ]
 
 let types = Env.addn _types Env.empty
@@ -55,16 +57,19 @@ let quals = Env.addn _quals Env.empty
 
 
 let op_frame op qual =
-  (op, FArrow(xv, FInt([], RQuals []), FArrow(yv, FInt([], RQuals []), FInt([], RQuals [qual]))))
-
+  (op, FArrow(xv, FBase(Int, ([], RQuals [])),
+              FArrow(yv, FBase(Int, ([], RQuals [])), FBase(Int, ([], RQuals [qual])))))
+let rel_frame op qual =
+  (op, FArrow(xv, FBase(Int, ([], RQuals [])),
+              FArrow(yv, FBase(Int, ([], RQuals [])), FBase(Bool, ([], RQuals [qual])))))
 
 let _frames = [
   op_frame "+" qplus;
   op_frame "-" qminus;
-  op_frame "=" qequal;
-  op_frame "!=" qnequal;
-  op_frame "<" qless;
-  op_frame "<=" qlesseq;
+  rel_frame "=" qequal;
+  rel_frame "!=" qnequal;
+  rel_frame "<" qless;
+  rel_frame "<=" qlesseq;
 ]
 
 let frames = Env.addn _frames Env.empty

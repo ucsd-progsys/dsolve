@@ -6,16 +6,24 @@ open TheoremProver
 (* Type language *)
 type qualifier = string * parameterized_pred
 
+type basetyp =
+    Int
+  | Bool
+
 type typ =
     Arrow of string * typ * typ
   | List of typ
-  | Int
+  | Base of basetyp
   | TyVar of string
   | GenTy of string list * typ
 
 let (fresh_tyvar, reset_fresh_tyvar) = Misc.make_get_fresh_and_reset (fun x -> TyVar x)
 
 let pprint_quals quals = Misc.join (List.map (fun (x, _) -> x) quals) " "
+
+let pprint_basetyp = function
+  | Int -> "int"
+  | Bool -> "bool"
 
 let rec pprint_typ = function
     Arrow(x, (Arrow _ as t1), t2) ->
@@ -24,8 +32,8 @@ let rec pprint_typ = function
       sprintf "%s: %s -> %s" x (pprint_typ t1) (pprint_typ t2)
   | List t ->
       sprintf "%s list" (pprint_typ t)
-  | Int ->
-      sprintf "int"
+  | Base b ->
+      pprint_basetyp b
   | TyVar a ->
       sprintf "'%s" a
   | GenTy(_, t) ->

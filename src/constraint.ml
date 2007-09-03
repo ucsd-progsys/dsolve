@@ -21,7 +21,7 @@ let split_constraints constrs =
         flatten_rec flat (SubType(env, guard, f1, f2)::cs)
     | SubType(env, guard, FTyVar _, FTyVar _)::cs ->
         flatten_rec flat cs
-    | SubType(env, guard, FInt r1, FInt r2)::cs ->
+    | SubType(env, guard, FBase(b1, r1), FBase(b2, r2))::cs when b1 = b2 ->
         flatten_rec (SubRef(env, guard, r1, r2)::flat) cs
     | [] -> flat
     | SubType(_, _, f1, f2)::cs ->
@@ -66,8 +66,8 @@ let frame_apply_solution solution fr =
         FList(apply_rec f)
     | (FTyVar _) as f ->
         f
-    | FInt r ->
-        FInt(refinement_apply_solution solution r)
+    | FBase(b, r) ->
+        FBase(b, (refinement_apply_solution solution r))
   in apply_rec fr
 
 
@@ -83,7 +83,7 @@ let refinement_predicate solution qual_var = function
 
 
 let frame_predicate solution qual_var = function
-    FInt r -> refinement_predicate solution qual_var r
+    FBase(_, r) -> refinement_predicate solution qual_var r
   | f -> True
 
 
