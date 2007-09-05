@@ -82,6 +82,12 @@ let rec fresh_frame_from_typ = function
    variable with a fresh frame based on the type used for instantiation. *)
 let instantiate_frame_like_typ fr ty =
   let rec instantiate_rec sub = function
+    | (f, GenTy(_, t)) ->
+        (* This is for cases like "let a = [] in let b = a in ..."; a is instantiated,
+           then immediately generalized again.
+           We can just instantiate the frame to look like the generalized type, since we
+           don't do anything special with the genvars anyway. *)
+        instantiate_rec sub (f, t)
     | (FArrow(_, f1, f2), Arrow(_, t1, t2)) ->
         let sub' = instantiate_rec sub (f1, t1) in
           instantiate_rec sub' (f2, t2)
