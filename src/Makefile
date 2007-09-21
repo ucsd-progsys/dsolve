@@ -20,7 +20,8 @@ include stdlib/StdlibModules
 CAMLC=boot/ocamlrun boot/ocamlc -nostdlib -I boot
 CAMLOPT=boot/ocamlrun ./ocamlopt -nostdlib -I stdlib
 COMPFLAGS=-warn-error A $(INCLUDES)
-LINKFLAGS=
+LINKFLAGS=-custom -I yices/lib/ -ccopt -L./yices/lib/ -cclib -loyices -cclib \
+          -lyices -cclib -lgmp
 
 CAMLYACC=boot/ocamlyacc
 YACCFLAGS=-v
@@ -31,8 +32,8 @@ CAMLRUN=byterun/ocamlrun
 SHELL=/bin/sh
 MKDIR=mkdir -p
 
-INCLUDES=-I utils -I parsing -I typing -I bytecomp -I asmcomp -I driver \
-         -I toplevel
+INCLUDES=-I utils -I parsing -I typing -I yices/lib -I qualifying -I bytecomp \
+          -I asmcomp -I driver -I toplevel
 
 UTILS=utils/misc.cmo utils/tbl.cmo utils/config.cmo \
   utils/clflags.cmo utils/terminfo.cmo utils/ccomp.cmo utils/warnings.cmo \
@@ -56,6 +57,9 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/typetexp.cmo typing/stypes.cmo typing/typecore.cmo \
   typing/typedecl.cmo typing/typeclass.cmo \
   typing/typemod.cmo
+
+QUALIFYING=qualifying/predicate.cmo qualifying/frame.cmo \
+  yices/lib/oyices.cma qualifying/theoremProver.cmo
 
 COMP=bytecomp/lambda.cmo bytecomp/printlambda.cmo \
   bytecomp/typeopt.cmo bytecomp/switch.cmo bytecomp/matching.cmo \
@@ -96,13 +100,13 @@ TOPLEVEL=driver/pparse.cmo driver/errors.cmo driver/compile.cmo \
 TOPLEVELLIB=toplevel/toplevellib.cma
 TOPLEVELSTART=toplevel/topstart.cmo
 
-COMPOBJS=$(UTILS) $(PARSING) $(TYPING) $(COMP) $(BYTECOMP) $(DRIVER)
+COMPOBJS=$(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(COMP) $(BYTECOMP) $(DRIVER)
 
-TOPLIB=$(UTILS) $(PARSING) $(TYPING) $(COMP) $(BYTECOMP) $(TOPLEVEL)
+TOPLIB=$(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(COMP) $(BYTECOMP) $(TOPLEVEL)
 
 TOPOBJS=$(TOPLEVELLIB) $(TOPLEVELSTART)
 
-OPTOBJS=$(OPTUTILS) $(PARSING) $(TYPING) $(COMP) $(ASMCOMP) $(OPTDRIVER)
+OPTOBJS=$(OPTUTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(COMP) $(ASMCOMP) $(OPTDRIVER)
 
 EXPUNGEOBJS=utils/misc.cmo utils/tbl.cmo \
   utils/config.cmo utils/clflags.cmo \
@@ -284,7 +288,7 @@ clean:: partialclean
 
 ocamlc: $(COMPOBJS)
 	$(CAMLC) $(LINKFLAGS) -o ocamlc $(COMPOBJS)
-	@sed -e 's|@compiler@|$$topdir/boot/ocamlrun $$topdir/ocamlc|' \
+	@sed -e 's|@compiler@|$$topdir/ocamlc|' \
 	  driver/ocamlcomp.sh.in > ocamlcomp.sh
 	@chmod +x ocamlcomp.sh
 
@@ -528,7 +532,9 @@ alldepend::
 # The library
 
 library: ocamlc
-	cd stdlib; $(MAKE) all
+# pmr: blank runtime because ocamlrun is none too pleased to run things
+# that we link with -custom (e.g., ocamlc)
+	cd stdlib; $(MAKE) RUNTIME= all
 library-cross:
 	cd stdlib; $(MAKE) RUNTIME=../byterun/ocamlrun all
 libraryopt:
@@ -666,6 +672,7 @@ partialclean::
 	rm -f utils/*.cm[iox] utils/*.[so] utils/*~
 	rm -f parsing/*.cm[iox] parsing/*.[so] parsing/*~
 	rm -f typing/*.cm[iox] typing/*.[so] typing/*~
+	rm -f qualifying/*.cm[iox] qualifying/*.[so] qualifying/*~
 	rm -f bytecomp/*.cm[iox] bytecomp/*.[so] bytecomp/*~
 	rm -f asmcomp/*.cm[iox] asmcomp/*.[so] asmcomp/*~
 	rm -f driver/*.cm[iox] driver/*.[so] driver/*~

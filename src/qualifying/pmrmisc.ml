@@ -97,15 +97,6 @@ let hashtbl_to_list t =
 let rec clone x n = 
   if n <= 0 then [] else (x::(clone x (n-1)))
 
-let rec join l s =
-  match l with
-      [] ->
-	""
-    | h::[] ->
-	h
-    | h::t ->
-	h ^ s ^ (join t s)
-
 let rec search_list test = function
     h::t ->
       begin

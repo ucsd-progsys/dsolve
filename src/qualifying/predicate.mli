@@ -3,7 +3,6 @@ type binop =
   | Minus
   | Times
 
-
 type binrel =
     Eq
   | Ne
@@ -17,7 +16,6 @@ type pexpr =
   | FunApp of string * pexpr
   | Binop of pexpr * binop * pexpr 
 
-
 type predicate =  
     True
   | Atom of pexpr * binrel * pexpr 
@@ -25,19 +23,15 @@ type predicate =
   | And of predicate * predicate 
   | Or of predicate * predicate 
 
-
-type parameterized_pred = PredOver of (string * predicate)
-
 val big_and: predicate list -> predicate
 val big_or: predicate list -> predicate
 val equals: (pexpr * pexpr) -> predicate
 
-val fresh_pexprvar: unit -> pexpr
-
 val predicate_subst: pexpr -> string -> predicate -> predicate
 val predicate_vars: predicate -> string list
-
+(*
 val parse_predicate: Parsetree.predicate -> predicate
 
 val pprint_pexpr: pexpr -> string
 val pprint_predicate: predicate -> string
+*)

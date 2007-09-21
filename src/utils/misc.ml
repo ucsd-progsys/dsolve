@@ -195,3 +195,13 @@ let rev_split_words s =
       | _ -> split2 res i (j+1)
     end
   in split1 [] 0
+
+let do_memo memo f args key = 
+  try Hashtbl.find memo key with Not_found ->
+    let rv = f args in
+    let _ = Hashtbl.replace memo key rv in
+    rv
+
+let rec repeat_fn f i = 
+  if i = 0 then ()
+  else (f (); repeat_fn f (i-1))

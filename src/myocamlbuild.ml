@@ -120,7 +120,9 @@ let ocamlc_solver =
     if List.for_all Pathname.exists native_deps then
       S[A"./ocamlc.opt"; A"-nostdlib"]
     else if List.for_all Pathname.exists byte_deps then
-      S[ocamlrun; A"./ocamlc"; A"-nostdlib"]
+      (* pmr: rather curiously, it seems we have to use ../ where the old code
+         used ./; look into in copious free time. *)
+      S[A"../ocamlc"; A"-nostdlib"]
     else boot_ocamlc;;
 
 Command.setup_virtual_command_solver "OCAMLC" ocamlc_solver;;

@@ -263,6 +263,13 @@ typing/unused_var.cmo: utils/warnings.cmi parsing/parsetree.cmi \
 typing/unused_var.cmx: utils/warnings.cmx parsing/parsetree.cmi \
     parsing/longident.cmx parsing/location.cmx parsing/asttypes.cmi \
     typing/unused_var.cmi 
+qualifying/predicate.cmo: qualifying/predicate.cmi
+qualifying/predicate.cmx: qualifying/predicate.cmi
+qualifying/frame.cmo: qualifying/frame.cmi
+qualifying/frame.cmx: qualifying/frame.cmi
+yices/lib/oyices.cma:
+qualifying/theoremProver.cmo: qualifying/predicate.cmi utils/misc.cmi
+qualifying/theoremProver.cmx: qualifying/predicate.cmx utils/misc.cmx
 bytecomp/bytegen.cmi: bytecomp/lambda.cmi bytecomp/instruct.cmi 
 bytecomp/bytelink.cmi: bytecomp/symtable.cmi bytecomp/cmo_format.cmi 
 bytecomp/bytepackager.cmi: typing/ident.cmi 

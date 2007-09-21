@@ -102,3 +102,11 @@ val search_substring: string -> string -> int -> int
 val rev_split_words: string -> string list
         (* [rev_split_words s] splits [s] in blank-separated words, and return
            the list of words in reverse order. *)
+
+val do_memo: ('a, 'b) Hashtbl.t -> ('c -> 'b) -> 'c -> 'a -> 'b
+        (* [do_memo table f args key] looks up the result of [f] [args] in
+           [memo] using [key] or maps [key] to the result if it's not
+           present. *)
+
+val repeat_fn: (unit -> unit) -> int -> unit
+        (* [repeat_fn f i] calls [f] () [i] times. *)

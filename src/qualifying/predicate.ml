@@ -1,19 +1,13 @@
-open Parsetree
-open Asttypes
-
-
 type binop =
     Plus
   | Minus
   | Times
-
 
 type binrel =
     Eq
   | Ne
   | Lt
   | Le 
-
 
 type pexpr =
     PInt of int 
@@ -22,7 +16,6 @@ type pexpr =
   | FunApp of string * pexpr
   | Binop of pexpr * binop * pexpr 
 
-
 type predicate =
     True
   | Atom of pexpr * binrel * pexpr 
@@ -30,23 +23,14 @@ type predicate =
   | And of predicate * predicate 
   | Or of predicate * predicate
 
-
-type parameterized_pred = PredOver of (string * predicate)
-
-
 let equals(p, q) =
   Atom(p, Eq, q)
 
-
 let big_and cs =
-  let combine p q = And(p, q) in
-    List.fold_right combine cs True
-
+  List.fold_right (fun p q -> And(p, q)) cs True
 
 let big_or cs =
-  let combine p q = Or(p, q) in
-    List.fold_right combine cs (Not(True))
-
+  List.fold_right (fun p q -> Or(p, q)) cs (Not(True))
 
 let rec predexpr_subst v x = function
     Var y when y = x ->
@@ -57,7 +41,6 @@ let rec predexpr_subst v x = function
       Binop(predexpr_subst v x e1, op, predexpr_subst v x e2)
   | e ->
       e
-
 
 let rec predicate_subst v x = function
     True ->
@@ -70,7 +53,6 @@ let rec predicate_subst v x = function
       And(predicate_subst v x p, predicate_subst v x q)
   | Or(p, q) ->
       Or(predicate_subst v x p, predicate_subst v x q)
-
 
 let predicate_vars p =
   let rec exp_vars_rec vars = function
@@ -101,21 +83,19 @@ let predicate_vars p =
   in
     vars_rec [] p
 
-
 let implies(p, q) =
   Or(Not p, q)
-
-
+(*
 let fresh_pexprvar = Misc.make_get_fresh (fun x -> Var ("__" ^ x))
-
-
-let rec parse_predicate p =
-  let parse_op = function
+*)
+(*
+let rec transl_predicate p =
+  let transl_op = function
       Predexp_plus -> Plus
     | Predexp_minus -> Minus
     | Predexp_times -> Times
   in
-  let rec parse_pexpression pexp =
+  let rec transl_pexpression pexp =
     match pexp.ppredexp_desc with
 	Ppredexp_int (n) ->
 	  PInt n
@@ -128,13 +108,13 @@ let rec parse_predicate p =
       | Ppredexp_binop (e1, op, e2) ->
 	  Binop (parse_pexpression e1, parse_op op, parse_pexpression e2)
   in
-  let parse_rel = function
+  let transl_rel = function
       Pred_eq -> Eq
     | Pred_ne -> Ne
     | Pred_lt -> Lt
     | Pred_le -> Le
   in
-  let rec parse_pred_rec pred =
+  let rec transl_pred_rec pred =
     match pred.ppred_desc with
 	Ppred_true ->
 	  True
@@ -148,7 +128,6 @@ let rec parse_predicate p =
 	  Or (parse_predicate p1, parse_predicate p2)
   in parse_pred_rec p
 
-
 let pprint_binop frec e1 op e2 =
   let opstr =
     match op with
@@ -158,7 +137,6 @@ let pprint_binop frec e1 op e2 =
   in
   let (str1, str2) = (frec e1, frec e2) in
     Misc.join [str1; opstr; str2] " "
-
 
 let pprint_binrel frec e1 rel e2 =
   let relstr =
@@ -170,7 +148,6 @@ let pprint_binrel frec e1 rel e2 =
   in
   let (str1, str2) = (frec e1, frec e2) in
     Misc.join [str1; relstr; str2] " "
-
 
 let rec pprint_pexpr = function
     PInt(n) ->
@@ -184,7 +161,6 @@ let rec pprint_pexpr = function
   | Binop(e1, op, e2) ->
       pprint_binop pprint_pexpr e1 op e2
 
-
 let rec pprint_predicate = function
     True ->
       "true"
@@ -196,3 +172,4 @@ let rec pprint_predicate = function
       "(and " ^ pprint_predicate p ^ " " ^ pprint_predicate q ^ ")"
   | Or(p, q) ->
       "(or " ^ pprint_predicate p ^ " " ^ pprint_predicate q ^ ")"
+*)
