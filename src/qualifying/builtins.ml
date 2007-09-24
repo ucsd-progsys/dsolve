@@ -75,3 +75,6 @@ let frames = Env.addn _frames Env.empty
   *)
 let equality_refinement exp =
   ([], Qconst [(Path.Pident(Ident.create "<constant>"), xv, equals(Var xv, exp))])
+
+let true_refinement =
+  ([], Qconst [(Path.Pident(Ident.create "true"), xv, True)])

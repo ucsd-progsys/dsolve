@@ -19,6 +19,12 @@ let constrain_expression exp cstrs initframemap =
 	  (Texp_constant(Const_int n), Tconstr(path, [], _)) ->
             (ref (Fconstr(path, [], Builtins.equality_refinement (PInt n))),
              constrs, framemap)
+        | (Texp_construct(cstrdesc, []), Tconstr(path, [], _)) ->
+            let cstrref =
+              match cstrdesc.cstr_tag with
+                  Cstr_constant n -> Builtins.equality_refinement (PInt n)
+                | _ -> Builtins.true_refinement
+            in (ref (Fconstr(path, [], cstrref)), constrs, framemap)
 (*	| Pexp_ident(Lident x) ->
             let f =
               let ty = ExpMap.find e shapemap in
