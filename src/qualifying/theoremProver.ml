@@ -74,8 +74,9 @@ module YicesProver  =
     let rec yicesExp me e =
       match e with 
         PInt i -> Y.yices_mk_num me.c i 
-      | Var s -> yicesVar me s me.t
-      | Pvar (s,i) -> yicesVar me (Printf.sprintf "%sprime%d" s i) me.t
+      | Var s -> yicesVar me (Ident.unique_name s) me.t
+      | Pvar (s,i) -> yicesVar me
+          (Printf.sprintf "%sprime%d" (Ident.unique_name s) i) me.t
       | FunApp (f,e) ->
           let (fn, e') = (yicesVar me f me.f, yicesExp me e) in
             Y.yices_mk_app me.c fn [|e'|]

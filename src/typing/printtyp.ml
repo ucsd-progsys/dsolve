@@ -327,7 +327,7 @@ let rec tree_of_typexp sch ty =
     | Ttuple tyl ->
         Otyp_tuple (tree_of_typlist sch tyl)
     | Tconstr(p, tyl, abbrev) ->
-        Otyp_constr (tree_of_path p, tree_of_typlist sch tyl)
+        Otyp_constr (tree_of_path p, tree_of_typlist sch tyl, None)
     | Tvariant row ->
         let row = row_repr row in
         let fields =
@@ -348,7 +348,7 @@ let rec tree_of_typexp sch ty =
             let id = tree_of_path p in
             let args = tree_of_typlist sch tyl in
             if row.row_closed && all_present then
-              Otyp_constr (id, args)
+              Otyp_constr (id, args, None)
             else
               let non_gen = is_non_gen sch px in
               let tags =

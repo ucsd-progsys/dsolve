@@ -58,8 +58,10 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/typedecl.cmo typing/typeclass.cmo \
   typing/typemod.cmo
 
-QUALIFYING=qualifying/predicate.cmo qualifying/frame.cmo \
-  yices/lib/oyices.cma qualifying/theoremProver.cmo
+QUALIFYING=qualifying/predicate.cmo qualifying/qualifier.cmo \
+  qualifying/frame.cmo yices/lib/oyices.cma qualifying/theoremProver.cmo \
+  qualifying/builtins.cmo qualifying/lightenv.cmo qualifying/constraint.cmo \
+  qualifying/qualifymod.cmo qualifying/printqual.cmo
 
 COMP=bytecomp/lambda.cmo bytecomp/printlambda.cmo \
   bytecomp/typeopt.cmo bytecomp/switch.cmo bytecomp/matching.cmo \
@@ -127,8 +129,7 @@ defaultentry:
 	@echo "should work.  But see the file INSTALL for more details."
 
 # Recompile the system using the bootstrap compiler
-all: runtime ocamlc ocamllex ocamlyacc ocamltools library ocaml \
-  otherlibraries ocamlbuild.byte camlp4out $(DEBUGGER) ocamldoc
+all: runtime ocamlc ocamllex ocamlyacc ocamltools library ocaml
 
 # The compilation of ocaml will fail if the runtime has changed.
 # Never mind, just do make bootstrap to reach fixpoint again.
@@ -681,7 +682,7 @@ partialclean::
 	rm -f *~
 
 depend: beforedepend
-	(for d in utils parsing typing bytecomp asmcomp driver toplevel; \
+	(for d in utils parsing typing qualifying bytecomp asmcomp driver toplevel; \
 	 do $(CAMLDEP) $(DEPFLAGS) $$d/*.mli $$d/*.ml; \
 	 done) > .depend
 

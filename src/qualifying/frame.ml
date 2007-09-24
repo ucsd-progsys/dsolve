@@ -4,11 +4,9 @@ open Btype
 
 type substitution = Ident.t * pexpr
 
-type qualifier = Ident.t * predicate
-
 type qualifier_expr =
     Qvar of Ident.t
-  | Qconst of qualifier
+  | Qconst of Qualifier.t list
 
 type refinement = substitution list * qualifier_expr
 

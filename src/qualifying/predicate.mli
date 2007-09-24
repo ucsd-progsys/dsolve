@@ -11,8 +11,8 @@ type binrel =
 
 type pexpr =   
     PInt of int 
-  | Var of string
-  | Pvar of string * int
+  | Var of Ident.t
+  | Pvar of Ident.t * int
   | FunApp of string * pexpr
   | Binop of pexpr * binop * pexpr 
 
@@ -27,8 +27,8 @@ val big_and: predicate list -> predicate
 val big_or: predicate list -> predicate
 val equals: (pexpr * pexpr) -> predicate
 
-val predicate_subst: pexpr -> string -> predicate -> predicate
-val predicate_vars: predicate -> string list
+val predicate_subst: pexpr -> Ident.t -> predicate -> predicate
+val predicate_vars: predicate -> Ident.t list
 (*
 val parse_predicate: Parsetree.predicate -> predicate
 

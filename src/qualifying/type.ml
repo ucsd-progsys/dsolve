@@ -4,8 +4,6 @@ open TheoremProver
 
 
 (* Type language *)
-type qualifier = string * parameterized_pred
-
 type basetyp =
     Int
   | Bool
@@ -87,15 +85,8 @@ let instantiate_typ = function
   | t -> t
 
 
-let qualify x (q, PredOver(y, p)) = predicate_subst (Var x) y p
-
-
 let qualifier_subst e x ((q, PredOver(y, p)) as qual) =
   if x = y then
     qual
   else
     (q, PredOver(y, predicate_subst e x p))
-
-
-let qualifier_well_formed domain (_, PredOver(x, p)) =
-  List.for_all (fun v -> List.mem v (x::domain)) (predicate_vars p)

@@ -11,8 +11,8 @@ type binrel =
 
 type pexpr =
     PInt of int 
-  | Var of string
-  | Pvar of string * int
+  | Var of Ident.t
+  | Pvar of Ident.t * int
   | FunApp of string * pexpr
   | Binop of pexpr * binop * pexpr 
 
@@ -33,7 +33,7 @@ let big_or cs =
   List.fold_right (fun p q -> Or(p, q)) cs (Not(True))
 
 let rec predexpr_subst v x = function
-    Var y when y = x ->
+    Var y when Ident.same y x ->
       v
   | FunApp(f, e) ->
       FunApp(f, predexpr_subst v x e)

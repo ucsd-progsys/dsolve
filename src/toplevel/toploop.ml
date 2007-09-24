@@ -220,6 +220,7 @@ let execute_phrase print_outcome ppf phr =
       Typecore.reset_delayed_checks ();
       let (str, sg, newenv) = Typemod.type_structure oldenv sstr in
       Typecore.force_delayed_checks ();
+      let framemap = Qualifymod.qualify_structure str in
       let lam = Translmod.transl_toplevel_definition str in
       Warnings.check_fatal ();
       begin try
@@ -232,7 +233,9 @@ let execute_phrase print_outcome ppf phr =
                 match str with
                 | [Tstr_eval exp] ->
                     let outv = outval_of_value newenv v exp.exp_type in
-                    let ty = Printtyp.tree_of_type_scheme exp.exp_type in
+                    let ty' = Printtyp.tree_of_type_scheme exp.exp_type in
+                    let ty = Printqual.qualify_tree_of_type_scheme ty'
+                      (Qualifymod.LocationMap.find exp.exp_loc framemap) in
                     Ophr_eval (outv, ty)
                 | [] -> Ophr_signature []
                 | _ -> Ophr_signature (item_list newenv

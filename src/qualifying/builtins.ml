@@ -1,12 +1,10 @@
-open Type
 open Frame
 open Predicate
 
-
-let xv = "_X"
-let yv = "_Y"
-let zv = "z"
-
+let xv = Ident.create "_X"
+let yv = Ident.create "_Y"
+let zv = Ident.create "_Z"
+(*
 
 let op_shape name =
   (name, Arrow(xv, Base(Int), Arrow(yv, Base(Int), Base(Int))))
@@ -74,6 +72,6 @@ let _frames = [
 
 let frames = Env.addn _frames Env.empty
 
-
-let equality_qualifier exp =
-  ("__EQ" ^ pprint_pexpr exp, PredOver(xv, equals(Var xv, exp)))
+  *)
+let equality_refinement exp =
+  ([], Qconst [(Path.Pident(Ident.create "<constant>"), xv, equals(Var xv, exp))])
