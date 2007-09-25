@@ -179,7 +179,8 @@ and print_simple_out_type ppf =
     Otyp_class (ng, id, tyl) ->
       fprintf ppf "@[%a%s#%a@]" print_typargs tyl (if ng then "_" else "")
         print_ident id
-  | Otyp_constr (id, tyl, None) ->
+  | Otyp_constr (id, tyl, None)
+  | Otyp_constr (id, tyl, Some (Oqual [])) ->
       fprintf ppf "@[%a%a@]" print_typargs tyl print_ident id
   | Otyp_constr (id, tyl, Some (Oqual qs)) ->
       fprintf ppf "@[{%a%a@ |@;<1 2>%s}@]" print_typargs tyl print_ident id
