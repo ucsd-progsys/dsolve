@@ -29,6 +29,8 @@ val equals: (pexpr * pexpr) -> predicate
 
 val predicate_subst: pexpr -> Ident.t -> predicate -> predicate
 val predicate_vars: predicate -> Ident.t list
+(* pmr: change to plain old instantiate *)
+val instantiate_named_vars: (string * Ident.t) list -> predicate -> predicate
 (*
 val parse_predicate: Parsetree.predicate -> predicate
 

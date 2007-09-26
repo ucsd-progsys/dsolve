@@ -32,27 +32,37 @@ let big_and cs =
 let big_or cs =
   List.fold_right (fun p q -> Or(p, q)) cs (Not(True))
 
-let rec predexpr_subst v x = function
-    Var y when Ident.same y x ->
-      v
-  | FunApp(f, e) ->
-      FunApp(f, predexpr_subst v x e)
-  | Binop(e1, op, e2) ->
-      Binop(predexpr_subst v x e1, op, predexpr_subst v x e2)
-  | e ->
-      e
+let rec pexp_map_vars f pexp =
+  let rec map_rec = function
+      Var y ->
+        f y
+    | FunApp (fn, e) ->
+        FunApp (fn, map_rec e)
+    | Binop (e1, op, e2) ->
+        Binop (map_rec e1, op, map_rec e2)
+    | e ->
+        e
+  in map_rec pexp
 
-let rec predicate_subst v x = function
-    True ->
-      True
-  | Atom(e1, rel, e2) ->
-      Atom(predexpr_subst v x e1, rel, predexpr_subst v x e2)
-  | Not(p) ->
-      Not(predicate_subst v x p)
-  | And(p, q) ->
-      And(predicate_subst v x p, predicate_subst v x q)
-  | Or(p, q) ->
-      Or(predicate_subst v x p, predicate_subst v x q)
+let rec map_vars f pred =
+  let rec map_rec = function
+      True ->
+        True
+    | Atom (e1, rel, e2) ->
+        Atom (pexp_map_vars f e1, rel, pexp_map_vars f e2)
+    | Not p ->
+        Not (map_rec p)
+    | And (p, q) ->
+        And (map_rec p, map_rec q)
+  | Or (p, q) ->
+      Or (map_rec p, map_rec q)
+  in map_rec pred
+
+let predicate_subst v x pred =
+  map_vars (fun y -> if Ident.same x y then v else Var y) pred
+
+let rec instantiate_named_vars subs pred =
+  map_vars (fun y -> Var (List.assoc (Ident.name y) subs)) pred
 
 let predicate_vars p =
   let rec exp_vars_rec vars = function
