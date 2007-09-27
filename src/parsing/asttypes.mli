@@ -34,3 +34,7 @@ type mutable_flag = Immutable | Mutable
 type virtual_flag = Virtual | Concrete
 
 type label = string
+
+type predexp_op = Predexp_plus | Predexp_minus | Predexp_times
+
+type pred_rel = Pred_eq | Pred_ne | Pred_lt | Pred_le

@@ -15,3 +15,4 @@ let instantiate names_to_idents (path, valu, pred) =
   (* Don't instantiate the bound variable *)
   let names_to_idents' = (Ident.name valu, valu)::names_to_idents in
     (path, valu, instantiate_named_vars names_to_idents' pred)
+

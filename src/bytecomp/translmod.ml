@@ -295,6 +295,8 @@ and transl_structure fields cc rootpath = function
       transl_structure fields cc rootpath rem
   | Tstr_type(decls) :: rem ->
       transl_structure fields cc rootpath rem
+  | Tstr_qualifier _ :: rem ->
+      transl_structure fields cc rootpath rem
   | Tstr_exception(id, decl) :: rem ->
       Llet(Strict, id, transl_exception id (field_path rootpath id) decl,
            transl_structure (id :: fields) cc rootpath rem)
@@ -379,6 +381,8 @@ let transl_store_structure glob map prims str =
       end;
       transl_store subst rem
   | Tstr_type(decls) :: rem ->
+      transl_store subst rem
+  | Tstr_qualifier _ :: rem ->
       transl_store subst rem
   | Tstr_exception(id, decl) :: rem ->
       let lam = transl_exception id (field_path (global_path glob) id) decl in
@@ -478,6 +482,7 @@ let rec defined_idents = function
       let_bound_idents pat_expr_list @ defined_idents rem
   | Tstr_primitive(id, descr) :: rem -> defined_idents rem
   | Tstr_type decls :: rem -> defined_idents rem
+  | Tstr_qualifier _ :: rem -> defined_idents rem
   | Tstr_exception(id, decl) :: rem -> id :: defined_idents rem
   | Tstr_exn_rebind(id, path) :: rem -> id :: defined_idents rem
   | Tstr_module(id, modl) :: rem -> id :: defined_idents rem
@@ -579,6 +584,8 @@ let transl_toplevel_item = function
   | Tstr_primitive(id, descr) ->
       lambda_unit
   | Tstr_type(decls) ->
+      lambda_unit
+  | Tstr_qualifier _ ->
       lambda_unit
   | Tstr_exception(id, decl) ->
       toploop_setvalue id (transl_exception id None decl)

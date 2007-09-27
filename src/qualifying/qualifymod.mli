@@ -20,5 +20,5 @@ module LocationMap: sig
 end
 
 val qualify_structure: Env.t -> Qualifier.t list -> Typedtree.structure ->
-  frame_expr LocationMap.t
+  Qualifier.t list * frame_expr LocationMap.t
 

@@ -195,6 +195,10 @@ let rec item_list env = function
 
 let toplevel_env = ref Env.empty
 
+(* The current qualifier list for the toplevel *)
+
+let toplevel_quals = ref []
+
 (* Print an exception produced by an evaluation *)
 
 let print_out_exception ppf exn outv =
@@ -220,11 +224,13 @@ let execute_phrase print_outcome ppf phr =
       Typecore.reset_delayed_checks ();
       let (str, sg, newenv) = Typemod.type_structure oldenv sstr in
       Typecore.force_delayed_checks ();
-      let framemap = Qualifymod.qualify_structure newenv [] str in
+      let oldquals = !toplevel_quals in
+      let (newquals, framemap) = Qualifymod.qualify_structure newenv oldquals str in
       let lam = Translmod.transl_toplevel_definition str in
       Warnings.check_fatal ();
       begin try
         toplevel_env := newenv;
+        toplevel_quals := newquals;
         let res = load_lambda ppf lam in
         let out_phr =
           match res with
@@ -243,6 +249,7 @@ let execute_phrase print_outcome ppf phr =
               else Ophr_signature []
           | Exception exn ->
               toplevel_env := oldenv;
+              toplevel_quals := oldquals;
               if exn = Out_of_memory then Gc.full_major();
               let outv =
                 outval_of_value !toplevel_env (Obj.repr exn) Predef.type_exn
@@ -255,7 +262,7 @@ let execute_phrase print_outcome ppf phr =
         | Ophr_exception _ -> false
         end
       with x ->
-        toplevel_env := oldenv; raise x
+        toplevel_env := oldenv; toplevel_quals := oldquals; raise x
       end
   | Ptop_dir(dir_name, dir_arg) ->
       try

@@ -599,6 +599,12 @@ and type_structure anchor env sstr =
         (Tstr_type decls :: str_rem,
          map_rec' (fun rs (id, info) -> Tsig_type(id, info, rs)) decls sig_rem,
          final_env)
+    | {pstr_desc = Pstr_qualifier (name, decl)} :: srem ->
+        let (str_rem, sig_rem, final_env) = type_struct env srem in
+        (Tstr_qualifier (Ident.create name, Typedecl.transl_qualifier decl)
+         :: str_rem,
+         sig_rem,
+         final_env)
     | {pstr_desc = Pstr_exception(name, sarg)} :: srem ->
         let arg = Typedecl.transl_exception env sarg in
         let (id, newenv) = Env.enter_exception name arg env in

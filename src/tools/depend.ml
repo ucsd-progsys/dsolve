@@ -230,6 +230,8 @@ and add_struct_item bv item =
       add_type bv vd.pval_type; bv
   | Pstr_type dcls ->
       List.iter (fun (id, td) -> add_type_declaration bv td) dcls; bv
+  | Pstr_qualifier _ ->
+      bv
   | Pstr_exception(id, args) ->
       List.iter (add_type bv) args; bv
   | Pstr_exn_rebind(id, l) ->

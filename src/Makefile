@@ -46,7 +46,7 @@ PARSING=parsing/linenum.cmo parsing/location.cmo parsing/longident.cmo \
   parsing/lexer.cmo parsing/parse.cmo parsing/printast.cmo
 
 TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
-  typing/primitive.cmo typing/types.cmo \
+  typing/predicate.cmo typing/primitive.cmo typing/types.cmo \
   typing/btype.cmo typing/oprint.cmo \
   typing/subst.cmo typing/predef.cmo \
   typing/datarepr.cmo typing/env.cmo \
@@ -58,7 +58,7 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/typedecl.cmo typing/typeclass.cmo \
   typing/typemod.cmo
 
-QUALIFYING=qualifying/predicate.cmo qualifying/lightenv.cmo \
+QUALIFYING=qualifying/lightenv.cmo \
   qualifying/qualifier.cmo qualifying/frame.cmo yices/lib/oyices.cma \
   qualifying/theoremProver.cmo qualifying/builtins.cmo \
   qualifying/constraint.cmo qualifying/qualifymod.cmo qualifying/printqual.cmo

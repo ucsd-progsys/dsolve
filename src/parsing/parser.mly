@@ -22,6 +22,12 @@ open Parsetree
 
 let mktyp d =
   { ptyp_desc = d; ptyp_loc = symbol_rloc() }
+let mkqual d =
+  { pqual_desc = d; pqual_loc = symbol_rloc() }
+let mkpred d =
+  { ppred_desc = d; ppred_loc = symbol_rloc() }
+let mkpredexp d =
+  { ppredexp_desc = d; ppredexp_loc = symbol_rloc() }
 let mkpat d =
   { ppat_desc = d; ppat_loc = symbol_rloc() }
 let mkexp d =
@@ -269,6 +275,7 @@ let bigarray_set arr arg newval =
 %token PLUS
 %token <string> PREFIXOP
 %token PRIVATE
+%token QUALIF
 %token QUESTION
 %token QUESTIONQUESTION
 %token QUOTE
@@ -447,6 +454,8 @@ structure_item:
       { mkstr(Pstr_primitive($2, {pval_type = $3; pval_prim = $5})) }
   | TYPE type_declarations
       { mkstr(Pstr_type(List.rev $2)) }
+  | QUALIF qualifier_declaration
+      { mkstr($2) }
   | EXCEPTION UIDENT constructor_arguments
       { mkstr(Pstr_exception($2, $3)) }
   | EXCEPTION UIDENT EQUAL constr_longident
@@ -1380,6 +1389,31 @@ field:
 label:
     LIDENT                                      { $1 }
 ;
+
+/* Qualifiers */
+
+qualifier_declaration:
+    UIDENT LPAREN LIDENT RPAREN COLON predicate
+      { (Pstr_qualifier($1, mkqual(($3, $6)))) }
+
+/* Predicates */
+
+predicate:
+    TRUE                                        { mkpred Ppred_true }
+  | LPAREN predicate RPAREN                     { $2 }
+  | pexpression LESS pexpression                { mkpred (Ppred_atom($1, Pred_lt, $3)) }
+/*  | pexpression LESSEQ pexpression              { mkpred (Ppred_atom($1, Pred_le, $3)) } */
+  | pexpression EQUAL pexpression               { mkpred (Ppred_atom($1, Pred_eq, $3)) }
+/*  | NOT predicate                               { mkpred (Ppred_not $2) } */
+  | predicate AND predicate                     { mkpred (Ppred_and($1, $3)) }
+  | predicate OR predicate                      { mkpred (Ppred_or($1, $3)) }
+
+pexpression:
+    INT                                         { mkpredexp (Ppredexp_int $1) }
+  | LIDENT                                      { mkpredexp (Ppredexp_var $1) }
+  | pexpression PLUS pexpression                { mkpredexp (Ppredexp_binop($1, Predexp_plus, $3)) }
+  | pexpression MINUS pexpression               { mkpredexp (Ppredexp_binop($1, Predexp_minus, $3)) }
+  | pexpression STAR pexpression                { mkpredexp (Ppredexp_binop($1, Predexp_times, $3)) }
 
 /* Constants */
 

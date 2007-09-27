@@ -129,6 +129,10 @@ and record_representation =
     Record_regular                      (* All fields are boxed / tagged *)
   | Record_float                        (* All fields are floats *)
 
+(* Qualifier definitions *)
+
+type qualifier_declaration = Ident.t * Predicate.predicate
+
 (* Type definitions *)
 
 type type_declaration =

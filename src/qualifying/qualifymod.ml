@@ -117,16 +117,19 @@ let constrain_expression tenv quals exp cstrs initframemap =
 
 (* pmr: note we're operating in the environment created by typing the
    structure - it's entirely possible this has some bad corner cases *)
-let constrain_structure tenv quals str =
-  let rec constrain_rec cstrs fmap = function
-    | [] -> (cstrs, fmap)
+let constrain_structure tenv initquals str =
+  let rec constrain_rec quals cstrs fmap = function
+    | [] -> (quals, cstrs, fmap)
     | (Tstr_eval exp) :: srem ->
         let (_, cstrs', fmap') = constrain_expression tenv quals exp cstrs fmap in
-          constrain_rec cstrs' fmap' srem
+          constrain_rec quals cstrs' fmap' srem
+    | (Tstr_qualifier (name, (valu, pred))) :: srem ->
+        let newquals = (Path.Pident name, valu, pred) :: quals in
+          constrain_rec newquals cstrs fmap srem
     | _ -> assert false
-  in constrain_rec [] LocationMap.empty str
+  in constrain_rec initquals [] LocationMap.empty str
 
 let qualify_structure tenv quals str =
-  let (cstrs, fmap) = constrain_structure tenv quals str in
+  let (newquals, cstrs, fmap) = constrain_structure tenv quals str in
   let solution = solve_constraints cstrs in
-    LocationMap.map (frame_apply_solution solution) fmap
+    (newquals, LocationMap.map (frame_apply_solution solution) fmap)
