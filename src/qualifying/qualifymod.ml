@@ -13,7 +13,7 @@ module LocationMap = Map.Make(struct type t = Location.t
 (* pmr: must remove redundant definitions of maplist *)
 let maplist f sm = LocationMap.fold (fun k v r -> (f k v)::r) sm []
 
-let constrain_expression tenv exp cstrs initframemap =
+let constrain_expression tenv quals exp cstrs initframemap =
   let rec constrain e env guard constrs framemap =
     let (f, cs, fm) =
       match (e.exp_desc, (repr e.exp_type).desc) with
@@ -27,7 +27,7 @@ let constrain_expression tenv exp cstrs initframemap =
                 | _ -> Builtins.empty_refinement
             in (ref (Fconstr(path, [], cstrref)), constrs, framemap)
 	| (Texp_ifthenelse(e1, e2, Some e3), _) ->
-            let f = fresh e.exp_type in
+            let f = fresh env quals e.exp_type in
             let (f1, cstrs1, fm1) = constrain e1 env guard cstrs framemap in
             let guardvar = Ident.create "guard" in
             let true_tag =
@@ -117,16 +117,16 @@ let constrain_expression tenv exp cstrs initframemap =
 
 (* pmr: note we're operating in the environment created by typing the
    structure - it's entirely possible this has some bad corner cases *)
-let rec constrain_structure tenv cstrs fmap = function
-  | [] -> (cstrs, fmap)
-  | (Tstr_eval exp) :: srem ->
-      let (_, cstrs', fmap') = constrain_expression tenv exp cstrs fmap in
-        constrain_structure tenv cstrs' fmap' srem
-  | _ -> assert false
+let constrain_structure tenv quals str =
+  let rec constrain_rec cstrs fmap = function
+    | [] -> (cstrs, fmap)
+    | (Tstr_eval exp) :: srem ->
+        let (_, cstrs', fmap') = constrain_expression tenv quals exp cstrs fmap in
+          constrain_rec cstrs' fmap' srem
+    | _ -> assert false
+  in constrain_rec [] LocationMap.empty str
 
-let constrain_structure tenv = constrain_structure tenv [] LocationMap.empty
-
-let qualify_structure tenv str =
-  let (cstrs, fmap) = constrain_structure tenv str in
-  let solution = solve_constraints Lightenv.empty cstrs in
+let qualify_structure tenv quals str =
+  let (cstrs, fmap) = constrain_structure tenv quals str in
+  let solution = solve_constraints cstrs in
     LocationMap.map (frame_apply_solution solution) fmap

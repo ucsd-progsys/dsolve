@@ -35,5 +35,6 @@ val instantiate_named_vars: (string * Ident.t) list -> predicate -> predicate
 val parse_predicate: Parsetree.predicate -> predicate
 
 val pprint_pexpr: pexpr -> string
-val pprint_predicate: predicate -> string
 *)
+val pprint_predicate: predicate -> string
+

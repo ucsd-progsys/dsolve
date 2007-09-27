@@ -220,7 +220,7 @@ let execute_phrase print_outcome ppf phr =
       Typecore.reset_delayed_checks ();
       let (str, sg, newenv) = Typemod.type_structure oldenv sstr in
       Typecore.force_delayed_checks ();
-      let framemap = Qualifymod.qualify_structure newenv str in
+      let framemap = Qualifymod.qualify_structure newenv [] str in
       let lam = Translmod.transl_toplevel_definition str in
       Warnings.check_fatal ();
       begin try

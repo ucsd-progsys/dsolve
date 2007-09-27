@@ -40,6 +40,14 @@ let rec map_left_right f = function
     [] -> []
   | hd::tl -> let res = f hd in res :: map_left_right f tl
 
+let rec map_filter f = function
+    [] -> []
+  | hd::tl ->
+      let rest = map_filter f tl in
+        match f hd with
+            Some x -> x::rest
+          | None -> rest
+
 let rec for_all2 pred l1 l2 =
   match (l1, l2) with
     ([], []) -> true

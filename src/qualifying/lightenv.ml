@@ -19,6 +19,11 @@ let filterlist f env =
 let mapfilter f env =
   fold (fun k v r -> match f k v with Some x -> x::r | None -> r) env []
 
+let find_default k default m =
+  try
+    find k m
+  with Not_found -> default
+
 let addn items env =
   List.fold_left (fun e (k, v) -> add k v e) env items
 (*

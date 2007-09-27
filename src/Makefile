@@ -58,10 +58,10 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/typedecl.cmo typing/typeclass.cmo \
   typing/typemod.cmo
 
-QUALIFYING=qualifying/predicate.cmo qualifying/qualifier.cmo \
-  qualifying/frame.cmo yices/lib/oyices.cma qualifying/theoremProver.cmo \
-  qualifying/builtins.cmo qualifying/lightenv.cmo qualifying/constraint.cmo \
-  qualifying/qualifymod.cmo qualifying/printqual.cmo
+QUALIFYING=qualifying/predicate.cmo qualifying/lightenv.cmo \
+  qualifying/qualifier.cmo qualifying/frame.cmo yices/lib/oyices.cma \
+  qualifying/theoremProver.cmo qualifying/builtins.cmo \
+  qualifying/constraint.cmo qualifying/qualifymod.cmo qualifying/printqual.cmo
 
 COMP=bytecomp/lambda.cmo bytecomp/printlambda.cmo \
   bytecomp/typeopt.cmo bytecomp/switch.cmo bytecomp/matching.cmo \

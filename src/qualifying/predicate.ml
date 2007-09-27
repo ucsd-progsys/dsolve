@@ -137,7 +137,7 @@ let rec transl_predicate p =
       | Ppred_or (p1, p2) ->
 	  Or (parse_predicate p1, parse_predicate p2)
   in parse_pred_rec p
-
+*)
 let pprint_binop frec e1 op e2 =
   let opstr =
     match op with
@@ -146,7 +146,7 @@ let pprint_binop frec e1 op e2 =
       | Times -> "*"
   in
   let (str1, str2) = (frec e1, frec e2) in
-    Misc.join [str1; opstr; str2] " "
+    String.concat " " [str1; opstr; str2]
 
 let pprint_binrel frec e1 rel e2 =
   let relstr =
@@ -157,15 +157,15 @@ let pprint_binrel frec e1 rel e2 =
       | Le -> "<="
   in
   let (str1, str2) = (frec e1, frec e2) in
-    Misc.join [str1; relstr; str2] " "
+    String.concat " " [str1; relstr; str2]
 
 let rec pprint_pexpr = function
     PInt(n) ->
       string_of_int n
   | Var x ->
-      x
+      Ident.unique_name x
   | Pvar(x, n) ->
-      x ^ "_" ^ (string_of_int n)
+      (Ident.unique_name x) ^ "_" ^ (string_of_int n)
   | FunApp(f, e) ->
       Printf.sprintf "%s(%s)" f (pprint_pexpr e)
   | Binop(e1, op, e2) ->
@@ -182,4 +182,4 @@ let rec pprint_predicate = function
       "(and " ^ pprint_predicate p ^ " " ^ pprint_predicate q ^ ")"
   | Or(p, q) ->
       "(or " ^ pprint_predicate p ^ " " ^ pprint_predicate q ^ ")"
-*)
+

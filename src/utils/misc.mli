@@ -23,6 +23,9 @@ val map_end: ('a -> 'b) -> 'a list -> 'b list -> 'b list
         (* [map_end f l t] is [map f l @ t], just more efficient. *)
 val map_left_right: ('a -> 'b) -> 'a list -> 'b list
         (* Like [List.map], with guaranteed left-to-right evaluation order *)
+val map_filter: ('a -> 'b option) -> 'a list -> 'b list
+        (* Like [List.map], but [f] must return an option with the result, if
+           any. *)
 val for_all2: ('a -> 'b -> bool) -> 'a list -> 'b list -> bool
         (* Same as [List.for_all] but for a binary predicate.
            In addition, this [for_all2] never fails: given two lists
