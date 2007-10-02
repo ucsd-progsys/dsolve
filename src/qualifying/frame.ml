@@ -13,7 +13,7 @@ type refinement = substitution list * qualifier_expr
 type frame_desc =
     Fvar
   | Fconstr of Path.t * frame_expr list * refinement
-  | Farrow of Ident.t * frame_expr * frame_expr
+  | Farrow of Ident.t option * frame_expr * frame_expr
 
 and frame_expr = frame_desc ref
 
@@ -42,8 +42,7 @@ let fresh ty =
       | Tconstr(p, tyl, _) ->
           ref (Fconstr(p, List.map fresh_rec tyl, fresh_refinementvar ()))
       | Tarrow(_, t1, t2, _) ->
-          (* pmr: obviously b0rked *)
-          ref (Farrow(Ident.create "", fresh_rec t1, fresh_rec t2))
+          ref (Farrow(None, fresh_rec t1, fresh_rec t2))
       | _ -> assert false
   in fresh_rec ty
 
@@ -74,4 +73,16 @@ let rec apply_substitution sub f =
         ref (Fconstr(p, [], (sub::subs, qe)))
     | Farrow(x, f1, f2) ->
         ref (Farrow(x, apply_substitution sub f1, apply_substitution sub f2))
+    | _ -> assert false
+
+(* Label all the function formals in [f] with their corresponding labels in
+   [f'].  Obviously, they are expected to be of the same shape; also, [f]
+   must be completely unlabeled (as frames are after creation by fresh). *)
+let rec label_like f f' =
+  match (!f, !f') with
+    | (Fvar, Fvar)
+    | (Fconstr _, Fconstr _) ->
+        f
+    | (Farrow (None, f1, f1'), Farrow(l, f2, f2')) ->
+        ref (Farrow (l, label_like f1 f2, label_like f1' f2'))
     | _ -> assert false

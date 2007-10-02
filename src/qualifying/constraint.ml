@@ -19,11 +19,21 @@ let split cstrs =
     | [] -> flat
     | SubFrame(env, guard, f1, f2) :: cs ->
         begin match (!f1, !f2) with
-          | (Farrow(x, f1, f1'), Farrow(_, f2, f2')) ->
-              split_rec flat
-                (SubFrame(env, guard, f2, f1)
-                 ::SubFrame(Lightenv.add x f2 env, guard, f1', f2')
-                 ::cs)
+          | (Farrow(l1, f1, f1'), Farrow(l2, f2, f2')) ->
+              (* If the labels disagree, we don't attempt to resolve it.
+                 Instead, we just proceed with the best information we have,
+                 probably losing chances to assert qualifiers along the way. *)
+              let env' = match (l1, l2) with
+                | (Some x, None)
+                | (None, Some x) ->
+                    Lightenv.add x f2 env
+                | (Some x, Some y) when Ident.same x y ->
+                    Lightenv.add x f2 env
+                | _ -> env
+              in split_rec flat
+                   (SubFrame (env, guard, f2, f1)
+                    :: SubFrame (env', guard, f1', f2')
+                    :: cs)
           | (Fconstr(_, [], r1), Fconstr(_, [], r2)) ->
               split_rec (SubRefinement(env, guard, r1, r2)::flat) cs
           | (Fvar, Fvar) ->
@@ -32,11 +42,14 @@ let split cstrs =
         end
     | WFFrame(env, f) :: cs ->
         begin match (!f) with
-          | Farrow (x, f, f') ->
-              split_rec flat
-                (WFFrame (env, f)
-                 :: WFFrame (Lightenv.add x f env, f')
-                 :: cs)
+          | Farrow (l, f, f') ->
+              let env' = match l with
+                | None -> env
+                | Some x -> Lightenv.add x f env
+              in split_rec flat
+                   (WFFrame (env, f)
+                    :: WFFrame (env', f')
+                    :: cs)
           | Fconstr (_, [], r) ->
               split_rec (WFRefinement (env, r) :: flat) cs
           | Fvar ->

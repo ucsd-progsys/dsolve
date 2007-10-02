@@ -44,14 +44,23 @@ let constrain_expression tenv quals exp cstrs initframemap =
                ::SubFrame(env', guard3, f3, f)
                ::cstrs3,
                fm3)
-(*	| (Texp_function(_, _, [({ppat_desc = Ppat_var x}, e')]), _) ->
-	    begin match fresh e.exp_type with
-                FArrow(f, f') ->
+	| (Texp_function([({pat_desc = Tpat_var x}, e')], _), _) ->
+	    begin match !(fresh e.exp_type) with
+              | Farrow(_, f, unlabelled_f') ->
                   let env' = Lightenv.add x f env in
-                  let (f'', constrs', fm') = constrain e' env' guard cstrs framemap in
-                    (FArrow(f, f'), SubType(env', guard, f'', f')::constrs', fm')
+                  let (f'', cstrs', fm') = constrain e' env' guard cstrs framemap in
+                  (* Since the underlying type system doesn't have dependent
+                     types, fresh can't give us the proper labels for the RHS.
+                     Instead, we have to label it after the fact. *)
+                  let f' = label_like unlabelled_f' f'' in
+                  let f = ref (Farrow (Some x, f, f')) in
+                    (f,
+                     WFFrame (env, f)
+                     :: SubFrame (env', guard, f'', f')
+                     :: cstrs',
+                     fm')
               | _ -> assert false
-	    end *)
+	    end
 (*	| Pexp_ident(Lident x) ->
             let f =
               let ty = ExpMap.find e shapemap in
