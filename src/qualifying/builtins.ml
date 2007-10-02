@@ -74,6 +74,6 @@ let frames = Env.addn _frames Env.empty
 
   *)
 let equality_refinement exp =
-  ([], Qconst [(Path.Pident(Ident.create "<constant>"), xv, equals(Var xv, exp))])
+  ([], Qconst [(Path.Pident(Ident.create "<eq>"), xv, equals(Var xv, exp))])
 
 let empty_refinement = ([], Qconst [])

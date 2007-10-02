@@ -61,14 +61,17 @@ let constrain_expression tenv quals exp cstrs initframemap =
                      fm')
               | _ -> assert false
 	    end
-(*	| Pexp_ident(Lident x) ->
-            let f =
+	| (Texp_ident (id, _), Tconstr (p, [], _)) ->
+            (ref (Fconstr (p, [], Builtins.equality_refinement (Var (Path.head id)))),
+             cstrs,
+             framemap)
+(*            let f =
               let ty = ExpMap.find e shapemap in
-              match ty with
-                  Base(b) ->
-                    FBase(b, ([], RQuals [Builtins.equality_qualifier (Var x)]))
-                | _ ->
-                    instantiate_frame_like_typ (Env.find x env) ty
+                match ty with
+                    Base(b) ->
+                      FBase(b, ([], RQuals [Builtins.equality_qualifier (Var x)]))
+                  | _ ->
+                      instantiate_frame_like_typ (Env.find x env) ty
             in (f, constrs, framemap)
 	| Pexp_construct(Lident "[]", _, _) ->
             (fresh_frame e, constrs, framemap)
