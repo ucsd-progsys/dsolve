@@ -10,9 +10,6 @@ open Longident
 module LocationMap = Map.Make(struct type t = Location.t
                                      let compare = compare end)
 
-(* pmr: must remove redundant definitions of maplist *)
-let maplist f sm = LocationMap.fold (fun k v r -> (f k v)::r) sm []
-
 let constrain_expression tenv quals exp cstrs initframemap =
   let rec constrain e env guard constrs framemap =
     let (f, cs, fm) =
@@ -27,7 +24,7 @@ let constrain_expression tenv quals exp cstrs initframemap =
                 | _ -> Builtins.empty_refinement
             in (ref (Fconstr(path, [], cstrref)), constrs, framemap)
 	| (Texp_ifthenelse(e1, e2, Some e3), _) ->
-            let f = fresh env quals e.exp_type in
+            let f = fresh e.exp_type in
             let (f1, cstrs1, fm1) = constrain e1 env guard cstrs framemap in
             let guardvar = Ident.create "guard" in
             let true_tag =
@@ -42,10 +39,19 @@ let constrain_expression tenv quals exp cstrs initframemap =
             let guard3 = And(Not(guardp), guard) in
             let (f3, cstrs3, fm3) = constrain e3 env' guard3 cstrs2 fm2 in
               (f,
-               SubFrame(env', guard2, f2, f)
+               WFFrame(env, f)
+               ::SubFrame(env', guard2, f2, f)
                ::SubFrame(env', guard3, f3, f)
                ::cstrs3,
                fm3)
+(*	| (Texp_function(_, _, [({ppat_desc = Ppat_var x}, e')]), _) ->
+	    begin match fresh e.exp_type with
+                FArrow(f, f') ->
+                  let env' = Lightenv.add x f env in
+                  let (f'', constrs', fm') = constrain e' env' guard cstrs framemap in
+                    (FArrow(f, f'), SubType(env', guard, f'', f')::constrs', fm')
+              | _ -> assert false
+	    end *)
 (*	| Pexp_ident(Lident x) ->
             let f =
               let ty = ExpMap.find e shapemap in
@@ -68,14 +74,7 @@ let constrain_expression tenv quals exp cstrs initframemap =
                     end
               | _ -> failwith "Fresh frame has wrong shape - expected list"
             end
-	| Pexp_function(_, _, [({ppat_desc = Ppat_var x}, e')]) ->
-	    begin match fresh_frame e with
-	        FArrow(_, f, f') ->
-		  let env' = Env.add x f env in
-		  let (f'', constrs', fm') = constrain e' env' guard constrs framemap in
-		    (FArrow(x, f, f'), SubType(env', guard, f'', f')::constrs', fm')
-	      | _ -> failwith "Fresh frame has wrong shape - expected arrow"
-	    end
+
 	| Pexp_apply(e1, exps) ->
 	    let constrain_application (f, cs, fm) (_, e2) =
 	      match f with
@@ -129,7 +128,22 @@ let constrain_structure tenv initquals str =
     | _ -> assert false
   in constrain_rec initquals [] LocationMap.empty str
 
+module QualifierSet = Set.Make(Qualifier)
+
+(* Make copies of all the qualifiers where the free identifiers are replaced
+   by the appropriate bound identifiers from the environment. *)
+let instantiate_in_environments cstrs quals =
+  let envs = List.map environment cstrs in
+  let instantiate_qual qualset q =
+    let instantiate_in_env qset env =
+      try
+        QualifierSet.add (Qualifier.instantiate env q) qset
+      with Qualifier.Refinement_not_closed -> qset
+    in List.fold_left instantiate_in_env qualset envs
+  in QualifierSet.elements (List.fold_left instantiate_qual QualifierSet.empty quals)
+
 let qualify_structure tenv quals str =
   let (newquals, cstrs, fmap) = constrain_structure tenv quals str in
-  let solution = solve_constraints cstrs in
+  let instantiated_quals = instantiate_in_environments cstrs quals in
+  let solution = solve_constraints instantiated_quals cstrs in
     (newquals, LocationMap.map (frame_apply_solution solution) fmap)

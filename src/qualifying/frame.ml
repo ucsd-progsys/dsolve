@@ -4,33 +4,8 @@ open Btype
 
 type substitution = Ident.t * pexpr
 
-(* Each qualifier variable carries a list of the qualifiers that may be assigned
-   to it.  There are two reasons to do this:
-
-   1) It's easiest to specify qualifiers in an "open" way.  That is, to use
-   variables that don't necessarily appear in the current context.  For example:
-
-   qualifier GreaterThanA(x): x > a
-
-   let a = ... in let b = a + 1 in ...
-
-   When we create the qualifier variable for b, we can notice that the name a is
-   bound in this scope and instantiate the qualifier with the actual identifier
-   (Ident.t) for a.
-
-   This solves the problem of what happens when a function, closed over an
-   environment containing the variable y, with type ... -> {v | v > y}, is
-   called in an environment which also contains the variable y.  Because the
-   qualifier on the return type and the qualifiers used on any variables in the
-   calling context will use different identifiers for y, there is no chance for
-   confusion.
-
-   2) We automatically carry a list of all well-formed qualifiers around with
-   each variable, simplifying the previously-quite-ugly refine.
-*)
 type qualifier_expr =
-    Qvar of Qualifier.t list * Ident.t  (* Qualifier variable with list of assignable
-                                           qualifiers *)
+    Qvar of Ident.t                     (* Qualifier variable *)
   | Qconst of Qualifier.t list          (* Constant qualifier set *)
 
 type refinement = substitution list * qualifier_expr
@@ -42,15 +17,7 @@ type frame_desc =
 
 and frame_expr = frame_desc ref
 
-let fresh_refinementvar env quals =
-  let names_to_idents =
-    Lightenv.maplist (fun id _ -> (Ident.name id, id)) env in
-  let instantiate q =
-    try Some (Qualifier.instantiate names_to_idents q)
-    with Not_found -> None
-  in
-  let instantiated_quals = Misc.map_filter instantiate quals in
-    ([], Qvar (instantiated_quals, Ident.create "k"))
+let fresh_refinementvar () = ([], Qvar (Ident.create "k"))
 
 (* Create a fresh frame with the same shape as the given type.  Identical tyvars
    become references to the same FVar.  (This makes instantiation much
@@ -60,7 +27,7 @@ let fresh_refinementvar env quals =
    variable its own list of well-formed and instantiated qualifiers.
    (See above.)
 *)
-let fresh env quals ty =
+let fresh ty =
   let vars = ref [] in
   let rec fresh_rec t =
     let t' = repr t in
@@ -73,8 +40,7 @@ let fresh env quals ty =
               fv
           end
       | Tconstr(p, tyl, _) ->
-          ref (Fconstr(p, List.map fresh_rec tyl,
-                       fresh_refinementvar env quals))
+          ref (Fconstr(p, List.map fresh_rec tyl, fresh_refinementvar ()))
       | Tarrow(_, t1, t2, _) ->
           (* pmr: obviously b0rked *)
           ref (Farrow(Ident.create "", fresh_rec t1, fresh_rec t2))
