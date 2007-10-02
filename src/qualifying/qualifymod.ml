@@ -10,19 +10,28 @@ open Longident
 module LocationMap = Map.Make(struct type t = Location.t
                                      let compare = compare end)
 
-let constrain_expression tenv quals exp cstrs initframemap =
-  let rec constrain e env guard constrs framemap =
+let expression_to_pexpr e =
+  match e.exp_desc with
+    | Texp_constant (Const_int n) ->
+	PInt n
+    | Texp_ident (id, _) ->
+	Var (Path.head id)
+    | _ ->
+        Var (Ident.create "")
+
+let constrain_expression tenv quals exp initcstrs initframemap =
+  let rec constrain e env guard cstrs framemap =
     let (f, cs, fm) =
       match (e.exp_desc, (repr e.exp_type).desc) with
 	  (Texp_constant(Const_int n), Tconstr(path, [], _)) ->
             (ref (Fconstr(path, [], Builtins.equality_refinement (PInt n))),
-             constrs, framemap)
+             cstrs, framemap)
         | (Texp_construct(cstrdesc, []), Tconstr(path, [], _)) ->
             let cstrref =
               match cstrdesc.cstr_tag with
                   Cstr_constant n -> Builtins.equality_refinement (PInt n)
                 | _ -> Builtins.empty_refinement
-            in (ref (Fconstr(path, [], cstrref)), constrs, framemap)
+            in (ref (Fconstr(path, [], cstrref)), cstrs, framemap)
 	| (Texp_ifthenelse(e1, e2, Some e3), _) ->
             let f = fresh e.exp_type in
             let (f1, cstrs1, fm1) = constrain e1 env guard cstrs framemap in
@@ -61,8 +70,9 @@ let constrain_expression tenv quals exp cstrs initframemap =
                      fm')
               | _ -> assert false
 	    end
-	| (Texp_ident (id, _), Tconstr (p, [], _)) ->
-            (ref (Fconstr (p, [], Builtins.equality_refinement (Var (Path.head id)))),
+	| (Texp_ident _, Tconstr (p, [], _)) ->
+            (ref (Fconstr (p, [],
+                           Builtins.equality_refinement (expression_to_pexpr e))),
              cstrs,
              framemap)
 (*            let f =
@@ -86,17 +96,26 @@ let constrain_expression tenv quals exp cstrs initframemap =
                     end
               | _ -> failwith "Fresh frame has wrong shape - expected list"
             end
-
-	| Pexp_apply(e1, exps) ->
-	    let constrain_application (f, cs, fm) (_, e2) =
-	      match f with
-		  FArrow(x, f, f') ->
-		    let (f2, cs', fm') = constrain e2 env guard cs fm in
-		    let pe2 = expression_to_pexpr e2 in
-		    let f'' = frame_apply_subst (x, pe2) f' in
-		      (f'', SubType(env, guard, f2, f)::cs', fm')
-		| _ -> failwith "Subexpression frame has wrong shape - expected arrow"
-	    in List.fold_left constrain_application (constrain e1 env guard constrs framemap) exps
+*)
+	| (Texp_apply (e1, exps), _) ->
+	    let constrain_application (f, cs, fm) = function
+              | (Some e2, _) ->
+	          begin match !f with
+		    | Farrow (l, f, f') ->
+		        let (f2, cs', fm') = constrain e2 env guard cs fm in
+		        let f'' = match l with
+                          | Some x -> Frame.apply_substitution (x, expression_to_pexpr e2) f'
+                              (* pmr: The soundness of this next line is suspect,
+                                 must investigate (i.e., what if there's a var that might
+                                 somehow be substituted that isn't because of this?  How
+                                 does it interact w/ the None label rules for subtyping? *)
+                          | None -> f'
+                        in (f'', SubFrame (env, guard, f2, f) :: cs', fm')
+		    | _ -> assert false
+                  end
+              | _ -> assert false
+	    in List.fold_left constrain_application (constrain e1 env guard cstrs framemap) exps
+(*
 (*        | Exp.Match(e1, e2, (h, t), e3, _) ->
             begin match constrain e1 env guard constrs framemap with
                 (FList f1, constrs''', fm''') ->
@@ -124,7 +143,7 @@ let constrain_expression tenv quals exp cstrs initframemap =
 	| _ -> raise ExpressionNotSupported *)
         | _ -> assert false
     in (f, cs, LocationMap.add e.exp_loc f fm)
-  in constrain exp Lightenv.empty True cstrs initframemap
+  in constrain exp Lightenv.empty True initcstrs initframemap
 
 (* pmr: note we're operating in the environment created by typing the
    structure - it's entirely possible this has some bad corner cases *)
