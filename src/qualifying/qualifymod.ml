@@ -88,21 +88,6 @@ let constrain_expression tenv initenv quals exp initcstrs initframemap =
             let (f, ftemplate) = (name_lookup_hack id env, Frame.fresh t) in
               instantiate f ftemplate;
               (f, cstrs, framemap)
-(*
-	| Pexp_construct(Lident "[]", _, _) ->
-            (fresh_frame e, constrs, framemap)
-	| Pexp_construct(Lident "::", Some {pexp_desc = Pexp_tuple [e1; e2]}, _) ->
-            begin match fresh_frame e with
-                FList f ->
-                  let (f1, constrs'', fm'') = constrain e1 env guard constrs framemap in
-                    begin match constrain e2 env guard constrs'' fm'' with
-                        (FList f2, constrs', fm') ->
-                          (FList f, SubType(env, guard, f1, f)::SubType(env, guard, f2, f)::constrs', fm')
-                      | _ -> failwith "List tail frame has wrong shape"
-                    end
-              | _ -> failwith "Fresh frame has wrong shape - expected list"
-            end
-*)
 	| (Texp_apply (e1, exps), _) ->
 	    let constrain_application (f, cs, fm) = function
               | (Some e2, _) ->
@@ -129,16 +114,6 @@ let constrain_expression tenv initenv quals exp initcstrs initframemap =
             let f = Frame.fresh t in
               (f, SubFrame (env', guard, f2, f) :: cstrs', fm')
 (*
-(*        | Exp.Match(e1, e2, (h, t), e3, _) ->
-            begin match constrain e1 env guard constrs framemap with
-                (FList f1, constrs''', fm''') ->
-                  let (f2, constrs'', fm'') = constrain e2 env guard constrs''' fm''' in
-                  let env' = Env.addn [(h, f1); (t, FList f1)] env in
-                  let (f3, constrs', fm') = constrain e3 env' guard constrs'' fm'' in
-                  let f = fresh_frame e in
-                    (f, SubType(env, guard, f2, f)::SubType(env', guard, f3, f)::constrs', fm')
-              | _ -> failwith "Wrong shape for match guard - expected list"
-            end *)
 	| Pexp_let(Recursive, [({ppat_desc = Ppat_var f}, e1)], e2) ->
             let f1'' = fresh_frame e1 in
             let env'' = Env.add f f1'' env in
