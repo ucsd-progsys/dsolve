@@ -1,79 +1,48 @@
 open Frame
 open Predicate
 
-let xv = Ident.create "_X"
-let yv = Ident.create "_Y"
-let zv = Ident.create "_Z"
-(*
+let qfalse = (Path.Pident (Ident.create "FALSE"), Ident.create "x", Not True)
 
-let op_shape name =
-  (name, Arrow(xv, Base(Int), Arrow(yv, Base(Int), Base(Int))))
-let rel_shape name =
-  (name, Arrow(xv, Base(Int), Arrow(yv, Base(Int), Base(Bool))))
-
-let _types = [
-  op_shape "+";
-  op_shape "-";
-  rel_shape "=";
-  rel_shape "!=";
-  rel_shape "<";
-  rel_shape "<=";
-]
-
-let types = Env.addn _types Env.empty
-
-
-let binop_qual name op =
-  (name, PredOver(zv, equals(Var zv, Binop(Var xv, op, Var yv))))
-
-
-let binrel_qual name rel =
-  let truepred = Atom(Var xv, rel, Var yv) in
-    (name, PredOver(zv, Or(And(equals(Var zv, PInt 1), truepred),
-                           And(equals(Var zv, PInt 0), Not(truepred)))))
-
-
-let qplus = binop_qual "PLUS" Plus
-let qminus = binop_qual "MINUS" Minus
-let qequal = binrel_qual "EQUAL" Eq
-let qnequal = binrel_qual "NEQUAL" Ne
-let qless = binrel_qual "LESS" Lt
-let qlesseq = binrel_qual "LESSEQ" Le
-let qfalse = ("FALSE", PredOver("x", Not(True)))
-
-let _quals = [
-  qplus;
-  qminus;
-  qequal;
-  qnequal;
-  qless;
-  qlesseq;
+let quals = [
   qfalse
 ]
 
-let quals = Env.addn _quals Env.empty
+let mk_int qs = ref (Fconstr (Predef.path_int, [], ([], Qconst qs)))
 
+let mk_fun (lab, f, f') = ref (Farrow (Some lab, f, f'))
 
-let op_frame op qual =
-  (op, FArrow(xv, FBase(Int, ([], RQuals [])),
-              FArrow(yv, FBase(Int, ([], RQuals [])), FBase(Int, ([], RQuals [qual])))))
-let rel_frame op qual =
-  (op, FArrow(xv, FBase(Int, ([], RQuals [])),
-              FArrow(yv, FBase(Int, ([], RQuals [])), FBase(Bool, ([], RQuals [qual])))))
+let fun_frame name (x, y) qual =
+  ("Pervasives." ^ name,
+   mk_fun (x, mk_int [], mk_fun (y, mk_int [], mk_int [qual])))
 
-let _frames = [
-  op_frame "+" qplus;
-  op_frame "-" qminus;
-  rel_frame "=" qequal;
-  rel_frame "!=" qnequal;
-  rel_frame "<" qless;
-  rel_frame "<=" qlesseq;
+let fresh_idents () = (Ident.create "x", Ident.create "y", Ident.create "z")
+
+let op_frame name op =
+  let (x, y, z) = fresh_idents () in
+  let qual = (Path.Pident (Ident.create name),
+              z, equals (Var z, Binop (Var x, op, Var y))) in
+    fun_frame name (x, y) qual
+
+let rel_frame name rel =
+  let (x, y, z) = fresh_idents () in
+  let truepred = Atom (Var x, rel, Var y) in
+  let qual = (Path.Pident (Ident.create name),
+              z,
+              Or (And (equals (Var z, PInt 1), truepred),
+                  And (equals (Var z, PInt 0), Not truepred))) in
+    fun_frame name (x, y) qual
+
+let frames = [
+  op_frame "+" Plus;
+  op_frame "-" Minus;
+  rel_frame "=" Eq;
+  rel_frame "!=" Ne;
+  rel_frame "<" Lt;
+  rel_frame "<=" Le;
 ]
 
-let frames = Env.addn _frames Env.empty
-
-  *)
 let equality_refinement exp =
-  ([], Qconst [(Path.Pident(Ident.create "<eq>"), xv, equals(Var xv, exp))])
+  let x = Ident.create "x" in
+    ([], Qconst [(Path.Pident (Ident.create "<eq>"), x, equals (Var x, exp))])
 
 let empty_refinement = ([], Qconst [])

@@ -19,7 +19,15 @@ let expression_to_pexpr e =
     | _ ->
         Var (Ident.create "")
 
-let constrain_expression tenv quals exp initcstrs initframemap =
+let name_lookup_hack path env =
+  try
+    List.assoc (Path.name path) Builtins.frames
+  with Not_found ->
+    (* pmr: This is intrinsically broken for any path that isn't a plain
+       Pident.  The long-term fix is merge Lightenv and Env. *)
+    Lightenv.find (Path.head path) env
+
+let constrain_expression tenv initenv quals exp initcstrs initframemap =
   let rec constrain e env guard cstrs framemap =
     let (f, cs, fm) =
       match (e.exp_desc, (repr e.exp_type).desc) with
@@ -73,16 +81,15 @@ let constrain_expression tenv quals exp initcstrs initframemap =
 	| (Texp_ident _, Tconstr (p, [], _)) ->
             (ref (Fconstr (p, [],
                            Builtins.equality_refinement (expression_to_pexpr e))),
-             cstrs,
-             framemap)
-(*            let f =
-              let ty = ExpMap.find e shapemap in
-                match ty with
-                    Base(b) ->
-                      FBase(b, ([], RQuals [Builtins.equality_qualifier (Var x)]))
-                  | _ ->
-                      instantiate_frame_like_typ (Env.find x env) ty
-            in (f, constrs, framemap)
+             cstrs, framemap)
+        | (Texp_ident (id, _), t) ->
+            (* pmr: Later, the env should probably take paths, not idents.
+               Something to think about... *)
+            let (f, ftemplate) = (name_lookup_hack id env,
+                                  Frame.fresh e.exp_type) in
+              instantiate f ftemplate;
+              (f, cstrs, framemap)
+(*
 	| Pexp_construct(Lident "[]", _, _) ->
             (fresh_frame e, constrs, framemap)
 	| Pexp_construct(Lident "::", Some {pexp_desc = Pexp_tuple [e1; e2]}, _) ->
@@ -143,15 +150,15 @@ let constrain_expression tenv quals exp initcstrs initframemap =
 	| _ -> raise ExpressionNotSupported *)
         | _ -> assert false
     in (f, cs, LocationMap.add e.exp_loc f fm)
-  in constrain exp Lightenv.empty True initcstrs initframemap
+  in constrain exp initenv True initcstrs initframemap
 
 (* pmr: note we're operating in the environment created by typing the
    structure - it's entirely possible this has some bad corner cases *)
-let constrain_structure tenv initquals str =
+let constrain_structure tenv fenv initquals str =
   let rec constrain_rec quals cstrs fmap = function
     | [] -> (quals, cstrs, fmap)
     | (Tstr_eval exp) :: srem ->
-        let (_, cstrs', fmap') = constrain_expression tenv quals exp cstrs fmap in
+        let (_, cstrs', fmap') = constrain_expression tenv fenv quals exp cstrs fmap in
           constrain_rec quals cstrs' fmap' srem
     | (Tstr_qualifier (name, (valu, pred))) :: srem ->
         let newquals = (Path.Pident name, valu, pred) :: quals in
@@ -173,8 +180,8 @@ let instantiate_in_environments cstrs quals =
     in List.fold_left instantiate_in_env qualset envs
   in QualifierSet.elements (List.fold_left instantiate_qual QualifierSet.empty quals)
 
-let qualify_structure tenv quals str =
-  let (newquals, cstrs, fmap) = constrain_structure tenv quals str in
+let qualify_structure tenv fenv quals str =
+  let (newquals, cstrs, fmap) = constrain_structure tenv fenv quals str in
   let instantiated_quals = instantiate_in_environments cstrs quals in
   let solution = solve_constraints instantiated_quals cstrs in
     (newquals, LocationMap.map (frame_apply_solution solution) fmap)

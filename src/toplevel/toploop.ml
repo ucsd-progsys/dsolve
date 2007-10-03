@@ -195,6 +195,10 @@ let rec item_list env = function
 
 let toplevel_env = ref Env.empty
 
+(* The current frame environment for the toplevel *)
+
+let toplevel_fenv = ref Lightenv.empty
+
 (* The current qualifier list for the toplevel *)
 
 let toplevel_quals = ref []
@@ -225,7 +229,8 @@ let execute_phrase print_outcome ppf phr =
       let (str, sg, newenv) = Typemod.type_structure oldenv sstr in
       Typecore.force_delayed_checks ();
       let oldquals = !toplevel_quals in
-      let (newquals, framemap) = Qualifymod.qualify_structure newenv oldquals str in
+      let (newquals, framemap) =
+        Qualifymod.qualify_structure newenv !toplevel_fenv oldquals str in
       let lam = Translmod.transl_toplevel_definition str in
       Warnings.check_fatal ();
       begin try

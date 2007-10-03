@@ -19,6 +19,6 @@ module LocationMap: sig
   val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
 end
 
-val qualify_structure: Env.t -> Qualifier.t list -> Typedtree.structure ->
+val qualify_structure:
+  Env.t -> frame_expr Lightenv.t -> Qualifier.t list -> Typedtree.structure ->
   Qualifier.t list * frame_expr LocationMap.t
-
