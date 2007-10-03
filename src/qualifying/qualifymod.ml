@@ -120,7 +120,14 @@ let constrain_expression tenv initenv quals exp initcstrs initframemap =
 		    | _ -> assert false
                   end
               | _ -> assert false
-	    in List.fold_left constrain_application (constrain e1 env guard cstrs framemap) exps
+	    in List.fold_left constrain_application
+                 (constrain e1 env guard cstrs framemap) exps
+	| (Texp_let (Nonrecursive, [({pat_desc = Tpat_var x}, e1)], e2), t) ->
+            let (f1, cstrs'', fm'') = constrain e1 env guard cstrs framemap in
+            let env' = Lightenv.add x f1 env in
+            let (f2, cstrs', fm') = constrain e2 env' guard cstrs'' fm'' in
+            let f = Frame.fresh t in
+              (f, SubFrame (env', guard, f2, f) :: cstrs', fm')
 (*
 (*        | Exp.Match(e1, e2, (h, t), e3, _) ->
             begin match constrain e1 env guard constrs framemap with
@@ -132,12 +139,6 @@ let constrain_expression tenv initenv quals exp initcstrs initframemap =
                     (f, SubType(env, guard, f2, f)::SubType(env', guard, f3, f)::constrs', fm')
               | _ -> failwith "Wrong shape for match guard - expected list"
             end *)
-	| Pexp_let(Nonrecursive, [({ppat_desc = Ppat_var x}, e1)], e2) ->
-            let (f1, constrs'', fm'') = constrain e1 env guard constrs framemap in
-            let env' = Env.add x f1 env in
-            let (f2, constrs', fm') = constrain e2 env' guard constrs'' fm'' in
-            let f = fresh_frame e in
-              (f, SubType(env', guard, f2, f)::constrs', fm')
 	| Pexp_let(Recursive, [({ppat_desc = Ppat_var f}, e1)], e2) ->
             let f1'' = fresh_frame e1 in
             let env'' = Env.add f f1'' env in
