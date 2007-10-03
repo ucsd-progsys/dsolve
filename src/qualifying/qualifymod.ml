@@ -30,11 +30,11 @@ let name_lookup_hack path env =
 let constrain_expression tenv initenv quals exp initcstrs initframemap =
   let rec constrain e env guard cstrs framemap =
     let (f, cs, fm) =
-      match (e.exp_desc, (repr e.exp_type).desc) with
-	  (Texp_constant(Const_int n), Tconstr(path, [], _)) ->
+      match (e.exp_desc, repr e.exp_type) with
+	  (Texp_constant(Const_int n), {desc = Tconstr(path, [], _)}) ->
             (ref (Fconstr(path, [], Builtins.equality_refinement (PInt n))),
              cstrs, framemap)
-        | (Texp_construct(cstrdesc, []), Tconstr(path, [], _)) ->
+        | (Texp_construct(cstrdesc, []), {desc = Tconstr(path, [], _)}) ->
             let cstrref =
               match cstrdesc.cstr_tag with
                   Cstr_constant n -> Builtins.equality_refinement (PInt n)
@@ -78,15 +78,14 @@ let constrain_expression tenv initenv quals exp initcstrs initframemap =
                      fm')
               | _ -> assert false
 	    end
-	| (Texp_ident _, Tconstr (p, [], _)) ->
+	| (Texp_ident _, {desc = Tconstr (p, [], _)}) ->
             (ref (Fconstr (p, [],
                            Builtins.equality_refinement (expression_to_pexpr e))),
              cstrs, framemap)
         | (Texp_ident (id, _), t) ->
             (* pmr: Later, the env should probably take paths, not idents.
                Something to think about... *)
-            let (f, ftemplate) = (name_lookup_hack id env,
-                                  Frame.fresh e.exp_type) in
+            let (f, ftemplate) = (name_lookup_hack id env, Frame.fresh t) in
               instantiate f ftemplate;
               (f, cstrs, framemap)
 (*
