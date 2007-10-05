@@ -1,17 +1,13 @@
-open Predicate
 open Format
 
-type t = Path.t * Ident.t * predicate
+type t = Path.t * Ident.t * Predicate.t
 
 let pprint ppf (path, _, _) =
   fprintf ppf "%s" (Path.name path)
 
 let compare = compare
 
-let apply x (_, y, p) = predicate_subst (Var x) y p
-
-let is_well_formed domain (_, x, p) =
-  List.for_all (fun v -> List.mem v (x::domain)) (predicate_vars p)
+let apply x (_, y, p) = Predicate.subst (Predicate.Var x) y p
 
 exception Refinement_not_closed
 
@@ -35,5 +31,5 @@ let instantiate env (path, valu, pred) =
      (Ident.name valu, valu) ::
        (Lightenv.maplist (fun id _ -> (Ident.name id, id)) env) in
     try
-      (path, valu, instantiate_named_vars names_to_idents pred)
+      (path, valu, Predicate.instantiate_named_vars names_to_idents pred)
     with Not_found -> raise Refinement_not_closed

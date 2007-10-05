@@ -1,8 +1,6 @@
 open OUnit
-open Predicate
 open Constraint
 open Type
-open Frame
 
 
 let empty_solution = Solution.create QualifierSet.empty

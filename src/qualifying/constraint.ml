@@ -2,12 +2,12 @@ open TheoremProver
 open Format
 
 type frame_constraint =
-  | SubFrame of Frame.frame_expr Lightenv.t * Predicate.predicate * Frame.frame_expr * Frame.frame_expr
-  | WFFrame of Frame.frame_expr Lightenv.t * Frame.frame_expr
+  | SubFrame of Frame.t Lightenv.t * Predicate.t * Frame.t * Frame.t
+  | WFFrame of Frame.t Lightenv.t * Frame.t
 
 type refinement_constraint =
-  | SubRefinement of Frame.frame_expr Lightenv.t * Predicate.predicate * Frame.refinement * Frame.refinement
-  | WFRefinement of Frame.frame_expr Lightenv.t * Frame.refinement
+  | SubRefinement of Frame.t Lightenv.t * Predicate.t * Frame.refinement * Frame.refinement
+  | WFRefinement of Frame.t Lightenv.t * Frame.refinement
 
 let pprint ppf = function
   | SubFrame (_, _, f1, f2) ->

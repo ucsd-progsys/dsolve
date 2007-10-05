@@ -20,12 +20,12 @@ type pexpr =
   | FunApp of string * pexpr
   | Binop of pexpr * binop * pexpr 
 
-type predicate =
+type t =
     True
   | Atom of pexpr * binrel * pexpr 
-  | Not of predicate
-  | And of predicate * predicate 
-  | Or of predicate * predicate
+  | Not of t
+  | And of t * t 
+  | Or of t * t
 
 let rec pprint_pexpr ppf = function
   | PInt n ->
@@ -95,13 +95,13 @@ let rec map_vars f pred =
       Or (map_rec p, map_rec q)
   in map_rec pred
 
-let predicate_subst v x pred =
+let subst v x pred =
   map_vars (fun y -> if Ident.same x y then v else Var y) pred
 
 let rec instantiate_named_vars subs pred =
   map_vars (fun y -> Var (List.assoc (Ident.name y) subs)) pred
 
-let predicate_vars p =
+let vars p =
   let rec exp_vars_rec vars = function
       PInt _ ->
         vars

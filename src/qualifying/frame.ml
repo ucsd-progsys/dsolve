@@ -10,10 +10,10 @@ type qualifier_expr =
 
 type refinement = substitution list * qualifier_expr
 
-type frame_expr =
+type t =
     Fvar of Ident.t
-  | Fconstr of Path.t * frame_expr list * refinement
-  | Farrow of Ident.t option * frame_expr * frame_expr
+  | Fconstr of Path.t * t list * refinement
+  | Farrow of Ident.t option * t * t
 
 let pprint_qualifier_expr ppf = function
   | Qvar id ->
@@ -140,7 +140,7 @@ let refinement_predicate solution qual_var (subs, qualifiers) =
     | Qconst qs -> qs
   in
   let unsubst = Predicate.big_and (List.map (Qualifier.apply qual_var) quals) in
-  let substitute p (x, e) = Predicate.predicate_subst e x p in
+  let substitute p (x, e) = Predicate.subst e x p in
     List.fold_left substitute unsubst subs
 
 let predicate solution qual_var = function
@@ -153,4 +153,4 @@ let refinement_well_formed env solution r =
   let valu = Ident.create "valu" in
   let var_bound v = v = valu or Lightenv.mem v env in
     List.for_all var_bound
-      (Predicate.predicate_vars (refinement_predicate solution valu r))
+      (Predicate.vars (refinement_predicate solution valu r))

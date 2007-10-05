@@ -1,11 +1,9 @@
-open Predicate
 open Format
 
-type t = Path.t * Ident.t * predicate
+type t = Path.t * Ident.t * Predicate.t
 
 val compare: t -> t -> int
-val apply: Ident.t -> t -> predicate
-val is_well_formed: Ident.t list -> t -> bool
+val apply: Ident.t -> t -> Predicate.t
 
 exception Refinement_not_closed
 

@@ -1,5 +1,3 @@
-open Frame
-open Predicate
 open Constraint
 
 module LocationMap: sig
@@ -20,5 +18,5 @@ module LocationMap: sig
 end
 
 val qualify_structure:
-  Env.t -> frame_expr Lightenv.t -> Qualifier.t list -> Typedtree.structure ->
-  Qualifier.t list * frame_expr LocationMap.t
+  Env.t -> Frame.t Lightenv.t -> Qualifier.t list -> Typedtree.structure ->
+  Qualifier.t list * Frame.t LocationMap.t

@@ -1,15 +1,13 @@
-open Frame
-open Predicate
-
-let qfalse = (Path.Pident (Ident.create "FALSE"), Ident.create "x", Not True)
+let qfalse = (Path.Pident (Ident.create "FALSE"), Ident.create "x",
+              Predicate.Not Predicate.True)
 
 let quals = [
   qfalse
 ]
 
-let mk_int qs = Fconstr (Predef.path_int, [], ([], Qconst qs))
+let mk_int qs = Frame.Fconstr (Predef.path_int, [], ([], Frame.Qconst qs))
 
-let mk_fun (lab, f, f') = Farrow (Some lab, f, f')
+let mk_fun (lab, f, f') = Frame.Farrow (Some lab, f, f')
 
 let fun_frame name (x, y) qual =
   ("Pervasives." ^ name,
@@ -20,29 +18,36 @@ let fresh_idents () = (Ident.create "x", Ident.create "y", Ident.create "z")
 let op_frame name op =
   let (x, y, z) = fresh_idents () in
   let qual = (Path.Pident (Ident.create name),
-              z, equals (Var z, Binop (Var x, op, Var y))) in
+              z,
+              Predicate.equals
+                (Predicate.Var z,
+                 Predicate.Binop (Predicate.Var x, op, Predicate.Var y))) in
     fun_frame name (x, y) qual
 
 let rel_frame name rel =
   let (x, y, z) = fresh_idents () in
-  let truepred = Atom (Var x, rel, Var y) in
+  let truepred = Predicate.Atom (Predicate.Var x, rel, Predicate.Var y) in
   let qual = (Path.Pident (Ident.create name),
               z,
-              Or (And (equals (Var z, PInt 1), truepred),
-                  And (equals (Var z, PInt 0), Not truepred))) in
+              Predicate.Or (Predicate.And (Predicate.equals (Predicate.Var z, Predicate.PInt 1),
+                                           truepred),
+                            Predicate.And (Predicate.equals (Predicate.Var z, Predicate.PInt 0),
+                                           Predicate.Not truepred))) in
     fun_frame name (x, y) qual
 
 let frames = [
-  op_frame "+" Plus;
-  op_frame "-" Minus;
-  rel_frame "=" Eq;
-  rel_frame "!=" Ne;
-  rel_frame "<" Lt;
-  rel_frame "<=" Le;
+  op_frame "+" Predicate.Plus;
+  op_frame "-" Predicate.Minus;
+  rel_frame "=" Predicate.Eq;
+  rel_frame "!=" Predicate.Ne;
+  rel_frame "<" Predicate.Lt;
+  rel_frame "<=" Predicate.Le;
 ]
 
 let equality_refinement exp =
   let x = Ident.create "x" in
-    ([], Qconst [(Path.Pident (Ident.create "<eq>"), x, equals (Var x, exp))])
+    ([], Frame.Qconst [(Path.Pident (Ident.create "<eq>"),
+                        x,
+                        Predicate.equals (Predicate.Var x, exp))])
 
-let empty_refinement = ([], Qconst [])
+let empty_refinement = ([], Frame.Qconst [])

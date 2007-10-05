@@ -132,7 +132,7 @@ and record_representation =
 
 (* Qualifier definitions *)
 
-type qualifier_declaration = Ident.t * Predicate.predicate
+type qualifier_declaration = Ident.t * Predicate.t
 
 (* Type definitions *)
 

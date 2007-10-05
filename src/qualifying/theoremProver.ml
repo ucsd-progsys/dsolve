@@ -23,13 +23,11 @@
 
 (* This file is part of the SIMPLE Project.*)
 
-open Predicate
-
 
 module type PROVER = 
   sig
     (* push p: tell prover to assume fact p *)
-    val push : Predicate.predicate -> unit 
+    val push : Predicate.t -> unit 
     
     (* pop () : tell prover to un-assume last assumed fact *)
     val pop : unit -> unit 
@@ -38,10 +36,10 @@ module type PROVER =
     val reset : unit -> unit 
     
     (* valid p : do the currently assumed facts imply p ? *)
-    val valid : Predicate.predicate -> bool
+    val valid : Predicate.t -> bool
 
     (* implies p q = true iff predicate p (provably) implies predicate q *)
-    val implies : Predicate.predicate -> Predicate.predicate -> bool  
+    val implies : Predicate.t -> Predicate.t -> bool  
     
   end
 
@@ -73,34 +71,34 @@ module YicesProver  =
     
     let rec yicesExp me e =
       match e with 
-        PInt i -> Y.yices_mk_num me.c i 
-      | Var s -> yicesVar me (Ident.unique_name s) me.t
-      | Pvar (s,i) -> yicesVar me
+        Predicate.PInt i -> Y.yices_mk_num me.c i 
+      | Predicate.Var s -> yicesVar me (Ident.unique_name s) me.t
+      | Predicate.Pvar (s,i) -> yicesVar me
           (Printf.sprintf "%sprime%d" (Ident.unique_name s) i) me.t
-      | FunApp (f,e) ->
+      | Predicate.FunApp (f,e) ->
           let (fn, e') = (yicesVar me f me.f, yicesExp me e) in
             Y.yices_mk_app me.c fn [|e'|]
-      | Binop (e1,op,e2) ->
+      | Predicate.Binop (e1,op,e2) ->
           let es' = Array.map (yicesExp me) [|e1;e2|] in
           (match op with 
-             Plus  -> Y.yices_mk_sum me.c es'
-           | Minus -> Y.yices_mk_sub me.c es'
-           | Times -> Y.yices_mk_mul me.c es')
+             Predicate.Plus  -> Y.yices_mk_sum me.c es'
+           | Predicate.Minus -> Y.yices_mk_sub me.c es'
+           | Predicate.Times -> Y.yices_mk_mul me.c es')
 
     let rec yicesPred me p = 
       match p with 
-        True -> Y.yices_mk_true me.c
-      | Not p' -> Y.yices_mk_not me.c (yicesPred me p')
-      | And (p1,p2) -> Y.yices_mk_and me.c (Array.map (yicesPred me) [|p1;p2|])
-      | Or (p1,p2) -> Y.yices_mk_or me.c (Array.map (yicesPred me) [|p1;p2|])
-      | Atom (e1,br,e2) ->
+        Predicate.True -> Y.yices_mk_true me.c
+      | Predicate.Not p' -> Y.yices_mk_not me.c (yicesPred me p')
+      | Predicate.And (p1,p2) -> Y.yices_mk_and me.c (Array.map (yicesPred me) [|p1;p2|])
+      | Predicate.Or (p1,p2) -> Y.yices_mk_or me.c (Array.map (yicesPred me) [|p1;p2|])
+      | Predicate.Atom (e1,br,e2) ->
           let e1' = yicesExp me e1 in
           let e2' = yicesExp me e2 in
           (match br with 
-             Eq -> Y.yices_mk_eq me.c e1' e2' 
-           | Ne -> Y.yices_mk_diseq me.c e1' e2' 
-           | Lt -> Y.yices_mk_lt me.c e1' e2'
-           | Le -> Y.yices_mk_le me.c e1' e2')
+             Predicate.Eq -> Y.yices_mk_eq me.c e1' e2' 
+           | Predicate.Ne -> Y.yices_mk_diseq me.c e1' e2' 
+           | Predicate.Lt -> Y.yices_mk_lt me.c e1' e2'
+           | Predicate.Le -> Y.yices_mk_le me.c e1' e2')
 
     let me = 
       let c = Y.yices_mk_context () in
@@ -145,7 +143,7 @@ module YicesProver  =
       Y.yices_check me.c = -1
 
     let valid p =
-      let _ = push (Not p) in
+      let _ = push (Predicate.Not p) in
       let rv = unsat () in
       let _ = pop () in
       rv

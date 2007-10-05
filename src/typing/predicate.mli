@@ -18,23 +18,23 @@ type pexpr =
   | FunApp of string * pexpr
   | Binop of pexpr * binop * pexpr 
 
-type predicate =  
+type t =  
     True
   | Atom of pexpr * binrel * pexpr 
-  | Not of predicate
-  | And of predicate * predicate 
-  | Or of predicate * predicate 
+  | Not of t
+  | And of t * t 
+  | Or of t * t 
 
-val pprint: formatter -> predicate -> unit
+val pprint: formatter -> t -> unit
 val pprint_pexpr: formatter -> pexpr -> unit
 
-val big_and: predicate list -> predicate
-val big_or: predicate list -> predicate
-val equals: (pexpr * pexpr) -> predicate
+val big_and: t list -> t
+val big_or: t list -> t
+val equals: (pexpr * pexpr) -> t
 
-val predicate_subst: pexpr -> Ident.t -> predicate -> predicate
-val predicate_vars: predicate -> Ident.t list
+val subst: pexpr -> Ident.t -> t -> t
+val vars: t -> Ident.t list
 (* pmr: change to plain old instantiate *)
-val instantiate_named_vars: (string * Ident.t) list -> predicate -> predicate
-val transl_predicate: Parsetree.predicate_declaration -> predicate
+val instantiate_named_vars: (string * Ident.t) list -> t -> t
+val transl_predicate: Parsetree.predicate_declaration -> t
 

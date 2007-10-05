@@ -9,21 +9,21 @@ type qualifier_expr =
 
 type refinement = substitution list * qualifier_expr
 
-type frame_expr =
+type t =
     Fvar of Ident.t
-  | Fconstr of Path.t * frame_expr list * refinement
-  | Farrow of Ident.t option * frame_expr * frame_expr
+  | Fconstr of Path.t * t list * refinement
+  | Farrow of Ident.t option * t * t
 
-val pprint: formatter -> frame_expr -> unit
-val fresh: type_expr -> frame_expr
-val fresh_with_labels: type_expr -> frame_expr -> frame_expr
-val instantiate: frame_expr -> frame_expr -> frame_expr
-val apply_substitution: substitution -> frame_expr -> frame_expr
-val label_like: frame_expr -> frame_expr -> frame_expr
-val apply_solution: Qualifier.t list Lightenv.t -> frame_expr -> frame_expr
+val pprint: formatter -> t -> unit
+val fresh: type_expr -> t
+val fresh_with_labels: type_expr -> t -> t
+val instantiate: t -> t -> t
+val apply_substitution: substitution -> t -> t
+val label_like: t -> t -> t
+val apply_solution: Qualifier.t list Lightenv.t -> t -> t
 val refinement_predicate:
-  Qualifier.t list Lightenv.t -> Ident.t -> refinement -> Predicate.predicate
+  Qualifier.t list Lightenv.t -> Ident.t -> refinement -> Predicate.t
 val predicate:
-  Qualifier.t list Lightenv.t -> Ident.t -> frame_expr -> Predicate.predicate
+  Qualifier.t list Lightenv.t -> Ident.t -> t -> Predicate.t
 val refinement_well_formed:
-  frame_expr Lightenv.t -> Qualifier.t list Lightenv.t -> refinement -> bool
+  t Lightenv.t -> Qualifier.t list Lightenv.t -> refinement -> bool
