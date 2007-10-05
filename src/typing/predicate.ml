@@ -1,5 +1,6 @@
 open Parsetree
 open Asttypes
+open Format
 
 type binop =
     Plus
@@ -25,6 +26,39 @@ type predicate =
   | Not of predicate
   | And of predicate * predicate 
   | Or of predicate * predicate
+
+let rec pprint_pexpr ppf = function
+  | PInt n ->
+      fprintf ppf "%d" n
+  | Var id ->
+      fprintf ppf "%s" (Ident.unique_name id)
+  | Pvar (id, n) ->
+      fprintf ppf "%s-%d" (Ident.unique_name id) n
+  | FunApp (f, pexp) ->
+      fprintf ppf "@[%s@ %a@]" f pprint_pexpr pexp
+  | Binop (p, op, q) ->
+      let opstr = match op with
+        | Plus -> "+"
+        | Minus -> "-"
+        | Times -> "*"
+      in fprintf ppf "@[%a@ %s@ %a@]" pprint_pexpr p opstr pprint_pexpr q
+
+let rec pprint ppf = function
+  | True ->
+      fprintf ppf "true"
+  | Atom (p, rel, q) ->
+      let relstr = match rel with
+        | Eq -> "="
+        | Ne -> "=/="
+        | Lt -> "<"
+        | Le -> "<="
+      in fprintf ppf "@[%a@ %s@ %a@]" pprint_pexpr p relstr pprint_pexpr q
+  | Not p ->
+      fprintf ppf "@[not@ %a@]" pprint p
+  | And (p, q) ->
+      fprintf ppf "@[%a@ and@ %a@]" pprint p pprint q
+  | Or (p, q) ->
+      fprintf ppf "@[%a@ or@ %a@]" pprint p pprint q
 
 let equals(p, q) =
   Atom(p, Eq, q)
@@ -137,49 +171,3 @@ let rec transl_predicate p =
       | Ppred_or (p1, p2) ->
 	  Or (transl_pred_rec p1, transl_pred_rec p2)
   in transl_pred_rec p
-
-let pprint_binop frec e1 op e2 =
-  let opstr =
-    match op with
-	Plus -> "+"
-      | Minus -> "-"
-      | Times -> "*"
-  in
-  let (str1, str2) = (frec e1, frec e2) in
-    String.concat " " [str1; opstr; str2]
-
-let pprint_binrel frec e1 rel e2 =
-  let relstr =
-    match rel with
-	Eq -> "="
-      | Ne -> "!="
-      | Lt -> "<"
-      | Le -> "<="
-  in
-  let (str1, str2) = (frec e1, frec e2) in
-    String.concat " " [str1; relstr; str2]
-
-let rec pprint_pexpr = function
-    PInt(n) ->
-      string_of_int n
-  | Var x ->
-      Ident.unique_name x
-  | Pvar(x, n) ->
-      (Ident.unique_name x) ^ "_" ^ (string_of_int n)
-  | FunApp(f, e) ->
-      Printf.sprintf "%s(%s)" f (pprint_pexpr e)
-  | Binop(e1, op, e2) ->
-      pprint_binop pprint_pexpr e1 op e2
-
-let rec pprint_predicate = function
-    True ->
-      "true"
-  | Atom(e1, rel, e2) ->
-      "(" ^ pprint_binrel pprint_pexpr e1 rel e2 ^ ")"
-  | Not(p) ->
-      "(not " ^ pprint_predicate p ^ ")"
-  | And(p, q) ->
-      "(and " ^ pprint_predicate p ^ " " ^ pprint_predicate q ^ ")"
-  | Or(p, q) ->
-      "(or " ^ pprint_predicate p ^ " " ^ pprint_predicate q ^ ")"
-

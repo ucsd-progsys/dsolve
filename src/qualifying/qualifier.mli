@@ -1,4 +1,5 @@
 open Predicate
+open Format
 
 type t = Path.t * Ident.t * predicate
 
@@ -9,3 +10,4 @@ val is_well_formed: Ident.t list -> t -> bool
 exception Refinement_not_closed
 
 val instantiate: 'a Lightenv.t -> t -> t
+val pprint: formatter -> t -> unit

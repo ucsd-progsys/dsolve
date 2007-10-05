@@ -1,3 +1,5 @@
+open Format
+
 type binop =
     Plus
   | Minus
@@ -23,6 +25,9 @@ type predicate =
   | And of predicate * predicate 
   | Or of predicate * predicate 
 
+val pprint: formatter -> predicate -> unit
+val pprint_pexpr: formatter -> pexpr -> unit
+
 val big_and: predicate list -> predicate
 val big_or: predicate list -> predicate
 val equals: (pexpr * pexpr) -> predicate
@@ -32,8 +37,4 @@ val predicate_vars: predicate -> Ident.t list
 (* pmr: change to plain old instantiate *)
 val instantiate_named_vars: (string * Ident.t) list -> predicate -> predicate
 val transl_predicate: Parsetree.predicate_declaration -> predicate
-(*
-val pprint_pexpr: pexpr -> string
-*)
-val pprint_predicate: predicate -> string
 

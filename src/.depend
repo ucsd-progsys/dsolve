@@ -275,25 +275,26 @@ qualifying/constraint.cmi: qualifying/qualifier.cmi typing/predicate.cmi \
 qualifying/expr.cmi: qualifying/type.cmi typing/predicate.cmi \
     parsing/parsetree.cmi typing/env.cmi 
 qualifying/frame.cmi: typing/types.cmi qualifying/qualifier.cmi \
-    typing/predicate.cmi typing/path.cmi typing/ident.cmi 
+    typing/predicate.cmi typing/path.cmi qualifying/lightenv.cmo \
+    typing/ident.cmi 
 qualifying/printqual.cmi: typing/outcometree.cmi qualifying/frame.cmi 
 qualifying/qualifier.cmi: typing/predicate.cmi typing/path.cmi \
     qualifying/lightenv.cmo typing/ident.cmi 
 qualifying/qualifymod.cmi: typing/typedtree.cmi qualifying/qualifier.cmi \
-    typing/predicate.cmi parsing/location.cmi qualifying/frame.cmi \
-    typing/env.cmi qualifying/constraint.cmi 
-qualifying/builtins.cmo: typing/predicate.cmi typing/path.cmi \
-    typing/ident.cmi qualifying/frame.cmi 
-qualifying/builtins.cmx: typing/predicate.cmx typing/path.cmx \
-    typing/ident.cmx qualifying/frame.cmx 
+    typing/predicate.cmi parsing/location.cmi qualifying/lightenv.cmo \
+    qualifying/frame.cmi typing/env.cmi qualifying/constraint.cmi 
+qualifying/builtins.cmo: typing/predicate.cmi typing/predef.cmi \
+    typing/path.cmi typing/ident.cmi qualifying/frame.cmi 
+qualifying/builtins.cmx: typing/predicate.cmx typing/predef.cmx \
+    typing/path.cmx typing/ident.cmx qualifying/frame.cmx 
 qualifying/constraint.cmo: qualifying/theoremProver.cmo \
-    qualifying/qualifier.cmi typing/predicate.cmi utils/misc.cmi \
+    qualifying/printqual.cmi typing/predicate.cmi utils/misc.cmi \
     qualifying/lightenv.cmo typing/ident.cmi qualifying/frame.cmi \
-    qualifying/constraint.cmi 
+    utils/clflags.cmi qualifying/constraint.cmi 
 qualifying/constraint.cmx: qualifying/theoremProver.cmx \
-    qualifying/qualifier.cmx typing/predicate.cmx utils/misc.cmx \
+    qualifying/printqual.cmx typing/predicate.cmx utils/misc.cmx \
     qualifying/lightenv.cmx typing/ident.cmx qualifying/frame.cmx \
-    qualifying/constraint.cmi 
+    utils/clflags.cmx qualifying/constraint.cmi 
 qualifying/expr.cmo: typing/predicate.cmi parsing/parsetree.cmi \
     parsing/longident.cmi typing/env.cmi qualifying/builtins.cmo \
     parsing/asttypes.cmi qualifying/expr.cmi 
@@ -301,10 +302,12 @@ qualifying/expr.cmx: typing/predicate.cmx parsing/parsetree.cmi \
     parsing/longident.cmx typing/env.cmx qualifying/builtins.cmx \
     parsing/asttypes.cmi qualifying/expr.cmi 
 qualifying/frame.cmo: typing/types.cmi qualifying/qualifier.cmi \
-    typing/predicate.cmi typing/path.cmi typing/ident.cmi typing/btype.cmi \
+    qualifying/printqual.cmi typing/predicate.cmi typing/path.cmi \
+    qualifying/lightenv.cmo typing/ident.cmi typing/btype.cmi \
     qualifying/frame.cmi 
 qualifying/frame.cmx: typing/types.cmx qualifying/qualifier.cmx \
-    typing/predicate.cmx typing/path.cmx typing/ident.cmx typing/btype.cmx \
+    qualifying/printqual.cmx typing/predicate.cmx typing/path.cmx \
+    qualifying/lightenv.cmx typing/ident.cmx typing/btype.cmx \
     qualifying/frame.cmi 
 qualifying/lightenv.cmo: typing/ident.cmi 
 qualifying/lightenv.cmx: typing/ident.cmx 
@@ -853,9 +856,9 @@ toplevel/toploop.cmo: utils/warnings.cmi typing/unused_var.cmi \
     parsing/printast.cmi typing/predef.cmi typing/path.cmi \
     parsing/parsetree.cmi parsing/parse.cmi typing/outcometree.cmi \
     typing/oprint.cmi utils/misc.cmi bytecomp/meta.cmi parsing/longident.cmi \
-    parsing/location.cmi parsing/lexer.cmi typing/ident.cmi \
-    toplevel/genprintval.cmi driver/errors.cmi typing/env.cmi \
-    bytecomp/emitcode.cmi bytecomp/dll.cmi utils/consistbl.cmi \
+    parsing/location.cmi qualifying/lightenv.cmo parsing/lexer.cmi \
+    typing/ident.cmi toplevel/genprintval.cmi driver/errors.cmi \
+    typing/env.cmi bytecomp/emitcode.cmi bytecomp/dll.cmi utils/consistbl.cmi \
     utils/config.cmi driver/compile.cmi utils/clflags.cmi \
     bytecomp/bytegen.cmi typing/btype.cmi toplevel/toploop.cmi 
 toplevel/toploop.cmx: utils/warnings.cmx typing/unused_var.cmx \
@@ -866,9 +869,9 @@ toplevel/toploop.cmx: utils/warnings.cmx typing/unused_var.cmx \
     parsing/printast.cmx typing/predef.cmx typing/path.cmx \
     parsing/parsetree.cmi parsing/parse.cmx typing/outcometree.cmi \
     typing/oprint.cmx utils/misc.cmx bytecomp/meta.cmx parsing/longident.cmx \
-    parsing/location.cmx parsing/lexer.cmx typing/ident.cmx \
-    toplevel/genprintval.cmx driver/errors.cmx typing/env.cmx \
-    bytecomp/emitcode.cmx bytecomp/dll.cmx utils/consistbl.cmx \
+    parsing/location.cmx qualifying/lightenv.cmx parsing/lexer.cmx \
+    typing/ident.cmx toplevel/genprintval.cmx driver/errors.cmx \
+    typing/env.cmx bytecomp/emitcode.cmx bytecomp/dll.cmx utils/consistbl.cmx \
     utils/config.cmx driver/compile.cmx utils/clflags.cmx \
     bytecomp/bytegen.cmx typing/btype.cmx toplevel/toploop.cmi 
 toplevel/topmain.cmo: utils/warnings.cmi toplevel/toploop.cmi \

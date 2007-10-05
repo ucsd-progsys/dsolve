@@ -1,6 +1,10 @@
 open Predicate
+open Format
 
 type t = Path.t * Ident.t * predicate
+
+let pprint ppf (path, _, _) =
+  fprintf ppf "%s" (Path.name path)
 
 let compare = compare
 

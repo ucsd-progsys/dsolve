@@ -1,4 +1,5 @@
-qualifier NM(x) = x = n + m;;
+qualif NM(x): x = n + m;;
+qualif T(x): x = 3;;
 
 let rec append n m =
   if n = 0 then

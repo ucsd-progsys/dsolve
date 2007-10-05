@@ -1,5 +1,5 @@
-qualifier P(x) = 0 < x;;
-qualifier NN(x) = 0 <= x;;
+qualif P(x): 0 < x;;
+qualif NN(x): 0 < x + 1;;
 
 let rec f n =
   if n = 0 then

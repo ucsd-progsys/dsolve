@@ -7,9 +7,9 @@ let quals = [
   qfalse
 ]
 
-let mk_int qs = ref (Fconstr (Predef.path_int, [], ([], Qconst qs)))
+let mk_int qs = Fconstr (Predef.path_int, [], ([], Qconst qs))
 
-let mk_fun (lab, f, f') = ref (Farrow (Some lab, f, f'))
+let mk_fun (lab, f, f') = Farrow (Some lab, f, f')
 
 let fun_frame name (x, y) qual =
   ("Pervasives." ^ name,

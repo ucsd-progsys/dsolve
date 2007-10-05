@@ -94,6 +94,7 @@ let main () =
      "-drawlambda", Arg.Set dump_rawlambda, " (undocumented)";
      "-dlambda", Arg.Set dump_lambda, " (undocumented)";
      "-dinstr", Arg.Set dump_instr, " (undocumented)";
+     "-dconstrs", Arg.Set dump_constraints, "print out subframe constraints";
     ] file_argument usage;
   if not (prepare Format.err_formatter) then exit 2;
   Toploop.loop Format.std_formatter

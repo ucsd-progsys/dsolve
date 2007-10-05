@@ -17,10 +17,10 @@
 include config/Makefile
 include stdlib/StdlibModules
 
-CAMLC=boot/ocamlrun boot/ocamlc -nostdlib -I boot
+CAMLC=boot/ocamlrun boot/ocamlc -nostdlib -I boot -g
 CAMLOPT=boot/ocamlrun ./ocamlopt -nostdlib -I stdlib
 COMPFLAGS=-warn-error A $(INCLUDES)
-LINKFLAGS=-custom -I yices/lib/ -ccopt -L./yices/lib/ -cclib -loyices -cclib \
+LINKFLAGS=-g -custom -I yices/lib/ -ccopt -L./yices/lib/ -cclib -loyices -cclib \
           -lyices -cclib -lgmp
 
 CAMLYACC=boot/ocamlyacc

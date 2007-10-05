@@ -1,4 +1,4 @@
-qualifier NNEG(x) = 0 <= x;;
+qualif NNEG(x): 0 < x + 1;;
 
 let rec repeat f n b =
   if n = 0 then

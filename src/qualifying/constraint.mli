@@ -1,12 +1,11 @@
-open Predicate
-open Frame
-
 type frame_constraint =
-  | SubFrame of frame_expr Lightenv.t * predicate * frame_expr * frame_expr
-  | WFFrame of frame_expr Lightenv.t * frame_expr
+  | SubFrame of Frame.frame_expr Lightenv.t * Predicate.predicate * Frame.frame_expr * Frame.frame_expr
+  | WFFrame of Frame.frame_expr Lightenv.t * Frame.frame_expr
 
-val environment: frame_constraint -> frame_expr Lightenv.t
-val frame_apply_solution: Qualifier.t list Lightenv.t -> frame_expr -> frame_expr
+type refinement_constraint =
+  | SubRefinement of Frame.frame_expr Lightenv.t * Predicate.predicate * Frame.refinement * Frame.refinement
+  | WFRefinement of Frame.frame_expr Lightenv.t * Frame.refinement
+
+val environment: frame_constraint -> Frame.frame_expr Lightenv.t
 val solve_constraints:
   Qualifier.t list -> frame_constraint list -> Qualifier.t list Lightenv.t
-

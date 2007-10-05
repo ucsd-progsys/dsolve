@@ -1,7 +1,8 @@
-qualifier LEN(x) = x <= n;;
-qualifier LN(x) = x < n;;
-qualifier LT(x) = x < 10;;
-qualifier LET(x) = x <= 10;;
+(* pmr: this one's hard to test as-is, need more debuggin' info *)
+qualif LEN(x): x - 1 < n;;
+qualif LN(x): x < n;;
+qualif LT(x): x < 10;;
+qualif LET(x): x - 1 < 10;;
 
 let rec foo n i f c =
   if i < n then

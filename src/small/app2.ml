@@ -1,5 +1,6 @@
-qualifier P(x) = 0 < x;;
-qualifier N(x) = x < 0;;
+qualif P(x): 0 < x;;
+qualif N(x): x < 0;;
+qualif Z(x): x = 0;;
 
 let inc x = x + 1 in
 let dec y = y - 1 in
