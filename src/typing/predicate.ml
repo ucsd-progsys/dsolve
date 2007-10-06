@@ -6,10 +6,12 @@ type binop =
     Plus
   | Minus
   | Times
+	(*| Div*)
 
 type binrel =
     Eq
   | Ne
+  | Gt
   | Lt
   | Le 
 
@@ -50,6 +52,7 @@ let rec pprint ppf = function
       let relstr = match rel with
         | Eq -> "="
         | Ne -> "=/="
+        | Gt -> ">"
         | Lt -> "<"
         | Le -> "<="
       in fprintf ppf "@[%a@ %s@ %a@]" pprint_pexpr p relstr pprint_pexpr q
@@ -155,6 +158,7 @@ let rec transl_predicate p =
   let transl_rel = function
     | Pred_eq -> Eq
     | Pred_ne -> Ne
+    | Pred_gt -> Gt
     | Pred_lt -> Lt
     | Pred_le -> Le
   in

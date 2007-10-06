@@ -96,7 +96,8 @@ module YicesProver  =
           let e2' = yicesExp me e2 in
           (match br with 
              Predicate.Eq -> Y.yices_mk_eq me.c e1' e2' 
-           | Predicate.Ne -> Y.yices_mk_diseq me.c e1' e2' 
+           | Predicate.Ne -> Y.yices_mk_diseq me.c e1' e2'
+           | Predicate.Gt -> Y.yices_mk_gt me.c e1' e2'
            | Predicate.Lt -> Y.yices_mk_lt me.c e1' e2'
            | Predicate.Le -> Y.yices_mk_le me.c e1' e2')
 

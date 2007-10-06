@@ -8,6 +8,7 @@ type binop =
 type binrel =
     Eq
   | Ne
+  | Gt
   | Lt
   | Le 
 

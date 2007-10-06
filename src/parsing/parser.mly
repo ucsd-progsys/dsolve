@@ -1402,20 +1402,27 @@ predicate:
     TRUE                                        { mkpred Ppred_true }
   | LPAREN predicate RPAREN                     { $2 }
   | pexpression LESS pexpression                { mkpred (Ppred_atom($1, Pred_lt, $3)) }
-  | pexpression LESSEQ pexpression              { mkpred (Ppred_atom($1, Pred_le, $3)) } 
+  | pexpression GREATER pexpression             { mkpred (Ppred_atom($1, Pred_gt, $3)) }
   | pexpression EQUAL pexpression               { mkpred (Ppred_atom($1, Pred_eq, $3)) }
-/*  | NOT predicate                               { mkpred (Ppred_not $2) } */
+  | pexpression INFIXOP0 pexpression            {
+      let op =
+        if $2 = "<=" then Pred_le
+        else if $2 = "!=" then Pred_ne
+        else raise Parse_error
+      in mkpred (Ppred_atom($1, op, $3))
+    }
+  | MINUSDOT predicate                          { mkpred (Ppred_not $2) }
   | predicate AND predicate                     { mkpred (Ppred_and($1, $3)) }
   | predicate OR predicate                      { mkpred (Ppred_or($1, $3)) }
 
 pexpression:
     INT                                         { mkpredexp (Ppredexp_int $1) }
   | LIDENT                                      { mkpredexp (Ppredexp_var $1) }
-	| LIDENT pexpression													{ mkpredexp (Ppredexp_app $1) }
+	| LIDENT pexpression													{ mkpredexp (Ppredexp_app ($1, $2)) }
   | pexpression PLUS pexpression                { mkpredexp (Ppredexp_binop($1, Predexp_plus, $3)) }
   | pexpression MINUS pexpression               { mkpredexp (Ppredexp_binop($1, Predexp_minus, $3)) }
   | pexpression STAR pexpression                { mkpredexp (Ppredexp_binop($1, Predexp_times, $3)) }
-	| pexpression INFIXOP3 pexpression					  { match $2 with "/" -> 
+	/*| pexpression INFIXOP3 pexpression					  { match $2 with "/" -> mkpredexp(Ppredexp_binop($1, Predexp_times, $3)) } */
 
 /* Constants */
 
