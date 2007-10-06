@@ -1402,7 +1402,7 @@ predicate:
     TRUE                                        { mkpred Ppred_true }
   | LPAREN predicate RPAREN                     { $2 }
   | pexpression LESS pexpression                { mkpred (Ppred_atom($1, Pred_lt, $3)) }
-/*  | pexpression LESSEQ pexpression              { mkpred (Ppred_atom($1, Pred_le, $3)) } */
+  | pexpression LESSEQ pexpression              { mkpred (Ppred_atom($1, Pred_le, $3)) } 
   | pexpression EQUAL pexpression               { mkpred (Ppred_atom($1, Pred_eq, $3)) }
 /*  | NOT predicate                               { mkpred (Ppred_not $2) } */
   | predicate AND predicate                     { mkpred (Ppred_and($1, $3)) }
@@ -1411,9 +1411,11 @@ predicate:
 pexpression:
     INT                                         { mkpredexp (Ppredexp_int $1) }
   | LIDENT                                      { mkpredexp (Ppredexp_var $1) }
+	| LIDENT pexpression													{ mkpredexp (Ppredexp_app $1) }
   | pexpression PLUS pexpression                { mkpredexp (Ppredexp_binop($1, Predexp_plus, $3)) }
   | pexpression MINUS pexpression               { mkpredexp (Ppredexp_binop($1, Predexp_minus, $3)) }
   | pexpression STAR pexpression                { mkpredexp (Ppredexp_binop($1, Predexp_times, $3)) }
+	| pexpression INFIXOP3 pexpression					  { match $2 with "/" -> 
 
 /* Constants */
 
