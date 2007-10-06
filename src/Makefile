@@ -137,6 +137,8 @@ all: runtime ocamlc ocamllex ocamlyacc ocamltools library ocaml
 # Compile everything the first time
 world: coldstart all
 
+world.remake: clean world
+
 # Compile also native code compiler and libraries, fast
 world.opt: coldstart opt.opt
 
