@@ -116,7 +116,9 @@ let rec apply_substitution sub = function
       Fconstr (p, [], (sub :: subs, qe))
   | Farrow (x, f1, f2) ->
       Farrow (x, apply_substitution sub f1, apply_substitution sub f2)
-  | _ -> assert false
+  | Fconstr (p, l, (subs, qe)) ->
+      Fconstr (p, List.map (apply_substitution sub) l, (sub::subs, qe))
+  (*| _ -> assert false*)
 
 (* Label all the function formals in [f] with their corresponding labels in
    [f'].  Obviously, they are expected to be of the same shape; also, [f]

@@ -28,7 +28,7 @@ let name_lookup_hack path env =
 				(function (n, f) -> f) 
 				(if (Path.name path) = "Array.length" then Builtins.array_length_frame else 
 				if (Path.name path) = "Array.get" then Builtins.array_get_frame else
-				raise Not_found)
+				(Printf.printf "%s\n" (Path.name path); raise Not_found) )
 
 let constrain_expression tenv initenv quals exp initcstrs initframemap =
   let rec constrain e env guard cstrs framemap =

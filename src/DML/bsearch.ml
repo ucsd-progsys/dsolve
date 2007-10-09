@@ -1,22 +1,22 @@
-qualif LTS(x) = x < size vec;;
-qualif LES(x) = x <= size vec;;
-(*qualif EQS(x) = x = size vec;;*)
-qualif NEQs(x) = not(x = size vec);;
-qualif LTh(x) = x < hi;;
-qualif LTl(x) = x < lo;;
-(*qualif EQh(x) = x = hi;;*)
-qualif NEQh(x) = not(x = hi);;
-qualif NEQl(x) = not(x = lo);;
-(*qualif EQl(x) = x = lo;;*)
-qualif LEh(x) = x <= hi;;
-qualif LEl(x) = x <= lo;;
-qualif NNEG(x) = 0 <= x;;
-qualif POS(x) = 0 < x;;
-qualif NEG1(x) = x = 0 - 1;;
-qualif GENEG1(x) = 0 - 1 <= x;;
-qualif GTNEG1(x) = 0 - 1 < x;;
-qualif LT4(x) = x < 4;;
-qualif GT(x) = 0 < x;;
+qualif LTS(x) : x < Array.length vec;;
+qualif LES(x) : x <= Array.length vec;;
+(*qualif EQS(x) : x = Array.length vec;;*)
+qualif NEQs(x) : not(x = Array.length vec);;
+qualif LTh(x) : x < hi;;
+qualif LTl(x) : x < lo;;
+(*qualif EQh(x) : x = hi;;*)
+qualif NEQh(x) : not(x = hi);;
+qualif NEQl(x) : not(x = lo);;
+(*qualif EQl(x) : x = lo;;*)
+qualif LEh(x) : x <= hi;;
+qualif LEl(x) : x <= lo;;
+qualif NNEG(x) : 0 <= x;;
+qualif POS(x) : 0 < x;;
+qualif NEG1(x) : x = 0 - 1;;
+qualif GENEG1(x) : 0 - 1 <= x;;
+qualif GTNEG1(x) : 0 - 1 < x;;
+qualif LT4(x) : x < 4;;
+qualif GT(x) : 0 < x;;
 
 
 let bsearch key vec =
@@ -25,7 +25,7 @@ let bsearch key vec =
     if lo < hi_minus  then
 			let hl = hi + lo in
       let m = hl / 2  in
-      let x = get vec m in
+      let x = Array.get vec m in
 			let diff = key - x in
 			let m_plus = m + 1 in
 			let m_minus = m - 1 in
@@ -34,7 +34,7 @@ let bsearch key vec =
 				else if key = x then m else -1)
 			else -1
 	in
-	let sv = size vec in
+	let sv = Array.length vec in
 	let sv_minus = sv - 1 in
 	look 0 sv_minus 
 in 
