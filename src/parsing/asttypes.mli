@@ -37,4 +37,4 @@ type label = string
 
 type predexp_op = Predexp_plus | Predexp_minus | Predexp_times
 
-type pred_rel = Pred_eq | Pred_ne | Pred_gt | Pred_lt | Pred_le
+type pred_rel = Pred_eq | Pred_ne | Pred_gt | Pred_lt | Pred_le | Pred_ge

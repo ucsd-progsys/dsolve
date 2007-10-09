@@ -52,6 +52,7 @@ module YicesProver  =
     type yices_instance = { 
       c : Y.yices_context;
       t : Y.yices_type;
+			ar: Y.yices_type;
       f : Y.yices_type;
       d : (string,Y.yices_var_decl) Hashtbl.t;
       mutable ds : string list ;
@@ -76,6 +77,11 @@ module YicesProver  =
       | Predicate.Pvar (s,i) -> yicesVar me
           (Printf.sprintf "%sprime%d" (Ident.unique_name s) i) me.t
       | Predicate.FunApp (f,e) ->
+					(* huge hack alert *)
+					if f = "Array.length" then 
+						let (fn, e') = (yicesVar me f me.f, yicesVar me ((function Predicate.Var(s) -> Ident.unique_name s | _ -> assert false) e) me.ar) in
+						Y.yices_mk_app me.c fn [|e'|]
+					else
           let (fn, e') = (yicesVar me f me.f, yicesExp me e) in
             Y.yices_mk_app me.c fn [|e'|]
       | Predicate.Binop (e1,op,e2) ->
@@ -98,16 +104,19 @@ module YicesProver  =
              Predicate.Eq -> Y.yices_mk_eq me.c e1' e2' 
            | Predicate.Ne -> Y.yices_mk_diseq me.c e1' e2'
            | Predicate.Gt -> Y.yices_mk_gt me.c e1' e2'
+					 | Predicate.Ge -> Y.yices_mk_ge me.c e1' e2'
            | Predicate.Lt -> Y.yices_mk_lt me.c e1' e2'
            | Predicate.Le -> Y.yices_mk_le me.c e1' e2')
 
     let me = 
       let c = Y.yices_mk_context () in
       let t = Y.yices_mk_type c "int" in
-      let unknown = Y.yices_mk_type c "unk" in
-      let f = Y.yices_mk_function_type c [| unknown |] t in
+			let ar = Y.yices_mk_type c "a' array" in
+      (*let unknown = Y.yices_mk_type c "unk" in*)
+			(* need a blind uninterp function again eventually *)
+      let f = Y.yices_mk_function_type c [| ar |] t in
       let d = Hashtbl.create 37 in
-        { c = c; t = t; f = f; d = d; ds = []; count = 0; i = 0 }
+        { c = c; t = t; ar = ar; f = f; d = d; ds = []; count = 0; i = 0 }
 
     let push p =
       me.count <- me.count + 1;

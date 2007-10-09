@@ -9,6 +9,7 @@ type binrel =
     Eq
   | Ne
   | Gt
+	| Ge
   | Lt
   | Le 
 
@@ -26,6 +27,7 @@ type t =
   | And of t * t 
   | Or of t * t 
 
+val pprint_rel: binrel -> string
 val pprint: formatter -> t -> unit
 val pprint_pexpr: formatter -> pexpr -> unit
 

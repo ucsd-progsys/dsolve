@@ -39,7 +39,10 @@ let rec pprint ppf = function
       fprintf ppf "@[%a@ ->@;<1 2>%a@]" pprint1 f pprint f'
   | Farrow (Some id, f, f') ->
       fprintf ppf "@[%s:@ %a@ ->@;<1 2>%a@]" (Ident.unique_name id) pprint1 f pprint f'
-  | _ -> assert false
+	| Fconstr (path, l, r) ->
+			(fprintf ppf "path name: %s:\t" (Path.name path); (function t->()) (List.map (pprint ppf) l))
+		(*^^^ DEBUG*)
+  (*| _ -> assert false*)
  and pprint1 ppf = function
    | (Farrow _) as f ->
        fprintf ppf "@[(%a)@]" pprint f
@@ -50,6 +53,7 @@ let fresh_refinementvar () = ([], Qvar (Ident.create "k"))
 (* Create a fresh frame with the same shape as the given type [ty].
    You probably want to consider using fresh_with_labels instead of this
    for subtype constraints. *)
+(* ming: abbrevs? *)
 let fresh ty =
   let vars = ref [] in
   let rec fresh_rec t =
@@ -62,14 +66,14 @@ let fresh ty =
               vars := (t', fv) :: !vars;
               fv
           end
-      | Tconstr(p, tyl, _) ->
+      | Tconstr(p, tyl, _) -> 
           Fconstr (p, List.map fresh_rec tyl, fresh_refinementvar ())
       | Tarrow(_, t1, t2, _) ->
           Farrow (None, fresh_rec t1, fresh_rec t2)
       | _ -> assert false
   in fresh_rec ty
 
-(* Instantiate the vars in f with the corresponding frames in ftemplate.  If a
+(* Instantiate the vars in f(r) with the corresponding frames in ftemplate.  If a
    variable occurs twice, it will only be instantiated with one frame; which
    one is undefined and unimportant. *)
 let instantiate fr ftemplate =
@@ -86,7 +90,18 @@ let instantiate fr ftemplate =
           Fconstr (p, [], r)
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
           Farrow (l, inst f1 f2, inst f1' f2')
-      | _ -> assert false
+			| (Fconstr (p, l, r), Fconstr(p', l', r')) ->
+					let _ = if p = p' then () else assert false in
+					(*let _ = if r = r' then () else assert false in*)
+					Fconstr(p, List.map2 inst l l', r)
+			| (f1, f2) ->
+					let _ = Printf.printf "Unsupported types for instantiation:\t" in
+					let _ = pprint Format.std_formatter f1 in
+					let _ = Printf.printf "\n" in
+					let _ = pprint Format.std_formatter f2 in
+					let _ = Printf.printf "\n" in
+					assert false
+      (*| _ -> assert false*)
   in inst fr ftemplate
 
 (* Apply a substitution to a frame, distributing over arrows.  Unaliases any

@@ -24,7 +24,11 @@ let name_lookup_hack path env =
   with Not_found ->
     (* pmr: This is intrinsically broken for any path that isn't a plain
        Pident.  The long-term fix is merge Lightenv and Env. *)
-    Lightenv.find (Path.head path) env
+    try Lightenv.find (Path.head path) env with Not_found ->
+				(function (n, f) -> f) 
+				(if (Path.name path) = "Array.length" then Builtins.array_length_frame else 
+				if (Path.name path) = "Array.get" then Builtins.array_get_frame else
+				raise Not_found)
 
 let constrain_expression tenv initenv quals exp initcstrs initframemap =
   let rec constrain e env guard cstrs framemap =
@@ -33,7 +37,7 @@ let constrain_expression tenv initenv quals exp initcstrs initframemap =
 	  (Texp_constant(Const_int n), {desc = Tconstr(path, [], _)}) ->
             (Frame.Fconstr (path, [], Builtins.equality_refinement (Predicate.PInt n)),
              cstrs, framemap)
-        | (Texp_construct(cstrdesc, []), {desc = Tconstr(path, [], _)}) ->
+  | (Texp_construct(cstrdesc, []), {desc = Tconstr(path, [], _)}) ->
             let cstrref =
               match cstrdesc.cstr_tag with
                   Cstr_constant n ->
@@ -81,7 +85,7 @@ let constrain_expression tenv initenv quals exp initcstrs initframemap =
 	| (Texp_ident _, {desc = Tconstr (p, [], _)}) ->
             (Frame.Fconstr (p, [], Builtins.equality_refinement (expression_to_pexpr e)),
              cstrs, framemap)
-        | (Texp_ident (id, _), t) ->
+  | (Texp_ident (id, _), t) ->
             (* pmr: Later, the env should probably take paths, not idents.
                Something to think about... *)
             let (f', ftemplate) = (name_lookup_hack id env, Frame.fresh t) in
@@ -134,7 +138,22 @@ let constrain_expression tenv initenv quals exp initcstrs initframemap =
                :: SubFrame (env'', guard, f1, f1')
                :: cstrs',
                fm')
-        | _ -> assert false
+	| (Texp_array(es), t) ->
+						let f = Frame.fresh t in
+						let (f, fs) = (function Frame.Fconstr(p, l, _) -> (Frame.Fconstr(p, l, Builtins.size_lit_refinement(List.length es)), l) | _ -> assert false) f in
+						let list_rec (fs, c, m) e = (function (f, c, m) -> (f::fs, c, m)) (constrain e env guard c m) in
+						let (fs', c, m) = List.fold_left list_rec ([], cstrs, framemap) es in
+						let mksub b a = SubFrame(env, guard, a, b) in
+						let c = List.append (List.map (mksub (List.hd fs)) fs') c in
+						(f, (WFFrame(env, f)::c), m)	
+	| (_, t) ->
+					let _ = !Oprint.out_type Format.std_formatter (Printtyp.tree_of_type_scheme t) in
+					let _ = flush_all () in
+					assert false
+					(*let _ = Printf.printf "\n" in*)
+					(*(Frame.fresh e.exp_type, cstrs, framemap)*)			 
+
+(*| _ -> assert false*)
     in (f, cs, LocationMap.add e.exp_loc f fm)
   in constrain exp initenv Predicate.True initcstrs initframemap
 
@@ -149,6 +168,8 @@ let constrain_structure tenv fenv initquals str =
     | (Tstr_qualifier (name, (valu, pred))) :: srem ->
         let newquals = (Path.Pident name, valu, pred) :: quals in
           constrain_rec newquals cstrs fmap srem
+		| (Tstr_value(_, _))::srem ->
+				Printf.printf "Tstr_val unsupported."; assert false
     | _ -> assert false
   in constrain_rec initquals [] LocationMap.empty str
 

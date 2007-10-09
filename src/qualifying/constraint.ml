@@ -43,6 +43,9 @@ let split cstrs =
               split_rec (SubRefinement (env, guard, r1, r2) :: flat) cs
           | (Frame.Fvar _, Frame.Fvar _) ->
               split_rec flat cs
+					| (Frame.Fconstr (p1, l1, r1), Frame.Fconstr(p2, l2, r2)) ->
+							let invar a b = [SubFrame(env, guard, a, b); SubFrame(env, guard, b, a)] in
+							split_rec (SubRefinement(env, guard, r1, r2)::flat) (List.append (List.concat (List.map2 invar l1 l2)) cs)
           | _ -> assert false
         end
     | WFFrame(env, f) :: cs ->
@@ -59,7 +62,10 @@ let split cstrs =
               split_rec (WFRefinement (env, r) :: flat) cs
           | Frame.Fvar _ ->
               split_rec flat cs
-          | _ -> assert false
+					| Frame.Fconstr (_, l, r) ->
+							split_rec (WFRefinement(env, r)::flat) 
+																						(List.append (List.map (function li -> WFFrame(env, li)) l) cs)
+          (*| _ -> assert false*)
         end
   in split_rec [] cstrs
 

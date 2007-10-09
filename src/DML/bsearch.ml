@@ -1,22 +1,22 @@
-qualifier LTS(x) = x < size vec;;
-qualifier LES(x) = x <= size vec;;
-(*qualifier EQS(x) = x = size vec;;*)
-qualifier NEQs(x) = not(x = size vec);;
-qualifier LTh(x) = x < hi;;
-qualifier LTl(x) = x < lo;;
-(*qualifier EQh(x) = x = hi;;*)
-qualifier NEQh(x) = not(x = hi);;
-qualifier NEQl(x) = not(x = lo);;
-(*qualifier EQl(x) = x = lo;;*)
-qualifier LEh(x) = x <= hi;;
-qualifier LEl(x) = x <= lo;;
-qualifier NNEG(x) = 0 <= x;;
-qualifier POS(x) = 0 < x;;
-qualifier NEG1(x) = x = 0 - 1;;
-qualifier GENEG1(x) = 0 - 1 <= x;;
-qualifier GTNEG1(x) = 0 - 1 < x;;
-qualifier LT4(x) = x < 4;;
-qualifier GT(x) = 0 < x;;
+qualif LTS(x) = x < size vec;;
+qualif LES(x) = x <= size vec;;
+(*qualif EQS(x) = x = size vec;;*)
+qualif NEQs(x) = not(x = size vec);;
+qualif LTh(x) = x < hi;;
+qualif LTl(x) = x < lo;;
+(*qualif EQh(x) = x = hi;;*)
+qualif NEQh(x) = not(x = hi);;
+qualif NEQl(x) = not(x = lo);;
+(*qualif EQl(x) = x = lo;;*)
+qualif LEh(x) = x <= hi;;
+qualif LEl(x) = x <= lo;;
+qualif NNEG(x) = 0 <= x;;
+qualif POS(x) = 0 < x;;
+qualif NEG1(x) = x = 0 - 1;;
+qualif GENEG1(x) = 0 - 1 <= x;;
+qualif GTNEG1(x) = 0 - 1 < x;;
+qualif LT4(x) = x < 4;;
+qualif GT(x) = 0 < x;;
 
 
 let bsearch key vec =
@@ -44,7 +44,7 @@ bsearch 5 ar
 
 
 
-(*qualifier LE(x) = x < size vec;;
+(*qualif LE(x) = x < size vec;;
 
 let bsearch key vec =
   let rec look lo hi =

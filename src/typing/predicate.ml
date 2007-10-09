@@ -12,6 +12,7 @@ type binrel =
     Eq
   | Ne
   | Gt
+	| Ge
   | Lt
   | Le 
 
@@ -28,6 +29,14 @@ type t =
   | Not of t
   | And of t * t 
   | Or of t * t
+
+let pprint_rel = function
+		Eq -> "="
+		| Ne -> "=/="
+		| Gt -> ">"
+		| Ge -> ">="
+		| Lt -> "<"
+		| Le -> "<="
 
 let rec pprint_pexpr ppf = function
   | PInt n ->
@@ -49,19 +58,14 @@ let rec pprint ppf = function
   | True ->
       fprintf ppf "true"
   | Atom (p, rel, q) ->
-      let relstr = match rel with
-        | Eq -> "="
-        | Ne -> "=/="
-        | Gt -> ">"
-        | Lt -> "<"
-        | Le -> "<="
-      in fprintf ppf "@[%a@ %s@ %a@]" pprint_pexpr p relstr pprint_pexpr q
+      fprintf ppf "@[%a@ %s@ %a@]" pprint_pexpr p (pprint_rel rel) pprint_pexpr q
   | Not p ->
       fprintf ppf "@[not@ %a@]" pprint p
   | And (p, q) ->
       fprintf ppf "@[%a@ and@ %a@]" pprint p pprint q
   | Or (p, q) ->
       fprintf ppf "@[%a@ or@ %a@]" pprint p pprint q
+
 
 let equals(p, q) =
   Atom(p, Eq, q)
@@ -159,6 +163,7 @@ let rec transl_predicate p =
     | Pred_eq -> Eq
     | Pred_ne -> Ne
     | Pred_gt -> Gt
+		| Pred_ge -> Ge
     | Pred_lt -> Lt
     | Pred_le -> Le
   in
