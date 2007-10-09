@@ -54,6 +54,7 @@ module YicesProver  =
       t : Y.yices_type;
 			ar: Y.yices_type;
       f : Y.yices_type;
+			binop: Y.yices_type; (* for uninterp ops *)
       d : (string,Y.yices_var_decl) Hashtbl.t;
       mutable ds : string list ;
       mutable count : int;
@@ -69,6 +70,10 @@ module YicesProver  =
           let rv = Y.yices_mk_var_decl me.c s ty in
             me.ds <- s::me.ds;rv) () s in
       Y.yices_mk_var_from_decl me.c decl
+
+		let rec isconst = function
+			Predicate.PInt(i) -> true
+			| _ -> false	
     
     let rec yicesExp me e =
       match e with 
@@ -89,7 +94,16 @@ module YicesProver  =
           (match op with 
              Predicate.Plus  -> Y.yices_mk_sum me.c es'
            | Predicate.Minus -> Y.yices_mk_sub me.c es'
-           | Predicate.Times -> Y.yices_mk_mul me.c es')
+           | Predicate.Times -> 
+							if (isconst e1) || (isconst e2) then 
+								Y.yices_mk_mul me.c es'
+							else
+								let (fd, e1, e2) = (yicesVar me "_NONL_MUL" me.binop, yicesExp me e1, yicesExp me e2) in
+								Y.yices_mk_app me.c fd [|e1; e2|]
+					 | Predicate.Div -> 
+							let (fd, e1, e2) = (yicesVar me "_DIV" me.binop, yicesExp me e1, yicesExp me e2) in
+							Y.yices_mk_app me.c fd [|e1; e2|]) 
+
 
     let rec yicesPred me p = 
       match p with 
@@ -114,9 +128,10 @@ module YicesProver  =
 			let ar = Y.yices_mk_type c "a' array" in
       (*let unknown = Y.yices_mk_type c "unk" in*)
 			(* need a blind uninterp function again eventually *)
+			let binop = Y.yices_mk_function_type c [| t; t |] t in
       let f = Y.yices_mk_function_type c [| ar |] t in
       let d = Hashtbl.create 37 in
-        { c = c; t = t; ar = ar; f = f; d = d; ds = []; count = 0; i = 0 }
+        { c = c; t = t; ar = ar; f = f; binop = binop; d = d; ds = []; count = 0; i = 0 }
 
     let push p =
       me.count <- me.count + 1;

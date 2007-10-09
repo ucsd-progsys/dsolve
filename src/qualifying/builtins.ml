@@ -66,6 +66,7 @@ let array_get_frame =
 let frames = [
   op_frame "+" Predicate.Plus;
   op_frame "-" Predicate.Minus;
+	op_frame "/" Predicate.Div;
   rel_frame "=" Predicate.Eq;
   rel_frame "!=" Predicate.Ne;
   rel_frame "<" Predicate.Lt;
