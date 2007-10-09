@@ -66,7 +66,7 @@ typing/includemod.cmi: typing/types.cmi typing/typedtree.cmi typing/path.cmi \
     typing/ident.cmi typing/env.cmi typing/ctype.cmi 
 typing/mtype.cmi: typing/types.cmi typing/path.cmi typing/ident.cmi \
     typing/env.cmi 
-typing/oprint.cmi: typing/outcometree.cmi 
+typing/oprint.cmi: qualifying/qualifymod.cmi typing/outcometree.cmi 
 typing/outcometree.cmi: parsing/asttypes.cmi 
 typing/parmatch.cmi: typing/types.cmi typing/typedtree.cmi \
     parsing/location.cmi typing/env.cmi 
@@ -272,41 +272,33 @@ typing/unused_var.cmx: utils/warnings.cmx parsing/parsetree.cmi \
     typing/unused_var.cmi 
 qualifying/constraint.cmi: qualifying/qualifier.cmi typing/predicate.cmi \
     qualifying/lightenv.cmo qualifying/frame.cmi 
-qualifying/expr.cmi: qualifying/type.cmi typing/predicate.cmi \
-    parsing/parsetree.cmi typing/env.cmi 
 qualifying/frame.cmi: typing/types.cmi qualifying/qualifier.cmi \
     typing/predicate.cmi typing/path.cmi qualifying/lightenv.cmo \
     typing/ident.cmi 
 qualifying/printqual.cmi: typing/outcometree.cmi qualifying/frame.cmi 
+qualifying/qdebug.cmi: typing/typedtree.cmi qualifying/qualifymod.cmi \
+    qualifying/frame.cmi 
 qualifying/qualifier.cmi: typing/predicate.cmi typing/path.cmi \
     qualifying/lightenv.cmo typing/ident.cmi 
 qualifying/qualifymod.cmi: typing/typedtree.cmi qualifying/qualifier.cmi \
-    typing/predicate.cmi parsing/location.cmi qualifying/lightenv.cmo \
-    qualifying/frame.cmi typing/env.cmi qualifying/constraint.cmi 
+    parsing/location.cmi qualifying/lightenv.cmo qualifying/frame.cmi \
+    typing/env.cmi qualifying/constraint.cmi 
 qualifying/builtins.cmo: typing/predicate.cmi typing/predef.cmi \
     typing/path.cmi typing/ident.cmi qualifying/frame.cmi 
 qualifying/builtins.cmx: typing/predicate.cmx typing/predef.cmx \
     typing/path.cmx typing/ident.cmx qualifying/frame.cmx 
-qualifying/constraint.cmo: qualifying/theoremProver.cmo \
-    qualifying/printqual.cmi typing/predicate.cmi utils/misc.cmi \
-    qualifying/lightenv.cmo typing/ident.cmi qualifying/frame.cmi \
-    utils/clflags.cmi qualifying/constraint.cmi 
-qualifying/constraint.cmx: qualifying/theoremProver.cmx \
-    qualifying/printqual.cmx typing/predicate.cmx utils/misc.cmx \
-    qualifying/lightenv.cmx typing/ident.cmx qualifying/frame.cmx \
-    utils/clflags.cmx qualifying/constraint.cmi 
-qualifying/expr.cmo: typing/predicate.cmi parsing/parsetree.cmi \
-    parsing/longident.cmi typing/env.cmi qualifying/builtins.cmo \
-    parsing/asttypes.cmi qualifying/expr.cmi 
-qualifying/expr.cmx: typing/predicate.cmx parsing/parsetree.cmi \
-    parsing/longident.cmx typing/env.cmx qualifying/builtins.cmx \
-    parsing/asttypes.cmi qualifying/expr.cmi 
+qualifying/constraint.cmo: qualifying/theoremProver.cmo typing/predicate.cmi \
+    typing/oprint.cmi utils/misc.cmi qualifying/lightenv.cmo typing/ident.cmi \
+    qualifying/frame.cmi utils/clflags.cmi qualifying/constraint.cmi 
+qualifying/constraint.cmx: qualifying/theoremProver.cmx typing/predicate.cmx \
+    typing/oprint.cmx utils/misc.cmx qualifying/lightenv.cmx typing/ident.cmx \
+    qualifying/frame.cmx utils/clflags.cmx qualifying/constraint.cmi 
 qualifying/frame.cmo: typing/types.cmi qualifying/qualifier.cmi \
-    qualifying/printqual.cmi typing/predicate.cmi typing/path.cmi \
+    typing/predicate.cmi typing/path.cmi typing/oprint.cmi \
     qualifying/lightenv.cmo typing/ident.cmi typing/btype.cmi \
     qualifying/frame.cmi 
 qualifying/frame.cmx: typing/types.cmx qualifying/qualifier.cmx \
-    qualifying/printqual.cmx typing/predicate.cmx typing/path.cmx \
+    typing/predicate.cmx typing/path.cmx typing/oprint.cmx \
     qualifying/lightenv.cmx typing/ident.cmx typing/btype.cmx \
     qualifying/frame.cmi 
 qualifying/lightenv.cmo: typing/ident.cmi 
@@ -315,30 +307,36 @@ qualifying/printqual.cmo: typing/path.cmi typing/outcometree.cmi \
     qualifying/frame.cmi qualifying/printqual.cmi 
 qualifying/printqual.cmx: typing/path.cmx typing/outcometree.cmi \
     qualifying/frame.cmx qualifying/printqual.cmi 
+qualifying/qdebug.cmo: typing/types.cmi typing/typedtree.cmi \
+    qualifying/qualifymod.cmi typing/printtyp.cmi qualifying/printqual.cmi \
+    typing/predicate.cmi typing/path.cmi typing/oprint.cmi typing/ident.cmi \
+    typing/btype.cmi parsing/asttypes.cmi qualifying/qdebug.cmi 
+qualifying/qdebug.cmx: typing/types.cmx typing/typedtree.cmx \
+    qualifying/qualifymod.cmx typing/printtyp.cmx qualifying/printqual.cmx \
+    typing/predicate.cmx typing/path.cmx typing/oprint.cmx typing/ident.cmx \
+    typing/btype.cmx parsing/asttypes.cmi qualifying/qdebug.cmi 
 qualifying/qualifier.cmo: typing/predicate.cmi typing/path.cmi \
     qualifying/lightenv.cmo typing/ident.cmi qualifying/qualifier.cmi 
 qualifying/qualifier.cmx: typing/predicate.cmx typing/path.cmx \
     qualifying/lightenv.cmx typing/ident.cmx qualifying/qualifier.cmi 
 qualifying/qualifymod.cmo: typing/types.cmi typing/typedtree.cmi \
-    qualifying/qualifier.cmi typing/predicate.cmi typing/path.cmi \
-    parsing/longident.cmi parsing/location.cmi qualifying/lightenv.cmo \
-    typing/ident.cmi qualifying/frame.cmi typing/env.cmi \
-    qualifying/constraint.cmi qualifying/builtins.cmo typing/btype.cmi \
-    parsing/asttypes.cmi qualifying/qualifymod.cmi 
+    qualifying/qualifier.cmi typing/printtyp.cmi typing/predicate.cmi \
+    typing/path.cmi typing/oprint.cmi parsing/longident.cmi \
+    parsing/location.cmi qualifying/lightenv.cmo typing/ident.cmi \
+    qualifying/frame.cmi typing/env.cmi qualifying/constraint.cmi \
+    qualifying/builtins.cmo typing/btype.cmi parsing/asttypes.cmi \
+    qualifying/qualifymod.cmi 
 qualifying/qualifymod.cmx: typing/types.cmx typing/typedtree.cmx \
-    qualifying/qualifier.cmx typing/predicate.cmx typing/path.cmx \
-    parsing/longident.cmx parsing/location.cmx qualifying/lightenv.cmx \
-    typing/ident.cmx qualifying/frame.cmx typing/env.cmx \
-    qualifying/constraint.cmx qualifying/builtins.cmx typing/btype.cmx \
-    parsing/asttypes.cmi qualifying/qualifymod.cmi 
+    qualifying/qualifier.cmx typing/printtyp.cmx typing/predicate.cmx \
+    typing/path.cmx typing/oprint.cmx parsing/longident.cmx \
+    parsing/location.cmx qualifying/lightenv.cmx typing/ident.cmx \
+    qualifying/frame.cmx typing/env.cmx qualifying/constraint.cmx \
+    qualifying/builtins.cmx typing/btype.cmx parsing/asttypes.cmi \
+    qualifying/qualifymod.cmi 
 qualifying/theoremProver.cmo: typing/predicate.cmi utils/misc.cmi \
     typing/ident.cmi 
 qualifying/theoremProver.cmx: typing/predicate.cmx utils/misc.cmx \
     typing/ident.cmx 
-qualifying/type.cmo: qualifying/theoremProver.cmo typing/predicate.cmi \
-    utils/misc.cmi typing/env.cmi qualifying/type.cmi 
-qualifying/type.cmx: qualifying/theoremProver.cmx typing/predicate.cmx \
-    utils/misc.cmx typing/env.cmx qualifying/type.cmi 
 bytecomp/bytegen.cmi: bytecomp/lambda.cmi bytecomp/instruct.cmi 
 bytecomp/bytelink.cmi: bytecomp/symtable.cmi bytecomp/cmo_format.cmi 
 bytecomp/bytepackager.cmi: typing/ident.cmi 
