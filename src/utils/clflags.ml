@@ -57,6 +57,7 @@ and dump_rawlambda = ref false          (* -drawlambda *)
 and dump_lambda = ref false             (* -dlambda *)
 and dump_instr = ref false              (* -dinstr *)
 and dump_constraints = ref false        (* -dconstr *)
+and dump_qexprs = ref false             (* -dqexprs *)
 
 let keep_asm_file = ref false           (* -S *)
 let optimize_for_speed = ref true       (* -compact *)

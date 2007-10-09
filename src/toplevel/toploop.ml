@@ -231,6 +231,8 @@ let execute_phrase print_outcome ppf phr =
       let oldquals = !toplevel_quals in
       let (newquals, framemap) =
         Qualifymod.qualify_structure newenv !toplevel_fenv oldquals str in
+      if !Clflags.dump_qexprs then
+        Qdebug.dump_qualified_structure std_formatter framemap str;
       let lam = Translmod.transl_toplevel_definition str in
       Warnings.check_fatal ();
       begin try
