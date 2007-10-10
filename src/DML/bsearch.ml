@@ -2,6 +2,7 @@ qualif LTS(x) : x < Array.length vec;;
 qualif LES(x) : x <= Array.length vec;;
 (*qualif EQS(x) : x = Array.length vec;;*)
 qualif NEQs(x) : not(x = Array.length vec);;
+qualif EQ5(x) : x = 5;;
 qualif LTh(x) : x < hi;;
 qualif LTl(x) : x < lo;;
 (*qualif EQh(x) : x = hi;;*)
