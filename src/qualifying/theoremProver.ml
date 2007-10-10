@@ -100,7 +100,7 @@ module YicesProver  =
 							if (isconst e1) || (isconst e2) then 
 								Y.yices_mk_mul me.c es'
 							else
-								let (fd, e1, e2) = (yicesVar me "_NONL_MUL" me.binop, yicesExp me e1, yicesExp me e2) in
+								let (fd, e1, e2) = (yicesVar me "_MUL" me.binop, yicesExp me e1, yicesExp me e2) in
 								Y.yices_mk_app me.c fd [|e1; e2|]
 					 | Predicate.Div -> 
 							let (fd, e1, e2) = (yicesVar me "_DIV" me.binop, yicesExp me e1, yicesExp me e2) in
@@ -124,8 +124,66 @@ module YicesProver  =
            | Predicate.Lt -> Y.yices_mk_lt me.c e1' e2'
            | Predicate.Le -> Y.yices_mk_le me.c e1' e2')
 
+(* cleaner version assumes a-normal input *)
+let rec fixdiv p = 
+   let expr_isdiv = 
+       function Predicate.Binop(_, Predicate.Div, _) -> true
+                | _ -> false in 
+   let pull_const =
+       function Predicate.PInt(i) -> i
+                | _ -> 1 in
+   let pull_divisor =
+       function Predicate.Binop(_, Predicate.Div, d1) ->
+                pull_const d1 
+                | _ -> 1 in
+   let rec apply_mult m e =
+       match e with
+           Predicate.Binop(n, Predicate.Div, Predicate.PInt(d)) ->
+               let _ = assert ((m/d) * d = m) in
+               Predicate.Binop(Predicate.PInt(m/d), Predicate.Times, n) 
+           | Predicate.Binop(e1, rel, e2) ->
+               Predicate.Binop(apply_mult m e1, rel, apply_mult m e2) 
+           | Predicate.PInt(i) -> Predicate.PInt(i*m)
+           | e -> Predicate.Binop(Predicate.PInt(m), Predicate.Times, e)
+           in
+   let rec pred_isdiv = 
+       function Predicate.Atom(e, _, e') -> (expr_isdiv e) || (expr_isdiv e')
+                | Predicate.And(p, p') -> (pred_isdiv p) || (pred_isdiv p')
+                | Predicate.Or(p, p') -> (pred_isdiv p) || (pred_isdiv p')
+                | Predicate.True -> false
+                | Predicate.Not p -> pred_isdiv p in
+   let calc_cm e1 e2 =
+       pull_divisor e1 * pull_divisor e2 in
+   match p with
+       Predicate.Atom(e, r, e') -> 
+              if pred_isdiv p then 
+                let m = calc_cm e e' in
+                let e'' = Predicate.Binop(e', Predicate.Minus, Predicate.PInt(1)) in
+                let bound (e, r, e', e'') = 
+                    Predicate.And(Predicate.Atom(apply_mult m e, Predicate.Gt, apply_mult m e''),
+                                  Predicate.Atom(apply_mult m e, Predicate.Le, apply_mult m e'))
+                in
+                (match (e, r, e') with
+                  (Predicate.Var v, Predicate.Eq, e') ->
+                    bound (e, r, e', e'')
+                  | (Predicate.PInt v, Predicate.Eq, e') ->
+                    bound (e, r, e', e'')
+                  | _ -> p) else p
+       | Predicate.And(p1, p2) -> 
+              if pred_isdiv p then
+                let p1 = if pred_isdiv p1 then fixdiv p1 else p1 in
+                let p2 = if pred_isdiv p2 then fixdiv p2 else p2 in
+                Predicate.And(p1, p2) else p     
+       | Predicate.Or(p1, p2) ->
+              if pred_isdiv p then
+                let p1 = if pred_isdiv p1 then fixdiv p1 else p1 in
+                let p2 = if pred_isdiv p2 then fixdiv p2 else p2 in
+                Predicate.Or(p1, p2) else p
+       | Predicate.Not p1 -> if pred_isdiv p1 then Predicate.Not(fixdiv p1) else p
+       | p -> p
+   
 (* ming: this is really a monster. eventually, it'll be cleaned up *)
-let rec fixdiv p =
+(*let rec fixdiv p =
       let isdiv = function Div -> true | _ -> false in
       let rec find_div e =
         match e with
@@ -190,7 +248,7 @@ let rec fixdiv p =
         | Not(p) -> Not(fixdiv p)
         | And(p1, p2) -> And(fixdiv p1, fixdiv p2)
         | Or(p1, p2) -> Or(fixdiv p1, fixdiv p2)
-        | True -> True
+        | True -> True*)
 
 
     let me = 
@@ -212,7 +270,13 @@ let rec fixdiv p =
 	begin
 	  me.ds <- barrier :: me.ds;
 	  Y.yices_push me.c;
-	  Y.yices_assert me.c (let p' = fixdiv p in yicesPred me p')
+	  Y.yices_assert me.c 
+                  (let p' = fixdiv p in 
+                  (*let _ = if (fixdiv p) != p then
+                      (Predicate.pprint Format.std_formatter p; 
+                      Predicate.pprint Format.std_formatter p') 
+                      else () in *)
+                  yicesPred me p')
 	end
       
     let rec vpop (cs,s) =
