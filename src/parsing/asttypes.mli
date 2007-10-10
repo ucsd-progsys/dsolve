@@ -35,6 +35,6 @@ type virtual_flag = Virtual | Concrete
 
 type label = string
 
-type predexp_op = Predexp_plus | Predexp_minus | Predexp_times
+type predexp_op = Predexp_plus | Predexp_minus | Predexp_times | Predexp_div
 
 type pred_rel = Pred_eq | Pred_ne | Pred_gt | Pred_lt | Pred_le | Pred_ge

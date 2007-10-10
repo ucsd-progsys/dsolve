@@ -57,10 +57,10 @@ let array_length_frame =
 	(["length"; "Array"], mk_fun (x, (mk_array (Frame.Fvar(tyvar)) []), mk_int [qsize Predicate.Eq x y; qint Predicate.Gt 0 y]))
 
 let array_get_frame =
-	let (x, y) = (Path.mk_ident "x", Path.mk_ident "y") in
-	let tyvar = Path.mk_ident "'a" in
-	(["get"; "Array"], mk_fun(x, (mk_array (Frame.Fvar(tyvar)) []),
-								mk_fun (y, mk_int [qsize Predicate.Lt x y; qint Predicate.Ge 0 y], (Frame.Fvar(tyvar))))) 
+  let (x, y) = (Path.mk_ident "x", Path.mk_ident "y") in
+  let tyvar = Path.mk_ident "'a" in
+    (["get"; "Array"], mk_fun(x, (mk_array (Frame.Fvar(tyvar)) []),
+			      mk_fun (y, mk_int [qsize Predicate.Lt x y; qint Predicate.Ge 0 y], (Frame.Fvar(tyvar))))) 
 
 let _frames = [
   op_frame ["+"; "Pervasives"] "+" Predicate.Plus;
@@ -69,8 +69,8 @@ let _frames = [
   rel_frame ["!="; "Pervasives"] "!=" Predicate.Ne;
   rel_frame ["<"; "Pervasives"] "<" Predicate.Lt;
   rel_frame ["<="; "Pervasives"] "<=" Predicate.Le;
-	array_length_frame;
-	array_get_frame;
+  array_length_frame;
+  array_get_frame;
 ]
 
 let find_path id env =

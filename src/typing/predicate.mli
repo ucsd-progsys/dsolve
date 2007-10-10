@@ -4,6 +4,7 @@ type binop =
     Plus
   | Minus
   | Times
+	| Div
 
 type binrel =
     Eq

@@ -6,7 +6,7 @@ type binop =
     Plus
   | Minus
   | Times
-      (*| Div*)
+  | Div
 
 type binrel =
     Eq
@@ -52,6 +52,7 @@ let rec pprint_pexpr ppf = function
         | Plus -> "+"
         | Minus -> "-"
         | Times -> "*"
+				| Div -> "/"
       in fprintf ppf "@[%a@ %s@ %a@]" pprint_pexpr p opstr pprint_pexpr q
 
 let rec pprint ppf = function
@@ -145,6 +146,7 @@ let rec transl_predicate p =
     | Predexp_plus -> Plus
     | Predexp_minus -> Minus
     | Predexp_times -> Times
+		| Predexp_div -> Div
   in
   let rec transl_pexpression pexp =
     match pexp.ppredexp_desc with

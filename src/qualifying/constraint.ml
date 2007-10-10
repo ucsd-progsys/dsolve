@@ -91,7 +91,7 @@ let refine solution = function
       let refined_quals =
         List.filter
           (fun q -> Frame.refinement_well_formed env solution (subs, Frame.Qconst [q]))
-          (Lightenv.find k solution)
+          (try Lightenv.find k solution with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k); raise Not_found))
       in Lightenv.add k refined_quals solution
   | SubRefinement (env, guard, r1, (subs, Frame.Qvar k2)) ->
       let envp = environment_predicate solution env in
@@ -105,7 +105,7 @@ let refine solution = function
             None
         in
         let refined_quals =
-          Misc.map_filter qual_holds (Lightenv.find k2 solution) in
+          Misc.map_filter qual_holds (try Lightenv.find k2 solution with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k2); raise Not_found)) in
           Prover.pop();
           Lightenv.add k2 refined_quals solution
   | SubRefinement _

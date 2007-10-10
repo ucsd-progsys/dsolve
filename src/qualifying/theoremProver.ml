@@ -23,6 +23,8 @@
 
 (* This file is part of the SIMPLE Project.*)
 
+open Predicate
+
 
 module type PROVER = 
   sig
@@ -54,6 +56,7 @@ module YicesProver  =
       t : Y.yices_type;
 			ar: Y.yices_type;
       f : Y.yices_type;
+			binop: Y.yices_type; (* for uninterp ops *)
       d : (string,Y.yices_var_decl) Hashtbl.t;
       mutable ds : string list ;
       mutable count : int;
@@ -69,6 +72,10 @@ module YicesProver  =
           let rv = Y.yices_mk_var_decl me.c s ty in
             me.ds <- s::me.ds;rv) () s in
       Y.yices_mk_var_from_decl me.c decl
+
+		let rec isconst = function
+			Predicate.PInt(i) -> true
+			| _ -> false	
     
     let rec yicesExp me e =
       match e with 
@@ -89,7 +96,16 @@ module YicesProver  =
           (match op with 
              Predicate.Plus  -> Y.yices_mk_sum me.c es'
            | Predicate.Minus -> Y.yices_mk_sub me.c es'
-           | Predicate.Times -> Y.yices_mk_mul me.c es')
+           | Predicate.Times -> 
+							if (isconst e1) || (isconst e2) then 
+								Y.yices_mk_mul me.c es'
+							else
+								let (fd, e1, e2) = (yicesVar me "_MUL" me.binop, yicesExp me e1, yicesExp me e2) in
+								Y.yices_mk_app me.c fd [|e1; e2|]
+					 | Predicate.Div -> 
+							let (fd, e1, e2) = (yicesVar me "_DIV" me.binop, yicesExp me e1, yicesExp me e2) in
+							Y.yices_mk_app me.c fd [|e1; e2|]) 
+
 
     let rec yicesPred me p = 
       match p with 
@@ -108,15 +124,143 @@ module YicesProver  =
            | Predicate.Lt -> Y.yices_mk_lt me.c e1' e2'
            | Predicate.Le -> Y.yices_mk_le me.c e1' e2')
 
+(* cleaner version assumes a-normal input *)
+let rec fixdiv p = 
+   let expr_isdiv = 
+       function Predicate.Binop(_, Predicate.Div, _) -> true
+                | _ -> false in 
+   let pull_const =
+       function Predicate.PInt(i) -> i
+                | _ -> 1 in
+   let pull_divisor =
+       function Predicate.Binop(_, Predicate.Div, d1) ->
+                pull_const d1 
+                | _ -> 1 in
+   let rec apply_mult m e =
+       match e with
+           Predicate.Binop(n, Predicate.Div, Predicate.PInt(d)) ->
+               let _ = assert ((m/d) * d = m) in
+               Predicate.Binop(Predicate.PInt(m/d), Predicate.Times, n) 
+           | Predicate.Binop(e1, rel, e2) ->
+               Predicate.Binop(apply_mult m e1, rel, apply_mult m e2) 
+           | Predicate.PInt(i) -> Predicate.PInt(i*m)
+           | e -> Predicate.Binop(Predicate.PInt(m), Predicate.Times, e)
+           in
+   let rec pred_isdiv = 
+       function Predicate.Atom(e, _, e') -> (expr_isdiv e) || (expr_isdiv e')
+                | Predicate.And(p, p') -> (pred_isdiv p) || (pred_isdiv p')
+                | Predicate.Or(p, p') -> (pred_isdiv p) || (pred_isdiv p')
+                | Predicate.True -> false
+                | Predicate.Not p -> pred_isdiv p in
+   let calc_cm e1 e2 =
+       pull_divisor e1 * pull_divisor e2 in
+   match p with
+       Predicate.Atom(e, r, e') -> 
+              if pred_isdiv p then 
+                let m = calc_cm e e' in
+                let e'' = Predicate.Binop(e', Predicate.Minus, Predicate.PInt(1)) in
+                let bound (e, r, e', e'') = 
+                    Predicate.And(Predicate.Atom(apply_mult m e, Predicate.Gt, apply_mult m e''),
+                                  Predicate.Atom(apply_mult m e, Predicate.Le, apply_mult m e'))
+                in
+                (match (e, r, e') with
+                  (Predicate.Var v, Predicate.Eq, e') ->
+                    bound (e, r, e', e'')
+                  | (Predicate.PInt v, Predicate.Eq, e') ->
+                    bound (e, r, e', e'')
+                  | _ -> p) else p
+       | Predicate.And(p1, p2) -> 
+              if pred_isdiv p then
+                let p1 = if pred_isdiv p1 then fixdiv p1 else p1 in
+                let p2 = if pred_isdiv p2 then fixdiv p2 else p2 in
+                Predicate.And(p1, p2) else p     
+       | Predicate.Or(p1, p2) ->
+              if pred_isdiv p then
+                let p1 = if pred_isdiv p1 then fixdiv p1 else p1 in
+                let p2 = if pred_isdiv p2 then fixdiv p2 else p2 in
+                Predicate.Or(p1, p2) else p
+       | Predicate.Not p1 -> if pred_isdiv p1 then Predicate.Not(fixdiv p1) else p
+       | p -> p
+   
+(* ming: this is really a monster. eventually, it'll be cleaned up *)
+(*let rec fixdiv p =
+      let isdiv = function Div -> true | _ -> false in
+      let rec find_div e =
+        match e with
+        (*FunApp(s, e') -> find_div e' *)
+        Binop(e1, b, e2) -> if isdiv b then true else
+                                 ((find_div e1) || (find_div e2))
+        | t -> false
+      in
+      (* not always the LCM.. but eh close enough *)
+      let isconst = (function PInt(i) -> true | _ -> false) in
+      let rec find_lcm e =
+        match e with
+          (*assume A-normal FunApp(s, e) -> find_lcm e (* pretend uninterp functiosn are linear *)*)
+          Binop(e1, b, e2) ->   if isdiv b && isconst e2 then
+                                   (function PInt(i) -> (find_lcm e1) * i
+                                   | _ -> failwith "non-constant divisor") e2
+                                  else (find_lcm e1) * (find_lcm e2)
+          | t -> 1
+      in
+      let rec apply_mult factor e =
+        let get_divisor = function PInt(i) -> i | _ -> failwith "non-constant divisor" in
+        match e with
+          (*FunApp(s, e) -> FunApp(s, apply_mult factor e)*)
+          Binop(e1, b, e2) ->  if isdiv b && isconst e2 then
+                                    let c_fact = factor / (get_divisor e2) in
+                                      Binop(PInt(c_fact), Times, e1) else
+                                      Binop(apply_mult factor e1, b, apply_mult factor e2)
+          | PInt(i) -> PInt(factor * i)
+          | t -> Binop(PInt(factor), Times, t)
+      in
+   (* this doesn't work for many reasons... when the divisor is negative, the failure case... *)
+      match p with
+        Atom(e1, br, e2) ->  (*let _ = Printf.printf "%b %b\n" (find_div e1) (find_div e2)in*)
+                              if (find_div e1 || find_div e2) then
+                                (let ulcm = (find_lcm e1) * (find_lcm e2) in
+                                 let e1' = apply_mult ulcm e1 in
+                                 let e2' = apply_mult ulcm e2 in
+                                 let rec apply_rec  =  function
+                                  Atom(e1, br, e2) ->
+                                    begin
+                                  if find_div e1 && not(find_div e2) then
+                                    match br with
+                                      Eq -> And(Atom(e2', Le, e1'),
+                                          Atom(apply_mult ulcm (Binop(e1, Minus, PInt 1)), Lt, e2'))
+                                      | Le -> Atom(e1', br, e2')
+                                      | Ne -> Not(apply_rec (Atom(e1, Eq, e2)))
+                                      | _ ->
+                                            failwith "can't deal with other ops involving div yet."
+                                  else if find_div e2 && not(find_div e1) then
+                                       match br with
+                                        Eq -> And(Atom(e1', Le, e2'),
+                                          Atom(apply_mult ulcm (Binop(e2, Minus, PInt 1)), Lt, e1'))
+                                        | Le -> Atom(e1', br, e2')
+                                        | Ne -> Not(apply_rec (Atom(e1, Eq, e2)))
+                                        | _ -> failwith "can't deal with other ops involving div yet."
+                                  else failwith "div on both sides of an atom"
+                                    end
+                                  | t -> t
+                                  in apply_rec (Atom(e1, br, e2))
+                                )
+                                else Atom(e1, br, e2)
+        | Not(p) -> Not(fixdiv p)
+        | And(p1, p2) -> And(fixdiv p1, fixdiv p2)
+        | Or(p1, p2) -> Or(fixdiv p1, fixdiv p2)
+        | True -> True*)
+
+
     let me = 
       let c = Y.yices_mk_context () in
       let t = Y.yices_mk_type c "int" in
 			let ar = Y.yices_mk_type c "a' array" in
       (*let unknown = Y.yices_mk_type c "unk" in*)
 			(* need a blind uninterp function again eventually *)
+			let binop = Y.yices_mk_function_type c [| t; t |] t in
       let f = Y.yices_mk_function_type c [| ar |] t in
       let d = Hashtbl.create 37 in
-        { c = c; t = t; ar = ar; f = f; d = d; ds = []; count = 0; i = 0 }
+        { c = c; t = t; ar = ar; f = f; binop = binop; d = d; ds = []; count = 0; i = 0 }
 
     let push p =
       me.count <- me.count + 1;
@@ -126,7 +270,13 @@ module YicesProver  =
 	begin
 	  me.ds <- barrier :: me.ds;
 	  Y.yices_push me.c;
-	  Y.yices_assert me.c (yicesPred me p)
+	  Y.yices_assert me.c 
+                  (let p' = fixdiv p in 
+                  (*let _ = if (fixdiv p) != p then
+                      (Predicate.pprint Format.std_formatter p; 
+                      Predicate.pprint Format.std_formatter p') 
+                      else () in *)
+                  yicesPred me p')
 	end
       
     let rec vpop (cs,s) =

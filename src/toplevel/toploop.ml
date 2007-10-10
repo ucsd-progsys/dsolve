@@ -232,13 +232,15 @@ let execute_phrase print_outcome ppf phr =
       let (newquals, framemap) =
         Qualifymod.qualify_structure newenv !toplevel_fenv oldquals str in
       if !Clflags.dump_qexprs then
-        Qdebug.dump_qualified_structure std_formatter framemap str;
+        Qdebug.dump_qualified_structure std_formatter framemap str; flush stdout;
       let lam = Translmod.transl_toplevel_definition str in
       Warnings.check_fatal ();
       begin try
         toplevel_env := newenv;
         toplevel_quals := newquals;
+        let _ = Printf.printf "Starting to execute\n"; flush stdout in
         let res = load_lambda ppf lam in
+        let _ = Printf.printf "Finished executing\n"; flush stdout in
         let out_phr =
           match res with
           | Result v ->
@@ -246,8 +248,8 @@ let execute_phrase print_outcome ppf phr =
                 match str with
                 | [Tstr_eval exp] ->
                     let outv = outval_of_value newenv v exp.exp_type in
-                    let ty' = Printtyp.tree_of_type_scheme exp.exp_type in
-                    let ty = Printqual.qualify_tree_of_type_scheme ty'
+                    let ty = Printtyp.tree_of_type_scheme exp.exp_type in
+                    let ty = Printqual.qualify_tree_of_type_scheme ty
                       (Qualifymod.LocationMap.find exp.exp_loc framemap) in
                     Ophr_eval (outv, ty)
                 | [] -> Ophr_signature []
@@ -316,7 +318,7 @@ let use_file ppf name =
         try
           List.iter
             (fun ph ->
-              if !Clflags.dump_parsetree then Printast.top_phrase ppf ph;
+              if !Clflags.dump_parsetree then Printast.top_phrase ppf ph; flush stdout;
               if not (execute_phrase !use_print_results ppf ph) then raise Exit)
             (!parse_use_file lb);
           true

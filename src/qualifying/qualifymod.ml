@@ -135,7 +135,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
 						let (fs', c, m) = List.fold_left list_rec ([], cstrs, framemap) es in
 						let mksub b a = SubFrame(env, guard, a, b) in
 						let c = List.append (List.map (mksub (List.hd fs)) fs') c in
-						(f, (WFFrame(env, f)::c), m)	
+						(f, WFFrame(env, f)::c, m)	
 	| (_, t) ->
 					let _ = !Oprint.out_type Format.std_formatter (Printtyp.tree_of_type_scheme t) in
 					let _ = flush_all () in

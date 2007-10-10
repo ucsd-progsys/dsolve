@@ -1430,7 +1430,10 @@ pexpression:
   | pexpression PLUS pexpression                { mkpredexp (Ppredexp_binop($1, Predexp_plus, $3)) }
   | pexpression MINUS pexpression               { mkpredexp (Ppredexp_binop($1, Predexp_minus, $3)) }
   | pexpression STAR pexpression                { mkpredexp (Ppredexp_binop($1, Predexp_times, $3)) }
-	/*| pexpression INFIXOP3 pexpression					  { match $2 with "/" -> mkpredexp(Ppredexp_binop($1, Predexp_times, $3)) } */
+	| pexpression INFIXOP3 pexpression					  { 
+			match $2 with 
+					"/" -> mkpredexp(Ppredexp_binop($1, Predexp_div, $3)) 
+					| _ -> assert false }
 
 /* Constants */
 
