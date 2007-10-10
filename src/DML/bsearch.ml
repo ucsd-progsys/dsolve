@@ -25,7 +25,7 @@ let bsearch key vec =
     if lo < hi_minus  then
 			let hl = hi + lo in
       let m = hl / 2  in
-      let x = Array.get vec m in
+      let x = 5 in(*Array.get vec m in*)
 			let diff = key - x in
 			let m_plus = m + 1 in
 			let m_minus = m - 1 in
@@ -35,7 +35,7 @@ let bsearch key vec =
 			else -1
 	in
 	let sv = Array.length vec in
-	let sv_minus = sv - 1 in
+	let sv_minus = sv - 1 in 
 	look 0 sv_minus 
 in 
 let ar = [|1;2;3|] in

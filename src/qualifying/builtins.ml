@@ -58,9 +58,9 @@ let array_length_frame =
 
 let array_get_frame =
 	let (x, y) = (Ident.create "x", Ident.create "y") in
-	let tyvar = Ident.create "'a" in
-	("Array.get", mk_fun(x, (mk_array (Frame.Fvar(tyvar)) []), 
-								mk_fun (y, mk_int [qsize Predicate.Lt x y; qint Predicate.Ge 0 y], (Frame.Fvar(tyvar))))) 
+	let tyvar = Frame.Fvar(Ident.create "'a") in
+	("Array.get", mk_fun(x, (mk_array tyvar []), 
+								mk_fun (y, mk_int [qsize Predicate.Lt x y; qint Predicate.Ge 0 y], (tyvar)))) 
 
 
 let frames = [
