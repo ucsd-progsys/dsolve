@@ -96,4 +96,3 @@ let size_lit_refinement i =
 											 x,
 											 Predicate.equals(Predicate.FunApp("Array.length", Predicate.Var x), Predicate.PInt(i)))])
 
-let empty_refinement = ([], Frame.Qconst [])

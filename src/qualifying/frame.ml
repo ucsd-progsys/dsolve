@@ -14,6 +14,7 @@ type t =
     Fvar of Path.t
   | Fconstr of Path.t * t list * refinement
   | Farrow of Path.t option * t * t
+  | Funknown
 
 let pprint_qualifier_expr ppf = function
   | Qvar id ->
@@ -42,20 +43,24 @@ let rec pprint ppf = function
   | Fconstr (path, l, r) ->
       (fprintf ppf "path name: %s:\t" (Path.name path); (function t->()) (List.map (pprint ppf) l))
 	(*^^^ DEBUG*)
+  | Funknown ->
+      fprintf ppf "[unknown]"
   (*| _ -> assert false*)
  and pprint1 ppf = function
    | (Farrow _) as f ->
        fprintf ppf "@[(%a)@]" pprint f
    | _ as f -> pprint ppf f
 
+let empty_refinement = ([], Qconst [])
+
 let fresh_refinementvar () = ([], Qvar (Path.mk_ident "k"))
 
 let fresh_fvar () = Fvar (Path.mk_ident "a")
-(* Create a fresh frame with the same shape as the given type [ty].
-   You probably want to consider using fresh_with_labels instead of this
-   for subtype constraints. *)
+
 (* ming: abbrevs? *)
-let fresh ty =
+(* Create a fresh frame with the same shape as the given type [ty], using
+   [fresh_ref_var] to create new refinement variables. *)
+let fresh_with_var_fun ty fresh_ref_var =
   let vars = ref [] in
   let rec fresh_rec t =
     let t' = repr t in
@@ -68,11 +73,23 @@ let fresh ty =
               fv
           end
       | Tconstr(p, tyl, _) -> 
-          Fconstr (p, List.map fresh_rec tyl, fresh_refinementvar ())
+          Fconstr (p, List.map fresh_rec tyl, fresh_ref_var ())
       | Tarrow(_, t1, t2, _) ->
           Farrow (None, fresh_rec t1, fresh_rec t2)
-      | _ -> assert false
+      | _ ->
+          fprintf err_formatter "@[Warning:@ Freshing@ unsupported@ type@]@.";
+          Funknown
   in fresh_rec ty
+
+(* Create a fresh frame with the same shape as the given type [ty].
+   You probably want to consider using fresh_with_labels instead of this
+   for subtype constraints. *)
+let fresh ty = fresh_with_var_fun ty fresh_refinementvar
+
+(* Create a fresh frame with the same shape as the given type [ty].
+   No refinement variables are created - all refinements are initialized
+   to true. *)
+let fresh_without_vars ty = fresh_with_var_fun ty (fun _ -> empty_refinement)
 
 (* Instantiate the vars in f(r) with the corresponding frames in ftemplate.  If a
    variable occurs twice, it will only be instantiated with one frame; which
@@ -91,17 +108,18 @@ let instantiate fr ftemplate =
           Fconstr (p, [], r)
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
           Farrow (l, inst f1 f2, inst f1' f2')
-			| (Fconstr (p, l, r), Fconstr(p', l', r')) ->
-					let _ = if p = p' then () else assert false in
-					(*let _ = if r = r' then () else assert false in*)
-					Fconstr(p, List.map2 inst l l', r)
-			| (f1, f2) ->
-					let _ = Printf.printf "Unsupported types for instantiation:\t" in
-					let _ = pprint Format.std_formatter f1 in
-					let _ = Printf.printf "\n" in
-					let _ = pprint Format.std_formatter f2 in
-					let _ = Printf.printf "\n" in
-					assert false
+      | (Fconstr (p, l, r), Fconstr(p', l', r')) ->
+	  let _ = if p = p' then () else assert false in
+	    (*let _ = if r = r' then () else assert false in*)
+	    Fconstr(p, List.map2 inst l l', r)
+      | (Funknown, Funknown) -> Funknown
+      | (f1, f2) ->
+	  let _ = Printf.printf "Unsupported types for instantiation:\t" in
+	  let _ = pprint Format.std_formatter f1 in
+	  let _ = Printf.printf "\n" in
+	  let _ = pprint Format.std_formatter f2 in
+	  let _ = Printf.printf "\n" in
+	    assert false
       (*| _ -> assert false*)
   in inst fr ftemplate
 
@@ -119,6 +137,8 @@ let rec apply_substitution sub = function
       Farrow (x, apply_substitution sub f1, apply_substitution sub f2)
   | Fconstr (p, l, (subs, qe)) ->
       Fconstr (p, List.map (apply_substitution sub) l, (sub::subs, qe))
+  | Funknown ->
+      Funknown
   (*| _ -> assert false*)
 
 (* Label all the function formals in [f] with their corresponding labels in
@@ -127,7 +147,8 @@ let rec apply_substitution sub = function
 let rec label_like f f' =
   match (f, f') with
     | (Fvar _, Fvar _)
-    | (Fconstr _, Fconstr _) ->
+    | (Fconstr _, Fconstr _)
+    | (Funknown, Funknown) ->
         f
     | (Farrow (None, f1, f1'), Farrow(l, f2, f2')) ->
         Farrow (l, label_like f1 f2, label_like f1' f2')
@@ -149,7 +170,8 @@ let apply_solution solution fr =
     | Fconstr (path, fl, r) ->
         Fconstr (path, List.map apply_rec fl,
                  refinement_apply_solution solution r)
-    | (Fvar _) as f -> f
+    | Fvar _
+    | Funknown as f-> f
   in apply_rec fr
 
 let refinement_predicate solution qual_var (subs, qualifiers) =
