@@ -1,9 +1,9 @@
-qualifier LTs(x) = x < size v1;;
-qualifier LEs(x) = x <= size v1;;
-qualifier NEs(s) = not(x = size v1);;
-qualifier LTs1(x) = x < size v2;;
-qualifier LEs1(x) = x <= size v2;;
-qualifier NEs1(s) = not(x = size v2);;
+qualifier LTs(x) = x < Array.length v1;;
+qualifier LEs(x) = x <= Array.length v1;;
+qualifier NEs(s) = not(x = Array.length v1);;
+qualifier LTs1(x) = x < Array.length v2;;
+qualifier LEs1(x) = x <= Array.length v2;;
+qualifier NEs1(s) = not(x = Array.length v2);;
 qualifier LT0(x) = x < 0;;
 qualifier LE0(x) = x <= 0;;
 qualifier NE0(x) = not(x = 0);;
@@ -14,20 +14,23 @@ qualifier LEn(x) = x <= n;;
 qualifier NEn(x) = not(x = n);;
 qualifier GTn(x) = n < x;;
 qualifier GEn(x) = n <= x;;
+qualifier LT3(x) = x < 3;;
+qualifier LE3(x) = x <= 3;;
+qualifier NE3(x) = not(x = 3);;
+qualifier EQ3(x) = x = 3;;
 
-(* the product here is non-linear -- yices chokes on it *)
 
 let dotprod v1 v2 = 
 begin
-		(* we can't infer that size v2 >= size v1.. so this has to be added *)
-		let sz2 = size v2 in
-		let sz = size v1 in
+		(* we can't infer that Array.length v2 >= Array.length v1.. so this has to be added *)
+		let sz2 = Array.length v2 in
+		let sz = Array.length v1 in
 			if sz2 = sz then
 begin
 		let sz_minus = sz - 1 in
 		let rec loop n sum i =
-			let get_v1_i = get v1 i in
-			let get_v2_i = get v2 i in
+			let get_v1_i = Array.get v1 i in
+			let get_v2_i = Array.get v2 i in
 			let get_prod_i = get_v1_i * get_v2_i in
 			let get_prod_i_plus_sum = get_prod_i + sum in
 			let i_plus = i + 1 in 

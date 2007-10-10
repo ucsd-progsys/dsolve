@@ -1,15 +1,10 @@
 open Predicate
 
-(* element one of the great array hack: 
-let arr_length = Path.Pident(Ident.create "Array.length")
-let arr_get = Path.Pident(Ident.create "Array.get")*)
-
 let qfalse = (Path.Pident(Ident.create "FALSE"), Ident.create "x",
               Predicate.Not Predicate.True)
 
-(* element two of the great array hack: *)
-let qsize rel x y = (Path.Pident(Ident.create ("SIZE_" ^ (Predicate.pprint_rel rel))), y,
-							Predicate.Atom(Predicate.Var y, rel, Predicate.FunApp("Array.length", Predicate.Var x)))
+let qsize rel x y z = (Path.Pident(Ident.create ("SIZE_" ^ (Predicate.pprint_rel rel))), y,
+							Predicate.Atom(Predicate.Var z, rel, Predicate.FunApp("Array.length", Predicate.Var x)))
 let qint rel i y = (Path.Pident(Ident.create (Printf.sprintf "SIZE_%s%d" 
 		(Predicate.pprint_rel rel) i)), y, Predicate.Atom(Predicate.Var y, rel, Predicate.PInt i))
 
@@ -21,7 +16,15 @@ let mk_int qs = Frame.Fconstr (Predef.path_int, [], ([], Frame.Qconst qs))
 
 let mk_array f qs = Frame.Fconstr(Predef.path_array, [f], ([], Frame.Qconst qs))
 
+(* must find path for refs.. *)
+let mk_ref f qs = Frame.Fconstr(Predef.path_int, [f], ([], Frame.Qconst qs))
+
+let mk_unit () = Frame.Fconstr(Predef.path_unit, [], ([], Frame.Qconst []))
+
 let mk_fun (lab, f, f') = Frame.Farrow (Some lab, f, f')
+
+let mk_rel_qual s rel x y z = (Path.Pident (Ident.create s), x, 
+          Predicate.Atom(Predicate.Var y, rel, Predicate.Var z))
 
 let fun_frame name (x, y) qual =
   ("Pervasives." ^ name,
@@ -50,18 +53,45 @@ let rel_frame name rel =
     fun_frame name (x, y) qual
 
 
-(* element 3 of the great array hack: *make sure the generalization works..* *)
 let array_length_frame = 
 	let (x, y) = (Ident.create "x", Ident.create "y") in (* make 2 idents fresh *)
 	let tyvar = Ident.create "'a" in
-	("Array.length", mk_fun (x, (mk_array (Frame.Fvar(tyvar)) []), mk_int [qsize Predicate.Eq x y; qint Predicate.Gt 0 y]))
+	("Array.length", mk_fun (x, (mk_array (Frame.Fvar(tyvar)) []), mk_int [qsize Predicate.Eq x y y; qint Predicate.Gt 0 y]))
+
+let array_set_frame =
+  let (x, y, z) = fresh_idents () in
+  let tyvar = Frame.Fvar(Ident.create "'a") in
+  ("Array.set", mk_fun(x, (mk_array tyvar []),
+                mk_fun(y, mk_int [qsize Predicate.Lt x y y; qint Predicate.Ge 0 y],
+                mk_fun(z, tyvar, mk_unit ()))))
 
 let array_get_frame =
 	let (x, y) = (Ident.create "x", Ident.create "y") in
 	let tyvar = Frame.Fvar(Ident.create "'a") in
 	("Array.get", mk_fun(x, (mk_array tyvar []), 
-								mk_fun (y, mk_int [qsize Predicate.Lt x y; qint Predicate.Ge 0 y], (tyvar)))) 
+								mk_fun(y, mk_int [qsize Predicate.Lt x y y; qint Predicate.Ge 0 y], (tyvar)))) 
 
+let array_make_frame =
+  let (x, y, z) = fresh_idents () in
+  let tyvar = Frame.Fvar(Ident.create "'a") in
+  ("Array.make", mk_fun(x, mk_int [qint Predicate.Gt 0 x],
+                 mk_fun(y, tyvar, mk_array tyvar [qsize Predicate.Eq z z x])))
+
+let ref_ref_frame =
+  let (x, y) = (Ident.create "x", Ident.create "y") in
+  let tyvar = Frame.Fvar(Ident.create "'a") in
+  ("Pervasives.ref", mk_fun(x, tyvar, mk_ref tyvar []))
+
+let ref_deref_frame =
+  let (x, y) = (Ident.create "x", Ident.create "y") in
+  let tyvar = Frame.Fvar(Ident.create "'a") in
+  ("Pervasives.!", mk_fun(x, mk_ref tyvar [], tyvar))
+
+let ref_assgn_frame =
+  let (x, y) = (Ident.create "x", Ident.create "y") in
+  let tyvar = Frame.Fvar(Ident.create "'a") in
+  ("Pervasives.:=", mk_fun(x, mk_ref tyvar [],
+                    mk_fun(y, tyvar, mk_unit ())))
 
 let frames = [
   op_frame "+" Predicate.Plus;
@@ -73,6 +103,11 @@ let frames = [
   rel_frame "<=" Predicate.Le;
 	array_length_frame;
 	array_get_frame;
+  array_make_frame;
+  array_set_frame;
+  ref_ref_frame;
+  ref_deref_frame;
+  ref_assgn_frame;
 ]
 
 let equality_refinement exp =

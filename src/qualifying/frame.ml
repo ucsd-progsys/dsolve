@@ -66,12 +66,62 @@ let fresh ty =
               vars := (t', fv) :: !vars;
               fv
           end
+       (* ming: there are some types that we'd like to essentially leave unrefined
+          -- for readability and generally being careful we'd like these refined as true,
+          but that would require special casing the case below, which is inelegant. *)
       | Tconstr(p, tyl, _) -> 
           Fconstr (p, List.map fresh_rec tyl, fresh_refinementvar ())
       | Tarrow(_, t1, t2, _) ->
           Farrow (None, fresh_rec t1, fresh_rec t2)
-      | _ -> assert false
+      | Ttuple(_) ->
+          Printf.printf "Ttuple"; assert false
+      | Tobject(_, _) ->
+          Printf.printf "Tobject"; assert false
+      | Tfield(_, _, _, _) ->
+          Printf.printf "Tfield"; assert false
+      | Tnil ->
+          Printf.printf "Tnil"; assert false
+      | Tlink(_) ->
+          Printf.printf "Tlink"; assert false
+      | Tsubst(_) ->
+          Printf.printf "Tsubst"; assert false
+      | Tvariant(_) ->
+          Printf.printf "Tvariant"; assert false
+      | Tunivar ->
+          Printf.printf "Tunivar"; assert false
+      | Tpoly(_, _) ->
+          Printf.printf "Tpoly"; assert false
   in fresh_rec ty
+
+let rec type_structure t =
+  let t' = repr t in
+  match t'.desc with
+        Tvar ->
+          Printf.sprintf "Tvar" 
+      | Tconstr(p, tyl, _) -> 
+          Printf.sprintf "Tconstr: path(%s) types: (%s)" (Path.name p) 
+                        (String.concat " " (List.map type_structure tyl))
+      | Tarrow(p, t1, t2, _) ->
+          Printf.sprintf "Tarrow: path(%s) type_in: (%s) type_out: (%s)" (p)
+            (type_structure t1) (type_structure t2)
+      | Ttuple(_) ->
+          Printf.sprintf "Ttuple"
+      | Tobject(_, _) ->
+          Printf.sprintf "Tobject"
+      | Tfield(_, _, _, _) ->
+          Printf.sprintf "Tfield"
+      | Tnil ->
+          Printf.sprintf "Tnil"
+      | Tlink(t) ->
+          Printf.sprintf "Tlink: %s" (type_structure t)
+      | Tsubst(_) ->
+          Printf.sprintf "Tsubst"
+      | Tvariant(_) ->
+          Printf.sprintf "Tvariant"
+      | Tunivar ->
+          Printf.sprintf "Tunivar"
+      | Tpoly(_, _) ->
+          Printf.sprintf "Tpoly"
 
 (* Instantiate the vars in f(r) with the corresponding frames in ftemplate.  If a
    variable occurs twice, it will only be instantiated with one frame; which
@@ -91,7 +141,7 @@ let instantiate fr ftemplate =
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
           Farrow (l, inst f1 f2, inst f1' f2')
 			| (Fconstr (p, l, r), Fconstr(p', l', r')) ->
-					let _ = if p = p' then () else assert false in
+					(*let _ = if Path.same p p' then () else assert false in*)
 					(*let _ = if r = r' then () else assert false in*)
 					Fconstr(p, List.map2 inst l l', r)
 			| (f1, f2) ->

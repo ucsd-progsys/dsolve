@@ -147,8 +147,9 @@ let constrain_expression tenv initenv quals exp initcstrs initframemap =
 						let c = List.append (List.map (mksub (List.hd fs)) fs') c in
 						(f, WFFrame(env, f)::c, m)	
 	| (_, t) ->
-					let _ = !Oprint.out_type Format.std_formatter (Printtyp.tree_of_type_scheme t) in
-					let _ = flush_all () in
+					(*let _ = !Oprint.out_type Format.std_formatter (Printtyp.tree_of_type_scheme t) in*)
+					(*let _ = flush_all () in*)
+          let _ = Printf.printf "%s" (Frame.type_structure t) in
 					assert false
 					(*let _ = Printf.printf "\n" in*)
 					(*(Frame.fresh e.exp_type, cstrs, framemap)*)			 

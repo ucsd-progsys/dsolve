@@ -17,6 +17,7 @@ type t =
 val pprint: formatter -> t -> unit
 val fresh: type_expr -> t
 val fresh_with_labels: type_expr -> t -> t
+val type_structure: type_expr -> string
 val instantiate: t -> t -> t
 val apply_substitution: substitution -> t -> t
 val label_like: t -> t -> t
