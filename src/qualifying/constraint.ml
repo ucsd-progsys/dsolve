@@ -32,7 +32,7 @@ let split cstrs =
                 | (Some x, None)
                 | (None, Some x) ->
                     Lightenv.add x f2 env
-                | (Some x, Some y) when Ident.same x y ->
+                | (Some x, Some y) when Path.same x y ->
                     Lightenv.add x f2 env
                 | _ -> env
               in split_rec flat
@@ -62,9 +62,9 @@ let split cstrs =
               split_rec (WFRefinement (env, r) :: flat) cs
           | Frame.Fvar _ ->
               split_rec flat cs
-					| Frame.Fconstr (_, l, r) ->
-							split_rec (WFRefinement(env, r)::flat) 
-																						(List.append (List.map (function li -> WFFrame(env, li)) l) cs)
+	  | Frame.Fconstr (_, l, r) ->
+	      split_rec (WFRefinement(env, r)::flat) 
+		(List.append (List.map (function li -> WFFrame(env, li)) l) cs)
           (*| _ -> assert false*)
         end
   in split_rec [] cstrs
@@ -73,7 +73,7 @@ let environment_predicate solution env =
   Predicate.big_and (Lightenv.maplist (Frame.predicate solution) env)
 
 (* Unique variable to qualify when testing sat, applicability of qualifiers, etc. *)
-let qual_test_var = Ident.create "AA"
+let qual_test_var = Path.mk_ident "AA"
 
 let constraint_sat solution = function
   | SubRefinement (env, guard, r1, r2) ->

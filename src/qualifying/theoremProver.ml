@@ -73,17 +73,17 @@ module YicesProver  =
     let rec yicesExp me e =
       match e with 
         Predicate.PInt i -> Y.yices_mk_num me.c i 
-      | Predicate.Var s -> yicesVar me (Ident.unique_name s) me.t
+      | Predicate.Var s -> yicesVar me (Path.unique_name s) me.t
       | Predicate.Pvar (s,i) -> yicesVar me
-          (Printf.sprintf "%sprime%d" (Ident.unique_name s) i) me.t
+          (Printf.sprintf "%sprime%d" (Path.unique_name s) i) me.t
       | Predicate.FunApp (f,e) ->
-					(* huge hack alert *)
-					if f = "Array.length" then 
-						let (fn, e') = (yicesVar me f me.f, yicesVar me ((function Predicate.Var(s) -> Ident.unique_name s | _ -> assert false) e) me.ar) in
-						Y.yices_mk_app me.c fn [|e'|]
-					else
-          let (fn, e') = (yicesVar me f me.f, yicesExp me e) in
-            Y.yices_mk_app me.c fn [|e'|]
+	  (* huge hack alert *)
+	  if f = "Array.length" then 
+	    let (fn, e') = (yicesVar me f me.f, yicesVar me ((function Predicate.Var(s) -> Path.unique_name s | _ -> assert false) e) me.ar) in
+	      Y.yices_mk_app me.c fn [|e'|]
+	  else
+            let (fn, e') = (yicesVar me f me.f, yicesExp me e) in
+              Y.yices_mk_app me.c fn [|e'|]
       | Predicate.Binop (e1,op,e2) ->
           let es' = Array.map (yicesExp me) [|e1;e2|] in
           (match op with 

@@ -1,6 +1,6 @@
 open Format
 
-type t = Path.t * Ident.t * Predicate.t
+type t = Path.t * Path.t * Predicate.t
 
 let pprint ppf (path, _, _) =
   fprintf ppf "%s" (Path.name path)
@@ -28,8 +28,8 @@ exception Refinement_not_closed
 let instantiate env (path, valu, pred) =
   (* Don't instantiate the bound variable *)
   let names_to_idents =
-     (Ident.name valu, valu) ::
-       (Lightenv.maplist (fun id _ -> (Ident.name id, id)) env) in
+     (Path.name valu, valu) ::
+       (Lightenv.maplist (fun path _ -> (Path.name path, path)) env) in
     try
       (path, valu, Predicate.instantiate_named_vars names_to_idents pred)
     with Not_found -> raise Refinement_not_closed

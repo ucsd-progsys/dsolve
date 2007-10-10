@@ -6,20 +6,20 @@ type binop =
     Plus
   | Minus
   | Times
-	(*| Div*)
+      (*| Div*)
 
 type binrel =
     Eq
   | Ne
   | Gt
-	| Ge
+  | Ge
   | Lt
   | Le 
 
 type pexpr =
     PInt of int 
-  | Var of Ident.t
-  | Pvar of Ident.t * int
+  | Var of Path.t
+  | Pvar of Path.t * int
   | FunApp of string * pexpr
   | Binop of pexpr * binop * pexpr 
 
@@ -31,20 +31,20 @@ type t =
   | Or of t * t
 
 let pprint_rel = function
-		Eq -> "="
-		| Ne -> "=/="
-		| Gt -> ">"
-		| Ge -> ">="
-		| Lt -> "<"
-		| Le -> "<="
+    Eq -> "="
+  | Ne -> "=/="
+  | Gt -> ">"
+  | Ge -> ">="
+  | Lt -> "<"
+  | Le -> "<="
 
 let rec pprint_pexpr ppf = function
   | PInt n ->
       fprintf ppf "%d" n
   | Var id ->
-      fprintf ppf "%s" (Ident.unique_name id)
+      fprintf ppf "%s" (Path.unique_name id)
   | Pvar (id, n) ->
-      fprintf ppf "%s-%d" (Ident.unique_name id) n
+      fprintf ppf "%s-%d" (Path.unique_name id) n
   | FunApp (f, pexp) ->
       fprintf ppf "@[%s@ %a@]" f pprint_pexpr pexp
   | Binop (p, op, q) ->
@@ -98,15 +98,15 @@ let rec map_vars f pred =
         Not (map_rec p)
     | And (p, q) ->
         And (map_rec p, map_rec q)
-  | Or (p, q) ->
-      Or (map_rec p, map_rec q)
+    | Or (p, q) ->
+        Or (map_rec p, map_rec q)
   in map_rec pred
 
 let subst v x pred =
-  map_vars (fun y -> if Ident.same x y then v else Var y) pred
+  map_vars (fun y -> if Path.same x y then v else Var y) pred
 
 let rec instantiate_named_vars subs pred =
-  map_vars (fun y -> Var (List.assoc (Ident.name y) subs)) pred
+  map_vars (fun y -> Var (List.assoc (Path.name y) subs)) pred
 
 let vars p =
   let rec exp_vars_rec vars = function
@@ -151,9 +151,9 @@ let rec transl_predicate p =
       | Ppredexp_int n ->
 	  PInt n
       | Ppredexp_var y ->
-	  Var (Ident.create y)
+	  Var (Path.mk_ident y)
       | Ppredexp_pvar (y, n) ->
-	  Pvar (Ident.create y, n)
+	  Pvar (Path.mk_ident y, n)
       | Ppredexp_app (f, e) ->
 	  FunApp (f, transl_pexpression e)
       | Ppredexp_binop (e1, op, e2) ->
@@ -163,7 +163,7 @@ let rec transl_predicate p =
     | Pred_eq -> Eq
     | Pred_ne -> Ne
     | Pred_gt -> Gt
-		| Pred_ge -> Ge
+    | Pred_ge -> Ge
     | Pred_lt -> Lt
     | Pred_le -> Le
   in

@@ -2,27 +2,27 @@ open Types
 open Btype
 open Format
 
-type substitution = Ident.t * Predicate.pexpr
+type substitution = Path.t * Predicate.pexpr
 
 type qualifier_expr =
-    Qvar of Ident.t                     (* Qualifier variable *)
+    Qvar of Path.t                      (* Qualifier variable *)
   | Qconst of Qualifier.t list          (* Constant qualifier set *)
 
 type refinement = substitution list * qualifier_expr
 
 type t =
-    Fvar of Ident.t
+    Fvar of Path.t
   | Fconstr of Path.t * t list * refinement
-  | Farrow of Ident.t option * t * t
+  | Farrow of Path.t option * t * t
 
 let pprint_qualifier_expr ppf = function
   | Qvar id ->
-      fprintf ppf "%s" (Ident.unique_name id)
+      fprintf ppf "%s" (Path.unique_name id)
   | Qconst quals ->
       Oprint.print_list Qualifier.pprint (fun ppf -> fprintf ppf "@ ") ppf quals
 
-let pprint_sub ppf (id, pexp) =
-  fprintf ppf "@[%s@ ->@ %a@]" (Ident.unique_name id) Predicate.pprint_pexpr pexp
+let pprint_sub ppf (path, pexp) =
+  fprintf ppf "@[%s@ ->@ %a@]" (Path.unique_name path) Predicate.pprint_pexpr pexp
 
 let pprint_subs ppf subs =
   Oprint.print_list pprint_sub (fun ppf -> fprintf ppf ";@ ") ppf subs
@@ -32,24 +32,25 @@ let pprint_refinement ppf (subs, qexp) =
 
 let rec pprint ppf = function
   | Fvar a ->
-      fprintf ppf "%s" (Ident.unique_name a)
+      fprintf ppf "%s" (Path.unique_name a)
   | Fconstr (path, [], r) ->
       fprintf ppf "@[{%s@ |@;<1 2>%a}@]" (Path.name path) pprint_refinement r
   | Farrow (None, f, f') ->
       fprintf ppf "@[%a@ ->@;<1 2>%a@]" pprint1 f pprint f'
   | Farrow (Some id, f, f') ->
-      fprintf ppf "@[%s:@ %a@ ->@;<1 2>%a@]" (Ident.unique_name id) pprint1 f pprint f'
-	| Fconstr (path, l, r) ->
-			(fprintf ppf "path name: %s:\t" (Path.name path); (function t->()) (List.map (pprint ppf) l))
-		(*^^^ DEBUG*)
+      fprintf ppf "@[%s:@ %a@ ->@;<1 2>%a@]" (Path.unique_name id) pprint1 f pprint f'
+  | Fconstr (path, l, r) ->
+      (fprintf ppf "path name: %s:\t" (Path.name path); (function t->()) (List.map (pprint ppf) l))
+	(*^^^ DEBUG*)
   (*| _ -> assert false*)
  and pprint1 ppf = function
    | (Farrow _) as f ->
        fprintf ppf "@[(%a)@]" pprint f
    | _ as f -> pprint ppf f
 
-let fresh_refinementvar () = ([], Qvar (Ident.create "k"))
+let fresh_refinementvar () = ([], Qvar (Path.mk_ident "k"))
 
+let fresh_fvar () = Fvar (Path.mk_ident "a")
 (* Create a fresh frame with the same shape as the given type [ty].
    You probably want to consider using fresh_with_labels instead of this
    for subtype constraints. *)
@@ -62,7 +63,7 @@ let fresh ty =
         Tvar ->
           begin try List.assq t' !vars
           with Not_found ->
-            let fv = Fvar (Ident.create "a") in
+            let fv = fresh_fvar () in
               vars := (t', fv) :: !vars;
               fv
           end
@@ -165,7 +166,7 @@ let predicate solution qual_var = function
   | _ -> Predicate.True
 
 let refinement_well_formed env solution r =
-  let valu = Ident.create "valu" in
+  let valu = Path.mk_ident "valu" in
   let var_bound v = v = valu or Lightenv.mem v env in
     List.for_all var_bound
       (Predicate.vars (refinement_predicate solution valu r))
