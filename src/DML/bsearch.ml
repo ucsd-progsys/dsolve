@@ -39,7 +39,7 @@ let bsearch key vec =
 	let sv_minus = sv - 1 in 
 	look 0 sv_minus
 in 
-let ar = [|1;2;3|] in
+let ar = [|1;2;3;4;5;6;7|] in
 bsearch 5 ar
 ;;
 
