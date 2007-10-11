@@ -95,8 +95,9 @@ let rec type_structure t =
       | Tarrow(p, t1, t2, _) ->
           Printf.sprintf "Tarrow: path(%s) type_in: (%s) type_out: (%s)" (p)
             (type_structure t1) (type_structure t2)
-      | Ttuple(_) ->
-          Printf.sprintf "Ttuple"
+      | Ttuple(ts) ->
+          Printf.sprintf "Ttuple: types: (%s)" 
+                        (String.concat " " (List.map type_structure ts))
       | Tobject(_, _) ->
           Printf.sprintf "Tobject"
       | Tfield(_, _, _, _) ->
