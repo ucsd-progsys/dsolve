@@ -41,7 +41,8 @@ let split cstrs =
                     :: cs)
           | (Frame.Fconstr (_, [], r1), Frame.Fconstr (_, [], r2)) ->
               split_rec (SubRefinement (env, guard, r1, r2) :: flat) cs
-          | (Frame.Fvar _, Frame.Fvar _) ->
+          | (Frame.Fvar _, Frame.Fvar _)
+          | (Frame.Funknown, Frame.Funknown) ->
               split_rec flat cs
 					| (Frame.Fconstr (p1, l1, r1), Frame.Fconstr(p2, l2, r2)) ->
               let invar a b = [SubFrame(env, guard, a, b); SubFrame(env, guard, b, a)] in
@@ -68,7 +69,8 @@ let split cstrs =
                     :: cs)
           | Frame.Fconstr (_, [], r) ->
               split_rec (WFRefinement (env, r) :: flat) cs
-          | Frame.Fvar _ ->
+          | Frame.Fvar _
+          | Frame.Funknown ->
               split_rec flat cs
 	  | Frame.Fconstr (_, l, r) ->
 	      split_rec (WFRefinement(env, r)::flat) 
