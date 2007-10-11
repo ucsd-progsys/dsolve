@@ -148,7 +148,6 @@ let instantiate fr ftemplate =
 					Fconstr(p, List.map2 inst l l', r)
       | (Funknown, Funknown) -> Funknown
 			| (f1, f2) ->
-					let _ = Printf.printf "Unsupported types for instantiation:\t" in
 					let _ = pprint Format.std_formatter f1 in
 					let _ = pprint Format.std_formatter f2 in
 					assert false
