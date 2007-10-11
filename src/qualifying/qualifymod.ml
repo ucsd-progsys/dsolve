@@ -14,23 +14,11 @@ let expression_to_pexpr e =
     | Texp_constant (Const_int n) ->
 	Predicate.PInt n
     | Texp_ident (id, _) ->
-	Predicate.Var (Path.head id)
+	Predicate.Var id
     | _ ->
-        Predicate.Var (Ident.create "")
+        Predicate.Var (Path.mk_ident "dummy")
 
-let name_lookup_hack path env =
-  try
-    List.assoc (Path.name path) Builtins.frames
-  with Not_found ->
-    (* pmr: This is intrinsically broken for any path that isn't a plain
-       Pident.  The long-term fix is merge Lightenv and Env. *)
-    try Lightenv.find (Path.head path) env with Not_found ->
-				(function (n, f) -> f) 
-				(if (Path.name path) = "Array.length" then Builtins.array_length_frame else 
-				if (Path.name path) = "Array.get" then Builtins.array_get_frame else
-				(Printf.printf "Couldn't find: %s\n" (Path.name path); raise Not_found) )
-
-let constrain_expression tenv initenv quals exp initcstrs initframemap =
+let constrain_expression tenv initenv exp initcstrs initframemap =
   let rec constrain e env guard cstrs framemap =
     let (f, cs, fm) =
       match (e.exp_desc, repr e.exp_type) with
@@ -47,7 +35,7 @@ let constrain_expression tenv initenv quals exp initcstrs initframemap =
 	| (Texp_ifthenelse(e1, e2, Some e3), t) ->
             let f = Frame.fresh t in
             let (f1, cstrs1, fm1) = constrain e1 env guard cstrs framemap in
-            let guardvar = Ident.create "guard" in
+            let guardvar = Path.mk_ident "guard" in
             let true_tag =
               match (Env.lookup_constructor (Lident "true") tenv).cstr_tag with
                   Cstr_constant n -> n
@@ -68,13 +56,14 @@ let constrain_expression tenv initenv quals exp initcstrs initframemap =
 	| (Texp_function([({pat_desc = Tpat_var x}, e')], _), t) ->
 	    begin match Frame.fresh t with
               | Frame.Farrow (_, f, unlabelled_f') ->
-                  let env' = Lightenv.add x f env in
+                  let xp = Path.Pident x in
+                  let env' = Lightenv.add xp f env in
                   let (f'', cstrs', fm') = constrain e' env' guard cstrs framemap in
                   (* Since the underlying type system doesn't have dependent
                      types, fresh can't give us the proper labels for the RHS.
                      Instead, we have to label it after the fact. *)
                   let f' = Frame.label_like unlabelled_f' f'' in
-                  let f = Frame.Farrow (Some x, f, f') in
+                  let f = Frame.Farrow (Some xp, f, f') in
                     (f,
                      WFFrame (env, f)
                      :: SubFrame (env', guard, f'', f')
@@ -88,7 +77,7 @@ let constrain_expression tenv initenv quals exp initcstrs initframemap =
   | (Texp_ident (id, _), t) ->
             (* pmr: Later, the env should probably take paths, not idents.
                Something to think about... *)
-            let (f', ftemplate) = (name_lookup_hack id env, Frame.fresh t) in
+            let (f', ftemplate) = (Lightenv.find id env, Frame.fresh t) in
             let f = Frame.instantiate f' ftemplate in
               (f, cstrs, framemap)
 	| (Texp_apply (e1, exps), _) ->
@@ -112,7 +101,7 @@ let constrain_expression tenv initenv quals exp initcstrs initframemap =
                  (constrain e1 env guard cstrs framemap) exps
 	| (Texp_let (Nonrecursive, [({pat_desc = Tpat_var x}, e1)], e2), t) ->
             let (f1, cstrs'', fm'') = constrain e1 env guard cstrs framemap in
-            let env' = Lightenv.add x f1 env in
+            let env' = Lightenv.add (Path.Pident x) f1 env in
             let (f2, cstrs', fm') = constrain e2 env' guard cstrs'' fm'' in
             let f = Frame.fresh_with_labels t f2 in
               (f, SubFrame (env', guard, f2, f) :: cstrs', fm')
@@ -125,12 +114,13 @@ let constrain_expression tenv initenv quals exp initcstrs initframemap =
                a first pass just to get the labels, then do a second
                with the proper labels added. *)
             let unlabelled_f1 = Frame.fresh e1.exp_type in
-            let unlabelled_env = Lightenv.add f unlabelled_f1 env in
+            let fp = Path.Pident f in
+            let unlabelled_env = Lightenv.add fp unlabelled_f1 env in
             let (labelled_f1, _, _) = constrain e1 unlabelled_env guard cstrs framemap in
             let f1' = Frame.label_like unlabelled_f1 labelled_f1 in
-            let env'' = Lightenv.add f f1' env in
+            let env'' = Lightenv.add fp f1' env in
             let (f1, cstrs'', fm'') = constrain e1 env'' guard cstrs framemap in
-            let env' = Lightenv.add f f1 env in
+            let env' = Lightenv.add fp f1 env in
             let (f2, cstrs', fm') = constrain e2 env' guard cstrs'' fm'' in
             let f = Frame.fresh_with_labels t f2 in
               (f,
@@ -164,10 +154,10 @@ let constrain_structure tenv fenv initquals str =
   let rec constrain_rec quals cstrs fmap = function
     | [] -> (quals, cstrs, fmap)
     | (Tstr_eval exp) :: srem ->
-        let (_, cstrs', fmap') = constrain_expression tenv fenv quals exp cstrs fmap in
+        let (_, cstrs', fmap') = constrain_expression tenv fenv exp cstrs fmap in
           constrain_rec quals cstrs' fmap' srem
     | (Tstr_qualifier (name, (valu, pred))) :: srem ->
-        let newquals = (Path.Pident name, valu, pred) :: quals in
+        let newquals = (Path.Pident name, Path.Pident valu, pred) :: quals in
           constrain_rec newquals cstrs fmap srem
 		| (Tstr_value(_, _))::srem ->
 				Printf.printf "Tstr_val unsupported."; assert false

@@ -19,6 +19,8 @@ type t =
   | Pdot of t * string * int
   | Papply of t * t
 
+val mk_ident: string -> t
+
 val same: t -> t -> bool
 val isfree: Ident.t -> t -> bool
 val binding_time: t -> int
@@ -26,4 +28,5 @@ val binding_time: t -> int
 val nopos: int
 
 val name: t -> string
+val unique_name: t -> string
 val head: t -> Ident.t

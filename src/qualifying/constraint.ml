@@ -32,7 +32,7 @@ let split cstrs =
                 | (Some x, None)
                 | (None, Some x) ->
                     Lightenv.add x f2 env
-                | (Some x, Some y) when Ident.same x y ->
+                | (Some x, Some y) when Path.same x y ->
                     Lightenv.add x f2 env
                 | _ -> env
               in split_rec flat
@@ -70,9 +70,9 @@ let split cstrs =
               split_rec (WFRefinement (env, r) :: flat) cs
           | Frame.Fvar _ ->
               split_rec flat cs
-					| Frame.Fconstr (_, l, r) ->
-							split_rec (WFRefinement(env, r)::flat) 
-																						(List.append (List.map (function li -> WFFrame(env, li)) l) cs)
+	  | Frame.Fconstr (_, l, r) ->
+	      split_rec (WFRefinement(env, r)::flat) 
+		(List.append (List.map (function li -> WFFrame(env, li)) l) cs)
           (*| _ -> assert false*)
         end
   in split_rec [] cstrs
@@ -81,7 +81,7 @@ let environment_predicate solution env =
   Predicate.big_and (Lightenv.maplist (Frame.predicate solution) env)
 
 (* Unique variable to qualify when testing sat, applicability of qualifiers, etc. *)
-let qual_test_var = Ident.create "AA"
+let qual_test_var = Path.mk_ident "AA"
 
 let constraint_sat solution = function
   | SubRefinement (env, guard, r1, r2) ->
@@ -99,7 +99,7 @@ let refine solution = function
       let refined_quals =
         List.filter
           (fun q -> Frame.refinement_well_formed env solution (subs, Frame.Qconst [q]))
-          (try Lightenv.find k solution with Not_found -> (Printf.printf "Couldn't find: %s" (Ident.name k); raise Not_found))
+          (try Lightenv.find k solution with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k); raise Not_found))
       in Lightenv.add k refined_quals solution
   | SubRefinement (env, guard, r1, (subs, Frame.Qvar k2)) ->
       let envp = environment_predicate solution env in
@@ -113,7 +113,7 @@ let refine solution = function
             None
         in
         let refined_quals =
-          Misc.map_filter qual_holds (try Lightenv.find k2 solution with Not_found -> (Printf.printf "Couldn't find: %s" (Ident.name k2); raise Not_found)) in
+          Misc.map_filter qual_holds (try Lightenv.find k2 solution with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k2); raise Not_found)) in
           Prover.pop();
           Lightenv.add k2 refined_quals solution
   | SubRefinement _

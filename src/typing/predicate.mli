@@ -16,8 +16,8 @@ type binrel =
 
 type pexpr =   
     PInt of int 
-  | Var of Ident.t
-  | Pvar of Ident.t * int
+  | Var of Path.t
+  | Pvar of Path.t * int
   | FunApp of string * pexpr
   | Binop of pexpr * binop * pexpr 
 
@@ -36,9 +36,9 @@ val big_and: t list -> t
 val big_or: t list -> t
 val equals: (pexpr * pexpr) -> t
 
-val subst: pexpr -> Ident.t -> t -> t
-val vars: t -> Ident.t list
+val subst: pexpr -> Path.t -> t -> t
+val vars: t -> Path.t list
 (* pmr: change to plain old instantiate *)
-val instantiate_named_vars: (string * Ident.t) list -> t -> t
+val instantiate_named_vars: (string * Path.t) list -> t -> t
 val transl_predicate: Parsetree.predicate_declaration -> t
 

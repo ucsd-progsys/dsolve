@@ -1,12 +1,12 @@
 (* A small environment module; provided so we (hopefully) won't have to screw
    with OCaml's env. *)
 
-module ComparableIdent = struct
-  type t = Ident.t
+module ComparablePath = struct
+  type t = Path.t
   let compare = compare
 end
 
-module E = Map.Make(ComparableIdent)
+module E = Map.Make(ComparablePath)
 
 include E
 
@@ -21,6 +21,7 @@ let mapfilter f env =
 
 let addn items env =
   List.fold_left (fun e (k, v) -> add k v e) env items
+
 (*
 let pprint pprint_range env =
   Misc.join (maplist (fun x t -> Printf.sprintf "%s -> %s" x (pprint_range t)) env) "; "

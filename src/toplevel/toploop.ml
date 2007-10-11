@@ -410,7 +410,8 @@ let set_paths () =
   Dll.add_path !load_path
 
 let initialize_toplevel_env () =
-  toplevel_env := Compile.initial_env()
+  toplevel_env := Compile.initial_env();
+  toplevel_fenv := Lightenv.addn (Builtins.frames !toplevel_env) Lightenv.empty
 
 (* The interactive loop *)
 
