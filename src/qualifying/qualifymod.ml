@@ -136,6 +136,10 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
 						let mksub b a = SubFrame(env, guard, a, b) in
 						let c = List.append (List.map (mksub (List.hd fs)) fs') c in
 						(f, WFFrame(env, f)::c, m)	
+  | (Texp_sequence(e1, e2), t) ->
+            let (f1, c, m) = constrain e1 env guard cstrs framemap in
+            let (f2, c, m) = constrain e2 env guard c m in
+            (f2, (SubFrame(env, guard, f1, Builtins.mk_unit ())::c), m)
 	| (_, t) ->
 (*
 					(*let _ = !Oprint.out_type Format.std_formatter (Printtyp.tree_of_type_scheme t) in*)
@@ -146,7 +150,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
 					(*(Frame.fresh e.exp_type, cstrs, framemap)*)			 
 *)
             (* pmr: need to print the offending expression, perhaps *)
-            fprintf err_formatter "@[Warning:@ Don't@ know@ how@ to@ constrain@ expression,@;<1 0>defaulting@ to@ true@]@."; Printf.printf "Type structure: %s" (Frame.type_structure t);
+            fprintf err_formatter "@[Warning:@ Don't@ know@ how@ to@ constrain@ expression,@;<1 0>defaulting@ to@ true@]@.\t Ty_structure: %s\n" (Frame.type_structure t);
             (Frame.fresh_without_vars t, cstrs, framemap)
     in (f, cs, LocationMap.add e.exp_loc f fm)
   in constrain exp initenv Predicate.True initcstrs initframemap

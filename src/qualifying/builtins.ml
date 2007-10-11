@@ -21,6 +21,10 @@ let qsize rel x y z = (Path.mk_ident ("SIZE_" ^ (Predicate.pprint_rel rel)), y,
 let qint rel i y = (Path.mk_ident (Printf.sprintf "SIZE_%s%d" 
 		(Predicate.pprint_rel rel) i), y, Predicate.Atom(Predicate.Var y, rel, Predicate.PInt i))
 
+let qrel rel x y = (Path.mk_ident (Printf.sprintf "_%s%s%s_" 
+                                      (Path.name x) (Predicate.pprint_rel rel) (Path.name y)), 
+                                      x, Predicate.Atom(Predicate.Var x, rel, Predicate.Var y))
+
 let quals = [
   qfalse;
 ]
@@ -39,6 +43,7 @@ let fun_frame path (x, y) qual =
   (path, mk_fun (x, mk_int [], mk_fun (y, mk_int [], mk_int [qual])))
 
 let fresh_idents () = (Path.mk_ident "x", Path.mk_ident "y", Path.mk_ident "z")
+let fresh_2_idents () = (Path.mk_ident "x", Path.mk_ident "y")
 
 let op_frame path qname op =
   let (x, y, z) = fresh_idents () in
@@ -85,6 +90,15 @@ let array_make_frame =
   (["make"; "Array"], mk_fun(x, mk_int [qint Predicate.Gt 0 x],
                  mk_fun(y, tyvar, mk_array tyvar [qsize Predicate.Eq z z x])))
 
+let rand_init_frame =
+  let x = Path.mk_ident "x" in
+  (["init"; "Random"], mk_fun(x, mk_int [], mk_unit ()))
+
+let rand_int_frame =
+  let (x, y) = fresh_2_idents () in
+  (["int"; "Random"], mk_fun(x, mk_int [qint Predicate.Gt 0 x], 
+                                mk_int [qint Predicate.Ge 0 y; qrel Predicate.Lt y x]))
+
 let ref_ref_frame env =
   let (x, y) = (Path.mk_ident "x", Path.mk_ident "y") in
   let tyvar = Frame.Fvar(Path.mk_ident "'a") in
@@ -104,6 +118,7 @@ let ref_assgn_frame env =
 let ref_path env =
   ("ref", find_type_path ["ref"; "Pervasives"] env)
 
+
 let _frames = [
   op_frame ["+"; "Pervasives"] "+" Predicate.Plus;
   op_frame ["-"; "Pervasives"] "-" Predicate.Minus;
@@ -117,6 +132,8 @@ let _frames = [
   array_get_frame;
   array_make_frame;
   array_set_frame;
+  rand_init_frame;
+  rand_int_frame;
 ]
 
 let _lib_frames = [

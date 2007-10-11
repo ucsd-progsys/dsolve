@@ -86,7 +86,7 @@ module YicesProver  =
       | Predicate.FunApp (f,e) ->
 	  (* huge hack alert *)
 	  if f = "Array.length" then 
-	    let (fn, e') = (yicesVar me f me.f, yicesVar me ((function Predicate.Var(s) -> Path.unique_name s | _ -> assert false) e) me.ar) in
+	    let (fn, e') = (yicesVar me f me.f, yicesVar me ((function Predicate.Var(s) -> Path.unique_name s | _ -> Predicate.pprint_pexpr Format.std_formatter e; assert false) e) me.ar) in
 	      Y.yices_mk_app me.c fn [|e'|]
 	  else
             let (fn, e') = (yicesVar me f me.f, yicesExp me e) in

@@ -39,6 +39,8 @@ let rec print_typed_expression qmap ppf exp =
                pprint_rec recf (Ident.unique_name f) pprint e1 pprint e2
       | Texp_array es ->
           fprintf ppf "@[[|%a|]@]" (pprint_list ";" pprint) es
+      | Texp_sequence(e1, e2) ->
+          fprintf ppf "@[%a@]" (pprint_list ";" pprint) [e1; e2]
       | _ -> assert false
   in
   let tytree = Printtyp.tree_of_type_scheme (repr exp.exp_type) in

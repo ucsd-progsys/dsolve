@@ -1,35 +1,35 @@
-qualifier LTs(x) = x < size arr;;
-qualifier LEs(x) = x <= size arr;;
-qualifier NEs(x) = not(x = size arr);;
-qualifier EQs(x) = size x = size arr;;
-qualifier LTs1(x) = x < size _1_arr;;
-qualifier LEs1(x) = x <= size _1_arr;;
-qualifier NEs1(x) = not(x = size _1_arr);;
-qualifier EQs1(x) = size x = size _1_arr;;
-qualifier LTs2(x) = x < size yarr;;
-qualifier LEs2(x) = x <= size yarr;;
-qualifier NEs2(x) = not(x = size yarr);;
-qualifier EQs2(x) = size x = size yarr;;
-qualifier LTs3(x) = x < size _2_arr;;
-qualifier LEs3(x) = x <= size _2_arr;;
-qualifier NEs3(x) = not(x = size _2_arr);;
-qualifier EQs3(x) = size x = size _2_arr;;
-qualifier SGT0(x) = 0 < size x ;;
+qualif LTs(x) : x < size arr;;
+qualif LEs(x) : x <= size arr;;
+qualif NEs(x) : not(x = size arr);;
+qualif EQs(x) : size x = size arr;;
+qualif LTs1(x) : x < size _1_arr;;
+qualif LEs1(x) : x <= size _1_arr;;
+qualif NEs1(x) : not(x = size _1_arr);;
+qualif EQs1(x) : size x = size _1_arr;;
+qualif LTs2(x) : x < size yarr;;
+qualif LEs2(x) : x <= size yarr;;
+qualif NEs2(x) : not(x = size yarr);;
+qualif EQs2(x) : size x = size yarr;;
+qualif LTs3(x) : x < size _2_arr;;
+qualif LEs3(x) : x <= size _2_arr;;
+qualif NEs3(x) : not(x = size _2_arr);;
+qualif EQs3(x) : size x = size _2_arr;;
+qualif SGT0(x) : 0 < size x ;;
 
-qualifier SEQ(x) = size x = size yarr;;
+qualif SEQ(x) : size x = size yarr;;
 
-qualifier LT0(x) = x < 0;;
-qualifier LE0(x) = x <= 0;;
-qualifier NE0(x) = not(x = 0);;
-qualifier GT0(x) = 0 < x;;
-qualifier GE0(x) = 0 <= x;;
-qualifier BOOL(x) = (x = 0) or (x = 1);;
-qualifier TRUE(x) = x = 1;;
-qualifier FALSE(x) = x = 0;;
+qualif LT0(x) : x < 0;;
+qualif LE0(x) : x <= 0;;
+qualif NE0(x) : not(x = 0);;
+qualif GT0(x) : 0 < x;;
+qualif GE0(x) : 0 <= x;;
+qualif BOOL(x) : (x = 0) or (x = 1);;
+qualif TRUE(x) : x = 1;;
+qualif FALSE(x) : x = 0;;
 
-qualifier LTsz(x) = x < sz;;
-qualifier LEsz(x) = x <= sz;;
-qualifier NEsz(x) = not(x = sz);; 
+qualif LTsz(x) : x < sz;;
+qualif LEsz(x) : x <= sz;;
+qualif NEsz(x) : not(x = sz);; 
 
 let
 sortRange arr start n =
@@ -63,7 +63,7 @@ in
 let sorting _2_arr = (sortRange _2_arr 0 (size _2_arr) ; _2_arr) in
 (* sorted checks if a list is well-sorted -- i never would have figured this out if not for the comment *)
 let
-sorted _1_arr =
+:orted _1_arr =
   let len = size _1_arr in
   let rec s v _5_i =
 		let _5_i_plus = _5_i + 1 in
