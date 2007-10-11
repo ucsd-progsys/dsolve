@@ -41,8 +41,7 @@ let rec pprint ppf = function
   | Farrow (Some id, f, f') ->
       fprintf ppf "@[%s:@ %a@ ->@;<1 2>%a@]" (Path.unique_name id) pprint1 f pprint f'
   | Fconstr (path, l, r) ->
-      (fprintf ppf "path name: %s:\t" (Path.name path); (function t->()) (List.map (pprint ppf) l))
-	(*^^^ DEBUG*)
+      fprintf ppf "@[{%a@ %s|@;<1 2>%a}@]" pprint (List.hd l) (Path.unique_name path) pprint_refinement r
   | Funknown ->
       fprintf ppf "[unknown]"
   (*| _ -> assert false*)
