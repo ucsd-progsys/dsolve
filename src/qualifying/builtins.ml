@@ -1,6 +1,17 @@
 open Longident
 open Predicate
 
+let rec mk_longid = function
+  | [] -> assert false
+  | [id] -> Lident id
+  | id :: idrem -> Ldot (mk_longid idrem, id)
+
+let find_path id env =
+  let (path, _) = Env.lookup_value (mk_longid id) env in path
+
+let find_type_path id env =
+  let (path, _) = Env.lookup_type (mk_longid id) env in path 
+
 let qfalse = (Path.mk_ident "FALSE", Path.mk_ident "x",
               Predicate.Not Predicate.True)
 
@@ -18,8 +29,7 @@ let mk_int qs = Frame.Fconstr(Predef.path_int, [], ([], Frame.Qconst qs))
 
 let mk_array f qs = Frame.Fconstr(Predef.path_array, [f], ([], Frame.Qconst qs))
 
-(* must find path for refs.. *)
-let mk_ref f qs = Frame.Fconstr(Predef.path_int, [f], ([], Frame.Qconst qs))
+let mk_ref f qs env = Frame.Fconstr(find_type_path ["ref"; "Pervasives"] env, [f], ([], Frame.Qconst qs))
 
 let mk_unit () = Frame.Fconstr(Predef.path_unit, [], ([], Frame.Qconst []))
 
@@ -75,22 +85,24 @@ let array_make_frame =
   (["make"; "Array"], mk_fun(x, mk_int [qint Predicate.Gt 0 x],
                  mk_fun(y, tyvar, mk_array tyvar [qsize Predicate.Eq z z x])))
 
-let ref_ref_frame =
+let ref_ref_frame env =
   let (x, y) = (Path.mk_ident "x", Path.mk_ident "y") in
   let tyvar = Frame.Fvar(Path.mk_ident "'a") in
-  (["ref"; "Pervasives"], mk_fun(x, tyvar, mk_ref tyvar []))
+  (["ref"; "Pervasives"], mk_fun(x, tyvar, mk_ref tyvar [] env))
 
-let ref_deref_frame =
+let ref_deref_frame env =
   let (x, y) = (Path.mk_ident "x", Path.mk_ident "y") in
   let tyvar = Frame.Fvar(Path.mk_ident "'a") in
-  (["!"; "Pervasives"], mk_fun(x, mk_ref tyvar [], tyvar))
+  (["!"; "Pervasives"], mk_fun(x, mk_ref tyvar [] env, tyvar))
 
-let ref_assgn_frame =
+let ref_assgn_frame env =
   let (x, y) = (Path.mk_ident "x", Path.mk_ident "y") in
   let tyvar = Frame.Fvar(Path.mk_ident "'a") in
-  ([":="; "Pervasives"], mk_fun(x, mk_ref tyvar [],
+  ([":="; "Pervasives"], mk_fun(x, mk_ref tyvar [] env,
                     mk_fun(y, tyvar, mk_unit ())))
 
+let ref_path env =
+  ("ref", find_type_path ["ref"; "Pervasives"] env)
 
 let _frames = [
   op_frame ["+"; "Pervasives"] "+" Predicate.Plus;
@@ -105,21 +117,30 @@ let _frames = [
   array_get_frame;
   array_make_frame;
   array_set_frame;
+]
+
+let _lib_frames = [
   ref_ref_frame;
   ref_deref_frame;
   ref_assgn_frame;
 ]
 
-let find_path id env =
-  let rec mk_lid = function
-    | [] -> assert false
-    | [id] -> Lident id
-    | id :: idrem -> Ldot (mk_lid idrem, id)
-  in
-  let (path, _) = Env.lookup_value (mk_lid id) env in path
+let _type_path_constrs = [
+  ref_path;
+]
+
+let _type_paths = ref None
+
+let ext_find_type_path t =
+  (fun (a, b) -> b) (List.find (fun (a, _) -> (a = t)) 
+                      (match !_type_paths with None -> assert false
+                                               | Some b -> b))
 
 let frames env =
-  List.map (fun (id, fr) -> (find_path id env, fr)) _frames
+  let _ = _type_paths := Some (List.map (fun x -> x env) _type_path_constrs) in
+  List.append (List.map (fun (id, fr) -> (find_path id env, fr)) _frames)
+              (List.map (fun (id, fr) -> (find_path id env, fr)) 
+                (List.map (fun (fr) -> (fr env)) _lib_frames))
 
 let equality_refinement exp =
   let x = Path.mk_ident "x" in
@@ -133,3 +154,4 @@ let size_lit_refinement i =
 											 x,
 											 Predicate.equals(Predicate.FunApp("Array.length", Predicate.Var x), Predicate.PInt(i)))])
 
+  

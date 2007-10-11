@@ -51,7 +51,7 @@ let split cstrs =
 							    split_rec (SubRefinement(env, guard, r1, r2)::flat) (List.append (invar (List.hd l1) (List.hd l2)) cs)
               else if Path.same p1 Predef.path_int then (* must find path for tuple oh no i hope it's a path *)
                   split_rec (SubRefinement(env, guard, r1, r2)::flat) (List.append (List.map2 subt l1 l2) cs)
-              else if Path.same p1 Predef.path_int then (* must find path for ref *)
+              else if Path.same p1 (Builtins.ext_find_type_path "ref") then (* must find path for ref *)
                   split_rec (SubRefinement(env, guard, r1, r2)::flat) (List.append (invar (List.hd l1) (List.hd l2)) cs)
               else
                   (Printf.printf "Unsupported type into split: %s\n" (Path.name p1); assert false)
