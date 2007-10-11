@@ -1,13 +1,13 @@
 qualif LTS(x) : x < Array.length vec;;
 qualif LES(x) : x <= Array.length vec;;
 (*qualif EQS(x) : x = Array.length vec;;*)
-qualif NEQs(x) : not(x = Array.length vec);;
+qualif NEQs(x) : -.(x = Array.length vec);;
 qualif EQ5(x) : x = 5;;
 qualif LTh(x) : x < hi;;
 qualif LTl(x) : x < lo;;
 (*qualif EQh(x) : x = hi;;*)
-qualif NEQh(x) : not(x = hi);;
-qualif NEQl(x) : not(x = lo);;
+qualif NEQh(x) : -.(x = hi);;
+qualif NEQl(x) : -.(x = lo);;
 (*qualif EQl(x) : x = lo;;*)
 qualif LEh(x) : x <= hi;;
 qualif LEl(x) : x <= lo;;

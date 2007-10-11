@@ -39,20 +39,22 @@ let split cstrs =
                    (SubFrame (env, guard, f2, f1)
                     :: SubFrame (env', guard, f1', f2')
                     :: cs)
-          | (Frame.Fconstr (_, [], r1), Frame.Fconstr (_, [], r2)) ->
+          | (Frame.Fconstr (p1, [], r1), Frame.Fconstr (p2, [], r2)) ->
+              if Path.same p1 Predef.path_unit || Path.same p2 Predef.path_unit then
+                if Path.same p2 Predef.path_unit  && Path.same p1 Predef.path_unit then
+                  split_rec flat cs else assert false else
               split_rec (SubRefinement (env, guard, r1, r2) :: flat) cs
           | (Frame.Fvar _, Frame.Fvar _)
           | (Frame.Funknown, Frame.Funknown) ->
               split_rec flat cs
 					| (Frame.Fconstr (p1, l1, r1), Frame.Fconstr(p2, l2, r2)) ->
               let invar a b = [SubFrame(env, guard, a, b); SubFrame(env, guard, b, a)] in
-              let subt a b = SubFrame(env, guard, a, b) in
-              if Path.same p1 Predef.path_array then 
+              (*let subt a b = SubFrame(env, guard, a, b) in*)
+              if Path.same p1 Predef.path_array 
+                 || Path.same p1 (Builtins.ext_find_type_path "ref") then 
 							    split_rec (SubRefinement(env, guard, r1, r2)::flat) (List.append (invar (List.hd l1) (List.hd l2)) cs)
-              else if Path.same p1 Predef.path_int then (* must find path for tuple oh no i hope it's a path *)
-                  split_rec (SubRefinement(env, guard, r1, r2)::flat) (List.append (List.map2 subt l1 l2) cs)
-              else if Path.same p1 (Builtins.ext_find_type_path "ref") then (* must find path for ref *)
-                  split_rec (SubRefinement(env, guard, r1, r2)::flat) (List.append (invar (List.hd l1) (List.hd l2)) cs)
+              (*else if Path.same p1 Predef.path_int then (* must find path for tuple oh no i hope it's a path *)
+                  split_rec (SubRefinement(env, guard, r1, r2)::flat) (List.append (List.map2 subt l1 l2) cs)*)
               else
                   (Printf.printf "Unsupported type into split: %s\n" (Path.name p1); assert false)
           | _ -> assert false

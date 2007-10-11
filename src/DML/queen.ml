@@ -1,9 +1,9 @@
 qualif LTs(x) : x < Array.length queenArray;;
 qualif LEs(x) : x <= Array.length queenArray;;
-qualif NEs(s) : not(x = Array.length queenArray);;
+qualif NEs(s) : -.(x = Array.length queenArray);;
 qualif LT0(x) : x < 0;;
 qualif LE0(x) : x <= 0;;
-qualif NE0(x) : not(x = 0);;
+qualif NE0(x) : -.(x = 0);;
 qualif GT0(x) : 0 < x;;
 qualif GE0(x) : 0 <= x;;
 qualif BOOL(x) : (x = 0) or (x = 1);;

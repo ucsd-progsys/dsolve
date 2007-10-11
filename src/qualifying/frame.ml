@@ -33,7 +33,7 @@ let pprint_refinement ppf (subs, qexp) =
 
 let rec pprint ppf = function
   | Fvar a ->
-      fprintf ppf "%s" (Path.unique_name a)
+      fprintf ppf "Var(%s)" (Path.unique_name a)
   | Fconstr (path, [], r) ->
       fprintf ppf "@[{%s@ |@;<1 2>%a}@]" (Path.name path) pprint_refinement r
   | Farrow (None, f, f') ->
@@ -149,9 +149,7 @@ let instantiate fr ftemplate =
 			| (f1, f2) ->
 					let _ = Printf.printf "Unsupported types for instantiation:\t" in
 					let _ = pprint Format.std_formatter f1 in
-					let _ = Printf.printf "\n" in
 					let _ = pprint Format.std_formatter f2 in
-					let _ = Printf.printf "\n" in
 					assert false
       (*| _ -> assert false*)
   in inst fr ftemplate

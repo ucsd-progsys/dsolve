@@ -1,12 +1,12 @@
 qualif LTs(x) : x < Array.length v1;;
 qualif LEs(x) : x <= Array.length v1;;
-qualif NEs(s) : not(x = Array.length v1);;
+qualif NEs(s) : -.(x = Array.length v1);;
 qualif LTs1(x) : x < Array.length v2;;
 qualif LEs1(x) : x <= Array.length v2;;
-qualif NEs1(s) : not(x = Array.length v2);;
+qualif NEs1(s) : -.(x = Array.length v2);;
 qualif LT0(x) : x < 0;;
 qualif LE0(x) : x <= 0;;
-qualif NE0(x) : not(x = 0);;
+qualif NE0(x) : -.(x = 0);;
 qualif GT0(x) : 0 < x;;
 qualif GE0(x) : 0 <= x;;
 qualif SE3(x) : Array.length x = 3;;
