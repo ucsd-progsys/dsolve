@@ -147,11 +147,10 @@ let instantiate fr ftemplate =
 					(*let _ = if r = r' then () else assert false in*)
 					Fconstr(p, List.map2 inst l l', r)
       | (Funknown, Funknown) -> Funknown
-			| (f1, f2) ->
-					let _ = Printf.printf "Unsupported types for instantiation:\t" in
-					let _ = pprint Format.std_formatter f1 in
-					let _ = pprint Format.std_formatter f2 in
-					assert false
+      | (f1, f2) ->
+          fprintf std_formatter "@[Unsupported@ types@ for@ instantiation:@;<1 2>%a@;<1 2>%a@]@."
+	    pprint f1 pprint f2;
+	    assert false
       (*| _ -> assert false*)
   in inst fr ftemplate
 
