@@ -56,7 +56,7 @@ sortRange arr start n =
              if j < start_plus then outer i_plus else 
 								let ij_minus = item j_minus in 
 									let ij = item j in  
-                    let k = ij_minus = ij in ()
+                    let k = j_minus > j in ()
 										(*if ij < ij_minus then (swap j j_minus; inner j_minus) else (outer i_plus)*)  
 		       in inner i  
     in outer start_plus 

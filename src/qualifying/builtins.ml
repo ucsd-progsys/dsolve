@@ -31,6 +31,8 @@ let quals = [
 
 let mk_int qs = Frame.Fconstr(Predef.path_int, [], ([], Frame.Qconst qs))
 
+let mk_bool qs = Frame.Fconstr(Predef.path_bool, [], ([], Frame.Qconst qs))
+
 let mk_array f qs = Frame.Fconstr(Predef.path_array, [f], ([], Frame.Qconst qs))
 
 let mk_ref f qs env = Frame.Fconstr(find_type_path ["ref"; "Pervasives"] env, [f], ([], Frame.Qconst qs))
@@ -41,6 +43,9 @@ let mk_fun (lab, f, f') = Frame.Farrow (Some lab, f, f')
 
 let fun_frame path (x, y) qual =
   (path, mk_fun (x, mk_int [], mk_fun (y, mk_int [], mk_int [qual])))
+
+let rel_fun_frame path (x, y) qual =
+  (path, mk_fun (x, mk_int [], mk_fun (y, mk_int [], mk_bool [qual])))
 
 let fresh_idents () = (Path.mk_ident "x", Path.mk_ident "y", Path.mk_ident "z")
 let fresh_2_idents () = (Path.mk_ident "x", Path.mk_ident "y")
@@ -63,7 +68,7 @@ let rel_frame path qname rel =
                                            truepred),
                             Predicate.And (Predicate.equals (Predicate.Var z, Predicate.PInt 0),
                                            Predicate.Not truepred))) in
-    fun_frame path (x, y) qual
+    rel_fun_frame path (x, y) qual
 
 
 let array_length_frame = 
@@ -128,6 +133,8 @@ let _frames = [
   rel_frame ["!="; "Pervasives"] "!=" Predicate.Ne;
   rel_frame ["<"; "Pervasives"] "<" Predicate.Lt;
   rel_frame ["<="; "Pervasives"] "<=" Predicate.Le;
+  rel_frame [">"; "Pervasives"] ">" Predicate.Gt;
+  rel_frame [">="; "Pervasives"] ">=" Predicate.Ge;
   array_length_frame;
   array_get_frame;
   array_make_frame;
