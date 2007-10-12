@@ -47,6 +47,9 @@ let fun_frame path (x, y) qual =
 let rel_fun_frame path (x, y) qual =
   (path, mk_fun (x, mk_int [], mk_fun (y, mk_int [], mk_bool [qual])))
 
+let poly_rel_fun_frame path (x, y) tyvar =
+  (path, mk_fun (x, tyvar, mk_fun (y, tyvar, mk_bool [])))
+
 let fresh_idents () = (Path.mk_ident "x", Path.mk_ident "y", Path.mk_ident "z")
 let fresh_2_idents () = (Path.mk_ident "x", Path.mk_ident "y")
 
@@ -69,6 +72,11 @@ let rel_frame path qname rel =
                             Predicate.And (Predicate.equals (Predicate.Var z, Predicate.PInt 0),
                                            Predicate.Not truepred))) in
     rel_fun_frame path (x, y) qual
+
+let poly_rel_frame path =
+  let (x, y) = fresh_2_idents () in
+  let tyvar = Frame.Fvar(Path.mk_ident "'a") in
+    poly_rel_fun_frame path (x, y) tyvar
 
 
 let array_length_frame = 
@@ -131,10 +139,15 @@ let _frames = [
   op_frame ["*"; "Pervasives"] "*" Predicate.Times;
   rel_frame ["="; "Pervasives"] "=" Predicate.Eq;
   rel_frame ["!="; "Pervasives"] "!=" Predicate.Ne;
-  rel_frame ["<"; "Pervasives"] "<" Predicate.Lt;
-  rel_frame ["<="; "Pervasives"] "<=" Predicate.Le;
-  rel_frame [">"; "Pervasives"] ">" Predicate.Gt;
-  rel_frame [">="; "Pervasives"] ">=" Predicate.Ge;
+  rel_frame ["<"; "Perversives"] "<" Predicate.Lt;
+  rel_frame ["<="; "Perversives"] "<=" Predicate.Le;
+  rel_frame [">"; "Perversives"] ">" Predicate.Gt;
+  rel_frame [">="; "Perversives"] ">=" Predicate.Ge;
+  poly_rel_frame ["="; "Pervasives"] ;
+  poly_rel_frame ["<"; "Pervasives"] ;
+  poly_rel_frame [">"; "Pervasives"] ;
+  poly_rel_frame [">="; "Pervasives"] ;
+  poly_rel_frame ["<="; "Pervasives"] ;
   array_length_frame;
   array_get_frame;
   array_make_frame;
