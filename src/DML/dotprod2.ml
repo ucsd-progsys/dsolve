@@ -19,7 +19,7 @@ let dotprod v1 v2 =
 	let rec loop _none = 
 		let deref_i = !i in
 		let deref_i_plus = deref_i + 1 in
-		if deref_i < sz then   
+		if lt_int deref_i sz then   
      		(	let get_v1_i = Array.get v1 deref_i in	
 					let get_v2_i = Array.get v2 deref_i in
 					let get_prod_i = get_v1_i * get_v2_i in

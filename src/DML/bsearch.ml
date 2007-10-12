@@ -23,16 +23,16 @@ qualif GT(x) : 0 < x;;
 let bsearch key vec =
   let rec look lo hi =
 		let hi_minus = hi - 1 in
-    if lo < hi_minus  then
+    if lt_int lo hi_minus  then
 			let hl = hi + lo in
       let m = hl / 2  in
       let x = Array.get vec m in
 			let diff = key - x in
 			let m_plus = m + 1 in
 			let m_minus = m - 1 in
-        (if diff < 0 then look lo m_plus
-				else if 0 < diff then look m_minus hi
-				else if key = x then m else -1)
+        (if lt_int diff 0 then look lo m_plus
+				else if lt_int 0 diff then look m_minus hi
+				else if eq_int key x then m else -1)
 			else -1
 	in
 	let sv = Array.length vec in
