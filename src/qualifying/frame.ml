@@ -137,6 +137,9 @@ let instantiate fr ftemplate =
             vars := (f, ft) :: !vars;
             ft
           end
+        (* this happens in (hopefully) exactly one case *)
+      (*| (Fconstr(p, [], r), Fvar(_)) ->
+          Fconstr(p, [], r) *)
       | (Fconstr (p, [], r), Fconstr (_, [], _)) ->
           Fconstr (p, [], r)
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->

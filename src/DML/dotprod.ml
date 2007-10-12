@@ -25,7 +25,7 @@ qualif SEQ3(x) : Array.length x = 3;;
 
 let dotprod v1 v2 = 
 		let rec loop n sum i =
-			if eq_int i n then sum else 
+			if i = n then sum else 
         let get_v1_i = Array.get v1 i in  
         let get_v2_i = Array.get v2 i in
         let get_prod_i = get_v1_i * get_v2_i in

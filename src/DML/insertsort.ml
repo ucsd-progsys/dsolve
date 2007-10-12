@@ -42,7 +42,7 @@ sortRange arr start n =
 		let _3_i_plus = _3_i + 1 in
 		let _2_j_plus = _2_j + 1 in
 		let _1_n_minus = _1_n - 1 in
-		if eq_int _1_n 0 then () else begin swap _3_i _2_j; vecswap _3_i_plus _2_j_plus _1_n_minus end
+		if _1_n = 0 then () else begin swap _3_i _2_j; vecswap _3_i_plus _2_j_plus _1_n_minus end
   in
 
   let insertSort start n =
@@ -50,13 +50,13 @@ sortRange arr start n =
 		let start_plus = start + 1 in
     let rec outer i  =
 			let i_plus = i + 1 in
-      if lt_int limit i_plus then ()
+      if limit < i_plus then ()
       else let rec inner j =
 						 let j_minus = j - 1 in
-             if lt_int j start_plus then outer i_plus else 
+             if j < start_plus then outer i_plus else 
 								let ij_minus = item j_minus in 
 									let ij = item j in  
-									 if lt_int ij ij_minus then (swap j j_minus; inner j_minus) else (outer i_plus)  
+									 if ij < ij_minus then (swap j j_minus; inner j_minus) else (outer i_plus)  
 		       in inner i  
     in outer start_plus 
   in insertSort start n
@@ -69,10 +69,10 @@ sorted _1_arr =
   let rec s v _5_i =
 		let _5_i_plus = _5_i + 1 in
     let v' = Array.get _1_arr _5_i in
-			if lt_int v' v then false else 
-				(if eq_int _5_i_plus len then true else s v' _5_i_plus)
+			if v' < v then false else 
+				(if _5_i_plus = len then true else s v' _5_i_plus)
   in
-  if lt_int len 2 then true else s (Array.get _1_arr 0) 1
+  if len < 2 then true else s (Array.get _1_arr 0) 1
 in
 let noners = Random.init 555 in
 let sz = Random.int 10 in

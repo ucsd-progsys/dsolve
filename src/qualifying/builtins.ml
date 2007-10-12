@@ -25,9 +25,19 @@ let qrel rel x y = (Path.mk_ident (Printf.sprintf "_%s%s%s_"
                                       (Path.name x) (Predicate.pprint_rel rel) (Path.name y)), 
                                       x, Predicate.Atom(Predicate.Var x, rel, Predicate.Var y))
 
+let qbool_rel qname rel (x, y, z) =
+  let truepred = Predicate.Atom (Predicate.Var x, rel, Predicate.Var y) in
+  (Path.mk_ident qname, z, 
+              Predicate.Or (Predicate.And (Predicate.equals (Predicate.Var z, Predicate.PInt 1),
+                                           truepred),
+                            Predicate.And (Predicate.equals (Predicate.Var z, Predicate.PInt 0),
+                                           Predicate.Not truepred))) 
+
 let quals = [
   qfalse;
 ]
+
+let mk_tyvar () = Frame.Fvar(Path.mk_ident "'a") 
 
 let mk_int qs = Frame.Fconstr(Predef.path_int, [], ([], Frame.Qconst qs))
 
@@ -47,8 +57,8 @@ let fun_frame path (x, y) qual =
 let rel_fun_frame path (x, y) qual =
   (path, mk_fun (x, mk_int [], mk_fun (y, mk_int [], mk_bool [qual])))
 
-let poly_rel_fun_frame path (x, y) tyvar =
-  (path, mk_fun (x, tyvar, mk_fun (y, tyvar, mk_bool [])))
+let poly_rel_fun_frame path (x, y) tyvar qs =
+  (path, mk_fun (x, tyvar, mk_fun (y, tyvar, mk_bool [qs])))
 
 let fresh_idents () = (Path.mk_ident "x", Path.mk_ident "y", Path.mk_ident "z")
 let fresh_2_idents () = (Path.mk_ident "x", Path.mk_ident "y")
@@ -64,42 +74,35 @@ let op_frame path qname op =
 
 let rel_frame path qname rel =
   let (x, y, z) = fresh_idents () in
-  let truepred = Predicate.Atom (Predicate.Var x, rel, Predicate.Var y) in
-  let qual = (Path.mk_ident qname,
-              z,
-              Predicate.Or (Predicate.And (Predicate.equals (Predicate.Var z, Predicate.PInt 1),
-                                           truepred),
-                            Predicate.And (Predicate.equals (Predicate.Var z, Predicate.PInt 0),
-                                           Predicate.Not truepred))) in
-    rel_fun_frame path (x, y) qual
+    rel_fun_frame path (x, y) (qbool_rel qname rel (x, y, z))
 
-let poly_rel_frame path =
-  let (x, y) = fresh_2_idents () in
-  let tyvar = Frame.Fvar(Path.mk_ident "'a") in
-    poly_rel_fun_frame path (x, y) tyvar
+let poly_rel_frame path qname rel =
+  let (x, y, z) = fresh_idents () in
+  let tyvar = mk_tyvar () in
+    poly_rel_fun_frame path (x, y) tyvar (qbool_rel qname rel (x, y, z))
 
 
 let array_length_frame = 
 	let (x, y) = (Path.mk_ident "x", Path.mk_ident "y") in (* make 2 idents fresh *)
-	let tyvar = Frame.Fvar(Path.mk_ident "'a") in
+	let tyvar = mk_tyvar () in
 	(["length"; "Array"], mk_fun (x, (mk_array tyvar []), mk_int [qsize Predicate.Eq x y y; qint Predicate.Gt 0 y]))
 
 let array_set_frame =
   let (x, y, z) = fresh_idents () in
-  let tyvar = Frame.Fvar(Path.mk_ident "'a") in
+  let tyvar = mk_tyvar () in
   (["set"; "Array"], mk_fun(x, (mk_array tyvar []),
                 mk_fun(y, mk_int [qsize Predicate.Lt x y y; qint Predicate.Ge 0 y],
                 mk_fun(z, tyvar, mk_unit ()))))
 
 let array_get_frame =
 	let (x, y) = (Path.mk_ident "x", Path.mk_ident "y") in
-	let tyvar = Frame.Fvar(Path.mk_ident "'a") in
+	let tyvar = mk_tyvar () in
 	(["get"; "Array"], mk_fun(x, (mk_array tyvar []), 
 								mk_fun(y, mk_int [qsize Predicate.Lt x y y; qint Predicate.Ge 0 y], (tyvar)))) 
 
 let array_make_frame =
   let (x, y, z) = fresh_idents () in
-  let tyvar = Frame.Fvar(Path.mk_ident "'a") in
+  let tyvar = mk_tyvar () in
   (["make"; "Array"], mk_fun(x, mk_int [qint Predicate.Gt 0 x],
                  mk_fun(y, tyvar, mk_array tyvar [qsize Predicate.Eq z z x])))
 
@@ -113,18 +116,18 @@ let rand_int_frame =
                                 mk_int [qint Predicate.Ge 0 y; qrel Predicate.Lt y x]))
 
 let ref_ref_frame env =
-  let (x, y) = (Path.mk_ident "x", Path.mk_ident "y") in
-  let tyvar = Frame.Fvar(Path.mk_ident "'a") in
+  let (x, y) = fresh_2_idents () in
+  let tyvar = mk_tyvar () in
   (["ref"; "Pervasives"], mk_fun(x, tyvar, mk_ref tyvar [] env))
 
 let ref_deref_frame env =
-  let (x, y) = (Path.mk_ident "x", Path.mk_ident "y") in
-  let tyvar = Frame.Fvar(Path.mk_ident "'a") in
+  let (x, y) = fresh_2_idents () in
+  let tyvar = mk_tyvar () in
   (["!"; "Pervasives"], mk_fun(x, mk_ref tyvar [] env, tyvar))
 
 let ref_assgn_frame env =
-  let (x, y) = (Path.mk_ident "x", Path.mk_ident "y") in
-  let tyvar = Frame.Fvar(Path.mk_ident "'a") in
+  let (x, y) = fresh_2_idents () in
+  let tyvar = mk_tyvar () in
   ([":="; "Pervasives"], mk_fun(x, mk_ref tyvar [] env,
                     mk_fun(y, tyvar, mk_unit ())))
 
@@ -137,17 +140,18 @@ let _frames = [
   op_frame ["-"; "Pervasives"] "-" Predicate.Minus;
   op_frame ["/"; "Pervasives"] "/" Predicate.Div;
   op_frame ["*"; "Pervasives"] "*" Predicate.Times;
-  (*rel_frame ["eq_int"; "A"] "=" Predicate.Eq;
-  rel_frame ["ne_int"; "Pervasives"] "!=" Predicate.Ne;
-  rel_frame ["lt_int"; "Pervasives"] "<" Predicate.Lt;
-  rel_frame ["le_int"; "Pervasives"] "<=" Predicate.Le;
-  rel_frame ["gt_int"; "Pervasives"] ">" Predicate.Gt;
-  rel_frame ["ge_int"; "Pervasives"] ">=" Predicate.Ge;*)
-  poly_rel_frame ["="; "Pervasives"] ;
-  poly_rel_frame ["<"; "Pervasives"] ;
-  poly_rel_frame [">"; "Pervasives"] ;
-  poly_rel_frame [">="; "Pervasives"] ;
-  poly_rel_frame ["<="; "Pervasives"] ;
+  (*rel_frame ["="; "Pervasives"] "=" Predicate.Eq;
+  rel_frame ["!="; "Pervasives"] "!=" Predicate.Ne;
+  rel_frame ["<"; "Pervasives"] "<" Predicate.Lt;
+  rel_frame ["<="; "Pervasives"] "<=" Predicate.Le;
+  rel_frame [">"; "Pervasives"] ">" Predicate.Gt;
+  rel_frame ["<="; "Pervasives"] ">=" Predicate.Ge;*)
+  poly_rel_frame ["="; "Pervasives"] "=" Predicate.Eq;
+  poly_rel_frame ["!="; "Pervasives"] "!=" Predicate.Ne;
+  poly_rel_frame ["<"; "Pervasives"] "<" Predicate.Lt;
+  poly_rel_frame [">"; "Pervasives"] "<=" Predicate.Le;
+  poly_rel_frame [">="; "Pervasives"] ">" Predicate.Gt;
+  poly_rel_frame ["<="; "Pervasives"] ">=" Predicate.Ge;
   array_length_frame;
   array_get_frame;
   array_make_frame;
@@ -175,9 +179,9 @@ let ext_find_type_path t =
 
 let frames env =
   let _ = _type_paths := Some (List.map (fun x -> x env) _type_path_constrs) in
-  List.append (List.map (fun (id, fr) -> (find_path id env, fr)) _frames)
-              (List.map (fun (id, fr) -> (find_path id env, fr)) 
-                (List.map (fun (fr) -> (fr env)) _lib_frames))
+  let resolve_types x = List.map (fun fr -> fr env) x in
+  let resolve_names x = List.map (fun (id, fr) -> (find_path id env, fr)) x in
+  List.append (resolve_names  _frames) (resolve_names (resolve_types _lib_frames))
 
 let equality_refinement exp =
   let x = Path.mk_ident "x" in
