@@ -15,9 +15,9 @@
 
 include ../config/Makefile
 
-RUNTIME=../boot/ocamlrun
+RUNTIME=
 COMPILER=../ocamlc
-CAMLC=$(RUNTIME) $(COMPILER)
+CAMLC=$(COMPILER)
 COMPFLAGS=-g -warn-error A -nostdlib
 OPTCOMPILER=../ocamlopt
 CAMLOPT=$(RUNTIME) $(OPTCOMPILER)
