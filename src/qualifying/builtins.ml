@@ -137,12 +137,12 @@ let _frames = [
   op_frame ["-"; "Pervasives"] "-" Predicate.Minus;
   op_frame ["/"; "Pervasives"] "/" Predicate.Div;
   op_frame ["*"; "Pervasives"] "*" Predicate.Times;
-  rel_frame ["eq_int"; "Pervasives"] "=" Predicate.Eq;
+  (*rel_frame ["eq_int"; "A"] "=" Predicate.Eq;
   rel_frame ["ne_int"; "Pervasives"] "!=" Predicate.Ne;
   rel_frame ["lt_int"; "Pervasives"] "<" Predicate.Lt;
   rel_frame ["le_int"; "Pervasives"] "<=" Predicate.Le;
   rel_frame ["gt_int"; "Pervasives"] ">" Predicate.Gt;
-  rel_frame ["ge_int"; "Pervasives"] ">=" Predicate.Ge;
+  rel_frame ["ge_int"; "Pervasives"] ">=" Predicate.Ge;*)
   poly_rel_frame ["="; "Pervasives"] ;
   poly_rel_frame ["<"; "Pervasives"] ;
   poly_rel_frame [">"; "Pervasives"] ;
