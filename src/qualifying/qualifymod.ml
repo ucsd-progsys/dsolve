@@ -77,7 +77,11 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
   | (Texp_ident (id, _), t) ->
             (* pmr: Later, the env should probably take paths, not idents.
                Something to think about... *)
-            let (f', ftemplate) = (Lightenv.find id env, Frame.fresh t) in
+            let (f', ftemplate) = (
+                (try Lightenv.find id env
+                  with Not_found -> fprintf std_formatter "@[Not_found:@ %s@]" (Path.unique_name id);
+                       raise Not_found)
+                  , Frame.fresh t) in
             (*let _ = fprintf std_formatter "@[instantiating@ %a@ %a@]" Frame.pprint f' Frame.pprint ftemplate in*)
             (*let _ = Frame.pprint Format.err_formatter f' in
             let _ = Frame.pprint Format.err_formatter ftemplate in *)

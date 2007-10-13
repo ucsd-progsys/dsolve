@@ -124,7 +124,6 @@ module YicesProver  =
            | Predicate.Lt -> Y.yices_mk_lt me.c e1' e2'
            | Predicate.Le -> Y.yices_mk_le me.c e1' e2')
 
-(* cleaner version assumes a-normal input *)
 let rec fixdiv p = 
    let expr_isdiv = 
        function Predicate.Binop(_, Predicate.Div, _) -> true
@@ -182,74 +181,6 @@ let rec fixdiv p =
        | Predicate.Not p1 -> if pred_isdiv p1 then Predicate.Not(fixdiv p1) else p
        | p -> p
    
-(* ming: this is really a monster. eventually, it'll be cleaned up *)
-(*let rec fixdiv p =
-      let isdiv = function Div -> true | _ -> false in
-      let rec find_div e =
-        match e with
-        (*FunApp(s, e') -> find_div e' *)
-        Binop(e1, b, e2) -> if isdiv b then true else
-                                 ((find_div e1) || (find_div e2))
-        | t -> false
-      in
-      (* not always the LCM.. but eh close enough *)
-      let isconst = (function PInt(i) -> true | _ -> false) in
-      let rec find_lcm e =
-        match e with
-          (*assume A-normal FunApp(s, e) -> find_lcm e (* pretend uninterp functiosn are linear *)*)
-          Binop(e1, b, e2) ->   if isdiv b && isconst e2 then
-                                   (function PInt(i) -> (find_lcm e1) * i
-                                   | _ -> failwith "non-constant divisor") e2
-                                  else (find_lcm e1) * (find_lcm e2)
-          | t -> 1
-      in
-      let rec apply_mult factor e =
-        let get_divisor = function PInt(i) -> i | _ -> failwith "non-constant divisor" in
-        match e with
-          (*FunApp(s, e) -> FunApp(s, apply_mult factor e)*)
-          Binop(e1, b, e2) ->  if isdiv b && isconst e2 then
-                                    let c_fact = factor / (get_divisor e2) in
-                                      Binop(PInt(c_fact), Times, e1) else
-                                      Binop(apply_mult factor e1, b, apply_mult factor e2)
-          | PInt(i) -> PInt(factor * i)
-          | t -> Binop(PInt(factor), Times, t)
-      in
-   (* this doesn't work for many reasons... when the divisor is negative, the failure case... *)
-      match p with
-        Atom(e1, br, e2) ->  (*let _ = Printf.printf "%b %b\n" (find_div e1) (find_div e2)in*)
-                              if (find_div e1 || find_div e2) then
-                                (let ulcm = (find_lcm e1) * (find_lcm e2) in
-                                 let e1' = apply_mult ulcm e1 in
-                                 let e2' = apply_mult ulcm e2 in
-                                 let rec apply_rec  =  function
-                                  Atom(e1, br, e2) ->
-                                    begin
-                                  if find_div e1 && not(find_div e2) then
-                                    match br with
-                                      Eq -> And(Atom(e2', Le, e1'),
-                                          Atom(apply_mult ulcm (Binop(e1, Minus, PInt 1)), Lt, e2'))
-                                      | Le -> Atom(e1', br, e2')
-                                      | Ne -> Not(apply_rec (Atom(e1, Eq, e2)))
-                                      | _ ->
-                                            failwith "can't deal with other ops involving div yet."
-                                  else if find_div e2 && not(find_div e1) then
-                                       match br with
-                                        Eq -> And(Atom(e1', Le, e2'),
-                                          Atom(apply_mult ulcm (Binop(e2, Minus, PInt 1)), Lt, e1'))
-                                        | Le -> Atom(e1', br, e2')
-                                        | Ne -> Not(apply_rec (Atom(e1, Eq, e2)))
-                                        | _ -> failwith "can't deal with other ops involving div yet."
-                                  else failwith "div on both sides of an atom"
-                                    end
-                                  | t -> t
-                                  in apply_rec (Atom(e1, br, e2))
-                                )
-                                else Atom(e1, br, e2)
-        | Not(p) -> Not(fixdiv p)
-        | And(p1, p2) -> And(fixdiv p1, fixdiv p2)
-        | Or(p1, p2) -> Or(fixdiv p1, fixdiv p2)
-        | True -> True*)
-
 
     let me = 
       let c = Y.yices_mk_context () in

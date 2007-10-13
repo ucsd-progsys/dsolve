@@ -75,6 +75,9 @@ let fresh_with_var_fun ty fresh_ref_var =
           -- for readability and generally being careful we'd like these refined as true,
           but that would require special casing the case below, which is inelegant. *)
       | Tconstr(p, tyl, _) -> 
+          if Path.same p Predef.path_unit then
+            Fconstr (p, [], ([], Qconst []))
+          else
           Fconstr (p, List.map fresh_rec tyl, fresh_ref_var ())
       | Tarrow(_, t1, t2, _) ->
           Farrow (None, fresh_rec t1, fresh_rec t2)
