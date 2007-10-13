@@ -74,14 +74,14 @@ play sz =
 		let rec showpiece_r_rec _4_none =
 			let deref_2_i = !_2_i in
 			let deref_2_i_plus = deref_2_i + 1 in
-			if lt_int deref_2_i_plus _1_n then (print_string (); _2_i := deref_2_i_plus; showpiece_r_rec ())
+			if deref_2_i_plus < _1_n then (print_string (); _2_i := deref_2_i_plus; showpiece_r_rec ())
 										 else ()
 		in
 		let j = ref _1_n_plus in
 		let rec showpiece_r2_rec _5_none =		
 			let deref_j = !j in
 			let deref_j_plus = deref_j + 1 in
-			if lt_int deref_j sz then (print_string (); j := deref_j_plus; showpiece_r2_rec ())
+			if deref_j < sz then (print_string (); j := deref_j_plus; showpiece_r2_rec ())
 										 else ()
 		in (showpiece_r_rec (); showpiece_r2_rec ())
 	in
@@ -91,7 +91,7 @@ play sz =
 		let rec showposts_rec _6_none =
 			let deref_3_i = !_3_i in
 			let deref_3_i_plus = deref_3_i + 1 in
-			if lt_int deref_3_i sz_minus then
+			if deref_3_i < sz_minus then
       (showpiece (Array.get leftPost deref_3_i);
 			print_string ();
       showpiece (Array.get middlePost deref_3_i);
@@ -112,7 +112,7 @@ play sz =
 		let s_plus_2_n_minus = s + _2_n_minus in
 		let pp_minus_2_n_plus = p' - _2_n_minus in
 		let s_plus_2_n = s + _2_n in
-    if eq_int _2_n 1 then
+    if _2_n = 1 then
       begin (Array.set _2_post (p - 1) (Array.get source s); Array.set source s 0; showposts()) end
     else begin
       (move _2_n_minus source s post' p' _2_post p;
