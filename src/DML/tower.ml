@@ -63,7 +63,7 @@ play sz =
 		let rec initialize_rec _3_none = 
 			let deref_1_i = !_1_i in
 			let deref_1_i_plus = deref_1_i + 1 in
-			if lt_int deref_1_i sz_minus then (Array.set _1_post deref_1_i deref_1_i_plus; _1_i := deref_1_i_plus; initialize_rec ()) 
+			if deref_1_i < sz_minus then (Array.set _1_post deref_1_i deref_1_i_plus; _1_i := deref_1_i_plus; initialize_rec ()) 
 											 else ()
 		in initialize_rec ()
   in
