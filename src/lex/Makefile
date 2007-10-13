@@ -13,8 +13,8 @@
 # $Id: Makefile,v 1.19 2004/11/29 14:49:24 doligez Exp $
 
 # The lexer generator
-CAMLC=../boot/ocamlc -nostdlib -I ../boot
-CAMLOPT=../ocamlopt -nostdlib -I ../stdlib
+CAMLC=../boot/ocamlrun ../boot/ocamlc -nostdlib -I ../boot
+CAMLOPT=../boot/ocamlrun ../ocamlopt -nostdlib -I ../stdlib
 COMPFLAGS=-warn-error A
 CAMLYACC=../boot/ocamlyacc
 YACCFLAGS=-v
