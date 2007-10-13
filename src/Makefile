@@ -17,8 +17,8 @@
 include config/Makefile
 include stdlib/StdlibModules
 
-CAMLC=boot/ocamlc -nostdlib -I boot
-CAMLOPT=./ocamlopt -nostdlib -I stdlib
+CAMLC=boot/ocamlrun boot/ocamlc -nostdlib -I boot
+CAMLOPT=boot/ocamlrun ./ocamlopt -nostdlib -I stdlib
 COMPFLAGS=-warn-error A $(INCLUDES)
 LINKFLAGS=-custom -I yices/lib/ -ccopt -L./yices/lib/ -cclib -loyices -cclib \
           -lyices -cclib -lgmp
@@ -28,7 +28,7 @@ YACCFLAGS=-v
 CAMLLEX=boot/ocamlrun boot/ocamllex
 CAMLDEP=boot/ocamlrun tools/ocamldep
 DEPFLAGS=$(INCLUDES)
-CAMLRUN=
+CAMLRUN=byterun/ocamlrun
 SHELL=/bin/sh
 MKDIR=mkdir -p
 
@@ -130,7 +130,7 @@ defaultentry:
 	@echo "should work.  But see the file INSTALL for more details."
 
 # Recompile the system using the bootstrap compiler
-all: runtime ocamlc ocamllex ocamlyacc ocamltools library ocaml
+all: runtime ocamlc library ocaml
 
 # The compilation of ocaml will fail if the runtime has changed.
 # Never mind, just do make bootstrap to reach fixpoint again.
@@ -498,7 +498,7 @@ beforedepend:: asmcomp/emit.ml
 
 tools/cvt_emit: tools/cvt_emit.mll
 	cd tools; \
-	$(MAKE) CAMLC="../boot/ocamlc -I ../stdlib" cvt_emit
+	$(MAKE) CAMLC="../$(CAMLRUN) ../boot/ocamlc -I ../stdlib" cvt_emit
 
 # The "expunge" utility
 
