@@ -96,6 +96,12 @@ let constraint_sat solution = function
   | WFRefinement (env, r) ->
       Frame.refinement_well_formed env solution r
 
+let pprint_env_pred ppf (solution, env) = 
+  Predicate.pprint ppf (environment_predicate solution env)
+
+let pprint_ref_pred ppf (solution, r) =
+  Predicate.pprint ppf (Frame.refinement_predicate solution qual_test_var r)
+
 exception Unsatisfiable
 
 let refine solution = function
@@ -120,12 +126,15 @@ let refine solution = function
           Misc.map_filter qual_holds (try Lightenv.find k2 solution with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k2); raise Not_found)) in
           Prover.pop();
           Lightenv.add k2 refined_quals solution
-  | SubRefinement _
+  | SubRefinement (env, guard, r1, r2) ->
       (* If we have a literal RHS and we're unsatisfied, we're hosed -
          either the LHS is a literal and we can't do anything, or it's
          a var which has been pushed up by other constraints and, again,
          we can't do anything *)
+      fprintf std_formatter "@[Unsatisfiable@ literal@ Subtype:@ (%a@ <:@ %a)@ Env:@ %a@ Subref:%a@ ->@ %a@]" Frame.pprint_refinement r1 Frame.pprint_refinement r2 pprint_env_pred (solution, env) pprint_ref_pred (solution, r1) pprint_ref_pred (solution, r2);
+      raise Unsatisfiable
   | WFRefinement _ ->
+      fprintf std_formatter "@[Unsatisfiable@ literal@ WF@]";
       raise Unsatisfiable
 
 (* Form the initial solution by mapping all constrained variables to all

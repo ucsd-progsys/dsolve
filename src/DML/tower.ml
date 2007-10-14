@@ -48,6 +48,12 @@ qualif BOOL(x) : (x = 0) or (x = 1);;
 qualif TRUE(x) : x = 1;;
 qualif FALSE(x) : x = 0;;
 
+qualif STEN(x) : Array.length x  = 10;;
+qualif TEN(x) : x = 10;;
+qualif LTEN(x) : x < 10;;
+qualif LETEN(x) : x <= 10;;
+qualif NETEN(x) : x != 10;;
+qualif NINE(x) : x = 9;;
 
 let print_newline _1_none = () in
 let print_string _2_none = () in

@@ -18,7 +18,7 @@ let qfalse = (Path.mk_ident "FALSE", Path.mk_ident "x",
 let qsize rel x y z = (Path.mk_ident ("SIZE_" ^ (Predicate.pprint_rel rel)), y,
 						Predicate.Atom(Predicate.Var z, rel, Predicate.FunApp("Array.length", Predicate.Var x)))
 
-let qint rel i y = (Path.mk_ident (Printf.sprintf "SIZE_%s%d" 
+let qint rel i y = (Path.mk_ident (Printf.sprintf "INT_%s%d" 
 		(Predicate.pprint_rel rel) i), y, Predicate.Atom(Predicate.Var y, rel, Predicate.PInt i))
 
 let qrel rel x y = (Path.mk_ident (Printf.sprintf "_%s%s%s_" 

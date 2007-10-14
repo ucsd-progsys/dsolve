@@ -153,9 +153,9 @@ let rec fixdiv p =
                 | Predicate.Not p -> pred_isdiv p in
    let calc_cm e1 e2 =
        pull_divisor e1 * pull_divisor e2 in
+   if pred_isdiv p then
    match p with
        Predicate.Atom(e, r, e') -> 
-              if pred_isdiv p then 
                 let m = calc_cm e e' in
                 let e'' = Predicate.Binop(e', Predicate.Minus, Predicate.PInt(1)) in
                 let bound (e, r, e', e'') = 
@@ -167,19 +167,18 @@ let rec fixdiv p =
                     bound (e, r, e', e'')
                   | (Predicate.PInt v, Predicate.Eq, e') ->
                     bound (e, r, e', e'')
-                  | _ -> p) else p
+                  | _ -> p) 
        | Predicate.And(p1, p2) -> 
-              if pred_isdiv p then
                 let p1 = if pred_isdiv p1 then fixdiv p1 else p1 in
                 let p2 = if pred_isdiv p2 then fixdiv p2 else p2 in
-                Predicate.And(p1, p2) else p     
+                Predicate.And(p1, p2)      
        | Predicate.Or(p1, p2) ->
-              if pred_isdiv p then
                 let p1 = if pred_isdiv p1 then fixdiv p1 else p1 in
                 let p2 = if pred_isdiv p2 then fixdiv p2 else p2 in
-                Predicate.Or(p1, p2) else p
-       | Predicate.Not p1 -> if pred_isdiv p1 then Predicate.Not(fixdiv p1) else p
+                Predicate.Or(p1, p2) 
+       | Predicate.Not p1 -> Predicate.Not(fixdiv p1) 
        | p -> p
+   else p
    
 
     let me = 
