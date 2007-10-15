@@ -77,11 +77,13 @@ let fresh_with_var_fun ty fresh_ref_var =
        (* ming: there are some types that we'd like to essentially leave unrefined
           -- for readability and generally being careful we'd like these refined as true,
           but that would require special casing the case below, which is inelegant. *)
+       (* pmr: badness; should be handled just fine by well-formedness constraints,
+          which would effectively effect the same effect *)
       | Tconstr(p, tyl, _) -> 
           if Path.same p Predef.path_unit then
             Fconstr (p, [], ([], Qconst []))
           else
-          Fconstr (p, List.map fresh_rec tyl, fresh_ref_var ())
+            Fconstr (p, List.map fresh_rec tyl, fresh_ref_var ())
       | Tarrow(_, t1, t2, _) ->
           Farrow (None, fresh_rec t1, fresh_rec t2)
       (* ming: placeholder for full tuples *)
@@ -216,8 +218,7 @@ let apply_solution solution fr =
     | Farrow (x, f, f') ->
         Farrow (x, apply_rec f, apply_rec f')
     | Fconstr (path, fl, r) ->
-        Fconstr (path, List.map apply_rec fl,
-                 refinement_apply_solution solution r)
+        Fconstr (path, List.map apply_rec fl, refinement_apply_solution solution r)
     | Ftuple(t1, t2) ->
         Ftuple(apply_rec t1, apply_rec t2)
     | Fvar _
@@ -226,7 +227,7 @@ let apply_solution solution fr =
 
 let refinement_predicate solution qual_var (subs, qualifiers) =
   let quals = match qualifiers with
-    | Qvar k -> Lightenv.find k solution
+    | Qvar k -> (try Lightenv.find k solution with Not_found -> assert false)
     | Qconst qs -> qs
   in
   let unsubst = Predicate.big_and (List.map (Qualifier.apply qual_var) quals) in

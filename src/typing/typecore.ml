@@ -878,7 +878,10 @@ let check_application_result env statement exp =
   | Tconstr (p, _, _) when Path.same p Predef.path_unit -> ()
   | _ ->
       if statement then
-        Location.prerr_warning exp.exp_loc Warnings.Statement_type
+        begin
+          Location.prerr_warning exp.exp_loc Warnings.Statement_type;
+          assert false
+        end
 
 (* Hack to allow coercion of self. Will clean-up later. *)
 let self_coercion = ref ([] : (Path.t * Location.t list ref) list)
@@ -1894,7 +1897,8 @@ and type_statement env sexp =
   | Tvar ->
       add_delayed_check (fun () -> check_application_result env true exp)
   | _ ->
-      Location.prerr_warning sexp.pexp_loc Warnings.Statement_type
+      Location.prerr_warning sexp.pexp_loc Warnings.Statement_type;
+      assert false
   end;
   unify_var env tv ty;
   exp

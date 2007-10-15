@@ -40,9 +40,6 @@ let split cstrs =
                     :: SubFrame (env', guard, f1', f2')
                     :: cs)
           | (Frame.Fconstr (p1, [], r1), Frame.Fconstr (p2, [], r2)) ->
-              if Path.same p1 Predef.path_unit || Path.same p2 Predef.path_unit then
-                if Path.same p2 Predef.path_unit  && Path.same p1 Predef.path_unit then
-                  split_rec flat cs else assert false else
               split_rec (SubRefinement (env, guard, r1, r2) :: flat) cs
           | (Frame.Fvar _, Frame.Fvar _)
           | (Frame.Funknown, Frame.Funknown) ->
