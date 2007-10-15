@@ -57,6 +57,8 @@ let split cstrs =
                   split_rec (SubRefinement(env, guard, r1, r2)::flat) (List.append (List.map2 subt l1 l2) cs)*)
               else
                   (Printf.printf "Unsupported type into split: %s\n" (Path.name p1); assert false)
+          | (Frame.Ftuple(t1, t2), Frame.Ftuple(t1', t2')) ->
+              split_rec flat (List.append [SubFrame(env, guard, t1, t1'); SubFrame(env, guard, t2, t2')] cs) 
           | _ -> assert false
         end
     | WFFrame(env, f) :: cs ->
@@ -71,6 +73,8 @@ let split cstrs =
                     :: cs)
           | Frame.Fconstr (_, [], r) ->
               split_rec (WFRefinement (env, r) :: flat) cs
+          | Frame.Ftuple (t1, t2) ->
+              split_rec flat (List.append [WFFrame(env, t1); WFFrame(env, t2)] cs)
           | Frame.Fvar _
           | Frame.Funknown ->
               split_rec flat cs

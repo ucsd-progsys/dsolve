@@ -14,6 +14,7 @@ type t =
     Fvar of Path.t
   | Fconstr of Path.t * t list * refinement
   | Farrow of Path.t option * t * t
+  | Ftuple of t * t
   | Funknown
 
 let pprint_qualifier_expr ppf = function
@@ -42,6 +43,8 @@ let rec pprint ppf = function
       fprintf ppf "@[%s:@ %a@ ->@;<1 2>%a@]" (Path.unique_name id) pprint1 f pprint f'
   | Fconstr (path, l, r) ->
       fprintf ppf "@[{%a@ %s|@;<1 2>%a}@]" pprint (List.hd l) (Path.unique_name path) pprint_refinement r
+   | Ftuple(t1, t2) ->
+      fprintf ppf "@[(%a,@ %a)@]" pprint t1 pprint t2
   | Funknown ->
       fprintf ppf "[unknown]"
   (*| _ -> assert false*)
@@ -81,6 +84,9 @@ let fresh_with_var_fun ty fresh_ref_var =
           Fconstr (p, List.map fresh_rec tyl, fresh_ref_var ())
       | Tarrow(_, t1, t2, _) ->
           Farrow (None, fresh_rec t1, fresh_rec t2)
+      (* ming: placeholder for full tuples *)
+      | Ttuple(ts) ->
+          Ftuple (fresh_rec (List.hd ts), fresh_rec (List.hd (List.tl ts)))
       | _ ->
           fprintf err_formatter "@[Warning:@ Freshing@ unsupported@ type@]@.";
           Funknown
@@ -151,6 +157,8 @@ let instantiate fr ftemplate =
 					(*let _ = if Path.same p p' then () else assert false in*)
 					(*let _ = if r = r' then () else assert false in*)
 					Fconstr(p, List.map2 inst l l', r)
+      | (Ftuple(t1, t2), Ftuple(t1', t2')) ->
+          Ftuple(inst t1 t1', inst t2 t2')
       | (Funknown, Funknown) -> Funknown
       | (f1, f2) ->
           fprintf std_formatter "@[Unsupported@ types@ for@ instantiation:@;<1 2>%a@;<1 2>%a@]@."
@@ -173,6 +181,8 @@ let rec apply_substitution sub = function
       Farrow (x, apply_substitution sub f1, apply_substitution sub f2)
   | Fconstr (p, l, (subs, qe)) ->
       Fconstr (p, List.map (apply_substitution sub) l, (sub::subs, qe))
+  | Ftuple(t1, t2) ->
+      Ftuple(apply_substitution sub t1, apply_substitution sub t2)
   | Funknown ->
       Funknown
   (*| _ -> assert false*)
@@ -188,6 +198,8 @@ let rec label_like f f' =
         f
     | (Farrow (None, f1, f1'), Farrow(l, f2, f2')) ->
         Farrow (l, label_like f1 f2, label_like f1' f2')
+    | (Ftuple(t1, t2), Ftuple(t1', t2')) ->
+        Ftuple(label_like t1 t1', label_like t2 t2')
     | _ -> assert false
 
 (* Create a fresh frame with the same shape as [t] and [f],
@@ -206,6 +218,8 @@ let apply_solution solution fr =
     | Fconstr (path, fl, r) ->
         Fconstr (path, List.map apply_rec fl,
                  refinement_apply_solution solution r)
+    | Ftuple(t1, t2) ->
+        Ftuple(apply_rec t1, apply_rec t2)
     | Fvar _
     | Funknown as f-> f
   in apply_rec fr

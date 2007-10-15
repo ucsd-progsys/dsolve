@@ -39,6 +39,8 @@ let quals = [
 
 let mk_tyvar () = Frame.Fvar(Path.mk_ident "'a") 
 
+let mk_tyvarb () = Frame.Fvar(Path.mk_ident "'b")
+
 let mk_int qs = Frame.Fconstr(Predef.path_int, [], ([], Frame.Qconst qs))
 
 let mk_bool qs = Frame.Fconstr(Predef.path_bool, [], ([], Frame.Qconst qs))
@@ -131,6 +133,13 @@ let ref_assgn_frame env =
   ([":="; "Pervasives"], mk_fun(x, mk_ref tyvar [] env,
                     mk_fun(y, tyvar, mk_unit ())))
 
+let tuple_fst_snd_frame name fst =
+  let x = Path.mk_ident "x" in
+  let tyvara = mk_tyvar () in
+  let tyvarb = mk_tyvarb () in
+  (name, mk_fun(x, Frame.Ftuple(tyvara, tyvarb),  
+                                if fst then tyvara else tyvarb))
+
 let ref_path env =
   ("ref", find_type_path ["ref"; "Pervasives"] env)
 
@@ -152,6 +161,8 @@ let _frames = [
   poly_rel_frame [">"; "Pervasives"] "<=" Predicate.Le;
   poly_rel_frame [">="; "Pervasives"] ">" Predicate.Gt;
   poly_rel_frame ["<="; "Pervasives"] ">=" Predicate.Ge;
+  tuple_fst_snd_frame ["fst"; "Pervasives"] true;
+  tuple_fst_snd_frame ["snd"; "Pervasives"] false;
   array_length_frame;
   array_get_frame;
   array_make_frame;

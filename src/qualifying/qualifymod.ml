@@ -147,6 +147,20 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
             let (f1, c, m) = constrain e1 env guard cstrs framemap in
             let (f2, c, m) = constrain e2 env guard c m in
             (f2, (SubFrame(env, guard, f1, Builtins.mk_unit ())::c), m)
+  | (Texp_tuple(es), t) ->
+            (* placeholder implementation *)
+            let e1 = List.hd es in
+            let e2 = List.hd (List.tl es) in
+            let (f1, c, m) = constrain e1 env guard cstrs framemap in
+            let (f2, c, m) = constrain e2 env guard c m in
+            let f = Frame.Ftuple(f1, f2) in
+            begin
+            match f with
+              Frame.Ftuple(f1', f2') ->
+                (f, List.append [SubFrame(env, guard, f1, f1'); SubFrame(env, guard, f2, f2')] 
+                                c, m)
+              | _ -> failwith "Text_tuple has wrong type"
+            end
 	| (_, t) ->
 (*
 					(*let _ = !Oprint.out_type Format.std_formatter (Printtyp.tree_of_type_scheme t) in*)
