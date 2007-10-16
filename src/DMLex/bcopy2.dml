@@ -1,18 +1,37 @@
-fun('a) bcopy_aux (src, des, i, l, j) =
-  if i = l then ()
-  else let
-           val _ = update(des, j, sub(src, i))
-       in
-           bcopy_aux (src, des, i+1, l, j+1)
-       end
-withtype {m:nat,n:nat,i:nat,j:nat,l:nat | i <= l <= m, j+l <= i+n} <m-i> =>
-         'a array(m) * 'a array(n) * int (i) * int(l) * int(j) -> unit
+qualif NNeg(x): 0 <= x;;
+qualif Eq3(x): x = 3;;
+qualif Eq1(x): x = 1;;
+qualif Eq0(x): x = 0;;
+qualif LtLenSrc(x): x < Array.length src;;
+qualif LeLenSrc(x): x <= Array.length src;;
+qualif EqLenSrc(x): x = Array.length src;;
+qualif LeLenDes(x): x <= Array.length des;;
+qualif EqLenDes(x): x = Array.length des;;
+qualif EqSrcLen(x): Array.length x = Array.length src;;
+qualif EqLen3(x): Array.length x = 3;;
 
-fun('a) bcopy (src, des, ss, len, ds) =
-  if (ss + len <= arraysize src) then
-    if (ds + len <= arraysize des) then
-      bcopy_aux (src, des, ss, ss + len, ds)
+let rec bcopy_aux src des i l j =
+  if i = l then ()
+  else
+    let n = Array.get src i in
+      Array.set des j n;
+      let i' = i + 1 in
+      let j' = j + 1 in
+      bcopy_aux src des i' l j'
+in
+let bcopy src des ss len ds =
+  let se = ss + len in
+  let srcl = Array.length src in
+    if (se <= srcl) then
+      let de = ds + len in
+      let desl = Array.length des in
+        if (de <= desl) then
+          let fini = ss + len in
+            bcopy_aux src des ss fini ds
+        else ()
     else ()
-  else () 
-withtype {m:nat,n:nat,ss:nat,len:nat,ds:nat} <> =>
-         'a array(m) * 'a array(n) * int(ss) * int (len) * int(ds) -> unit
+in
+let src = [|1; 2; 3|] in
+let asz = 3 in
+let des = Array.make asz 0 in
+  bcopy src des 1 2 0;;
