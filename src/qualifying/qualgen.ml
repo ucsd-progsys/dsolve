@@ -29,10 +29,11 @@ let rec esc s oc nc =
 
 let single_simple_qualif x fx i =
   let rels = ["<"; "<="; ">"; ">="; "="; "!="] in
-  let prels = ["LT_"; "LE_"; "GT_"; "GE_"; "EQ_"; "NE_"] in
+  let prels = ["_LT_"; "_LE_"; "_GT_"; "_GE_"; "_EQ_"; "_NE_"] in
   let ufx = String.uppercase fx in
   let _ = esc ufx ' ' '_' in 
   let _ = esc ufx '.' '_' in
+  let _ = esc ufx '\'' '_' in
   let mk_qualif op pop = Printf.sprintf "qualif Q%s%s%s(%s) : %s %s %s" ufx pop i x fx op i in
   List.map2 mk_qualif rels prels
   
