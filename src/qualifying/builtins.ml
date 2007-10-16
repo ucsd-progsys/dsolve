@@ -158,9 +158,9 @@ let _frames = [
   poly_rel_frame ["="; "Pervasives"] "=" Predicate.Eq;
   poly_rel_frame ["!="; "Pervasives"] "!=" Predicate.Ne;
   poly_rel_frame ["<"; "Pervasives"] "<" Predicate.Lt;
-  poly_rel_frame [">"; "Pervasives"] "<=" Predicate.Le;
-  poly_rel_frame [">="; "Pervasives"] ">" Predicate.Gt;
-  poly_rel_frame ["<="; "Pervasives"] ">=" Predicate.Ge;
+  poly_rel_frame [">"; "Pervasives"] ">" Predicate.Gt;
+  poly_rel_frame [">="; "Pervasives"] ">=" Predicate.Ge;
+  poly_rel_frame ["<="; "Pervasives"] "<=" Predicate.Le;
   tuple_fst_snd_frame ["fst"; "Pervasives"] true;
   tuple_fst_snd_frame ["snd"; "Pervasives"] false;
   array_length_frame;
