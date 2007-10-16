@@ -229,16 +229,20 @@ let execute_phrase print_outcome ppf phr =
       let (str, sg, newenv) = Typemod.type_structure oldenv sstr in
       Typecore.force_delayed_checks ();
       let oldquals = !toplevel_quals in
+      let dump_qualifs () = 
+        if !Clflags.dump_qualifs then
+          begin
+          fprintf std_formatter "@[Dumping@ qualifiers@\n@]";
+          Misc.format_list_of_strings std_formatter (";;", Qualgen.dump_qualifs ());
+          fprintf std_formatter "@[Done@ Dumping@ qualifiers@\n@]"
+          end
+      in
       let (newquals, framemap) =
-        Qualifymod.qualify_structure newenv !toplevel_fenv oldquals str in
+        try Qualifymod.qualify_structure newenv !toplevel_fenv oldquals str with
+          Constraint.Unsatisfiable -> dump_qualifs (); raise Constraint.Unsatisfiable
+      in
       if !Clflags.dump_qexprs then
         Qdebug.dump_qualified_structure std_formatter framemap str; 
-      if !Clflags.dump_qualifs then
-        begin
-        fprintf std_formatter "@[Dumping@ qualifiers@\n@]";
-        Misc.format_list_of_strings std_formatter (";;", Qualgen.dump_qualifs ());
-        fprintf std_formatter "@[Done@ Dumping@ qualifiers@\n@]"
-        end;
       let lam = Translmod.transl_toplevel_definition str in
       Warnings.check_fatal ();
       begin try

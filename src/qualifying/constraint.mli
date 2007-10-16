@@ -9,3 +9,5 @@ type refinement_constraint =
 val environment: frame_constraint -> Frame.t Lightenv.t
 val solve_constraints:
   Qualifier.t list -> frame_constraint list -> Qualifier.t list Lightenv.t
+
+exception Unsatisfiable
