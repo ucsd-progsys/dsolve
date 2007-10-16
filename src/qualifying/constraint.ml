@@ -157,8 +157,11 @@ let solve_constraints quals constrs =
       std_formatter constrs;
   let cs = split constrs in
   let rec solve_rec solution =
-    try
-      let unsat_constr = List.find (fun c -> not (constraint_sat solution c)) cs in
-        solve_rec (refine solution unsat_constr)
-    with Not_found -> solution
+    let unsat_constr =
+      try
+        Some (List.find (fun c -> not (constraint_sat solution c)) cs)
+      with Not_found -> None
+    in match unsat_constr with
+      | None -> solution
+      | Some unsat -> solve_rec (refine solution unsat)
   in solve_rec (initial_solution cs quals)
