@@ -23,6 +23,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
     let (f, cs, fm) =
       match (e.exp_desc, repr e.exp_type) with
 	  (Texp_constant(Const_int n), {desc = Tconstr(path, [], _)}) ->
+            let _ = Qualgen.add_constant n in
             (Frame.Fconstr (path, [], Builtins.equality_refinement (Predicate.PInt n)),
              cstrs, framemap)
   | (Texp_construct(cstrdesc, []), {desc = Tconstr(path, [], _)}) ->
@@ -108,6 +109,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
                  (constrain e1 env guard cstrs framemap) exps
 	| (Texp_let (Nonrecursive, [({pat_desc = Tpat_var x}, e1)], e2), t) ->
             let (f1, cstrs'', fm'') = constrain e1 env guard cstrs framemap in
+            let _ = Qualgen.add_label (Path.Pident x, e1.exp_type) in
             let env' = Lightenv.add (Path.Pident x) f1 env in
             let (f2, cstrs', fm') = constrain e2 env' guard cstrs'' fm'' in
             let f = Frame.fresh_with_labels t f2 in
@@ -122,6 +124,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
                with the proper labels added. *)
             let unlabelled_f1 = Frame.fresh e1.exp_type in
             let fp = Path.Pident f in
+            let _ = Qualgen.add_label (Path.Pident f, e1.exp_type) in
             let unlabelled_env = Lightenv.add fp unlabelled_f1 env in
             let (labelled_f1, _, _) = constrain e1 unlabelled_env guard cstrs framemap in
             let f1' = Frame.label_like unlabelled_f1 labelled_f1 in
@@ -136,6 +139,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
                :: cstrs',
                fm')
 	| (Texp_array(es), t) ->
+            let _ = Qualgen.add_constant (List.length es) in
 						let f = Frame.fresh t in
 						let (f, fs) = (function Frame.Fconstr(p, l, _) -> (Frame.Fconstr(p, l, Builtins.size_lit_refinement(List.length es)), l) | _ -> assert false) f in
 						let list_rec (fs, c, m) e = (function (f, c, m) -> (f::fs, c, m)) (constrain e env guard c m) in

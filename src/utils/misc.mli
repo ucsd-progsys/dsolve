@@ -113,3 +113,5 @@ val do_memo: ('a, 'b) Hashtbl.t -> ('c -> 'b) -> 'c -> 'a -> 'b
 
 val repeat_fn: (unit -> unit) -> int -> unit
         (* [repeat_fn f i] calls [f] () [i] times. *)
+
+val format_list_of_strings: Format.formatter -> string * string list -> unit

@@ -213,3 +213,11 @@ let do_memo memo f args key =
 let rec repeat_fn f i = 
   if i = 0 then ()
   else (f (); repeat_fn f (i-1))
+
+let rec format_list_of_strings ppf (delim, ls) =
+  if List.length ls > 1 then 
+    Format.fprintf ppf "@[%s%s@\n%a@]" (List.hd ls) delim format_list_of_strings (delim, List.tl ls)
+  else if List.length ls = 1 then
+    Format.fprintf ppf "@[%s%s@\n@]" (List.hd ls) delim
+  else 
+    Format.fprintf ppf ""

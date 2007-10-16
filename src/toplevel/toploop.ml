@@ -232,15 +232,21 @@ let execute_phrase print_outcome ppf phr =
       let (newquals, framemap) =
         Qualifymod.qualify_structure newenv !toplevel_fenv oldquals str in
       if !Clflags.dump_qexprs then
-        Qdebug.dump_qualified_structure std_formatter framemap str; flush stdout;
+        Qdebug.dump_qualified_structure std_formatter framemap str; 
+      if !Clflags.dump_qualifs then
+        begin
+        fprintf std_formatter "@[Dumping@ qualifiers@\n@]";
+        Misc.format_list_of_strings std_formatter (";;", Qualgen.dump_qualifs ());
+        fprintf std_formatter "@[Done@ Dumping@ qualifiers@\n@]"
+        end;
       let lam = Translmod.transl_toplevel_definition str in
       Warnings.check_fatal ();
       begin try
         toplevel_env := newenv;
         toplevel_quals := newquals;
-        let _ = Printf.printf "Starting to execute\n"; flush stdout in
+        let _ = fprintf std_formatter "@[Starting@ to@ execute@\n@]" in
         let res = load_lambda ppf lam in
-        let _ = Printf.printf "Finished executing\n"; flush stdout in
+        let _ = fprintf std_formatter "@[Finished@ executing@\n@]" in
         let out_phr =
           match res with
           | Result v ->

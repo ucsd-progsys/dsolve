@@ -61,8 +61,9 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
 QUALIFYING=qualifying/lightenv.cmo \
   qualifying/qualifier.cmo qualifying/frame.cmo yices/lib/oyices.cma \
   qualifying/theoremProver.cmo qualifying/builtins.cmo \
-  qualifying/constraint.cmo qualifying/qualifymod.cmo qualifying/printqual.cmo \
-  qualifying/qdebug.cmo
+  qualifying/constraint.cmo qualifying/qualgen.cmo \
+  qualifying/qualifymod.cmo qualifying/printqual.cmo \
+  qualifying/qdebug.cmo 
 
 COMP=bytecomp/lambda.cmo bytecomp/printlambda.cmo \
   bytecomp/typeopt.cmo bytecomp/switch.cmo bytecomp/matching.cmo \

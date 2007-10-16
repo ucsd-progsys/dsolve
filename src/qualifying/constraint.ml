@@ -132,7 +132,7 @@ let refine solution = function
          either the LHS is a literal and we can't do anything, or it's
          a var which has been pushed up by other constraints and, again,
          we can't do anything *)
-      fprintf std_formatter "@[Unsatisfiable@ literal@ Subtype:@ (%a@ <:@ %a)@ Env:@ %a@ Subref:%a@ ->@ %a@]" Frame.pprint_refinement r1 Frame.pprint_refinement r2 pprint_env_pred (solution, env) pprint_ref_pred (solution, r1) pprint_ref_pred (solution, r2);
+      fprintf std_formatter "@[Unsatisfiable@ literal@ Subtype:@ (%a@ <:@ %a)@\nEnv:@ %a@\nSubref:%a@ ->@ %a@\n@]" Frame.pprint_refinement r1 Frame.pprint_refinement r2 pprint_env_pred (solution, env) pprint_ref_pred (solution, r1) pprint_ref_pred (solution, r2);
       raise Unsatisfiable
   | WFRefinement _ ->
       fprintf std_formatter "@[Unsatisfiable@ literal@ WF@]";
