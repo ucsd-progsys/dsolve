@@ -53,11 +53,13 @@ let mk_unit () = Frame.Fconstr(Predef.path_unit, [], ([], Frame.Qconst []))
 
 let mk_fun (lab, f, f') = Frame.Farrow (Some lab, f, f')
 
+let mk_int_equals x i = Predicate.equals(Predicate.Var x, Predicate.PInt i)
+
 let fun_frame path (x, y) qual =
   (path, mk_fun (x, mk_int [], mk_fun (y, mk_int [], mk_int [qual])))
 
-let rel_fun_frame path (x, y) qual =
-  (path, mk_fun (x, mk_int [], mk_fun (y, mk_int [], mk_bool [qual])))
+let rel_fun_frame path (x, y) (t1, t2) qual =
+  (path, mk_fun (x, t1, mk_fun (y, t2, mk_bool [qual])))
 
 let poly_rel_fun_frame path (x, y) tyvar qs =
   (path, mk_fun (x, tyvar, mk_fun (y, tyvar, mk_bool [qs])))
@@ -74,9 +76,33 @@ let op_frame path qname op =
                  Predicate.Binop (Predicate.Var x, op, Predicate.Var y))) in
     fun_frame path (x, y) qual
 
+(* ming: connectives could use cleanup ... eventually *)
+
+let bool_conj_frame path qname =
+  let (x, y, z) = fresh_idents () in
+  let qual = (Path.mk_ident qname,
+                z,
+                Predicate.Or( Predicate.And(mk_int_equals z 1, 
+                              Predicate.And(mk_int_equals x 1, mk_int_equals y 1)),
+                              Predicate.And(mk_int_equals z 0,
+                              Predicate.Or(mk_int_equals x 0, mk_int_equals y 0)) )) in
+    rel_fun_frame path (x, y) (mk_bool [], mk_bool []) qual
+  
+let bool_disj_frame path qname =
+  let (x, y, z) = fresh_idents () in
+  let qual = (Path.mk_ident qname,
+                z,
+                Predicate.Or( Predicate.And(mk_int_equals z 1,
+                              Predicate.Or(mk_int_equals x 1, mk_int_equals y 1)),
+                              Predicate.And(mk_int_equals z 0,
+                              Predicate.And(mk_int_equals x 0, mk_int_equals y 0)) )) in
+    rel_fun_frame path (x, y) (mk_bool [], mk_bool []) qual
+
+    
+
 let rel_frame path qname rel =
   let (x, y, z) = fresh_idents () in
-    rel_fun_frame path (x, y) (qbool_rel qname rel (x, y, z))
+    rel_fun_frame path (x, y) (mk_int [], mk_int []) (qbool_rel qname rel (x, y, z))
 
 let poly_rel_frame path qname rel =
   let (x, y, z) = fresh_idents () in
@@ -158,11 +184,13 @@ let _frames = [
   poly_rel_frame ["="; "Pervasives"] "=" Predicate.Eq;
   poly_rel_frame ["!="; "Pervasives"] "!=" Predicate.Ne;
   poly_rel_frame ["<"; "Pervasives"] "<" Predicate.Lt;
-  poly_rel_frame [">"; "Pervasives"] "<=" Predicate.Le;
-  poly_rel_frame [">="; "Pervasives"] ">" Predicate.Gt;
-  poly_rel_frame ["<="; "Pervasives"] ">=" Predicate.Ge;
+  poly_rel_frame [">"; "Pervasives"] ">" Predicate.Gt;
+  poly_rel_frame [">="; "Pervasives"] ">=" Predicate.Ge;
+  poly_rel_frame ["<="; "Pervasives"] "<=" Predicate.Le;
   tuple_fst_snd_frame ["fst"; "Pervasives"] true;
   tuple_fst_snd_frame ["snd"; "Pervasives"] false;
+  bool_conj_frame ["&&"; "Pervasives"] "&&";
+  bool_disj_frame ["||"; "Pervasives"] "||";
   array_length_frame;
   array_get_frame;
   array_make_frame;

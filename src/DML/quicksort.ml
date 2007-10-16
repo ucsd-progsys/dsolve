@@ -1,3 +1,6 @@
+
+
+
 (*
  * This is an example showing that array bounds checking
  * is not needed for doing quicksort on an array.
@@ -9,10 +12,10 @@ let min _1_m _1_n =
 	if _1_m < _1_n_plus then _1_m else _1_n
 in 
 let sortRange _1_arr _1_start _1_n =
-  let item _1_i = get _1_arr _1_i in
+  let item _1_i = Array.get _1_arr _1_i in
   let swap _2_i _2_j =
 	let i_2_j = item _2_j in
-    let tmp = item _2_i in (set _1_arr _2_i i_2_j; set _1_arr _2_j tmp)
+    let tmp = item _2_i in (Array.set _1_arr _2_i i_2_j; Array.set _1_arr _2_j tmp)
   in
   let rec vecswap _3_i _3_j _3_n = 
 		let _3_i_plus = _3_i + 1 in
@@ -112,7 +115,7 @@ let sortRange _1_arr _1_start _1_n =
 			let new_10_pd = snd _10_top in
 			let new_10_pb_plus = new_10_pb + 1 in
 			let new_10_pc_minus = new_10_pc - 1 in
-			let _10_arg = (new_10_pa, new_10_pb, new_10_pc, new_10_pd) in
+			let _10_arg = (new_10_pa, (new_10_pb, (new_10_pc, new_10_pd))) in
       if new_10_pc < new_10_pb+1 then _10_arg
       else begin swap new_10_pb new_10_pc; 
 								 split new_10_pa new_10_pb_plus new_10_pc_minus new_10_pd end
@@ -153,34 +156,35 @@ let sortRange _1_arr _1_start _1_n =
     let __9_none = vecswap _7_pb _7_pn_minus_r' r' in
     let n' = _7_pb - _7_pa in
 
-    let __10_none = if 1 < n' then sorting _7_a n' else () in
+    let __10_none = if 1 < n' then (*sorting*) quickSort _7_a n' else () in
     let n'' = _7_pd - _7_pc in
 		let _7_pn_minus_n'' = _7_pn - n'' in
-    let __11_none = if 1 < n' 1 then sorting _7_pn_minus_n'' n'' else () in ()
+    let __11_none = if 1 < n' then (*sorting*) quickSort _7_pn_minus_n'' n'' else () in ()
 	in	
 
-  let sorting _3_start _11_n = if _11_n < 7 then insertSort _3_start _11_n else quickSort _3_start _11_n
-  in 
-  sorting _1_start _1_n 
+  (*let sorting _3_start _11_n = if _11_n < 7 then insertSort _3_start _11_n else quickSort _3_start _11_n
+  in*) 
+  (*sorting _1_start _1_n*) 
+  quickSort _1_start _1_n
 (* withtype {start:nat}{n:nat | start+n <= size }
          'a vect(size) * int(start) * int(n) * ('a * 'a -> order) -> unit *)
 in 
 let qs _1_vec =
-  sortRange _1_vec 0 (size _1_vec) 
+  sortRange _1_vec 0 (Array.length _1_vec) 
 (*withtype {size:nat} 'a vect(size) -> unit*)
 in 
 
 (* sorted checks if a list is well-sorted *)
 let
 sorted _2_arr =
-  let len = size _2_arr in
+  let len = Array.length _2_arr in
   let rec s v k =
 		let k_plus = k + 1 in
-    let v' = get _2_arr k  in
+    let v' = Array.get _2_arr k  in
 			if v' < v then false else if k_plus = len then true else s v' k_plus
 	in
 		if len < 2 then true else 
-			let get_0 = get _2_arr 0 in
+			let get_0 = Array.get _2_arr 0 in
 			s get_0 1 
 in 
 let vec = [|7;5;3;1;8;6;4;2|] 
