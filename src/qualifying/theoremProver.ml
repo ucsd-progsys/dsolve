@@ -41,7 +41,10 @@ module type PROVER =
     val valid : Predicate.t -> bool
 
     (* implies p q = true iff predicate p (provably) implies predicate q *)
-    val implies : Predicate.t -> Predicate.t -> bool  
+    val implies : Predicate.t -> Predicate.t -> bool
+
+    (* approximate total time spent in (underlying) theorem prover queries *)
+    val querytime : unit -> float
     
   end
 
@@ -61,6 +64,7 @@ module YicesProver  =
       mutable ds : string list ;
       mutable count : int;
       mutable i : int;
+      mutable qtime : float;
     }
 
     let barrier = "0" 
@@ -190,24 +194,26 @@ let rec fixdiv p =
 			let binop = Y.yices_mk_function_type c [| t; t |] t in
       let f = Y.yices_mk_function_type c [| ar |] t in
       let d = Hashtbl.create 37 in
-        { c = c; t = t; ar = ar; f = f; binop = binop; d = d; ds = []; count = 0; i = 0 }
+        { c = c; t = t; ar = ar; f = f; binop = binop; d = d; ds = []; count = 0; i = 0; qtime = 0.0 }
 
     let push p =
-      me.count <- me.count + 1;
-      if Y.yices_inconsistent me.c = 1 then
-	me.i <- me.i + 1
-      else
-	begin
-	  me.ds <- barrier :: me.ds;
-	  Y.yices_push me.c;
-	  Y.yices_assert me.c 
-                  (let p' = fixdiv p in 
-                  (*let _ = if (fixdiv p) != p then
-                      (Predicate.pprint Format.std_formatter p; 
-                      Predicate.pprint Format.std_formatter p') 
-                      else () in *)
-                  yicesPred me p')
-	end
+      let start = Sys.time () in
+        me.count <- me.count + 1;
+        if Y.yices_inconsistent me.c = 1 then
+	  me.i <- me.i + 1
+        else
+	  begin
+	    me.ds <- barrier :: me.ds;
+	    Y.yices_push me.c;
+	    Y.yices_assert me.c 
+              (let p' = fixdiv p in 
+                 (*let _ = if (fixdiv p) != p then
+                   (Predicate.pprint Format.std_formatter p; 
+                   Predicate.pprint Format.std_formatter p') 
+                   else () in *)
+                 yicesPred me p')
+	  end;
+        me.qtime <- me.qtime +. (Sys.time () -. start)
       
     let rec vpop (cs,s) =
       match s with [] -> (cs,s)
@@ -230,7 +236,10 @@ let rec fixdiv p =
       Misc.repeat_fn pop me.count
 
     let unsat () =
-      Y.yices_check me.c = -1
+      let start = Sys.time () in
+      let res = Y.yices_check me.c = -1 in
+        me.qtime <- me.qtime +. (Sys.time () -. start);
+        res
 
     let valid p =
       let _ = push (Predicate.Not p) in
@@ -243,6 +252,9 @@ let rec fixdiv p =
       let rv = valid q in
       let _ = pop () in
       rv
+
+    let querytime () =
+      me.qtime
   end
 
 module Prover = YicesProver

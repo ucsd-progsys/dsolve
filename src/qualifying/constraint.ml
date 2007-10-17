@@ -164,4 +164,9 @@ let solve_constraints quals constrs =
     in match unsat_constr with
       | None -> solution
       | Some unsat -> solve_rec (refine solution unsat)
-  in solve_rec (initial_solution cs quals)
+  in
+  let start_time = Sys.time () in
+  let solution = solve_rec (initial_solution cs quals) in
+    Printf.printf "\nFinished solving in %f seconds\n" (Sys.time () -. start_time);
+    Printf.printf "Time spent in prover: %f seconds\n" (Prover.querytime ());
+    solution
