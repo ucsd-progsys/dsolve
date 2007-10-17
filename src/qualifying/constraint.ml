@@ -157,8 +157,16 @@ let solve_constraints quals constrs =
       std_formatter constrs;
   let cs = split constrs in
   let rec solve_rec solution =
-    try
-      let unsat_constr = List.find (fun c -> not (constraint_sat solution c)) cs in
-        solve_rec (refine solution unsat_constr)
-    with Not_found -> solution
-  in solve_rec (initial_solution cs quals)
+    let unsat_constr =
+      try
+        Some (List.find (fun c -> not (constraint_sat solution c)) cs)
+      with Not_found -> None
+    in match unsat_constr with
+      | None -> solution
+      | Some unsat -> solve_rec (refine solution unsat)
+  in
+  let start_time = Sys.time () in
+  let solution = solve_rec (initial_solution cs quals) in
+    Printf.printf "\nFinished solving in %f seconds\n" (Sys.time () -. start_time);
+    Printf.printf "Time spent in prover: %f seconds\n" (Prover.querytime ());
+    solution
