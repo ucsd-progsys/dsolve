@@ -58,6 +58,15 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
 	    begin match Frame.fresh t with
               | Frame.Farrow (_, f, unlabelled_f') ->
                   let xp = Path.Pident x in
+                  let _ =
+                    match t with 
+                      {desc = Tarrow(_, t_in, t_out, _)} ->
+                        Qualgen.add_label(xp, t_in)
+                      | _ -> assert false
+                  in
+                    (*match e'.exp_type with  
+                      {desc = Tarrow(_, t_in, _, _)} -> Printf.printf "%s%s\n" (Ident.name x) (Frame.type_structure t_in); Qualgen.add_label (xp, t_in)
+                      | {desc = d} -> Printf.printf "%s%s\n" (Ident.name x) (Frame.type_structure e'.exp_type); Qualgen.add_label (xp, e'.exp_type)*)
                   let env' = Lightenv.add xp f env in
                   let (f'', cstrs', fm') = constrain e' env' guard cstrs framemap in
                   (* Since the underlying type system doesn't have dependent
