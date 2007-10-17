@@ -127,16 +127,9 @@ let refine solution = function
           Misc.map_filter qual_holds (try Lightenv.find k2 solution with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k2); raise Not_found)) in
           Prover.pop();
           Lightenv.add k2 refined_quals solution
-  | SubRefinement (env, guard, r1, r2) ->
-      (* If we have a literal RHS and we're unsatisfied, we're hosed -
-         either the LHS is a literal and we can't do anything, or it's
-         a var which has been pushed up by other constraints and, again,
-         we can't do anything *)
-      fprintf std_formatter "@[Unsatisfiable@ literal@ Subtype:@ (%a@ <:@ %a)@\nEnv:@ %a@\nSubref:%a@ ->@ %a@\n@]" Frame.pprint_refinement r1 Frame.pprint_refinement r2 pprint_env_pred (solution, env) pprint_ref_pred (solution, r1) pprint_ref_pred (solution, r2);
-      raise Unsatisfiable
-  | WFRefinement _ ->
-      fprintf std_formatter "@[Unsatisfiable@ literal@ WF@]";
-      raise Unsatisfiable
+  | _ -> solution
+      (* With anything else, there's nothing to refine, just to check later with
+         check_satisfied *)
 
 (* Form the initial solution by mapping all constrained variables to all
    qualifiers.  This was somewhat easier than adding any notion of "default"
@@ -151,22 +144,39 @@ let initial_solution cstrs quals =
     | WFRefinement (_, r) -> add_refinement_var solution r
   in List.fold_left add_constraint_vars Lightenv.empty cstrs
 
+let check_satisfied solution cstrs =
+  try
+    match List.find (fun c -> not (constraint_sat solution c)) cstrs with
+      | SubRefinement (env, guard, r1, r2) ->
+          (* If we have a literal RHS and we're unsatisfied, we're hosed -
+             either the LHS is a literal and we can't do anything, or it's
+             a var which has been pushed up by other constraints and, again,
+             we can't do anything *)
+          fprintf std_formatter
+            "@[Unsatisfiable@ literal@ Subtype:@ (%a@ <:@ %a)@\nEnv:@ %a@\nSubref:%a@ ->@ %a@\n@]"
+            Frame.pprint_refinement r1 Frame.pprint_refinement r2
+            pprint_env_pred (solution, env) pprint_ref_pred (solution, r1) pprint_ref_pred (solution, r2);
+          raise Unsatisfiable
+      | WFRefinement _ ->
+          fprintf std_formatter "@[Unsatisfiable@ literal@ WF@]";
+          raise Unsatisfiable
+  with Not_found -> ()
+
 let solve_constraints quals constrs =
   if !Clflags.dump_constraints then
     Oprint.print_list pprint (fun ppf -> fprintf ppf "@\n@\n"; print_flush ())
       std_formatter constrs;
   let cs = split constrs in
   let rec solve_rec solution =
-    let unsat_constr =
-      try
-        Some (List.find (fun c -> not (constraint_sat solution c)) cs)
-      with Not_found -> None
-    in match unsat_constr with
-      | None -> solution
-      | Some unsat -> solve_rec (refine solution unsat)
+    let solution' = List.fold_left refine solution cs in
+      if not (Lightenv.equal (=) solution' solution) then
+        solve_rec solution'
+      else
+        solution
   in
   let start_time = Sys.time () in
   let solution = solve_rec (initial_solution cs quals) in
+    check_satisfied solution cs;
     Printf.printf "\nFinished solving in %f seconds\n" (Sys.time () -. start_time);
     Printf.printf "Time spent in prover: %f seconds\n" (Prover.querytime ());
     solution
