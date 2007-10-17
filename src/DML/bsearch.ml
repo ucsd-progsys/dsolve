@@ -18,6 +18,7 @@ qualif GENEG1(x) : 0 - 1 <= x;;
 qualif GTNEG1(x) : 0 - 1 < x;;
 qualif LT4(x) : x < 4;;
 qualif GT(x) : 0 < x;;
+(* not all needed. some are just silly *)
 
 
 let bsearch key vec =
@@ -30,8 +31,8 @@ let bsearch key vec =
 			let diff = key - x in
 			let m_plus = m + 1 in
 			let m_minus = m - 1 in
-        (if diff < 0 then look lo m_plus
-				else if 0 < diff then look m_minus hi
+        (if diff < 0 then look lo m_minus
+				else if 0 < diff then look m_plus hi
 				else if key = x then m else -1)
 			else -1
 	in
@@ -39,7 +40,10 @@ let bsearch key vec =
 	let sv_minus = sv - 1 in 
 	look 0 sv_minus
 in 
-let ar = [|1;2;3;4;5;6;7|] in
+let _none = Random.init 555 in
+let sz = Random.int 10 in
+let sz_plus = sz + 2 in
+let ar = Array.make sz_plus 0 in
 bsearch 5 ar
 ;;
 

@@ -1,4 +1,120 @@
-qualif LTs(x) : x < Array.length queenArray;;
+qualif Q_AA_LT_ARRAY_LENGTH_QUEENARRAY(_AA) : _AA < Array.length queenArray;;
+qualif Q_AA_LE_ARRAY_LENGTH_QUEENARRAY(_AA) : _AA <= Array.length queenArray;;
+qualif Q_AA_GT_ARRAY_LENGTH_QUEENARRAY(_AA) : _AA > Array.length queenArray;;
+qualif Q_AA_GE_ARRAY_LENGTH_QUEENARRAY(_AA) : _AA >= Array.length queenArray;;
+qualif Q_AA_EQ_ARRAY_LENGTH_QUEENARRAY(_AA) : _AA = Array.length queenArray;;
+qualif Q_AA_NE_ARRAY_LENGTH_QUEENARRAY(_AA) : _AA != Array.length queenArray;;
+qualif QARRAY_LENGTH__AA_LT_ARRAY_LENGTH_QUEENARRAY(_AA) : Array.length _AA < Array.length queenArray;;
+qualif QARRAY_LENGTH__AA_LE_ARRAY_LENGTH_QUEENARRAY(_AA) : Array.length _AA <= Array.length queenArray;;
+qualif QARRAY_LENGTH__AA_GT_ARRAY_LENGTH_QUEENARRAY(_AA) : Array.length _AA > Array.length queenArray;;
+qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH_QUEENARRAY(_AA) : Array.length _AA >= Array.length queenArray;;
+qualif QARRAY_LENGTH__AA_EQ_ARRAY_LENGTH_QUEENARRAY(_AA) : Array.length _AA = Array.length queenArray;;
+qualif QARRAY_LENGTH__AA_NE_ARRAY_LENGTH_QUEENARRAY(_AA) : Array.length _AA != Array.length queenArray;;
+qualif Q_AA_LT_SZ(_AA) : _AA < sz;;
+qualif Q_AA_LE_SZ(_AA) : _AA <= sz;;
+qualif Q_AA_GT_SZ(_AA) : _AA > sz;;
+qualif Q_AA_GE_SZ(_AA) : _AA >= sz;;
+qualif Q_AA_EQ_SZ(_AA) : _AA = sz;;
+qualif Q_AA_NE_SZ(_AA) : _AA != sz;;
+qualif Q_AA_LT_NEXT(_AA) : _AA < next;;
+qualif Q_AA_LE_NEXT(_AA) : _AA <= next;;
+qualif Q_AA_GT_NEXT(_AA) : _AA > next;;
+qualif Q_AA_GE_NEXT(_AA) : _AA >= next;;
+qualif Q_AA_EQ_NEXT(_AA) : _AA = next;;
+qualif Q_AA_NE_NEXT(_AA) : _AA != next;;
+qualif Q_AA_LT__2_ROW_PLUS(_AA) : _AA < _2_row_plus;;
+qualif Q_AA_LE__2_ROW_PLUS(_AA) : _AA <= _2_row_plus;;
+qualif Q_AA_GT__2_ROW_PLUS(_AA) : _AA > _2_row_plus;;
+qualif Q_AA_GE__2_ROW_PLUS(_AA) : _AA >= _2_row_plus;;
+qualif Q_AA_EQ__2_ROW_PLUS(_AA) : _AA = _2_row_plus;;
+qualif Q_AA_NE__2_ROW_PLUS(_AA) : _AA != _2_row_plus;;
+qualif Q_AA_LT__2_ROW_MINUS(_AA) : _AA < _2_row_minus;;
+qualif Q_AA_LE__2_ROW_MINUS(_AA) : _AA <= _2_row_minus;;
+qualif Q_AA_GT__2_ROW_MINUS(_AA) : _AA > _2_row_minus;;
+qualif Q_AA_GE__2_ROW_MINUS(_AA) : _AA >= _2_row_minus;;
+qualif Q_AA_EQ__2_ROW_MINUS(_AA) : _AA = _2_row_minus;;
+qualif Q_AA_NE__2_ROW_MINUS(_AA) : _AA != _2_row_minus;;
+qualif Q_AA_LT__2_I_PLUS(_AA) : _AA < _2_i_plus;;
+qualif Q_AA_LE__2_I_PLUS(_AA) : _AA <= _2_i_plus;;
+qualif Q_AA_GT__2_I_PLUS(_AA) : _AA > _2_i_plus;;
+qualif Q_AA_GE__2_I_PLUS(_AA) : _AA >= _2_i_plus;;
+qualif Q_AA_EQ__2_I_PLUS(_AA) : _AA = _2_i_plus;;
+qualif Q_AA_NE__2_I_PLUS(_AA) : _AA != _2_i_plus;;
+qualif Q_AA_LT_J_MINUS_I(_AA) : _AA < j_minus_i;;
+qualif Q_AA_LE_J_MINUS_I(_AA) : _AA <= j_minus_i;;
+qualif Q_AA_GT_J_MINUS_I(_AA) : _AA > j_minus_i;;
+qualif Q_AA_GE_J_MINUS_I(_AA) : _AA >= j_minus_i;;
+qualif Q_AA_EQ_J_MINUS_I(_AA) : _AA = j_minus_i;;
+qualif Q_AA_NE_J_MINUS_I(_AA) : _AA != j_minus_i;;
+qualif Q_AA_LT_ABSQDIFF(_AA) : _AA < absqdiff;;
+qualif Q_AA_LE_ABSQDIFF(_AA) : _AA <= absqdiff;;
+qualif Q_AA_GT_ABSQDIFF(_AA) : _AA > absqdiff;;
+qualif Q_AA_GE_ABSQDIFF(_AA) : _AA >= absqdiff;;
+qualif Q_AA_EQ_ABSQDIFF(_AA) : _AA = absqdiff;;
+qualif Q_AA_NE_ABSQDIFF(_AA) : _AA != absqdiff;;
+qualif Q_AA_LT_QDIFF(_AA) : _AA < qdiff;;
+qualif Q_AA_LE_QDIFF(_AA) : _AA <= qdiff;;
+qualif Q_AA_GT_QDIFF(_AA) : _AA > qdiff;;
+qualif Q_AA_GE_QDIFF(_AA) : _AA >= qdiff;;
+qualif Q_AA_EQ_QDIFF(_AA) : _AA = qdiff;;
+qualif Q_AA_NE_QDIFF(_AA) : _AA != qdiff;;
+qualif Q_AA_LT__1_ROW_PLUS(_AA) : _AA < _1_row_plus;;
+qualif Q_AA_LE__1_ROW_PLUS(_AA) : _AA <= _1_row_plus;;
+qualif Q_AA_GT__1_ROW_PLUS(_AA) : _AA > _1_row_plus;;
+qualif Q_AA_GE__1_ROW_PLUS(_AA) : _AA >= _1_row_plus;;
+qualif Q_AA_EQ__1_ROW_PLUS(_AA) : _AA = _1_row_plus;;
+qualif Q_AA_NE__1_ROW_PLUS(_AA) : _AA != _1_row_plus;;
+qualif Q_AA_LT__1_SIZE_MINUS_1_N(_AA) : _AA < _1_size_minus_1_n;;
+qualif Q_AA_LE__1_SIZE_MINUS_1_N(_AA) : _AA <= _1_size_minus_1_n;;
+qualif Q_AA_GT__1_SIZE_MINUS_1_N(_AA) : _AA > _1_size_minus_1_n;;
+qualif Q_AA_GE__1_SIZE_MINUS_1_N(_AA) : _AA >= _1_size_minus_1_n;;
+qualif Q_AA_EQ__1_SIZE_MINUS_1_N(_AA) : _AA = _1_size_minus_1_n;;
+qualif Q_AA_NE__1_SIZE_MINUS_1_N(_AA) : _AA != _1_size_minus_1_n;;
+qualif Q_AA_LT__1_N_MINUS(_AA) : _AA < _1_n_minus;;
+qualif Q_AA_LE__1_N_MINUS(_AA) : _AA <= _1_n_minus;;
+qualif Q_AA_GT__1_N_MINUS(_AA) : _AA > _1_n_minus;;
+qualif Q_AA_GE__1_N_MINUS(_AA) : _AA >= _1_n_minus;;
+qualif Q_AA_EQ__1_N_MINUS(_AA) : _AA = _1_n_minus;;
+qualif Q_AA_NE__1_N_MINUS(_AA) : _AA != _1_n_minus;;
+qualif Q_AA_LT__2_N_MINUS(_AA) : _AA < _2_n_minus;;
+qualif Q_AA_LE__2_N_MINUS(_AA) : _AA <= _2_n_minus;;
+qualif Q_AA_GT__2_N_MINUS(_AA) : _AA > _2_n_minus;;
+qualif Q_AA_GE__2_N_MINUS(_AA) : _AA >= _2_n_minus;;
+qualif Q_AA_EQ__2_N_MINUS(_AA) : _AA = _2_n_minus;;
+qualif Q_AA_NE__2_N_MINUS(_AA) : _AA != _2_n_minus;;
+qualif Q_AA_LT_Y(_AA) : _AA < y;;
+qualif Q_AA_LE_Y(_AA) : _AA <= y;;
+qualif Q_AA_GT_Y(_AA) : _AA > y;;
+qualif Q_AA_GE_Y(_AA) : _AA >= y;;
+qualif Q_AA_EQ_Y(_AA) : _AA = y;;
+qualif Q_AA_NE_Y(_AA) : _AA != y;;
+qualif Q_AA_LT_1(_AA) : _AA < 1;;
+qualif Q_AA_LE_1(_AA) : _AA <= 1;;
+qualif Q_AA_GT_1(_AA) : _AA > 1;;
+qualif Q_AA_GE_1(_AA) : _AA >= 1;;
+qualif Q_AA_EQ_1(_AA) : _AA = 1;;
+qualif Q_AA_NE_1(_AA) : _AA != 1;;
+qualif QARRAY_LENGTH__AA_LT_1(_AA) : Array.length _AA < 1;;
+qualif QARRAY_LENGTH__AA_LE_1(_AA) : Array.length _AA <= 1;;
+qualif QARRAY_LENGTH__AA_GT_1(_AA) : Array.length _AA > 1;;
+qualif QARRAY_LENGTH__AA_GE_1(_AA) : Array.length _AA >= 1;;
+qualif QARRAY_LENGTH__AA_EQ_1(_AA) : Array.length _AA = 1;;
+qualif QARRAY_LENGTH__AA_NE_1(_AA) : Array.length _AA != 1;;
+qualif Q_AA_LT_0(_AA) : _AA < 0;;
+qualif Q_AA_LE_0(_AA) : _AA <= 0;;
+qualif Q_AA_GT_0(_AA) : _AA > 0;;
+qualif Q_AA_GE_0(_AA) : _AA >= 0;;
+qualif Q_AA_EQ_0(_AA) : _AA = 0;;
+qualif Q_AA_NE_0(_AA) : _AA != 0;;
+qualif QARRAY_LENGTH__AA_LT_0(_AA) : Array.length _AA < 0;;
+qualif QARRAY_LENGTH__AA_LE_0(_AA) : Array.length _AA <= 0;;
+qualif QARRAY_LENGTH__AA_GT_0(_AA) : Array.length _AA > 0;;
+qualif QARRAY_LENGTH__AA_GE_0(_AA) : Array.length _AA >= 0;;
+qualif QARRAY_LENGTH__AA_EQ_0(_AA) : Array.length _AA = 0;;
+qualif QARRAY_LENGTH__AA_NE_0(_AA) : Array.length _AA != 0;;
+
+
+(*qualif LTs(x) : x < Array.length queenArray;;
 qualif LEs(x) : x <= Array.length queenArray;;
 qualif NEs(s) : -.(x = Array.length queenArray);;
 qualif LT0(x) : x < 0;;
@@ -8,10 +124,10 @@ qualif GT0(x) : 0 < x;;
 qualif GE0(x) : 0 <= x;;
 qualif BOOL(x) : (x = 0) or (x = 1);;
 qualif TRUE(x) : x = 1;;
-qualif FALSE(x) : x = 0;;
+qualif FALSE(x) : x = 0;;*)
 
-qualif TEN(x) : x = 10;;
-qualif STEN(x) : Array.length x = 10;;
+(*qualif TEN(x) : x = 10;;
+qualif STEN(x) : Array.length x = 10;;*)
 
 (* TODO: add all the printing back in *)
 
@@ -72,8 +188,11 @@ begin
         else loop _2_row
       end  
 	in loop 0
-end 
-in queen 10 ;;
+end in
+let _none = Random.init 555 in
+let sz = Random.int 10 in
+let sz_plus = sz + 1 
+in queen sz_plus ;;
 
 
 

@@ -28,8 +28,8 @@ let rec esc s oc nc =
   if next_sp = -1 then s else (String.fill s next_sp 1 nc; esc s oc nc)
 
 let single_simple_qualif x fx i =
-  let rels = ["<"; "<="; ">"; ">="; "="; "!="] in
-  let prels = ["_LT_"; "_LE_"; "_GT_"; "_GE_"; "_EQ_"; "_NE_"] in
+  let rels = ["<="; ">="; "="; "!="] in
+  let prels = ["_LE_"; "_GE_"; "_EQ_"; "_NE_"] in
   let ufx = String.uppercase fx in
   let _ = esc ufx ' ' '_' in 
   let _ = esc ufx '.' '_' in
@@ -58,11 +58,12 @@ let dump_qualifs () =
   let lbls = !labels in
   let const_qualifs = List.concat (List.map single_const_qualif consts) in
   let lfilter p b ty = 
+      let ty = Ctype.repr ty in
       b || 
       match ty with
         {desc = Tconstr(p', _, _)} ->
           Path.same p p'
-        | _ -> false
+        | t -> false
   in 
   let filter p path ts = if List.fold_left (lfilter p) false ts then Some path
                                                                 else None
