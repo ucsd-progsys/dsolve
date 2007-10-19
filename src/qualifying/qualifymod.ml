@@ -222,5 +222,7 @@ let instantiate_in_environments cstrs quals =
 let qualify_structure tenv fenv quals str =
   let (newquals, cstrs, fmap) = constrain_structure tenv fenv quals str in
   let instantiated_quals = instantiate_in_environments cstrs quals in
-  let solution = solve_constraints instantiated_quals cstrs in
-    (newquals, LocationMap.map (Frame.apply_solution solution) fmap)
+    Bstats.reset ();
+    let solution = Bstats.time "solving" (solve_constraints instantiated_quals) cstrs in
+      Bstats.print stdout "\n\nTime to solve constraints:\n";
+      (newquals, LocationMap.map (Frame.apply_solution solution) fmap)

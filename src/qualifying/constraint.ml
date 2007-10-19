@@ -136,9 +136,9 @@ let refine solution = function
   | (env, guard, r1, (subs, Frame.Qvar k2)) ->
       let envp = environment_predicate solution env in
       let p1 = Frame.refinement_predicate solution qual_test_var r1 in
-        Prover.push (Predicate.big_and [envp; guard; p1]);
+        Bstats.time "refinement query" Prover.push (Predicate.big_and [envp; guard; p1]);
         let qual_holds q =
-          if Prover.valid
+          if Bstats.time "refinement query" Prover.valid
             (Frame.refinement_predicate solution qual_test_var (subs, Frame.Qconst [q])) then
             Some q
           else
@@ -146,7 +146,7 @@ let refine solution = function
         in
         let refined_quals =
           Misc.map_filter qual_holds (try Lightenv.find k2 solution with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k2); raise Not_found)) in
-          Prover.pop();
+          Bstats.time "refinement query" Prover.pop ();
           Lightenv.add k2 refined_quals solution
   | _ -> solution
       (* With anything else, there's nothing to refine, just to check later with
@@ -219,7 +219,6 @@ let solve_constraints quals constrs =
   if !Clflags.dump_constraints then
     Oprint.print_list pprint (fun ppf -> fprintf ppf "@.@.")
       std_formatter constrs;
-  let start_time = Sys.time () in
   let cs = split constrs in
   let (wfs, refis) = divide_constraints_by_form [] [] cs in
   let init_solution = initial_solution cs quals in
@@ -233,15 +232,11 @@ let solve_constraints quals constrs =
             let wklist' =
               match sr with
                 | (_, _, _, (_, Frame.Qvar k)) ->
-                    (*Printf.printf "Found some more constraints \n";*)
                     (try VarMap.find k cstr_map with Not_found -> []) @ wklist
-                  (*is this second match case possible?*)
                 | _ -> wklist
             in solve_rec sol' wklist'
           else solve_rec sol' wklist
   in
-  let solution = solve_rec solution' refis in
-    check_satisfied solution cs;
-    Printf.printf "\nFinished solving in %f seconds\n" (Sys.time () -. start_time);
-    Printf.printf "Time spent in prover: %f seconds\n" (Prover.querytime ());
+  let solution = Bstats.time "refining" (solve_rec solution') refis in
+    Bstats.time "testing solution" (check_satisfied solution) cs;
     solution
