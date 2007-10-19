@@ -5,9 +5,15 @@ type frame_constraint =
   | SubFrame of Frame.t Lightenv.t * Predicate.t * Frame.t * Frame.t
   | WFFrame of Frame.t Lightenv.t * Frame.t
 
+type subrefinement_constraint =
+    Frame.t Lightenv.t * Predicate.t * Frame.refinement * Frame.refinement
+
+type well_formed_refinement_constraint =
+    Frame.t Lightenv.t * Frame.refinement
+
 type refinement_constraint =
-  | SubRefinement of Frame.t Lightenv.t * Predicate.t * Frame.refinement * Frame.refinement
-  | WFRefinement of Frame.t Lightenv.t * Frame.refinement
+  | SubRefinement of subrefinement_constraint
+  | WFRefinement of well_formed_refinement_constraint
 
 let pprint ppf = function
   | SubFrame (_, _, f1, f2) ->
@@ -105,14 +111,20 @@ let pprint_ref_pred ppf (solution, r) =
 
 exception Unsatisfiable
 
-let refine solution = function
-  | WFRefinement (env, (subs, Frame.Qvar k)) ->
+let rec solve_wf_constraints solution = function
+  | [] -> solution
+  | (env, (subs, Frame.Qvar k)) :: cs ->
+      let solution' = solve_wf_constraints solution cs in
       let refined_quals =
         List.filter
           (fun q -> Frame.refinement_well_formed env solution (subs, Frame.Qconst [q]))
           (try Lightenv.find k solution with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k); raise Not_found))
-      in Lightenv.add k refined_quals solution
-  | SubRefinement (env, guard, r1, (subs, Frame.Qvar k2)) ->
+      in Lightenv.add k refined_quals solution'
+  | _ :: cs -> solve_wf_constraints solution cs
+      (* Nothing to do here; we can check satisfiability later *)
+
+let refine solution = function
+  | (env, guard, r1, (subs, Frame.Qvar k2)) ->
       let envp = environment_predicate solution env in
       let p1 = Frame.refinement_predicate solution qual_test_var r1 in
         Prover.push (Predicate.big_and [envp; guard; p1]);
@@ -162,20 +174,30 @@ let check_satisfied solution cstrs =
           raise Unsatisfiable
   with Not_found -> ()
 
+let rec divide_constraints_by_form wf refi = function
+  | [] -> (wf, refi)
+  | SubRefinement r :: cs ->
+      divide_constraints_by_form wf (r :: refi) cs
+  | WFRefinement w :: cs ->
+      divide_constraints_by_form (w :: wf) refi cs
+
 let solve_constraints quals constrs =
   if !Clflags.dump_constraints then
     Oprint.print_list pprint (fun ppf -> fprintf ppf "@\n@\n"; print_flush ())
       std_formatter constrs;
+  let start_time = Sys.time () in
   let cs = split constrs in
+  let (wfs, refis) = divide_constraints_by_form [] [] cs in
+  let init_solution = initial_solution cs quals in
+  let solution' = solve_wf_constraints init_solution wfs in
   let rec solve_rec solution =
-    let solution' = List.fold_left refine solution cs in
+    let solution' = List.fold_left refine solution refis in
       if not (Lightenv.equal (=) solution' solution) then
         solve_rec solution'
       else
         solution
   in
-  let start_time = Sys.time () in
-  let solution = solve_rec (initial_solution cs quals) in
+  let solution = solve_rec solution' in
     check_satisfied solution cs;
     Printf.printf "\nFinished solving in %f seconds\n" (Sys.time () -. start_time);
     Printf.printf "Time spent in prover: %f seconds\n" (Prover.querytime ());
