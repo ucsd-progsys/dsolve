@@ -138,14 +138,11 @@ let refine solution = function
       let p1 = Frame.refinement_predicate solution qual_test_var r1 in
         Bstats.time "refinement query" Prover.push (Predicate.big_and [envp; guard; p1]);
         let qual_holds q =
-          if Bstats.time "refinement query" Prover.valid
-            (Frame.refinement_predicate solution qual_test_var (subs, Frame.Qconst [q])) then
-            Some q
-          else
-            None
+          Bstats.time "refinement query" Prover.valid
+            (Frame.refinement_predicate solution qual_test_var (subs, Frame.Qconst [q]))
         in
         let refined_quals =
-          Misc.map_filter qual_holds (try Lightenv.find k2 solution with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k2); raise Not_found)) in
+          List.filter qual_holds (try Lightenv.find k2 solution with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k2); raise Not_found)) in
           Bstats.time "refinement query" Prover.pop ();
           Lightenv.add k2 refined_quals solution
   | _ -> solution
@@ -222,7 +219,7 @@ let solve_constraints quals constrs =
   let cs = split constrs in
   let (wfs, refis) = divide_constraints_by_form [] [] cs in
   let init_solution = initial_solution cs quals in
-  let solution' = solve_wf_constraints init_solution wfs in
+  let solution' = Bstats.time "solving wfs" (solve_wf_constraints init_solution) wfs in
   let cstr_map = make_variable_constraint_map refis in
   let rec solve_rec sol = function
     | [] -> sol
@@ -232,11 +229,11 @@ let solve_constraints quals constrs =
             let wklist' =
               match sr with
                 | (_, _, _, (_, Frame.Qvar k)) ->
-                    (try VarMap.find k cstr_map with Not_found -> []) @ wklist
+                    wklist @ (try VarMap.find k cstr_map with Not_found -> [])
                 | _ -> wklist
             in solve_rec sol' wklist'
           else solve_rec sol' wklist
   in
-  let solution = Bstats.time "refining" (solve_rec solution') refis in
+  let solution = Bstats.time "refining subtypes" (solve_rec solution') refis in
     Bstats.time "testing solution" (check_satisfied solution) cs;
     solution
