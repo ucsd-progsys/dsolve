@@ -15,6 +15,15 @@ type refinement_constraint =
   | SubRefinement of subrefinement_constraint
   | WFRefinement of well_formed_refinement_constraint
 
+module VarName = struct
+  type t = Path.t
+  let compare = compare
+  let equal = (=)
+  let hash = Hashtbl.hash
+end
+
+module VarMap = Map.Make(VarName)
+
 let pprint ppf = function
   | SubFrame (_, _, f1, f2) ->
       fprintf ppf "@[%a@ <:@;<1 2>%a@]" Frame.pprint f1 Frame.pprint f2
@@ -143,6 +152,29 @@ let refine solution = function
       (* With anything else, there's nothing to refine, just to check later with
          check_satisfied *)
 
+let env_refinement_vars env =
+  let add_var _ f l =
+    match Frame.refinement_var f with
+      | None -> l
+      | Some v -> v::l
+  in Lightenv.fold add_var env []
+
+let make_variable_constraint_map cstrs =
+  let rec make_rec map = function
+    | (env, _, (_, qe), (_, Frame.Qvar k)) as c :: cs ->
+        let env_vars = env_refinement_vars env in
+        let r1_vars = match qe with
+          | Frame.Qvar k -> [k]
+          | _ -> []
+        in
+        let add_cstr mp v =
+          let new_cstrs = c :: (try VarMap.find v map with Not_found -> []) in
+            VarMap.add v new_cstrs mp
+        in List.fold_left add_cstr map (List.flatten [env_vars; r1_vars])
+    | _ :: cs -> make_rec map cs
+    | [] -> map
+  in make_rec VarMap.empty cstrs
+
 (* Form the initial solution by mapping all constrained variables to all
    qualifiers.  This was somewhat easier than adding any notion of "default"
    to Lightenv. *)
@@ -183,21 +215,29 @@ let rec divide_constraints_by_form wf refi = function
 
 let solve_constraints quals constrs =
   if !Clflags.dump_constraints then
-    Oprint.print_list pprint (fun ppf -> fprintf ppf "@\n@\n"; print_flush ())
+    Oprint.print_list pprint (fun ppf -> fprintf ppf "@.@.")
       std_formatter constrs;
   let start_time = Sys.time () in
   let cs = split constrs in
   let (wfs, refis) = divide_constraints_by_form [] [] cs in
   let init_solution = initial_solution cs quals in
   let solution' = solve_wf_constraints init_solution wfs in
-  let rec solve_rec solution =
-    let solution' = List.fold_left refine solution refis in
-      if not (Lightenv.equal (=) solution' solution) then
-        solve_rec solution'
-      else
-        solution
+  let cstr_map = make_variable_constraint_map refis in
+  let rec solve_rec sol = function
+    | [] -> sol
+    | sr :: wklist ->
+        let sol' = refine sol sr in
+          if not (Lightenv.equal (=) sol' sol) then
+            let wklist' =
+              match sr with
+                | (_, _, _, (_, Frame.Qvar k)) ->
+                    Printf.printf "Found some more constraints \n";
+                    (try VarMap.find k cstr_map with Not_found -> []) @ wklist
+                | _ -> wklist
+            in solve_rec sol' wklist'
+          else solve_rec sol' wklist
   in
-  let solution = solve_rec solution' in
+  let solution = solve_rec solution' refis in
     check_satisfied solution cs;
     Printf.printf "\nFinished solving in %f seconds\n" (Sys.time () -. start_time);
     Printf.printf "Time spent in prover: %f seconds\n" (Prover.querytime ());

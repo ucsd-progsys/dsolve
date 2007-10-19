@@ -234,6 +234,11 @@ let refinement_predicate solution qual_var (subs, qualifiers) =
   let substitute p (x, e) = Predicate.subst e x p in
     List.fold_left substitute unsubst subs
 
+let refinement_var = function
+  | Fconstr (_, _, (_, Qvar k)) ->
+      Some k
+  | _ -> None
+
 let predicate solution qual_var = function
     Fconstr(_, _, r) ->
       refinement_predicate solution qual_var r

@@ -30,6 +30,7 @@ val label_like: t -> t -> t
 val apply_solution: Qualifier.t list Lightenv.t -> t -> t
 val refinement_predicate:
   Qualifier.t list Lightenv.t -> Path.t -> refinement -> Predicate.t
+val refinement_var: t -> Path.t option
 val predicate:
   Qualifier.t list Lightenv.t -> Path.t -> t -> Predicate.t
 val refinement_well_formed:
