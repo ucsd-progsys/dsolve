@@ -71,11 +71,15 @@ let rec pprint ppf = function
 let equals(p, q) =
   Atom(p, Eq, q)
 
-let big_and cs =
-  List.fold_right (fun p q -> And(p, q)) cs True
+let big_and = function
+  | c :: cs ->
+      List.fold_left (fun p q -> And (p, q)) c cs
+  | [] -> True
 
-let big_or cs =
-  List.fold_right (fun p q -> Or(p, q)) cs (Not(True))
+let big_or = function
+  | c :: cs ->
+      List.fold_left (fun p q -> Or (p, q)) c cs
+  | [] -> Not True
 
 let rec pexp_map_vars f pexp =
   let rec map_rec = function
