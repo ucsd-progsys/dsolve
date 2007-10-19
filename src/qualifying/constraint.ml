@@ -170,7 +170,9 @@ let make_variable_constraint_map cstrs =
         let add_cstr mp v =
           let new_cstrs = c :: (try VarMap.find v map with Not_found -> []) in
             VarMap.add v new_cstrs mp
-        in List.fold_left add_cstr map (List.flatten [env_vars; r1_vars])
+        in 
+        let map' = List.fold_left add_cstr map (List.flatten [env_vars; r1_vars]) in
+        make_rec map' cs
     | _ :: cs -> make_rec map cs
     | [] -> map
   in make_rec VarMap.empty cstrs
@@ -231,8 +233,9 @@ let solve_constraints quals constrs =
             let wklist' =
               match sr with
                 | (_, _, _, (_, Frame.Qvar k)) ->
-                    Printf.printf "Found some more constraints \n";
+                    (*Printf.printf "Found some more constraints \n";*)
                     (try VarMap.find k cstr_map with Not_found -> []) @ wklist
+                  (*is this second match case possible?*)
                 | _ -> wklist
             in solve_rec sol' wklist'
           else solve_rec sol' wklist
