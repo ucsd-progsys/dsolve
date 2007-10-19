@@ -133,10 +133,13 @@ let rec solve_wf_constraints solution = function
       (* Nothing to do here; we can check satisfiability later *)
 
 let refine solution = function
-  | (env, guard, r1, (subs, Frame.Qvar k2)) ->
-      let envp = environment_predicate solution env in
-      let p1 = Frame.refinement_predicate solution qual_test_var r1 in
-        Bstats.time "refinement query" Prover.push (Predicate.big_and [envp; guard; p1]);
+  | ((_, _, _, (subs, Frame.Qvar k2)) :: _) as srs ->
+      let make_lhs (env, guard, r1, _) =
+        let envp = environment_predicate solution env in
+        let p1 = Frame.refinement_predicate solution qual_test_var r1 in
+          (Predicate.big_and [envp; guard; p1])
+      in
+        Bstats.time "refinement query" Prover.push (Predicate.big_or (List.map make_lhs srs));
         let qual_holds q =
           Bstats.time "refinement query" Prover.valid
             (Frame.refinement_predicate solution qual_test_var (subs, Frame.Qconst [q]))
@@ -223,16 +226,20 @@ let solve_constraints quals constrs =
   let cstr_map = make_variable_constraint_map refis in
   let rec solve_rec sol = function
     | [] -> sol
-    | sr :: wklist ->
-        let sol' = refine sol sr in
+    | ((_, _, _, ((_, Frame.Qvar k) as rhs)) :: rest) as wklist ->
+        (* Find all the constraints with RHSes identical to this one; they can be solved
+           in one pass by or-ing all the LHSes together, saving a few prover calls *)
+        (* pmr: of course, as implemented below, this is quite inefficient - we shouldn't be
+           searching the worklist.  OTOH, we're trying to gain on time spent in the prover, so
+           we can worry about the efficiency of this later *)
+        let (same_rhs, wklist'') = List.partition (fun (_, _, _, rhs') -> rhs = rhs') wklist in
+        let sol' = refine sol same_rhs in
+        let wklist' =
           if not (Lightenv.equal (=) sol' sol) then
-            let wklist' =
-              match sr with
-                | (_, _, _, (_, Frame.Qvar k)) ->
-                    wklist @ (try VarMap.find k cstr_map with Not_found -> [])
-                | _ -> wklist
-            in solve_rec sol' wklist'
-          else solve_rec sol' wklist
+            wklist'' @ (try VarMap.find k cstr_map with Not_found -> [])
+          else wklist''
+        in solve_rec sol' wklist'
+    | _ :: wklist -> solve_rec sol wklist
   in
   let solution = Bstats.time "refining subtypes" (solve_rec solution') refis in
     Bstats.time "testing solution" (check_satisfied solution) cs;
