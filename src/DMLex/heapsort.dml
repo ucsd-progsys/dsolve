@@ -1,6 +1,6 @@
-datatype 'a heap with nat =
+(*datatype 'a heap with nat =
   {n:nat} H(n) of int(n) * [a:nat | a <= n] int(a) * 'a array(n)
-                  (* maximum size, current size, data *)
+                  (* maximum size, current size, data *)*)
 
 fun heapify (h, i) =
     let
