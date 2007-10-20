@@ -159,20 +159,20 @@ let env_refinement_vars env =
       | Some v -> v::l
   in Lightenv.fold add_var env []
 
+let lhs_vars (env, _, (_, qe), _) =
+  let env_vars = env_refinement_vars env in
+    match qe with
+      | Frame.Qvar k -> k::env_vars
+      | _ -> env_vars
+
 let make_variable_constraint_map cstrs =
   let rec make_rec map = function
-    | (env, _, (_, qe), (_, Frame.Qvar k)) as c :: cs ->
-        let env_vars = env_refinement_vars env in
-        let r1_vars = match qe with
-          | Frame.Qvar k -> [k]
-          | _ -> []
-        in
+    | (_, _, (_, _), (_, Frame.Qvar k)) as c :: cs ->
         let add_cstr mp v =
           let new_cstrs = c :: (try VarMap.find v map with Not_found -> []) in
             VarMap.add v new_cstrs mp
         in 
-        let map' = List.fold_left add_cstr map (List.flatten [env_vars; r1_vars]) in
-        make_rec map' cs
+        let map' = List.fold_left add_cstr map (lhs_vars c) in make_rec map' cs
     | _ :: cs -> make_rec map cs
     | [] -> map
   in make_rec VarMap.empty cstrs
@@ -241,6 +241,9 @@ let solve_constraints quals constrs =
         in solve_rec sol' wklist'
     | _ :: wklist -> solve_rec sol wklist
   in
-  let solution = Bstats.time "refining subtypes" (solve_rec solution') refis in
+  (* Find the "roots" of the constraint graph - all those constraints that don't
+     have a variable in the LHS *)
+  let init_wklist = List.filter (fun c -> match lhs_vars c with [] -> true | _ -> false) refis in
+  let solution = Bstats.time "refining subtypes" (solve_rec solution') init_wklist in
     Bstats.time "testing solution" (check_satisfied solution) cs;
     solution
