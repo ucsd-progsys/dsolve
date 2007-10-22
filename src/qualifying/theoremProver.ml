@@ -52,7 +52,7 @@ module YicesProver  =
   struct
     
     type yices_instance = { 
-      c : Y.yices_context;
+      mutable c : Y.yices_context;
       t : Y.yices_type;
 			ar: Y.yices_type;
       f : Y.yices_type;
@@ -199,6 +199,7 @@ let rec fixdiv p =
       else
 	begin
 	  me.ds <- barrier :: me.ds;
+          Format.fprintf Format.std_formatter "@[Pushing %a@]@.@." Predicate.pprint p;
 	  Y.yices_push me.c;
 	  Y.yices_assert me.c 
             (let p' = fixdiv p in 
@@ -227,7 +228,9 @@ let rec fixdiv p =
 	end
 
     let reset () =
-      Misc.repeat_fn pop me.count
+      Format.fprintf Format.std_formatter "@[Resetting@]@.@.";
+      Misc.repeat_fn pop me.count;
+      me.c <- Y.yices_mk_context ()
 
     let unsat () =
       let res = Y.yices_check me.c = -1 in
