@@ -149,11 +149,21 @@ let convert_rel r =
 let convert_op o = 
   match o with Plus -> "+" | Minus -> "-" | Times -> "*" | Div -> "div"
 
+let name_substitutions =
+  [(Str.regexp_string "'", "ptick");
+   (Str.regexp_string "_", "undscore");
+  ]
+
+let convert_var_name path =
+  let name = Path.unique_name path in
+    List.fold_left (fun n (rex, rpl) -> Str.global_replace rex rpl n)
+      name name_substitutions
+
 let rec convert_exp e =
   match e with
     PInt i -> string_of_int i  (* pmr: ask Ranjit why there was an assertion here *)
-  | Var x -> Path.unique_name x 
-  | Pvar (x,i) -> Printf.sprintf "%sprime%d" (Path.unique_name x) i 
+  | Var x -> convert_var_name x
+  | Pvar (x,i) -> Printf.sprintf "%sprime%d" (convert_var_name x) i
   | Binop (e1,op,e2) -> Printf.sprintf "(%s %s %s)" (convert_op op) (convert_exp e1) (convert_exp e2)
   | FunApp (f,e) -> Printf.sprintf "(%s %s)" f (convert_exp e)
 
