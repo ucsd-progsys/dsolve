@@ -20,8 +20,7 @@ include stdlib/StdlibModules
 CAMLC=boot/ocamlrun boot/ocamlc -nostdlib -I boot
 CAMLOPT=boot/ocamlrun ./ocamlopt -nostdlib -I stdlib
 COMPFLAGS=-warn-error A $(INCLUDES)
-LINKFLAGS=-custom -I yices/lib/ -ccopt -L./yices/lib/ -cclib -loyices -cclib \
-          -lyices -cclib -lgmp -ccopt -L$(LIBDIR)
+LINKFLAGS=-custom -ccopt -L$(LIBDIR)
 
 CAMLYACC=boot/ocamlyacc
 YACCFLAGS=-v
@@ -32,7 +31,7 @@ CAMLRUN=byterun/ocamlrun
 SHELL=/bin/sh
 MKDIR=mkdir -p
 
-INCLUDES=-I utils -I parsing -I typing -I yices/lib -I qualifying -I bytecomp \
+INCLUDES=-I utils -I parsing -I typing -I qualifying -I bytecomp \
           -I asmcomp -I driver -I toplevel
 
 UTILS=utils/misc.cmo utils/tbl.cmo utils/config.cmo \
