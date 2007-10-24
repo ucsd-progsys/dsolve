@@ -17,10 +17,10 @@
 include config/Makefile
 include stdlib/StdlibModules
 
-CAMLC=boot/ocamlrun boot/ocamlc -nostdlib -I boot
+CAMLC=ocamlc -nostdlib -I boot $(LIBDIR)/unix.cma
 CAMLOPT=boot/ocamlrun ./ocamlopt -nostdlib -I stdlib
 COMPFLAGS=-warn-error A $(INCLUDES)
-LINKFLAGS=-custom -ccopt -L$(LIBDIR)
+LINKFLAGS=-I $(LIBDIR)/stublibs
 
 CAMLYACC=boot/ocamlyacc
 YACCFLAGS=-v
@@ -32,7 +32,7 @@ SHELL=/bin/sh
 MKDIR=mkdir -p
 
 INCLUDES=-I utils -I parsing -I typing -I qualifying -I bytecomp \
-          -I asmcomp -I driver -I toplevel
+         -I asmcomp -I driver -I toplevel
 
 UTILS=utils/misc.cmo utils/tbl.cmo utils/config.cmo \
   utils/clflags.cmo utils/terminfo.cmo utils/ccomp.cmo utils/warnings.cmo \
@@ -60,7 +60,7 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
 QUALIFYING=qualifying/lightenv.cmo \
   qualifying/qualifier.cmo qualifying/frame.cmo \
   qualifying/message.cmo \
-  qualifying/theoremProver.cma qualifying/builtins.cmo \
+  qualifying/theoremProver.cmo qualifying/builtins.cmo \
   qualifying/constraint.cmo qualifying/qualgen.cmo \
   qualifying/qualifymod.cmo qualifying/printqual.cmo \
   qualifying/qdebug.cmo 
@@ -680,9 +680,6 @@ utils/bstats.cmo: utils/bstats.ml utils/bstats.cmi
 
 utils/bstats.cmi: utils/bstats.mli
 	cd utils; ocamlc unix.cma bstats.mli
-
-qualifying/theoremProver.cma: qualifying/theoremProver.cmo
-	ocamlc $(COMPFLAGS) -a unix.cma qualifying/theoremProver.cmo -o qualifying/theoremProver.cma
 
 qualifying/theoremProver.cmo: qualifying/theoremProver.ml
 	ocamlc $(COMPFLAGS) unix.cma qualifying/theoremProver.ml
