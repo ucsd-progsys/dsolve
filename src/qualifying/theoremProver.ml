@@ -126,11 +126,15 @@ let channel_exn_restart s =
   M.msg_string M.Error ("ChannelException in "^s); 
   restart_simplify ()
 
+let is_substring s subs =
+  let reg = Str.regexp subs in
+  try ignore(Str.search_forward reg s 0); true
+  with Not_found -> false
+
 let rec isValid ic = 
   let line = secure_input_line ic in
-    (* pmr: damn it *)
-  (*if Misc.is_substring line "Bad input" then (M.msg_string M.Error "Simplify poisoned!"; exit 1)
-  else*) if String.contains line 'V' then true 
+  if is_substring line "Bad input" then (M.msg_string M.Error "Simplify poisoned!"; exit 1)
+  else if String.contains line 'V' then true
   else if String.contains line 'I' then false
   else isValid ic
 

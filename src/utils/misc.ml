@@ -221,10 +221,3 @@ let rec format_list_of_strings ppf (delim, ls) =
     Format.fprintf ppf "@[%s%s@\n@]" (List.hd ls) delim
   else 
     Format.fprintf ppf ""
-
-(* pmr: needs str, which we don't build right now
-let is_substring s subs =
-  let reg = Str.regexp subs in
-  try ignore(Str.search_forward reg s 0); true
-  with Not_found -> false
-*)

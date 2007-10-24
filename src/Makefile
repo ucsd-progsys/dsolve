@@ -104,7 +104,8 @@ TOPLEVEL=driver/pparse.cmo driver/errors.cmo driver/compile.cmo \
 TOPLEVELLIB=toplevel/toplevellib.cma
 TOPLEVELSTART=toplevel/topstart.cmo
 
-HOSTLIBS=$(LIBDIR)/unix.cma
+# Libraries we expect to be provided by the host ocaml environment
+HOSTLIBS=$(LIBDIR)/unix.cma $(LIBDIR)/str.cma
 
 COMPOBJS=$(HOSTLIBS) $(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(COMP) $(BYTECOMP) $(DRIVER)
 
