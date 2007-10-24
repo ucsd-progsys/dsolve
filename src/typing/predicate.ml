@@ -32,7 +32,7 @@ type t =
 
 let pprint_rel = function
     Eq -> "="
-  | Ne -> "=/="
+  | Ne -> "!="
   | Gt -> ">"
   | Ge -> ">="
   | Lt -> "<"
@@ -46,26 +46,26 @@ let rec pprint_pexpr ppf = function
   | Pvar (id, n) ->
       fprintf ppf "%s-%d" (Path.unique_name id) n
   | FunApp (f, pexp) ->
-      fprintf ppf "@[%s@ %a@]" f pprint_pexpr pexp
+      fprintf ppf "@[(%s@ %a)@]" f pprint_pexpr pexp
   | Binop (p, op, q) ->
       let opstr = match op with
         | Plus -> "+"
         | Minus -> "-"
         | Times -> "*"
 				| Div -> "/"
-      in fprintf ppf "@[%a@ %s@ %a@]" pprint_pexpr p opstr pprint_pexpr q
+      in fprintf ppf "@[(%s@ %a@ %a)@]" opstr pprint_pexpr p pprint_pexpr q
 
 let rec pprint ppf = function
   | True ->
       fprintf ppf "true"
   | Atom (p, rel, q) ->
-      fprintf ppf "@[%a@ %s@ %a@]" pprint_pexpr p (pprint_rel rel) pprint_pexpr q
+      fprintf ppf "@[(%s@ %a@ %a)@]" (pprint_rel rel) pprint_pexpr p pprint_pexpr q
   | Not p ->
-      fprintf ppf "@[not@ %a@]" pprint p
+      fprintf ppf "@[(not@ %a)@]" pprint p
   | And (p, q) ->
-      fprintf ppf "@[%a@ and@ %a@]" pprint p pprint q
+      fprintf ppf "@[(and@ %a@ %a)@]" pprint p pprint q
   | Or (p, q) ->
-      fprintf ppf "@[%a@ or@ %a@]" pprint p pprint q
+      fprintf ppf "@[(or@ %a@ %a)@]" pprint p pprint q
 
 
 let equals(p, q) =
