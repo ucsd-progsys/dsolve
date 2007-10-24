@@ -62,18 +62,18 @@ qualif Q_AA_LE_LEN(_AA) : _AA <= len;;
 qualif Q_AA_GE_LEN(_AA) : _AA >= len;;
 qualif Q_AA_EQ_LEN(_AA) : _AA = len;;
 qualif Q_AA_NE_LEN(_AA) : _AA != len;;
-qualif Q_AA_LE_BSZ'(_AA) : _AA <= bsz';;
-qualif Q_AA_GE_BSZ'(_AA) : _AA >= bsz';;
-qualif Q_AA_EQ_BSZ'(_AA) : _AA = bsz';;
-qualif Q_AA_NE_BSZ'(_AA) : _AA != bsz';;
+qualif Q_AA_LE_BSZprm(_AA) : _AA <= bszprm;;
+qualif Q_AA_GE_BSZprm(_AA) : _AA >= bszprm;;
+qualif Q_AA_EQ_BSZprm(_AA) : _AA = bszprm;;
+qualif Q_AA_NE_BSZprm(_AA) : _AA != bszprm;;
 qualif Q_AA_LE_BSZ(_AA) : _AA <= bsz;;
 qualif Q_AA_GE_BSZ(_AA) : _AA >= bsz;;
 qualif Q_AA_EQ_BSZ(_AA) : _AA = bsz;;
 qualif Q_AA_NE_BSZ(_AA) : _AA != bsz;;
-qualif Q_AA_LE_ASZ'(_AA) : _AA <= asz';;
-qualif Q_AA_GE_ASZ'(_AA) : _AA >= asz';;
-qualif Q_AA_EQ_ASZ'(_AA) : _AA = asz';;
-qualif Q_AA_NE_ASZ'(_AA) : _AA != asz';;
+qualif Q_AA_LE_ASZprm(_AA) : _AA <= aszprm;;
+qualif Q_AA_GE_ASZprm(_AA) : _AA >= aszprm;;
+qualif Q_AA_EQ_ASZprm(_AA) : _AA = aszprm;;
+qualif Q_AA_NE_ASZprm(_AA) : _AA != aszprm;;
 qualif Q_AA_LE_ASZ(_AA) : _AA <= asz;;
 qualif Q_AA_GE_ASZ(_AA) : _AA >= asz;;
 qualif Q_AA_EQ_ASZ(_AA) : _AA = asz;;
@@ -110,14 +110,14 @@ qualif Q_AA_LE_SS(_AA) : _AA <= ss;;
 qualif Q_AA_GE_SS(_AA) : _AA >= ss;;
 qualif Q_AA_EQ_SS(_AA) : _AA = ss;;
 qualif Q_AA_NE_SS(_AA) : _AA != ss;;
-qualif Q_AA_LE_J'(_AA) : _AA <= j';;
-qualif Q_AA_GE_J'(_AA) : _AA >= j';;
-qualif Q_AA_EQ_J'(_AA) : _AA = j';;
-qualif Q_AA_NE_J'(_AA) : _AA != j';;
-qualif Q_AA_LE_I'(_AA) : _AA <= i';;
-qualif Q_AA_GE_I'(_AA) : _AA >= i';;
-qualif Q_AA_EQ_I'(_AA) : _AA = i';;
-qualif Q_AA_NE_I'(_AA) : _AA != i';;
+qualif Q_AA_LE_Jprm(_AA) : _AA <= jprm;;
+qualif Q_AA_GE_Jprm(_AA) : _AA >= jprm;;
+qualif Q_AA_EQ_Jprm(_AA) : _AA = jprm;;
+qualif Q_AA_NE_Jprm(_AA) : _AA != jprm;;
+qualif Q_AA_LE_Iprm(_AA) : _AA <= iprm;;
+qualif Q_AA_GE_Iprm(_AA) : _AA >= iprm;;
+qualif Q_AA_EQ_Iprm(_AA) : _AA = iprm;;
+qualif Q_AA_NE_Iprm(_AA) : _AA != iprm;;
 qualif Q_AA_LE_J(_AA) : _AA <= j;;
 qualif Q_AA_GE_J(_AA) : _AA >= j;;
 qualif Q_AA_EQ_J(_AA) : _AA = j;;
@@ -160,9 +160,9 @@ let rec bcopy_aux src des i l j =
   else
     let n = Array.get src i in
       Array.set des j n;
-      let i' = i + 1 in
-      let j' = j + 1 in
-      bcopy_aux src des i' l j'
+      let iprm = i + 1 in
+      let jprm = j + 1 in
+      bcopy_aux src des iprm l jprm
 in
 let bcopy src des ss len ds =
   let se = ss + len in
@@ -178,12 +178,12 @@ let bcopy src des ss len ds =
 in
 let _none = Random.init 555 in
 let asz = Random.int 20 in
-let asz' = asz + 2 in
+let aszprm = asz + 2 in
 let bsz = Random.int 20 in
-let bsz' = bsz + 1 in
+let bszprm = bsz + 1 in
 let len = Random.int 30 in
-let src = Array.make asz' 1 in
-let des = Array.make bsz' 0 in
+let src = Array.make aszprm 1 in
+let des = Array.make bszprm 0 in
 bcopy src des 1 len 0;;
 
 (*let src = [|1; 2; 3|] in
