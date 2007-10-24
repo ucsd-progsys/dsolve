@@ -170,7 +170,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
             begin
             match f with
               Frame.Ftuple(f1', f2') ->
-                (f, List.append [SubFrame(env, guard, f1, f1'); SubFrame(env, guard, f2, f2')] 
+                (f, List.append [WFFrame(env, f); SubFrame(env, guard, f1, f1'); SubFrame(env, guard, f2, f2')] 
                                 c, m)
               | _ -> failwith "Text_tuple has wrong type"
             end
