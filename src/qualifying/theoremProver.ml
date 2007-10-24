@@ -151,7 +151,7 @@ let convert_op o =
 
 let rec convert_exp e =
   match e with
-    PInt i -> (assert (i >= 0); string_of_int i) 
+    PInt i -> string_of_int i  (* pmr: ask Ranjit why there was an assertion here *)
   | Var x -> Path.unique_name x 
   | Pvar (x,i) -> Printf.sprintf "%sprime%d" (Path.unique_name x) i 
   | Binop (e1,op,e2) -> Printf.sprintf "(%s %s %s)" (convert_op op) (convert_exp e1) (convert_exp e2)
