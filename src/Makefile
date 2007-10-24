@@ -59,8 +59,9 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/typemod.cmo
 
 QUALIFYING=qualifying/lightenv.cmo \
-  qualifying/qualifier.cmo qualifying/frame.cmo yices/lib/oyices.cma \
-  qualifying/theoremProver.cmo qualifying/builtins.cmo \
+  qualifying/qualifier.cmo qualifying/frame.cmo \
+  qualifying/message.cmo \
+  qualifying/theoremProver.cma qualifying/builtins.cmo \
   qualifying/constraint.cmo qualifying/qualgen.cmo \
   qualifying/qualifymod.cmo qualifying/printqual.cmo \
   qualifying/qdebug.cmo 
@@ -680,6 +681,12 @@ utils/bstats.cmo: utils/bstats.ml utils/bstats.cmi
 
 utils/bstats.cmi: utils/bstats.mli
 	cd utils; ocamlc unix.cma bstats.mli
+
+qualifying/theoremProver.cma: qualifying/theoremProver.cmo
+	ocamlc $(COMPFLAGS) -a unix.cma qualifying/theoremProver.cmo -o qualifying/theoremProver.cma
+
+qualifying/theoremProver.cmo: qualifying/theoremProver.ml
+	ocamlc $(COMPFLAGS) unix.cma qualifying/theoremProver.ml
 
 .ml.cmx:
 	$(CAMLOPT) $(COMPFLAGS) -c $<
