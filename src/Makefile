@@ -36,7 +36,7 @@ INCLUDES=-I utils -I parsing -I typing -I qualifying -I bytecomp \
 
 UTILS=utils/misc.cmo utils/tbl.cmo utils/config.cmo \
   utils/clflags.cmo utils/terminfo.cmo utils/ccomp.cmo utils/warnings.cmo \
-  utils/consistbl.cmo utils/bstats.cma
+  utils/consistbl.cmo utils/bstats.cmo
 
 OPTUTILS=$(UTILS)
 
@@ -672,17 +672,11 @@ clean::
 
 # pmr: Major hackage here - we need to link against unix.cma, which is nigh on
 # impossible without doing this
-utils/bstats.cma: utils/bstats.cmo
-	cd utils; ocamlc -a unix.cma bstats.cmo -o bstats.cma
-
 utils/bstats.cmo: utils/bstats.ml utils/bstats.cmi
-	cd utils; ocamlc unix.cma bstats.ml
-
-utils/bstats.cmi: utils/bstats.mli
-	cd utils; ocamlc unix.cma bstats.mli
+	$(CAMLC) $(COMPFLAGS) -I $(LIBDIR) -c unix.cma utils/bstats.ml
 
 qualifying/theoremProver.cmo: qualifying/theoremProver.ml
-	ocamlc $(COMPFLAGS) unix.cma qualifying/theoremProver.ml
+	$(CAMLC) $(COMPFLAGS) -I $(LIBDIR) -c unix.cma qualifying/theoremProver.ml
 
 .ml.cmx:
 	$(CAMLOPT) $(COMPFLAGS) -c $<
