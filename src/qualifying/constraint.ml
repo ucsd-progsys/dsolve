@@ -139,7 +139,6 @@ let refine solution = function
         let p1 = Frame.refinement_predicate solution qual_test_var r1 in
           (Predicate.big_and [envp; guard; p1])
       in
-        Prover.reset ();
         Bstats.time "refinement query" Prover.push (Predicate.big_or (List.map make_lhs srs));
         let qual_holds q =
           Bstats.time "refinement query" Prover.valid

@@ -17,11 +17,10 @@
 include config/Makefile
 include stdlib/StdlibModules
 
-CAMLC=boot/ocamlrun boot/ocamlc -nostdlib -I boot
+CAMLC=ocamlc -nostdlib -I boot
 CAMLOPT=boot/ocamlrun ./ocamlopt -nostdlib -I stdlib
 COMPFLAGS=-warn-error A $(INCLUDES)
-LINKFLAGS=-custom -I yices/lib/ -ccopt -L./yices/lib/ -cclib -loyices -cclib \
-          -lyices -cclib -lgmp -ccopt -L$(LIBDIR)
+LINKFLAGS=-I $(LIBDIR)/stublibs
 
 CAMLYACC=boot/ocamlyacc
 YACCFLAGS=-v
@@ -32,12 +31,12 @@ CAMLRUN=byterun/ocamlrun
 SHELL=/bin/sh
 MKDIR=mkdir -p
 
-INCLUDES=-I utils -I parsing -I typing -I yices/lib -I qualifying -I bytecomp \
-          -I asmcomp -I driver -I toplevel
+INCLUDES=-I utils -I parsing -I typing -I qualifying -I bytecomp \
+         -I asmcomp -I driver -I toplevel
 
 UTILS=utils/misc.cmo utils/tbl.cmo utils/config.cmo \
   utils/clflags.cmo utils/terminfo.cmo utils/ccomp.cmo utils/warnings.cmo \
-  utils/consistbl.cmo utils/bstats.cma
+  utils/consistbl.cmo utils/bstats.cmo
 
 OPTUTILS=$(UTILS)
 
@@ -59,7 +58,8 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/typemod.cmo
 
 QUALIFYING=qualifying/lightenv.cmo \
-  qualifying/qualifier.cmo qualifying/frame.cmo yices/lib/oyices.cma \
+  qualifying/qualifier.cmo qualifying/frame.cmo \
+  qualifying/message.cmo \
   qualifying/theoremProver.cmo qualifying/builtins.cmo \
   qualifying/constraint.cmo qualifying/qualgen.cmo \
   qualifying/qualifymod.cmo qualifying/printqual.cmo \
@@ -104,11 +104,14 @@ TOPLEVEL=driver/pparse.cmo driver/errors.cmo driver/compile.cmo \
 TOPLEVELLIB=toplevel/toplevellib.cma
 TOPLEVELSTART=toplevel/topstart.cmo
 
-COMPOBJS=$(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(COMP) $(BYTECOMP) $(DRIVER)
+# Libraries we expect to be provided by the host ocaml environment
+HOSTLIBS=$(LIBDIR)/unix.cma $(LIBDIR)/str.cma
+
+COMPOBJS=$(HOSTLIBS) $(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(COMP) $(BYTECOMP) $(DRIVER)
 
 TOPLIB=$(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(COMP) $(BYTECOMP) $(TOPLEVEL)
 
-TOPOBJS=$(TOPLEVELLIB) $(TOPLEVELSTART)
+TOPOBJS=$(HOSTLIBS) $(TOPLEVELLIB) $(TOPLEVELSTART)
 
 OPTOBJS=$(OPTUTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(COMP) $(ASMCOMP) $(OPTDRIVER)
 
@@ -672,14 +675,11 @@ clean::
 
 # pmr: Major hackage here - we need to link against unix.cma, which is nigh on
 # impossible without doing this
-utils/bstats.cma: utils/bstats.cmo
-	cd utils; ocamlc -a unix.cma bstats.cmo -o bstats.cma
-
 utils/bstats.cmo: utils/bstats.ml utils/bstats.cmi
-	cd utils; ocamlc unix.cma bstats.ml
+	$(CAMLC) $(COMPFLAGS) -I $(LIBDIR) -c unix.cma utils/bstats.ml
 
-utils/bstats.cmi: utils/bstats.mli
-	cd utils; ocamlc unix.cma bstats.mli
+qualifying/theoremProver.cmo: qualifying/theoremProver.ml
+	$(CAMLC) $(COMPFLAGS) -I $(LIBDIR) -c unix.cma qualifying/theoremProver.ml
 
 .ml.cmx:
 	$(CAMLOPT) $(COMPFLAGS) -c $<
