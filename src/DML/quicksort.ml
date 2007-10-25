@@ -6,6 +6,14 @@ qualif QARRAY_LENGTH__AA_LE_ARRAY_LENGTH_VEC(_AA) : Array.length _AA <= Array.le
 qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH_VEC(_AA) : Array.length _AA >= Array.length vec;;
 qualif QARRAY_LENGTH__AA_EQ_ARRAY_LENGTH_VEC(_AA) : Array.length _AA = Array.length vec;;
 qualif QARRAY_LENGTH__AA_NE_ARRAY_LENGTH_VEC(_AA) : Array.length _AA != Array.length vec;;
+qualif Q_AA_LE_ARRAY_LENGTH_RR(_AA) : _AA <= Array.length rr;;
+qualif Q_AA_GE_ARRAY_LENGTH_RR(_AA) : _AA >= Array.length rr;;
+qualif Q_AA_EQ_ARRAY_LENGTH_RR(_AA) : _AA = Array.length rr;;
+qualif Q_AA_NE_ARRAY_LENGTH_RR(_AA) : _AA != Array.length rr;;
+qualif QARRAY_LENGTH__AA_LE_ARRAY_LENGTH_RR(_AA) : Array.length _AA <= Array.length rr;;
+qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH_RR(_AA) : Array.length _AA >= Array.length rr;;
+qualif QARRAY_LENGTH__AA_EQ_ARRAY_LENGTH_RR(_AA) : Array.length _AA = Array.length rr;;
+qualif QARRAY_LENGTH__AA_NE_ARRAY_LENGTH_RR(_AA) : Array.length _AA != Array.length rr;;
 qualif Q_AA_LE_ARRAY_LENGTH__2_ARR(_AA) : _AA <= Array.length _2_arr;;
 qualif Q_AA_GE_ARRAY_LENGTH__2_ARR(_AA) : _AA >= Array.length _2_arr;;
 qualif Q_AA_EQ_ARRAY_LENGTH__2_ARR(_AA) : _AA = Array.length _2_arr;;
@@ -14,14 +22,6 @@ qualif QARRAY_LENGTH__AA_LE_ARRAY_LENGTH__2_ARR(_AA) : Array.length _AA <= Array
 qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH__2_ARR(_AA) : Array.length _AA >= Array.length _2_arr;;
 qualif QARRAY_LENGTH__AA_EQ_ARRAY_LENGTH__2_ARR(_AA) : Array.length _AA = Array.length _2_arr;;
 qualif QARRAY_LENGTH__AA_NE_ARRAY_LENGTH__2_ARR(_AA) : Array.length _AA != Array.length _2_arr;;
-qualif Q_AA_LE_ARRAY_LENGTH__1_VEC(_AA) : _AA <= Array.length _1_vec;;
-qualif Q_AA_GE_ARRAY_LENGTH__1_VEC(_AA) : _AA >= Array.length _1_vec;;
-qualif Q_AA_EQ_ARRAY_LENGTH__1_VEC(_AA) : _AA = Array.length _1_vec;;
-qualif Q_AA_NE_ARRAY_LENGTH__1_VEC(_AA) : _AA != Array.length _1_vec;;
-qualif QARRAY_LENGTH__AA_LE_ARRAY_LENGTH__1_VEC(_AA) : Array.length _AA <= Array.length _1_vec;;
-qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH__1_VEC(_AA) : Array.length _AA >= Array.length _1_vec;;
-qualif QARRAY_LENGTH__AA_EQ_ARRAY_LENGTH__1_VEC(_AA) : Array.length _AA = Array.length _1_vec;;
-qualif QARRAY_LENGTH__AA_NE_ARRAY_LENGTH__1_VEC(_AA) : Array.length _AA != Array.length _1_vec;;
 qualif Q_AA_LE_ARRAY_LENGTH__1_ARR(_AA) : _AA <= Array.length _1_arr;;
 qualif Q_AA_GE_ARRAY_LENGTH__1_ARR(_AA) : _AA >= Array.length _1_arr;;
 qualif Q_AA_EQ_ARRAY_LENGTH__1_ARR(_AA) : _AA = Array.length _1_arr;;
@@ -30,6 +30,18 @@ qualif QARRAY_LENGTH__AA_LE_ARRAY_LENGTH__1_ARR(_AA) : Array.length _AA <= Array
 qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH__1_ARR(_AA) : Array.length _AA >= Array.length _1_arr;;
 qualif QARRAY_LENGTH__AA_EQ_ARRAY_LENGTH__1_ARR(_AA) : Array.length _AA = Array.length _1_arr;;
 qualif QARRAY_LENGTH__AA_NE_ARRAY_LENGTH__1_ARR(_AA) : Array.length _AA != Array.length _1_arr;;
+qualif Q_AA_LE_P(_AA) : _AA <= p;;
+qualif Q_AA_GE_P(_AA) : _AA >= p;;
+qualif Q_AA_EQ_P(_AA) : _AA = p;;
+qualif Q_AA_NE_P(_AA) : _AA != p;;
+qualif Q_AA_LE_I'(_AA) : _AA <= i';;
+qualif Q_AA_GE_I'(_AA) : _AA >= i';;
+qualif Q_AA_EQ_I'(_AA) : _AA = i';;
+qualif Q_AA_NE_I'(_AA) : _AA != i';;
+qualif Q_AA_LE_I(_AA) : _AA <= i;;
+qualif Q_AA_GE_I(_AA) : _AA >= i;;
+qualif Q_AA_EQ_I(_AA) : _AA = i;;
+qualif Q_AA_NE_I(_AA) : _AA != i;;
 qualif Q_AA_LE_K_PLUS(_AA) : _AA <= k_plus;;
 qualif Q_AA_GE_K_PLUS(_AA) : _AA >= k_plus;;
 qualif Q_AA_EQ_K_PLUS(_AA) : _AA = k_plus;;
@@ -42,14 +54,14 @@ qualif Q_AA_LE_LEN(_AA) : _AA <= len;;
 qualif Q_AA_GE_LEN(_AA) : _AA >= len;;
 qualif Q_AA_EQ_LEN(_AA) : _AA = len;;
 qualif Q_AA_NE_LEN(_AA) : _AA != len;;
-qualif Q_AA_LE__7_PN_MINUS_N''(_AA) : _AA <= _7_pn_minus_n'';;
-qualif Q_AA_GE__7_PN_MINUS_N''(_AA) : _AA >= _7_pn_minus_n'';;
-qualif Q_AA_EQ__7_PN_MINUS_N''(_AA) : _AA = _7_pn_minus_n'';;
-qualif Q_AA_NE__7_PN_MINUS_N''(_AA) : _AA != _7_pn_minus_n'';;
-qualif Q_AA_LE_N''(_AA) : _AA <= n'';;
-qualif Q_AA_GE_N''(_AA) : _AA >= n'';;
-qualif Q_AA_EQ_N''(_AA) : _AA = n'';;
-qualif Q_AA_NE_N''(_AA) : _AA != n'';;
+qualif Q_AA_LE__7_PN_MINUS_N'(_AA) : _AA <= _7_pn_minus_n';;
+qualif Q_AA_GE__7_PN_MINUS_N'(_AA) : _AA >= _7_pn_minus_n';;
+qualif Q_AA_EQ__7_PN_MINUS_N'(_AA) : _AA = _7_pn_minus_n';;
+qualif Q_AA_NE__7_PN_MINUS_N'(_AA) : _AA != _7_pn_minus_n';;
+qualif Q_AA_LE_N'(_AA) : _AA <= n';;
+qualif Q_AA_GE_N'(_AA) : _AA >= n';;
+qualif Q_AA_EQ_N'(_AA) : _AA = n';;
+qualif Q_AA_NE_N'(_AA) : _AA != n';;
 qualif Q_AA_LE_N'(_AA) : _AA <= n';;
 qualif Q_AA_GE_N'(_AA) : _AA >= n';;
 qualif Q_AA_EQ_N'(_AA) : _AA = n';;
@@ -270,6 +282,10 @@ qualif Q_AA_LE__6_P1(_AA) : _AA <= _6_p1;;
 qualif Q_AA_GE__6_P1(_AA) : _AA >= _6_p1;;
 qualif Q_AA_EQ__6_P1(_AA) : _AA = _6_p1;;
 qualif Q_AA_NE__6_P1(_AA) : _AA != _6_p1;;
+qualif Q_AA_LE__6_A_PLUS_N_DIV(_AA) : _AA <= _6_a_plus_n_div;;
+qualif Q_AA_GE__6_A_PLUS_N_DIV(_AA) : _AA >= _6_a_plus_n_div;;
+qualif Q_AA_EQ__6_A_PLUS_N_DIV(_AA) : _AA = _6_a_plus_n_div;;
+qualif Q_AA_NE__6_A_PLUS_N_DIV(_AA) : _AA != _6_a_plus_n_div;;
 qualif Q_AA_LE__6_A_PLUS_N(_AA) : _AA <= _6_a_plus_n;;
 qualif Q_AA_GE__6_A_PLUS_N(_AA) : _AA >= _6_a_plus_n;;
 qualif Q_AA_EQ__6_A_PLUS_N(_AA) : _AA = _6_a_plus_n;;
@@ -326,110 +342,50 @@ qualif Q_AA_LE__2_START(_AA) : _AA <= _2_start;;
 qualif Q_AA_GE__2_START(_AA) : _AA >= _2_start;;
 qualif Q_AA_EQ__2_START(_AA) : _AA = _2_start;;
 qualif Q_AA_NE__2_START(_AA) : _AA != _2_start;;
-qualif Q_AA_LE__3_N_MINUS(_AA) : _AA <= _3_n_minus;;
-qualif Q_AA_GE__3_N_MINUS(_AA) : _AA >= _3_n_minus;;
-qualif Q_AA_EQ__3_N_MINUS(_AA) : _AA = _3_n_minus;;
-qualif Q_AA_NE__3_N_MINUS(_AA) : _AA != _3_n_minus;;
-qualif Q_AA_LE__3_J_PLUS(_AA) : _AA <= _3_j_plus;;
-qualif Q_AA_GE__3_J_PLUS(_AA) : _AA >= _3_j_plus;;
-qualif Q_AA_EQ__3_J_PLUS(_AA) : _AA = _3_j_plus;;
-qualif Q_AA_NE__3_J_PLUS(_AA) : _AA != _3_j_plus;;
-qualif Q_AA_LE__3_I_PLUS(_AA) : _AA <= _3_i_plus;;
-qualif Q_AA_GE__3_I_PLUS(_AA) : _AA >= _3_i_plus;;
-qualif Q_AA_EQ__3_I_PLUS(_AA) : _AA = _3_i_plus;;
-qualif Q_AA_NE__3_I_PLUS(_AA) : _AA != _3_i_plus;;
-qualif Q_AA_LE__3_N(_AA) : _AA <= _3_n;;
-qualif Q_AA_GE__3_N(_AA) : _AA >= _3_n;;
-qualif Q_AA_EQ__3_N(_AA) : _AA = _3_n;;
-qualif Q_AA_NE__3_N(_AA) : _AA != _3_n;;
-qualif Q_AA_LE__3_J(_AA) : _AA <= _3_j;;
-qualif Q_AA_GE__3_J(_AA) : _AA >= _3_j;;
-qualif Q_AA_EQ__3_J(_AA) : _AA = _3_j;;
-qualif Q_AA_NE__3_J(_AA) : _AA != _3_j;;
-qualif Q_AA_LE__3_I(_AA) : _AA <= _3_i;;
-qualif Q_AA_GE__3_I(_AA) : _AA >= _3_i;;
-qualif Q_AA_EQ__3_I(_AA) : _AA = _3_i;;
-qualif Q_AA_NE__3_I(_AA) : _AA != _3_i;;
-qualif Q_AA_LE__2_J(_AA) : _AA <= _2_j;;
-qualif Q_AA_GE__2_J(_AA) : _AA >= _2_j;;
-qualif Q_AA_EQ__2_J(_AA) : _AA = _2_j;;
-qualif Q_AA_NE__2_J(_AA) : _AA != _2_j;;
-qualif Q_AA_LE__2_I(_AA) : _AA <= _2_i;;
-qualif Q_AA_GE__2_I(_AA) : _AA >= _2_i;;
-qualif Q_AA_EQ__2_I(_AA) : _AA = _2_i;;
-qualif Q_AA_NE__2_I(_AA) : _AA != _2_i;;
-qualif Q_AA_LE__1_I(_AA) : _AA <= _1_i;;
-qualif Q_AA_GE__1_I(_AA) : _AA >= _1_i;;
-qualif Q_AA_EQ__1_I(_AA) : _AA = _1_i;;
-qualif Q_AA_NE__1_I(_AA) : _AA != _1_i;;
-qualif Q_AA_LE__1_N(_AA) : _AA <= _1_n;;
-qualif Q_AA_GE__1_N(_AA) : _AA >= _1_n;;
-qualif Q_AA_EQ__1_N(_AA) : _AA = _1_n;;
-qualif Q_AA_NE__1_N(_AA) : _AA != _1_n;;
-qualif Q_AA_LE__1_START(_AA) : _AA <= _1_start;;
-qualif Q_AA_GE__1_START(_AA) : _AA >= _1_start;;
-qualif Q_AA_EQ__1_START(_AA) : _AA = _1_start;;
-qualif Q_AA_NE__1_START(_AA) : _AA != _1_start;;
-qualif Q_AA_LE__1_N_PLUS(_AA) : _AA <= _1_n_plus;;
-qualif Q_AA_GE__1_N_PLUS(_AA) : _AA >= _1_n_plus;;
-qualif Q_AA_EQ__1_N_PLUS(_AA) : _AA = _1_n_plus;;
-qualif Q_AA_NE__1_N_PLUS(_AA) : _AA != _1_n_plus;;
-qualif Q_AA_LE__1_N(_AA) : _AA <= _1_n;;
-qualif Q_AA_GE__1_N(_AA) : _AA >= _1_n;;
-qualif Q_AA_EQ__1_N(_AA) : _AA = _1_n;;
-qualif Q_AA_NE__1_N(_AA) : _AA != _1_n;;
-qualif Q_AA_LE__1_M(_AA) : _AA <= _1_m;;
-qualif Q_AA_GE__1_M(_AA) : _AA >= _1_m;;
-qualif Q_AA_EQ__1_M(_AA) : _AA = _1_m;;
-qualif Q_AA_NE__1_M(_AA) : _AA != _1_m;;
-qualif Q_AA_LE_4(_AA) : _AA <= 4;;
-qualif Q_AA_GE_4(_AA) : _AA >= 4;;
-qualif Q_AA_EQ_4(_AA) : _AA = 4;;
-qualif Q_AA_NE_4(_AA) : _AA != 4;;
-qualif QARRAY_LENGTH__AA_LE_4(_AA) : Array.length _AA <= 4;;
-qualif QARRAY_LENGTH__AA_GE_4(_AA) : Array.length _AA >= 4;;
-qualif QARRAY_LENGTH__AA_EQ_4(_AA) : Array.length _AA = 4;;
-qualif QARRAY_LENGTH__AA_NE_4(_AA) : Array.length _AA != 4;;
-qualif Q_AA_LE_6(_AA) : _AA <= 6;;
-qualif Q_AA_GE_6(_AA) : _AA >= 6;;
-qualif Q_AA_EQ_6(_AA) : _AA = 6;;
-qualif Q_AA_NE_6(_AA) : _AA != 6;;
-qualif QARRAY_LENGTH__AA_LE_6(_AA) : Array.length _AA <= 6;;
-qualif QARRAY_LENGTH__AA_GE_6(_AA) : Array.length _AA >= 6;;
-qualif QARRAY_LENGTH__AA_EQ_6(_AA) : Array.length _AA = 6;;
-qualif QARRAY_LENGTH__AA_NE_6(_AA) : Array.length _AA != 6;;
-qualif Q_AA_LE_3(_AA) : _AA <= 3;;
-qualif Q_AA_GE_3(_AA) : _AA >= 3;;
-qualif Q_AA_EQ_3(_AA) : _AA = 3;;
-qualif Q_AA_NE_3(_AA) : _AA != 3;;
-qualif QARRAY_LENGTH__AA_LE_3(_AA) : Array.length _AA <= 3;;
-qualif QARRAY_LENGTH__AA_GE_3(_AA) : Array.length _AA >= 3;;
-qualif QARRAY_LENGTH__AA_EQ_3(_AA) : Array.length _AA = 3;;
-qualif QARRAY_LENGTH__AA_NE_3(_AA) : Array.length _AA != 3;;
-qualif Q_AA_LE_5(_AA) : _AA <= 5;;
-qualif Q_AA_GE_5(_AA) : _AA >= 5;;
-qualif Q_AA_EQ_5(_AA) : _AA = 5;;
-qualif Q_AA_NE_5(_AA) : _AA != 5;;
-qualif QARRAY_LENGTH__AA_LE_5(_AA) : Array.length _AA <= 5;;
-qualif QARRAY_LENGTH__AA_GE_5(_AA) : Array.length _AA >= 5;;
-qualif QARRAY_LENGTH__AA_EQ_5(_AA) : Array.length _AA = 5;;
-qualif QARRAY_LENGTH__AA_NE_5(_AA) : Array.length _AA != 5;;
-qualif Q_AA_LE_41(_AA) : _AA <= 41;;
-qualif Q_AA_GE_41(_AA) : _AA >= 41;;
-qualif Q_AA_EQ_41(_AA) : _AA = 41;;
-qualif Q_AA_NE_41(_AA) : _AA != 41;;
-qualif QARRAY_LENGTH__AA_LE_41(_AA) : Array.length _AA <= 41;;
-qualif QARRAY_LENGTH__AA_GE_41(_AA) : Array.length _AA >= 41;;
-qualif QARRAY_LENGTH__AA_EQ_41(_AA) : Array.length _AA = 41;;
-qualif QARRAY_LENGTH__AA_NE_41(_AA) : Array.length _AA != 41;;
-qualif Q_AA_LE_2(_AA) : _AA <= 2;;
-qualif Q_AA_GE_2(_AA) : _AA >= 2;;
-qualif Q_AA_EQ_2(_AA) : _AA = 2;;
-qualif Q_AA_NE_2(_AA) : _AA != 2;;
-qualif QARRAY_LENGTH__AA_LE_2(_AA) : Array.length _AA <= 2;;
-qualif QARRAY_LENGTH__AA_GE_2(_AA) : Array.length _AA >= 2;;
-qualif QARRAY_LENGTH__AA_EQ_2(_AA) : Array.length _AA = 2;;
-qualif QARRAY_LENGTH__AA_NE_2(_AA) : Array.length _AA != 2;;
+qualif Q_AA_LE_N_MINUS(_AA) : _AA <= n_minus;;
+qualif Q_AA_GE_N_MINUS(_AA) : _AA >= n_minus;;
+qualif Q_AA_EQ_N_MINUS(_AA) : _AA = n_minus;;
+qualif Q_AA_NE_N_MINUS(_AA) : _AA != n_minus;;
+qualif Q_AA_LE_J_PLUS(_AA) : _AA <= j_plus;;
+qualif Q_AA_GE_J_PLUS(_AA) : _AA >= j_plus;;
+qualif Q_AA_EQ_J_PLUS(_AA) : _AA = j_plus;;
+qualif Q_AA_NE_J_PLUS(_AA) : _AA != j_plus;;
+qualif Q_AA_LE_I_PLUS(_AA) : _AA <= i_plus;;
+qualif Q_AA_GE_I_PLUS(_AA) : _AA >= i_plus;;
+qualif Q_AA_EQ_I_PLUS(_AA) : _AA = i_plus;;
+qualif Q_AA_NE_I_PLUS(_AA) : _AA != i_plus;;
+qualif Q_AA_LE_N(_AA) : _AA <= n;;
+qualif Q_AA_GE_N(_AA) : _AA >= n;;
+qualif Q_AA_EQ_N(_AA) : _AA = n;;
+qualif Q_AA_NE_N(_AA) : _AA != n;;
+qualif Q_AA_LE_J(_AA) : _AA <= j;;
+qualif Q_AA_GE_J(_AA) : _AA >= j;;
+qualif Q_AA_EQ_J(_AA) : _AA = j;;
+qualif Q_AA_NE_J(_AA) : _AA != j;;
+qualif Q_AA_LE_I(_AA) : _AA <= i;;
+qualif Q_AA_GE_I(_AA) : _AA >= i;;
+qualif Q_AA_EQ_I(_AA) : _AA = i;;
+qualif Q_AA_NE_I(_AA) : _AA != i;;
+qualif Q_AA_LE_J(_AA) : _AA <= j;;
+qualif Q_AA_GE_J(_AA) : _AA >= j;;
+qualif Q_AA_EQ_J(_AA) : _AA = j;;
+qualif Q_AA_NE_J(_AA) : _AA != j;;
+qualif Q_AA_LE_I(_AA) : _AA <= i;;
+qualif Q_AA_GE_I(_AA) : _AA >= i;;
+qualif Q_AA_EQ_I(_AA) : _AA = i;;
+qualif Q_AA_NE_I(_AA) : _AA != i;;
+qualif Q_AA_LE_I(_AA) : _AA <= i;;
+qualif Q_AA_GE_I(_AA) : _AA >= i;;
+qualif Q_AA_EQ_I(_AA) : _AA = i;;
+qualif Q_AA_NE_I(_AA) : _AA != i;;
+qualif Q_AA_LE_N(_AA) : _AA <= n;;
+qualif Q_AA_GE_N(_AA) : _AA >= n;;
+qualif Q_AA_EQ_N(_AA) : _AA = n;;
+qualif Q_AA_NE_N(_AA) : _AA != n;;
+qualif Q_AA_LE_START(_AA) : _AA <= start;;
+qualif Q_AA_GE_START(_AA) : _AA >= start;;
+qualif Q_AA_EQ_START(_AA) : _AA = start;;
+qualif Q_AA_NE_START(_AA) : _AA != start;;
 qualif Q_AA_LE_8(_AA) : _AA <= 8;;
 qualif Q_AA_GE_8(_AA) : _AA >= 8;;
 qualif Q_AA_EQ_8(_AA) : _AA = 8;;
@@ -438,6 +394,22 @@ qualif QARRAY_LENGTH__AA_LE_8(_AA) : Array.length _AA <= 8;;
 qualif QARRAY_LENGTH__AA_GE_8(_AA) : Array.length _AA >= 8;;
 qualif QARRAY_LENGTH__AA_EQ_8(_AA) : Array.length _AA = 8;;
 qualif QARRAY_LENGTH__AA_NE_8(_AA) : Array.length _AA != 8;;
+qualif Q_AA_LE_7(_AA) : _AA <= 7;;
+qualif Q_AA_GE_7(_AA) : _AA >= 7;;
+qualif Q_AA_EQ_7(_AA) : _AA = 7;;
+qualif Q_AA_NE_7(_AA) : _AA != 7;;
+qualif QARRAY_LENGTH__AA_LE_7(_AA) : Array.length _AA <= 7;;
+qualif QARRAY_LENGTH__AA_GE_7(_AA) : Array.length _AA >= 7;;
+qualif QARRAY_LENGTH__AA_EQ_7(_AA) : Array.length _AA = 7;;
+qualif QARRAY_LENGTH__AA_NE_7(_AA) : Array.length _AA != 7;;
+qualif Q_AA_LE_2(_AA) : _AA <= 2;;
+qualif Q_AA_GE_2(_AA) : _AA >= 2;;
+qualif Q_AA_EQ_2(_AA) : _AA = 2;;
+qualif Q_AA_NE_2(_AA) : _AA != 2;;
+qualif QARRAY_LENGTH__AA_LE_2(_AA) : Array.length _AA <= 2;;
+qualif QARRAY_LENGTH__AA_GE_2(_AA) : Array.length _AA >= 2;;
+qualif QARRAY_LENGTH__AA_EQ_2(_AA) : Array.length _AA = 2;;
+qualif QARRAY_LENGTH__AA_NE_2(_AA) : Array.length _AA != 2;;
 qualif Q_AA_LE_0(_AA) : _AA <= 0;;
 qualif Q_AA_GE_0(_AA) : _AA >= 0;;
 qualif Q_AA_EQ_0(_AA) : _AA = 0;;
@@ -461,25 +433,25 @@ qualif QARRAY_LENGTH__AA_NE_1(_AA) : Array.length _AA != 1;;
  * The code is copied from SML/NJ lib with some modification.
  *)
 
-let min _1_m _1_n = 
-	let _1_n_plus = _1_n + 1 in 
-	if _1_m < _1_n_plus then _1_m else _1_n
+let min m n = 
+	if m <= n  then m else n
 in 
-let sortRange _1_arr _1_start _1_n =
-  let item _1_i = Array.get _1_arr _1_i in
-  let swap _2_i _2_j =
-	let i_2_j = item _2_j in
-    let tmp = item _2_i in (Array.set _1_arr _2_i i_2_j; Array.set _1_arr _2_j tmp)
+let rec sortRange _1_arr start n =
+  let item i = Array.get _1_arr i in
+  let swap i j =
+	let ij = item j in
+    let tmp = item i in 
+    (Array.set _1_arr i ij; Array.set _1_arr j tmp)
   in
-  let rec vecswap _3_i _3_j _3_n = 
-		let _3_i_plus = _3_i + 1 in
-		let _3_j_plus = _3_j + 1 in
-		let _3_n_minus = _3_n - 1 in
-		if _3_n = 0 then () else begin swap _3_i _3_j; vecswap _3_i_plus _3_j_plus _3_n_minus end
+  let rec vecswap i j n = 
+		let i_plus = i + 1 in
+		let j_plus = j + 1 in
+		let n_minus = n - 1 in
+		if n = 0 then () else (swap i j; vecswap i_plus j_plus n_minus) 
   in 
 
   (* insertSort is called if there are less than 8 elements to be sorted *)
-  (*let insertSort _2_start _4_n =
+  let insertSort _2_start _4_n =
     let limit = _2_start + _4_n in
 		let _2_start_plus = _2_start + 1 in
     let rec outer _4_i =
@@ -495,7 +467,7 @@ let sortRange _1_arr _1_start _1_n =
 										outer _4_i_plus
            in inner _4_i
     in outer _2_start_plus
-  in *)
+  in 
 
   (* calculate the median of three *)
   let med3 _5_a _5_b _5_c =
@@ -517,11 +489,12 @@ let sortRange _1_arr _1_start _1_n =
   (* generate the pivot for splitting the elements *)
   let getPivot _6_a _6_n =
 		let _6_a_plus_n = _6_a + _6_n in
-    if _6_n < 8 then _6_a_plus_n / 2
+    let _6_a_plus_n_div = _6_a_plus_n / 2 in
+    if _6_n <= 7 then _6_a_plus_n_div 
     else let _6_p1 = _6_a in
-				 let _6_pm = _6_a_plus_n / 2 in
+				 let _6_pm = _6_a_plus_n_div in
 				 let _6_pn = _6_a_plus_n - 1 in
-       	 if _6_n < 41 then med3 _6_p1 _6_pm _6_pn else
+       	 if _6_n <= 40 then med3 _6_p1 _6_pm _6_pn else
       		 let _6_d = _6_n / 8 in
 					 let _2_6_d = 2 * _6_d in
 					 let _6_p1_plus_d = _6_p1 + _6_d in
@@ -537,7 +510,6 @@ let sortRange _1_arr _1_start _1_n =
 	in	
 
   let rec quickSort _7_a _7_n =
-		let _7_arg = (_7_a, _7_n) in
     let rec bottom _8_limit _8_pa _8_pb = 
 			let _8_arg = (_8_pa, _8_pb) in
       if _8_limit < _8_pb then _8_arg else
@@ -546,19 +518,19 @@ let sortRange _1_arr _1_start _1_n =
 			if _7_ia < _8_ipb then _8_arg else
 				let _8_pb_plus = _8_pb + 1 in
 				let _8_pa_plus = _8_pa + 1 in
-				if _7_ia < _8_ipb then bottom _8_limit _8_pa _8_pb_plus else
-						(swap _7_a _7_n; bottom _8_limit _8_pa_plus _8_pb_plus)
+				if _8_ipb < _7_ia then bottom _8_limit _8_pa _8_pb_plus else
+						(swap _8_pa _8_pb; bottom _8_limit _8_pa_plus _8_pb_plus)
 		in 
     let rec top _9_limit _9_pc _9_pd = 
 			let _9_arg = (_9_pc, _9_pd) in
+      if _9_pc < _9_limit then _9_arg else
 			let _9_ipc = item _9_pc in
 			let _7_ia = item _7_a in
 			let _9_pc_minus = _9_pc - 1 in
 			let _9_pd_minus = _9_pd - 1 in
-      if _9_pc < _9_limit then _9_arg else
       if _9_ipc < _7_ia then _9_arg else
 			if _7_ia < _9_ipc then top _9_limit _9_pc_minus _9_pd else
-			(swap _7_a _7_n; top _9_limit _9_pc_minus _9_pd_minus) 
+			(swap _9_pc _9_pd; top _9_limit _9_pc_minus _9_pd_minus) 
     in 
     let rec split _10_pa _10_pb _10_pc _10_pd =
 			let _10_bot = bottom _10_pc _10_pa _10_pb in
@@ -567,16 +539,19 @@ let sortRange _1_arr _1_start _1_n =
 			let _10_top = top _10_pb _10_pc _10_pd in
 			let new_10_pc = fst _10_top in
 			let new_10_pd = snd _10_top in
+      let tmp1 = (new_10_pc, new_10_pd) in
+      let tmp2 = (new_10_pb, tmp1) in
+			let _10_arg = (new_10_pa, tmp2) in
+      if new_10_pc <= new_10_pb then _10_arg
+      else 
 			let new_10_pb_plus = new_10_pb + 1 in
 			let new_10_pc_minus = new_10_pc - 1 in
-			let _10_arg = (new_10_pa, (new_10_pb, (new_10_pc, new_10_pd))) in
-      if new_10_pc < new_10_pb+1 then _10_arg
-      else begin swap new_10_pb new_10_pc; 
-								 split new_10_pa new_10_pb_plus new_10_pc_minus new_10_pd end
+      (swap new_10_pb new_10_pc; 
+								 split new_10_pa new_10_pb_plus new_10_pc_minus new_10_pd) 
  	  in 
 
     let _7_pm = getPivot _7_a _7_n in
-    let __7_none = swap _7_a _7_pm in
+    let _none = swap _7_a _7_pm in
     let _7_a_plus = _7_a + 1 in
     let _7_a_plus_7_n = _7_a + _7_n in
 		let _7_a_plus_7_n_minus = _7_a_plus_7_n - 1 in
@@ -603,30 +578,32 @@ let sortRange _1_arr _1_start _1_n =
 		let _7_pn_minus_7_pd = _7_pn - _7_pd in
 		let _7_pn_minus_7_pd_minus = _7_pn_minus_7_pd - 1 in
 
-    let r' = min _7_pn_minus_7_pd _7_pn_minus_7_pd_minus in
+    let r' = min _7_pd_minus_7_pc _7_pn_minus_7_pd_minus in
 
 		let _7_pn_minus_r' = _7_pn - r' in  
 
     let __9_none = vecswap _7_pb _7_pn_minus_r' r' in
     let n' = _7_pb - _7_pa in
 
-    let __10_none = if 1 < n' then (*sorting*) quickSort _7_a n' else () in
-    let n'' = _7_pd - _7_pc in
-		let _7_pn_minus_n'' = _7_pn - n'' in
-    let __11_none = if 1 < n' then (*sorting*) quickSort _7_pn_minus_n'' n'' else () in ()
+    (*let __10_none = if 1 < n' then if n' > 7 then quickSort _7_a n' else insertSort _7_a n' else () in*)
+    let _none = if 1 < n' then sortRange _1_arr _7_a n' else () in
+    let n' = _7_pd - _7_pc in
+		let _7_pn_minus_n' = _7_pn - n' in
+    (*let __11_none = if 1 < n'' then if n'' > 7 then quickSort _7_pn_minus_n'' n'' else insertSort _7_a n'' else () in ()*)
+    let _none = if 1 < n' then sortRange _1_arr _7_pn_minus_n' n' else () in ()
 	in	
 
   (*let sorting _3_start _11_n = if _11_n < 7 then insertSort _3_start _11_n else quickSort _3_start _11_n
   in*) 
-  (*sorting _1_start _1_n*) 
-  quickSort _1_start _1_n
+  (*sorting start n*) 
+  if n <= 7 then insertSort start n else quickSort start n
 (* withtype {start:nat}{n:nat | start+n <= size }
          'a vect(size) * int(start) * int(n) * ('a * 'a -> order) -> unit *)
 in 
-let qs _1_vec =
-  sortRange _1_vec 0 (Array.length _1_vec) 
+(*let qs _1_vec =
+  sortRange _1_vec 0 (Array.length _1_vec) *)
 (*withtype {size:nat} 'a vect(size) -> unit*)
-in 
+(*in*) 
 
 (* sorted checks if a list is well-sorted *)
 let
@@ -637,13 +614,28 @@ sorted _2_arr =
     let v' = Array.get _2_arr k  in
 			if v' < v then false else if k_plus = len then true else s v' k_plus
 	in
-		if len < 2 then true else 
+		if len <= 1  then true else 
 			let get_0 = Array.get _2_arr 0 in
 			s get_0 1 
 in 
-let vec = [|7;5;3;1;8;6;4;2|] 
-in 
-	sortRange vec 0 7
+let gen_vec rr =
+    let rec fill_arr i = 
+        let len = Array.length rr in
+        if i < len then 
+          let fill _none = Random.int 1000 in
+          let i' = i + 1 in
+          Array.set rr i (fill ()); fill_arr i' 
+        else ()
+    in fill_arr 0
+in
+let _none = Random.self_init ()in
+let p = Random.int 20 in
+let p = p + 1 in
+let vec = Array.make p 0 in
+let _none = gen_vec vec in
+(*let vec = [|9;8;7;16;6;5;32;4;3;2;1|] in
+let p = 11 in*)
+	sortRange vec 0 p; sorted vec 
 ;; 
 
 

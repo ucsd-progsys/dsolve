@@ -1,4 +1,109 @@
-fun dp (a, b) =
+qualif Q_AA_LE_ARRAY_LENGTH_B(_AA) : _AA <= Array.length b;;
+qualif Q_AA_GE_ARRAY_LENGTH_B(_AA) : _AA >= Array.length b;;
+qualif Q_AA_EQ_ARRAY_LENGTH_B(_AA) : _AA = Array.length b;;
+qualif Q_AA_NE_ARRAY_LENGTH_B(_AA) : _AA != Array.length b;;
+qualif QARRAY_LENGTH__AA_LE_ARRAY_LENGTH_B(_AA) : Array.length _AA <= Array.length b;;
+qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH_B(_AA) : Array.length _AA >= Array.length b;;
+qualif QARRAY_LENGTH__AA_EQ_ARRAY_LENGTH_B(_AA) : Array.length _AA = Array.length b;;
+qualif QARRAY_LENGTH__AA_NE_ARRAY_LENGTH_B(_AA) : Array.length _AA != Array.length b;;
+qualif Q_AA_LE_ARRAY_LENGTH_A(_AA) : _AA <= Array.length a;;
+qualif Q_AA_GE_ARRAY_LENGTH_A(_AA) : _AA >= Array.length a;;
+qualif Q_AA_EQ_ARRAY_LENGTH_A(_AA) : _AA = Array.length a;;
+qualif Q_AA_NE_ARRAY_LENGTH_A(_AA) : _AA != Array.length a;;
+qualif QARRAY_LENGTH__AA_LE_ARRAY_LENGTH_A(_AA) : Array.length _AA <= Array.length a;;
+qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH_A(_AA) : Array.length _AA >= Array.length a;;
+qualif QARRAY_LENGTH__AA_EQ_ARRAY_LENGTH_A(_AA) : Array.length _AA = Array.length a;;
+qualif QARRAY_LENGTH__AA_NE_ARRAY_LENGTH_A(_AA) : Array.length _AA != Array.length a;;
+qualif Q_AA_LE_SUM'(_AA) : _AA <= sum';;
+qualif Q_AA_GE_SUM'(_AA) : _AA >= sum';;
+qualif Q_AA_EQ_SUM'(_AA) : _AA = sum';;
+qualif Q_AA_NE_SUM'(_AA) : _AA != sum';;
+qualif Q_AA_LE_SUBM(_AA) : _AA <= subm;;
+qualif Q_AA_GE_SUBM(_AA) : _AA >= subm;;
+qualif Q_AA_EQ_SUBM(_AA) : _AA = subm;;
+qualif Q_AA_NE_SUBM(_AA) : _AA != subm;;
+qualif Q_AA_LE_SBI(_AA) : _AA <= sbi;;
+qualif Q_AA_GE_SBI(_AA) : _AA >= sbi;;
+qualif Q_AA_EQ_SBI(_AA) : _AA = sbi;;
+qualif Q_AA_NE_SBI(_AA) : _AA != sbi;;
+qualif Q_AA_LE_SAI(_AA) : _AA <= sai;;
+qualif Q_AA_GE_SAI(_AA) : _AA >= sai;;
+qualif Q_AA_EQ_SAI(_AA) : _AA = sai;;
+qualif Q_AA_NE_SAI(_AA) : _AA != sai;;
+qualif Q_AA_LE_I'(_AA) : _AA <= i';;
+qualif Q_AA_GE_I'(_AA) : _AA >= i';;
+qualif Q_AA_EQ_I'(_AA) : _AA = i';;
+qualif Q_AA_NE_I'(_AA) : _AA != i';;
+qualif Q_AA_LE_SUM(_AA) : _AA <= sum;;
+qualif Q_AA_GE_SUM(_AA) : _AA >= sum;;
+qualif Q_AA_EQ_SUM(_AA) : _AA = sum;;
+qualif Q_AA_NE_SUM(_AA) : _AA != sum;;
+qualif Q_AA_LE_I(_AA) : _AA <= i;;
+qualif Q_AA_GE_I(_AA) : _AA >= i;;
+qualif Q_AA_EQ_I(_AA) : _AA = i;;
+qualif Q_AA_NE_I(_AA) : _AA != i;;
+qualif Q_AA_LE_N(_AA) : _AA <= n;;
+qualif Q_AA_GE_N(_AA) : _AA >= n;;
+qualif Q_AA_EQ_N(_AA) : _AA = n;;
+qualif Q_AA_NE_N(_AA) : _AA != n;;
+qualif Q_AA_LE_5(_AA) : _AA <= 5;;
+qualif Q_AA_GE_5(_AA) : _AA >= 5;;
+qualif Q_AA_EQ_5(_AA) : _AA = 5;;
+qualif Q_AA_NE_5(_AA) : _AA != 5;;
+qualif QARRAY_LENGTH__AA_LE_5(_AA) : Array.length _AA <= 5;;
+qualif QARRAY_LENGTH__AA_GE_5(_AA) : Array.length _AA >= 5;;
+qualif QARRAY_LENGTH__AA_EQ_5(_AA) : Array.length _AA = 5;;
+qualif QARRAY_LENGTH__AA_NE_5(_AA) : Array.length _AA != 5;;
+qualif Q_AA_LE_0(_AA) : _AA <= 0;;
+qualif Q_AA_GE_0(_AA) : _AA >= 0;;
+qualif Q_AA_EQ_0(_AA) : _AA = 0;;
+qualif Q_AA_NE_0(_AA) : _AA != 0;;
+qualif QARRAY_LENGTH__AA_LE_0(_AA) : Array.length _AA <= 0;;
+qualif QARRAY_LENGTH__AA_GE_0(_AA) : Array.length _AA >= 0;;
+qualif QARRAY_LENGTH__AA_EQ_0(_AA) : Array.length _AA = 0;;
+qualif QARRAY_LENGTH__AA_NE_0(_AA) : Array.length _AA != 0;;
+qualif Q_AA_LE_1(_AA) : _AA <= 1;;
+qualif Q_AA_GE_1(_AA) : _AA >= 1;;
+qualif Q_AA_EQ_1(_AA) : _AA = 1;;
+qualif Q_AA_NE_1(_AA) : _AA != 1;;
+qualif QARRAY_LENGTH__AA_LE_1(_AA) : Array.length _AA <= 1;;
+qualif QARRAY_LENGTH__AA_GE_1(_AA) : Array.length _AA >= 1;;
+qualif QARRAY_LENGTH__AA_EQ_1(_AA) : Array.length _AA = 1;;
+qualif QARRAY_LENGTH__AA_NE_1(_AA) : Array.length _AA != 1;;
+
+let dp a b =
+  let n = Array.length a in
+  let rec loop i sum =
+    let i' = i + 1 in
+    let sai = Array.get a i in
+    let sbi = Array.get b i in   
+    let subm = sai + sbi in
+    let sum' = subm + sum in
+    if i = n then sum else  
+      loop i' sum'
+     (*withtype {i:nat | i <= n} <n-i> => int(i) * int -> int*)
+  in
+     loop 0 0
+in 5;;
+(*withtype {n:nat} int array(n) * int array(n) -> int*)
+
+let rec ack m n =
+  let n' = n + 1 in
+  if m = 0 then n'
+  else
+	  let ackm n = 
+      let m' = m - 1 in 
+      ack m' n
+          (*withtype {n:nat} <> => int(n) -> [a:nat] int(a)*)
+      in
+	  if n = 0 then ackm 1 else 
+      let n' = n - 1 in
+      let ackmn' = ack m n' in
+      ackm ackmn'
+in 5;;
+(*withtype {m:nat} int(m) -> {n:nat} <m, n> => int(n) -> [a:nat] int(a)*)
+
+(*fun dp (a, b) =
   let
      val n = arraysize a
      fun loop (i, sum) =
@@ -19,7 +124,7 @@ fun ack m n =
 	  if n = 0 then ackm 1 else ackm (ack m (n-1))
       end
 withtype {m:nat} int(m) -> {n:nat} <m, n> => int(n) -> [a:nat] int(a)
-
+*)
 (*
 fun dp {n:nat} (a: int array(n), b: int array(n)): int =
   let

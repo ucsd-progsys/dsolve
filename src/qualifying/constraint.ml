@@ -90,9 +90,9 @@ let split cstrs =
           | Frame.Fvar _
           | Frame.Funknown ->
               split_rec flat cs
-	  | Frame.Fconstr (_, l, r) ->
-	      split_rec (WFRefinement(env, r)::flat) 
-		(List.append (List.map (function li -> WFFrame(env, li)) l) cs)
+	        | Frame.Fconstr (_, l, r) ->
+	            split_rec (WFRefinement(env, r)::flat) 
+		            (List.append (List.map (function li -> WFFrame(env, li)) l) cs)
           (*| _ -> assert false*)
         end
   in split_rec [] cstrs

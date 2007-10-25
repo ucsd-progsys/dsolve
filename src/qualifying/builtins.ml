@@ -138,6 +138,10 @@ let rand_init_frame =
   let x = Path.mk_ident "x" in
   (["init"; "Random"], mk_fun(x, mk_int [], mk_unit ()))
 
+let void_fun_frame name =
+  let x = Path.mk_ident "x" in
+  (name, mk_fun(x, mk_unit (), mk_unit ()))
+
 let rand_int_frame =
   let (x, y) = fresh_2_idents () in
   (["int"; "Random"], mk_fun(x, mk_int [qint Predicate.Gt 0 x], 
@@ -197,6 +201,7 @@ let _frames = [
   array_set_frame;
   rand_init_frame;
   rand_int_frame;
+  void_fun_frame ["self_init"; "Random"];
 ]
 
 let _lib_frames = [
