@@ -56,6 +56,7 @@ val dump_instr : bool ref
 val dump_constraints: bool ref
 val dump_qexprs: bool ref
 val dump_qualifs: bool ref
+val brief_quals: bool ref
 val keep_asm_file : bool ref
 val optimize_for_speed : bool ref
 val dump_cmm : bool ref

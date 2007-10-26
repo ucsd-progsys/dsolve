@@ -7,7 +7,10 @@ let rec qualify_tree_of_type_scheme otyp fr =
         Otyp_arrow(l, qualify t1 f1, qualify t2 f2)
     | (Otyp_constr(id, tyl, None), Frame.Fconstr(_, fl, (_, Frame.Qconst quals))) ->
         let qualifier_names = List.map (fun (p, _, _) -> Path.name p) quals in
-        Otyp_constr(id, List.map2 qualify tyl fl, Some (Oqual qualifier_names))
+        let qualifier_num = [string_of_int (List.length quals)] in
+        let qualifier_desc = if !Clflags.brief_quals then qualifier_num else
+                              qualifier_names in
+        Otyp_constr(id, List.map2 qualify tyl fl, Some (Oqual qualifier_desc))
     | (Otyp_var _, Frame.Fvar _) ->
         otyp
     | (Otyp_tuple ts, Frame.Ftuple(t1', t2')) ->

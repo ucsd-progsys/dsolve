@@ -59,6 +59,7 @@ and dump_instr = ref false              (* -dinstr *)
 and dump_constraints = ref false        (* -dconstr *)
 and dump_qexprs = ref false             (* -dqexprs *)
 and dump_qualifs = ref false            (* -dqualifs *)
+and brief_quals = ref false              (* -bquals *)
 
 let keep_asm_file = ref false           (* -S *)
 let optimize_for_speed = ref true       (* -compact *)

@@ -280,7 +280,9 @@ play sz =
 		let pp_minus_2_n_plus = p' - _2_n_minus in
 		let s_plus_2_n = s + _2_n in
     if _2_n = 1 then
-      begin (Array.set _2_post (p - 1) (Array.get source s); Array.set source s 0; showposts()) end
+      let p' = p - 1 in 
+      let gss = Array.get source s in
+      begin Array.set _2_post p' gss; Array.set source s 0; showposts() end
     else begin
       (move _2_n_minus source s post' p' _2_post p;
       Array.set _2_post p_minus (Array.get source (s_plus_2_n_minus));

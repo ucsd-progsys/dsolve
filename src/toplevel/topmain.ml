@@ -97,6 +97,7 @@ let main () =
      "-dconstrs", Arg.Set dump_constraints, "print out subframe constraints";
      "-dqexprs", Arg.Set dump_qexprs, "print out all subexpressions with their qualified types";
      "-dqualifs", Arg.Set dump_qualifs, "print out simple qualifiers for all identifiers and integer literals";
+     "-bquals", Arg.Set brief_quals, "print out the number of refinements for a type instead of their names"
     ] file_argument usage;
   if not (prepare Format.err_formatter) then exit 2;
   Toploop.loop Format.std_formatter
