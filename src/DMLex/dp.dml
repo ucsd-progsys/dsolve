@@ -1,3 +1,11 @@
+qualif Q_AA_LE_ARRAY_LENGTH_ARR(_AA) : _AA <= Array.length arr;;
+qualif Q_AA_GE_ARRAY_LENGTH_ARR(_AA) : _AA >= Array.length arr;;
+qualif Q_AA_EQ_ARRAY_LENGTH_ARR(_AA) : _AA = Array.length arr;;
+qualif Q_AA_NE_ARRAY_LENGTH_ARR(_AA) : _AA != Array.length arr;;
+qualif QARRAY_LENGTH__AA_LE_ARRAY_LENGTH_ARR(_AA) : Array.length _AA <= Array.length arr;;
+qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH_ARR(_AA) : Array.length _AA >= Array.length arr;;
+qualif QARRAY_LENGTH__AA_EQ_ARRAY_LENGTH_ARR(_AA) : Array.length _AA = Array.length arr;;
+qualif QARRAY_LENGTH__AA_NE_ARRAY_LENGTH_ARR(_AA) : Array.length _AA != Array.length arr;;
 qualif Q_AA_LE_ARRAY_LENGTH_B(_AA) : _AA <= Array.length b;;
 qualif Q_AA_GE_ARRAY_LENGTH_B(_AA) : _AA >= Array.length b;;
 qualif Q_AA_EQ_ARRAY_LENGTH_B(_AA) : _AA = Array.length b;;
@@ -14,6 +22,10 @@ qualif QARRAY_LENGTH__AA_LE_ARRAY_LENGTH_A(_AA) : Array.length _AA <= Array.leng
 qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH_A(_AA) : Array.length _AA >= Array.length a;;
 qualif QARRAY_LENGTH__AA_EQ_ARRAY_LENGTH_A(_AA) : Array.length _AA = Array.length a;;
 qualif QARRAY_LENGTH__AA_NE_ARRAY_LENGTH_A(_AA) : Array.length _AA != Array.length a;;
+qualif Q_AA_LE_P(_AA) : _AA <= p;;
+qualif Q_AA_GE_P(_AA) : _AA >= p;;
+qualif Q_AA_EQ_P(_AA) : _AA = p;;
+qualif Q_AA_NE_P(_AA) : _AA != p;;
 qualif Q_AA_LE_SUM'(_AA) : _AA <= sum';;
 qualif Q_AA_GE_SUM'(_AA) : _AA >= sum';;
 qualif Q_AA_EQ_SUM'(_AA) : _AA = sum';;
@@ -46,14 +58,6 @@ qualif Q_AA_LE_N(_AA) : _AA <= n;;
 qualif Q_AA_GE_N(_AA) : _AA >= n;;
 qualif Q_AA_EQ_N(_AA) : _AA = n;;
 qualif Q_AA_NE_N(_AA) : _AA != n;;
-qualif Q_AA_LE_5(_AA) : _AA <= 5;;
-qualif Q_AA_GE_5(_AA) : _AA >= 5;;
-qualif Q_AA_EQ_5(_AA) : _AA = 5;;
-qualif Q_AA_NE_5(_AA) : _AA != 5;;
-qualif QARRAY_LENGTH__AA_LE_5(_AA) : Array.length _AA <= 5;;
-qualif QARRAY_LENGTH__AA_GE_5(_AA) : Array.length _AA >= 5;;
-qualif QARRAY_LENGTH__AA_EQ_5(_AA) : Array.length _AA = 5;;
-qualif QARRAY_LENGTH__AA_NE_5(_AA) : Array.length _AA != 5;;
 qualif Q_AA_LE_0(_AA) : _AA <= 0;;
 qualif Q_AA_GE_0(_AA) : _AA >= 0;;
 qualif Q_AA_EQ_0(_AA) : _AA = 0;;
@@ -71,7 +75,7 @@ qualif QARRAY_LENGTH__AA_GE_1(_AA) : Array.length _AA >= 1;;
 qualif QARRAY_LENGTH__AA_EQ_1(_AA) : Array.length _AA = 1;;
 qualif QARRAY_LENGTH__AA_NE_1(_AA) : Array.length _AA != 1;;
 
-let dp a b =
+(*let dp a b =
   let n = Array.length a in
   let rec loop i sum =
     let i' = i + 1 in
@@ -84,7 +88,13 @@ let dp a b =
      (*withtype {i:nat | i <= n} <n-i> => int(i) * int -> int*)
   in
      loop 0 0
-in 5;;
+in 
+let none_ = Random.self_init () in
+let p = Random.int 10 in
+let p = p + 1 in
+let arr = Array.make p 1 in
+dp arr arr;;*)
+
 (*withtype {n:nat} int array(n) * int array(n) -> int*)
 
 let rec ack m n =
@@ -100,7 +110,12 @@ let rec ack m n =
       let n' = n - 1 in
       let ackmn' = ack m n' in
       ackm ackmn'
-in 5;;
+in 
+let none_ = Random.self_init () in
+let m = Random.int 10 in
+let n = Random.int 10 in
+ack m n
+;;
 (*withtype {m:nat} int(m) -> {n:nat} <m, n> => int(n) -> [a:nat] int(a)*)
 
 (*fun dp (a, b) =

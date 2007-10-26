@@ -96,25 +96,27 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
             (*let _ = Frame.pprint Format.err_formatter f' in
             let _ = Frame.pprint Format.err_formatter ftemplate in *)
             let f = Frame.instantiate f' ftemplate in
-              (f, cstrs, framemap)
+              (f, WFFrame(env, f)::cstrs, framemap)
 	| (Texp_apply (e1, exps), _) ->
 	    let constrain_application (f, cs, fm) = function
-              | (Some e2, _) ->
+          | (Some e2, _) ->
 	          begin match f with
-		    | Frame.Farrow (l, f, f') ->
-		        let (f2, cs', fm') = constrain e2 env guard cs fm in
-		        let f'' = match l with
+		          | Frame.Farrow (l, f, f') ->
+		            let (f2, cs', fm') = constrain e2 env guard cs fm in
+		            let f'' = match l with
                           | Some x -> Frame.apply_substitution (x, expression_to_pexpr e2) f'
                               (* pmr: The soundness of this next line is suspect,
                                  must investigate (i.e., what if there's a var that might
                                  somehow be substituted that isn't because of this?  How
                                  does it interact w/ the None label rules for subtyping? *)
-                          | None -> f'
-                        in (f'', SubFrame (env, guard, f2, f) :: cs', fm')
-		    | _ -> assert false
-                  end
-              | _ -> assert false
-	    in List.fold_left constrain_application
+                          | None -> f' 
+                in
+                (*let _ = Format.printf "@[%a@\n@]" Frame.pprint f'' in*)
+                (f'', SubFrame (env, guard, f2, f) :: cs', fm')
+		          | _ -> assert false
+            end
+          | _ -> assert false
+	        in List.fold_left constrain_application
                  (constrain e1 env guard cstrs framemap) exps
 	| (Texp_let (Nonrecursive, [({pat_desc = Tpat_var x}, e1)], e2), t) ->
             let (f1, cstrs'', fm'') = constrain e1 env guard cstrs framemap in
@@ -172,7 +174,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
               Frame.Ftuple(f1', f2') ->
                 (f, List.append [WFFrame(env, f); SubFrame(env, guard, f1, f1'); SubFrame(env, guard, f2, f2')] 
                                 c, m)
-              | _ -> failwith "Text_tuple has wrong type"
+              | _ -> failwith "Texp_tuple has wrong type"
             end
 	| (_, t) ->
 (*
