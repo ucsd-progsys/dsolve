@@ -242,6 +242,7 @@ let execute_phrase print_outcome ppf phr =
           Constraint.Unsatisfiable -> dump_qualifs (); raise Constraint.Unsatisfiable
       in
       if !Clflags.dump_qexprs then
+        fprintf std_formatter "@.@.";
         Qdebug.dump_qualified_structure std_formatter framemap str; 
       let lam = Translmod.transl_toplevel_definition str in
       Warnings.check_fatal ();
