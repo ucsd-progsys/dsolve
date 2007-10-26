@@ -96,7 +96,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
             (*let _ = Frame.pprint Format.err_formatter f' in
             let _ = Frame.pprint Format.err_formatter ftemplate in *)
             let f = Frame.instantiate f' ftemplate in
-              (f, WFFrame(env, f)::cstrs, framemap)
+              (f, (*WFFrame(env, f)::*)cstrs, framemap)
 	| (Texp_apply (e1, exps), _) ->
 	    let constrain_application (f, cs, fm) = function
           | (Some e2, _) ->
@@ -172,7 +172,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
             begin
             match f with
               Frame.Ftuple(f1', f2') ->
-                (f, List.append [WFFrame(env, f); SubFrame(env, guard, f1, f1'); SubFrame(env, guard, f2, f2')] 
+                (f, List.append [(*WFFrame(env, f);*) SubFrame(env, guard, f1, f1'); SubFrame(env, guard, f2, f2')] 
                                 c, m)
               | _ -> failwith "Texp_tuple has wrong type"
             end

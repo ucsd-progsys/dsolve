@@ -1,0 +1,14 @@
+#not actually a regression test
+./ocaml -dqexprs < DML/bsearch.ml
+./ocaml -dqexprs < DML/dotprod.ml
+./ocaml -dqexprs < DML/dotprod2.ml
+./ocaml -dqexprs < DML/insertsort.ml
+./ocaml -dqexprs < DML/queen.ml
+./ocaml -dqexprs < DML/tower.ml
+./ocaml -dqexprs < DML/quicksort.ml
+./ocaml -dqexprs < DMLex/bcopy.dml
+./ocaml -dqexprs < DMLex/bcopy2.dml
+./ocaml -dqexprs < DMLex/dp.dml
+./ocaml -dqexprs < DMLex/heapsort.dml
+./ocaml -dqexprs < DMLex/matmult.dml
+
