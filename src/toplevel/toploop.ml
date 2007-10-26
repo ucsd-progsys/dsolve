@@ -241,9 +241,10 @@ let execute_phrase print_outcome ppf phr =
         try Qualifymod.qualify_structure newenv !toplevel_fenv oldquals str with
           Constraint.Unsatisfiable -> dump_qualifs (); raise Constraint.Unsatisfiable
       in
-      if !Clflags.dump_qexprs then
+      if !Clflags.dump_qexprs then begin
         fprintf std_formatter "@.@.";
-        Qdebug.dump_qualified_structure std_formatter framemap str; 
+        Qdebug.dump_qualified_structure std_formatter framemap str;
+      end;
       let lam = Translmod.transl_toplevel_definition str in
       Warnings.check_fatal ();
       begin try
