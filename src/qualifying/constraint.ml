@@ -129,7 +129,7 @@ let rec solve_wf_constraints solution = function
           (fun q -> Frame.refinement_well_formed env solution (subs, Frame.Qconst [q]))
           (try Lightenv.find k solution with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k); raise Not_found))
       in Lightenv.add k refined_quals solution'
-  | _ :: cs -> solve_wf_constraints solution cs
+  | _ :: cs -> (*Printf.printf "interesting..\n";*) solve_wf_constraints solution cs
       (* Nothing to do here; we can check satisfiability later *)
 
 let refine solution = function
@@ -203,8 +203,10 @@ let check_satisfied solution cstrs =
             Frame.pprint_refinement r1 Frame.pprint_refinement r2
             pprint_env_pred (solution, env) pprint_ref_pred (solution, r1) pprint_ref_pred (solution, r2);
           raise Unsatisfiable
-      | WFRefinement _ ->
-          fprintf std_formatter "@[Unsatisfiable@ literal@ WF@]";
+      | WFRefinement (env, f) ->
+          fprintf std_formatter "@[Unsatisfiable@ literal@ WF:@ %a@\nEnv:@ %a@\nWF:@ %a@]"
+            Frame.pprint_refinement f pprint_env_pred (solution, env)
+            pprint_ref_pred (solution, f);
           raise Unsatisfiable
   with Not_found -> ()
 
