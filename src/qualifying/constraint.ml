@@ -217,6 +217,10 @@ let rec divide_constraints_by_form wf refi = function
   | WFRefinement w :: cs ->
       divide_constraints_by_form (w :: wf) refi cs
 
+let is_simple_constraint = function
+  | (_, _, ([], _), ([], _)) -> true
+  | _ -> false
+
 let solve_constraints quals constrs =
   if !Clflags.dump_constraints then
     Oprint.print_list pprint (fun ppf -> fprintf ppf "@.@.")
@@ -225,6 +229,9 @@ let solve_constraints quals constrs =
   let (wfs, refis) = divide_constraints_by_form [] [] cs in
   let init_solution = initial_solution cs quals in
   let solution' = Bstats.time "solving wfs" (solve_wf_constraints init_solution) wfs in
+  Printf.printf "%d split subtyping constraints\n\n" (List.length refis);
+  Printf.printf "%d simple subtyping constraints\n\n"
+    (List.length (List.filter is_simple_constraint refis));
   let cstr_map = make_variable_constraint_map refis in
   let rec solve_rec sol = function
     | [] -> sol
@@ -246,6 +253,7 @@ let solve_constraints quals constrs =
   (* Find the "roots" of the constraint graph - all those constraints that don't
      have a variable in the LHS *)
   let init_wklist = List.filter (fun c -> match lhs_vars c with [] -> true | _ -> false) refis in
+  Printf.printf "%d constraint graph roots\n\n" (List.length init_wklist);
   let solution = Bstats.time "refining subtypes" (solve_rec solution') init_wklist in
     Bstats.time "testing solution" (check_satisfied solution) cs;
     solution
