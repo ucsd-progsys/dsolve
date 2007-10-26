@@ -126,7 +126,7 @@ let array_get_frame =
 	let (x, y) = (Path.mk_ident "x", Path.mk_ident "y") in
 	let tyvar = mk_tyvar () in
 	(["get"; "Array"], mk_fun(x, (mk_array tyvar []), 
-								mk_fun(y, mk_int [qsize Predicate.Lt x y y; qint Predicate.Ge 0 y], (tyvar)))) 
+				  mk_fun(y, mk_int [qsize Predicate.Lt x y y; qint Predicate.Ge 0 y], (tyvar))))
 
 let array_make_frame =
   let (x, y, z) = fresh_idents () in
