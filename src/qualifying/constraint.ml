@@ -139,10 +139,15 @@ let refine solution = function
         let p1 = Frame.refinement_predicate solution qual_test_var r1 in
           (Predicate.big_and [envp; guard; p1])
       in
-        Bstats.time "refinement query" Prover.push (Predicate.big_or (List.map make_lhs srs));
+        let lhs = (Predicate.big_or (List.map make_lhs srs)) in
+        Bstats.time "refinement query" Prover.push lhs;
         let qual_holds q =
-          Bstats.time "refinement query" Prover.valid
-            (Frame.refinement_predicate solution qual_test_var (subs, Frame.Qconst [q]))
+          let rhs = (Frame.refinement_predicate solution qual_test_var (subs, Frame.Qconst [q])) in
+          let res = Bstats.time "refinement query" Prover.valid rhs in
+            if !Clflags.dump_queries then
+              Format.fprintf std_formatter "@[%a@ =>@ %a@ (%s)@]@.@."
+                Predicate.pprint lhs Predicate.pprint rhs (if res then "SAT" else "UNSAT");
+            res
         in
         let refined_quals =
           List.filter qual_holds (try Lightenv.find k2 solution with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k2); raise Not_found)) in
