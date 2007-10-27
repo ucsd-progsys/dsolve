@@ -307,9 +307,9 @@ qualifying/lightenv.cmx: typing/path.cmx
 qualifying/message.cmo: qualifying/message.cmi 
 qualifying/message.cmx: qualifying/message.cmi 
 qualifying/printqual.cmo: typing/path.cmi typing/outcometree.cmi \
-    qualifying/frame.cmi qualifying/printqual.cmi 
+    qualifying/frame.cmi utils/clflags.cmi qualifying/printqual.cmi 
 qualifying/printqual.cmx: typing/path.cmx typing/outcometree.cmi \
-    qualifying/frame.cmx qualifying/printqual.cmi 
+    qualifying/frame.cmx utils/clflags.cmx qualifying/printqual.cmi 
 qualifying/qdebug.cmo: typing/types.cmi typing/typedtree.cmi \
     qualifying/qualifymod.cmi typing/printtyp.cmi qualifying/printqual.cmi \
     typing/predicate.cmi typing/path.cmi typing/oprint.cmi typing/ident.cmi \

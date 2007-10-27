@@ -149,23 +149,27 @@ let convert_rel r =
 let convert_op o = 
   match o with Plus -> "+" | Minus -> "-" | Times -> "*" | Div -> "/"
 
-let name_substitutions =
-  [(Str.regexp_string "'", "ptick");
-   (Str.regexp_string "_", "undscore");
-  ]
+let simplifyToTable = Hashtbl.create 17
 
-let convert_var_name path =
-  let name = Path.unique_name path in
-    List.fold_left (fun n (rex, rpl) -> Str.global_replace rex rpl n)
-      name name_substitutions
+let freshSimplifySymbol =
+  let n = ref 0 in
+  (fun () -> n := !n + 1; "v"^(string_of_int !n))
+
+let convertSymbol x =
+  try Hashtbl.find simplifyToTable x with Not_found ->
+    let x' = freshSimplifySymbol () in
+    let _ = Hashtbl.add simplifyToTable x x' in
+    x'
+
+let convertPath path = convertSymbol (Path.unique_name path)
 
 let rec convert_exp e =
   match e with
     PInt i -> string_of_int i  (* pmr: ask Ranjit why there was an assertion here *)
-  | Var x -> convert_var_name x
-  | Pvar (x,i) -> Printf.sprintf "%sprime%d" (convert_var_name x) i
+  | Var x -> convertPath x
+  | Pvar (x,i) -> Printf.sprintf "%sprime%d" (convertPath x) i
   | Binop (e1,op,e2) -> Printf.sprintf "(%s %s %s)" (convert_op op) (convert_exp e1) (convert_exp e2)
-  | FunApp (f,e) -> Printf.sprintf "(%s %s)" f (convert_exp e)
+  | FunApp (f,e) -> Printf.sprintf "(%s %s)" (convertSymbol f) (convert_exp e)
 
 let rec convert_pred p = 
   match p with 
