@@ -20,7 +20,8 @@ include stdlib/StdlibModules
 CAMLC=ocamlc -nostdlib -I boot
 CAMLOPT=boot/ocamlrun ./ocamlopt -nostdlib -I stdlib
 COMPFLAGS=-warn-error A $(INCLUDES)
-LINKFLAGS=-I $(LIBDIR)/stublibs
+LINKFLAGS=-custom -ccopt -Lyices/lib -ccopt -L$(LIBDIR) -cclib -loyices \
+          -cclib -lgmp -cclib -lyices -I $(LIBDIR)/stublibs -I yices/lib
 
 CAMLYACC=boot/ocamlyacc
 YACCFLAGS=-v
@@ -31,7 +32,7 @@ CAMLRUN=byterun/ocamlrun
 SHELL=/bin/sh
 MKDIR=mkdir -p
 
-INCLUDES=-I utils -I parsing -I typing -I qualifying -I bytecomp \
+INCLUDES=-I utils -I parsing -I typing -I yices/lib/ -I qualifying -I bytecomp \
          -I asmcomp -I driver -I toplevel
 
 UTILS=utils/misc.cmo utils/tbl.cmo utils/config.cmo \
@@ -60,7 +61,8 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
 QUALIFYING=qualifying/lightenv.cmo \
   qualifying/qualifier.cmo qualifying/builtins.cmo qualifying/frame.cmo \
   qualifying/message.cmo \
-  qualifying/theoremProver.cmo \
+  yices/lib/oyices.cma \
+  qualifying/theoremProverSimplify.cmo qualifying/theoremProverYices.cmo \
   qualifying/constraint.cmo qualifying/qualgen.cmo \
   qualifying/qualifymod.cmo qualifying/printqual.cmo \
   qualifying/qdebug.cmo 
@@ -113,7 +115,7 @@ TOPLIB=$(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(COMP) $(BYTECOMP) $(TOPLEVE
 
 TOPOBJS=$(HOSTLIBS) $(TOPLEVELLIB) $(TOPLEVELSTART)
 
-OPTOBJS=$(OPTUTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(COMP) $(ASMCOMP) $(OPTDRIVER)
+OPTOBJS=$(HOSTLIBS) $(OPTUTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(COMP) $(ASMCOMP) $(OPTDRIVER)
 
 EXPUNGEOBJS=utils/misc.cmo utils/tbl.cmo \
   utils/config.cmo utils/clflags.cmo \
@@ -678,8 +680,8 @@ clean::
 utils/bstats.cmo: utils/bstats.ml utils/bstats.cmi
 	$(CAMLC) $(COMPFLAGS) -I $(LIBDIR) -c unix.cma utils/bstats.ml
 
-qualifying/theoremProver.cmo: qualifying/theoremProver.ml
-	$(CAMLC) $(COMPFLAGS) -I $(LIBDIR) -c unix.cma qualifying/theoremProver.ml
+qualifying/theoremProverSimplify.cmo: qualifying/theoremProverSimplify.ml
+	$(CAMLC) $(COMPFLAGS) -I $(LIBDIR) -c unix.cma qualifying/theoremProverSimplify.ml
 
 .ml.cmx:
 	$(CAMLOPT) $(COMPFLAGS) -c $<

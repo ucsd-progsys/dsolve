@@ -1,4 +1,3 @@
-open TheoremProver
 open Format
 
 type frame_constraint =
@@ -33,9 +32,6 @@ let pprint ppf = function
 let environment = function
   | SubFrame (env, _, _, _) -> env
   | WFFrame (env, _) -> env
-
-(* Unique variable to qualify when testing sat, applicability of qualifiers, etc. *)
-let qual_test_var = Path.mk_ident "AA"
 
 let split cstrs =
   let rec split_rec flat = function
@@ -87,14 +83,14 @@ let split cstrs =
                     :: WFFrame (env', f')
                     :: cs)
           | Frame.Fconstr (_, [], r) ->
-        split_rec (WFRefinement (Lightenv.add qual_test_var f env, r) :: flat) cs
+              split_rec (WFRefinement (env, r) :: flat) cs
           | Frame.Ftuple (t1, t2) ->
               split_rec flat (List.append [WFFrame(env, t1); WFFrame(env, t2)] cs)
           | Frame.Fvar _
           | Frame.Funknown ->
               split_rec flat cs
 	        | Frame.Fconstr (_, l, r) ->
-	            split_rec (WFRefinement(Lightenv.add qual_test_var f env, r)::flat) 
+	            split_rec (WFRefinement(env, r)::flat) 
 		            (List.append (List.map (function li -> WFFrame(env, li)) l) cs)
           (*| _ -> assert false*)
         end
@@ -103,14 +99,18 @@ let split cstrs =
 let environment_predicate solution env =
   Predicate.big_and (Lightenv.maplist (Frame.predicate solution) env)
 
+(* Unique variable to qualify when testing sat, applicability of qualifiers, etc. *)
+let qual_test_var = Path.mk_ident "AA"
+
 let constraint_sat solution = function
   | SubRefinement (env, guard, r1, r2) ->
       let envp = environment_predicate solution env in
       let p1 = Frame.refinement_predicate solution qual_test_var r1 in
       let p2 = Frame.refinement_predicate solution qual_test_var r2 in
-        Prover.implies (Predicate.big_and [envp; guard; p1]) p2
-  (* ming: this is effectively an error check. we should be able to remove it once we're
-    confident.. *)
+        let smp = TheoremProverSimplify.Prover.implies (Predicate.big_and [envp; guard; p1]) p2 in
+        let yic = TheoremProverYices.Prover.implies (Predicate.big_and [envp; guard; p1]) p2 in
+        if smp != yic then assert false
+           else smp
   | WFRefinement (env, r) ->
       Frame.refinement_well_formed env solution r qual_test_var
 
@@ -122,8 +122,7 @@ let pprint_ref_pred ppf (solution, r) =
 
 exception Unsatisfiable
 
-let rec solve_wf_constraints solution cs = 
-  match cs with
+let rec solve_wf_constraints solution = function
   | [] -> solution
   | (env, (subs, Frame.Qvar k)) :: cs ->
       let solution' = solve_wf_constraints solution cs in
@@ -132,7 +131,7 @@ let rec solve_wf_constraints solution cs =
           (fun q -> Frame.refinement_well_formed env solution (subs, Frame.Qconst [q]) qual_test_var)
           (try Lightenv.find k solution with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k); raise Not_found))
       in Lightenv.add k refined_quals solution'
-  | _ :: cs -> solve_wf_constraints solution cs
+  | _ :: cs -> (*Printf.printf "interesting..\n";*) solve_wf_constraints solution cs
       (* Nothing to do here; we can check satisfiability later *)
 
 let refine solution = function
@@ -143,10 +142,13 @@ let refine solution = function
           (Predicate.big_and [envp; guard; p1])
       in
         let lhs = (Predicate.big_or (List.map make_lhs srs)) in
-        Bstats.time "refinement query" Prover.push lhs;
+        Bstats.time "refinement query yices" TheoremProverYices.Prover.push lhs;
+        Bstats.time "refinement query simp" TheoremProverSimplify.Prover.push lhs;
         let qual_holds q =
           let rhs = (Frame.refinement_predicate solution qual_test_var (subs, Frame.Qconst [q])) in
-          let res = Bstats.time "refinement query" Prover.valid rhs in
+          let resy = Bstats.time "refinement query yices" TheoremProverYices.Prover.valid rhs in
+          let ress = Bstats.time "refinement query simp" TheoremProverSimplify.Prover.valid rhs in
+          let res = if resy = ress then resy else assert false in
             if !Clflags.dump_queries then
               Format.fprintf std_formatter "@[%a@ =>@ %a@ (%s)@]@.@."
                 Predicate.pprint lhs Predicate.pprint rhs (if res then "SAT" else "UNSAT");
@@ -154,7 +156,8 @@ let refine solution = function
         in
         let refined_quals =
           List.filter qual_holds (try Lightenv.find k2 solution with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k2); raise Not_found)) in
-          Bstats.time "refinement query" Prover.pop ();
+          Bstats.time "refinement query yices" TheoremProverYices.Prover.pop ();
+          Bstats.time "refinement query simp" TheoremProverSimplify.Prover.pop ();
           Lightenv.add k2 refined_quals solution
   | _ -> solution
       (* With anything else, there's nothing to refine, just to check later with
@@ -212,8 +215,8 @@ let check_satisfied solution cstrs =
             pprint_env_pred (solution, env) pprint_ref_pred (solution, r1) pprint_ref_pred (solution, r2);
           raise Unsatisfiable
       | WFRefinement (env, f) ->
-          fprintf std_formatter "@[Unsatisfiable@ WF@\nEnv:@ %a@\nWF:@ %a@]" 
-            (Lightenv.pprint Frame.pprint) env
+          fprintf std_formatter "@[Unsatisfiable@ literal@ WF:@ %a@\nEnv:@ %a@\nWF:@ %a@]"
+            Frame.pprint_refinement f pprint_env_pred (solution, env)
             pprint_ref_pred (solution, f);
           raise Unsatisfiable
   with Not_found -> ()
