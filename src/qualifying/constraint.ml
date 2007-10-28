@@ -109,8 +109,9 @@ let constraint_sat solution = function
       let p2 = Frame.refinement_predicate solution qual_test_var r2 in
         let smp = TheoremProverSimplify.Prover.implies (Predicate.big_and [envp; guard; p1]) p2 in
         let yic = TheoremProverYices.Prover.implies (Predicate.big_and [envp; guard; p1]) p2 in
-        if smp != yic then assert false
-           else smp
+        if smp != yic then
+          assert false
+        else smp
   | WFRefinement (env, r) ->
       Frame.refinement_well_formed env solution r qual_test_var
 
@@ -148,7 +149,20 @@ let refine solution = function
           let rhs = (Frame.refinement_predicate solution qual_test_var (subs, Frame.Qconst [q])) in
           let resy = Bstats.time "refinement query yices" TheoremProverYices.Prover.valid rhs in
           let ress = Bstats.time "refinement query simp" TheoremProverSimplify.Prover.valid rhs in
-          let res = if resy = ress then resy else assert false in
+          let res =
+            if resy = ress then
+              resy
+            else begin
+              fprintf std_formatter
+                "@[Theorem@ prover@ insanity:@]@.";
+              fprintf std_formatter
+                "@[Query:@;<1 2>%a@;<1 2>=>@;<1 2>%a@]@."
+                Predicate.pprint lhs Predicate.pprint rhs;
+              fprintf std_formatter
+                "@[Yices@ says@ %B,@ Simplify@ says@ %B@]@." resy ress;
+              assert false
+            end
+          in
             if !Clflags.dump_queries then
               Format.fprintf std_formatter "@[%a@ =>@ %a@ (%s)@]@.@."
                 Predicate.pprint lhs Predicate.pprint rhs (if res then "SAT" else "UNSAT");
