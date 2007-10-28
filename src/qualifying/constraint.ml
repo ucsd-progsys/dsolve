@@ -34,6 +34,9 @@ let environment = function
   | SubFrame (env, _, _, _) -> env
   | WFFrame (env, _) -> env
 
+(* Unique variable to qualify when testing sat, applicability of qualifiers, etc. *)
+let qual_test_var = Path.mk_ident "AA"
+
 let split cstrs =
   let rec split_rec flat = function
     | [] -> flat
@@ -84,14 +87,14 @@ let split cstrs =
                     :: WFFrame (env', f')
                     :: cs)
           | Frame.Fconstr (_, [], r) ->
-              split_rec (WFRefinement (env, r) :: flat) cs
+        split_rec (WFRefinement (Lightenv.add qual_test_var f env, r) :: flat) cs
           | Frame.Ftuple (t1, t2) ->
               split_rec flat (List.append [WFFrame(env, t1); WFFrame(env, t2)] cs)
           | Frame.Fvar _
           | Frame.Funknown ->
               split_rec flat cs
 	        | Frame.Fconstr (_, l, r) ->
-	            split_rec (WFRefinement(env, r)::flat) 
+	            split_rec (WFRefinement(Lightenv.add qual_test_var f env, r)::flat) 
 		            (List.append (List.map (function li -> WFFrame(env, li)) l) cs)
           (*| _ -> assert false*)
         end
@@ -100,17 +103,16 @@ let split cstrs =
 let environment_predicate solution env =
   Predicate.big_and (Lightenv.maplist (Frame.predicate solution) env)
 
-(* Unique variable to qualify when testing sat, applicability of qualifiers, etc. *)
-let qual_test_var = Path.mk_ident "AA"
-
 let constraint_sat solution = function
   | SubRefinement (env, guard, r1, r2) ->
       let envp = environment_predicate solution env in
       let p1 = Frame.refinement_predicate solution qual_test_var r1 in
       let p2 = Frame.refinement_predicate solution qual_test_var r2 in
         Prover.implies (Predicate.big_and [envp; guard; p1]) p2
+  (* ming: this is effectively an error check. we should be able to remove it once we're
+    confident.. *)
   | WFRefinement (env, r) ->
-      Frame.refinement_well_formed env solution r
+      Frame.refinement_well_formed env solution r qual_test_var
 
 let pprint_env_pred ppf (solution, env) = 
   Predicate.pprint ppf (environment_predicate solution env)
@@ -120,16 +122,17 @@ let pprint_ref_pred ppf (solution, r) =
 
 exception Unsatisfiable
 
-let rec solve_wf_constraints solution = function
+let rec solve_wf_constraints solution cs = 
+  match cs with
   | [] -> solution
   | (env, (subs, Frame.Qvar k)) :: cs ->
       let solution' = solve_wf_constraints solution cs in
       let refined_quals =
         List.filter
-          (fun q -> Frame.refinement_well_formed env solution (subs, Frame.Qconst [q]))
+          (fun q -> Frame.refinement_well_formed env solution (subs, Frame.Qconst [q]) qual_test_var)
           (try Lightenv.find k solution with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k); raise Not_found))
       in Lightenv.add k refined_quals solution'
-  | _ :: cs -> (*Printf.printf "interesting..\n";*) solve_wf_constraints solution cs
+  | _ :: cs -> solve_wf_constraints solution cs
       (* Nothing to do here; we can check satisfiability later *)
 
 let refine solution = function
@@ -209,8 +212,8 @@ let check_satisfied solution cstrs =
             pprint_env_pred (solution, env) pprint_ref_pred (solution, r1) pprint_ref_pred (solution, r2);
           raise Unsatisfiable
       | WFRefinement (env, f) ->
-          fprintf std_formatter "@[Unsatisfiable@ literal@ WF:@ %a@\nEnv:@ %a@\nWF:@ %a@]"
-            Frame.pprint_refinement f pprint_env_pred (solution, env)
+          fprintf std_formatter "@[Unsatisfiable@ WF@\nEnv:@ %a@\nWF:@ %a@]" 
+            (Lightenv.pprint Frame.pprint) env
             pprint_ref_pred (solution, f);
           raise Unsatisfiable
   with Not_found -> ()

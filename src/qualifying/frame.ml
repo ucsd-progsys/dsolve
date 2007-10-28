@@ -23,6 +23,7 @@ let pprint_qualifier_expr ppf = function
   | Qconst quals ->
       Oprint.print_list Qualifier.pprint (fun ppf -> fprintf ppf "@ ") ppf quals
 
+
 let pprint_sub ppf (path, pexp) =
   fprintf ppf "@[%s@ ->@ %a@]" (Path.unique_name path) Predicate.pprint_pexpr pexp
 
@@ -54,6 +55,12 @@ let rec pprint ppf = function
    | _ as f -> pprint ppf f
 
 let empty_refinement = ([], Qconst [])
+
+(* ming: note this is a redefinition of builtins.mk_... *)
+
+let frame_cons p = Fconstr(p, [], empty_refinement)
+let frame_int = frame_cons Predef.path_int
+let frame_bool = frame_cons Predef.path_bool
 
 let fresh_refinementvar () = ([], Qvar (Path.mk_ident "k"))
 
@@ -245,8 +252,76 @@ let predicate solution qual_var = function
       (* pmr: need to elementify on constructed types *)
   | _ -> Predicate.True
 
-let refinement_well_formed env solution r =
-  let valu = Path.mk_ident "valu" in
-  let var_bound v = v = valu or Lightenv.mem v env in
-    List.for_all var_bound
-      (Predicate.vars (refinement_predicate solution valu r))
+let rec same_shape t1 t2 =
+  match (t1, t2) with
+  (Fconstr(p, l, _), Fconstr(p', l', _)) ->
+   (Path.same p p') && (List.for_all (fun f -> f) (List.map2 same_shape l l')) 
+  | (Fvar p, Fvar p') ->
+   Path.same p p'
+  | (Farrow(_, i, o), Farrow(_, i', o')) ->
+   (same_shape i i') && (same_shape o o')
+  | (Ftuple(f, g), Ftuple(f', g')) ->
+   (same_shape f f') && (same_shape g g')
+  | (Funknown, Funknown) -> true
+  | t -> false
+
+let pred_is_well_typed env p = 
+  let rec get_expr_shape = function
+  | Predicate.PInt _ -> (frame_int)
+  | Predicate.Var x -> 
+                (try Lightenv.find x env 
+                  with Not_found -> assert false)
+  | Predicate.Pvar (x, _) -> (try Lightenv.find x env
+                        with Not_found -> assert false)
+  | Predicate.FunApp (s, p') -> 
+      (* ming: huge hack alert *)
+      if s = "Array.length" then 
+        let arg_shp = get_expr_shape p' in
+        match arg_shp with
+          Fconstr(a, _, _) -> 
+            if Path.same Predef.path_array a then 
+              frame_int 
+            else
+              Funknown
+          | _ -> Funknown
+        else assert false
+  (* ming: why am i adding spaces everywhere? what the hell is this, java? *)
+  | Predicate.Binop (p1, op, p2) ->
+      let p1_shp = get_expr_shape p1 in
+      let p1_int = same_shape p1_shp (frame_int) in
+      let p2_shp = get_expr_shape p2 in
+      let p2_int = same_shape p2_shp (frame_int) in
+      if p1_int && p2_int then frame_int else Funknown
+  and get_pred_shape = function
+  | Predicate.True -> true
+  | Predicate.Not p -> get_pred_shape p 
+  | Predicate.Or (p1, p2) -> (get_pred_shape p1) && (get_pred_shape p2)
+  | Predicate.And (p1, p2) -> (get_pred_shape p1) && (get_pred_shape p2)
+  | Predicate.Atom (p1, rel, p2) -> 
+    let p1_shp = get_expr_shape p1 in
+    let p2_shp = get_expr_shape p2 in
+    match rel with
+    | Predicate.Eq
+    | Predicate.Ne ->
+        (same_shape p1_shp p2_shp) && not(same_shape p1_shp Funknown)
+        || ((same_shape p1_shp frame_bool) && (same_shape p2_shp frame_int))
+        || ((same_shape p1_shp frame_int) && (same_shape p2_shp frame_bool))
+    | Predicate.Gt
+    | Predicate.Ge
+    | Predicate.Lt
+    | Predicate.Le ->
+        (same_shape p1_shp p2_shp) && (same_shape p1_shp (frame_int))  
+    in
+      get_pred_shape p
+
+let refinement_well_formed env solution r qual_var =
+  let valu = qual_var in
+  let pred = refinement_predicate solution valu r in
+  let vars = Predicate.vars pred in
+  let in_scope =
+    let var_bound v = Lightenv.mem v env in
+    List.for_all var_bound vars
+  in
+  (*if in_scope then pred_is_well_typed env pred else false*) in_scope 
+
+

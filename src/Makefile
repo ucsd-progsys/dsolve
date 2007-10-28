@@ -58,9 +58,9 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/typemod.cmo
 
 QUALIFYING=qualifying/lightenv.cmo \
-  qualifying/qualifier.cmo qualifying/frame.cmo \
+  qualifying/qualifier.cmo qualifying/builtins.cmo qualifying/frame.cmo \
   qualifying/message.cmo \
-  qualifying/theoremProver.cmo qualifying/builtins.cmo \
+  qualifying/theoremProver.cmo \
   qualifying/constraint.cmo qualifying/qualgen.cmo \
   qualifying/qualifymod.cmo qualifying/printqual.cmo \
   qualifying/qdebug.cmo 

@@ -165,7 +165,8 @@ let convertPath path = convertSymbol (Path.unique_name path)
 
 let rec convert_exp e =
   match e with
-    PInt i -> string_of_int i  (* pmr: ask Ranjit why there was an assertion here *)
+    PInt i -> if i >= 0 then string_of_int i
+              else convert_exp (Binop(PInt(0), Minus, PInt(abs i))) 
   | Var x -> convertPath x
   | Pvar (x,i) -> Printf.sprintf "%sprime%d" (convertPath x) i
   | Binop (e1,op,e2) -> Printf.sprintf "(%s %s %s)" (convert_op op) (convert_exp e1) (convert_exp e2)

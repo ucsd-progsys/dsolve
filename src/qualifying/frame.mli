@@ -34,4 +34,4 @@ val refinement_var: t -> Path.t option
 val predicate:
   Qualifier.t list Lightenv.t -> Path.t -> t -> Predicate.t
 val refinement_well_formed:
-  t Lightenv.t -> Qualifier.t list Lightenv.t -> refinement -> bool
+  t Lightenv.t -> Qualifier.t list Lightenv.t -> refinement -> Path.t -> bool

@@ -22,7 +22,7 @@ let mapfilter f env =
 let addn items env =
   List.fold_left (fun e (k, v) -> add k v e) env items
 
-(*
-let pprint pprint_range env =
-  Misc.join (maplist (fun x t -> Printf.sprintf "%s -> %s" x (pprint_range t)) env) "; "
-*)
+let pprint pprint_range ppf env =
+  iter (fun x t -> Format.fprintf ppf "@[%s@ ->@ %a;@\n@]" (Path.unique_name x) pprint_range t) env 
+  
+
