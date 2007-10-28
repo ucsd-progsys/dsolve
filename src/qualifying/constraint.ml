@@ -75,6 +75,11 @@ let split cstrs =
               split_rec flat (List.append [SubFrame(env, guard, t1, t1'); SubFrame(env, guard, t2, t2')] cs) 
           | _ -> assert false
         end
+    (* ming: for type checking, when we split WFFrames now, we need to keep
+             the frame around. the paper method for doing this is to insert
+             the frame into the environment, so that's what we do here.
+             note that we've just agreed on using the qual_test_var ident
+             for predicate vars (it's passed into the solver later...) *)
     | WFFrame(env, f) :: cs ->
         begin match f with
           | Frame.Farrow (l, f, f') ->
@@ -128,6 +133,11 @@ let rec solve_wf_constraints solution = function
   | [] -> solution
   | (env, (subs, Frame.Qvar k)) :: cs ->
       let solution' = solve_wf_constraints solution cs in
+      (* ming: we have to pass qual_test_var into the WF checker now because
+               we've agreed with the splitting code to use that as the predicate
+               var. the only way around this would be to keep the frame from
+               the WFFrame up until here, the solver, essentially obviating
+               splitting. *)
       let refined_quals =
         List.filter
           (fun q -> Frame.refinement_well_formed env solution (subs, Frame.Qconst [q]) qual_test_var)
