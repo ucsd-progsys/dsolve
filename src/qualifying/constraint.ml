@@ -264,10 +264,11 @@ let check_satisfied solution cstrs =
           raise Unsatisfiable
   with Not_found -> ()
 
+(* generate only RHS WFs in attempt to WF something while not bugging out the solver *)
 let rec build_wf cs =
   match cs with
   | [] -> []
-  | SubFrame (env, guard, t1, t2) :: cs -> (WFFrame(env, t1)::(WFFrame(env, t2)::(build_wf cs)))
+  | SubFrame (env, guard, t1, t2) :: cs -> ((*WFFrame(env, t1)::*)(WFFrame(env, t2)::(build_wf cs)))
   | _ :: cs -> assert false
 
 let rec divide_constraints_by_form wf refi = function
@@ -322,12 +323,10 @@ let solve_constraints quals constrs =
     Oprint.print_list pprint (fun ppf -> fprintf ppf "@.@.")
       std_formatter constrs;
   let wf_const = build_wf constrs in
-  let _ = assert (2 * (List.length constrs) = (List.length wf_const)) in
   let (cs', wfs') = (split constrs, split wf_const) in
   let (refis, wfs) = (subrefi_to_tuple cs', wfrefi_to_tuple wfs') in
   let inst_quals = List.length quals in
   let _ = Printf.printf "%d instantiated qualifiers\n\n" inst_quals in
-  (*let (wfs, refis) = (build_wf cs, cs) in divide_constraints_by_form [] [] cs in*)
   let init_solution = initial_solution cs' quals in
   let num_vars = count_variables init_solution in
   let _ = Printf.printf "%d variables\n\n" num_vars in 
