@@ -338,10 +338,20 @@ qualifying/qualifymod.cmx: typing/types.cmx typing/typedtree.cmx \
     qualifying/lightenv.cmx qualifying/frame.cmx typing/env.cmx \
     qualifying/constraint.cmx qualifying/builtins.cmx typing/btype.cmx \
     utils/bstats.cmx parsing/asttypes.cmi qualifying/qualifymod.cmi 
-qualifying/theoremProver.cmo: typing/predicate.cmi typing/path.cmi \
+qualifying/theoremProver.cmo: qualifying/theoremProverYices.cmo \
+    qualifying/theoremProverSimplify.cmo typing/predicate.cmi \
+    utils/clflags.cmi 
+qualifying/theoremProver.cmx: qualifying/theoremProverYices.cmx \
+    qualifying/theoremProverSimplify.cmx typing/predicate.cmx \
+    utils/clflags.cmx 
+qualifying/theoremProverSimplify.cmo: typing/predicate.cmi typing/path.cmi \
     utils/misc.cmi qualifying/message.cmi 
-qualifying/theoremProver.cmx: typing/predicate.cmx typing/path.cmx \
+qualifying/theoremProverSimplify.cmx: typing/predicate.cmx typing/path.cmx \
     utils/misc.cmx qualifying/message.cmx 
+qualifying/theoremProverYices.cmo: typing/predicate.cmi typing/path.cmi \
+    utils/misc.cmi 
+qualifying/theoremProverYices.cmx: typing/predicate.cmx typing/path.cmx \
+    utils/misc.cmx 
 bytecomp/bytegen.cmi: bytecomp/lambda.cmi bytecomp/instruct.cmi 
 bytecomp/bytelink.cmi: bytecomp/symtable.cmi bytecomp/cmo_format.cmi 
 bytecomp/bytepackager.cmi: typing/ident.cmi 

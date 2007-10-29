@@ -39,13 +39,13 @@ module type PROVER =
     (* valid p : do the currently assumed facts imply p ? *)
     val valid : Predicate.t -> bool
 
-    (* implies p q = true iff predicate p (provably) implies predicate q *)
-    val implies : Predicate.t -> Predicate.t -> bool
+    (* implies (p, q) = true iff predicate p (provably) implies predicate q *)
+    val implies : (Predicate.t * Predicate.t) -> bool
 
     val print_simplify: Predicate.t -> Predicate.t -> unit
 
     val restart_simplify : unit -> unit
-    
+
   end
 
 module M = Message
@@ -87,7 +87,7 @@ let simp_oc = open_out "simplify.log"
 (* may raise ChannelException *)
 let secure_output_string oc s = 
   try set_alarm (); 
-  (*output_string simp_oc s; flush simp_oc;*)
+  output_string simp_oc s; flush simp_oc;
   output_string oc s; flush oc; reset_alarm ()
   with ChannelException -> reset_alarm (); raise ChannelException
 
@@ -182,71 +182,13 @@ let rec convert_exp e =
 
 let rec convert_pred p = 
   match p with 
-    True -> "(EQ 0 0)"  
+    True -> "(EQ 0 0)"
+  | Atom (e1,Predicate.Lt,e2) ->
+      convert_pred (Atom (e1, Predicate.Le, Binop(e2,Predicate.Minus,PInt 1)))
   | Atom (e1,r,e2) -> Printf.sprintf "(%s %s %s)" (convert_rel r) (convert_exp e1) (convert_exp e2)
   | Not p -> Printf.sprintf "(NOT %s)" (convert_pred p) 
   | And (p1,p2) -> Printf.sprintf "(AND %s %s)" (convert_pred p1) (convert_pred p2)
   | Or (p1,p2) -> Printf.sprintf "(OR %s %s)" (convert_pred p1) (convert_pred p2)
-
-(********************************************************************************)
-(************************** Unbreaking Division *********************************)
-(********************************************************************************)
-
-let rec fixdiv p = 
-   let expr_isdiv = 
-       function Predicate.Binop(_, Predicate.Div, _) -> true
-                | _ -> false in 
-   let pull_const =
-       function Predicate.PInt(i) -> i
-                | _ -> 1 in
-   let pull_divisor =
-       function Predicate.Binop(_, Predicate.Div, d1) ->
-                pull_const d1 
-                | _ -> 1 in
-   let rec apply_mult m e =
-       match e with
-           Predicate.Binop(n, Predicate.Div, Predicate.PInt(d)) ->
-               let _ = assert ((m/d) * d = m) in
-               Predicate.Binop(Predicate.PInt(m/d), Predicate.Times, n) 
-           | Predicate.Binop(e1, rel, e2) ->
-               Predicate.Binop(apply_mult m e1, rel, apply_mult m e2) 
-           | Predicate.PInt(i) -> Predicate.PInt(i*m)
-           | e -> Predicate.Binop(Predicate.PInt(m), Predicate.Times, e)
-           in
-   let rec pred_isdiv = 
-       function Predicate.Atom(e, _, e') -> (expr_isdiv e) || (expr_isdiv e')
-                | Predicate.And(p, p') -> (pred_isdiv p) || (pred_isdiv p')
-                | Predicate.Or(p, p') -> (pred_isdiv p) || (pred_isdiv p')
-                | Predicate.True -> false
-                | Predicate.Not p -> pred_isdiv p in
-   let calc_cm e1 e2 =
-       pull_divisor e1 * pull_divisor e2 in
-   if pred_isdiv p then
-   match p with
-       Predicate.Atom(e, r, e') -> 
-                let m = calc_cm e e' in
-                let e'' = Predicate.Binop(e', Predicate.Minus, Predicate.PInt(1)) in
-                let bound (e, r, e', e'') = 
-                    Predicate.And(Predicate.Atom(apply_mult m e, Predicate.Gt, apply_mult m e''),
-                                  Predicate.Atom(apply_mult m e, Predicate.Le, apply_mult m e'))
-                in
-                (match (e, r, e') with
-                  (Predicate.Var v, Predicate.Eq, e') ->
-                    bound (e, r, e', e'')
-                  | (Predicate.PInt v, Predicate.Eq, e') ->
-                    bound (e, r, e', e'')
-                  | _ -> p) 
-       | Predicate.And(p1, p2) -> 
-                let p1 = if pred_isdiv p1 then fixdiv p1 else p1 in
-                let p2 = if pred_isdiv p2 then fixdiv p2 else p2 in
-                Predicate.And(p1, p2)      
-       | Predicate.Or(p1, p2) ->
-                let p1 = if pred_isdiv p1 then fixdiv p1 else p1 in
-                let p2 = if pred_isdiv p2 then fixdiv p2 else p2 in
-                Predicate.Or(p1, p2) 
-       | Predicate.Not p1 -> Predicate.Not(fixdiv p1) 
-       | p -> p
-   else p
 
 
 (********************************************************************************)
@@ -254,8 +196,7 @@ let rec fixdiv p =
 (********************************************************************************)
 
 let push pred =
-  let fixed = fixdiv pred in
-  let s = Printf.sprintf "(BG_PUSH %s) \n" (convert_pred fixed) in
+  let s = Printf.sprintf "(BG_PUSH %s) \n" (convert_pred pred) in
   let _ = current_simplify_stack := s :: !current_simplify_stack in
   let _ = simplify_stack_counter := !simplify_stack_counter + 1 in
   let (_,oc) = getServer () in
@@ -290,11 +231,20 @@ let valid p =
 let reset () = 
   Misc.repeat_fn pop (!simplify_stack_counter)
 
-let implies p q = 
-  let _  = push p in
-  let rv = valid q in
-  let _  = pop () in
-  rv
+let implies (p, q) =
+  let s = Printf.sprintf "(IMPLIES %s %s)" (convert_pred p) (convert_pred q) in
+  let rec qe flag = 
+    let _ = flush stdout; flush stderr in 
+    try
+      let ic,oc = getServer () in
+      secure_output_string oc s;flush oc; isValid ic
+    with ChannelException when flag -> failwith "Simplify fails again!" 
+       | ChannelException -> restart_simplify (); qe true
+       | e -> 
+         failwith (Format.fprintf Format.str_formatter
+           "Simplify raises %s for %a. Check that Simplify is in your path \n" 
+           (Printexc.to_string e) Predicate.pprint p; Format.flush_str_formatter ()) in
+  qe false
 
 let print_simplify p q = 
   let ps = convert_pred p in

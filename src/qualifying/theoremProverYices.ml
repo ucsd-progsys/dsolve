@@ -40,8 +40,8 @@ module type PROVER =
     (* valid p : do the currently assumed facts imply p ? *)
     val valid : Predicate.t -> bool
 
-    (* implies p q = true iff predicate p (provably) implies predicate q *)
-    val implies : Predicate.t -> Predicate.t -> bool
+    (* implies (p, q) = true iff predicate p (provably) implies predicate q *)
+    val implies : (Predicate.t * Predicate.t) -> bool
     
   end
 
@@ -113,6 +113,8 @@ module YicesProver  =
       | Predicate.Not p' -> Y.yices_mk_not me.c (yicesPred me p')
       | Predicate.And (p1,p2) -> Y.yices_mk_and me.c (Array.map (yicesPred me) [|p1;p2|])
       | Predicate.Or (p1,p2) -> Y.yices_mk_or me.c (Array.map (yicesPred me) [|p1;p2|])
+      | Predicate.Atom (e1,Predicate.Lt,e2) ->
+          yicesPred me (Atom (e1, Predicate.Le, Binop(e2,Predicate.Minus,PInt 1)))
       | Predicate.Atom (e1,br,e2) ->
           let e1' = yicesExp me e1 in
           let e2' = yicesExp me e2 in
@@ -123,62 +125,6 @@ module YicesProver  =
 					 | Predicate.Ge -> Y.yices_mk_ge me.c e1' e2'
            | Predicate.Lt -> Y.yices_mk_lt me.c e1' e2'
            | Predicate.Le -> Y.yices_mk_le me.c e1' e2')
-
-let rec fixdiv p = 
-   let expr_isdiv = 
-       function Predicate.Binop(_, Predicate.Div, _) -> true
-                | _ -> false in 
-   let pull_const =
-       function Predicate.PInt(i) -> i
-                | _ -> 1 in
-   let pull_divisor =
-       function Predicate.Binop(_, Predicate.Div, d1) ->
-                pull_const d1 
-                | _ -> 1 in
-   let rec apply_mult m e =
-       match e with
-           Predicate.Binop(n, Predicate.Div, Predicate.PInt(d)) ->
-               let _ = assert ((m/d) * d = m) in
-               Predicate.Binop(Predicate.PInt(m/d), Predicate.Times, n) 
-           | Predicate.Binop(e1, rel, e2) ->
-               Predicate.Binop(apply_mult m e1, rel, apply_mult m e2) 
-           | Predicate.PInt(i) -> Predicate.PInt(i*m)
-           | e -> Predicate.Binop(Predicate.PInt(m), Predicate.Times, e)
-           in
-   let rec pred_isdiv = 
-       function Predicate.Atom(e, _, e') -> (expr_isdiv e) || (expr_isdiv e')
-                | Predicate.And(p, p') -> (pred_isdiv p) || (pred_isdiv p')
-                | Predicate.Or(p, p') -> (pred_isdiv p) || (pred_isdiv p')
-                | Predicate.True -> false
-                | Predicate.Not p -> pred_isdiv p in
-   let calc_cm e1 e2 =
-       pull_divisor e1 * pull_divisor e2 in
-   if pred_isdiv p then
-   match p with
-       Predicate.Atom(e, r, e') -> 
-                let m = calc_cm e e' in
-                let e'' = Predicate.Binop(e', Predicate.Minus, Predicate.PInt(1)) in
-                let bound (e, r, e', e'') = 
-                    Predicate.And(Predicate.Atom(apply_mult m e, Predicate.Gt, apply_mult m e''),
-                                  Predicate.Atom(apply_mult m e, Predicate.Le, apply_mult m e'))
-                in
-                (match (e, r, e') with
-                  (Predicate.Var v, Predicate.Eq, e') ->
-                    bound (e, r, e', e'')
-                  | (Predicate.PInt v, Predicate.Eq, e') ->
-                    bound (e, r, e', e'')
-                  | _ -> p) 
-       | Predicate.And(p1, p2) -> 
-                let p1 = if pred_isdiv p1 then fixdiv p1 else p1 in
-                let p2 = if pred_isdiv p2 then fixdiv p2 else p2 in
-                Predicate.And(p1, p2)      
-       | Predicate.Or(p1, p2) ->
-                let p1 = if pred_isdiv p1 then fixdiv p1 else p1 in
-                let p2 = if pred_isdiv p2 then fixdiv p2 else p2 in
-                Predicate.Or(p1, p2) 
-       | Predicate.Not p1 -> Predicate.Not(fixdiv p1) 
-       | p -> p
-   else p
    
 
     let me = 
@@ -200,13 +146,7 @@ let rec fixdiv p =
 	begin
 	  me.ds <- barrier :: me.ds;
 	  Y.yices_push me.c;
-	  Y.yices_assert me.c 
-            (let p' = fixdiv p in 
-               (*let _ = if (fixdiv p) != p then
-                 (Predicate.pprint Format.std_formatter p; 
-                 Predicate.pprint Format.std_formatter p') 
-                 else () in *)
-               yicesPred me p')
+	  Y.yices_assert me.c (yicesPred me p)
 	end
       
     let rec vpop (cs,s) =
@@ -239,7 +179,7 @@ let rec fixdiv p =
       let _ = pop () in
       rv
 
-    let implies p q = 
+    let implies (p, q) = 
       let _ = push p in
       let rv = valid q in
       let _ = pop () in
