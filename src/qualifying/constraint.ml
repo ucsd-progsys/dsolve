@@ -233,6 +233,11 @@ let check_satisfied solution cstrs =
           raise Unsatisfiable
   with Not_found -> ()
 
+let rec build_wf cs =
+  match cs with
+  | [] -> []
+  | SubFrame (env, guard, t1, t2) :: cs -> (WFFrame(env, t1)::(WFFrame(env, t2)::(build_wf cs)))
+  | _ :: cs -> assert false
 
 let rec divide_constraints_by_form wf refi = function
   | [] -> (wf, refi)
@@ -240,6 +245,18 @@ let rec divide_constraints_by_form wf refi = function
       divide_constraints_by_form wf (r :: refi) cs
   | WFRefinement w :: cs ->
       divide_constraints_by_form (w :: wf) refi cs
+
+let rec subrefi_to_tuple = function
+  | [] -> []
+  | SubRefinement r :: cs ->
+      r :: subrefi_to_tuple cs
+  | _ :: cs -> subrefi_to_tuple cs
+
+let rec wfrefi_to_tuple = function
+  | [] -> []
+  | WFRefinement w :: cs ->
+      w :: wfrefi_to_tuple cs
+  | _ :: cs -> wfrefi_to_tuple cs
 
 let is_simple_constraint = function
   | (_, _, ([], _), ([], _)) -> true
@@ -273,11 +290,14 @@ let solve_constraints quals constrs =
   if !Clflags.dump_constraints then
     Oprint.print_list pprint (fun ppf -> fprintf ppf "@.@.")
       std_formatter constrs;
-  let cs = split constrs in
+  let wf_const = build_wf constrs in
+  let _ = assert (2 * (List.length constrs) = (List.length wf_const)) in
+  let (cs', wfs') = (split constrs, split wf_const) in
+  let (refis, wfs) = (subrefi_to_tuple cs', wfrefi_to_tuple wfs') in
   let inst_quals = List.length quals in
   let _ = Printf.printf "%d instantiated qualifiers\n\n" inst_quals in
-  let (wfs, refis) = divide_constraints_by_form [] [] cs in
-  let init_solution = initial_solution cs quals in
+  (*let (wfs, refis) = (build_wf cs, cs) in divide_constraints_by_form [] [] cs in*)
+  let init_solution = initial_solution cs' quals in
   let num_vars = count_variables init_solution in
   let _ = Printf.printf "%d variables\n\n" num_vars in 
   let _ = Printf.printf "%d total quals\n\n" (num_vars * inst_quals) in
@@ -312,5 +332,6 @@ let solve_constraints quals constrs =
   let init_wklist = List.filter (fun c -> match lhs_vars c with [] -> true | _ -> false) refis in
   Printf.printf "%d constraint graph roots\n\n" (List.length init_wklist);
   let solution = Bstats.time "refining subtypes" (solve_rec solution') init_wklist in
-    Bstats.time "testing solution" (check_satisfied solution) cs;
+    Bstats.time "testing solution subs" (check_satisfied solution) cs';
+    Bstats.time "testing solution wfs" (check_satisfied solution) wfs';
     solution

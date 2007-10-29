@@ -322,6 +322,6 @@ let refinement_well_formed env solution r qual_var =
     let var_bound v = Lightenv.mem v env in
     List.for_all var_bound vars
   in
-  (*if in_scope then pred_is_well_typed env pred else false*) in_scope 
+  if in_scope then pred_is_well_typed env pred else false (*in_scope*) 
 
 

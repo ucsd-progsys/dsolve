@@ -61,6 +61,7 @@ and dump_qexprs = ref false             (* -dqexprs *)
 and dump_qualifs = ref false            (* -dqualifs *)
 and dump_queries = ref false            (* -dqueries *)
 and brief_quals = ref false              (* -bquals *)
+and less_qualifs = ref false            (* -lqualifs *)
 
 let keep_asm_file = ref false           (* -S *)
 let optimize_for_speed = ref true       (* -compact *)
