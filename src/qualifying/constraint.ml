@@ -233,6 +233,7 @@ let check_satisfied solution cstrs =
           raise Unsatisfiable
   with Not_found -> ()
 
+
 let rec divide_constraints_by_form wf refi = function
   | [] -> (wf, refi)
   | SubRefinement r :: cs ->
@@ -244,14 +245,47 @@ let is_simple_constraint = function
   | (_, _, ([], _), ([], _)) -> true
   | _ -> false
 
+module QualifierSet = Set.Make(Qualifier)
+
+let count_qualifiers solution =
+  let quals = ref QualifierSet.empty in
+  let add k ql = List.iter (fun q -> quals := QualifierSet.add q !quals) ql in
+  Lightenv.iter add solution; QualifierSet.cardinal !quals 
+
+let count_variables solution =
+  let sum = ref 0 in
+  let add k ql = sum := 1 + !sum in
+  Lightenv.iter add solution; !sum
+
+let count_total_qualifiers solution = 
+  let sum = ref 0 in
+  let max = ref 0 in
+  let min = ref 0 in
+  let add k ql = 
+    let l = List.length ql in
+    sum := l + !sum;
+    max := if l > !max then l else !max;
+    min := if !min = 0 then l else
+              if l < !min then l else !min in
+  Lightenv.iter add solution; (!sum, !max, !min)
+
 let solve_constraints quals constrs =
   if !Clflags.dump_constraints then
     Oprint.print_list pprint (fun ppf -> fprintf ppf "@.@.")
       std_formatter constrs;
   let cs = split constrs in
+  let inst_quals = List.length quals in
+  let _ = Printf.printf "%d instantiated qualifiers\n\n" inst_quals in
   let (wfs, refis) = divide_constraints_by_form [] [] cs in
   let init_solution = initial_solution cs quals in
+  let num_vars = count_variables init_solution in
+  let _ = Printf.printf "%d variables\n\n" num_vars in 
+  let _ = Printf.printf "%d total quals\n\n" (num_vars * inst_quals) in
   let solution' = Bstats.time "solving wfs" (solve_wf_constraints init_solution) wfs in
+  Printf.printf "%d unique qualifiers after solving wf\n\n" (count_qualifiers solution');
+  let (sum, max, min) = count_total_qualifiers solution' in
+  Printf.printf "Quals:\n\tTotal: %d\n\tAvg: %f\n\tMax: %d\n\tMin: %d\n\n"
+                sum ((float_of_int sum) /. (float_of_int num_vars)) max min;
   Printf.printf "%d split subtyping constraints\n\n" (List.length refis);
   Printf.printf "%d simple subtyping constraints\n\n"
     (List.length (List.filter is_simple_constraint refis));
