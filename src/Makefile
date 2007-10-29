@@ -63,6 +63,7 @@ QUALIFYING=qualifying/lightenv.cmo \
   qualifying/message.cmo \
   yices/lib/oyices.cma \
   qualifying/theoremProverSimplify.cmo qualifying/theoremProverYices.cmo \
+  qualifying/theoremProver.cmo \
   qualifying/constraint.cmo qualifying/qualgen.cmo \
   qualifying/qualifymod.cmo qualifying/printqual.cmo \
   qualifying/qdebug.cmo 

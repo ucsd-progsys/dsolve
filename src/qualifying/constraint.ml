@@ -114,11 +114,7 @@ let constraint_sat solution = function
       let envp = environment_predicate solution env in
       let p1 = Frame.refinement_predicate solution qual_test_var r1 in
       let p2 = Frame.refinement_predicate solution qual_test_var r2 in
-        let smp = TheoremProverSimplify.Prover.implies (Predicate.big_and [envp; guard; p1]) p2 in
-        let yic = TheoremProverYices.Prover.implies (Predicate.big_and [envp; guard; p1]) p2 in
-        if smp != yic then
-          assert false
-        else smp
+        TheoremProver.implies (Predicate.big_and [envp; guard; p1]) p2
   | WFRefinement (env, r) ->
     (* ming: this is an error check. it shouldn't be possible for this to be tripped*)
       Frame.refinement_well_formed env solution r qual_test_var
@@ -156,31 +152,27 @@ let refine solution = function
           (Predicate.big_and [envp; guard; p1])
       in
         let lhs = make_lhs r in
-        Bstats.time "refinement query yices" TheoremProverYices.Prover.push lhs;
-        Bstats.time "refinement query simp" TheoremProverSimplify.Prover.push lhs;
         let qual_holds q =
           let rhs = (Frame.refinement_predicate solution qual_test_var (subs, Frame.Qconst [q])) in
-          let resy = Bstats.time "refinement query yices" TheoremProverYices.Prover.valid rhs in
-          let ress = Bstats.time "refinement query simp" TheoremProverSimplify.Prover.valid rhs in
-          let res =
-            if resy = ress then
-              resy
-            else begin
-              fprintf std_formatter
-                "@[Theorem@ prover@ insanity:@]@.";
-              fprintf std_formatter
-                "@[Query:@;<1 2>%a@;<1 2>=>@;<1 2>%a@]@."
-                Predicate.pprint lhs Predicate.pprint rhs;
-              fprintf std_formatter
-                "@[Yices@ says@ %B,@ Simplify@ says@ %B@]@." resy ress;
-              TheoremProverSimplify.Prover.print_simplify lhs rhs;
-              assert false
-            end;
-          in
-            if !Clflags.dump_queries then
-              Format.fprintf std_formatter "@[%a@ =>@ %a@ (%s)@]@.@."
-                Predicate.pprint lhs Predicate.pprint rhs (if res then "SAT" else "UNSAT");
-            res
+            begin try
+              let res = Bstats.time "refinement query" TheoremProver.implies lhs rhs in
+                if !Clflags.dump_queries then
+                  Format.fprintf std_formatter "@[%a@ =>@ %a@ (%s)@]@.@."
+                    Predicate.pprint lhs Predicate.pprint rhs (if res then "SAT" else "UNSAT");
+                res
+            with TheoremProver.Provers_disagree (default, backup) ->
+              begin
+                fprintf std_formatter
+                  "@[Theorem@ prover@ insanity:@]@.";
+                fprintf std_formatter
+                  "@[Query:@;<1 2>%a@;<1 2>=>@;<1 2>%a@]@."
+                  Predicate.pprint lhs Predicate.pprint rhs;
+                fprintf std_formatter
+                  "@[Default@ prover:@ %B,@ backup@ prover:@ %B@]@."
+                  default backup;
+                assert false
+              end
+            end
         in
         let refined_quals =
           List.filter qual_holds (try Lightenv.find k2 solution with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k2); raise Not_found)) in
@@ -199,8 +191,6 @@ let refine solution = function
               end
           | _ -> ()
         in *)
-          Bstats.time "refinement query yices" TheoremProverYices.Prover.pop ();
-          Bstats.time "refinement query simp" TheoremProverSimplify.Prover.pop ();
           Lightenv.add k2 refined_quals solution
   | _ -> solution
       (* With anything else, there's nothing to refine, just to check later with

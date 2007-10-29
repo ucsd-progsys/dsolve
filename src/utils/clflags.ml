@@ -60,6 +60,7 @@ and dump_constraints = ref false        (* -dconstr *)
 and dump_qexprs = ref false             (* -dqexprs *)
 and dump_qualifs = ref false            (* -dqualifs *)
 and dump_queries = ref false            (* -dqueries *)
+and check_queries = ref false            (* -cqueries *)
 and brief_quals = ref false              (* -bquals *)
 
 let keep_asm_file = ref false           (* -S *)
