@@ -59,6 +59,7 @@ val dump_qualifs: bool ref
 val dump_queries: bool ref
 val check_queries: bool ref
 val brief_quals: bool ref
+val less_qualifs: bool ref
 val keep_asm_file : bool ref
 val optimize_for_speed : bool ref
 val dump_cmm : bool ref

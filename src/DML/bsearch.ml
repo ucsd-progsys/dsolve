@@ -18,7 +18,6 @@ qualif GENEG1(x) : 0 - 1 <= x;;
 qualif GTNEG1(x) : 0 - 1 < x;;
 qualif LT4(x) : x < 4;;
 qualif GT(x) : 0 < x;;
-(* not all needed. some are just silly *)
 
 
 let bsearch key vec =

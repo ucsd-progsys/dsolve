@@ -1,26 +1,28 @@
 #not actually a regression test
+OCAML=./ocaml.run
+FLAGS=-dqexprs
 echo "NEXT: bsearch.ml"
-./ocaml -dqexprs < DML/bsearch.ml
+$OCAML $FLAGS < DML/bsearch.ml
 echo "NEXT: dotprod.ml"
-./ocaml -dqexprs < DML/dotprod.ml
+$OCAML $FLAGS < DML/dotprod.ml
 echo "NEXT: dotprod2.ml"
-./ocaml -dqexprs < DML/dotprod2.ml
+$OCAML $FLAGS < DML/dotprod2.ml
 echo "NEXT: insertsort.ml"
-./ocaml -dqexprs < DML/insertsort.ml
+$OCAML $FLAGS < DML/insertsort.ml
 echo "NEXT: queen.ml"
-./ocaml -dqexprs < DML/queen.ml
+$OCAML $FLAGS < DML/queen.ml
 echo "NEXT: tower.ml"
-./ocaml -dqexprs < DML/tower.ml
+$OCAML $FLAGS < DML/tower.ml
 echo "NEXT: quicksort.ml"
-./ocaml -dqexprs < DML/quicksort.ml
+$OCAML $FLAGS < DML/quicksort.ml
 echo "NEXT: bcopy.dml"
-./ocaml -dqexprs < DMLex/bcopy.dml
+$OCAML $FLAGS < DMLex/bcopy.dml
 echo "NEXT: bcopy2.dml"
-./ocaml -dqexprs < DMLex/bcopy2.dml
+$OCAML $FLAGS < DMLex/bcopy2.dml
 echo "NEXT: dp.dml"
-./ocaml -dqexprs < DMLex/dp.dml
+$OCAML $FLAGS < DMLex/dp.dml
 echo "NEXT: heapsort.dml"
-./ocaml -dqexprs < DMLex/heapsort.dml
+$OCAML $FLAGS < DMLex/heapsort.dml
 echo "NEXT: matmult.dml"
-./ocaml -dqexprs < DMLex/matmult.dml
+$OCAML $FLAGS < DMLex/matmult.dml
 

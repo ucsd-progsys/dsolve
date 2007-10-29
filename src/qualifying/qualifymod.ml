@@ -18,6 +18,8 @@ let expression_to_pexpr e =
     | _ ->
         Predicate.Var (Path.mk_ident "dummy")
 
+let under_lambda = ref 0
+
 let constrain_expression tenv initenv exp initcstrs initframemap =
   let rec constrain e env guard cstrs framemap =
     let (f, cs, fm) =
@@ -49,8 +51,8 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
             let guard3 = Predicate.And (Predicate.Not guardp, guard) in
             let (f3, cstrs3, fm3) = constrain e3 env' guard3 cstrs2 fm2 in
               (f,
-               WFFrame(env, f)
-               ::SubFrame(env', guard2, f2, f)
+               (*WFFrame(env, f)
+               ::*)SubFrame(env', guard2, f2, f)
                ::SubFrame(env', guard3, f3, f)
                ::cstrs3,
                fm3)
@@ -75,12 +77,12 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
                   let f' = Frame.label_like unlabelled_f' f'' in
                   let f = Frame.Farrow (Some xp, f, f') in
                     (f,
-                     WFFrame (env, f)
-                     :: SubFrame (env', guard, f'', f')
+                     (*WFFrame (env, f)
+                     ::*) SubFrame (env', guard, f'', f')
                      :: cstrs',
                      fm')
               | _ -> assert false
-	    end
+	    end 
 	| (Texp_ident _, {desc = Tconstr (p, [], _)}) ->
             (Frame.Fconstr (p, [], Builtins.equality_refinement (expression_to_pexpr e)),
              cstrs, framemap)
@@ -119,10 +121,16 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
 	        in List.fold_left constrain_application
                  (constrain e1 env guard cstrs framemap) exps
 	| (Texp_let (Nonrecursive, [({pat_desc = Tpat_var x}, e1)], e2), t) ->
+            let _ = if !under_lambda = 0 && !Clflags.less_qualifs then Qualgen.add_label (Path.Pident x, e1.exp_type) 
+                    else () in
+            let lambda = match e1.exp_desc with
+                      Texp_function (_, _) -> 
+                        under_lambda := !under_lambda + 1; true 
+                      | _ -> false in
             let (f1, cstrs'', fm'') = constrain e1 env guard cstrs framemap in
-            let _ = Qualgen.add_label (Path.Pident x, e1.exp_type) in
             let env' = Lightenv.add (Path.Pident x) f1 env in
             let (f2, cstrs', fm') = constrain e2 env' guard cstrs'' fm'' in
+            let _ = if lambda then under_lambda := !under_lambda - 1 else () in
             let f = Frame.fresh_with_labels t f2 in
               (f, SubFrame (env', guard, f2, f) :: cstrs', fm')
 	| (Texp_let (Recursive, [({pat_desc = Tpat_var f}, e1)], e2), t) ->
@@ -135,7 +143,12 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
                with the proper labels added. *)
             let unlabelled_f1 = Frame.fresh e1.exp_type in
             let fp = Path.Pident f in
-            let _ = Qualgen.add_label (Path.Pident f, e1.exp_type) in
+            let _ = if !under_lambda = 0 && !Clflags.less_qualifs then Qualgen.add_label (Path.Pident f, e1.exp_type) 
+                    else () in
+            let lambda = match e1.exp_desc with
+                      Texp_function (_, _) ->
+                        under_lambda := !under_lambda + 1; true
+                      | _ -> false in
             let unlabelled_env = Lightenv.add fp unlabelled_f1 env in
             let (labelled_f1, _, _) = constrain e1 unlabelled_env guard cstrs framemap in
             let f1' = Frame.label_like unlabelled_f1 labelled_f1 in
@@ -143,6 +156,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
             let (f1, cstrs'', fm'') = constrain e1 env'' guard cstrs framemap in
             let env' = Lightenv.add fp f1 env in
             let (f2, cstrs', fm') = constrain e2 env' guard cstrs'' fm'' in
+            let _ = if lambda then under_lambda := !under_lambda - 1 else () in
             let f = Frame.fresh_with_labels t f2 in
               (f,
                SubFrame (env', guard, f2, f)
@@ -157,7 +171,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
 						let (fs', c, m) = List.fold_left list_rec ([], cstrs, framemap) es in
 						let mksub b a = SubFrame(env, guard, a, b) in
 						let c = List.append (List.map (mksub (List.hd fs)) fs') c in
-						(f, WFFrame(env, f)::c, m)	
+						(f, (*WFFrame(env, f)::*)c, m)	
   | (Texp_sequence(e1, e2), t) ->
             let (f1, c, m) = constrain e1 env guard cstrs framemap in
             let (f2, c, m) = constrain e2 env guard c m in

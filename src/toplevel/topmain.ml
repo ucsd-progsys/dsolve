@@ -100,6 +100,7 @@ let main () =
      "-dqueries", Arg.Set dump_queries, "print out all theorem prover queries and their results";
      "-cqueries", Arg.Set check_queries, "use a backup prover to check all queries";
      "-bquals", Arg.Set brief_quals, "print out the number of refinements for a type instead of their names"
+     "-lqualifs", Arg.Set less_qualifs, "generate less qualifiers (lets only under lambdas)"
     ] file_argument usage;
   if not (prepare Format.err_formatter) then exit 2;
   Toploop.loop Format.std_formatter
