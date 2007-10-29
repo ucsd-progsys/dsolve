@@ -63,10 +63,29 @@ let rec pprint ppf = function
   | Not p ->
       fprintf ppf "@[(not@ %a)@]" pprint p
   | And (p, q) ->
-      fprintf ppf "@[(and@ %a@ %a)@]" pprint p pprint q
+      fprintf ppf "@[(and@;<1 2>%a@;<1 2>%a)@]" flatten_conjuncts p flatten_conjuncts q
   | Or (p, q) ->
-      fprintf ppf "@[(or@ %a@ %a)@]" pprint p pprint q
-
+      fprintf ppf "@[(or@;<1 2>%a@;<1 2>%a)@]" flatten_disjuncts p flatten_disjuncts q
+and flatten_conjuncts ppf = function
+  | And (And (p1, p2), And (q1, q2)) ->
+      fprintf ppf "@[%a@;<1 0>%a@;<1 0>%a@;<1 0>%a@]"
+        flatten_conjuncts p1 flatten_conjuncts p2
+        flatten_conjuncts q1 flatten_conjuncts q2
+  | And (And (p1, p2), q)
+  | And (q, And (p1, p2)) ->
+      fprintf ppf "@[%a@;<1 0>%a@;<1 0>%a@]"
+        pprint q flatten_conjuncts p1 flatten_conjuncts p2
+  | p -> pprint ppf p
+and flatten_disjuncts ppf = function
+  | Or (Or (p1, p2), Or (q1, q2)) ->
+      fprintf ppf "@[%a@;<1 0>%a@;<1 0>%a@;<1 0>%a@]"
+        flatten_disjuncts p1 flatten_disjuncts p2
+        flatten_disjuncts q1 flatten_disjuncts q2
+  | Or (Or (p1, p2), q)
+  | Or (q, Or (p1, p2)) ->
+      fprintf ppf "@[%a@;<1 0>%a@;<1 0>%a@]"
+        pprint q flatten_disjuncts p1 flatten_disjuncts p2
+  | p -> pprint ppf p
 
 let equals(p, q) =
   Atom(p, Eq, q)
