@@ -258,7 +258,8 @@ let check_satisfied solution cstrs =
             pprint_env_pred (solution, env) pprint_ref_pred (solution, r1) pprint_ref_pred (solution, r2);
           raise Unsatisfiable
       | WFRefinement (env, f) ->
-          fprintf std_formatter "@[Unsatisfiable@ WF@\nEnv:@ %a@\nWF:@ %a@]" 
+          fprintf std_formatter "@[Unsatisfied@ WF:@ %a@\nEnv:@ %a@\nWF:@ %a@]" 
+            Frame.pprint_refinement f
             (Lightenv.pprint Frame.pprint) env
             pprint_ref_pred (solution, f);
           raise Unsatisfiable
