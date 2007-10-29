@@ -139,7 +139,7 @@ let rec solve_wf_constraints solution = function
       let refined_quals =
         List.filter
           (fun q -> Frame.refinement_well_formed env solution (subs, Frame.Qconst [q]) qual_test_var)
-          (try Lightenv.find k solution with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k); raise Not_found))
+          (try Lightenv.find k solution' with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k); raise Not_found))
       in Lightenv.add k refined_quals solution'
   | _ :: cs -> solve_wf_constraints solution cs
       (* Nothing to do here; we can check satisfiability later *)
