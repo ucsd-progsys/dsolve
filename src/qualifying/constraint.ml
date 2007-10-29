@@ -144,6 +144,8 @@ let rec solve_wf_constraints solution = function
   | _ :: cs -> solve_wf_constraints solution cs
       (* Nothing to do here; we can check satisfiability later *)
 
+let compare_constraints (env1, _, _, _) (env2, _, _, _) = Lightenv.compare env1 env2
+
 let refine solution = function
   | (_, _, _, (subs, Frame.Qvar k2)) as r ->
       let make_lhs (env, guard, r1, _) =
@@ -314,7 +316,8 @@ let solve_constraints quals constrs =
       std_formatter constrs;
   let wf_const = build_wf constrs in
   let (cs', wfs') = (split constrs, split wf_const) in
-  let (refis, wfs) = (subrefi_to_tuple cs', wfrefi_to_tuple wfs') in
+  let (refis', wfs) = (subrefi_to_tuple cs', wfrefi_to_tuple wfs') in
+  let refis = List.fast_sort compare_constraints refis' in
   let inst_quals = List.length quals in
   let _ = Printf.printf "%d instantiated qualifiers\n\n" inst_quals in
   let init_solution = initial_solution cs' quals in
