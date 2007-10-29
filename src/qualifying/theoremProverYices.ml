@@ -129,7 +129,7 @@ module YicesProver  =
 
     let me = 
       let c = Y.yices_mk_context () in
-      let _ = Y.yices_enable_log_file "yices.log" in
+      let _ = if !Clflags.log_queries then Y.yices_enable_log_file "yices.log" else () in
       let t = Y.yices_mk_type c "int" in
 			let ar = Y.yices_mk_type c "a' array" in
       (*let unknown = Y.yices_mk_type c "unk" in*)
