@@ -23,7 +23,6 @@ let pprint_qualifier_expr ppf = function
   | Qconst quals ->
       Oprint.print_list Qualifier.pprint (fun ppf -> fprintf ppf "@ ") ppf quals
 
-
 let pprint_sub ppf (path, pexp) =
   fprintf ppf "@[%s@ ->@ %a@]" (Path.unique_name path) Predicate.pprint_pexpr pexp
 

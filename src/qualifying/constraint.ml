@@ -91,22 +91,23 @@ let split cstrs =
                     :: WFFrame (env', f')
                     :: cs)
           | Frame.Fconstr (_, [], r) ->
+              (* We add the test variable to the environment with the current frame;
+                 this makes type checking easier *)
               split_rec (WFRefinement (Lightenv.add qual_test_var f env, r) :: flat) cs
           | Frame.Ftuple (t1, t2) ->
               split_rec flat (List.append [WFFrame(env, t1); WFFrame(env, t2)] cs)
           | Frame.Fvar _
           | Frame.Funknown ->
               split_rec flat cs
-	        | Frame.Fconstr (_, l, r) ->
-	            split_rec (WFRefinement(Lightenv.add qual_test_var f env, r)::flat) 
-		            (List.append (List.map (function li -> WFFrame(env, li)) l) cs)
+	  | Frame.Fconstr (_, l, r) ->
+	      split_rec (WFRefinement(Lightenv.add qual_test_var f env, r)::flat) 
+		(List.append (List.map (function li -> WFFrame(env, li)) l) cs)
           (*| _ -> assert false*)
         end
   in split_rec [] cstrs
 
 let environment_predicate solution env =
   Predicate.big_and (Lightenv.maplist (Frame.predicate solution) env)
-
 
 let constraint_sat solution = function
   | SubRefinement (env, guard, r1, r2) ->
@@ -115,8 +116,9 @@ let constraint_sat solution = function
       let p2 = Frame.refinement_predicate solution qual_test_var r2 in
         let smp = TheoremProverSimplify.Prover.implies (Predicate.big_and [envp; guard; p1]) p2 in
         let yic = TheoremProverYices.Prover.implies (Predicate.big_and [envp; guard; p1]) p2 in
-        if smp != yic then assert false
-           else smp
+        if smp != yic then
+          assert false
+        else smp
   | WFRefinement (env, r) ->
     (* ming: this is an error check. it shouldn't be possible for this to be tripped*)
       Frame.refinement_well_formed env solution r qual_test_var
@@ -147,20 +149,34 @@ let rec solve_wf_constraints solution = function
       (* Nothing to do here; we can check satisfiability later *)
 
 let refine solution = function
-  | ((_, _, _, (subs, Frame.Qvar k2)) :: _) as srs ->
+  | (_, _, _, (subs, Frame.Qvar k2)) as r ->
       let make_lhs (env, guard, r1, _) =
         let envp = environment_predicate solution env in
         let p1 = Frame.refinement_predicate solution qual_test_var r1 in
           (Predicate.big_and [envp; guard; p1])
       in
-        let lhs = (Predicate.big_or (List.map make_lhs srs)) in
+        let lhs = make_lhs r in
         Bstats.time "refinement query yices" TheoremProverYices.Prover.push lhs;
         Bstats.time "refinement query simp" TheoremProverSimplify.Prover.push lhs;
         let qual_holds q =
           let rhs = (Frame.refinement_predicate solution qual_test_var (subs, Frame.Qconst [q])) in
           let resy = Bstats.time "refinement query yices" TheoremProverYices.Prover.valid rhs in
           let ress = Bstats.time "refinement query simp" TheoremProverSimplify.Prover.valid rhs in
-          let res = if resy = ress then resy else assert false in
+          let res =
+            if resy = ress then
+              resy
+            else begin
+              fprintf std_formatter
+                "@[Theorem@ prover@ insanity:@]@.";
+              fprintf std_formatter
+                "@[Query:@;<1 2>%a@;<1 2>=>@;<1 2>%a@]@."
+                Predicate.pprint lhs Predicate.pprint rhs;
+              fprintf std_formatter
+                "@[Yices@ says@ %B,@ Simplify@ says@ %B@]@." resy ress;
+              TheoremProverSimplify.Prover.print_simplify lhs rhs;
+              assert false
+            end;
+          in
             if !Clflags.dump_queries then
               Format.fprintf std_formatter "@[%a@ =>@ %a@ (%s)@]@.@."
                 Predicate.pprint lhs Predicate.pprint rhs (if res then "SAT" else "UNSAT");
@@ -168,6 +184,21 @@ let refine solution = function
         in
         let refined_quals =
           List.filter qual_holds (try Lightenv.find k2 solution with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k2); raise Not_found)) in
+(*        let _ = match r with
+          | (_, _, ([], Frame.Qvar k1), ([], Frame.Qvar _)) ->
+              if not (List.for_all (fun q -> List.mem q refined_quals) (Lightenv.find k1 solution)) then begin
+                Format.fprintf std_formatter "@[Found@ different@ quals@ for@ constraint:@]@.@.";
+                Format.fprintf std_formatter "@[Predicate@ LHS@ is:@;<1 2>%a@;<1 2>=>@ ...@ @]@.@."
+                  Predicate.pprint lhs;
+                let q1s = Lightenv.find k1 solution in
+                  Format.fprintf std_formatter "@[Simple@ propagation:@;<1 2>%a@]@."
+                    Frame.pprint_refinement ([], Frame.Qconst q1s);
+                  Format.fprintf std_formatter "@[Prover@ propagation:@;<1 2>%a@]@."
+                    Frame.pprint_refinement ([], Frame.Qconst refined_quals);
+                assert false
+              end
+          | _ -> ()
+        in *)
           Bstats.time "refinement query yices" TheoremProverYices.Prover.pop ();
           Bstats.time "refinement query simp" TheoremProverSimplify.Prover.pop ();
           Lightenv.add k2 refined_quals solution
@@ -312,18 +343,18 @@ let solve_constraints quals constrs =
   let cstr_map = make_variable_constraint_map refis in
   let rec solve_rec sol = function
     | [] -> sol
-    | ((_, _, _, ((_, Frame.Qvar k) as rhs)) :: rest) as wklist ->
-        (* Find all the constraints with RHSes identical to this one; they can be solved
+    | (_, _, _, (_, Frame.Qvar k)) as r :: rest ->
+        (* pmr: removed opt-
+           Find all the constraints with RHSes identical to this one; they can be solved
            in one pass by or-ing all the LHSes together, saving a few prover calls *)
         (* pmr: of course, as implemented below, this is quite inefficient - we shouldn't be
            searching the worklist.  OTOH, we're trying to gain on time spent in the prover, so
            we can worry about the efficiency of this later *)
-        let (same_rhs, wklist'') = List.partition (fun (_, _, _, rhs') -> rhs = rhs') wklist in
-        let sol' = refine sol same_rhs in
+        let sol' = refine sol r in
         let wklist' =
           if not (Lightenv.equal (=) sol' sol) then
-            wklist'' @ (try VarMap.find k cstr_map with Not_found -> [])
-          else wklist''
+            rest @ (try VarMap.find k cstr_map with Not_found -> [])
+          else rest
         in solve_rec sol' wklist'
     | _ :: wklist -> solve_rec sol wklist
   in
