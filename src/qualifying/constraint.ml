@@ -146,6 +146,9 @@ let rec solve_wf_constraints solution = function
 
 let compare_constraints (env1, _, _, _) (env2, _, _, _) = Lightenv.compare env1 env2
 
+let solved_constraints = ref 0
+let valid_constraints = ref 0
+
 let refine solution = function
   | (_, _, _, (subs, Frame.Qvar k2)) as r ->
       let make_lhs (env, guard, r1, _) =
@@ -158,6 +161,10 @@ let refine solution = function
           let rhs = (Frame.refinement_predicate solution qual_test_var (subs, Frame.Qconst [q])) in
             begin try
               let res = Bstats.time "refinement query" TheoremProver.implies lhs rhs in
+                incr solved_constraints;
+                if res then incr valid_constraints;
+                Printf.printf "Solved %d constraints; %d valid\n\n" !solved_constraints !valid_constraints;
+                print_flush ();
                 if !Clflags.dump_queries then
                   Format.fprintf std_formatter "@[%a@ =>@ %a@ (%s)@]@.@."
                     Predicate.pprint lhs Predicate.pprint rhs (if res then "SAT" else "UNSAT");
@@ -332,6 +339,7 @@ let solve_constraints quals constrs =
   Printf.printf "%d split subtyping constraints\n\n" (List.length refis);
   Printf.printf "%d simple subtyping constraints\n\n"
     (List.length (List.filter is_simple_constraint refis));
+  print_flush ();
   let cstr_map = make_variable_constraint_map refis in
   let rec solve_rec sol = function
     | [] -> sol
@@ -342,6 +350,8 @@ let solve_constraints quals constrs =
         (* pmr: of course, as implemented below, this is quite inefficient - we shouldn't be
            searching the worklist.  OTOH, we're trying to gain on time spent in the prover, so
            we can worry about the efficiency of this later *)
+        Printf.printf "Worklist has size %d\n\n" (List.length rest);
+        print_flush ();
         let sol' = refine sol r in
         let wklist' =
           if not (Lightenv.equal (=) sol' sol) then
@@ -352,7 +362,7 @@ let solve_constraints quals constrs =
   in
   (* Find the "roots" of the constraint graph - all those constraints that don't
      have a variable in the LHS *)
-  let init_wklist = List.filter (fun c -> match lhs_vars c with [] -> true | _ -> false) refis in
+  let init_wklist = refis in (* List.filter (fun c -> match lhs_vars c with [] -> true | _ -> false) refis in *)
   Printf.printf "%d constraint graph roots\n\n" (List.length init_wklist);
   let solution = Bstats.time "refining subtypes" (solve_rec solution') init_wklist in
     Bstats.time "testing solution subs" (check_satisfied solution) cs';
