@@ -328,7 +328,30 @@ module Constraint = struct
        is a priority queue *)
 end
 
-module Worklist = Heap.Functional(Constraint)
+exception Empty_worklist
+
+module Worklist = struct
+  module WHeap = Heap.Functional(Constraint)
+
+  type t =
+    | Workheap of WHeap.t
+    | Worklist of subrefinement_constraint list
+
+  let empty () = if !Clflags.use_list then Worklist [] else Workheap (WHeap.empty)
+
+  let pop = function
+    | Worklist [] -> raise Empty_worklist
+    | Worklist (c :: cs) -> (c, Worklist cs)
+    | Workheap h ->
+        try
+          (WHeap.maximum h, Workheap (WHeap.remove h))
+        with Heap.EmptyHeap -> raise Empty_worklist
+
+  let push cs = function
+    | Worklist l -> Worklist (l @ cs)
+    | Workheap h ->
+        Workheap (List.fold_left (fun w c -> WHeap.add c w) h cs)
+end
 
 let solve_constraints quals constrs =
   if !Clflags.dump_constraints then
@@ -357,10 +380,9 @@ let solve_constraints quals constrs =
     (List.length (List.filter is_simple_constraint refis));
   print_flush ();
   let cstr_map = make_variable_constraint_map refis in
-  let rec solve_rec sol worklist =
+  let rec solve_rec sol wklist =
     try
-      let cstr = Worklist.maximum worklist in
-      let rest = Worklist.remove worklist in
+      let (cstr, rest) = Worklist.pop wklist in
         match cstr with
           | (_, _, _, (_, Frame.Qvar k)) ->
               (* pmr: removed opt-
@@ -372,12 +394,11 @@ let solve_constraints quals constrs =
               let sol' = refine sol cstr in
               let wklist' =
                 if not (Lightenv.equal (=) sol' sol) then
-                  List.fold_left (fun w c -> Worklist.add c w) rest
-                    (try VarMap.find k cstr_map with Not_found -> [])
+                  Worklist.push (try VarMap.find k cstr_map with Not_found -> []) rest
                 else rest
               in solve_rec sol' wklist'
           | _ -> solve_rec sol rest
-    with Heap.EmptyHeap -> sol
+    with Empty_worklist -> sol
   in
 
   (* Find the "roots" of the constraint graph - all those constraints that don't
@@ -385,7 +406,7 @@ let solve_constraints quals constrs =
   let roots = List.filter (fun c -> match lhs_vars c with [] -> true | _ -> false) refis in
   Printf.printf "%d constraint graph roots\n\n" (List.length roots);
 
-  let init_wklist = List.fold_left (fun w c -> Worklist.add c w) Worklist.empty roots in
+  let init_wklist = Worklist.push roots (Worklist.empty ()) in
 
   let solution = Bstats.time "refining subtypes" (solve_rec solution') init_wklist in
 

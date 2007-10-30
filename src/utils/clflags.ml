@@ -66,6 +66,7 @@ and brief_quals = ref false              (* -bquals *)
 and no_simple = ref false               (* -no-simple *)
 and verify_simple = ref false           (* -verify-simple *)
 and less_qualifs = ref false            (* -lqualifs *)
+and use_list = ref false                (* -wlist *)
 
 let keep_asm_file = ref false           (* -S *)
 let optimize_for_speed = ref true       (* -compact *)

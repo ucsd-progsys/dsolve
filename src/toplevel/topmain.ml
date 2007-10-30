@@ -103,6 +103,7 @@ let main () =
      "-bquals", Arg.Set brief_quals, "print out the number of refinements for a type instead of their names";
      "-no-simple", Arg.Set no_simple, "do not propagate in simple constraints";
      "-verify-simple", Arg.Set verify_simple, "verify simple constraint propagation against theorem prover result";
+     "-use-list", Arg.Set use_list, "use worklist instead of heap in solver";
      "-lqualifs", Arg.Set less_qualifs, "generate less qualifiers (lets only under lambdas)";
     ] file_argument usage;
   if not (prepare Format.err_formatter) then exit 2;
