@@ -37,7 +37,7 @@ INCLUDES=-I utils -I parsing -I typing -I yices/lib/ -I qualifying -I bytecomp \
 
 UTILS=utils/misc.cmo utils/tbl.cmo utils/config.cmo \
   utils/clflags.cmo utils/terminfo.cmo utils/ccomp.cmo utils/warnings.cmo \
-  utils/consistbl.cmo utils/bstats.cmo
+  utils/consistbl.cmo utils/bstats.cmo utils/heap.cmo
 
 OPTUTILS=$(UTILS)
 

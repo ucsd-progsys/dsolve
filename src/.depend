@@ -10,6 +10,8 @@ utils/config.cmo: utils/config.cmi
 utils/config.cmx: utils/config.cmi 
 utils/consistbl.cmo: utils/consistbl.cmi 
 utils/consistbl.cmx: utils/consistbl.cmi 
+utils/heap.cmo: utils/heap.cmi 
+utils/heap.cmx: utils/heap.cmi 
 utils/misc.cmo: utils/misc.cmi 
 utils/misc.cmx: utils/misc.cmi 
 utils/tbl.cmo: utils/tbl.cmi 
@@ -288,14 +290,16 @@ qualifying/builtins.cmo: typing/predicate.cmi typing/predef.cmi \
     typing/path.cmi parsing/longident.cmi qualifying/frame.cmi typing/env.cmi 
 qualifying/builtins.cmx: typing/predicate.cmx typing/predef.cmx \
     typing/path.cmx parsing/longident.cmx qualifying/frame.cmx typing/env.cmx 
-qualifying/constraint.cmo: qualifying/theoremProver.cmo typing/predicate.cmi \
-    typing/predef.cmi typing/path.cmi typing/oprint.cmi \
-    qualifying/lightenv.cmo qualifying/frame.cmi utils/clflags.cmi \
-    qualifying/builtins.cmo utils/bstats.cmi qualifying/constraint.cmi 
-qualifying/constraint.cmx: qualifying/theoremProver.cmx typing/predicate.cmx \
-    typing/predef.cmx typing/path.cmx typing/oprint.cmx \
-    qualifying/lightenv.cmx qualifying/frame.cmx utils/clflags.cmx \
-    qualifying/builtins.cmx utils/bstats.cmx qualifying/constraint.cmi 
+qualifying/constraint.cmo: qualifying/theoremProver.cmo \
+    qualifying/qualifier.cmi typing/predicate.cmi typing/predef.cmi \
+    typing/path.cmi typing/oprint.cmi qualifying/lightenv.cmo utils/heap.cmi \
+    qualifying/frame.cmi utils/clflags.cmi qualifying/builtins.cmo \
+    utils/bstats.cmi qualifying/constraint.cmi 
+qualifying/constraint.cmx: qualifying/theoremProver.cmx \
+    qualifying/qualifier.cmx typing/predicate.cmx typing/predef.cmx \
+    typing/path.cmx typing/oprint.cmx qualifying/lightenv.cmx utils/heap.cmx \
+    qualifying/frame.cmx utils/clflags.cmx qualifying/builtins.cmx \
+    utils/bstats.cmx qualifying/constraint.cmi 
 qualifying/frame.cmo: typing/types.cmi qualifying/qualifier.cmi \
     typing/predicate.cmi typing/predef.cmi typing/path.cmi typing/oprint.cmi \
     qualifying/lightenv.cmo typing/btype.cmi qualifying/frame.cmi 
@@ -330,14 +334,16 @@ qualifying/qualifymod.cmo: typing/types.cmi typing/typedtree.cmi \
     qualifying/qualifier.cmi qualifying/qualgen.cmo typing/predicate.cmi \
     typing/path.cmi parsing/longident.cmi parsing/location.cmi \
     qualifying/lightenv.cmo qualifying/frame.cmi typing/env.cmi \
-    qualifying/constraint.cmi qualifying/builtins.cmo typing/btype.cmi \
-    utils/bstats.cmi parsing/asttypes.cmi qualifying/qualifymod.cmi 
+    qualifying/constraint.cmi utils/clflags.cmi qualifying/builtins.cmo \
+    typing/btype.cmi utils/bstats.cmi parsing/asttypes.cmi \
+    qualifying/qualifymod.cmi 
 qualifying/qualifymod.cmx: typing/types.cmx typing/typedtree.cmx \
     qualifying/qualifier.cmx qualifying/qualgen.cmx typing/predicate.cmx \
     typing/path.cmx parsing/longident.cmx parsing/location.cmx \
     qualifying/lightenv.cmx qualifying/frame.cmx typing/env.cmx \
-    qualifying/constraint.cmx qualifying/builtins.cmx typing/btype.cmx \
-    utils/bstats.cmx parsing/asttypes.cmi qualifying/qualifymod.cmi 
+    qualifying/constraint.cmx utils/clflags.cmx qualifying/builtins.cmx \
+    typing/btype.cmx utils/bstats.cmx parsing/asttypes.cmi \
+    qualifying/qualifymod.cmi 
 qualifying/theoremProver.cmo: qualifying/theoremProverYices.cmo \
     qualifying/theoremProverSimplify.cmo typing/predicate.cmi \
     utils/clflags.cmi 
@@ -345,13 +351,13 @@ qualifying/theoremProver.cmx: qualifying/theoremProverYices.cmx \
     qualifying/theoremProverSimplify.cmx typing/predicate.cmx \
     utils/clflags.cmx 
 qualifying/theoremProverSimplify.cmo: typing/predicate.cmi typing/path.cmi \
-    utils/misc.cmi qualifying/message.cmi 
+    utils/misc.cmi qualifying/message.cmi utils/clflags.cmi 
 qualifying/theoremProverSimplify.cmx: typing/predicate.cmx typing/path.cmx \
-    utils/misc.cmx qualifying/message.cmx 
+    utils/misc.cmx qualifying/message.cmx utils/clflags.cmx 
 qualifying/theoremProverYices.cmo: typing/predicate.cmi typing/path.cmi \
-    utils/misc.cmi 
+    utils/misc.cmi utils/clflags.cmi 
 qualifying/theoremProverYices.cmx: typing/predicate.cmx typing/path.cmx \
-    utils/misc.cmx 
+    utils/misc.cmx utils/clflags.cmx 
 bytecomp/bytegen.cmi: bytecomp/lambda.cmi bytecomp/instruct.cmi 
 bytecomp/bytelink.cmi: bytecomp/symtable.cmi bytecomp/cmo_format.cmi 
 bytecomp/bytepackager.cmi: typing/ident.cmi 
