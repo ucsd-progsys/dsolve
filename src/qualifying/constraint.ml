@@ -147,8 +147,6 @@ let rec solve_wf_constraints solution = function
 (* ming: we should aggregate these tracking and statistics vals *)
 let num_refines = ref 0
 
-let compare_constraints (env1, _, _, _) (env2, _, _, _) = Lightenv.compare env1 env2
-
 let solved_constraints = ref 0
 let valid_constraints = ref 0
 
@@ -292,6 +290,15 @@ let count_total_qualifiers solution =
               if l < !min then l else !min in
   Lightenv.iter add solution; (!sum, !max, !min)
 
+module Constraint = struct
+  type t = subrefinement_constraint
+  let compare (env1, _, _, _) (env2, _, _, _) = -(Lightenv.compare env1 env2)
+    (* We want the smallest environment to be the maximum because our worklist
+       is a priority queue *)
+end
+
+module Worklist = Heap.Functional(Constraint)
+
 let solve_constraints quals constrs =
   if !Clflags.dump_constraints then
     Oprint.print_list pprint (fun ppf -> fprintf ppf "@.@.")
@@ -299,7 +306,6 @@ let solve_constraints quals constrs =
   let cs = split constrs in
   let (wfs, refis) = divide_constraints_by_form [] [] cs in
   
-  let refis = List.fast_sort compare_constraints refis in
   let inst_quals = List.length quals in
   let _ = Printf.printf "%d instantiated qualifiers\n\n" inst_quals in
 
@@ -320,29 +326,35 @@ let solve_constraints quals constrs =
     (List.length (List.filter is_simple_constraint refis));
   print_flush ();
   let cstr_map = make_variable_constraint_map refis in
-  let rec solve_rec sol = function
-    | [] -> sol
-    | (_, _, _, (_, Frame.Qvar k)) as r :: rest ->
-        (* pmr: removed opt-
-           Find all the constraints with RHSes identical to this one; they can be solved
-           in one pass by or-ing all the LHSes together, saving a few prover calls *)
-        (* pmr: of course, as implemented below, this is quite inefficient - we shouldn't be
-           searching the worklist.  OTOH, we're trying to gain on time spent in the prover, so
-           we can worry about the efficiency of this later *)
-        Printf.printf "Worklist has size %d\n\n" (List.length rest);
-        print_flush ();
-        let sol' = refine sol r in
-        let wklist' =
-          if not (Lightenv.equal (=) sol' sol) then
-            rest @ (try VarMap.find k cstr_map with Not_found -> [])
-          else rest
-        in solve_rec sol' wklist'
-    | _ :: wklist -> solve_rec sol wklist
+  let rec solve_rec sol worklist =
+    let cstr = Worklist.maximum worklist in
+    let rest = Worklist.remove worklist in
+      try match cstr with
+        | (_, _, _, (_, Frame.Qvar k)) ->
+            (* pmr: removed opt-
+               Find all the constraints with RHSes identical to this one; they can be solved
+               in one pass by or-ing all the LHSes together, saving a few prover calls *)
+            (* pmr: of course, as implemented below, this is quite inefficient - we shouldn't be
+               searching the worklist.  OTOH, we're trying to gain on time spent in the prover, so
+               we can worry about the efficiency of this later *)
+            let sol' = refine sol cstr in
+            let wklist' =
+              if not (Lightenv.equal (=) sol' sol) then
+                List.fold_left (fun w c -> Worklist.add c w) rest
+                  (try VarMap.find k cstr_map with Not_found -> [])
+              else rest
+            in solve_rec sol' wklist'
+        | _ -> solve_rec sol rest
+      with Heap.EmptyHeap -> sol
   in
+
   (* Find the "roots" of the constraint graph - all those constraints that don't
      have a variable in the LHS *)
-  let init_wklist = List.filter (fun c -> match lhs_vars c with [] -> true | _ -> false) refis in
-  Printf.printf "%d constraint graph roots\n\n" (List.length init_wklist);
+  let roots = List.filter (fun c -> match lhs_vars c with [] -> true | _ -> false) refis in
+  Printf.printf "%d constraint graph roots\n\n" (List.length roots);
+
+  let init_wklist = List.fold_left (fun w c -> Worklist.add c w) Worklist.empty roots in
+
   let solution = Bstats.time "refining subtypes" (solve_rec solution') init_wklist in
 
   let _ = Printf.printf "solution refinement completed:\n\t%d iterations of refine\n\n" !num_refines in
