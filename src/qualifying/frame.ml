@@ -300,8 +300,8 @@ let pred_is_well_typed env p =
     let p1_shp = get_expr_shape p1 in
     let p2_shp = get_expr_shape p2 in
     match rel with
-    | Predicate.Eq
-    | Predicate.Ne ->
+    | Predicate.Ne
+    | Predicate.Eq ->
         (same_shape p1_shp p2_shp) && not(same_shape p1_shp Funknown)
         || ((same_shape p1_shp frame_bool) && (same_shape p2_shp frame_int))
         || ((same_shape p1_shp frame_int) && (same_shape p2_shp frame_bool))
@@ -309,7 +309,8 @@ let pred_is_well_typed env p =
     | Predicate.Ge
     | Predicate.Lt
     | Predicate.Le ->
-        (same_shape p1_shp p2_shp) && (same_shape p1_shp (frame_int))  
+        (same_shape p1_shp p2_shp) && (same_shape p1_shp frame_int || 
+                                       (function Fvar _ -> true | _ -> false) p1_shp) 
     in
       get_pred_shape p
 
@@ -321,6 +322,6 @@ let refinement_well_formed env solution r qual_var =
     let var_bound v = Lightenv.mem v env in
     List.for_all var_bound vars
   in
-  (*if in_scope then pred_is_well_typed env pred else false*) in_scope 
+  if in_scope then pred_is_well_typed env pred else false 
 
 

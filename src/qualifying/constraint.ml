@@ -99,9 +99,9 @@ let split cstrs =
           | Frame.Fvar _
           | Frame.Funknown ->
               split_rec flat cs
-	  | Frame.Fconstr (_, l, r) ->
-	      split_rec (WFRefinement(Lightenv.add qual_test_var f env, r)::flat) 
-		(List.append (List.map (function li -> WFFrame(env, li)) l) cs)
+	        | Frame.Fconstr (_, l, r) ->
+	            split_rec (WFRefinement(Lightenv.add qual_test_var f env, r)::flat) 
+		          (List.append (List.map (function li -> WFFrame(env, li)) l) cs)
           (*| _ -> assert false*)
         end
   in split_rec [] cstrs
@@ -138,11 +138,14 @@ let rec solve_wf_constraints solution = function
                splitting. *)
       let refined_quals =
         List.filter
-          (fun q -> Frame.refinement_well_formed env solution (subs, Frame.Qconst [q]) qual_test_var)
+          (fun q -> Frame.refinement_well_formed env solution' (subs, Frame.Qconst [q]) qual_test_var)
           (try Lightenv.find k solution' with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k); raise Not_found))
       in Lightenv.add k refined_quals solution'
   | _ :: cs -> solve_wf_constraints solution cs
       (* Nothing to do here; we can check satisfiability later *)
+
+(* ming: we should aggregate these tracking and statistics vals *)
+let num_refines = ref 0
 
 let compare_constraints (env1, _, _, _) (env2, _, _, _) = Lightenv.compare env1 env2
 
@@ -155,6 +158,7 @@ let refine solution = function
       let refined_quals = List.filter (fun q -> List.mem q k1_quals) (Lightenv.find k2 solution) in
         Lightenv.add k2 refined_quals solution
   | (_, _, _, (subs, Frame.Qvar k2)) as r ->
+      let _ = num_refines := !num_refines + 1 in
       let make_lhs (env, guard, r1, _) =
         let envp = environment_predicate solution env in
         let p1 = Frame.refinement_predicate solution qual_test_var r1 in
@@ -246,18 +250,12 @@ let check_satisfied solution cstrs =
             pprint_env_pred (solution, env) pprint_ref_pred (solution, r1) pprint_ref_pred (solution, r2);
           raise Unsatisfiable
       | WFRefinement (env, f) ->
-          fprintf std_formatter "@[Unsatisfiable@ WF@\nEnv:@ %a@\nWF:@ %a@]" 
+          fprintf std_formatter "@[Unsatisfied@ WF:@ %a@\nEnv:@ %a@\nWF:@ %a@]" 
+            Frame.pprint_refinement f
             (Lightenv.pprint Frame.pprint) env
             pprint_ref_pred (solution, f);
           raise Unsatisfiable
   with Not_found -> ()
-
-(* generate only RHS WFs in attempt to WF something while not bugging out the solver *)
-let rec build_wf cs =
-  match cs with
-  | [] -> []
-  | SubFrame (env, guard, t1, t2) :: cs -> ((*WFFrame(env, t1)::*)(WFFrame(env, t2)::(build_wf cs)))
-  | _ :: cs -> assert false
 
 let rec divide_constraints_by_form wf refi = function
   | [] -> (wf, refi)
@@ -265,18 +263,6 @@ let rec divide_constraints_by_form wf refi = function
       divide_constraints_by_form wf (r :: refi) cs
   | WFRefinement w :: cs ->
       divide_constraints_by_form (w :: wf) refi cs
-
-let rec subrefi_to_tuple = function
-  | [] -> []
-  | SubRefinement r :: cs ->
-      r :: subrefi_to_tuple cs
-  | _ :: cs -> subrefi_to_tuple cs
-
-let rec wfrefi_to_tuple = function
-  | [] -> []
-  | WFRefinement w :: cs ->
-      w :: wfrefi_to_tuple cs
-  | _ :: cs -> wfrefi_to_tuple cs
 
 let is_simple_constraint = function
   | (_, _, ([], _), ([], _)) -> true
@@ -310,17 +296,21 @@ let solve_constraints quals constrs =
   if !Clflags.dump_constraints then
     Oprint.print_list pprint (fun ppf -> fprintf ppf "@.@.")
       std_formatter constrs;
-  let wf_const = build_wf constrs in
-  let (cs', wfs') = (split constrs, split wf_const) in
-  let (refis', wfs) = (subrefi_to_tuple cs', wfrefi_to_tuple wfs') in
-  let refis = List.fast_sort compare_constraints refis' in
+  let cs = split constrs in
+  let (wfs, refis) = divide_constraints_by_form [] [] cs in
+  
+  let refis = List.fast_sort compare_constraints refis in
   let inst_quals = List.length quals in
   let _ = Printf.printf "%d instantiated qualifiers\n\n" inst_quals in
-  let init_solution = initial_solution cs' quals in
+
+  let init_solution = initial_solution cs quals in
+
   let num_vars = count_variables init_solution in
   let _ = Printf.printf "%d variables\n\n" num_vars in 
   let _ = Printf.printf "%d total quals\n\n" (num_vars * inst_quals) in
+
   let solution' = Bstats.time "solving wfs" (solve_wf_constraints init_solution) wfs in
+
   Printf.printf "%d unique qualifiers after solving wf\n\n" (count_qualifiers solution');
   let (sum, max, min) = count_total_qualifiers solution' in
   Printf.printf "Quals:\n\tTotal: %d\n\tAvg: %f\n\tMax: %d\n\tMin: %d\n\n"
@@ -354,6 +344,9 @@ let solve_constraints quals constrs =
   let init_wklist = refis in (* List.filter (fun c -> match lhs_vars c with [] -> true | _ -> false) refis in *)
   Printf.printf "%d constraint graph roots\n\n" (List.length init_wklist);
   let solution = Bstats.time "refining subtypes" (solve_rec solution') init_wklist in
-    Bstats.time "testing solution subs" (check_satisfied solution) cs';
-    Bstats.time "testing solution wfs" (check_satisfied solution) wfs';
+
+  let _ = Printf.printf "solution refinement completed:\n\t%d iterations of refine\n\n" !num_refines in
+  let _ = flush stdout in
+
+    Bstats.time "testing solution" (check_satisfied solution) cs;
     solution
