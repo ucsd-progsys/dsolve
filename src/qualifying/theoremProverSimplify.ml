@@ -82,7 +82,7 @@ let reset_alarm () = ()
 
 let set_alarm () = ()
 
-let simp_oc = open_out "simplify.log" 
+let simp_oc = if !Clflags.log_queries then open_out "simplify.log" else open_out "/dev/null"
 
 (* may raise ChannelException *)
 let secure_output_string oc s = 

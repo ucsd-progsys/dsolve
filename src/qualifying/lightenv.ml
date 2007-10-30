@@ -24,5 +24,7 @@ let addn items env =
 
 let pprint pprint_range ppf env =
   iter (fun x t -> Format.fprintf ppf "@[%s@ ->@ %a;@\n@]" (Path.unique_name x) pprint_range t) env 
-  
 
+let cardinality e = fold (fun _ _ c -> c + 1) e 0
+
+let compare e1 e2 = Pervasives.compare (cardinality e1) (cardinality e2)

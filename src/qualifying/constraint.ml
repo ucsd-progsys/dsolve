@@ -147,6 +147,8 @@ let rec solve_wf_constraints solution = function
 (* ming: we should aggregate these tracking and statistics vals *)
 let num_refines = ref 0
 
+let compare_constraints (env1, _, _, _) (env2, _, _, _) = Lightenv.compare env1 env2
+
 let refine solution = function
   | (_, _, _, (subs, Frame.Qvar k2)) as r ->
       let _ = num_refines := !num_refines + 1 in
@@ -301,6 +303,7 @@ let solve_constraints quals constrs =
   let cs = split constrs in
   let (wfs, refis) = divide_constraints_by_form [] [] cs in
   
+  let refis = List.fast_sort compare_constraints refis in
   let inst_quals = List.length quals in
   let _ = Printf.printf "%d instantiated qualifiers\n\n" inst_quals in
 
