@@ -14,7 +14,7 @@ $OCAML $FLAGS < DML/queen.ml
 echo "NEXT: tower.ml"
 $OCAML $FLAGS < DML/tower.ml
 echo "NEXT: quicksort.ml"
-$OCAML $FLAGS < DML/quicksort.ml
+#$OCAML $FLAGS < DML/quicksort.ml
 echo "NEXT: bcopy.dml"
 $OCAML $FLAGS < DMLex/bcopy.dml
 echo "NEXT: bcopy2.dml"

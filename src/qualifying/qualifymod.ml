@@ -51,8 +51,8 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
             let guard3 = Predicate.And (Predicate.Not guardp, guard) in
             let (f3, cstrs3, fm3) = constrain e3 env' guard3 cstrs2 fm2 in
               (f,
-               (*WFFrame(env, f)
-               ::*)SubFrame(env', guard2, f2, f)
+               WFFrame(env, f)
+               ::SubFrame(env', guard2, f2, f)
                ::SubFrame(env', guard3, f3, f)
                ::cstrs3,
                fm3)
@@ -77,8 +77,8 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
                   let f' = Frame.label_like unlabelled_f' f'' in
                   let f = Frame.Farrow (Some xp, f, f') in
                     (f,
-                     (*WFFrame (env, f)
-                     ::*) SubFrame (env', guard, f'', f')
+                     WFFrame (env, f)
+                     :: SubFrame (env', guard, f'', f')
                      :: cstrs',
                      fm')
               | _ -> assert false
@@ -98,7 +98,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
             (*let _ = Frame.pprint Format.err_formatter f' in
             let _ = Frame.pprint Format.err_formatter ftemplate in *)
             let f = Frame.instantiate f' ftemplate in
-              (f, (*WFFrame(env, f)::*)cstrs, framemap)
+              (f, WFFrame(env, f)::cstrs, framemap)
 	| (Texp_apply (e1, exps), _) ->
 	    let constrain_application (f, cs, fm) = function
           | (Some e2, _) ->
@@ -132,7 +132,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
             let (f2, cstrs', fm') = constrain e2 env' guard cstrs'' fm'' in
             let _ = if lambda then under_lambda := !under_lambda - 1 else () in
             let f = Frame.fresh_with_labels t f2 in
-              (f, SubFrame (env', guard, f2, f) :: cstrs', fm')
+              (f, WFFrame(env', f) :: SubFrame (env', guard, f2, f) :: cstrs', fm')
 	| (Texp_let (Recursive, [({pat_desc = Tpat_var f}, e1)], e2), t) ->
             (* pmr: This is horrendous, but about the best we can do
                without using destructive updates.  We need to label
@@ -159,7 +159,9 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
             let _ = if lambda then under_lambda := !under_lambda - 1 else () in
             let f = Frame.fresh_with_labels t f2 in
               (f,
-               SubFrame (env', guard, f2, f)
+               WFFrame (env', f)
+               :: WFFrame (env'', f1')
+               :: SubFrame (env', guard, f2, f)
                :: SubFrame (env'', guard, f1, f1')
                :: cstrs',
                fm')
@@ -171,7 +173,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
 						let (fs', c, m) = List.fold_left list_rec ([], cstrs, framemap) es in
 						let mksub b a = SubFrame(env, guard, a, b) in
 						let c = List.append (List.map (mksub (List.hd fs)) fs') c in
-						(f, (*WFFrame(env, f)::*)c, m)	
+						(f, WFFrame(env, f)::c, m)	
   | (Texp_sequence(e1, e2), t) ->
             let (f1, c, m) = constrain e1 env guard cstrs framemap in
             let (f2, c, m) = constrain e2 env guard c m in
@@ -186,7 +188,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
             begin
             match f with
               Frame.Ftuple(f1', f2') ->
-                (f, List.append [(*WFFrame(env, f);*) SubFrame(env, guard, f1, f1'); SubFrame(env, guard, f2, f2')] 
+                (f, List.append [WFFrame(env, f); SubFrame(env, guard, f1, f1'); SubFrame(env, guard, f2, f2')] 
                                 c, m)
               | _ -> failwith "Texp_tuple has wrong type"
             end

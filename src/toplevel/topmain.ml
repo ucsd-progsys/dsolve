@@ -99,7 +99,7 @@ let main () =
      "-dqualifs", Arg.Set dump_qualifs, "print out simple qualifiers for all identifiers and integer literals";
      "-dqueries", Arg.Set dump_queries, "print out all theorem prover queries and their results";
      "-cqueries", Arg.Set check_queries, "use a backup prover to check all queries";
-     "-bquals", Arg.Set brief_quals, "print out the number of refinements for a type instead of their names"
+     "-bquals", Arg.Set brief_quals, "print out the number of refinements for a type instead of their names";
      "-lqualifs", Arg.Set less_qualifs, "generate less qualifiers (lets only under lambdas)"
     ] file_argument usage;
   if not (prepare Format.err_formatter) then exit 2;
