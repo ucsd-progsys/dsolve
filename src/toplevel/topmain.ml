@@ -101,6 +101,8 @@ let main () =
      "-lqueries", Arg.Set log_queries, "log queries to [prover].log";
      "-cqueries", Arg.Set check_queries, "use a backup prover to check all queries";
      "-bquals", Arg.Set brief_quals, "print out the number of refinements for a type instead of their names";
+     "-no-simple", Arg.Set no_simple, "do not propagate in simple constraints";
+     "-verify-simple", Arg.Set verify_simple, "verify simple constraint propagation against theorem prover result";
      "-lqualifs", Arg.Set less_qualifs, "generate less qualifiers (lets only under lambdas)";
     ] file_argument usage;
   if not (prepare Format.err_formatter) then exit 2;

@@ -20,6 +20,7 @@ type t =
 
 val pprint: formatter -> t -> unit
 val pprint_refinement: formatter -> refinement -> unit
+val pprint_qualifier_expr: formatter -> qualifier_expr -> unit
 val fresh: type_expr -> t
 val fresh_without_vars: type_expr -> t
 val fresh_with_labels: type_expr -> t -> t

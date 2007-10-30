@@ -63,6 +63,8 @@ and dump_queries = ref false            (* -dqueries *)
 and log_queries = ref false             (* -lqueries *)
 and check_queries = ref false            (* -cqueries *)
 and brief_quals = ref false              (* -bquals *)
+and no_simple = ref false               (* -no-simple *)
+and verify_simple = ref false           (* -verify-simple *)
 and less_qualifs = ref false            (* -lqualifs *)
 
 let keep_asm_file = ref false           (* -S *)

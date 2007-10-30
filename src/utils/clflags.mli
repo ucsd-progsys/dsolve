@@ -60,6 +60,8 @@ val dump_queries: bool ref
 val log_queries: bool ref
 val check_queries: bool ref
 val brief_quals: bool ref
+val no_simple: bool ref
+val verify_simple: bool ref
 val less_qualifs: bool ref
 val keep_asm_file : bool ref
 val optimize_for_speed : bool ref

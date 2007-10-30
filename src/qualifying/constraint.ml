@@ -122,6 +122,11 @@ let constraint_sat solution = function
 let pprint_env_pred ppf (solution, env) = 
   Predicate.pprint ppf (environment_predicate solution env)
 
+let pprint_subref solution ppf (env, guard, r1, r2) =
+  fprintf ppf "@[Env:@ %a;@;<1 2>Guard:@ %a@;<1 0>|-@;<1 2>%a@;<1 2><:@;<1 2>%a@]"
+    pprint_env_pred (solution, env)
+    Predicate.pprint guard Frame.pprint_refinement r1 Frame.pprint_refinement r2
+
 let pprint_ref_pred ppf (solution, r) =
   Predicate.pprint ppf (Frame.refinement_predicate solution qual_test_var r)
 
@@ -150,19 +155,23 @@ let num_refines = ref 0
 let solved_constraints = ref 0
 let valid_constraints = ref 0
 
+(* Refine a constraint with variables on both sides and no substitutions *)
+let refine_simple solution k1 k2 =
+  let k1_quals = Lightenv.find k1 solution in
+    List.filter (fun q -> List.mem q k1_quals) (Lightenv.find k2 solution)
+
 let refine solution = function
-  | (_, _, ([], Frame.Qvar k1), ([], Frame.Qvar k2)) ->
-      let k1_quals = Lightenv.find k1 solution in
-      let refined_quals = List.filter (fun q -> List.mem q k1_quals) (Lightenv.find k2 solution) in
-        Lightenv.add k2 refined_quals solution
-  | (_, _, _, (subs, Frame.Qvar k2)) as r ->
+  | (_, _, ([], Frame.Qvar k1), ([], Frame.Qvar k2))
+      when not (!Clflags.no_simple || !Clflags.verify_simple) ->
+      Lightenv.add k2 (refine_simple solution k1 k2) solution
+  | (_, _, r1, (subs, Frame.Qvar k2)) as cstr ->
       let _ = num_refines := !num_refines + 1 in
       let make_lhs (env, guard, r1, _) =
         let envp = environment_predicate solution env in
         let p1 = Frame.refinement_predicate solution qual_test_var r1 in
           Predicate.big_and [envp; guard; p1]
       in
-        let lhs = make_lhs r in
+        let lhs = make_lhs cstr in
         let qual_holds q =
           let rhs = Frame.refinement_predicate solution qual_test_var (subs, Frame.Qconst [q]) in
             begin try
@@ -172,7 +181,7 @@ let refine solution = function
                 if !Clflags.dump_queries then begin
                   Format.printf "@[Solved@ %d@ constraints;@ %d@ valid@]@.@."
                     !solved_constraints !valid_constraints;
-                  Format.fprintf std_formatter "@[%a@ =>@ %a@ (%s)@]@.@."
+                  Format.printf "@[%a@ =>@ %a@ (%s)@]@.@."
                     Predicate.pprint lhs Predicate.pprint rhs (if res then "SAT" else "UNSAT");
                 end;
                 res
@@ -192,7 +201,28 @@ let refine solution = function
         in
         let refined_quals =
           List.filter qual_holds (try Lightenv.find k2 solution with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k2); raise Not_found))
-        in Lightenv.add k2 refined_quals solution
+        in
+          (* Verify propagation of simple constraint LHSes against using the theorem prover *)
+          if !Clflags.verify_simple then begin
+            match r1 with
+                ([], Frame.Qvar k1) ->
+                  let simple_quals = refine_simple solution k1 k2 in
+                    if not (simple_quals = refined_quals) then begin
+                      Format.printf "@[Theorem@ prover@ and@ simple@ propagation@ disagree@ on@ constraint@ %a:@]@.@."
+                        (pprint_subref solution) cstr;
+                      Format.printf "@[Background@ is@;<1 0>%a@]@.@."
+                        Predicate.pprint lhs;
+                      Format.printf "@[Full@ set:@;<1 2>%a@]@."
+                        Frame.pprint_qualifier_expr (Frame.Qconst (Lightenv.find k2 solution));
+                      Format.printf "@[Prover:@ %a@]@."
+                        Frame.pprint_qualifier_expr (Frame.Qconst refined_quals);
+                      Format.printf "@[Propagation:@ %a@]@."
+                        Frame.pprint_qualifier_expr (Frame.Qconst simple_quals);
+                      assert false
+                    end
+              | _ -> ()
+          end;
+          Lightenv.add k2 refined_quals solution
   | _ -> solution
       (* With anything else, there's nothing to refine, just to check later with
          check_satisfied *)
