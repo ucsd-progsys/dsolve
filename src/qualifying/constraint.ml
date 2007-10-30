@@ -150,6 +150,10 @@ let solved_constraints = ref 0
 let valid_constraints = ref 0
 
 let refine solution = function
+  | (_, _, ([], Frame.Qvar k1), ([], Frame.Qvar k2)) ->
+      let k1_quals = Lightenv.find k1 solution in
+      let refined_quals = List.filter (fun q -> List.mem q k1_quals) (Lightenv.find k2 solution) in
+        Lightenv.add k2 refined_quals solution
   | (_, _, _, (subs, Frame.Qvar k2)) as r ->
       let make_lhs (env, guard, r1, _) =
         let envp = environment_predicate solution env in
@@ -184,23 +188,8 @@ let refine solution = function
             end
         in
         let refined_quals =
-          List.filter qual_holds (try Lightenv.find k2 solution with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k2); raise Not_found)) in
-(*        let _ = match r with
-          | (_, _, ([], Frame.Qvar k1), ([], Frame.Qvar _)) ->
-              if not (List.for_all (fun q -> List.mem q refined_quals) (Lightenv.find k1 solution)) then begin
-                Format.fprintf std_formatter "@[Found@ different@ quals@ for@ constraint:@]@.@.";
-                Format.fprintf std_formatter "@[Predicate@ LHS@ is:@;<1 2>%a@;<1 2>=>@ ...@ @]@.@."
-                  Predicate.pprint lhs;
-                let q1s = Lightenv.find k1 solution in
-                  Format.fprintf std_formatter "@[Simple@ propagation:@;<1 2>%a@]@."
-                    Frame.pprint_refinement ([], Frame.Qconst q1s);
-                  Format.fprintf std_formatter "@[Prover@ propagation:@;<1 2>%a@]@."
-                    Frame.pprint_refinement ([], Frame.Qconst refined_quals);
-                assert false
-              end
-          | _ -> ()
-        in *)
-          Lightenv.add k2 refined_quals solution
+          List.filter qual_holds (try Lightenv.find k2 solution with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k2); raise Not_found))
+        in Lightenv.add k2 refined_quals solution
   | _ -> solution
       (* With anything else, there's nothing to refine, just to check later with
          check_satisfied *)
