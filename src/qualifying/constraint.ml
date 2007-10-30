@@ -160,19 +160,21 @@ let refine solution = function
       let make_lhs (env, guard, r1, _) =
         let envp = environment_predicate solution env in
         let p1 = Frame.refinement_predicate solution qual_test_var r1 in
-          (Predicate.big_and [envp; guard; p1])
+          Predicate.big_and [envp; guard; p1]
       in
         let lhs = make_lhs r in
         let qual_holds q =
-          let rhs = (Frame.refinement_predicate solution qual_test_var (subs, Frame.Qconst [q])) in
+          let rhs = Frame.refinement_predicate solution qual_test_var (subs, Frame.Qconst [q]) in
             begin try
-              let res = Bstats.time "refinement query" TheoremProver.implies lhs rhs in
+              let res = Bstats.time "refinement query" (TheoremProver.implies lhs) rhs in
                 incr solved_constraints;
                 if res then incr valid_constraints;
-                (*Printf.printf "Solved %d constraints; %d valid\n\n" !solved_constraints !valid_constraints;*)
-                if !Clflags.dump_queries then
+                if !Clflags.dump_queries then begin
+                  Format.printf "@[Solved@ %d@ constraints;@ %d@ valid@]@.@."
+                    !solved_constraints !valid_constraints;
                   Format.fprintf std_formatter "@[%a@ =>@ %a@ (%s)@]@.@."
                     Predicate.pprint lhs Predicate.pprint rhs (if res then "SAT" else "UNSAT");
+                end;
                 res
             with TheoremProver.Provers_disagree (default, backup) ->
               begin
