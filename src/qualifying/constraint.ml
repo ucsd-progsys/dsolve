@@ -341,7 +341,7 @@ let solve_constraints quals constrs =
   in
   (* Find the "roots" of the constraint graph - all those constraints that don't
      have a variable in the LHS *)
-  let init_wklist = refis in (* List.filter (fun c -> match lhs_vars c with [] -> true | _ -> false) refis in *)
+  let init_wklist = List.filter (fun c -> match lhs_vars c with [] -> true | _ -> false) refis in
   Printf.printf "%d constraint graph roots\n\n" (List.length init_wklist);
   let solution = Bstats.time "refining subtypes" (solve_rec solution') init_wklist in
 
