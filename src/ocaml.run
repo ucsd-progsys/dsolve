@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #OLD_PATH=PATH
 #export PATH=./:$PATH
 export LD_LIBRARY_PATH=/home/mwookawa/ocaml-liquid/src/yices/lib
