@@ -1,28 +1,44 @@
+#!/bin/bash
 #not actually a regression test
 OCAML=./ocaml.run
+TMPDIR=/tmp
 FLAGS=-dqexprs
-echo "NEXT: bsearch.ml"
-$OCAML $FLAGS < DML/bsearch.ml
-echo "NEXT: dotprod.ml"
-$OCAML $FLAGS < DML/dotprod.ml
-echo "NEXT: dotprod2.ml"
-$OCAML $FLAGS < DML/dotprod2.ml
-echo "NEXT: insertsort.ml"
-$OCAML $FLAGS < DML/insertsort.ml
-echo "NEXT: queen.ml"
-$OCAML $FLAGS < DML/queen.ml
-echo "NEXT: tower.ml"
-$OCAML $FLAGS < DML/tower.ml
-echo "NEXT: quicksort.ml"
-$OCAML $FLAGS < DML/quicksort.ml
-echo "NEXT: bcopy.dml"
-$OCAML $FLAGS < DMLex/bcopy.dml
-echo "NEXT: bcopy2.dml"
-$OCAML $FLAGS < DMLex/bcopy2.dml
-echo "NEXT: dp.dml"
-$OCAML $FLAGS < DMLex/dp.dml
-echo "NEXT: heapsort.dml"
-$OCAML $FLAGS < DMLex/heapsort.dml
-echo "NEXT: matmult.dml"
-$OCAML $FLAGS < DMLex/matmult.dml
+POSFILE=postests
+NEGFILE=negtests
+RESFILE=$1
+
+rm -f $TMPDIR/*.lilog
+
+echo RUNNING POSFILE
+for i in `cat $POSFILE`
+do
+  echo RUNNING: $i 
+  $OCAML $FLAGS < $i &> $TMPDIR"/"${i/\//_}".lilog"
+  if [ $? = 0 ] 
+  then 
+    echo "SUCCESS!"
+  else
+    echo "FAILURE :("
+  fi
+done
+echo DONE
+
+echo RUNNING NEGFILE
+for i in `cat $POSFILE`
+do
+  echo RUNNING: $i 
+  $OCAML $FLAGS < $i &> $TMPDIR"/"${i/\//_}".lilog"
+  if [ $? = 0 ] 
+  then 
+    echo "SUCCESS!"
+  else
+    echo "FAILURE :("
+  fi
+done
+echo DONE
+
+FILE=`cat $POSFILE $NEGFILE`
+FILE=${FILE/\//_}
+
+#grovel through output files for stats below:
 
