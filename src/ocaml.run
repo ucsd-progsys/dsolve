@@ -1,0 +1,12 @@
+#OLD_PATH=PATH
+#export PATH=./:$PATH
+export LD_LIBRARY_PATH=/home/mwookawa/ocaml-liquid/src/yices/lib
+
+nice -n19 rlwrap ./ocaml $@
+
+EXIT=$?
+
+unset LD_LIBRARY_PATH
+#export PATH=OLD_PATH
+
+exit $EXIT

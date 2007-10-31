@@ -2,7 +2,7 @@
 #not actually a regression test
 OCAML=./ocaml.run
 TMPDIR=/tmp
-FLAGS=-dqexprs
+FLAGS="-dqexprs -no-simple"
 POSFILE=postests
 NEGFILE=negtests
 RESFILE=$1
@@ -24,11 +24,11 @@ done
 echo DONE
 
 echo RUNNING NEGFILE
-for i in `cat $POSFILE`
+for i in `cat $NEGFILE`
 do
   echo RUNNING: $i 
   $OCAML $FLAGS < $i &> $TMPDIR"/"${i/\//_}".lilog"
-  if [ $? = 0 ] 
+  if [ $? = 1 ] 
   then 
     echo "SUCCESS!"
   else
