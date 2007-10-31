@@ -179,8 +179,6 @@ let refine solution = function
                 incr solved_constraints;
                 if res then incr valid_constraints;
                 if !Clflags.dump_queries then begin
-                  Format.printf "@[Solved@ %d@ constraints;@ %d@ valid@]@.@."
-                    !solved_constraints !valid_constraints;
                   Format.printf "@[%a@ =>@ %a@ (%s)@]@.@."
                     Predicate.pprint lhs Predicate.pprint rhs (if res then "SAT" else "UNSAT");
                 end;
@@ -411,6 +409,7 @@ let solve_constraints quals constrs =
   let solution = Bstats.time "refining subtypes" (solve_rec solution') init_wklist in
 
   let _ = Printf.printf "solution refinement completed:\n\t%d iterations of refine\n\n" !num_refines in
+  let _ = Format.printf "@[Solved@ %d@ constraints;@ %d@ valid@]@.@." !solved_constraints !valid_constraints in
   let _ = flush stdout in
 
     Bstats.time "testing solution" (check_satisfied solution) cs;
