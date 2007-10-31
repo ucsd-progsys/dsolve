@@ -400,11 +400,12 @@ let solve_constraints quals constrs =
   in
 
   (* Find the "roots" of the constraint graph - all those constraints that don't
-     have a variable in the LHS *)
-  let roots = List.filter (fun c -> match lhs_vars c with [] -> true | _ -> false) refis in
-  Printf.printf "%d constraint graph roots\n\n" (List.length roots);
-
-  let init_wklist = Worklist.push roots (Worklist.empty ()) in
+     have a variable in the LHS AND also the vars we solved for well-formedness in the previous
+     round (because we need to be sure we visit their children) *)
+  (* pmr: this is sounding like basically everything, so we'll just throw everything on at the
+     start to be sure; the heap should ensure we get to the roots first, though *)
+    (*let roots = List.filter (fun c -> match lhs_vars c with [] -> true | _ -> false) refis in*)
+  let init_wklist = Worklist.push refis (Worklist.empty ()) in
 
   let solution = Bstats.time "refining subtypes" (solve_rec solution') init_wklist in
 
