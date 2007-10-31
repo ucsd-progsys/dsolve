@@ -240,12 +240,12 @@ let lhs_vars (env, _, (_, qe), _) =
 
 let make_variable_constraint_map cstrs =
   let rec make_rec map = function
-    | (_, _, (_, _), (_, Frame.Qvar k)) as c :: cs ->
-        let add_cstr mp v =
-          let new_cstrs = c :: (try VarMap.find v map with Not_found -> []) in
-            VarMap.add v new_cstrs mp
-        in 
-        let map' = List.fold_left add_cstr map (lhs_vars c) in make_rec map' cs
+    | (_, _, _, (_, Frame.Qvar k)) as c :: cs ->
+        let add_cstr m v =
+          let new_cstrs = c :: (try VarMap.find v m with Not_found -> []) in
+            VarMap.add v new_cstrs m
+        in
+        let map = List.fold_left add_cstr map (lhs_vars c) in make_rec map cs
     | _ :: cs -> make_rec map cs
     | [] -> map
   in make_rec VarMap.empty cstrs
