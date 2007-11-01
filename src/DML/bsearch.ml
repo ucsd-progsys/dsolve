@@ -1,4 +1,4 @@
-(*qualif LTS(x) : x < Array.length vec;;
+qualif LTS(x) : x < Array.length vec;;
 qualif LES(x) : x <= Array.length vec;;
 (*qualif EQS(x) : x = Array.length vec;;*)
 qualif NEQs(x) : -.(x = Array.length vec);;
@@ -17,7 +17,7 @@ qualif NEG1(x) : x = 0 - 1;;
 qualif GENEG1(x) : 0 - 1 <= x;;
 qualif GTNEG1(x) : 0 - 1 < x;;
 qualif LT4(x) : x < 4;;
-qualif GT(x) : 0 < x;;*)
+qualif GT(x) : 0 < x;;
 
 
 let bsearch key vec =
