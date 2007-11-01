@@ -1,4 +1,6 @@
-(*qualif Q_AA_LE_ARRAY_LENGTH_VEC(_AA) : _AA <= Array.length vec;;
+(* full qualifier set *)
+
+qualif Q_AA_LE_ARRAY_LENGTH_VEC(_AA) : _AA <= Array.length vec;;
 qualif Q_AA_GE_ARRAY_LENGTH_VEC(_AA) : _AA >= Array.length vec;;
 qualif Q_AA_EQ_ARRAY_LENGTH_VEC(_AA) : _AA = Array.length vec;;
 qualif Q_AA_NE_ARRAY_LENGTH_VEC(_AA) : _AA != Array.length vec;;
@@ -441,9 +443,11 @@ qualif Q_AA_NE_1(_AA) : _AA != 1;;
 qualif QARRAY_LENGTH__AA_LE_1(_AA) : Array.length _AA <= 1;;
 qualif QARRAY_LENGTH__AA_GE_1(_AA) : Array.length _AA >= 1;;
 qualif QARRAY_LENGTH__AA_EQ_1(_AA) : Array.length _AA = 1;;
-qualif QARRAY_LENGTH__AA_NE_1(_AA) : Array.length _AA != 1;;*)
+qualif QARRAY_LENGTH__AA_NE_1(_AA) : Array.length _AA != 1;;
 
-qualif Q_AA_LE_ARRAY_LENGTH_RR(_AA) : _AA <= Array.length rr;;
+(* reduced qualifier set *)
+
+(*qualif Q_AA_LE_ARRAY_LENGTH_RR(_AA) : _AA <= Array.length rr;;
 qualif Q_AA_GE_ARRAY_LENGTH_RR(_AA) : _AA >= Array.length rr;;
 qualif Q_AA_EQ_ARRAY_LENGTH_RR(_AA) : _AA = Array.length rr;;
 qualif Q_AA_NE_ARRAY_LENGTH_RR(_AA) : _AA != Array.length rr;;
@@ -638,7 +642,7 @@ qualif Q_AA_NE_1(_AA) : _AA != 1;;
 qualif QARRAY_LENGTH__AA_LE_1(_AA) : Array.length _AA <= 1;;
 qualif QARRAY_LENGTH__AA_GE_1(_AA) : Array.length _AA >= 1;;
 qualif QARRAY_LENGTH__AA_EQ_1(_AA) : Array.length _AA = 1;;
-qualif QARRAY_LENGTH__AA_NE_1(_AA) : Array.length _AA != 1;;
+qualif QARRAY_LENGTH__AA_NE_1(_AA) : Array.length _AA != 1;;*)
 
 
 (*

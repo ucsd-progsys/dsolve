@@ -2,7 +2,7 @@
 #not actually a regression test
 OCAML=./ocaml
 TMPDIR=/tmp
-FLAGS="-dqexprs -no-simple"
+FLAGS="-dqexprs"
 POSFILE=postests
 NEGFILE=negtests
 RESFILE=$1
