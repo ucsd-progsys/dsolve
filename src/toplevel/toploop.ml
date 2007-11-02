@@ -233,13 +233,13 @@ let execute_phrase print_outcome ppf phr =
         if !Clflags.dump_qualifs then
           begin
           fprintf std_formatter "@[Dumping@ qualifiers@\n@]";
-          Misc.format_list_of_strings std_formatter (";;", Qualgen.dump_qualifs ());
+          Misc.format_list_of_strings err_formatter (";;", Qualgen.dump_qualifs ());
           fprintf std_formatter "@[Done@ Dumping@ qualifiers@\n@]"
           end
       in
       let (newquals, framemap) =
         try Qualifymod.qualify_structure newenv !toplevel_fenv oldquals str with
-          Constraint.Unsatisfiable -> dump_qualifs (); raise Constraint.Unsatisfiable
+          Constraint.Unsatisfiable -> dump_qualifs (); exit 1
       in
       if !Clflags.dump_qexprs then begin
         fprintf std_formatter "@.@.";

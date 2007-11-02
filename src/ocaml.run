@@ -2,7 +2,7 @@
 
 #OLD_PATH=PATH
 #export PATH=./:$PATH
-export LD_LIBRARY_PATH=/home/mwookawa/ocaml-liquid/src/yices/lib
+export LD_LIBRARY_PATH=./yices/lib
 
 nice -n19 rlwrap ./ocaml $@
 

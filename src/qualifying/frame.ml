@@ -266,10 +266,8 @@ let rec same_shape t1 t2 =
 
 let pred_is_well_typed env p = 
   let rec get_expr_shape = function
-  | Predicate.PInt _ -> (frame_int)
-  | Predicate.Var x -> 
-                (try Lightenv.find x env 
-                  with Not_found -> assert false)
+  | Predicate.PInt _ -> frame_int
+  | Predicate.Var x  
   | Predicate.Pvar (x, _) -> (try Lightenv.find x env
                         with Not_found -> assert false)
   | Predicate.FunApp (s, p') -> 
@@ -284,35 +282,34 @@ let pred_is_well_typed env p =
               Funknown
           | _ -> Funknown
         else assert false
-  (* ming: why am i adding spaces everywhere? what the hell is this, java? *)
   | Predicate.Binop (p1, op, p2) ->
       let p1_shp = get_expr_shape p1 in
-      let p1_int = same_shape p1_shp (frame_int) in
+      let p1_int = same_shape p1_shp frame_int in
       let p2_shp = get_expr_shape p2 in
-      let p2_int = same_shape p2_shp (frame_int) in
+      let p2_int = same_shape p2_shp frame_int in
       if p1_int && p2_int then frame_int else Funknown
-  and get_pred_shape = function
+  and pred_shape_is_bool = function
   | Predicate.True -> true
-  | Predicate.Not p -> get_pred_shape p 
-  | Predicate.Or (p1, p2) -> (get_pred_shape p1) && (get_pred_shape p2)
-  | Predicate.And (p1, p2) -> (get_pred_shape p1) && (get_pred_shape p2)
+  | Predicate.Not p -> pred_shape_is_bool p 
+  | Predicate.Or (p1, p2)  
+  | Predicate.And (p1, p2) -> (pred_shape_is_bool p1) && (pred_shape_is_bool p2)
   | Predicate.Atom (p1, rel, p2) -> 
-    let p1_shp = get_expr_shape p1 in
-    let p2_shp = get_expr_shape p2 in
-    match rel with
-    | Predicate.Ne
-    | Predicate.Eq ->
-        (same_shape p1_shp p2_shp) && not(same_shape p1_shp Funknown)
-        || ((same_shape p1_shp frame_bool) && (same_shape p2_shp frame_int))
-        || ((same_shape p1_shp frame_int) && (same_shape p2_shp frame_bool))
-    | Predicate.Gt
-    | Predicate.Ge
-    | Predicate.Lt
-    | Predicate.Le ->
+      let p1_shp = get_expr_shape p1 in
+      let p2_shp = get_expr_shape p2 in
+        match rel with
+        | Predicate.Ne
+        | Predicate.Eq ->
+         (same_shape p1_shp p2_shp) && not(same_shape p1_shp Funknown)
+         || ((same_shape p1_shp frame_bool) && (same_shape p2_shp frame_int))
+         || ((same_shape p1_shp frame_int) && (same_shape p2_shp frame_bool))
+        | Predicate.Gt
+        | Predicate.Ge
+        | Predicate.Lt
+        | Predicate.Le ->
         (same_shape p1_shp p2_shp) && (same_shape p1_shp frame_int || 
                                        (function Fvar _ -> true | _ -> false) p1_shp) 
     in
-      get_pred_shape p
+      pred_shape_is_bool p
 
 let refinement_well_formed env solution r qual_var =
   let valu = qual_var in

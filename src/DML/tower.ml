@@ -1,220 +1,92 @@
-(*qualif LTs(x) : x < Array.length leftPost;;
-qualif LEs(x) : x <= Array.length leftPost;;
-qualif NEs(x) : -.(x = Array.length leftPost);;
-qualif SEQs(x) : Array.length x = Array.length leftPost;;
-qualif EQs(x) : x = Array.length leftPost;;
-qualif LTs1(x) : x < Array.length middlePost;;
-qualif LEs1(x) : x <= Array.length middlePost;;
-qualif NEs1(x) : -.(x = Array.length middlePost);;
-qualif EQs1(x) : Array.length x = Array.length middlePost;;
-qualif LTs2(x) : x < Array.length rightPost;;
-qualif LEs2(x) : x <= Array.length rightPost;;
-qualif NEs2(x) : -.(x = Array.length rightPost);;
-qualif EQs2(x) : Array.length x = Array.length rightPost;;
-qualif LTs3(x) : x < Array.length _1_post;;
-qualif LEs3(x) : x <= Array.length _1_post;;
-qualif NEs3(x) : -.(x = Array.length _1_post);;
-qualif SEQs3(x) : Array.length x = Array.length _1_post;;
-qualif EQs3(x) : x = Array.length _1_post;;
-qualif LTs4(x) : x < Array.length post';;
-qualif LEs4(x) : x <= Array.length post';;
-qualif NEs4(x) : -.(x = Array.length post');;
-qualif EQs4(x) : Array.length x = Array.length post';;
-qualif LTs5(x) : x < Array.length _2_post;;
-qualif LEs5(x) : x <= Array.length _2_post;;
-qualif NEs5(x) : -.(x = Array.length _2_post);;
-qualif EQs5(x) : Array.length x = Array.length _2_post;;
-qualif LTs6(x) : x < Array.length source;;
-qualif LEs6(x) : x <= Array.length source;;
-qualif NEs6(x) : -.(x = Array.length source);;
-qualif EQs6(x) : Array.length x = Array.length source;;*)
 
-qualif SUM(x) : p + p' + s = Array.length rightpost + Array.length rightpost;;
-qualif OSUM(x) : x + n <= Array.length rightpost;;
-qualif LTnppn(x) : n <= p';;
-qualif P(x) : x = Array.length source + Array.length source - p' - s;;
-qualif PP(x) : x = Array.length source + Array.length source - p - s;;
-qualif S(x) : x = Array.length source + Array.length source - p' - p;;
+qualif X_PLUS_N_LE_SZ(x) : x + n <= sz;;
+qualif X_PLUS_S_LE_SZ(x) : x + s <= sz;;
+qualif SUM_OF_THREE3(x) : x = sz + sz - p' - s;;
+qualif SUM_OF_THREE2(x) : x = sz + sz - p - s;;
+qualif SUM_OF_THREE1(x) : x = sz + sz - p' - p;;
 
-(*qualif LTp(x) : x < p;;
-
-qualif LT0(x) : x < 0;;
-qualif LE0(x) : x <= 0;;
-qualif NE0(x) : -.(x = 0);;
-qualif GT0(x) : 0 < x;;
-qualif GE0(x) : 0 <= x;;
-qualif EQ0(x) : 0 = x;;
-qualif BOOL(x) : (x = 0) or (x = 1);;
-qualif TRUE(x) : x = 1;;
-qualif FALSE(x) : x = 0;;
-
-qualif STEN(x) : Array.length x  = 10;;
-qualif TEN(x) : x = 10;;
-qualif LTEN(x) : x < 10;;
-qualif LETEN(x) : x <= 10;;
-qualif NETEN(x) : x != 10;;
-qualif NINE(x) : x = 9;;*)
-
-qualif Q_AA_LE_ARRAY_LENGTH_POST'(_AA) : _AA <= Array.length post';;
-qualif Q_AA_GE_ARRAY_LENGTH_POST'(_AA) : _AA >= Array.length post';;
-qualif Q_AA_EQ_ARRAY_LENGTH_POST'(_AA) : _AA = Array.length post';;
-qualif Q_AA_NE_ARRAY_LENGTH_POST'(_AA) : _AA != Array.length post';;
-qualif QARRAY_LENGTH__AA_LE_ARRAY_LENGTH_POST'(_AA) : Array.length _AA <= Array.length post';;
-qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH_POST'(_AA) : Array.length _AA >= Array.length post';;
-qualif QARRAY_LENGTH__AA_EQ_ARRAY_LENGTH_POST'(_AA) : Array.length _AA = Array.length post';;
-qualif QARRAY_LENGTH__AA_NE_ARRAY_LENGTH_POST'(_AA) : Array.length _AA != Array.length post';;
-qualif Q_AA_LE_ARRAY_LENGTH__2_POST(_AA) : _AA <= Array.length _2_post;;
-qualif Q_AA_GE_ARRAY_LENGTH__2_POST(_AA) : _AA >= Array.length _2_post;;
-qualif Q_AA_EQ_ARRAY_LENGTH__2_POST(_AA) : _AA = Array.length _2_post;;
-qualif Q_AA_NE_ARRAY_LENGTH__2_POST(_AA) : _AA != Array.length _2_post;;
-qualif QARRAY_LENGTH__AA_LE_ARRAY_LENGTH__2_POST(_AA) : Array.length _AA <= Array.length _2_post;;
-qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH__2_POST(_AA) : Array.length _AA >= Array.length _2_post;;
-qualif QARRAY_LENGTH__AA_EQ_ARRAY_LENGTH__2_POST(_AA) : Array.length _AA = Array.length _2_post;;
-qualif QARRAY_LENGTH__AA_NE_ARRAY_LENGTH__2_POST(_AA) : Array.length _AA != Array.length _2_post;;
-qualif Q_AA_LE_ARRAY_LENGTH_SOURCE(_AA) : _AA <= Array.length source;;
-qualif Q_AA_GE_ARRAY_LENGTH_SOURCE(_AA) : _AA >= Array.length source;;
-qualif Q_AA_EQ_ARRAY_LENGTH_SOURCE(_AA) : _AA = Array.length source;;
-qualif Q_AA_NE_ARRAY_LENGTH_SOURCE(_AA) : _AA != Array.length source;;
-qualif QARRAY_LENGTH__AA_LE_ARRAY_LENGTH_SOURCE(_AA) : Array.length _AA <= Array.length source;;
-qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH_SOURCE(_AA) : Array.length _AA >= Array.length source;;
-qualif QARRAY_LENGTH__AA_EQ_ARRAY_LENGTH_SOURCE(_AA) : Array.length _AA = Array.length source;;
-qualif QARRAY_LENGTH__AA_NE_ARRAY_LENGTH_SOURCE(_AA) : Array.length _AA != Array.length source;;
-qualif Q_AA_LE_ARRAY_LENGTH__1_POST(_AA) : _AA <= Array.length _1_post;;
-qualif Q_AA_GE_ARRAY_LENGTH__1_POST(_AA) : _AA >= Array.length _1_post;;
-qualif Q_AA_EQ_ARRAY_LENGTH__1_POST(_AA) : _AA = Array.length _1_post;;
-qualif Q_AA_NE_ARRAY_LENGTH__1_POST(_AA) : _AA != Array.length _1_post;;
-qualif QARRAY_LENGTH__AA_LE_ARRAY_LENGTH__1_POST(_AA) : Array.length _AA <= Array.length _1_post;;
-qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH__1_POST(_AA) : Array.length _AA >= Array.length _1_post;;
-qualif QARRAY_LENGTH__AA_EQ_ARRAY_LENGTH__1_POST(_AA) : Array.length _AA = Array.length _1_post;;
-qualif QARRAY_LENGTH__AA_NE_ARRAY_LENGTH__1_POST(_AA) : Array.length _AA != Array.length _1_post;;
-qualif Q_AA_LE_ARRAY_LENGTH_RIGHTPOST(_AA) : _AA <= Array.length rightPost;;
-qualif Q_AA_GE_ARRAY_LENGTH_RIGHTPOST(_AA) : _AA >= Array.length rightPost;;
-qualif Q_AA_EQ_ARRAY_LENGTH_RIGHTPOST(_AA) : _AA = Array.length rightPost;;
-qualif Q_AA_NE_ARRAY_LENGTH_RIGHTPOST(_AA) : _AA != Array.length rightPost;;
-qualif QARRAY_LENGTH__AA_LE_ARRAY_LENGTH_RIGHTPOST(_AA) : Array.length _AA <= Array.length rightPost;;
-qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH_RIGHTPOST(_AA) : Array.length _AA >= Array.length rightPost;;
-qualif QARRAY_LENGTH__AA_EQ_ARRAY_LENGTH_RIGHTPOST(_AA) : Array.length _AA = Array.length rightPost;;
-qualif QARRAY_LENGTH__AA_NE_ARRAY_LENGTH_RIGHTPOST(_AA) : Array.length _AA != Array.length rightPost;;
-qualif Q_AA_LE_ARRAY_LENGTH_MIDDLEPOST(_AA) : _AA <= Array.length middlePost;;
-qualif Q_AA_GE_ARRAY_LENGTH_MIDDLEPOST(_AA) : _AA >= Array.length middlePost;;
-qualif Q_AA_EQ_ARRAY_LENGTH_MIDDLEPOST(_AA) : _AA = Array.length middlePost;;
-qualif Q_AA_NE_ARRAY_LENGTH_MIDDLEPOST(_AA) : _AA != Array.length middlePost;;
-qualif QARRAY_LENGTH__AA_LE_ARRAY_LENGTH_MIDDLEPOST(_AA) : Array.length _AA <= Array.length middlePost;;
-qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH_MIDDLEPOST(_AA) : Array.length _AA >= Array.length middlePost;;
-qualif QARRAY_LENGTH__AA_EQ_ARRAY_LENGTH_MIDDLEPOST(_AA) : Array.length _AA = Array.length middlePost;;
-qualif QARRAY_LENGTH__AA_NE_ARRAY_LENGTH_MIDDLEPOST(_AA) : Array.length _AA != Array.length middlePost;;
-qualif Q_AA_LE_ARRAY_LENGTH_LEFTPOST(_AA) : _AA <= Array.length leftPost;;
-qualif Q_AA_GE_ARRAY_LENGTH_LEFTPOST(_AA) : _AA >= Array.length leftPost;;
-qualif Q_AA_EQ_ARRAY_LENGTH_LEFTPOST(_AA) : _AA = Array.length leftPost;;
-qualif Q_AA_NE_ARRAY_LENGTH_LEFTPOST(_AA) : _AA != Array.length leftPost;;
-qualif QARRAY_LENGTH__AA_LE_ARRAY_LENGTH_LEFTPOST(_AA) : Array.length _AA <= Array.length leftPost;;
-qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH_LEFTPOST(_AA) : Array.length _AA >= Array.length leftPost;;
-qualif QARRAY_LENGTH__AA_EQ_ARRAY_LENGTH_LEFTPOST(_AA) : Array.length _AA = Array.length leftPost;;
-qualif QARRAY_LENGTH__AA_NE_ARRAY_LENGTH_LEFTPOST(_AA) : Array.length _AA != Array.length leftPost;;
-qualif Q_AA_LE_S_PLUS_2_N(_AA) : _AA <= s_plus_2_n;;
-qualif Q_AA_GE_S_PLUS_2_N(_AA) : _AA >= s_plus_2_n;;
-qualif Q_AA_EQ_S_PLUS_2_N(_AA) : _AA = s_plus_2_n;;
-qualif Q_AA_NE_S_PLUS_2_N(_AA) : _AA != s_plus_2_n;;
-qualif Q_AA_LE_PP_MINUS_2_N_PLUS(_AA) : _AA <= pp_minus_2_n_plus;;
-qualif Q_AA_GE_PP_MINUS_2_N_PLUS(_AA) : _AA >= pp_minus_2_n_plus;;
-qualif Q_AA_EQ_PP_MINUS_2_N_PLUS(_AA) : _AA = pp_minus_2_n_plus;;
-qualif Q_AA_NE_PP_MINUS_2_N_PLUS(_AA) : _AA != pp_minus_2_n_plus;;
-qualif Q_AA_LE_S_PLUS_2_N_MINUS(_AA) : _AA <= s_plus_2_n_minus;;
-qualif Q_AA_GE_S_PLUS_2_N_MINUS(_AA) : _AA >= s_plus_2_n_minus;;
-qualif Q_AA_EQ_S_PLUS_2_N_MINUS(_AA) : _AA = s_plus_2_n_minus;;
-qualif Q_AA_NE_S_PLUS_2_N_MINUS(_AA) : _AA != s_plus_2_n_minus;;
-qualif Q_AA_LE_P_MINUS(_AA) : _AA <= p_minus;;
-qualif Q_AA_GE_P_MINUS(_AA) : _AA >= p_minus;;
-qualif Q_AA_EQ_P_MINUS(_AA) : _AA = p_minus;;
-qualif Q_AA_NE_P_MINUS(_AA) : _AA != p_minus;;
-qualif Q_AA_LE__2_N_PLUS(_AA) : _AA <= _2_n_plus;;
-qualif Q_AA_GE__2_N_PLUS(_AA) : _AA >= _2_n_plus;;
-qualif Q_AA_EQ__2_N_PLUS(_AA) : _AA = _2_n_plus;;
-qualif Q_AA_NE__2_N_PLUS(_AA) : _AA != _2_n_plus;;
-qualif Q_AA_LE__2_N_MINUS(_AA) : _AA <= _2_n_minus;;
-qualif Q_AA_GE__2_N_MINUS(_AA) : _AA >= _2_n_minus;;
-qualif Q_AA_EQ__2_N_MINUS(_AA) : _AA = _2_n_minus;;
-qualif Q_AA_NE__2_N_MINUS(_AA) : _AA != _2_n_minus;;
-qualif Q_AA_LE_P'(_AA) : _AA <= p';;
-qualif Q_AA_GE_P'(_AA) : _AA >= p';;
-qualif Q_AA_EQ_P'(_AA) : _AA = p';;
-qualif Q_AA_NE_P'(_AA) : _AA != p';;
-qualif Q_AA_LE_P(_AA) : _AA <= p;;
-qualif Q_AA_GE_P(_AA) : _AA >= p;;
-qualif Q_AA_EQ_P(_AA) : _AA = p;;
-qualif Q_AA_NE_P(_AA) : _AA != p;;
-qualif Q_AA_LE_S(_AA) : _AA <= s;;
-qualif Q_AA_GE_S(_AA) : _AA >= s;;
-qualif Q_AA_EQ_S(_AA) : _AA = s;;
-qualif Q_AA_NE_S(_AA) : _AA != s;;
-qualif Q_AA_LE__2_N(_AA) : _AA <= _2_n;;
-qualif Q_AA_GE__2_N(_AA) : _AA >= _2_n;;
-qualif Q_AA_EQ__2_N(_AA) : _AA = _2_n;;
-qualif Q_AA_NE__2_N(_AA) : _AA != _2_n;;
-qualif Q_AA_LE_DEREF_3_I_PLUS(_AA) : _AA <= deref_3_i_plus;;
-qualif Q_AA_GE_DEREF_3_I_PLUS(_AA) : _AA >= deref_3_i_plus;;
-qualif Q_AA_EQ_DEREF_3_I_PLUS(_AA) : _AA = deref_3_i_plus;;
-qualif Q_AA_NE_DEREF_3_I_PLUS(_AA) : _AA != deref_3_i_plus;;
-qualif Q_AA_LE_DEREF_3_I(_AA) : _AA <= deref_3_i;;
-qualif Q_AA_GE_DEREF_3_I(_AA) : _AA >= deref_3_i;;
-qualif Q_AA_EQ_DEREF_3_I(_AA) : _AA = deref_3_i;;
-qualif Q_AA_NE_DEREF_3_I(_AA) : _AA != deref_3_i;;
-qualif Q_AA_LE_DEREF_J_PLUS(_AA) : _AA <= deref_j_plus;;
-qualif Q_AA_GE_DEREF_J_PLUS(_AA) : _AA >= deref_j_plus;;
-qualif Q_AA_EQ_DEREF_J_PLUS(_AA) : _AA = deref_j_plus;;
-qualif Q_AA_NE_DEREF_J_PLUS(_AA) : _AA != deref_j_plus;;
-qualif Q_AA_LE_DEREF_J(_AA) : _AA <= deref_j;;
-qualif Q_AA_GE_DEREF_J(_AA) : _AA >= deref_j;;
-qualif Q_AA_EQ_DEREF_J(_AA) : _AA = deref_j;;
-qualif Q_AA_NE_DEREF_J(_AA) : _AA != deref_j;;
-qualif Q_AA_LE_DEREF_2_I_PLUS(_AA) : _AA <= deref_2_i_plus;;
-qualif Q_AA_GE_DEREF_2_I_PLUS(_AA) : _AA >= deref_2_i_plus;;
-qualif Q_AA_EQ_DEREF_2_I_PLUS(_AA) : _AA = deref_2_i_plus;;
-qualif Q_AA_NE_DEREF_2_I_PLUS(_AA) : _AA != deref_2_i_plus;;
-qualif Q_AA_LE_DEREF_2_I(_AA) : _AA <= deref_2_i;;
-qualif Q_AA_GE_DEREF_2_I(_AA) : _AA >= deref_2_i;;
-qualif Q_AA_EQ_DEREF_2_I(_AA) : _AA = deref_2_i;;
-qualif Q_AA_NE_DEREF_2_I(_AA) : _AA != deref_2_i;;
-qualif Q_AA_LE__1_N_PLUS(_AA) : _AA <= _1_n_plus;;
-qualif Q_AA_GE__1_N_PLUS(_AA) : _AA >= _1_n_plus;;
-qualif Q_AA_EQ__1_N_PLUS(_AA) : _AA = _1_n_plus;;
-qualif Q_AA_NE__1_N_PLUS(_AA) : _AA != _1_n_plus;;
-qualif Q_AA_LE__1_N(_AA) : _AA <= _1_n;;
-qualif Q_AA_GE__1_N(_AA) : _AA >= _1_n;;
-qualif Q_AA_EQ__1_N(_AA) : _AA = _1_n;;
-qualif Q_AA_NE__1_N(_AA) : _AA != _1_n;;
-qualif Q_AA_LE_DEREF_1_I_PLUS(_AA) : _AA <= deref_1_i_plus;;
-qualif Q_AA_GE_DEREF_1_I_PLUS(_AA) : _AA >= deref_1_i_plus;;
-qualif Q_AA_EQ_DEREF_1_I_PLUS(_AA) : _AA = deref_1_i_plus;;
-qualif Q_AA_NE_DEREF_1_I_PLUS(_AA) : _AA != deref_1_i_plus;;
-qualif Q_AA_LE_DEREF_1_I(_AA) : _AA <= deref_1_i;;
-qualif Q_AA_GE_DEREF_1_I(_AA) : _AA >= deref_1_i;;
-qualif Q_AA_EQ_DEREF_1_I(_AA) : _AA = deref_1_i;;
-qualif Q_AA_NE_DEREF_1_I(_AA) : _AA != deref_1_i;;
-qualif Q_AA_LE_SZ_MINUS(_AA) : _AA <= sz_minus;;
-qualif Q_AA_GE_SZ_MINUS(_AA) : _AA >= sz_minus;;
-qualif Q_AA_EQ_SZ_MINUS(_AA) : _AA = sz_minus;;
-qualif Q_AA_NE_SZ_MINUS(_AA) : _AA != sz_minus;;
-qualif Q_AA_LE_SZ(_AA) : _AA <= sz;;
-qualif Q_AA_GE_SZ(_AA) : _AA >= sz;;
-qualif Q_AA_EQ_SZ(_AA) : _AA = sz;;
-qualif Q_AA_NE_SZ(_AA) : _AA != sz;;
-qualif Q_AA_LE_1(_AA) : _AA <= 1;;
-qualif Q_AA_GE_1(_AA) : _AA >= 1;;
-qualif Q_AA_EQ_1(_AA) : _AA = 1;;
-qualif Q_AA_NE_1(_AA) : _AA != 1;;
-qualif QARRAY_LENGTH__AA_LE_1(_AA) : Array.length _AA <= 1;;
-qualif QARRAY_LENGTH__AA_GE_1(_AA) : Array.length _AA >= 1;;
-qualif QARRAY_LENGTH__AA_EQ_1(_AA) : Array.length _AA = 1;;
-qualif QARRAY_LENGTH__AA_NE_1(_AA) : Array.length _AA != 1;;
-qualif Q_AA_LE_0(_AA) : _AA <= 0;;
-qualif Q_AA_GE_0(_AA) : _AA >= 0;;
-qualif Q_AA_EQ_0(_AA) : _AA = 0;;
-qualif Q_AA_NE_0(_AA) : _AA != 0;;
-qualif QARRAY_LENGTH__AA_LE_0(_AA) : Array.length _AA <= 0;;
-qualif QARRAY_LENGTH__AA_GE_0(_AA) : Array.length _AA >= 0;;
 qualif QARRAY_LENGTH__AA_EQ_0(_AA) : Array.length _AA = 0;;
+qualif QARRAY_LENGTH__AA_EQ_1(_AA) : Array.length _AA = 1;;
+qualif QARRAY_LENGTH__AA_EQ_10(_AA) : Array.length _AA = 10;;
+qualif QARRAY_LENGTH__AA_EQ_ARRAY_LENGTH_POST'(_AA) : Array.length _AA = Array.length post';;
+qualif QARRAY_LENGTH__AA_EQ_ARRAY_LENGTH_POST(_AA) : Array.length _AA = Array.length post;;
+qualif QARRAY_LENGTH__AA_EQ_ARRAY_LENGTH_SOURCE(_AA) : Array.length _AA = Array.length source;;
+qualif QARRAY_LENGTH__AA_EQ_ARRAY_LENGTH__1_POST(_AA) : Array.length _AA = Array.length _1_post;;
+qualif QARRAY_LENGTH__AA_GE_0(_AA) : Array.length _AA >= 0;;
+qualif QARRAY_LENGTH__AA_GE_1(_AA) : Array.length _AA >= 1;;
+qualif QARRAY_LENGTH__AA_GE_10(_AA) : Array.length _AA >= 10;;
+qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH_POST'(_AA) : Array.length _AA >= Array.length post';;
+qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH_POST(_AA) : Array.length _AA >= Array.length post;;
+qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH_SOURCE(_AA) : Array.length _AA >= Array.length source;;
+qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH__1_POST(_AA) : Array.length _AA >= Array.length _1_post;;
+qualif QARRAY_LENGTH__AA_LE_0(_AA) : Array.length _AA <= 0;;
+qualif QARRAY_LENGTH__AA_LE_1(_AA) : Array.length _AA <= 1;;
+qualif QARRAY_LENGTH__AA_LE_10(_AA) : Array.length _AA <= 10;;
+qualif QARRAY_LENGTH__AA_LE_ARRAY_LENGTH_POST'(_AA) : Array.length _AA <= Array.length post';;
+qualif QARRAY_LENGTH__AA_LE_ARRAY_LENGTH_POST(_AA) : Array.length _AA <= Array.length post;;
+qualif QARRAY_LENGTH__AA_LE_ARRAY_LENGTH_SOURCE(_AA) : Array.length _AA <= Array.length source;;
+qualif QARRAY_LENGTH__AA_LE_ARRAY_LENGTH__1_POST(_AA) : Array.length _AA <= Array.length _1_post;;
 qualif QARRAY_LENGTH__AA_NE_0(_AA) : Array.length _AA != 0;;
+qualif QARRAY_LENGTH__AA_NE_1(_AA) : Array.length _AA != 1;;
+qualif QARRAY_LENGTH__AA_NE_10(_AA) : Array.length _AA != 10;;
+qualif QARRAY_LENGTH__AA_NE_ARRAY_LENGTH_POST'(_AA) : Array.length _AA != Array.length post';;
+qualif QARRAY_LENGTH__AA_NE_ARRAY_LENGTH_POST(_AA) : Array.length _AA != Array.length post;;
+qualif QARRAY_LENGTH__AA_NE_ARRAY_LENGTH_SOURCE(_AA) : Array.length _AA != Array.length source;;
+qualif QARRAY_LENGTH__AA_NE_ARRAY_LENGTH__1_POST(_AA) : Array.length _AA != Array.length _1_post;;
+qualif Q_AA_EQ_0(_AA) : _AA = 0;;
+qualif Q_AA_EQ_1(_AA) : _AA = 1;;
+qualif Q_AA_EQ_10(_AA) : _AA = 10;;
+qualif Q_AA_EQ_ARRAY_LENGTH_POST'(_AA) : _AA = Array.length post';;
+qualif Q_AA_EQ_ARRAY_LENGTH_POST(_AA) : _AA = Array.length post;;
+qualif Q_AA_EQ_ARRAY_LENGTH_SOURCE(_AA) : _AA = Array.length source;;
+qualif Q_AA_EQ_ARRAY_LENGTH__1_POST(_AA) : _AA = Array.length _1_post;;
+qualif Q_AA_EQ_N(_AA) : _AA = n;;
+qualif Q_AA_EQ_P'(_AA) : _AA = p';;
+qualif Q_AA_EQ_P(_AA) : _AA = p;;
+qualif Q_AA_EQ_S(_AA) : _AA = s;;
+qualif Q_AA_EQ_SZ(_AA) : _AA = sz;;
+qualif Q_AA_EQ__1_N(_AA) : _AA = _1_n;;
+qualif Q_AA_GE_0(_AA) : _AA >= 0;;
+qualif Q_AA_GE_1(_AA) : _AA >= 1;;
+qualif Q_AA_GE_10(_AA) : _AA >= 10;;
+qualif Q_AA_GE_ARRAY_LENGTH_POST'(_AA) : _AA >= Array.length post';;
+qualif Q_AA_GE_ARRAY_LENGTH_POST(_AA) : _AA >= Array.length post;;
+qualif Q_AA_GE_ARRAY_LENGTH_SOURCE(_AA) : _AA >= Array.length source;;
+qualif Q_AA_GE_ARRAY_LENGTH__1_POST(_AA) : _AA >= Array.length _1_post;;
+qualif Q_AA_GE_N(_AA) : _AA >= n;;
+qualif Q_AA_GE_P'(_AA) : _AA >= p';;
+qualif Q_AA_GE_P(_AA) : _AA >= p;;
+qualif Q_AA_GE_S(_AA) : _AA >= s;;
+qualif Q_AA_GE_SZ(_AA) : _AA >= sz;;
+qualif Q_AA_GE__1_N(_AA) : _AA >= _1_n;;
+qualif Q_AA_LE_0(_AA) : _AA <= 0;;
+qualif Q_AA_LE_1(_AA) : _AA <= 1;;
+qualif Q_AA_LE_10(_AA) : _AA <= 10;;
+qualif Q_AA_LE_ARRAY_LENGTH_POST'(_AA) : _AA <= Array.length post';;
+qualif Q_AA_LE_ARRAY_LENGTH_POST(_AA) : _AA <= Array.length post;;
+qualif Q_AA_LE_ARRAY_LENGTH_SOURCE(_AA) : _AA <= Array.length source;;
+qualif Q_AA_LE_ARRAY_LENGTH__1_POST(_AA) : _AA <= Array.length _1_post;;
+qualif Q_AA_LE_N(_AA) : _AA <= n;;
+qualif Q_AA_LE_P'(_AA) : _AA <= p';;
+qualif Q_AA_LE_P(_AA) : _AA <= p;;
+qualif Q_AA_LE_S(_AA) : _AA <= s;;
+qualif Q_AA_LE_SZ(_AA) : _AA <= sz;;
+qualif Q_AA_LE__1_N(_AA) : _AA <= _1_n;;
+qualif Q_AA_NE_0(_AA) : _AA != 0;;
+qualif Q_AA_NE_1(_AA) : _AA != 1;;
+qualif Q_AA_NE_10(_AA) : _AA != 10;;
+qualif Q_AA_NE_ARRAY_LENGTH_POST'(_AA) : _AA != Array.length post';;
+qualif Q_AA_NE_ARRAY_LENGTH_POST(_AA) : _AA != Array.length post;;
+qualif Q_AA_NE_ARRAY_LENGTH_SOURCE(_AA) : _AA != Array.length source;;
+qualif Q_AA_NE_ARRAY_LENGTH__1_POST(_AA) : _AA != Array.length _1_post;;
+qualif Q_AA_NE_N(_AA) : _AA != n;;
+qualif Q_AA_NE_P'(_AA) : _AA != p';;
+qualif Q_AA_NE_P(_AA) : _AA != p;;
+qualif Q_AA_NE_S(_AA) : _AA != s;;
+qualif Q_AA_NE_SZ(_AA) : _AA != sz;;
+qualif Q_AA_NE__1_N(_AA) : _AA != _1_n;;
+
+
 
 let print_newline _1_none = () in
 let print_string _2_none = () in
@@ -272,29 +144,42 @@ play sz =
   in
 
   let _7_none = initialize leftPost in
-  let rec move _2_n source s _2_post p post' p' =
-		let _2_n_minus = _2_n - 1 in
-		let _2_n_plus = _2_n + 1 in
+  let rec move n source s post p post' p' =
+		let n_minus = n - 1 in
+		(*let n_plus = n + 1 in*)
 		let p_minus = p - 1 in
-		let s_plus_2_n_minus = s + _2_n_minus in
-		let pp_minus_2_n_plus = p' - _2_n_minus in
-		let s_plus_2_n = s + _2_n in
-    if _2_n = 1 then
-      let p' = p - 1 in 
+		let s_plus_n_minus = s + n_minus in
+		let pp_minus_n_plus = p' - n_minus in
+		let s_plus_n = s + n in
+    if n = 1 then
       let gss = Array.get source s in
-      begin Array.set _2_post p' gss; Array.set source s 0; showposts() end
+      begin Array.set post p_minus gss; Array.set source s 0; showposts() end
     else begin
-      (move _2_n_minus source s post' p' _2_post p;
-      Array.set _2_post p_minus (Array.get source (s_plus_2_n_minus));
-      Array.set source (s_plus_2_n_minus) 0;
+      (move n_minus source s post' p' post p;
+      let gs = Array.get source s_plus_n_minus in
+      Array.set post p_minus gs;
+      Array.set source s_plus_n_minus 0;
       showposts ();
-      move _2_n_minus post' pp_minus_2_n_plus _2_post p_minus source s_plus_2_n)
+      move n_minus post' pp_minus_n_plus post p_minus source s_plus_n)
     end
 	in
   (showposts ();
   move sz leftPost 0 rightPost sz middlePost sz)
 in play 10 
 ;;
+
+(*
+  let rec move (n, source, s, post, p, post', p') =
+    if n = 1 then
+      begin post[p - 1] <-  source[s]; source[s] <- 0 end
+    else begin
+      move(n-1, source, s, post', p', post, p);
+      post[p - 1] <- source[s + n - 1];
+      source[s + n - 1] <- 0;
+      move(n-1, post', p'-n+1, post, p - 1, source, s + n)
+    end
+  move(size, leftPost, 0, rightPost, size, middlePost, size)
+*)
 
 
 (*
@@ -328,20 +213,13 @@ play Array.length =
 
   let _ = initialize(leftPost) in
   let rec move (n, source, s, post, p, post', p') =
-    if eq_int n 1 then
-      begin post..(p - 1) <- source..(s); source..(s) <- 0; showposts() end
+    if n = 1 then
+      begin post[p - 1] <-  source[s]; source[s] <- 0 end
     else begin
       move(n-1, source, s, post', p', post, p);
-      post..(p - 1) <- source..(s + n - 1);
-      source..(s + n - 1) <- 0;
-      showposts ();
+      post[p - 1] <- source[s + n - 1];
+      source[s + n - 1] <- 0;
       move(n-1, post', p'-n+1, post, p - 1, source, s + n)
     end
-  withtype {n:nat}{s:nat}{p:nat}{p':nat |
-            p <= Array.length /\ p' <= Array.length /\ s + p + p' = Array.length + Array.length /\ 0 < n /\
-            s + n <= Array.length /\ n <= p /\ n <= p' }
-           int(n) * int vect(Array.length) * int(s) * int vect(Array.length) * int(p) * int vect(Array.length) * int(p') -> unit in
-  showposts();
-  move(Array.length, leftPost, 0, rightPost, Array.length, middlePost, Array.length)
-withtype int(Array.length) -> unit
+  move(size, leftPost, 0, rightPost, size, middlePost, size)
 ;; *)

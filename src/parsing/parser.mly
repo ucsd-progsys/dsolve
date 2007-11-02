@@ -1459,8 +1459,7 @@ pexpression:
 				| Longident.Ldot (t, s) -> (flatten t) ^ "." ^ s
 				| Longident.Lapply (t, t') -> (flatten t) ^ "(" ^ (flatten t') ^ ")"
 			in
-			(Printf.printf "%s\n" (flatten $1);
-			mkpredexp (Ppredexp_app (flatten $1, mkpredexp(Ppredexp_var($2))))) }
+			mkpredexp (Ppredexp_app (flatten $1, mkpredexp(Ppredexp_var($2)))) }
   | pexpression PLUS pexpression                { mkpredexp (Ppredexp_binop($1, Predexp_plus, $3)) }
   | pexpression MINUS pexpression               { mkpredexp (Ppredexp_binop($1, Predexp_minus, $3)) }
   | pexpression STAR pexpression                { mkpredexp (Ppredexp_binop($1, Predexp_times, $3)) }

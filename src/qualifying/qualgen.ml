@@ -22,6 +22,7 @@ let add_label (lbl, t) =
   else
     labels := (add lbl [t] !labels)
 
+
 let rec esc s oc nc = 
   let find_sp s = try String.index s oc with Not_found -> -1 in
   let next_sp = find_sp s in
@@ -39,13 +40,15 @@ let single_simple_qualif x fx i =
   let mk_qualif op pop = Printf.sprintf "qualif Q%s%s%s(%s) : %s %s %s" ufx pop ui x fx op i in
   List.map2 mk_qualif rels prels
   
+module StringSet = Set.Make(String)
+
 let single_int_qualif path =
   single_simple_qualif "_AA" "_AA" (Path.name path)
 
 let single_const_qualif i =
   let i = string_of_int i in
   List.append (single_simple_qualif "_AA" "_AA" i)
-              (single_simple_qualif "_AA" "Array.length _AA" i)
+                          (single_simple_qualif "_AA" "Array.length _AA" i)
 
 let single_array_qualif path =
   let name = Path.name path in
@@ -72,6 +75,10 @@ let dump_qualifs () =
   let int_qualifs = List.concat (List.map single_int_qualif int_lbls) in
   let arr_lbls = mapfilter (filter Predef.path_array) lbls in
   let arr_qualifs = List.concat (List.map single_array_qualif arr_lbls) in
-  List.concat [arr_qualifs; int_qualifs; const_qualifs]
+  let multiset_quals = List.concat [arr_qualifs; int_qualifs; const_qualifs] in
+  let qualif_set = ref StringSet.empty in
+  let _ = List.iter (fun q -> qualif_set := StringSet.add q !qualif_set) multiset_quals in
+  StringSet.elements !qualif_set
+  
       
 
