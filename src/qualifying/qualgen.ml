@@ -29,7 +29,7 @@ let rec esc s oc nc =
   if next_sp = -1 then s else (String.fill s next_sp 1 nc; esc s oc nc)
 
 let single_simple_qualif x fx i =
-  let rels = ["<="; ">="; "="; "!="] in
+  let rels = ["<="; ">="; "!="] in
   let prels = ["_LE_"; "_GE_"; "_EQ_"; "_NE_"] in
   let ufx = String.uppercase fx in
   let _ = esc ufx ' ' '_' in 
