@@ -30,7 +30,7 @@ let rec esc s oc nc =
 
 let single_simple_qualif x fx i =
   let rels = ["<="; ">="; "!="] in
-  let prels = ["_LE_"; "_GE_"; "_EQ_"; "_NE_"] in
+  let prels = ["_LE_"; "_GE_"; "_NE_"] in
   let ufx = String.uppercase fx in
   let _ = esc ufx ' ' '_' in 
   let _ = esc ufx '.' '_' in
