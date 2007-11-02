@@ -1,22 +1,3 @@
-qualif LTS(x) : x < Array.length vec;;
-qualif LES(x) : x <= Array.length vec;;
-qualif NEQs(x) : -.(x = Array.length vec);;
-qualif EQ5(x) : x = 5;;
-qualif LTh(x) : x < hi;;
-qualif LTl(x) : x < lo;;
-qualif NEQh(x) : -.(x = hi);;
-qualif NEQl(x) : -.(x = lo);;
-qualif LEh(x) : x <= hi;;
-qualif LEl(x) : x <= lo;;
-qualif NNEG(x) : 0 <= x;;
-qualif POS(x) : 0 < x;;
-qualif NEG1(x) : x = 0 - 1;;
-qualif GENEG1(x) : 0 - 1 <= x;;
-qualif GTNEG1(x) : 0 - 1 < x;;
-qualif LT4(x) : x < 4;;
-qualif GT(x) : 0 < x;;
-
-
 let bsearch key vec =
   let rec look lo hi =
 		let hi_minus = hi - 1 in
