@@ -1,5 +1,9 @@
 #!/bin/bash
 
+#if the script is given arguments, the last argument is assumed to be a filename
+#everything else is passed straight through except for -dframes which has a
+#filename tacked onto it
+
 argc=`echo $@ | wc -w`
 
 let "j = 0"
