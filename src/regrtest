@@ -3,12 +3,25 @@
 OCAML=./ocaml.run
 TMPDIR=/tmp
 FLAGS="-dqexprs -dframes"
+QUALFLAGS="-dqualifs"
 POSFILE=postests
 NEGFILE=negtests
 RESFILE=$1
 
 rm -f $TMPDIR/*.lilog
 
+FILE=$POSFILE" "$NEGFILE
+
+for i in `cat $FILE`
+do
+  cat $i.quals &> /dev/null
+  if [[ $? != 0 ]]
+  then
+    echo $OCAML $QUALFLAGS 
+  fi
+done
+
+exit 0
 
 echo RUNNING POSFILE
 for i in `cat $POSFILE`
