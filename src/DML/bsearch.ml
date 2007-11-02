@@ -1,49 +1,27 @@
-qualif LTS(x) : x < Array.length vec;;
-qualif LES(x) : x <= Array.length vec;;
-(*qualif EQS(x) : x = Array.length vec;;*)
-qualif NEQs(x) : -.(x = Array.length vec);;
-qualif EQ5(x) : x = 5;;
-qualif LTh(x) : x < hi;;
-qualif LTl(x) : x < lo;;
-(*qualif EQh(x) : x = hi;;*)
-qualif NEQh(x) : -.(x = hi);;
-qualif NEQl(x) : -.(x = lo);;
-(*qualif EQl(x) : x = lo;;*)
-qualif LEh(x) : x <= hi;;
-qualif LEl(x) : x <= lo;;
-qualif NNEG(x) : 0 <= x;;
-qualif POS(x) : 0 < x;;
-qualif NEG1(x) : x = 0 - 1;;
-qualif GENEG1(x) : 0 - 1 <= x;;
-qualif GTNEG1(x) : 0 - 1 < x;;
-qualif LT4(x) : x < 4;;
-qualif GT(x) : 0 < x;;
-
-
 let bsearch key vec =
   let rec look lo hi =
-		let hi_minus = hi - 1 in
-    if lo < hi_minus  then
-			let hl = hi + lo in
-      let m = hl / 2  in
-      let x = Array.get vec m in
-			let diff = key - x in
-			let m_plus = m + 1 in
-			let m_minus = m - 1 in
-        (if diff < 0 then look lo m_minus
-				else if 0 < diff then look m_plus hi
-				else if key = x then m else -1)
-			else -1
-	in
-	let sv = Array.length vec in
-	let sv_minus = sv - 1 in 
-	look 0 sv_minus
-in 
+    let hi_minus = hi - 1 in
+      if lo < hi_minus  then
+        let hl = hi + lo in
+        let m = hl / 2  in
+        let x = Array.get vec m in
+        let diff = key - x in
+        let m_plus = m + 1 in
+        let m_minus = m - 1 in
+          (if diff < 0 then look lo m_minus
+           else if 0 < diff then look m_plus hi
+           else if key = x then m else -1)
+      else -1
+  in
+  let sv = Array.length vec in
+  let sv_minus = sv - 1 in 
+    look 0 sv_minus
+in
 let _none = Random.init 555 in
 let sz = Random.int 10 in
 let sz_plus = sz + 2 in
 let ar = Array.make sz_plus 0 in
-bsearch 5 ar
+  bsearch 5 ar
 ;;
 
 
@@ -53,18 +31,18 @@ bsearch 5 ar
 let bsearch key vec =
   let rec look lo hi =
     if lo < hi - 1  then
-			let hl = hi + lo in
+   let hl = hi + lo in
       let m = hl (*/ 2*)  in
       let x = lo + vec (*get vec m*) in
-			let diff = key - x in
+   let diff = key - x in
         (if diff < 0 then look lo (m - 1) 
-				else if 0 < diff then look (m + 1) hi
-				else if key = x then m else -1)
-			else -1
-	in
-	let sv = 4 (*size vec*) in
-	let sv_minus = sv - 1 in
-	look 0 sv_minus 
+    else if 0 < diff then look (m + 1) hi
+    else if key = x then m else -1)
+   else -1
+ in
+ let sv = 4 (*size vec*) in
+ let sv_minus = sv - 1 in
+ look 0 sv_minus 
 in 
 let ar = 2(*[|1;2;3|]*) in
 bsearch 5 ar

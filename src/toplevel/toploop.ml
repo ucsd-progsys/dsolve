@@ -245,6 +245,10 @@ let execute_phrase print_outcome ppf phr =
         fprintf std_formatter "@.@.";
         Qdebug.dump_qualified_structure std_formatter framemap str;
       end;
+      begin match !Clflags.dump_frames with
+        | None -> ()
+        | Some filename -> Printqual.dump filename framemap
+      end;
       let lam = Translmod.transl_toplevel_definition str in
       Warnings.check_fatal ();
       begin try

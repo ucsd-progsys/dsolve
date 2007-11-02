@@ -27,6 +27,7 @@ type type_info =
 
 val record : type_info -> unit;;
 val record_phrase : Location.t -> unit;;
+val print_position : Format.formatter -> Lexing.position -> unit
 val dump : string -> unit;;
 
 val get_location : type_info -> Location.t;;
