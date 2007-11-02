@@ -17,6 +17,8 @@ module LocationMap: sig
   val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
 end
 
+exception IllQualified of Frame.t LocationMap.t
+
 val qualify_structure:
   Env.t -> Frame.t Lightenv.t -> Qualifier.t list -> Typedtree.structure ->
   Qualifier.t list * Frame.t LocationMap.t

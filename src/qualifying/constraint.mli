@@ -7,4 +7,4 @@ val solve_constraints:
   Qualifier.t list -> frame_constraint list -> Qualifier.t list Lightenv.t
 
 
-exception Unsatisfiable
+exception Unsatisfiable of Qualifier.t list Lightenv.t

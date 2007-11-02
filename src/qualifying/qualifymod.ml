@@ -237,10 +237,15 @@ let instantiate_in_environments cstrs quals =
     in List.fold_left instantiate_in_env qualset envs
   in QualifierSet.elements (List.fold_left instantiate_qual QualifierSet.empty quals)
 
+exception IllQualified of Frame.t LocationMap.t
+
 let qualify_structure tenv fenv quals str =
   let (newquals, cstrs, fmap) = constrain_structure tenv fenv quals str in
   let instantiated_quals = instantiate_in_environments cstrs quals in
     Bstats.reset ();
-    let solution = Bstats.time "solving" (solve_constraints instantiated_quals) cstrs in
-      Bstats.print stdout "\n\nTime to solve constraints:\n";
-      (newquals, LocationMap.map (Frame.apply_solution solution) fmap)
+    try
+      let solution = Bstats.time "solving" (solve_constraints instantiated_quals) cstrs in
+        Bstats.print stdout "\n\nTime to solve constraints:\n";
+        (newquals, LocationMap.map (Frame.apply_solution solution) fmap)
+    with Unsatisfiable solution ->
+      raise (IllQualified (LocationMap.map (Frame.apply_solution solution) fmap))
