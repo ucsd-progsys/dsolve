@@ -1,11 +1,16 @@
 #!/bin/bash
 #not actually a regression test
 OCAML=./ocaml.run
-TMPDIR=/tmp
 FLAGS="-dqexprs -dframes"
 POSFILE=postests
 NEGFILE=negtests
-RESFILE=$1
+
+if [[ $1 == "" ]]
+then
+  TMPDIR=/tmp
+else
+  TMPDIR=$1
+fi
 
 rm -f $TMPDIR/*.lilog
 
