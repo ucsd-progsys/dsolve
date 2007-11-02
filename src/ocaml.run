@@ -3,21 +3,30 @@
 argc=`echo $@ | wc -w`
 
 let "j = 0"
-catt=''
-argv=''
+catt=""
+argv=""
+frames=""
 for i in ${@/\ //n}
 do
   let "j = $j + 1"
   catt="cat "$i".quals "$i 
   if [[ $j<$argc ]] 
   then
-    argv=$argv" "$i  
+    if [[ $i == "-dframes" ]]
+    then
+      frames="true"
+    else
+      argv=$argv" "$i  
+    fi
   fi
 done
-echo $catt
+if [[ $frames != "" ]]
+then
+  argv=$argv" -dframes "${i%\.ml}".annot"
+fi
 export LD_LIBRARY_PATH=./yices/lib
 
-$catt | nice -n19 rlwrap ./ocaml $argv
+$catt | nice -n19 rlwrap ./ocaml$argv
 
 EXIT=$?
 
