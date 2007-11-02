@@ -250,8 +250,9 @@ play sz =
       begin Array.set _2_post p' gss; Array.set source s 0; showposts() end
     else begin
       (move _2_n_minus source s post' p' _2_post p;
-      Array.set _2_post p_minus (Array.get source (s_plus_2_n_minus));
-      Array.set source (s_plus_2_n_minus) 0;
+      let gs = Array.get source s_plus_2_n_minus in
+      Array.set _2_post p_minus gs);
+      Array.set source s_plus_2_n_minus 0;
       showposts ();
       move _2_n_minus post' pp_minus_2_n_plus _2_post p_minus source s_plus_2_n)
     end
