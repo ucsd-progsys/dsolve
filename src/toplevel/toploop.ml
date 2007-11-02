@@ -220,6 +220,11 @@ let directive_table = (Hashtbl.create 13 : (string, directive_fun) Hashtbl.t)
 
 (* Execute a toplevel phrase *)
 
+let dump_frames fmap =
+  match !Clflags.dump_frames with
+    | None -> ()
+    | Some filename -> Printqual.dump filename fmap
+
 let execute_phrase print_outcome ppf phr =
   match phr with
   | Ptop_def sstr ->
@@ -238,17 +243,19 @@ let execute_phrase print_outcome ppf phr =
           end
       in
       let (newquals, framemap) =
-        try Qualifymod.qualify_structure newenv !toplevel_fenv oldquals str with
-          Constraint.Unsatisfiable -> dump_qualifs (); exit 1
+        try Qualifymod.qualify_structure newenv !toplevel_fenv oldquals str
+        with Qualifymod.IllQualified partial_fmap ->
+          begin
+            dump_qualifs ();
+            dump_frames partial_fmap;
+            exit 1
+          end
       in
       if !Clflags.dump_qexprs then begin
         fprintf std_formatter "@.@.";
         Qdebug.dump_qualified_structure std_formatter framemap str;
       end;
-      begin match !Clflags.dump_frames with
-        | None -> ()
-        | Some filename -> Printqual.dump filename framemap
-      end;
+      dump_frames framemap;
       let lam = Translmod.transl_toplevel_definition str in
       Warnings.check_fatal ();
       begin try
