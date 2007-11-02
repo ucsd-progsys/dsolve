@@ -251,7 +251,7 @@ play sz =
     else begin
       (move _2_n_minus source s post' p' _2_post p;
       let gs = Array.get source s_plus_2_n_minus in
-      Array.set _2_post p_minus gs);
+      Array.set _2_post p_minus gs;
       Array.set source s_plus_2_n_minus 0;
       showposts ();
       move _2_n_minus post' pp_minus_2_n_plus _2_post p_minus source s_plus_2_n)
