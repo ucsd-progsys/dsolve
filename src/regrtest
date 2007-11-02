@@ -1,7 +1,7 @@
 #!/bin/bash
 #not actually a regression test
-OCAML=./ocaml
-TMPDIR=/tmp
+OCAML=./ocaml.run
+TMPDIR=/tmp/ming
 FLAGS="-dqexprs"
 POSFILE=postests
 NEGFILE=negtests
@@ -38,10 +38,10 @@ do
 done
 echo DONE
 
-FILE=`cat $POSFILE $NEGFILE`
-FILE=${FILE/\//_}
+#FILE=`cat $POSFILE $NEGFILE`
+#FILE=${FILE/\//_}
 
-OUT_FILES=`ls $TMPDIR"/*.lilog"`
+#OUT_FILES=`ls $TMPDIR"/*.lilog"`
 
 
 #grovel through output files for stats below:
