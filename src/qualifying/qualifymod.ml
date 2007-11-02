@@ -121,7 +121,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
 	        in List.fold_left constrain_application
                  (constrain e1 env guard cstrs framemap) exps
 	| (Texp_let (Nonrecursive, [({pat_desc = Tpat_var x}, e1)], e2), t) ->
-            let _ = if !under_lambda = 0 && !Clflags.less_qualifs then Qualgen.add_label (Path.Pident x, e1.exp_type) 
+            let _ = if !under_lambda = 0 || not(!Clflags.less_qualifs) then Qualgen.add_label (Path.Pident x, e1.exp_type) 
                     else () in
             let lambda = match e1.exp_desc with
                       Texp_function (_, _) -> 
@@ -143,7 +143,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
                with the proper labels added. *)
             let unlabelled_f1 = Frame.fresh e1.exp_type in
             let fp = Path.Pident f in
-            let _ = if !under_lambda = 0 && !Clflags.less_qualifs then Qualgen.add_label (Path.Pident f, e1.exp_type) 
+            let _ = if !under_lambda = 0 || not(!Clflags.less_qualifs) then Qualgen.add_label (Path.Pident f, e1.exp_type) 
                     else () in
             let lambda = match e1.exp_desc with
                       Texp_function (_, _) ->
