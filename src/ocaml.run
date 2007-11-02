@@ -1,14 +1,26 @@
 #!/bin/bash
 
-#OLD_PATH=PATH
-#export PATH=./:$PATH
+argc=`echo $@ | wc -w`
+
+let "j = 0"
+catt=''
+argv=''
+for i in ${@/\ //n}
+do
+  let "j = $j + 1"
+  catt="cat "$i".quals "$i 
+  if [[ $j<$argc ]] 
+  then
+    argv=$argv" "$i  
+  fi
+done
+echo $catt
 export LD_LIBRARY_PATH=./yices/lib
 
-nice -n19 rlwrap ./ocaml $@
+$catt | nice -n19 rlwrap ./ocaml $argv
 
 EXIT=$?
 
 unset LD_LIBRARY_PATH
-#export PATH=OLD_PATH
 
 exit $EXIT

@@ -14,7 +14,7 @@ echo RUNNING POSFILE
 for i in `cat $POSFILE`
 do
   echo RUNNING: $i 
-  cat $i".quals" $i | $OCAML $FLAGS &> $TMPDIR"/"${i/\//_}".lilog"
+  $OCAML $FLAGS $i &> $TMPDIR"/"${i/\//_}".lilog"
   if [ $? = 0 ] 
   then 
     echo "SUCCESS!"
@@ -28,7 +28,7 @@ echo RUNNING NEGFILE
 for i in `cat $NEGFILE`
 do
   echo RUNNING: $i 
-  cat $i".quals" $i | $OCAML $FLAGS &> $TMPDIR"/"${i/\//_}".lilog"
+  $OCAML $FLAGS $i &> $TMPDIR"/"${i/\//_}".lilog"
   if [ $? = 1 ] 
   then 
     echo "SUCCESS!"
@@ -38,8 +38,8 @@ do
 done
 echo DONE
 
-#FILE=`cat $POSFILE $NEGFILE`
-#FILE=${FILE/\//_}
+FILE=$POSFILE"\n"$NEGFILE
+FILE=${FILE/\//_}
 
 #OUT_FILES=`ls $TMPDIR"/*.lilog"`
 

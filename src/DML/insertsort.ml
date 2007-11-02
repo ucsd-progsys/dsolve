@@ -1,36 +1,3 @@
-qualif LTs(x) : x < Array.length arr;;
-qualif LEs(x) : x <= Array.length arr;;
-qualif NEs(x) : -.(x = Array.length arr);;
-qualif EQs(x) : Array.length x = Array.length arr;;
-qualif LTs1(x) : x < Array.length _1_arr;;
-qualif LEs1(x) : x <= Array.length _1_arr;;
-qualif NEs1(x) : -.(x = Array.length _1_arr);;
-qualif EQs1(x) : Array.length x = Array.length _1_arr;;
-qualif LTs2(x) : x < Array.length yarr;;
-qualif LEs2(x) : x <= Array.length yarr;;
-qualif NEs2(x) : -.(x = Array.length yarr);;
-qualif EQs2(x) : Array.length x = Array.length yarr;;
-qualif LTs3(x) : x < Array.length _2_arr;;
-qualif LEs3(x) : x <= Array.length _2_arr;;
-qualif NEs3(x) : -.(x = Array.length _2_arr);;
-qualif EQs3(x) : Array.length x = Array.length _2_arr;;
-qualif SGT0(x) : 0 < Array.length x ;;
-
-qualif SEQ(x) : Array.length x = Array.length yarr;;
-
-qualif LT0(x) : x < 0;;
-qualif LE0(x) : x <= 0;;
-qualif NE0(x) : -.(x = 0);;
-qualif GT0(x) : 0 < x;;
-qualif GE0(x) : 0 <= x;;
-qualif BOOL(x) : (x = 0) or (x = 1);;
-qualif TRUE(x) : x = 1;;
-qualif FALSE(x) : x = 0;;
-
-qualif LTsz(x) : x < sz;;
-qualif LEsz(x) : x <= sz;;
-qualif NEsz(x) : -.(x = sz);; 
-
 let
 sortRange arr start n =
   let item _1_i = Array.get arr _1_i in
