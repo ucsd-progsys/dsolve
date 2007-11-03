@@ -357,7 +357,6 @@ let solve_constraints quals constrs =
       std_formatter constrs;
   let cs = split constrs in
   let (wfs, refis) = divide_constraints_by_form [] [] cs in
-  
   let inst_quals = List.length quals in
   let _ = Printf.printf "%d instantiated qualifiers\n\n" inst_quals in
 
@@ -413,5 +412,8 @@ let solve_constraints quals constrs =
   let _ = Format.printf "@[Solved@ %d@ constraints;@ %d@ valid@]@.@." !solved_constraints !valid_constraints in
   let _ = flush stdout in
 
-    Bstats.time "testing solution" (check_satisfied solution) cs;
-    solution
+  if !Clflags.dump_constraints then
+    Oprint.print_list (pprint_subref solution) (fun ppf -> fprintf ppf "@.@.")
+      std_formatter refis;
+  Bstats.time "testing solution" (check_satisfied solution) cs;
+  solution

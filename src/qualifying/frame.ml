@@ -188,7 +188,10 @@ let rec apply_substitution sub = function
   | Farrow (x, f1, f2) ->
       Farrow (x, apply_substitution sub f1, apply_substitution sub f2)
   | Fconstr (p, l, (subs, qe)) ->
-      Fconstr (p, List.map (apply_substitution sub) l, (sub::subs, qe))
+     (* Fconstr (p, List.map (apply_substitution sub) l, (sub::subs, qe))*)
+     (* ming: let's not prop substitutions into compound types and see what
+      * happens *)
+     Fconstr (p, l, (sub::subs, qe))
   | Ftuple(t1, t2) ->
       Ftuple(apply_substitution sub t1, apply_substitution sub t2)
   | Funknown ->
