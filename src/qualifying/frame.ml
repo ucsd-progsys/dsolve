@@ -284,7 +284,10 @@ let pred_is_well_typed env p =
             else
               Funknown
           | _ -> Funknown
-        else assert false
+      else if s = "Bigarray.Array2.dim1" || s = "Bigarray.Array2.dim2" then
+        (* pmr: I'm not even going to bother right now *)
+        frame_int
+      else assert false
   | Predicate.Binop (p1, op, p2) ->
       let p1_shp = get_expr_shape p1 in
       let p1_int = same_shape p1_shp frame_int in

@@ -22,6 +22,12 @@ let qfalse = (Path.mk_ident "FALSE", Path.mk_ident "x",
 let qsize rel x y z = (Path.mk_ident ("SIZE_" ^ (Predicate.pprint_rel rel)), y,
 						Predicate.Atom(Predicate.Var z, rel, Predicate.FunApp("Array.length", Predicate.Var x)))
 
+let qdim rel dim x y z =
+  let dimstr = string_of_int dim in
+    (Path.mk_ident ("DIM" ^ dimstr ^ "="), y,
+     Predicate.Atom(Predicate.Var z, rel,
+                    Predicate.FunApp("Bigarray.Array2.dim" ^ dimstr, Predicate.Var x)))
+
 let qint rel i y = (Path.mk_ident (Printf.sprintf "INT_%s%d" 
 		(Predicate.pprint_rel rel) i), y, Predicate.Atom(Predicate.Var y, rel, Predicate.PInt i))
 
@@ -55,11 +61,11 @@ let mk_named path fs qs env = Frame.Fconstr(find_type_path path env, fs, ([], Fr
 
 let mk_ref f qs env = mk_named ["ref"; "Pervasives"] [f] qs env
 
-let mk_bigarray_kind a b qs env = mk_named ["kind"; "Bigarray"] [a; b] [] env
+let mk_bigarray_kind a b qs env = mk_named ["kind"; "Bigarray"] [a; b] qs env
 
-let mk_bigarray_layout a qs env = mk_named ["layout"; "Bigarray"] [a] [] env
+let mk_bigarray_layout a qs env = mk_named ["layout"; "Bigarray"] [a] qs env
 
-let mk_bigarray_type a b c qs env = mk_named ["t"; "Array2"; "Bigarray"] [a; b; c] [] env
+let mk_bigarray_type a b c qs env = mk_named ["t"; "Array2"; "Bigarray"] [a; b; c] qs env
 
 let mk_unit () = Frame.Fconstr(Predef.path_unit, [], ([], Frame.Qconst []))
 
@@ -149,13 +155,16 @@ let array_make_frame =
 let bigarray_create_frame env =
   let (k, l) = fresh_2_idents () in
   let (a, b, c) = (mk_tyvar (), mk_tyvar (), mk_tyvar ()) in
-  let (dim1, dim2) = fresh_2_idents () in
+  let (dim1, dim2, z) = fresh_idents () in
   (["create"; "Array2"; "Bigarray"],
    mk_fun(k, mk_bigarray_kind a b [] env,
           (mk_fun(l, mk_bigarray_layout c [] env,
           (mk_fun(dim1, mk_int [qint Predicate.Gt 0 dim1],
           (mk_fun(dim2, mk_int [qint Predicate.Gt 0 dim2],
-                  mk_bigarray_type a b c [] env))))))))
+                  mk_bigarray_type a b c
+                    [qdim Predicate.Eq 1 z z dim1;
+                     qdim Predicate.Eq 2 z z dim2]
+                    env))))))))
 
 let bigarray_int_frame env =
   (["int"; "Bigarray"],
