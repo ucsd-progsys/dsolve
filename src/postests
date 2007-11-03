@@ -5,6 +5,5 @@ DML/insertsort.ml
 DML/queen.ml
 DML/tower.ml
 DMLex/bcopy.ml
-DMLex/dp.ml
 DMLex/heapsort.ml
 DMLex/matmult.ml
