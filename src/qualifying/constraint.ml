@@ -62,15 +62,23 @@ let split cstrs =
           | (Frame.Funknown, Frame.Funknown) ->
               split_rec flat cs
 					| (Frame.Fconstr (p1, l1, r1), Frame.Fconstr(p2, l2, r2)) ->
-              let invar a b = [SubFrame(env, guard, a, b); SubFrame(env, guard, b, a)] in
+              let invar r a b =
+                SubFrame(env, guard, a, b)
+                :: SubFrame(env, guard, b, a)
+                :: r
+              in
+                (* pmr: because we were only filtering through invariant types anyway, we might
+                   as well just use invariants until we start getting problems from it ---
+                   for now, it's too much trouble to work around all the BigArray stuff *)
+                split_rec (SubRefinement(env, guard, r1, r2)::flat) (List.fold_left2 invar cs l1 l2)
               (*let subt a b = SubFrame(env, guard, a, b) in*)
-              if Path.same p1 Predef.path_array 
-                 || Path.same p1 (Builtins.ext_find_type_path "ref") then 
-							    split_rec (SubRefinement(env, guard, r1, r2)::flat) (List.append (invar (List.hd l1) (List.hd l2)) cs)
+              (*if Path.same p1 Predef.path_array
+                 || Path.same p1 (Builtins.ext_find_type_path "ref") then
+							    split_rec (SubRefinement(env, guard, r1, r2)::flat) (List.append (List.map2 invar l1 l2) cs)
               (*else if Path.same p1 Predef.path_int then (* must find path for tuple oh no i hope it's a path *)
                   split_rec (SubRefinement(env, guard, r1, r2)::flat) (List.append (List.map2 subt l1 l2) cs)*)
               else
-                  (Printf.printf "Unsupported type into split: %s\n" (Path.name p1); assert false)
+                  (Printf.printf "Unsupported type into split: %s\n" (Path.name p1); assert false)*)
           | (Frame.Ftuple(t1, t2), Frame.Ftuple(t1', t2')) ->
               split_rec flat (List.append [SubFrame(env, guard, t1, t1'); SubFrame(env, guard, t2, t2')] cs) 
           | _ -> assert false
