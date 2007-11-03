@@ -129,8 +129,8 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
                       | _ -> false in
             let (f1, cstrs'', fm'') = constrain e1 env guard cstrs framemap in
             let env' = Lightenv.add (Path.Pident x) f1 env in
-            let (f2, cstrs', fm') = constrain e2 env' guard cstrs'' fm'' in
             let _ = if lambda then under_lambda := !under_lambda - 1 else () in
+            let (f2, cstrs', fm') = constrain e2 env' guard cstrs'' fm'' in
             let f = Frame.fresh_with_labels t f2 in
               (f, WFFrame(env', f) :: SubFrame (env', guard, f2, f) :: cstrs', fm')
 	| (Texp_let (Recursive, [({pat_desc = Tpat_var f}, e1)], e2), t) ->
@@ -155,8 +155,8 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
             let env'' = Lightenv.add fp f1' env in
             let (f1, cstrs'', fm'') = constrain e1 env'' guard cstrs framemap in
             let env' = Lightenv.add fp f1 env in
-            let (f2, cstrs', fm') = constrain e2 env' guard cstrs'' fm'' in
             let _ = if lambda then under_lambda := !under_lambda - 1 else () in
+            let (f2, cstrs', fm') = constrain e2 env' guard cstrs'' fm'' in
             let f = Frame.fresh_with_labels t f2 in
               (f,
                WFFrame (env', f)
