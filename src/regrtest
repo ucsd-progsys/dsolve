@@ -30,7 +30,7 @@ for i in `cat $POSFILE`
 do
   echo RUNNING: $i 
   LOGFILE=$TMPDIR"/"${i/\//_}".lilog"
-  $OCAML $FLAGS $i &> $LOGFILE
+  time $OCAML $FLAGS $i &> $LOGFILE
   if [ $? = 0 ] 
   then 
     echo "SUCCESS!"
@@ -45,7 +45,7 @@ echo RUNNING NEGFILE
 for i in `cat $NEGFILE`
 do
   echo RUNNING: $i 
-  $OCAML $FLAGS $i &> $TMPDIR"/"${i/\//_}".lilog"
+  time $OCAML $FLAGS $i &> $TMPDIR"/"${i/\//_}".lilog"
   if [ $? = 1 ] 
   then 
     echo "SUCCESS!"

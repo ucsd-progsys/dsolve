@@ -86,6 +86,13 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
 	| (Texp_ident _, {desc = Tconstr (p, [], _)}) ->
             (Frame.Fconstr (p, [], Builtins.equality_refinement (expression_to_pexpr e)),
              cstrs, framemap)
+  (* ming: subtyping may be better for the inner types when a complex type is
+   * pulled up by name, but we have no way of expressing what we actually want,
+   * which is that each element is of the same shape with an equality_refinement
+   * *)
+  (*| (Texp_ident _, {desc = Tconstr (p, l, _)}) ->
+            (Frame.Fconstr (p, l, Builtins.equality_refinement (expression_to_pexpr e)),
+             cstrs, framemap)*)
   | (Texp_ident (id, _), t) ->
             (* pmr: Later, the env should probably take paths, not idents.
                Something to think about... *)
