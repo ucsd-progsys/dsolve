@@ -4,7 +4,6 @@ DML/dotprod2.ml
 DML/insertsort.ml
 DML/queen.ml
 DML/tower.ml
-DML/quicksort.ml
 DMLex/bcopy.ml
 DMLex/dp.ml
 DMLex/heapsort.ml

@@ -29,13 +29,15 @@ echo RUNNING POSFILE
 for i in `cat $POSFILE`
 do
   echo RUNNING: $i 
-  $OCAML $FLAGS $i &> $TMPDIR"/"${i/\//_}".lilog"
+  LOGFILE=$TMPDIR"/"${i/\//_}".lilog"
+  $OCAML $FLAGS $i &> $LOGFILE
   if [ $? = 0 ] 
   then 
     echo "SUCCESS!"
   else
     echo "FAILURE :("
   fi
+  grep "TOTAL" $LOGFILE
 done
 echo DONE
 
@@ -50,6 +52,7 @@ do
   else
     echo "FAILURE :("
   fi
+  grep "TOTAL" $LOGFILE
 done
 echo DONE
 
