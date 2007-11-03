@@ -37,7 +37,7 @@ do
   else
     echo "FAILURE :("
   fi
-  grep "TOTAL" $LOGFILE
+  grep "TOTAL" $LOGFILE | tail -n1
 done
 echo DONE
 
@@ -52,7 +52,7 @@ do
   else
     echo "FAILURE :("
   fi
-  grep "TOTAL" $LOGFILE
+  grep "TOTAL" $LOGFILE | tail -n1
 done
 echo DONE
 
