@@ -10,7 +10,11 @@ let find_path id env =
   let (path, _) = Env.lookup_value (mk_longid id) env in path
 
 let find_type_path id env =
-  let (path, _) = Env.lookup_type (mk_longid id) env in path 
+  try
+    let (path, _) = Env.lookup_type (mk_longid id) env in path
+  with Not_found ->
+    Printf.printf "Couldn't load %s!\n" (String.concat " " id);
+    assert false
 
 let qfalse = (Path.mk_ident "FALSE", Path.mk_ident "x",
               Predicate.Not Predicate.True)
@@ -47,7 +51,15 @@ let mk_bool qs = Frame.Fconstr(Predef.path_bool, [], ([], Frame.Qconst qs))
 
 let mk_array f qs = Frame.Fconstr(Predef.path_array, [f], ([], Frame.Qconst qs))
 
-let mk_ref f qs env = Frame.Fconstr(find_type_path ["ref"; "Pervasives"] env, [f], ([], Frame.Qconst qs))
+let mk_named path fs qs env = Frame.Fconstr(find_type_path path env, fs, ([], Frame.Qconst qs))
+
+let mk_ref f qs env = mk_named ["ref"; "Pervasives"] [f] qs env
+
+let mk_bigarray_kind a b qs env = mk_named ["kind"; "Bigarray"] [a; b] [] env
+
+let mk_bigarray_layout a qs env = mk_named ["layout"; "Bigarray"] [a] [] env
+
+let mk_bigarray_type a b c qs env = mk_named ["t"; "Array2"; "Bigarray"] [a; b; c] [] env
 
 let mk_unit () = Frame.Fconstr(Predef.path_unit, [], ([], Frame.Qconst []))
 
@@ -134,6 +146,25 @@ let array_make_frame =
   (["make"; "Array"], mk_fun(x, mk_int [qint Predicate.Gt 0 x],
                  mk_fun(y, tyvar, mk_array tyvar [qsize Predicate.Eq z z x])))
 
+let bigarray_create_frame env =
+  let (k, l) = fresh_2_idents () in
+  let (a, b, c) = (mk_tyvar (), mk_tyvar (), mk_tyvar ()) in
+  let (dim1, dim2) = fresh_2_idents () in
+  (["create"; "Array2"; "Bigarray"],
+   mk_fun(k, mk_bigarray_kind a b [] env,
+          (mk_fun(l, mk_bigarray_layout c [] env,
+          (mk_fun(dim1, mk_int [qint Predicate.Gt 0 dim1],
+          (mk_fun(dim2, mk_int [qint Predicate.Gt 0 dim2],
+                  mk_bigarray_type a b c [] env))))))))
+
+let bigarray_int_frame env =
+  (["int"; "Bigarray"],
+   mk_named ["kind"; "Bigarray"] [mk_int []; mk_named ["int_elt"; "Bigarray"] [] [] env] [] env)
+
+let bigarray_c_layout_frame env =
+  (["c_layout"; "Bigarray"],
+   mk_named ["layout"; "Bigarray"] [mk_named ["c_layout"; "Bigarray"] [] [] env] [] env)
+
 let rand_init_frame =
   let x = Path.mk_ident "x" in
   (["init"; "Random"], mk_fun(x, mk_int [], mk_unit ()))
@@ -208,6 +239,9 @@ let _lib_frames = [
   ref_ref_frame;
   ref_deref_frame;
   ref_assgn_frame;
+  bigarray_create_frame;
+  bigarray_int_frame;
+  bigarray_c_layout_frame;
 ]
 
 let _type_path_constrs = [
