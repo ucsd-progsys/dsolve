@@ -7,12 +7,12 @@
 let min m n = 
 	if m <= n  then m else n
 in 
-let rec sortRange _1_arr start n =
-  let item i = Array.get _1_arr i in
+let rec sortRange arr start n =
+  let item i = Array.get arr i in
   let swap i j =
 	let ij = item j in
     let tmp = item i in 
-    (Array.set _1_arr i ij; Array.set _1_arr j tmp)
+    (Array.set arr i ij; Array.set arr j tmp)
   in
   let rec vecswap i j n = 
 		let i_plus = i + 1 in
@@ -22,146 +22,150 @@ let rec sortRange _1_arr start n =
   in 
 
   (* insertSort is called if there are less than 8 elements to be sorted *)
-  let insertSort _2_start _4_n =
-    let limit = _2_start + _4_n in
-		let _2_start_plus = _2_start + 1 in
-    let rec outer _4_i =
-			let _4_i_plus = _4_i + 1 in
-      if limit < _4_i_plus then ()
+  let insertSort start n =
+    let limit = start + n in
+		let start_plus = start + 1 in
+    let rec outer i =
+			let i_plus = i + 1 in
+      if limit < i_plus then ()
       else let rec inner _4_j =
-             if _4_j < _2_start_plus then outer _4_i_plus 
+             if _4_j < start_plus then outer i_plus 
              else let _4_j' = _4_j - 1 in
 								  let ij' = item _4_j' in
 									let ij = item _4_j in
 									if ij < ij' then
 										(swap _4_j _4_j'; inner _4_j') else
-										outer _4_i_plus
-           in inner _4_i
-    in outer _2_start_plus
+										outer i_plus
+           in inner i
+    in outer start_plus
   in 
 
   (* calculate the median of three *)
-  let med3 _5_a _5_b _5_c =
-    let _5_a' = item _5_a in
-		let _5_b' = item _5_b in 
-		let _5_c' = item _5_c in
-		let lt_ab = _5_a' < _5_b' in
-		let lt_bc = _5_b' < _5_c' in
-		let gt_bc = _5_c' < _5_b' in
-		let lt_ac = _5_a' < _5_c' in
+  let med3 a b c =
+    let a' = item a in
+		let b' = item b in 
+		let c' = item c in
+		let lt_ab = a' < b' in
+		let lt_bc = b' < c' in
+		let gt_bc = c' < b' in
+		let lt_ac = a' < c' in
 		if lt_ab && lt_bc then
-			_5_b else
+			b else
 		if lt_ab then
-			if lt_ac then _5_c else _5_a else
-		if gt_bc then _5_b else
-		if lt_ac then _5_a else _5_c
+			if lt_ac then c else a else
+		if gt_bc then b else
+		if lt_ac then a else c
 	in 
 
   (* generate the pivot for splitting the elements *)
-  let getPivot _6_a _6_n =
-		let _6_a_plus_n = _6_a + _6_n in
-    let _6_a_plus_n_div = _6_a_plus_n / 2 in
-    if _6_n <= 7 then _6_a_plus_n_div 
-    else let _6_p1 = _6_a in
-				 let _6_pm = _6_a_plus_n_div in
-				 let _6_pn = _6_a_plus_n - 1 in
-       	 if _6_n <= 40 then med3 _6_p1 _6_pm _6_pn else
-      		 let _6_d = _6_n / 8 in
-					 let _2_6_d = 2 * _6_d in
-					 let _6_p1_plus_d = _6_p1 + _6_d in
-					 let _6_p1_plus_2_d = _6_p1 + _2_6_d in
-					 let _6_pm_minus_d = _6_pm - _6_d in
-					 let _6_pm_plus_d = _6_pm + _6_d in
-					 let _6_pn_minus_2_d = _6_pn - _2_6_d in
-					 let _6_pn_minus_d = _6_pn - _6_d in
-           let new_6_p1 = med3 _6_p1 _6_p1_plus_d _6_p1_plus_2_d in
-	   			 let new_6_pm = med3 _6_pm_minus_d _6_pm _6_pm_plus_d in
-	   			 let new_6_pn = med3 _6_pn_minus_2_d _6_pn_minus_d _6_pn in 
-							med3 new_6_p1 new_6_pm new_6_pn
+  let getPivot a n =
+		let a_plus_n = a + n in
+    let a_plus_n_div = a_plus_n / 2 in
+    if n <= 7 then a_plus_n_div 
+    else let p1 = a in
+				 let pm = a_plus_n_div in
+				 let pn = a_plus_n - 1 in
+       	 if n <= 40 then med3 p1 pm pn else
+      		 let d = n / 8 in
+					 let _2d = 2 * d in
+					 let p1_plus_d = p1 + d in
+					 let p1_plus_2_d = p1 + _2d in
+					 let pm_minus_d = pm - d in
+					 let pm_plus_d = pm + d in
+					 let pn_minus_2_d = pn - _2d in
+					 let pn_minus_d = pn - d in
+           let newp1 = med3 p1 p1_plus_d p1_plus_2_d in
+	   			 let newpm = med3 pm_minus_d pm pm_plus_d in
+	   			 let newpn = med3 pn_minus_2_d pn_minus_d pn in 
+							med3 newp1 newpm newpn
 	in	
 
-  let rec quickSort _7_a _7_n =
-    let rec bottom _8_limit _8_pa _8_pb = 
-			let _8_arg = (_8_pa, _8_pb) in
-      if _8_limit < _8_pb then _8_arg else
-			let _8_ipb = item _8_pb in
-			let _7_ia = item _7_a in
-			if _7_ia < _8_ipb then _8_arg else
-				let _8_pb_plus = _8_pb + 1 in
-				let _8_pa_plus = _8_pa + 1 in
-				if _8_ipb < _7_ia then bottom _8_limit _8_pa _8_pb_plus else
-						(swap _8_pa _8_pb; bottom _8_limit _8_pa_plus _8_pb_plus)
+  let rec quickSort a n =
+    let rec bottom limit pa pb = 
+			let arg = (pa, pb) in
+      if limit < pb then arg else
+			let ipb = item pb in
+			let ia = item a in
+			if ia < ipb then arg else
+				let pb_plus = pb + 1 in
+				let pa_plus = pa + 1 in
+				if ipb < ia then bottom limit pa pb_plus else
+						(swap pa pb; bottom limit pa_plus pb_plus)
 		in 
-    let rec top _9_limit _9_pc _9_pd = 
-			let _9_arg = (_9_pc, _9_pd) in
-      if _9_pc < _9_limit then _9_arg else
-			let _9_ipc = item _9_pc in
-			let _7_ia = item _7_a in
-			let _9_pc_minus = _9_pc - 1 in
-			let _9_pd_minus = _9_pd - 1 in
-      if _9_ipc < _7_ia then _9_arg else
-			if _7_ia < _9_ipc then top _9_limit _9_pc_minus _9_pd else
-			(swap _9_pc _9_pd; top _9_limit _9_pc_minus _9_pd_minus) 
+    let rec top limit pc pd = 
+			let arg = (pc, pd) in
+      if pc < limit then arg else
+			let ipc = item pc in
+			let ia = item a in
+			let pc_minus = pc - 1 in
+			let pd_minus = pd - 1 in
+      if ipc < ia then arg else
+			if ia < ipc then top limit pc_minus pd else
+			(swap pc pd; top limit pc_minus pd_minus) 
     in 
-    let rec split _10_pa _10_pb _10_pc _10_pd =
-			let _10_bot = bottom _10_pc _10_pa _10_pb in
-			let new_10_pa = fst _10_bot in
-			let new_10_pb = snd _10_bot in
-			let _10_top = top _10_pb _10_pc _10_pd in
-			let new_10_pc = fst _10_top in
-			let new_10_pd = snd _10_top in
-      let tmp1 = (new_10_pc, new_10_pd) in
-      let tmp2 = (new_10_pb, tmp1) in
-			let _10_arg = (new_10_pa, tmp2) in
-      if new_10_pc <= new_10_pb then _10_arg
+    let rec split pa pb pc pd =
+			let bot = bottom pc pa pb in
+			let newpa = fst bot in
+			let newpb = snd bot in
+			let top = top pb pc pd in
+			let newpc = fst top in
+			let newpd = snd top in
+      let tmp1 = (newpc, newpd) in
+      let tmp2 = (newpb, tmp1) in
+			let arg = (newpa, tmp2) in
+      if newpc <= newpb then arg
       else 
-			let new_10_pb_plus = new_10_pb + 1 in
-			let new_10_pc_minus = new_10_pc - 1 in
-      (swap new_10_pb new_10_pc; 
-								 split new_10_pa new_10_pb_plus new_10_pc_minus new_10_pd) 
+			let newpb_plus = newpb + 1 in
+			let newpc_minus = newpc - 1 in
+      (swap newpb newpc; 
+								 split newpa newpb_plus newpc_minus newpd) 
  	  in 
 
-    let _7_pm = getPivot _7_a _7_n in
-    let _none = swap _7_a _7_pm in
-    let _7_a_plus = _7_a + 1 in
-    let _7_a_plus_7_n = _7_a + _7_n in
-		let _7_a_plus_7_n_minus = _7_a_plus_7_n - 1 in
-    let pa_pb_pc_pd = split _7_a_plus _7_a_plus _7_a_plus_7_n_minus _7_a_plus_7_n_minus in
-		let _7_pa = fst pa_pb_pc_pd in
-		let _7_tmp1 = snd pa_pb_pc_pd in
-		let _7_pb = fst _7_tmp1 in
-		let _7_tmp2 = snd _7_tmp1 in
-		let _7_pc = fst _7_tmp2 in
-		let _7_pd = snd _7_tmp2 in 
+    let pm = getPivot a n in
+    let _none = swap a pm in
+    let a_plus = a + 1 in
+    let a_plusn = a + n in
+		let a_plusn_minus = a_plusn - 1 in
+    let pa_pb_pc_pd = split a_plus a_plus a_plusn_minus a_plusn_minus in
+		let pa = fst pa_pb_pc_pd in
+		let tmp1 = snd pa_pb_pc_pd in
+		let pb = fst tmp1 in
+		let tmp2 = snd tmp1 in
+		let pc = fst tmp2 in
+		let pd = snd tmp2 in 
 		
-    let _7_pn = _7_a + _7_n in
+    let pn = a + n in
 
-		let _7_pa_minus_7_a = _7_pa - _7_a in
-		let _7_pb_minus_7_pa = _7_pb - _7_pa in
+		let pa_minusa = pa - a in
+		let pb_minuspa = pb - pa in
 
-    let r = min _7_pa_minus_7_a _7_pb_minus_7_pa in
+    let r = min pa_minusa pb_minuspa in
 
-		let _7_pb_minus_r = _7_pb - r in
+		let pb_minus_r = pb - r in
 
-    let __8_none = vecswap _7_a _7_pb_minus_r r in
+    let __8_none = vecswap a pb_minus_r r in
 
-		let _7_pd_minus_7_pc = _7_pd - _7_pc in
-		let _7_pn_minus_7_pd = _7_pn - _7_pd in
-		let _7_pn_minus_7_pd_minus = _7_pn_minus_7_pd - 1 in
+		let pd_minuspc = pd - pc in
+		let pn_minuspd = pn - pd in
+		let pn_minuspd_minus = pn_minuspd - 1 in
 
-    let r' = min _7_pd_minus_7_pc _7_pn_minus_7_pd_minus in
+    let r' = min pd_minuspc pn_minuspd_minus in
 
-		let _7_pn_minus_r' = _7_pn - r' in  
+		let pn_minus_r' = pn - r' in  
 
-    let __9_none = vecswap _7_pb _7_pn_minus_r' r' in
-    let n' = _7_pb - _7_pa in
+    let __9_none = vecswap pb pn_minus_r' r' in
+    let n' = pb - pa in
 
-    (*let __10_none = if 1 < n' then if n' > 7 then quickSort _7_a n' else insertSort _7_a n' else () in*)
-    let _none = if 1 < n' then sortRange _1_arr _7_a n' else () in
-    let n' = _7_pd - _7_pc in
-		let _7_pn_minus_n' = _7_pn - n' in
-    (*let __11_none = if 1 < n'' then if n'' > 7 then quickSort _7_pn_minus_n'' n'' else insertSort _7_a n'' else () in ()*)
-    let _none = if 1 < n' then sortRange _1_arr _7_pn_minus_n' n' else () in ()
+    (*let _none = if 1 < n' then if n' > 7 then quickSort a n' else insertSort a n' else () in*)
+    let _none = (fun y -> y) a in
+    let _none = (fun y -> y) n' in
+    let _none = if 1 < n' then sortRange arr a n' else () in
+    let n' = pd - pc in
+		let pn_minus_n' = pn - n' in
+    (*let __11_none = if 1 < n'' then if n'' > 7 then quickSort pn_minus_n'' n'' else insertSort a n'' else () in ()*)
+    let _none = (fun y -> y) pn_minus_n' in
+    let _none = (fun y -> y) n' in
+    let _none = if 1 < n' then sortRange arr pn_minus_n' n' else () in ()
 	in	
 
   (*let sorting _3_start _11_n = if _11_n < 7 then insertSort _3_start _11_n else quickSort _3_start _11_n
@@ -178,15 +182,15 @@ in
 
 (* sorted checks if a list is well-sorted *)
 let
-sorted _2_arr =
-  let len = Array.length _2_arr in
+sorted arr =
+  let len = Array.length arr in
   let rec s v k =
 		let k_plus = k + 1 in
-    let v' = Array.get _2_arr k  in
+    let v' = Array.get arr k  in
 			if v' < v then false else if k_plus = len then true else s v' k_plus
 	in
 		if len <= 1  then true else 
-			let get_0 = Array.get _2_arr 0 in
+			let get_0 = Array.get arr 0 in
 			s get_0 1 
 in 
 let gen_vec rr =
@@ -201,12 +205,13 @@ let gen_vec rr =
 in
 let _none = Random.self_init ()in
 let p = Random.int 20 in
-let p = p + 1 in
 let vec = Array.make p 0 in
+let lent = Array.length vec in
 let _none = gen_vec vec in
+let kill = (fun x -> x) lent in
 (*let vec = [|9;8;7;16;6;5;32;4;3;2;1|] in
 let p = 11 in*)
-	sortRange vec 0 p; sorted vec 
+	sortRange vec 0 lent; sorted vec
 ;; 
 
 
