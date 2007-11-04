@@ -24,7 +24,7 @@ let qsize rel x y z = (Path.mk_ident ("SIZE_" ^ (Predicate.pprint_rel rel)), y,
 
 let qdim rel dim x y z =
   let dimstr = string_of_int dim in
-    (Path.mk_ident ("DIM" ^ dimstr ^ "="), y,
+    (Path.mk_ident ("DIM" ^ dimstr ^ (Predicate.pprint_rel rel)), y,
      Predicate.Atom(Predicate.Var z, rel,
                     Predicate.FunApp("Bigarray.Array2.dim" ^ dimstr, Predicate.Var x)))
 
@@ -174,6 +174,40 @@ let bigarray_c_layout_frame env =
   (["c_layout"; "Bigarray"],
    mk_named ["layout"; "Bigarray"] [mk_named ["c_layout"; "Bigarray"] [] [] env] [] env)
 
+let bigarray_get_frame env =
+  let ty = mk_tyvar () in
+  let (a, i, j) = fresh_idents () in
+    (["get"; "Array2"; "Bigarray"],
+     mk_fun(a, mk_bigarray_type ty (mk_tyvar ()) (mk_tyvar ()) [] env,
+            mk_fun(i,
+                   mk_int [qint Predicate.Ge 0 i;
+                           qdim Predicate.Lt 1 a i i],
+            mk_fun(j,
+                   mk_int [qint Predicate.Ge 0 j;
+                           qdim Predicate.Lt 2 a j j],
+                   ty))))
+
+let bigarray_set_frame env =
+  let ty = mk_tyvar () in
+  let (a, v) = fresh_2_idents () in
+  let (i, j) = fresh_2_idents () in
+    (["set"; "Array2"; "Bigarray"],
+     mk_fun(a, mk_bigarray_type ty (mk_tyvar ()) (mk_tyvar ()) [] env,
+            mk_fun(i,
+                   mk_int [qint Predicate.Ge 0 i;
+                           qdim Predicate.Lt 1 a i i],
+            mk_fun(j,
+                   mk_int [qint Predicate.Ge 0 j;
+                           qdim Predicate.Lt 2 a j j],
+            mk_fun(v, ty, mk_unit ())))))
+
+let bigarray_dim_frame dim env =
+  let ty = mk_tyvar () in
+  let (a, s) = fresh_2_idents () in
+    (["dim" ^ string_of_int dim; "Array2"; "Bigarray"],
+     mk_fun(a, mk_bigarray_type ty (mk_tyvar ()) (mk_tyvar ()) [] env,
+            mk_int [qdim Predicate.Eq dim a s s; qint Predicate.Gt 0 s]))
+
 let rand_init_frame =
   let x = Path.mk_ident "x" in
   (["init"; "Random"], mk_fun(x, mk_int [], mk_unit ()))
@@ -249,6 +283,10 @@ let _lib_frames = [
   ref_deref_frame;
   ref_assgn_frame;
   bigarray_create_frame;
+  bigarray_get_frame;
+  bigarray_set_frame;
+  bigarray_dim_frame 1;
+  bigarray_dim_frame 2;
   bigarray_int_frame;
   bigarray_c_layout_frame;
 ]
