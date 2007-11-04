@@ -30,34 +30,36 @@ let matmul a b =
   let p = Bigarray.Array2.dim1 a in
   let q = Bigarray.Array2.dim2 a in
   let r = Bigarray.Array2.dim2 b in
-  
+
   let cdata = Bigarray.Array2.create Bigarray.int Bigarray.c_layout p r in
   let zero _none = 0 in
-  let _ = fillar cdata zero in
+  let _none = fillar cdata zero in
 
-	let rec loop1 i =
-	  if i < p then
-		  let rec loop2 j =
-			  if j < r then
-			   let rec loop3 k sum = 
-			     if k < q then
-             let k' = k + 1 in 
-             let saik = sub2 a i k in
-             let sbkj = sub2 b k j in
-             let sum_p = sum + saik in
-             let sum_p = sum_p + sbkj in
-			       loop3 k' sum_p  
-				   else sum
+  let rec loop1 i =
+    if i < p then
+      let rec loop2 j =
+	if j < r then
+	  let rec loop3 k sum =
+	    if k < q then
+              let k' = k + 1 in
+              let _none = (fun s -> s) i in
+              let saik = sub2 a i k in
+              let _none = (fun s -> s) k in
+              let sbkj = sub2 b k j in
+              let sum_p = sum + saik in
+              let sum_p = sum_p + sbkj in
+		loop3 k' sum_p 
+	    else sum
           in let l3 = loop3 0 0 in
-			    let _none = update2 cdata i j l3  in
-        let j' = j + 1 in
-				loop2 j'
-			else () in
-		  let _none = loop2 0 in
+	  let _none = update2 cdata i j l3  in
+          let j' = j + 1 in
+	    loop2 j'
+	else () in
+      let _none = loop2 0 in
       let i' = i + 1 in
-		  loop1 i'
-    else () in
-	loop1 0; cdata 
+	loop1 i'
+    else ()
+  in loop1 0; cdata
 in 
 let _none = Random.self_init () in
 let p = Random.int 10 in
