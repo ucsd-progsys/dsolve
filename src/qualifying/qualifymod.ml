@@ -198,17 +198,9 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
               | _ -> failwith "Texp_tuple has wrong type"
             end
 	| (_, t) ->
-(*
-					(*let _ = !Oprint.out_type Format.std_formatter (Printtyp.tree_of_type_scheme t) in*)
-					(*let _ = flush_all () in*)
-          let _ = Printf.printf "%s" (Frame.type_structure t) in
-					assert false
-					(*let _ = Printf.printf "\n" in*)
-					(*(Frame.fresh e.exp_type, cstrs, framemap)*)			 
-*)
-            (* pmr: need to print the offending expression, perhaps *)
-            fprintf err_formatter "@[Warning:@ Don't@ know@ how@ to@ constrain@ expression,@;<1 0>defaulting@ to@ true@]@.\t Ty_structure: %s\n" (Frame.type_structure t);
-            (Frame.fresh_without_vars t, cstrs, framemap)
+      (* As it turns out, giving up and returning true here is actually _very_ unsound!  We won't check subexpressions! *)
+      fprintf err_formatter "@[Warning:@ Don't@ know@ how@ to@ constrain@ expression,@;<1 0>defaulting@ to@ true@]@.\t Ty_structure: %s\n" (Frame.type_structure t);
+      assert false
     in (f, cs, LocationMap.add e.exp_loc f fm)
   in constrain exp initenv Predicate.True initcstrs initframemap
 
