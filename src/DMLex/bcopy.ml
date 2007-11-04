@@ -1,13 +1,3 @@
-qualif NNeg(x): 0 <= x;;
-qualif Eq3(x): x = 3;;
-qualif LtLenSr(x): x < Array.length sr;
-qualif LtLenSrc(x): x < Array.length src;;
-qualif LeLenSr(x): x <= Array.length sr;;
-qualif LeLenSrc(x): x <= Array.length src;;
-qualif EqLenSrc(x): x = Array.length src;;
-qualif EqSrcLen(x): Array.length x = Array.length src;;
-qualif LtM(x): x < m;;
-
 let rec bcopy_aux src des i m =
   if i = m then ()
   else

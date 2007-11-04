@@ -29,8 +29,8 @@ let rec esc s oc nc =
   if next_sp = -1 then s else (String.fill s next_sp 1 nc; esc s oc nc)
 
 let single_simple_qualif x fx i =
-  let rels = ["<="; ">="; "="; "!="] in
-  let prels = ["_LE_"; "_GE_"; "_EQ_"; "_NE_"] in
+  let rels = ["<="; ">="; "!="] in
+  let prels = ["_LE_"; "_GE_"; "_NE_"] in
   let ufx = String.uppercase fx in
   let _ = esc ufx ' ' '_' in 
   let _ = esc ufx '.' '_' in
@@ -43,7 +43,10 @@ let single_simple_qualif x fx i =
 module StringSet = Set.Make(String)
 
 let single_int_qualif path =
-  single_simple_qualif "_AA" "_AA" (Path.name path)
+  let name = Path.name path in
+  List.append (single_simple_qualif "_AA" "_AA" name)
+              (single_simple_qualif "_AA" "Array.length _AA" name)
+
 
 let single_const_qualif i =
   let i = string_of_int i in

@@ -86,9 +86,14 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
 	| (Texp_ident _, {desc = Tconstr (p, [], _)}) ->
             (Frame.Fconstr (p, [], Builtins.equality_refinement (expression_to_pexpr e)),
              cstrs, framemap)
+  (* ming: subtyping may be better for the inner types when a complex type is
+   * pulled up by name, but we have no way of expressing what we actually want,
+   * which is that each element is of the same shape with an equality_refinement
+   * *)
+  (*| (Texp_ident _, {desc = Tconstr (p, l, _)}) ->
+            (Frame.Fconstr (p, l, Builtins.equality_refinement (expression_to_pexpr e)),
+             cstrs, framemap)*)
   | (Texp_ident (id, _), t) ->
-            (* pmr: Later, the env should probably take paths, not idents.
-               Something to think about... *)
             let (f', ftemplate) = (
                 (try Lightenv.find id env
                   with Not_found -> fprintf std_formatter "@[Not_found:@ %s@]" (Path.unique_name id);
@@ -129,8 +134,8 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
                       | _ -> false in
             let (f1, cstrs'', fm'') = constrain e1 env guard cstrs framemap in
             let env' = Lightenv.add (Path.Pident x) f1 env in
-            let (f2, cstrs', fm') = constrain e2 env' guard cstrs'' fm'' in
             let _ = if lambda then under_lambda := !under_lambda - 1 else () in
+            let (f2, cstrs', fm') = constrain e2 env' guard cstrs'' fm'' in
             let f = Frame.fresh_with_labels t f2 in
               (f, WFFrame(env', f) :: SubFrame (env', guard, f2, f) :: cstrs', fm')
 	| (Texp_let (Recursive, [({pat_desc = Tpat_var f}, e1)], e2), t) ->
@@ -155,8 +160,8 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
             let env'' = Lightenv.add fp f1' env in
             let (f1, cstrs'', fm'') = constrain e1 env'' guard cstrs framemap in
             let env' = Lightenv.add fp f1 env in
-            let (f2, cstrs', fm') = constrain e2 env' guard cstrs'' fm'' in
             let _ = if lambda then under_lambda := !under_lambda - 1 else () in
+            let (f2, cstrs', fm') = constrain e2 env' guard cstrs'' fm'' in
             let f = Frame.fresh_with_labels t f2 in
               (f,
                WFFrame (env', f)
@@ -193,17 +198,9 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
               | _ -> failwith "Texp_tuple has wrong type"
             end
 	| (_, t) ->
-(*
-					(*let _ = !Oprint.out_type Format.std_formatter (Printtyp.tree_of_type_scheme t) in*)
-					(*let _ = flush_all () in*)
-          let _ = Printf.printf "%s" (Frame.type_structure t) in
-					assert false
-					(*let _ = Printf.printf "\n" in*)
-					(*(Frame.fresh e.exp_type, cstrs, framemap)*)			 
-*)
-            (* pmr: need to print the offending expression, perhaps *)
-            fprintf err_formatter "@[Warning:@ Don't@ know@ how@ to@ constrain@ expression,@;<1 0>defaulting@ to@ true@]@.\t Ty_structure: %s\n" (Frame.type_structure t);
-            (Frame.fresh_without_vars t, cstrs, framemap)
+      (* As it turns out, giving up and returning true here is actually _very_ unsound!  We won't check subexpressions! *)
+      fprintf err_formatter "@[Warning:@ Don't@ know@ how@ to@ constrain@ expression,@;<1 0>defaulting@ to@ true@]@.\t Ty_structure: %s\n" (Frame.type_structure t);
+      assert false
     in (f, cs, LocationMap.add e.exp_loc f fm)
   in constrain exp initenv Predicate.True initcstrs initframemap
 

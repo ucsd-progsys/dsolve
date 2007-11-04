@@ -1,4 +1,4 @@
-qualif Q_AA_LE_ARRAY_LENGTH_ARR(_AA) : _AA <= Array.length arr;;
+(*qualif Q_AA_LE_ARRAY_LENGTH_ARR(_AA) : _AA <= Array.length arr;;
 qualif Q_AA_GE_ARRAY_LENGTH_ARR(_AA) : _AA >= Array.length arr;;
 qualif Q_AA_EQ_ARRAY_LENGTH_ARR(_AA) : _AA = Array.length arr;;
 qualif Q_AA_NE_ARRAY_LENGTH_ARR(_AA) : _AA != Array.length arr;;
@@ -73,8 +73,9 @@ qualif Q_AA_NE_1(_AA) : _AA != 1;;
 qualif QARRAY_LENGTH__AA_LE_1(_AA) : Array.length _AA <= 1;;
 qualif QARRAY_LENGTH__AA_GE_1(_AA) : Array.length _AA >= 1;;
 qualif QARRAY_LENGTH__AA_EQ_1(_AA) : Array.length _AA = 1;;
-qualif QARRAY_LENGTH__AA_NE_1(_AA) : Array.length _AA != 1;;
+qualif QARRAY_LENGTH__AA_NE_1(_AA) : Array.length _AA != 1;;*)
 
+(* just dotprod again *)
 (*let dp a b =
   let n = Array.length a in
   let rec loop i sum =
@@ -97,7 +98,9 @@ dp arr arr;;*)
 
 (*withtype {n:nat} int array(n) * int array(n) -> int*)
 
-let rec ack m n =
+(* some infinite looking recursion thing *)
+
+(*let rec ack m n =
   let n' = n + 1 in
   if m = 0 then n'
   else
@@ -115,7 +118,7 @@ let none_ = Random.self_init () in
 let m = Random.int 10 in
 let n = Random.int 10 in
 ack m n
-;;
+;;*)
 (*withtype {m:nat} int(m) -> {n:nat} <m, n> => int(n) -> [a:nat] int(a)*)
 
 (*fun dp (a, b) =

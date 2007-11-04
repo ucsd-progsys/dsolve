@@ -188,7 +188,10 @@ let rec apply_substitution sub = function
   | Farrow (x, f1, f2) ->
       Farrow (x, apply_substitution sub f1, apply_substitution sub f2)
   | Fconstr (p, l, (subs, qe)) ->
-      Fconstr (p, List.map (apply_substitution sub) l, (sub::subs, qe))
+     (* Fconstr (p, List.map (apply_substitution sub) l, (sub::subs, qe))*)
+     (* ming: let's not prop substitutions into compound types and see what
+      * happens *)
+     Fconstr (p, l, (sub::subs, qe))
   | Ftuple(t1, t2) ->
       Ftuple(apply_substitution sub t1, apply_substitution sub t2)
   | Funknown ->
@@ -281,7 +284,10 @@ let pred_is_well_typed env p =
             else
               Funknown
           | _ -> Funknown
-        else assert false
+      else if s = "Bigarray.Array2.dim1" || s = "Bigarray.Array2.dim2" then
+        (* pmr: I'm not even going to bother right now *)
+        frame_int
+      else assert false
   | Predicate.Binop (p1, op, p2) ->
       let p1_shp = get_expr_shape p1 in
       let p1_int = same_shape p1_shp frame_int in

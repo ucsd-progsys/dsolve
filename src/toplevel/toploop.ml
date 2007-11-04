@@ -230,6 +230,8 @@ let execute_phrase print_outcome ppf phr =
   | Ptop_def sstr ->
       let oldenv = !toplevel_env in
       let _ = Unused_var.warn ppf sstr in
+      (* rewrite the AST to a-normalize *)
+      let sstr = Normalize.normalize sstr in
       Typecore.reset_delayed_checks ();
       let (str, sg, newenv) = Typemod.type_structure oldenv sstr in
       Typecore.force_delayed_checks ();
@@ -255,6 +257,8 @@ let execute_phrase print_outcome ppf phr =
         fprintf std_formatter "@.@.";
         Qdebug.dump_qualified_structure std_formatter framemap str;
       end;
+      if !Clflags.dump_qualifs then
+        dump_qualifs ();
       dump_frames framemap;
       let lam = Translmod.transl_toplevel_definition str in
       Warnings.check_fatal ();
