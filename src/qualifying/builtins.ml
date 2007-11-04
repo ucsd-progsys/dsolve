@@ -187,6 +187,20 @@ let bigarray_get_frame env =
                            qdim Predicate.Lt 2 a j j],
                    ty))))
 
+let bigarray_set_frame env =
+  let ty = mk_tyvar () in
+  let (a, v) = fresh_2_idents () in
+  let (i, j) = fresh_2_idents () in
+    (["set"; "Array2"; "Bigarray"],
+     mk_fun(a, mk_bigarray_type ty (mk_tyvar ()) (mk_tyvar ()) [] env,
+            mk_fun(i,
+                   mk_int [qint Predicate.Ge 0 i;
+                           qdim Predicate.Lt 1 a i i],
+            mk_fun(j,
+                   mk_int [qint Predicate.Ge 0 j;
+                           qdim Predicate.Lt 2 a j j],
+            mk_fun(v, ty, mk_unit ())))))
+
 let rand_init_frame =
   let x = Path.mk_ident "x" in
   (["init"; "Random"], mk_fun(x, mk_int [], mk_unit ()))
@@ -263,6 +277,7 @@ let _lib_frames = [
   ref_assgn_frame;
   bigarray_create_frame;
   bigarray_get_frame;
+  bigarray_set_frame;
   bigarray_int_frame;
   bigarray_c_layout_frame;
 ]
