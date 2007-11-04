@@ -231,7 +231,7 @@ let execute_phrase print_outcome ppf phr =
       let oldenv = !toplevel_env in
       let _ = Unused_var.warn ppf sstr in
       (* rewrite the AST to a-normalize *)
-      let sstr = Normalize.normalize sstr in
+      (*let sstr = Normalize.normalize sstr in *)
       Typecore.reset_delayed_checks ();
       let (str, sg, newenv) = Typemod.type_structure oldenv sstr in
       Typecore.force_delayed_checks ();
