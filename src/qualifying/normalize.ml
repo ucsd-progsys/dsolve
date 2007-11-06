@@ -87,10 +87,13 @@ let normalize exp =
         let ls = List.concat (List.rev (f::lss)) in
          rw_expr (List.fold_left (wrap Nonrecursive) init ls)  
      | Pexp_ifthenelse(e1, e2, Some e3) ->
+         (* toss out the first label, since we know that hte first expression
+          * will be normalized, just use that as the conditional *)
         let b = norm_in e1 in
-        let (blbl, _) = List.hd b in
-        let init = mk_ifthenelse (mk_dum_ident_lbl blbl) (norm_out e2) (norm_out e3) in
-         rw_expr (List.fold_left (wrap Nonrecursive) init b)
+        let (blbl, e_b) = List.hd b in
+        let init = match e_b with Some e_b -> mk_ifthenelse e_b (norm_out e2) (norm_out e3)
+                    | None -> mk_ifthenelse (mk_dum_ident_lbl blbl) (norm_out e2) (norm_out e3) in
+         rw_expr (List.fold_left (wrap Nonrecursive) init (List.tl b))
      | Pexp_tuple(es) ->
         proc_list es mk_tuple
      | Pexp_array(es) ->
@@ -106,7 +109,7 @@ let normalize exp =
       let lss = List.map norm_in es in
       let lbls = List.map (fun ls -> let (lbl, _) = List.hd ls in (mk_dum_ident_lbl lbl)) lss in
       let e_this = rw_expr (skel lbls) in
-        (this, Some e_this)::(List.concat lss)
+        (this, Some e_this)::(List.concat (List.rev lss))
     in
 
     match exp.pexp_desc with
@@ -134,10 +137,14 @@ let normalize exp =
         let ls = proc_list es (mk_apply (mk_dum_ident_lbl flbl)) in
           (List.hd ls)::(List.append f (List.tl ls))
      | Pexp_ifthenelse(e1, e2, Some e3) ->
+        (* toss out the first label, since we know that expression will be
+         * normalized *)
         let b = norm_in e1 in
-        let (blbl, _) = List.hd b in
-        let (this, e_this) = (fresh_name (), mk_dum_ifthenelse (mk_dum_ident_lbl blbl) (norm_out e2) (norm_out e3)) in
-         (this, Some e_this)::b
+        let (blbl, e_b) = List.hd b in
+        let (this, e_this) = (fresh_name (), 
+                              match e_b with Some e_b -> mk_dum_ifthenelse e_b (norm_out e2) (norm_out e3)
+                                | None -> mk_dum_ifthenelse (mk_dum_ident_lbl blbl) (norm_out e1) (norm_out e3)) in
+         (this, Some e_this)::(List.tl b)
      | e -> printf "@[Bad expr to norm_in:@\n%a@]" Printast.top_phrase (wrap_printable exp); assert false
   in
   norm_out exp
@@ -148,5 +155,7 @@ let rec normalize_structure sstr =
   match sstr with
     [] -> []
     | {pstr_desc = (Pstr_eval exp); pstr_loc = loc} :: srem ->
-        ({pstr_desc = Pstr_eval (normalize exp); pstr_loc = loc}) :: (normalize_structure srem)
+        let normal_exp = normalize exp in
+        let _ = printf "@[%a@\n@]" Qdebug.pprint_expression normal_exp in
+        ({pstr_desc = (Pstr_eval(normal_exp)) ; pstr_loc = loc}) :: (normalize_structure srem)
     | p :: srem -> p :: (normalize_structure srem)
