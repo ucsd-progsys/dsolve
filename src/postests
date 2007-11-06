@@ -1,3 +1,4 @@
+DMLex/matmult.ml
 DML/bsearch.ml
 DML/dotprod.ml
 DML/dotprod2.ml
@@ -6,4 +7,3 @@ DML/queen.ml
 DML/tower.ml
 DMLex/bcopy.ml
 DMLex/heapsort.ml
-DMLex/matmult.ml

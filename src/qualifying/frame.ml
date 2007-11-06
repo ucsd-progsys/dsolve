@@ -274,19 +274,21 @@ let pred_is_well_typed env p =
   | Predicate.Pvar (x, _) -> (try Lightenv.find x env
                         with Not_found -> assert false)
   | Predicate.FunApp (s, p') -> 
+      let arg_shape shp out_shape =
+          match get_expr_shape p' with
+              Fconstr(a, _, _) ->
+                if Path.same shp a then
+                  out_shape
+                else
+                  Funknown
+            | _ -> Funknown
+      in
       (* ming: huge hack alert *)
-      if s = "Array.length" then 
-        let arg_shp = get_expr_shape p' in
-        match arg_shp with
-          Fconstr(a, _, _) -> 
-            if Path.same Predef.path_array a then 
-              frame_int 
-            else
-              Funknown
-          | _ -> Funknown
+      if s = "Array.length" then arg_shape Predef.path_array frame_int
       else if s = "Bigarray.Array2.dim1" || s = "Bigarray.Array2.dim2" then
         (* pmr: I'm not even going to bother right now *)
-        frame_int
+        (* ming: hence the huge hack *)
+        arg_shape (Builtins.ext_find_type_path "array2") frame_int
       else assert false
   | Predicate.Binop (p1, op, p2) ->
       let p1_shp = get_expr_shape p1 in
