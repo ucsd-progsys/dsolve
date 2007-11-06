@@ -1,8 +1,8 @@
 let rec heapify size data i =
-  let i_1 = i + 1 in
-  let i_2 = i + 2 in
-	let left = 2 * i_1 in
-	let right = 2 * i_2 in
+	let left = 2 * i in
+	let right = 2 * i in
+  let left = left + 1 in
+  let right = right + 2 in
 	let largest =
 	    (if left < size then
 		 if Array.get data left > Array.get data i then left else i
