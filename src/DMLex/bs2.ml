@@ -1,8 +1,8 @@
 let bs vec key =
 	let rec bs_aux l u =
-	    if u < l then -1
+	    if u + 1 = l then -1
 	    else
-        let m = l (*+ (u-l) / 2*) in
+        let m = l + ((u-l) / 2) in
         let x = Array.get vec m in
 		    if x < key then bs_aux (m+1) u
 		    else if x > key then bs_aux l (m-1)
