@@ -5,7 +5,9 @@ let rec heapify size data i =
   let right = right + 2 in
 	let largest =
 	    (if left < size then
-		 if Array.get data left > Array.get data i then left else i
+        let gl = Array.get data left in
+        let gi = Array.get data i in
+		 if gl > gi then left else i
 	     else i (*: int[0,n)*))
   in
 	let largest =

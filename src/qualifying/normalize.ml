@@ -10,26 +10,42 @@ let wrap_printable exp = (Ptop_def([{pstr_desc = (Pstr_eval exp); pstr_loc = Loc
      * happen in our code so this assumption is OK *)
 let li_flatten li = String.concat "." (Longident.flatten li) 
 
+(* constant divisions and multiplications are wreaking havoc on us
+ * because non-const ops turn into uninterpreted functions and make
+ * life difficult *)
+let is_op exp nm = 
+  match exp.pexp_desc with
+    | Pexp_ident(id) ->
+        li_flatten id = nm
+    | _ -> false
+
+let is_mult exp = 
+  is_op exp "*"
+let is_div exp =
+  is_op exp "/"
+               
+let is_const exp =
+  match exp.pexp_desc with
+    | Pexp_constant(Const_int _) ->
+        true
+    | _ -> false
+
 let is_const_div exp = 
-  let is_minus exp = 
-    match exp.pexp_desc with
-      | Pexp_ident(id) ->
-          li_flatten id = "/"
-      | _ -> false
-  in
-  let is_const exp =
-    match exp.pexp_desc with
-      | Pexp_constant(Const_int _) ->
-          true
-      | _ -> false
-  in             
   match exp.pexp_desc with 
     Pexp_apply(e1, es) ->
       let es = List.map (fun (_, e) -> e) es in
-      let minus = is_minus e1 in
-        if minus then is_const (List.nth es 1) else false 
+      let div = is_div e1 in
+        if div then is_const (List.nth es 1) else false 
     | _ -> false
       
+let is_const_mult exp =
+  match exp.pexp_desc with
+      Pexp_apply(e1, es) ->
+        let es = List.map (fun (_, e) -> e) es in
+        let mult = is_mult e1 in
+          if mult then is_const (List.nth es 1) || is_const (List.hd es)
+          else false
+    | _ -> false
 
 let normalize exp =
   let next_name_cnt = ref 0 in
@@ -106,13 +122,14 @@ let normalize exp =
         let lss = List.map norm_in es in
         let ts = List.map (fun ls -> let (lbl, _) = List.hd ls in mk_dum_ident_lbl lbl) lss in
           (* ming: hack for constant div *)
-        let divisor = if is_const_div exp
-                  then (Some (List.nth es 1))
-                  else None in
-        let ts = match divisor with
-                  | Some c -> (List.hd ts)::[c]
-                  | None -> ts in
-
+        let ts = if is_const_div exp || is_const_mult exp then
+                    let e_n1 = List.hd ts in
+                    let e_n2 = List.nth ts 1 in
+                    let e_o1 = List.hd es in
+                    let e_o2 = List.nth es 1 in
+               [if is_const e_o1 then e_o1 else e_n1;
+                if is_const e_o2 then e_o2 else e_n2]
+               else ts in
         let init = mk_apply (mk_dum_ident_lbl flbl) ts in
         let ls = List.concat (List.rev (f::lss)) in
          rw_expr (List.fold_left (wrap Nonrecursive) init ls)  
@@ -168,13 +185,19 @@ let normalize exp =
         let (this, e_this) = List.hd ls in
           (* ming: hack for constant div *)
         let e_this =  
-          if is_const_div exp then 
+          if is_const_div exp || is_const_mult exp then 
             begin
             match e_this with
                 Some e_this ->
                     begin match e_this.pexp_desc with
                     | Pexp_apply(e1, es') ->
-                      let es' = (List.hd es')::[("", List.nth es 1)] in
+                      let e_n1 = List.hd es' in
+                      let e_n2 = List.nth es' 1 in
+                      let e_o1 = List.hd es in
+                      let e_o2 = List.nth es 1 in
+                      let fst = if is_const e_o1 then ("", e_o1) else e_n1 in
+                      let snd = if is_const e_o2 then ("", e_o2) else e_n2 in
+                      let es' = [fst; snd] in
                       Some {pexp_desc = Pexp_apply(e1, es'); 
                             pexp_loc = e_this.pexp_loc}
                     | _ -> assert false
