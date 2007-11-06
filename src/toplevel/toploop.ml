@@ -231,7 +231,9 @@ let execute_phrase print_outcome ppf phr =
       let oldenv = !toplevel_env in
       let _ = Unused_var.warn ppf sstr in
       (* rewrite the AST to a-normalize *)
-      (*let sstr = Normalize.normalize sstr in *)
+      let sstr = if !Clflags.make_anormal then Normalize.normalize_structure sstr else sstr in
+      (* dump normalized parsetree on make_anormal for now *)
+      let _ = if !Clflags.make_anormal then (Printast.top_phrase ppf (Ptop_def(sstr))) else () in
       Typecore.reset_delayed_checks ();
       let (str, sg, newenv) = Typemod.type_structure oldenv sstr in
       Typecore.force_delayed_checks ();

@@ -19,7 +19,7 @@ include stdlib/StdlibModules
 
 CAMLC=ocamlc -nostdlib -I boot
 CAMLOPT=boot/ocamlrun ./ocamlopt -nostdlib -I stdlib
-COMPFLAGS=-warn-error A $(INCLUDES)
+COMPFLAGS=-warn-error A -dtypes $(INCLUDES)
 LINKFLAGS=-custom -ccopt -Lyices/lib -ccopt -L$(LIBDIR) -cclib -loyices \
           -cclib -lgmp -cclib -lyices -I $(LIBDIR)/stublibs -I yices/lib
 
@@ -66,7 +66,7 @@ QUALIFYING=qualifying/lightenv.cmo \
   qualifying/theoremProver.cmo \
   qualifying/constraint.cmo qualifying/qualgen.cmo \
   qualifying/qualifymod.cmo qualifying/printqual.cmo \
-  qualifying/qdebug.cmo 
+  qualifying/qdebug.cmo qualifying/normalize.cmo
 
 COMP=bytecomp/lambda.cmo bytecomp/printlambda.cmo \
   bytecomp/typeopt.cmo bytecomp/switch.cmo bytecomp/matching.cmo \
