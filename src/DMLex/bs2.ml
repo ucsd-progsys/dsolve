@@ -1,7 +1,6 @@
 let bs vec key =
 	let rec bs_aux l u =
-    if u < l then -1
-	    (*if u + 1 = l then -1*)
+	    if u + 1 = l then -1
 	    else
         let m = l + ((u-l) / 2) in
         let x = Array.get vec m in
