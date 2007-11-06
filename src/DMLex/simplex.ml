@@ -119,7 +119,12 @@ let main a =
       else failwith ("too few columns")
     end
     else failwith ("too few rows")
-in 12;;
+in
+  Random.self_init();
+  let arr = Bigarray.Array2.create Bigarray.int Bigarray.c_layout
+    (Random.int 20 + 1)
+    (Random.int 30 + 1) in
+    main arr;;
 
 (*
 (* An implementation of the simplex method in DML *)
