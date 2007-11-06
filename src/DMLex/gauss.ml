@@ -1,3 +1,136 @@
+datatype 'a matrix with (nat, nat) =
+  {m:nat, n:nat}
+  Matrix(m, n) of int(m) * int(n) * ('a array(n)) array(m)
+
+
+let fabs f =
+  if (f > 0.0) then f else (0.0 -. f)
+in
+
+let rowSwap data i j =
+    let temp = sub (data, i) in
+    let _none = update (data, i, sub (data, j)) in
+      update (data, j, temp)
+in
+
+let norm r n i =
+  let x = sub (r, i) in
+  let _none = update (r, i, 1.0) in
+  let loop k =
+    if k < n then
+      let _none = update (r, k, sub (r, k) /. x) in
+	loop (k+1)
+    else ()
+  in
+    loop (i+1)
+in
+
+let rowElim (r, s, n, i) =
+  let x = sub (s, i) in
+  let _none = update (s, i, 0.0) in
+  let loop k =
+    if k < n then
+      let _none = update (s, k, sub (s, k) -. x *. sub (r, k)) in
+	loop (k+1)
+    else ()
+  in
+    loop (i+1)
+in
+
+let rowMax data m i =
+  let x = fabs (sub2 (data, i, i)) in
+  let loop j x max =
+    if j < m then
+      let y = fabs (sub2 (data, j, i)) in
+        if (y >. x) then loop (j+1, y, j)
+	else loop (j+1, x, max)
+    else max
+  in
+    loop (i+1, x, i)
+in
+
+let gauss mat =
+  let n = Bigarray.Array2.dim1 mat in
+  let Matrix (n, _, data) = mat in
+  let loop1 i =
+    if i < n then
+      let max = rowMax(data, n, i) in
+      let _none = norm (sub (data, max), n+1, i) in
+      let _none = rowSwap (data, i, max) in
+      let loop2 j =
+	if j < n then
+	  let _none = rowElim (sub (data, i), sub (data, j), n+1, i)
+	  in
+	    loop2 (j+1)
+	else ()
+      in
+      let _none = loop2 (i+1) in
+	loop1 (i+1)
+    else ()
+  in
+    loop1 (0)
+in
+
+let print_array	data i j =
+  let loop k =
+    if k < j then
+      let _none = print_string ("\t") in
+      let _none = print_float (sub (data, k)) in
+	loop (k+1)
+    else print_string "\n"
+  in
+    if i < j then
+      let _none = print_float (sub (data, i)) in
+	loop (i+1)
+    else print_string "\n"
+in
+
+let print_matrix mat =
+  let m = Bigarray.Array2.dim1 mat in
+  let n = Bigarray.Array2.dim2 mat in
+    let loop i =
+      if i < m then
+	let _none = print_array (sub (data, i), 0, n) in
+          loop (i+1)
+      else print_string ("\n")
+    in
+      loop (0)
+
+(*
+(* Here is a test *)
+
+let main () =
+    let
+	val data = alloc(3, alloc(4, 0.0))
+
+	val _ = update2 (data, 0, 0, 1.0)
+	val _ = update2 (data, 0, 1, 1.0)
+	val _ = update2 (data, 0, 2, 1.0)
+	val _ = update2 (data, 0, 3, 0.0 -. 4.0)
+
+	val _ = update (data, 1, alloc (4, 0.0))
+	val _ = update2 (data, 1, 0, 0.0 -. 2.0)
+	val _ = update2 (data, 1, 1, 3.0)
+	val _ = update2 (data, 1, 2, 1.0)
+	val _ = update2 (data, 1, 3, 7.0)
+
+	val _ = update (data, 2, alloc (4, 0.0))
+	val _ = update2 (data, 2, 0, 3.0)
+	val _ = update2 (data, 2, 1, 0.0 -. 1.0)
+	val _ = update2 (data, 2, 2, 2.0)
+	val _ = update2 (data, 2, 3, 7.0)
+
+	val mat = Matrix (3, 4, data)
+
+	val _ = print_matrix (mat)
+	val _ = gauss (mat)
+	val _ = print_matrix (mat)
+    in
+	()
+    end
+withtype unit -> unit
+*)
+(*
 (*
  * An implementation of the Gaussian elimination approach in DML
  *)
@@ -181,3 +314,4 @@ fun main () =
 	()
     end
 withtype unit -> unit
+*)

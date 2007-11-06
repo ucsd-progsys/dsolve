@@ -247,6 +247,9 @@ let tuple_fst_snd_frame name fst =
 let ref_path env =
   ("ref", find_type_path ["ref"; "Pervasives"] env)
 
+let bigarray_array2_path env =
+  ("array2", find_type_path ["t"; "Array2"; "Bigarray"] env)
+
 
 let _frames = [
   op_frame ["+"; "Pervasives"] "+" Predicate.Plus;
@@ -293,6 +296,7 @@ let _lib_frames = [
 
 let _type_path_constrs = [
   ref_path;
+  bigarray_array2_path;
 ]
 
 let _type_paths = ref None
@@ -319,5 +323,3 @@ let size_lit_refinement i =
 		([], Frame.Qconst [(Path.mk_ident "<size_lit_eq>",
 											 x,
 											 Predicate.equals(Predicate.FunApp("Array.length", Predicate.Var x), Predicate.PInt(i)))])
-
-  
