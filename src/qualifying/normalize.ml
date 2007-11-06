@@ -76,7 +76,7 @@ let normalize exp =
               Some e -> mk_let r x e (norm_out e2) 
               | None -> mk_let r x (mk_dum_ident_lbl lbl) (norm_out e2)
         in
-         rw_expr (List.fold_left (wrap r) init ls)
+         rw_expr (List.fold_left (wrap r) init (List.tl ls))
      | Pexp_apply(e1, es) ->
         let f = norm_in e1 in
         let (flbl, _) = List.hd f in 
