@@ -86,7 +86,7 @@ let fresh_with_var_fun ty fresh_ref_var =
        (* pmr: badness; should be handled just fine by well-formedness constraints,
           which would effectively effect the same effect *)
       | Tconstr(p, tyl, _) -> 
-          if Path.same p Predef.path_unit then
+          if Path.same p Predef.path_unit || Path.same p Predef.path_float then
             Fconstr (p, [], ([], Qconst []))
           else
             Fconstr (p, List.map fresh_rec tyl, fresh_ref_var ())

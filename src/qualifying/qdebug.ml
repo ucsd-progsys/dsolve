@@ -16,6 +16,8 @@ let rec print_typed_expression qmap ppf exp =
     match e.exp_desc with
       | Texp_constant (Const_int n) ->
           fprintf ppf "%d" n
+      | Texp_constant (Const_float f) ->
+          fprintf ppf "%s" f
       | Texp_ident (path, _) ->
           fprintf ppf "%s" (Path.name path)
       | Texp_construct ({cstr_tag = Cstr_constant n}, []) ->
@@ -58,6 +60,8 @@ let rec pprint_expression ppf exp =
     match e.pexp_desc with
       | Pexp_constant (Const_int n) ->
           fprintf ppf "%d" n
+      | Pexp_constant (Const_float f) ->
+          fprintf ppf "%s" f
       | Pexp_ident id ->
           fprintf ppf "%s" (print_id id)
       | Pexp_construct (tag, eopt, _) ->
