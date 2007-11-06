@@ -1,21 +1,23 @@
-val arraysize: ('a).{n:nat} 'a array(n) -> int(n)
-
-fun bs vec key =
-    let
-	fun bs_aux l u =
-	    if u + 1 = l then ~1
+let bs vec key =
+	let rec bs_aux l u =
+	    if u + 1 = l then -1
 	    else
-		let
-		    val m = l + (u-l) / 2
-		    val x = sub (vec, m)
-		in
+        let m = l (*+ (u-l) / 2*) in
+        let x = Array.get vec m in
 		    if x < key then bs_aux (m+1) u
 		    else if x > key then bs_aux l (m-1)
 			 else m
-		end
-	withtype {i:int,j:int | 0 <= i <= j+1 <= n} <j+1-i> =>
-                 int(i) -> int(j) -> int
     in
-	bs_aux 0 (arraysize vec - 1)
-    end
-withtype {n:nat} <> => int array(n) -> int -> int
+	bs_aux 0 (Array.length vec - 1)
+in
+let vec = [|1;2;3;4;5|] in
+  bs vec 6;;
+(*let _none = Random.self_init () in
+let ar = Array.make ((Random.int 40) + 2) 0 in
+let rec fill i = 
+  if i < Array.length ar then  
+    (Array.set ar i (Random.int 40); fill (i+1))
+  else ()
+in
+  (fill 0; bs ar (Random.int 40))
+;;*)

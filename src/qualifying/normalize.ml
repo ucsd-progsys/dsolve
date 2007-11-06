@@ -4,6 +4,32 @@ open Format
 
 
 let wrap_printable exp = (Ptop_def([{pstr_desc = (Pstr_eval exp); pstr_loc = Location.none}])) 
+    
+    (* ming: I think it's actually better to pass everything around as
+     * longidents for true generality, but applies of functors should never
+     * happen in our code so this assumption is OK *)
+let li_flatten li = String.concat "." (Longident.flatten li) 
+
+let is_const_div exp = 
+  let is_minus exp = 
+    match exp.pexp_desc with
+      | Pexp_ident(id) ->
+          li_flatten id = "/"
+      | _ -> false
+  in
+  let is_const exp =
+    match exp.pexp_desc with
+      | Pexp_constant(Const_int _) ->
+          true
+      | _ -> false
+  in             
+  match exp.pexp_desc with 
+    Pexp_apply(e1, es) ->
+      let es = List.map (fun (_, e) -> e) es in
+      let minus = is_minus e1 in
+        if minus then is_const (List.nth es 1) else false 
+    | _ -> false
+      
 
 let normalize exp =
   let next_name_cnt = ref 0 in
@@ -12,10 +38,6 @@ let normalize exp =
     let _ = next_name_cnt := !next_name_cnt + 1 in
       ("__tmp"^(string_of_int i))  
   in
-    (* ming: I think it's actually better to pass everything around as
-     * longidents for true generality, but applies of functors should never
-     * happen in our code so this assumption is OK *)
-  let li_flatten li = String.concat "." (Longident.flatten li) in
 
   (* ming: we dummy out all the pattern locations because we don't use them.
    * this is technically destructive though, if we do implement pattern matching
@@ -83,6 +105,14 @@ let normalize exp =
         let es = List.map (fun (_, e) -> e) es in
         let lss = List.map norm_in es in
         let ts = List.map (fun ls -> let (lbl, _) = List.hd ls in mk_dum_ident_lbl lbl) lss in
+          (* ming: hack for constant div *)
+        let divisor = if is_const_div exp
+                  then (Some (List.nth es 1))
+                  else None in
+        let ts = match divisor with
+                  | Some c -> (List.hd ts)::[c]
+                  | None -> ts in
+
         let init = mk_apply (mk_dum_ident_lbl flbl) ts in
         let ls = List.concat (List.rev (f::lss)) in
          rw_expr (List.fold_left (wrap Nonrecursive) init ls)  
@@ -135,7 +165,24 @@ let normalize exp =
         let (flbl, e_f) = List.hd f in
         let es = List.map (fun (_, e) -> e) es in
         let ls = proc_list es (mk_apply (mk_dum_ident_lbl flbl)) in
-          (List.hd ls)::(List.append f (List.tl ls))
+        let (this, e_this) = List.hd ls in
+          (* ming: hack for constant div *)
+        let e_this =  
+          if is_const_div exp then 
+            begin
+            match e_this with
+                Some e_this ->
+                    begin match e_this.pexp_desc with
+                    | Pexp_apply(e1, es') ->
+                      let es' = (List.hd es')::[("", List.nth es 1)] in
+                      Some {pexp_desc = Pexp_apply(e1, es'); 
+                            pexp_loc = e_this.pexp_loc}
+                    | _ -> assert false
+                    end
+                | None -> assert false
+            end
+          else e_this in
+          (this, e_this)::(List.append f (List.tl ls))
      | Pexp_ifthenelse(e1, e2, Some e3) ->
         (* toss out the first label, since we know that expression will be
          * normalized *)
