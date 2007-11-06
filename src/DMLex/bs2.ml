@@ -10,9 +10,7 @@ let bs vec key =
     in
 	bs_aux 0 (Array.length vec - 1)
 in
-let vec = [|1;2;3;4;5|] in
-  bs vec 6;;
-(*let _none = Random.self_init () in
+let _none = Random.self_init () in
 let ar = Array.make ((Random.int 40) + 2) 0 in
 let rec fill i = 
   if i < Array.length ar then  
@@ -20,4 +18,4 @@ let rec fill i =
   else ()
 in
   (fill 0; bs ar (Random.int 40))
-;;*)
+;;
