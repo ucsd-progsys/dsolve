@@ -6,7 +6,7 @@
 
 (* converted to ints to avoid having to stress the unknown expressions bit of the code *)
 let pi = 3.14159265358979323846 in
-let two_pi = 2 *. pi in
+let two_pi = 2.0 *. pi in
 let ffor s d body = 
     let rec loop i =
         let i' = i + 1 in 
@@ -16,8 +16,8 @@ in
 let fft px py n = (* n must be a power of 2! *)
   let rec loop n2 n4 =
     if n2 <= 2 then () else (* the case n2 = 2 is treated below *)
-    let e = two_pi /. n2 in 
-    let e3 = 3 *. e in
+    let e = two_pi /. (float_of_int n2) in
+    let e3 = 3.0 *. e in
     let a = ref 0.0 in
     let a3 = ref 0.0 in
     let forbod j = 
@@ -58,8 +58,8 @@ let fft px py n = (* n must be a power of 2! *)
         let r2 = r2 +. s1 in
         let none_ = Array.set px i2 (r1 *. cc1 -. s2 *. ss1) in
         let none_ = Array.set py i2 ((-. s2) *. cc1 -. r1 *. ss1) in
-        let none_ = Array.set px i3 (s3 *. cc3 + r2 *. ss3) in
-        let none_ = Array.set py i3 (r2 *. cc3 - s3 *. ss3) in
+        let none_ = Array.set px i3 (s3 *. cc3 +. r2 *. ss3) in
+        let none_ = Array.set py i3 (r2 *. cc3 -. s3 *. ss3) in
         loop1 (i0 + id) (i1 + id) (i2 + id) (i3 + id) id
       in
       let rec loop2 is id =
@@ -107,32 +107,34 @@ let fft px py n = (* n must be a power of 2! *)
       end
     in
     loop2 1 1; n
- in
-let fabs r = if r > 0.0 then r else (-. r)
+in
+
+(* pmr: is this going to cause a problem? *)
+let fabs r = if r > 0.0 then r else (0.0 -. r)
                                      in
 let ffttest np =
-  let enp = np in
+  let enp = float_of_int np in
   let n2 = np / 2 in
   let npm = n2 - 1 in
-  let pxr = Array.make (np+1) 0 in
-  let pxi = Array.make (np+1) 0 in
-  let t = pi / enp in
-  let none_ = Array.set pxr 1 ((enp - 1) / 2) in
-  let none_ = Array.set pxi 1 (0) in
-  let none_ = Array.set pxr (n2+1) ((- (1/2))) in
-  let none_ = Array.set pxi (n2+1) (0) in
+  let pxr = Array.make (np+1) 0.0 in
+  let pxi = Array.make (np+1) 0.0 in
+  let t = pi /. enp in
+  let none_ = Array.set pxr 1 ((enp -. 1.0) /. 2.0) in
+  let none_ = Array.set pxi 1 (0.0) in
+  let none_ = Array.set pxr (n2+1) ((-. (1.0 /. 2.0))) in
+  let none_ = Array.set pxi (n2+1) (0.0) in
   let forbod i = 
     let j = np - i in
-    let none_ = Array.set pxr (i+1) (- (1/2)) in
-    let none_ = Array.set pxr (j+1) (- (1/2)) in
-    let z = t * i in
-    let y = (cos z / sin z) / 2 in
-    Array.set pxi (i+1) (- y); Array.set pxi (j+1) (y)
+    let none_ = Array.set pxr (i+1) (-. (1.0 /. 2.0)) in
+    let none_ = Array.set pxr (j+1) (-. (1.0 /. 2.0)) in
+    let z = t *. (float_of_int i) in
+    let y = (cos z /. sin z) /. 2.0 in
+    Array.set pxi (i+1) (-. y); Array.set pxi (j+1) (y)
   in ffor 1 npm forbod;
   ignore(fft pxr pxi np);
   let rec loop i zr zi kr ki =
     if i > np then (zr, zi) else
-      let a = fabs((Array.get pxr (i+1)) - i) in
+      let a = fabs((Array.get pxr (i+1)) -. (float_of_int i)) in
       let b = zr < a in
       let zr = if b then a else zr in
       let kr = if b then i else kr in
@@ -142,7 +144,7 @@ let ffttest np =
       let ki = if b then i else ki in
        loop (i+1) zr zi kr ki
   in
-  let zz = loop 0 0 0 0 0 in
+  let zz = loop 0 0.0 0.0 0 0 in
   let zr = fst zz in
   let zi = snd zz in
   let zm = if fabs zr < fabs zi then zi else zr
