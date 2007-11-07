@@ -179,6 +179,10 @@ let bigarray_int_frame env =
   (["int"; "Bigarray"],
    mk_named ["kind"; "Bigarray"] [mk_int []; mk_named ["int_elt"; "Bigarray"] [] [] env] [] env)
 
+let bigarray_float64_frame env =
+  (["float64"; "Bigarray"],
+   mk_named ["kind"; "Bigarray"] [mk_int []; mk_named ["float64_elt"; "Bigarray"] [] [] env] [] env)
+
 let bigarray_c_layout_frame env =
   (["c_layout"; "Bigarray"],
    mk_named ["layout"; "Bigarray"] [mk_named ["c_layout"; "Bigarray"] [] [] env] [] env)
@@ -306,6 +310,7 @@ let _lib_frames = [
   bigarray_dim_frame 1;
   bigarray_dim_frame 2;
   bigarray_int_frame;
+  bigarray_float64_frame;
   bigarray_c_layout_frame;
 ]
 
