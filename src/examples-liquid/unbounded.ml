@@ -1,14 +1,13 @@
-let rec unb arr2 m n i j =
-  if i = 0 then
-    if j < n-1 then
-      if Bigarray.Array2.get arr2 0 j < 0 then unb arr2 m n (i+1) j
-      else unb arr2 m n 0 (j+1)
-    else false
-  else
-    if i < m then
-      if Bigarray.Array2.get arr2 i j < 0 then unb arr2 m n (i+1) j
-      else unb arr2 m n 0 (j+1)
-    else true
+let rec unb1 arr2 m n i j =
+  if j < n-1 then
+    if Bigarray.Array2.get arr2 0 j < 0 then unb arr2 m n (i+1) j
+    else unb arr2 m n 0 (j+1)
+  else false
+and unb2 arr2 m n i j =
+  if i < m then
+    if Bigarray.Array2.get arr2 i j < 0 then unb arr2 m n (i+1) j
+    else unb arr2 m n 0 (j+1)
+  else true
 in
 
 (Random.self_init ();

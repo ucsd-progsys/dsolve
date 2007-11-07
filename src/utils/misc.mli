@@ -42,6 +42,8 @@ val samelist: ('a -> 'a -> bool) -> 'a list -> 'a list -> bool
         (* Like [List.for_all2] but returns [false] if the two
            lists have different length. *)
 
+val split3 : ('a * 'b * 'c) list -> ('a list * 'b list * 'c list)
+
 val may: ('a -> unit) -> 'a option -> unit
 val may_map: ('a -> 'b) -> 'a option -> 'b option
 
