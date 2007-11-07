@@ -52,13 +52,14 @@ let normalize exp =
   let fresh_name () =
     let i = !next_name_cnt in
     let _ = next_name_cnt := !next_name_cnt + 1 in
-      ("__tmp"^(string_of_int i))  
+      Longident.parse ("__tmp"^(string_of_int i))  
   in
 
   (* ming: we dummy out all the pattern locations because we don't use them.
    * this is technically destructive though, if we do implement pattern matching
    * it will have to be fixed. *)
   let mk_let r x e1 e2 = Pexp_let(r, [({ppat_desc = Ppat_var x; ppat_loc = Location.none}, e1)], e2) in
+  let mk_let_lbl r x e1 e2 = mk_let r (li_flatten x) e1 e2 in
   let mk_apply e1 es = Pexp_apply(e1, (List.map (fun e -> ("", e)) es)) in
   let mk_ident id = Pexp_ident(id) in
   let mk_function lbl elbl arg_pat sube = Pexp_function(lbl, elbl, [(arg_pat, sube)]) in
@@ -79,12 +80,11 @@ let normalize exp =
   let mk_dum_ifthenelse e1 e2 e3 = mk_dummy (mk_ifthenelse e1 e2 e3) in
   
   (*let fresh_ident () = mk_dum_ident (Longident.parse (fresh_name ())) in*)
-  let mk_dum_ident_lbl lbl = mk_dum_ident (Longident.parse lbl) in
   let mk_list_let r ls e2 = 
     let ls = List.map (fun (x, e) -> 
                          let e = match e with Some e -> e
-                           | None -> mk_dum_ident_lbl x
-                         in ({ppat_desc = Ppat_var x; ppat_loc = Location.none}, e)) ls in
+                           | None -> mk_dum_ident x
+                         in ({ppat_desc = Ppat_var (li_flatten x); ppat_loc = Location.none}, e)) ls in
       Pexp_let(r, ls, e2) in
 
   let rec norm_bind_list bs = 
@@ -93,7 +93,7 @@ let normalize exp =
         ({ppat_desc = Ppat_var x}, e1) ->
             let ls = norm_in e1 in
             let (_, e_f) = List.hd ls in
-              ((x, e_f), List.tl ls) 
+              ((Longident.parse x, e_f), List.tl ls) 
         | ({ppat_desc = Ppat_any}, e1) -> 
             let ls = norm_in e1 in
               (List.hd ls, List.tl ls)
@@ -107,12 +107,12 @@ let normalize exp =
     let rw_expr desc = {pexp_desc = desc; pexp_loc = exp.pexp_loc} in
     let wrap r b (lbl, a) = 
       match a with
-          Some a -> mk_let r lbl a (mk_dummy b)
+          Some a -> mk_let_lbl r lbl a (mk_dummy b)
           | None -> b
     in
     let proc_list es skel =
      let lss = List.map norm_in es in
-     let lbls = List.map (fun ls -> let (lbl, e_l) = List.hd ls in (mk_dum_ident_lbl lbl)) lss in
+     let lbls = List.map (fun ls -> let (lbl, e_l) = List.hd ls in (mk_dum_ident lbl)) lss in
      let init = skel lbls in
       rw_expr (List.fold_left (wrap Nonrecursive) init (List.concat (List.rev lss)))
     in
@@ -121,13 +121,13 @@ let normalize exp =
      | Pexp_constant(_) 
      | Pexp_construct(_, None, false) ->
         let a = fresh_name () in
-         rw_expr (mk_let Nonrecursive a exp (mk_dum_ident_lbl a))
+         rw_expr (mk_let_lbl Nonrecursive a exp (mk_dum_ident a))
      | Pexp_ident(_) ->
         exp
      | Pexp_function(lbl, elbl, [(arg, e)]) ->
         rw_expr (mk_function lbl elbl arg (norm_out e))
      | Pexp_let(r, [({ppat_desc = Ppat_any}, e1)], e2) ->
-        norm_out (rw_expr (mk_let r (fresh_name ()) e1 e2))
+        norm_out (rw_expr (mk_let_lbl r (fresh_name ()) e1 e2))
      | Pexp_let(r, [({ppat_desc = Ppat_var x}, e1)], e2) -> 
         let ls = norm_in e1 in 
         (* ming: e2 is already written with lbl x, so we have to ignore the lbl
@@ -136,7 +136,7 @@ let normalize exp =
         let init = 
           match e_1 with
               Some e -> mk_let r x e (norm_out e2) 
-              | None -> mk_let r x (mk_dum_ident_lbl lbl) (norm_out e2)
+              | None -> mk_let r x (mk_dum_ident lbl) (norm_out e2)
         in
          rw_expr (List.fold_left (wrap r) init (List.tl ls))
      (* to be particularly careful, we'll add a special case for mutual
@@ -151,7 +151,7 @@ let normalize exp =
         let (flbl, _) = List.hd f in 
         let es = List.map (fun (_, e) -> e) es in
         let lss = List.map norm_in es in
-        let ts = List.map (fun ls -> let (lbl, _) = List.hd ls in mk_dum_ident_lbl lbl) lss in
+        let ts = List.map (fun ls -> let (lbl, _) = List.hd ls in mk_dum_ident lbl) lss in
           (* ming: hack for constant div *)
         let ts = if is_const_div exp || is_const_mult exp then
                     let e_n1 = List.hd ts in
@@ -161,7 +161,7 @@ let normalize exp =
                [if is_const e_o1 then e_o1 else e_n1;
                 if is_const e_o2 then e_o2 else e_n2]
                else ts in
-        let init = mk_apply (mk_dum_ident_lbl flbl) ts in
+        let init = mk_apply (mk_dum_ident flbl) ts in
         let ls = List.concat (List.rev (f::lss)) in
          rw_expr (List.fold_left (wrap Nonrecursive) init ls)  
      | Pexp_ifthenelse(e1, e2, Some e3) ->
@@ -170,7 +170,7 @@ let normalize exp =
         let b = norm_in e1 in
         let (blbl, e_b) = List.hd b in
         let init = match e_b with Some e_b -> mk_ifthenelse e_b (norm_out e2) (norm_out e3)
-                    | None -> mk_ifthenelse (mk_dum_ident_lbl blbl) (norm_out e2) (norm_out e3) in
+                    | None -> mk_ifthenelse (mk_dum_ident blbl) (norm_out e2) (norm_out e3) in
          rw_expr (List.fold_left (wrap Nonrecursive) init (List.tl b))
      | Pexp_tuple(es) ->
         proc_list es mk_tuple
@@ -187,7 +187,7 @@ let normalize exp =
     let proc_list es skel = 
       let this = fresh_name () in
       let lss = List.map norm_in es in
-      let lbls = List.map (fun ls -> let (lbl, _) = List.hd ls in (mk_dum_ident_lbl lbl)) lss in
+      let lbls = List.map (fun ls -> let (lbl, _) = List.hd ls in (mk_dum_ident lbl)) lss in
       let e_this = rw_expr (skel lbls) in
         (this, Some e_this)::(List.concat (List.rev lss))
     in
@@ -203,7 +203,7 @@ let normalize exp =
           * like (id, exp), but that will add another layer to all scopes and
           * generally make life more difficult while debugging. will turn this
           * off eventually *)
-         [((li_flatten id), None)]
+         [(id, None)]
      | Pexp_sequence(_, _) 
      | Pexp_function(_, _, _)     
      | Pexp_let(_, _, _) -> 
@@ -216,7 +216,7 @@ let normalize exp =
         let f = norm_in e1 in
         let (flbl, e_f) = List.hd f in
         let es = List.map (fun (_, e) -> e) es in
-        let ls = proc_list es (mk_apply (mk_dum_ident_lbl flbl)) in
+        let ls = proc_list es (mk_apply (mk_dum_ident flbl)) in
         let (this, e_this) = List.hd ls in
           (* ming: hack for constant div *)
         let e_this =  
@@ -248,7 +248,7 @@ let normalize exp =
         let (blbl, e_b) = List.hd b in
         let (this, e_this) = (fresh_name (), 
                               match e_b with Some e_b -> mk_dum_ifthenelse e_b (norm_out e2) (norm_out e3)
-                                | None -> mk_dum_ifthenelse (mk_dum_ident_lbl blbl) (norm_out e1) (norm_out e3)) in
+                                | None -> mk_dum_ifthenelse (mk_dum_ident blbl) (norm_out e1) (norm_out e3)) in
          (this, Some e_this)::(List.tl b)
      | e -> printf "@[Bad expr to norm_in:@\n%a@]" Printast.top_phrase (wrap_printable exp); assert false
   in
