@@ -59,6 +59,7 @@ let empty_refinement = ([], Qconst [])
 
 let frame_cons p = Fconstr(p, [], empty_refinement)
 let frame_int = frame_cons Predef.path_int
+let frame_float = frame_cons Predef.path_float
 let frame_bool = frame_cons Predef.path_bool
 
 let fresh_refinementvar () = ([], Qvar (Path.mk_ident "k"))
@@ -315,7 +316,8 @@ let pred_is_well_typed env p =
         | Predicate.Lt
         | Predicate.Le ->
         (same_shape p1_shp p2_shp) && (same_shape p1_shp frame_int || 
-                                       (function Fvar _ -> true | _ -> false) p1_shp) 
+                                       (function Fvar _ -> true | _ -> false) p1_shp ||
+                                       same_shape p1_shp frame_float) 
     in
       pred_shape_is_bool p
 

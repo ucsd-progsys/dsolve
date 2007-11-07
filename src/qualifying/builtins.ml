@@ -126,6 +126,9 @@ let bool_disj_frame path qname =
     rel_fun_frame path (x, y) (mk_bool [], mk_bool []) qual
 
     
+let ignore_frame =
+  let x = Path.mk_ident "x" in
+    (["ignore"; "Pervasives"], mk_fun (x, mk_tyvar (), mk_unit ())) 
 
 let rel_frame path qname rel =
   let (x, y, z) = fresh_idents () in
@@ -299,6 +302,7 @@ let _frames = [
   rand_init_frame;
   rand_int_frame;
   void_fun_frame ["self_init"; "Random"];
+  ignore_frame;
 ]
 
 let _lib_frames = [
