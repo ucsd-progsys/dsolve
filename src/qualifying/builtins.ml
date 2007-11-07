@@ -283,6 +283,7 @@ let _frames = [
   rel_frame ["<="; "Pervasives"] ">=" Predicate.Ge;*)
   poly_rel_frame ["="; "Pervasives"] "=" Predicate.Eq;
   poly_rel_frame ["!="; "Pervasives"] "!=" Predicate.Ne;
+  poly_rel_frame ["<>"; "Pervasives"] "<>" Predicate.Ne;
   poly_rel_frame ["<"; "Pervasives"] "<" Predicate.Lt;
   poly_rel_frame [">"; "Pervasives"] ">" Predicate.Gt;
   poly_rel_frame [">="; "Pervasives"] ">=" Predicate.Ge;
