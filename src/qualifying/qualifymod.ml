@@ -164,6 +164,21 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
               (* pmr: I'm not assuming that constrain always gives us a fresh frame here, otherwise we could
                  use label_frames directly *)
             let binding_frames = List.map2 Frame.label_like unlabeled_frames label_frames in
+            
+              (* ming: qualgen code. generate qualifiers for all binding vars if
+               * we're currently under a lambda build a bitmap for each bind to
+               * manage lambda detection *)
+            let qualgen_addlbls var exp = Qualgen.add_label (var, exp.exp_type) in
+            let _ = if !under_lambda = 0 || not(!Clflags.less_qualifs) then List.iter2 qualgen_addlbls vars exprs  
+                                                                       else () 
+            in
+            let qualgen_is_function e = 
+              match e.exp_desc with
+                Texp_function (_, _) -> true
+                | _ -> false 
+            in
+            let qualgen_incr_lambda () = under_lambda := !under_lambda + 1 in
+            let qualgen_decr_lambda () = under_lambda := !under_lambda - 1 in
 
             (* Redo constraints now that we know what the right labels are --- note that unlabeled_frames are all
                still essentially fresh, since we're discarding any constraints on them *)
@@ -172,7 +187,19 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
               let (frame, new_cs, new_fm) = constrain e bound_env guard cs fm in
                 (frame :: fframes, new_cs, new_fm)
             in
-            let (found_frames, cstrs1, fmap1) = List.fold_right build_found_frame_list exprs ([], cstrs, framemap) in
+              (* qualgen, continued.. wrap the fold function in another that
+               * pushes onto the lambda stack while constraining functions *)
+            let qualgen_wrap_found_frame_list e b = 
+              if qualgen_is_function e then 
+                let _ = qualgen_incr_lambda () in
+                let r = build_found_frame_list e b in
+                let _ = qualgen_decr_lambda () in
+                  r  
+              else
+                    build_found_frame_list e b
+            in
+                  
+            let (found_frames, cstrs1, fmap1) = List.fold_right qualgen_wrap_found_frame_list exprs ([], cstrs, framemap) in
             let (body_frame, cstrs2, fmap2) = constrain body_exp bound_env guard cstrs1 fmap1 in
 
             (* Ensure that the types we discovered for each binding are no more general than the types implied by
