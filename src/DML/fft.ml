@@ -70,8 +70,6 @@ let fft px py n = (* n must be a power of 2! *)
         let none_ = Array.set px i3 (s3 * cc3 + r2 * ss3) in
         let none_ = Array.set py i3 (r2 * cc3 - s3 * ss3) in
         loop1 (i0 + id) (i1 + id) (i2 + id) (i3 + id) id
-      (*withtype {i0:nat}{i1:int}{i2:int}{i3:int | i0 <= i1 <= i2 <= i3}{id:nat}
-               int(i0) -> int(i1) -> int(i2) -> int(i3) -> int(id) -> unit in*)
       in
       let rec loop2 is id =
         if is >= n then () else begin
@@ -81,11 +79,9 @@ let fft px py n = (* n must be a power of 2! *)
           loop1 is i1 i2 i3 id;
           loop2 (2 * id - n2 + j) (4 * id)
         end
-      (*withtype {is:nat}{id:nat | id >= n2} int(is) -> int(id) -> unit in*)
       loop2 j (2 * n2)
-    (*done*)in ffor 1 n4 forbod; 
+    in ffor 1 n4 forbod; 
     loop (n2 / 2) (n4 / 2) in
-    (*withtype int(n2) -> int -> unit in*)
     loop n (n / 4);
 
     let rec loop1 i0 i1 id =
@@ -97,18 +93,15 @@ let fft px py n = (* n must be a power of 2! *)
       let none_ = Array.set py i0 (r1 + (Array.get py i1)) in
       let none_ = Array.set py i1 (r1 - (Array.get py i1)) in
       loop1 (i0 + id) (i1 + id) id
-    (*withtype {i0:nat}{i1:int | i0 <= i1} int(i0) -> int(i1) -> {id:nat} int(id) -> unit in*)
     let rec loop2 is id =
       if is >= n then () else begin
         loop1 is (is + 1) id;
         loop2 (2 * id - 1) (4 * id)
       end
-    (*withtype {is:nat}{id:nat | id >= 4} int(is) -> int(id) -> unit in*)
     loop2 1 4;
 
     let rec loop1 j k =
       if k >= j then j + k else loop1 (j - k) (k / 2)
-    (*withtype {j:nat}{k:nat | k <= n / 2} int(j) -> int(k) -> [i:nat | i <= n] int(i) in*)
     let rec loop2 i j =
       if i >= n then () else begin
         if i >= j then () else begin
@@ -117,9 +110,7 @@ let fft px py n = (* n must be a power of 2! *)
         end;
         loop2 (i + 1) (loop1 j (n / 2))
       end
-    (*withtype {i:nat} int(i) -> {j:nat | j <= n} int(j) -> unit in*)
     loop2 1 1; n
-(*withtype float vect(n+1) -> float vect(n+1) -> int(n) -> int(n)*)
     in
 let fabs r = if r >= 0 then r else (- r)
                                      in
@@ -133,9 +124,9 @@ let ffttest np =
   let pxi = Array.make (np+1) 0 in
   let t = PI / enp in
   let none_ = Array.set pxr 1 ((enp - 1) / 2) in
-  let none_ = Array.set pxi 1 (0.0) in
-  let none_ = Array.set pxr (n2+1) ((- 0.5)) in
-  let none_ = Array.set pxi (n2+1) (0.0) in
+  let none_ = Array.set pxi 1 (0) in
+  let none_ = Array.set pxr (n2+1) ((- (1/2))) in
+  let none_ = Array.set pxi (n2+1) (0) in
   let forbod i = 
     let j = np - i in
     let none_ = Array.set pxr (i+1) (- (1/2)) in
@@ -147,21 +138,24 @@ let ffttest np =
   fft pxr pxi np;
   let rec loop i zr zi kr ki =
     if ge_int i np then (zr, zi) else
-    let a = fabs(Array.get pxr i+1 - (float_of_int i)) in
-    let (zr, kr) = if zr < a then (a, i) else (zr, kr) in
-    let a = fabs(pxi..(i+1)) in
-    let (zi, ki) = if zi < a then (a, i) else (zi, ki) in
+    let a = fabs((Array.get pxr (i+1)) - i) in
+    let b = zr < a in
+    let zr = if b then a else zr in
+    let kr = if b then i else kr in
+    let a = fabs(Array.get pxi (i+1)) in
+    let b = zi < a in
+    let zi = if zi < a then a else zi in
+    let ki = if zi < a then i else ki in
     loop (i+1) zr zi kr ki
-  (*withtype {i:nat} int(i)  -> float -> float -> int -> int -> float * float*) in
+  in
   let (zr, zi) = loop 0 0 0 0 0 in
   let zm = if fabs zr < fabs zi then zi else zr
-  in print_float zm; print_newline ()
-(*withtype {np:int | np >= 2} int(np) -> unit*)
+  in
+  (*in print_float zm; print_newline ()*) zm
 ;;
 
 let rec loop_np i np =
   if i > 16 then () else begin ffttest np; loop_np (i + 1) (np * 2) end
-withtype int -> {np:int | np >= 2} int(np) -> unit
 ;;
 
 let doit () = loop_np 4 16;;
