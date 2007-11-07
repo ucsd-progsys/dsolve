@@ -17,6 +17,18 @@ let rec print_typed_expression qmap ppf exp =
     | Nonrecursive -> fprintf ppf ""
     | _ -> assert false
   in
+  let pprint_and ppf = function
+    | [] -> fprintf ppf "@ "
+    |  _ -> fprintf ppf "@ and@ " 
+  in
+  let rec pprint_binds ppf = function
+    | ({pat_desc = Tpat_any}, e)::rem ->
+      fprintf ppf "@[_@ =@;<1 2>%a%a%a@]" pprint e pprint_and rem pprint_binds rem
+    | ({pat_desc = Tpat_var f}, e)::rem ->
+      fprintf ppf "@[%s@ =@;<1 2>%a%a%a@]" (Ident.unique_name f) pprint e pprint_and rem pprint_binds rem
+    | [] -> fprintf ppf ""
+    | _ -> assert false
+  in
   let rec pprint_exp ppf e =
     match e.exp_desc with
       | Texp_constant (Const_int n) ->
@@ -38,9 +50,9 @@ let rec print_typed_expression qmap ppf exp =
             | (Some e, _) -> fprintf ppf "(%a)" pprint e
             | (None, _) -> fprintf ppf "(none)"
           in fprintf ppf "@[(%a@;<1 2>%a)@]" pprint e1 (pprint_list "" pprint_arg) exps
-      | Texp_let (recf, [({pat_desc = Tpat_var f}, e1)], e2) ->
-          fprintf ppf "@[let%a@ %s@ =@;<1 2>%a@;<1 0>in@;<1 2>%a@]"
-            pprint_rec recf (Ident.unique_name f) pprint e1 pprint e2
+      | Texp_let (recf, binds, e2) ->
+          fprintf ppf "@[let@%a@ %a@;<1 0>in@;<1 2>%a@]"
+            pprint_rec recf pprint_binds binds pprint e2
       (*| Texp_let (recf, binds, e2) ->
           fprintf ppf "@[let%a@ %s@ =@;<1 2>%a@;<1 0>in@;<1 2>%a@]"
             pprint_rec recf pprint_binds  *)
@@ -50,6 +62,8 @@ let rec print_typed_expression qmap ppf exp =
           fprintf ppf "@[%a@]" (pprint_list ";" pprint) [e1; e2]
       | Texp_tuple(es) ->
           fprintf ppf "@[(%a)@]" (pprint_list "," pprint) es
+      | Texp_assertfalse ->
+          fprintf ppf "@[assert@ false@]"
       | _ -> assert false
   in
   let tytree = Printtyp.tree_of_type_scheme (repr exp.exp_type) in
@@ -116,6 +130,8 @@ let rec pprint_expression ppf exp =
           fprintf ppf "@[%a@]" (pprint_list ";" pprint_expression) [e1; e2]
       | Pexp_tuple(es) ->
           fprintf ppf "@[(%a)@]" (pprint_list "," pprint_expression) es
+      | Pexp_assertfalse ->
+          fprintf ppf "@[assert@ false@]"
       | _ -> assert false
   in fprintf ppf "@[%a@]" pprint_exp exp
 

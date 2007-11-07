@@ -178,6 +178,8 @@ let normalize exp =
         proc_list es mk_array
      | Pexp_sequence(e1, e2) ->
         rw_expr (mk_sequence (norm_out e1) (norm_out e2))
+     | Pexp_assertfalse ->
+        exp
      | e -> printf "@[Bad expr to norm_out:@\n%a@]" Printast.top_phrase (wrap_printable exp); assert false
 
   and norm_in exp = 
@@ -191,6 +193,8 @@ let normalize exp =
     in
 
     match exp.pexp_desc with
+     | Pexp_assertfalse ->
+         [(fresh_name (), Some (norm_out exp))]
      | Pexp_constant(_)      
      | Pexp_construct(_, None, false) ->
          [(fresh_name (), Some exp)]
