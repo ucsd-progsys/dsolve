@@ -102,6 +102,9 @@ let uninterp_float_binop path =
 let uninterp_float_unop path =
   let (x, y) = fresh_2_idents () in
   (path, mk_fun(x, mk_float, mk_float))
+let float_to_int_unop path =
+  let (x, y) = fresh_2_idents () in
+  (path, mk_fun(x, mk_float, mk_int []))
 
 (* ming: connectives could use cleanup ... eventually *)
 
@@ -278,6 +281,8 @@ let _frames = [
   uninterp_float_binop ["*."; "Pervasives"];
   uninterp_float_unop ["sin"; "Pervasives"];
   uninterp_float_unop ["cos"; "Pervasives"];
+  uninterp_float_unop ["~-."; "Pervasives"];
+  float_to_int_unop ["float_of_int"; "Pervasives"];
   (*rel_frame ["="; "Pervasives"] "=" Predicate.Eq;
   rel_frame ["!="; "Pervasives"] "!=" Predicate.Ne;
   rel_frame ["<"; "Pervasives"] "<" Predicate.Lt;

@@ -81,7 +81,7 @@ let split cstrs =
                   (Printf.printf "Unsupported type into split: %s\n" (Path.name p1); assert false)*)
           | (Frame.Ftuple(t1, t2), Frame.Ftuple(t1', t2')) ->
               split_rec flat (List.append [SubFrame(env, guard, t1, t1'); SubFrame(env, guard, t2, t2')] cs) 
-          | _ -> assert false
+          | (f1, f2) -> printf "@[Can't@ split:@ %a@ <:@ %a@]" Frame.pprint f1 Frame.pprint f2; assert false
         end
     (* ming: for type checking, when we split WFFrames now, we need to keep
              the frame around. the paper method for doing this is to insert

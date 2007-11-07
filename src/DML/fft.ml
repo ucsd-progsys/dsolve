@@ -1,18 +1,16 @@
+let pi = 3.14 in
 (*
 ** by: Dave Edelblute, edelblut@cod.nosc.mil, 05 Jan 1993
 ** Modified: R. Mayer to work with hist benchmark routines.
 ** Translated from C to de Caml: Hongwei Xi, 07 Nov 1998
 *)
-
-(* converted to ints to avoid having to stress the unknown expressions bit of the code *)
-let pi = 3.14159265358979323846 in
-let two_pi = 2.0 *. pi in
+let two_pi = 2.0 *. pi in 
 let ffor s d body = 
     let rec loop i =
         let i' = i + 1 in 
         if i < d then (body i; loop i') else () 
     in loop s
-in
+in 
 let fft px py n = (* n must be a power of 2! *)
   let rec loop n2 n4 =
     if n2 <= 2 then () else (* the case n2 = 2 is treated below *)
@@ -107,9 +105,10 @@ let fft px py n = (* n must be a power of 2! *)
       end
     in
     loop2 1 1; n
-in
+in 
 
 (* pmr: is this going to cause a problem? *)
+(* ming: we aren't trying to prove anything over floats? *)
 let fabs r = if r > 0.0 then r else (0.0 -. r)
                                      in
 let ffttest np =
@@ -119,19 +118,19 @@ let ffttest np =
   let pxr = Array.make (np+1) 0.0 in
   let pxi = Array.make (np+1) 0.0 in
   let t = pi /. enp in
-  let none_ = Array.set pxr 1 ((enp -. 1.0) /. 2.0) in
+  let none_ = Array.set pxr 1 ((enp -. 1.0) *. 0.5) in
   let none_ = Array.set pxi 1 (0.0) in
-  let none_ = Array.set pxr (n2+1) ((-. (1.0 /. 2.0))) in
+  let none_ = Array.set pxr (n2+1) ((-. (1.0 *. 0.5))) in
   let none_ = Array.set pxi (n2+1) (0.0) in
   let forbod i = 
     let j = np - i in
-    let none_ = Array.set pxr (i+1) (-. (1.0 /. 2.0)) in
-    let none_ = Array.set pxr (j+1) (-. (1.0 /. 2.0)) in
+    let none_ = Array.set pxr (i+1) (-. (1.0 *. 0.5)) in
+    let none_ = Array.set pxr (j+1) (-. (1.0 *. 0.5)) in
     let z = t *. (float_of_int i) in
-    let y = (cos z /. sin z) /. 2.0 in
+    let y = (cos z /. sin z) *. 0.5 in
     Array.set pxi (i+1) (-. y); Array.set pxi (j+1) (y)
   in ffor 1 npm forbod;
-  ignore(fft pxr pxi np);
+  ignore (fft pxr pxi np);
   let rec loop i zr zi kr ki =
     if i > np then (zr, zi) else
       let a = fabs((Array.get pxr (i+1)) -. (float_of_int i)) in
@@ -152,10 +151,10 @@ let ffttest np =
   (*in print_float zm; print_newline ()*) zm
 in
 let rec loop_np i np =
-  if i > 16 then () else begin ignore(ffttest np); loop_np (i + 1) (np * 2) end
+  if i > 16 then () else begin ignore (ffttest np); loop_np (i + 1) (np * 2) end
 in
 let doit _none = loop_np 4 16 in
-  doit ();;
+  doit ();; 
 
 (*
 (*

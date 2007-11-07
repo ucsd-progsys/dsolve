@@ -253,7 +253,9 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
   | (Texp_sequence(e1, e2), t) ->
             let (f1, c, m) = constrain e1 env guard cstrs framemap in
             let (f2, c, m) = constrain e2 env guard c m in
-            (f2, (SubFrame(env, guard, f1, Builtins.mk_unit ())::c), m)
+             (* ming: the ocaml typer isn't constraining sequenced expressions
+              * into statements, so i guess we can't either *)
+            (f2, ((*SubFrame(env, guard, f1, Builtins.mk_unit ())::*)c), m)
   | (Texp_tuple(es), t) ->
             (* placeholder implementation *)
             let e1 = List.hd es in

@@ -248,7 +248,7 @@ let normalize exp =
         let (blbl, e_b) = List.hd b in
         let (this, e_this) = (fresh_name (), 
                               match e_b with Some e_b -> mk_dum_ifthenelse e_b (norm_out e2) (norm_out e3)
-                                | None -> mk_dum_ifthenelse (mk_dum_ident blbl) (norm_out e1) (norm_out e3)) in
+                                | None -> mk_dum_ifthenelse (mk_dum_ident blbl) (norm_out e2) (norm_out e3)) in
          (this, Some e_this)::(List.tl b)
      | e -> printf "@[Bad expr to norm_in:@\n%a@]" Printast.top_phrase (wrap_printable exp); assert false
   in
@@ -261,6 +261,8 @@ let rec normalize_structure sstr =
     [] -> []
     | {pstr_desc = (Pstr_eval exp); pstr_loc = loc} :: srem ->
         let normal_exp = normalize exp in
+        (*let _ = Format.set_margin 170 in
+        let _ = Format.set_max_indent 150 in*)
         let _ = printf "@[%a@\n@]" Qdebug.pprint_expression normal_exp in
         ({pstr_desc = (Pstr_eval(normal_exp)) ; pstr_loc = loc}) :: (normalize_structure srem)
     | p :: srem -> p :: (normalize_structure srem)
