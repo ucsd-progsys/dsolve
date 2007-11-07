@@ -132,7 +132,7 @@ let ffttest np =
   in ffor 1 npm forbod;
   ignore (fft pxr pxi np);
   let rec loop i zr zi kr ki =
-    if i > np then (zr, zi) else
+    if i >= np then (zr, zi) else
       let a = fabs((Array.get pxr (i+1)) -. (float_of_int i)) in
       let b = zr < a in
       let zr = if b then a else zr in
