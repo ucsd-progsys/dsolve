@@ -241,6 +241,9 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
                                 c, m)
               | _ -> failwith "Texp_tuple has wrong type"
             end
+  | (Texp_assertfalse, t) ->
+      let f = Frame.fresh_without_vars t in
+        (f, cstrs, framemap)
 	| (_, t) ->
       (* As it turns out, giving up and returning true here is actually _very_ unsound!  We won't check subexpressions! *)
       fprintf err_formatter "@[Warning:@ Don't@ know@ how@ to@ constrain@ expression,@ defaulting@ to@ true@ Ty_structure:@ %s@\n@]" (Frame.type_structure t);

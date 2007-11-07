@@ -54,7 +54,7 @@ let rec init_ratio arr2 m n j i =
     let c = Bigarray.Array2.get arr2 i j in
       if c > 0.0 then (i, (Bigarray.Array2.get arr2 i (n-1)) /. c)
       else init_ratio arr2 m n j (i+1)
-  else failwith ("init_ratio: negative coefficients!")
+  else assert false
 in
 
 (* step 5 *)
@@ -101,7 +101,7 @@ in
 
 let rec simplex arr2 m n =
   if is_neg arr2 n then
-    if unb1 arr2 m n 0 1 then assert false (*failwith ("simplex: unbound solution!")*)
+    if unb1 arr2 m n 0 1 then assert false
     else
       let j = enter_var arr2 n 1 (Bigarray.Array2.get arr2 0 1) 2 in
       let tt = init_ratio arr2 m n j 1 in
@@ -118,9 +118,9 @@ let main a =
   let n = Bigarray.Array2.dim2 a in
     if m > 1 then begin
       if n > 2 then simplex a m n
-      else assert false (*failwith ("too few columns")*)
+      else assert false
     end
-    else assert false (*failwith ("too few rows")*)
+    else assert false
 in
   Random.self_init();
   let arr = Bigarray.Array2.create Bigarray.int Bigarray.c_layout

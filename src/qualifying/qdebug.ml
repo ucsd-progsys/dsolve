@@ -63,7 +63,7 @@ let rec print_typed_expression qmap ppf exp =
       | Texp_tuple(es) ->
           fprintf ppf "@[(%a)@]" (pprint_list "," pprint) es
       | Texp_assertfalse ->
-          fprintf ppf "@[assert@ false@]"
+          fprintf ppf "assert@ false"
       | _ -> assert false
   in
   let tytree = Printtyp.tree_of_type_scheme (repr exp.exp_type) in
@@ -131,7 +131,7 @@ let rec pprint_expression ppf exp =
       | Pexp_tuple(es) ->
           fprintf ppf "@[(%a)@]" (pprint_list "," pprint_expression) es
       | Pexp_assertfalse ->
-          fprintf ppf "@[assert@ false@]"
+          fprintf ppf "assert@ false"
       | _ -> assert false
   in fprintf ppf "@[%a@]" pprint_exp exp
 
