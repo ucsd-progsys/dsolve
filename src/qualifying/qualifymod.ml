@@ -28,6 +28,8 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
             let _ = Qualgen.add_constant n in
             (Frame.Fconstr (path, [], Builtins.equality_refinement (Predicate.PInt n)),
              cstrs, framemap)
+  | (Texp_constant(Const_float n), t) ->
+            (Frame.fresh t, cstrs, framemap)
   | (Texp_construct(cstrdesc, []), {desc = Tconstr(path, [], _)}) ->
             let cstrref =
               match cstrdesc.cstr_tag with

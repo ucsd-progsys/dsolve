@@ -120,29 +120,30 @@ let fft px py n = (* n must be a power of 2! *)
     (*withtype {i:nat} int(i) -> {j:nat | j <= n} int(j) -> unit in*)
     loop2 1 1; n
 (*withtype float vect(n+1) -> float vect(n+1) -> int(n) -> int(n)*)
-;;
-
-let fabs r = if r > 0 then r else (- r)
-;;
-
+    in
+let fabs r = if r >= 0 then r else (- r)
+                                     in
 let ffttest np =
-  let none_ = print_int np and none_ = print_string "... " in
-  let enp = float_of_int np and n2 = np / 2 in
-  let npm = n2 - 1
-  and pxr = Array.make (np+1) 0.0
-  and pxi = Array.make (np+1) 0.0
-  and t = PI / enp in
-  let none_ = Array.set pxr 1 ((enp - 1.0) * 0.5)
-  and none_ = Array.set pxi 1 (0.0)
-  and none_ = Array.set pxr (n2+1) ((- 0.5))
-  and none_ = Array.set pxi (n2+1) (0.0) in
-  for i = 1 to npm do
+  (*let none_ = print_int np in
+  let none_ = print_string () in
+  let enp = float_of_int np and *)
+  let n2 = np / 2 in
+  let npm = n2 - 1 in
+  let pxr = Array.make (np+1) 0 in
+  let pxi = Array.make (np+1) 0 in
+  let t = PI / enp in
+  let none_ = Array.set pxr 1 ((enp - 1) / 2) in
+  let none_ = Array.set pxi 1 (0.0) in
+  let none_ = Array.set pxr (n2+1) ((- 0.5)) in
+  let none_ = Array.set pxi (n2+1) (0.0) in
+  let forbod i = 
     let j = np - i in
-    let none_ = Array.set pxr (i+1) (- 0.5) and none_ = Array.set pxr (j+1) (- 0.5) in
+    let none_ = Array.set pxr (i+1) (- (1/2)) in
+    let none_ = Array.set pxr (j+1) (- (1/2)) in
     let z = t * i in
-    let y = 0.5 * cos z / sin z in
+    let y = (cos z / sin z) / 2 in
     Array.set pxi (i+1) (- y); Array.set pxi (j+1) (y)
-  done;
+  in ffor 1 npm forbod;
   fft pxr pxi np;
   let rec loop i zr zi kr ki =
     if ge_int i np then (zr, zi) else

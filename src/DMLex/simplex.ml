@@ -104,7 +104,9 @@ let rec simplex arr2 m n =
     if unb1 arr2 m n 0 1 then failwith ("simplex: unbound solution!")
     else
       let j = enter_var arr2 n 1 (Bigarray.Array2.get arr2 0 1) 2 in
-      let (i, r) = init_ratio arr2 m n j 1 in
+      let tt = init_ratio arr2 m n j 1 in
+      let i = fst tt in
+      let j = snd tt in
       let i = depart_var arr2 m n j i r (i+1) in
       let _none = row_op arr2 m n i j in
 	simplex arr2 m n

@@ -53,6 +53,8 @@ let mk_tyvarb () = Frame.Fvar(Path.mk_ident "'b")
 
 let mk_int qs = Frame.Fconstr(Predef.path_int, [], ([], Frame.Qconst qs))
 
+let mk_float = Frame.Fconstr(Predef.path_float, [], ([], Frame.Qconst []))
+
 let mk_bool qs = Frame.Fconstr(Predef.path_bool, [], ([], Frame.Qconst qs))
 
 let mk_array f qs = Frame.Fconstr(Predef.path_array, [f], ([], Frame.Qconst qs))
@@ -93,6 +95,10 @@ let op_frame path qname op =
                 (Predicate.Var z,
                  Predicate.Binop (Predicate.Var x, op, Predicate.Var y))) in
     fun_frame path (x, y) qual
+
+let uninterp_float_binop path =
+  let (x, y, z) = fresh_idents () in
+  (path, mk_fun(x, mk_float, mk_fun(y, mk_float, mk_float)))
 
 (* ming: connectives could use cleanup ... eventually *)
 
@@ -256,6 +262,10 @@ let _frames = [
   op_frame ["-"; "Pervasives"] "-" Predicate.Minus;
   op_frame ["/"; "Pervasives"] "/" Predicate.Div;
   op_frame ["*"; "Pervasives"] "*" Predicate.Times;
+  uninterp_float_binop ["+."; "Pervasives"];
+  uninterp_float_binop ["-."; "Pervasives"];
+  uninterp_float_binop ["/."; "Pervasives"];
+  uninterp_float_binop ["*."; "Pervasives"];
   (*rel_frame ["="; "Pervasives"] "=" Predicate.Eq;
   rel_frame ["!="; "Pervasives"] "!=" Predicate.Ne;
   rel_frame ["<"; "Pervasives"] "<" Predicate.Lt;
