@@ -51,7 +51,7 @@ let rec print_typed_expression qmap ppf exp =
             | (None, _) -> fprintf ppf "(none)"
           in fprintf ppf "@[(%a@;<1 2>%a)@]" pprint e1 (pprint_list "" pprint_arg) exps
       | Texp_let (recf, binds, e2) ->
-          fprintf ppf "@[let@%a@ %a@;<1 0>in@;<1 2>%a@]"
+          fprintf ppf "@[let%a@ %a@;<1 0>in@;<1 2>%a@]"
             pprint_rec recf pprint_binds binds pprint e2
       (*| Texp_let (recf, binds, e2) ->
           fprintf ppf "@[let%a@ %s@ =@;<1 2>%a@;<1 0>in@;<1 2>%a@]"
