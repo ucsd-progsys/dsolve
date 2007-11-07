@@ -5,27 +5,21 @@
 *)
 
 (* converted to ints to avoid having to stress the unknown expressions bit of the code *)
-let pi = 3(*.14159265358979323846*) in
-let two_pi = 2 * pi in
+let pi = 3.14159265358979323846 in
+let two_pi = 2 *. pi in
 let ffor s d body = 
     let rec loop i =
         let i' = i + 1 in 
         if i < d then (body i; loop i') else () 
     in loop s
 in
-let sin x =
-    let x' = Random.int 2 in
-    x' - 1 
-in
-let cos = sin 
-in
 let fft px py n = (* n must be a power of 2! *)
   let rec loop n2 n4 =
     if n2 <= 2 then () else (* the case n2 = 2 is treated below *)
-    let e = two_pi / n2 in 
-    let e3 = 3 * e in
-    let a = ref 0 in
-    let a3 = ref 0 in
+    let e = two_pi /. n2 in 
+    let e3 = 3 *. e in
+    let a = ref 0.0 in
+    let a3 = ref 0.0 in
     let forbod j = 
     (*for j = 1 to n4 do*)
       let cc1 = cos !a in
@@ -34,38 +28,38 @@ let fft px py n = (* n must be a power of 2! *)
       let ss3 = sin !a3 in
       let b_a = !a in
       let b_a3 = !a3 in
-      let none_ = a := b_a + e in 
-      let none_ = a3 := b_a3 + e3 in
+      let none_ = a := b_a +. e in 
+      let none_ = a3 := b_a3 +. e3 in
       let rec loop1 i0 i1 i2 i3 id =
         if i3 > n then () else (* out_of_bounds *)
         let g_px_i0 = Array.get px i0 in
         let g_px_i2 = Array.get px i2 in
-        let r1 = g_px_i0 - g_px_i2 in
-        let r1' = g_px_i0 + g_px_i2 in
+        let r1 = g_px_i0 -. g_px_i2 in
+        let r1' = g_px_i0 +. g_px_i2 in
         let none_ = Array.set px i0 r1' in
         let g_px_i1 = Array.get px i1 in
         let g_px_i3 = Array.get px i3 in
-        let r2 = g_px_i1 - g_px_i3 in
-        let r2' = g_px_i1 + g_px_i3 in
+        let r2 = g_px_i1 -. g_px_i3 in
+        let r2' = g_px_i1 +. g_px_i3 in
         let none_ = Array.set px i1 r2' in
         let g_py_i0 = Array.get py i0 in
         let g_py_i2 = Array.get py i2 in
-        let s1 = g_py_i0 - g_py_i2 in
-        let s1' = g_py_i0 + g_py_i2 in
+        let s1 = g_py_i0 -. g_py_i2 in
+        let s1' = g_py_i0 +. g_py_i2 in
         let none_ = Array.set py i0 s1' in
         let g_py_i1 = Array.get py i1 in
         let g_py_i3 = Array.get py i3 in
-        let s2 = g_py_i1 - g_py_i3 in
-        let s2' = g_py_i1 + g_py_i3 in
+        let s2 = g_py_i1 -. g_py_i3 in
+        let s2' = g_py_i1 +. g_py_i3 in
         let none_ = Array.set py i1 s2' in
-        let s3 = r1 - s2 in 
-        let r1 = r1 + s2 in
-        let s2 = r2 - s1 in
-        let r2 = r2 + s1 in
-        let none_ = Array.set px i2 (r1 * cc1 - s2 * ss1) in
-        let none_ = Array.set py i2 ((- s2) * cc1 - r1 * ss1) in
-        let none_ = Array.set px i3 (s3 * cc3 + r2 * ss3) in
-        let none_ = Array.set py i3 (r2 * cc3 - s3 * ss3) in
+        let s3 = r1 -. s2 in 
+        let r1 = r1 +. s2 in
+        let s2 = r2 -. s1 in
+        let r2 = r2 +. s1 in
+        let none_ = Array.set px i2 (r1 *. cc1 -. s2 *. ss1) in
+        let none_ = Array.set py i2 ((-. s2) *. cc1 -. r1 *. ss1) in
+        let none_ = Array.set px i3 (s3 *. cc3 + r2 *. ss3) in
+        let none_ = Array.set py i3 (r2 *. cc3 - s3 *. ss3) in
         loop1 (i0 + id) (i1 + id) (i2 + id) (i3 + id) id
       in
       let rec loop2 is id =
@@ -85,11 +79,11 @@ let fft px py n = (* n must be a power of 2! *)
     let rec loop1 i0 i1 id =
       if i1 > n then () else
       let r1 = Array.get px i0 in
-      let none_ = Array.set px i0 (r1 + (Array.get px i1)) in
-      let none_ = Array.set px i1 (r1 - (Array.get px i1)) in
+      let none_ = Array.set px i0 (r1 +. (Array.get px i1)) in
+      let none_ = Array.set px i1 (r1 -. (Array.get px i1)) in
       let r1 = Array.get py i0 in
-      let none_ = Array.set py i0 (r1 + (Array.get py i1)) in
-      let none_ = Array.set py i1 (r1 - (Array.get py i1)) in
+      let none_ = Array.set py i0 (r1 +. (Array.get py i1)) in
+      let none_ = Array.set py i1 (r1 -. (Array.get py i1)) in
       loop1 (i0 + id) (i1 + id) id
     in
     let rec loop2 is id =
@@ -114,12 +108,9 @@ let fft px py n = (* n must be a power of 2! *)
     in
     loop2 1 1; n
  in
-let fabs r = if r >= 0 then r else (- r)
+let fabs r = if r > 0.0 then r else (-. r)
                                      in
 let ffttest np =
-  (*let none_ = print_int np in
-  let none_ = print_string () in
-  let enp = float_of_int np and *)
   let enp = np in
   let n2 = np / 2 in
   let npm = n2 - 1 in
@@ -138,18 +129,18 @@ let ffttest np =
     let y = (cos z / sin z) / 2 in
     Array.set pxi (i+1) (- y); Array.set pxi (j+1) (y)
   in ffor 1 npm forbod;
-  fft pxr pxi np;
+  ignore(fft pxr pxi np);
   let rec loop i zr zi kr ki =
-    if ge_int i np then (zr, zi) else
-    let a = fabs((Array.get pxr (i+1)) - i) in
-    let b = zr < a in
-    let zr = if b then a else zr in
-    let kr = if b then i else kr in
-    let a = fabs(Array.get pxi (i+1)) in
-    let b = zi < a in
-    let zi = if b then a else zi in
-    let ki = if b then i else ki in
-    loop (i+1) zr zi kr ki
+    if i > np then (zr, zi) else
+      let a = fabs((Array.get pxr (i+1)) - i) in
+      let b = zr < a in
+      let zr = if b then a else zr in
+      let kr = if b then i else kr in
+      let a = fabs(Array.get pxi (i+1)) in
+      let b = zi < a in
+      let zi = if b then a else zi in
+      let ki = if b then i else ki in
+       loop (i+1) zr zi kr ki
   in
   let zz = loop 0 0 0 0 0 in
   let zr = fst zz in
@@ -159,7 +150,7 @@ let ffttest np =
   (*in print_float zm; print_newline ()*) zm
 in
 let rec loop_np i np =
-  if i > 16 then () else begin ffttest np; loop_np (i + 1) (np * 2) end
+  if i > 16 then () else begin ignore(ffttest np); loop_np (i + 1) (np * 2) end
 in
 let doit _none = loop_np 4 16 in
   doit ();;
