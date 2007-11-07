@@ -1,36 +1,51 @@
-datatype 'a matrix with (nat, nat) =
-  {m:nat, n:nat}
-  Matrix(m, n) of int(m) * int(n) * ('a array(n)) array(m)
-
-
 let fabs f =
   if (f > 0.0) then f else (0.0 -. f)
 in
 
+let getRow data i =
+  let stride = Bigarray.Array2.dim2 data in
+  let rowData = Array.make stride 0.0 in
+  let rec extract j =
+    if j < stride then
+      Array.set rowData j (Bigarray.Array2.get data i j)
+    else ()
+  in
+    extract 0;
+    rowData
+in
+
+let putRow data i row =
+  let stride = Array.length row in
+  let rec put j =
+    if j < stride then
+      Bigarray.Array2.set data i j (Array.get row j)
+    else ()
+  in put 0
+in
+
 let rowSwap data i j =
-    let temp = sub (data, i) in
-    let _none = update (data, i, sub (data, j)) in
-      update (data, j, temp)
+  let temp = getRow data i in
+  let _none = putRow data i (getRow data j) in
+    putRow data j temp
 in
 
 let norm r n i =
-  let x = sub (r, i) in
-  let _none = update (r, i, 1.0) in
-  let loop k =
+  let x = Array.get r i in
+  let _none = Array.set r i 1.0 in
+  let rec loop k =
     if k < n then
-      let _none = update (r, k, sub (r, k) /. x) in
+      let _none = Array.set r k ((Array.get r k) /. x) in
 	loop (k+1)
     else ()
-  in
-    loop (i+1)
+  in loop (i+1)
 in
 
-let rowElim (r, s, n, i) =
-  let x = sub (s, i) in
-  let _none = update (s, i, 0.0) in
-  let loop k =
+let rowElim r s n i =
+  let x = Array.get s i in
+  let _none = Array.set s i 0.0 in
+  let rec loop k =
     if k < n then
-      let _none = update (s, k, sub (s, k) -. x *. sub (r, k)) in
+      let _none = Array.set s k ((Array.get s k) -. x *. (Array.get r k)) in
 	loop (k+1)
     else ()
   in
@@ -38,28 +53,28 @@ let rowElim (r, s, n, i) =
 in
 
 let rowMax data m i =
-  let x = fabs (sub2 (data, i, i)) in
-  let loop j x max =
+  let x = fabs (Bigarray.Array2.get data i i) in
+  let rec loop j x max =
     if j < m then
-      let y = fabs (sub2 (data, j, i)) in
-        if (y >. x) then loop (j+1, y, j)
-	else loop (j+1, x, max)
+      let y = fabs (Bigarray.Array2.get data j i) in
+        if (y > x) then loop (j+1) y j
+	else loop (j+1) x max
     else max
   in
-    loop (i+1, x, i)
+    loop (i+1) x i
 in
 
-let gauss mat =
-  let n = Bigarray.Array2.dim1 mat in
-  let Matrix (n, _, data) = mat in
-  let loop1 i =
+let gauss data =
+  let n = Bigarray.Array2.dim1 data in
+  let rec loop1 i =
     if i < n then
-      let max = rowMax(data, n, i) in
-      let _none = norm (sub (data, max), n+1, i) in
-      let _none = rowSwap (data, i, max) in
-      let loop2 j =
+      let max = rowMax data n i in
+      let _none = (fun x -> x) (n + 1) in
+      let _none = norm (getRow data max) (n+1) i in
+      let _none = rowSwap data i max in
+      let rec loop2 j =
 	if j < n then
-	  let _none = rowElim (sub (data, i), sub (data, j), n+1, i)
+	  let _none = rowElim (getRow data i) (getRow data j) (n+1) i
 	  in
 	    loop2 (j+1)
 	else ()
@@ -71,30 +86,11 @@ let gauss mat =
     loop1 (0)
 in
 
-let print_array	data i j =
-  let loop k =
-    if k < j then
-      let _none = print_string ("\t") in
-      let _none = print_float (sub (data, k)) in
-	loop (k+1)
-    else print_string "\n"
-  in
-    if i < j then
-      let _none = print_float (sub (data, i)) in
-	loop (i+1)
-    else print_string "\n"
-in
-
-let print_matrix mat =
-  let m = Bigarray.Array2.dim1 mat in
-  let n = Bigarray.Array2.dim2 mat in
-    let loop i =
-      if i < m then
-	let _none = print_array (sub (data, i), 0, n) in
-          loop (i+1)
-      else print_string ("\n")
-    in
-      loop (0)
+(* pmr: silly printing code removed - who really cares?  come on! *)
+let rows = Random.int 20 + 1 in
+let m = Bigarray.Array2.create Bigarray.float64 Bigarray.c_layout
+  rows (rows + 1) in
+  gauss m;;
 
 (*
 (* Here is a test *)
