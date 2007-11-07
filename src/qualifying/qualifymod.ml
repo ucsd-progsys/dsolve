@@ -138,7 +138,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
             let (f2, cstrs', fm') = constrain e2 env' guard cstrs'' fm'' in
             let f = Frame.fresh_with_labels t f2 in
               (f, WFFrame(env', f) :: SubFrame (env', guard, f2, f) :: cstrs', fm')
-	| (Texp_let (Recursive, [({pat_desc = Tpat_var f}, e1)], e2), t) ->
+	| (Texp_let (Recursive, bindings, body_exp), t) ->
             (* pmr: This is horrendous, but about the best we can do
                without using destructive updates.  We need to label
                the function we're binding in the environment where we
@@ -146,14 +146,56 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
                have that label until after we constrain it!  So we do
                a first pass just to get the labels, then do a second
                with the proper labels added. *)
-            let unlabelled_f1 = Frame.fresh e1.exp_type in
-            let fp = Path.Pident f in
+            let (vars, exprs) = List.split bindings in
+
+            (* Determine the labels we need to have on our bound frames first *)
+            let no_label_frame e = Frame.fresh e.exp_type in
+            let unlabeled_frames = List.map no_label_frame exprs in
+            let binding_var = function
+              | {pat_desc = Tpat_var f} -> Path.Pident f
+              | _ -> assert false
+            in
+            let vars = List.map binding_var vars in
+            let unlabeled_env = Lightenv.addn (List.combine vars unlabeled_frames) env in
+            let labeling_constraints = List.map (fun e -> constrain e unlabeled_env guard cstrs framemap) exprs in
+            let (label_frames, _, _) = Misc.split3 labeling_constraints in
+              (* pmr: I'm not assuming that constrain always gives us a fresh frame here, otherwise we could
+                 use label_frames directly *)
+            let binding_frames = List.map2 Frame.label_like unlabeled_frames label_frames in
+
+            (* Redo constraints now that we know what the right labels are --- note that unlabeled_frames are all
+               still essentially fresh, since we're discarding any constraints on them *)
+            let bound_env = Lightenv.addn (List.combine vars binding_frames) env in
+            let build_found_frame_list e (fframes, cs, fm) =
+              let (frame, new_cs, new_fm) = constrain e bound_env guard cs fm in
+                (frame :: fframes, new_cs, new_fm)
+            in
+            let (found_frames, cstrs1, fmap1) = List.fold_right build_found_frame_list exprs ([], cstrs, framemap) in
+            let (body_frame, cstrs2, fmap2) = constrain body_exp bound_env guard cstrs1 fmap1 in
+
+            (* Ensure that the types we discovered for each binding are no more general than the types implied by
+               their uses *)
+            let build_found_frame_cstr_list cs found_frame binding_frame =
+              WFFrame (bound_env, binding_frame) :: SubFrame (bound_env, guard, found_frame, binding_frame) :: cs
+            in
+            let binding_cstrs = List.fold_left2 build_found_frame_cstr_list cstrs2 found_frames binding_frames in
+            let f = Frame.fresh_with_labels t body_frame in
+              (f,
+               WFFrame (bound_env, f)
+               :: SubFrame (bound_env, guard, body_frame, f)
+               :: binding_cstrs,
+               fmap2)
+(*
+
+  pmr: is there a reason this stuff was hanging here rather than in a separate AST walker?
+
             let _ = if !under_lambda = 0 || not(!Clflags.less_qualifs) then Qualgen.add_label (Path.Pident f, e1.exp_type) 
-                    else () in
+            else () in
             let lambda = match e1.exp_desc with
-                      Texp_function (_, _) ->
-                        under_lambda := !under_lambda + 1; true
-                      | _ -> false in
+                Texp_function (_, _) ->
+                  under_lambda := !under_lambda + 1; true
+              | _ -> false in
+
             let unlabelled_env = Lightenv.add fp unlabelled_f1 env in
             let (labelled_f1, _, _) = constrain e1 unlabelled_env guard cstrs framemap in
             let f1' = Frame.label_like unlabelled_f1 labelled_f1 in
@@ -169,7 +211,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
                :: SubFrame (env', guard, f2, f)
                :: SubFrame (env'', guard, f1, f1')
                :: cstrs',
-               fm')
+               fm') *)
 	| (Texp_array(es), t) ->
             let _ = Qualgen.add_constant (List.length es) in
 						let f = Frame.fresh t in

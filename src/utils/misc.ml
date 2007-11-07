@@ -75,6 +75,11 @@ let rec samelist pred l1 l2 =
   | (hd1 :: tl1, hd2 :: tl2) -> pred hd1 hd2 && samelist pred tl1 tl2
   | (_, _) -> false
 
+let rec split3 = function
+  | [] -> ([], [], [])
+  | (x, y, z) :: rest ->
+      let (rx, ry, rz) = split3 rest in (x :: rx, y :: ry, z :: rz)
+
 (* Options *)
 
 let may f = function
