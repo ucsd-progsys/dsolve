@@ -269,7 +269,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
               | _ -> failwith "Texp_tuple has wrong type"
             end
   | (Texp_assertfalse, t) ->
-      let f = Frame.fresh_without_vars t in
+      let f = Frame.fresh t in
         (f, cstrs, framemap)
 	| (_, t) ->
       (* As it turns out, giving up and returning true here is actually _very_ unsound!  We won't check subexpressions! *)
