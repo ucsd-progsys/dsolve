@@ -49,11 +49,19 @@ let rec depart_var arr2 m n j i r i' =
   else i
 in
 
-let rec init_ratio arr2 m n j i =
+let rec init_ratio_left arr2 m n j i =
   if i < m then
     let c = Bigarray.Array2.get arr2 i j in
-      if c > 0.0 then (i, (Bigarray.Array2.get arr2 i (n-1)) /. c)
-      else init_ratio arr2 m n j (i+1)
+      if c > 0.0 then i
+      else init_ratio_left arr2 m n j (i+1)
+  else assert false
+in
+
+let rec init_ratio_right arr2 m n j i =
+  if i < m then
+    let c = Bigarray.Array2.get arr2 i j in
+      if c > 0.0 then (Bigarray.Array2.get arr2 i (n-1)) /. c
+      else init_ratio_right arr2 m n j (i+1)
   else assert false
 in
 
@@ -104,9 +112,8 @@ let rec simplex arr2 m n =
     if unb1 arr2 m n 0 1 then assert false
     else
       let j = enter_var arr2 n 1 (Bigarray.Array2.get arr2 0 1) 2 in
-      let tt = init_ratio arr2 m n j 1 in
-      let i = fst tt in
-      let r = snd tt in
+      let i = init_ratio_left arr2 m n j 1 in
+      let r = init_ratio_right arr2 m n j 1 in
       let i = depart_var arr2 m n j i r (i+1) in
       let _none = row_op arr2 m n i j in
 	simplex arr2 m n
