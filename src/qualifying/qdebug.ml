@@ -12,6 +12,11 @@ let pprint_list sepstr pp =
 
 let rec print_typed_expression qmap ppf exp =
   let pprint = print_typed_expression qmap in
+  let pprint_rec ppf = function
+    | Recursive -> fprintf ppf "@ rec"
+    | Nonrecursive -> fprintf ppf ""
+    | _ -> assert false
+  in
   let rec pprint_exp ppf e =
     match e.exp_desc with
       | Texp_constant (Const_int n) ->
@@ -34,12 +39,11 @@ let rec print_typed_expression qmap ppf exp =
             | (None, _) -> fprintf ppf "(none)"
           in fprintf ppf "@[(%a@;<1 2>%a)@]" pprint e1 (pprint_list "" pprint_arg) exps
       | Texp_let (recf, [({pat_desc = Tpat_var f}, e1)], e2) ->
-          let pprint_rec ppf = function
-            | Recursive -> fprintf ppf "@ rec"
-            | Nonrecursive -> fprintf ppf ""
-            | _ -> assert false
-          in fprintf ppf "@[let%a@ %s@ =@;<1 2>%a@;<1 0>in@;<1 2>%a@]"
-               pprint_rec recf (Ident.unique_name f) pprint e1 pprint e2
+          fprintf ppf "@[let%a@ %s@ =@;<1 2>%a@;<1 0>in@;<1 2>%a@]"
+            pprint_rec recf (Ident.unique_name f) pprint e1 pprint e2
+      (*| Texp_let (recf, binds, e2) ->
+          fprintf ppf "@[let%a@ %s@ =@;<1 2>%a@;<1 0>in@;<1 2>%a@]"
+            pprint_rec recf pprint_binds  *)
       | Texp_array es ->
           fprintf ppf "@[[|%a|]@]" (pprint_list ";" pprint) es
       | Texp_sequence(e1, e2) ->
@@ -56,6 +60,23 @@ let print_id id =
   String.concat "." (Longident.flatten id)
 
 let rec pprint_expression ppf exp =
+  let pprint_rec ppf = function
+    | Recursive -> fprintf ppf "@ rec"
+    | Nonrecursive -> fprintf ppf ""
+    | _ -> assert false
+  in
+  let pprint_and ppf = function
+    | [] -> fprintf ppf "@ "
+    |  _ -> fprintf ppf "@ and@ " 
+  in
+  let rec pprint_binds ppf = function
+    | ({ppat_desc = Ppat_any}, e)::rem ->
+      fprintf ppf "@[_@ =@;<1 2>%a%a%a@]" pprint_expression e pprint_and rem pprint_binds rem
+    | ({ppat_desc = Ppat_var f}, e)::rem ->
+      fprintf ppf "@[%s@ =@;<1 2>%a%a%a@]" f pprint_expression e pprint_and rem pprint_binds rem
+    | [] -> fprintf ppf ""
+    | _ -> assert false
+  in
   let rec pprint_exp ppf e =
     match e.pexp_desc with
       | Pexp_constant (Const_int n) ->
@@ -79,13 +100,16 @@ let rec pprint_expression ppf exp =
           let pprint_arg ppf (_, e) =
             fprintf ppf "(%a)" pprint_expression e
           in fprintf ppf "@[(%a@;<1 2>%a)@]" pprint_expression e1 (pprint_list "" pprint_arg) exps
-      | Pexp_let (recf, [({ppat_desc = Ppat_var f}, e1)], e2) ->
+      | Pexp_let (recf, binds, e2) ->
+          fprintf ppf "@[let%a@ %a@;<1 0>in@;<1 2>%a@]"
+               pprint_rec recf pprint_binds binds pprint_expression e2
+      (*| Pexp_let (recf, [({ppat_desc = Ppat_var f}, e1)], e2) ->
           let pprint_rec ppf = function
             | Recursive -> fprintf ppf "@ rec"
             | Nonrecursive -> fprintf ppf ""
             | _ -> assert false
           in fprintf ppf "@[let%a@ %s@ =@;<1 2>%a@;<1 0>in@;<1 2>%a@]"
-               pprint_rec recf f pprint_expression e1 pprint_expression e2
+               pprint_rec recf f pprint_expression e1 pprint_expression e2*)
       | Pexp_array es ->
           fprintf ppf "@[[|%a|]@]" (pprint_list ";" pprint_expression) es
       | Pexp_sequence(e1, e2) ->

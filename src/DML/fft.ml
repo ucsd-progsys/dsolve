@@ -5,12 +5,12 @@
 *)
 
 (* converted to ints to avoid having to stress the unknown expressions bit of the code *)
-let PI = 3(*.14159265358979323846*) in
-let TWO_PI = 2 * PI in
+let pi = 3(*.14159265358979323846*) in
+let two_pi = 2 * pi in
 let ffor s d body = 
     let rec loop i =
         let i' = i + 1 in 
-        if i < d then body i; loop i' else () 
+        if i < d then (body i; loop i') else () 
     in loop s
 in
 let sin x =
@@ -22,7 +22,7 @@ in
 let fft px py n = (* n must be a power of 2! *)
   let rec loop n2 n4 =
     if n2 <= 2 then () else (* the case n2 = 2 is treated below *)
-    let e = TWO_PI / n2 in 
+    let e = two_pi / n2 in 
     let e3 = 3 * e in
     let a = ref 0 in
     let a3 = ref 0 in
@@ -33,7 +33,7 @@ let fft px py n = (* n must be a power of 2! *)
       let cc3 = cos !a3 in
       let ss3 = sin !a3 in
       let b_a = !a in
-      let b_a2 = !a3 in
+      let b_a3 = !a3 in
       let none_ = a := b_a + e in 
       let none_ = a3 := b_a3 + e3 in
       let rec loop1 i0 i1 i2 i3 id =
@@ -62,9 +62,6 @@ let fft px py n = (* n must be a power of 2! *)
         let r1 = r1 + s2 in
         let s2 = r2 - s1 in
         let r2 = r2 + s1 in
-        let r1_cc1 = r1 * cc1 in
-        let s2_ss1 = s2 * ss1 in
-        let 
         let none_ = Array.set px i2 (r1 * cc1 - s2 * ss1) in
         let none_ = Array.set py i2 ((- s2) * cc1 - r1 * ss1) in
         let none_ = Array.set px i3 (s3 * cc3 + r2 * ss3) in
@@ -79,6 +76,7 @@ let fft px py n = (* n must be a power of 2! *)
           loop1 is i1 i2 i3 id;
           loop2 (2 * id - n2 + j) (4 * id)
         end
+      in
       loop2 j (2 * n2)
     in ffor 1 n4 forbod; 
     loop (n2 / 2) (n4 / 2) in
@@ -93,36 +91,41 @@ let fft px py n = (* n must be a power of 2! *)
       let none_ = Array.set py i0 (r1 + (Array.get py i1)) in
       let none_ = Array.set py i1 (r1 - (Array.get py i1)) in
       loop1 (i0 + id) (i1 + id) id
+    in
     let rec loop2 is id =
       if is >= n then () else begin
         loop1 is (is + 1) id;
         loop2 (2 * id - 1) (4 * id)
       end
+    in
     loop2 1 4;
 
     let rec loop1 j k =
       if k >= j then j + k else loop1 (j - k) (k / 2)
+    in
     let rec loop2 i j =
       if i >= n then () else begin
         if i >= j then () else begin
-          let xt = Array.get px j in Array.set px j (Array.get px i); Array.set px i (xt)
-          let xt = Array.get py j in Array.set py j (Array.get py i); Array.set py i (xt)
+          let xt = Array.get px j in (Array.set px j (Array.get px i); Array.set px i (xt));
+          let xt = Array.get py j in (Array.set py j (Array.get py i); Array.set py i (xt))
         end;
         loop2 (i + 1) (loop1 j (n / 2))
       end
-    loop2 1 1; n
     in
+    loop2 1 1; n
+ in
 let fabs r = if r >= 0 then r else (- r)
                                      in
 let ffttest np =
   (*let none_ = print_int np in
   let none_ = print_string () in
   let enp = float_of_int np and *)
+  let enp = np in
   let n2 = np / 2 in
   let npm = n2 - 1 in
   let pxr = Array.make (np+1) 0 in
   let pxi = Array.make (np+1) 0 in
-  let t = PI / enp in
+  let t = pi / enp in
   let none_ = Array.set pxr 1 ((enp - 1) / 2) in
   let none_ = Array.set pxi 1 (0) in
   let none_ = Array.set pxr (n2+1) ((- (1/2))) in
@@ -144,21 +147,22 @@ let ffttest np =
     let kr = if b then i else kr in
     let a = fabs(Array.get pxi (i+1)) in
     let b = zi < a in
-    let zi = if zi < a then a else zi in
-    let ki = if zi < a then i else ki in
+    let zi = if b then a else zi in
+    let ki = if b then i else ki in
     loop (i+1) zr zi kr ki
   in
-  let (zr, zi) = loop 0 0 0 0 0 in
+  let zz = loop 0 0 0 0 0 in
+  let zr = fst zz in
+  let zi = snd zz in
   let zm = if fabs zr < fabs zi then zi else zr
   in
   (*in print_float zm; print_newline ()*) zm
-;;
-
+in
 let rec loop_np i np =
   if i > 16 then () else begin ffttest np; loop_np (i + 1) (np * 2) end
-;;
-
-let doit () = loop_np 4 16;;
+in
+let doit _none = loop_np 4 16 in
+  doit ();;
 
 (*
 (*
@@ -167,13 +171,13 @@ let doit () = loop_np 4 16;;
 ** Translated from C to de Caml: Hongwei Xi, 07 Nov 1998
 *)
 
-let PI = 3.14159265358979323846 in
-let TWO_PI = 2 * PI in
+let pi = 3.14159265358979323846 in
+let two_pi = 2 * pi in
 
 let{n:int | n >= 2} fft px py n = (* n must be a power of 2! *)
   let rec{n2:nat} loop n2 n4 =
     if le_int n2 2 then () else (* the case n2 = 2 is treated below *)
-    let e = TWO_PI /. (float_of_int n2) in let e3 = 3.0 *. e in
+    let e = two_pi /. (float_of_int n2) in let e3 = 3.0 *. e in
     let a = ref 0.0 and a3 = ref 0.0 in
     for j = 1 to n4 do
       let cc1 = cos !a and ss1 = sin !a and cc3 = cos !a3 and ss3 = sin !a3 in
@@ -254,7 +258,7 @@ let ffttest np =
   let npm = n2 - 1
   and pxr = make_vect (np+1) 0.0
   and pxi = make_vect (np+1) 0.0
-  and t = PI /. enp in
+  and t = pi /. enp in
   let none_ = Array.get pxr 1 <- (enp -. 1.0) *. 0.5
   and none_ = Array.get pxi 1 <- 0.0
   and none_ = pxr..(n2+1) <- (-. 0.5)
