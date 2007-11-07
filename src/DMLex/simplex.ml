@@ -106,7 +106,7 @@ let rec simplex arr2 m n =
       let j = enter_var arr2 n 1 (Bigarray.Array2.get arr2 0 1) 2 in
       let tt = init_ratio arr2 m n j 1 in
       let i = fst tt in
-      let j = snd tt in
+      let r = snd tt in
       let i = depart_var arr2 m n j i r (i+1) in
       let _none = row_op arr2 m n i j in
 	simplex arr2 m n
@@ -123,7 +123,7 @@ let main a =
     else assert false
 in
   Random.self_init();
-  let arr = Bigarray.Array2.create Bigarray.int Bigarray.c_layout
+  let arr = Bigarray.Array2.create Bigarray.float64 Bigarray.c_layout
     (Random.int 20 + 1)
     (Random.int 30 + 1) in
     main arr;;
