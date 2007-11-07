@@ -80,8 +80,30 @@ let normalize exp =
   
   (*let fresh_ident () = mk_dum_ident (Longident.parse (fresh_name ())) in*)
   let mk_dum_ident_lbl lbl = mk_dum_ident (Longident.parse lbl) in
+  let mk_list_let r ls e2 = 
+    let ls = List.map (fun (x, e) -> 
+                         let e = match e with Some e -> e
+                           | None -> mk_dum_ident_lbl x
+                         in ({ppat_desc = Ppat_var x; ppat_loc = Location.none}, e)) ls in
+      Pexp_let(r, ls, e2) in
 
-  let rec norm_out exp =
+  let rec norm_bind_list bs = 
+    let single_bind elt =
+      match elt with
+        ({ppat_desc = Ppat_var x}, e1) ->
+            let ls = norm_in e1 in
+            let (_, e_f) = List.hd ls in
+              ((x, e_f), List.tl ls) 
+        | ({ppat_desc = Ppat_any}, e1) -> 
+            let ls = norm_in e1 in
+              (List.hd ls, List.tl ls)
+        | _ -> assert false
+    in
+    let prs = (List.map single_bind bs) in
+    let k (q, r) (qs, rs) = (q::qs, r::rs) in
+    let (ins, outs) = List.fold_right k prs ([], [])  in
+      (ins, List.concat outs)
+  and norm_out exp =
     let rw_expr desc = {pexp_desc = desc; pexp_loc = exp.pexp_loc} in
     let wrap r b (lbl, a) = 
       match a with
@@ -96,7 +118,7 @@ let normalize exp =
     in
 
     match exp.pexp_desc with
-     | Pexp_constant(Const_int _) 
+     | Pexp_constant(_) 
      | Pexp_construct(_, None, false) ->
         let a = fresh_name () in
          rw_expr (mk_let Nonrecursive a exp (mk_dum_ident_lbl a))
@@ -104,6 +126,8 @@ let normalize exp =
         exp
      | Pexp_function(lbl, elbl, [(arg, e)]) ->
         rw_expr (mk_function lbl elbl arg (norm_out e))
+     | Pexp_let(r, [({ppat_desc = Ppat_any}, e1)], e2) ->
+        norm_out (rw_expr (mk_let r (fresh_name ()) e1 e2))
      | Pexp_let(r, [({ppat_desc = Ppat_var x}, e1)], e2) -> 
         let ls = norm_in e1 in 
         (* ming: e2 is already written with lbl x, so we have to ignore the lbl
@@ -115,6 +139,13 @@ let normalize exp =
               | None -> mk_let r x (mk_dum_ident_lbl lbl) (norm_out e2)
         in
          rw_expr (List.fold_left (wrap r) init (List.tl ls))
+     (* to be particularly careful, we'll add a special case for mutual
+      * binds (keyword and) *)
+     | Pexp_let(r, pes, e2) ->
+        let (ins, outs) = norm_bind_list pes in        
+        let init = norm_out e2 in 
+        let init = mk_list_let r ins init in
+          rw_expr (List.fold_left (wrap r) init outs)
      | Pexp_apply(e1, es) ->
         let f = norm_in e1 in
         let (flbl, _) = List.hd f in 
@@ -160,7 +191,7 @@ let normalize exp =
     in
 
     match exp.pexp_desc with
-     | Pexp_constant(Const_int _)      
+     | Pexp_constant(_)      
      | Pexp_construct(_, None, false) ->
          [(fresh_name (), Some exp)]
      | Pexp_ident(id) ->
