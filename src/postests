@@ -1,4 +1,5 @@
 examples-liquid/vecswap.ml
+DMLex/gauss.ml
 DMLex/simplex.ml
 examples-liquid/unbounded.ml
 DMLex/bs2.ml
