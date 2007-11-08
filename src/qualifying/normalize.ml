@@ -204,10 +204,23 @@ let normalize exp =
           * generally make life more difficult while debugging. will turn this
           * off eventually *)
          [(id, None)]
-     | Pexp_sequence(_, _) 
+           (* I tried turning it back on and it doubles the number of refinement
+            * variables. totally uncool. *)
      | Pexp_function(_, _, _)     
      | Pexp_let(_, _, _) -> 
         [(fresh_name (), Some (norm_out exp))]
+          (* ming: pull sequences out to the closest scope *)
+     | Pexp_sequence(e1,e2) ->
+         let ls2 = norm_in e2 in
+         let ls1 = norm_in e1 in
+         let (l1, e1') = List.hd ls1 in
+         let (l2, e2') = List.hd ls2 in
+         let e1'' = match e1' with Some e1 -> e1
+                                |  None -> mk_dum_ident l1 in
+         let e2'' = match e2' with Some e2 -> e2
+                                |  None -> mk_dum_ident l2 in
+           (fresh_name(), Some (rw_expr (mk_sequence e1'' e2'')))
+           ::List.append (List.tl ls2) (List.tl ls1)
      | Pexp_tuple(es) ->
         proc_list es mk_tuple
      | Pexp_array(es) ->

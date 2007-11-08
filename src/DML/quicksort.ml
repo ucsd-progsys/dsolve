@@ -1,12 +1,11 @@
+let min m n = 
+	if m <= n then m else n
+in 
 (*
  * This is an example showing that array bounds checking
  * is not needed for doing quicksort on an array.
  * The code is copied from SML/NJ lib with some modification.
  *)
-
-let min m n = 
-	if m <= n  then m else n
-in 
 let rec sortRange arr start n =
   let item i = Array.get arr i in
   let swap i j =
@@ -55,13 +54,12 @@ let rec sortRange arr start n =
 
   (* generate the pivot for splitting the elements *)
   let getPivot a n =
-		let a_plus_n = a + n in
-    let a_plus_n_div = a_plus_n / 2 in
-    if n <= 7 then a_plus_n_div 
+    if n <= 7 then a + n/2  
     else let p1 = a in
-				 let pm = a_plus_n_div in
-				 let pn = a_plus_n - 1 in
-       	 if n <= 40 then med3 p1 pm pn else
+				 let pm = a + n/2 in
+				 let pn = a + n - 1 in
+           med3 p1 pm pn
+       	 (*if n <= 40 then med3 p1 pm pn else
       		 let d = n / 8 in
 					 let _2d = 2 * d in
 					 let p1_plus_d = p1 + d in
@@ -73,31 +71,23 @@ let rec sortRange arr start n =
            let newp1 = med3 p1 p1_plus_d p1_plus_2_d in
 	   			 let newpm = med3 pm_minus_d pm pm_plus_d in
 	   			 let newpn = med3 pn_minus_2_d pn_minus_d pn in 
-							med3 newp1 newpm newpn
+							med3 newp1 newpm newpn*)
 	in	
 
   let rec quickSort a n =
     let rec bottom limit pa pb = 
 			let arg = (pa, pb) in
       if limit < pb then arg else
-			let ipb = item pb in
-			let ia = item a in
-			if ia < ipb then arg else
-				let pb_plus = pb + 1 in
-				let pa_plus = pa + 1 in
-				if ipb < ia then bottom limit pa pb_plus else
-						(swap pa pb; bottom limit pa_plus pb_plus)
+			if item a < item pb then arg else
+				if item pb < item a then bottom limit pa (pb+1) else
+						(swap pa pb; bottom limit (pa+1) (pb+1))
 		in 
     let rec top limit pc pd = 
 			let arg = (pc, pd) in
       if pc < limit then arg else
-			let ipc = item pc in
-			let ia = item a in
-			let pc_minus = pc - 1 in
-			let pd_minus = pd - 1 in
-      if ipc < ia then arg else
-			if ia < ipc then top limit pc_minus pd else
-			(swap pc pd; top limit pc_minus pd_minus) 
+      if item pc < item a then arg else
+			if item a < item pc then top limit (pc-1) pd else
+			(swap pc pd; top limit (pc-1) (pd-1)) 
     in 
     let rec split pa pb pc pd =
 			let bot = bottom pc pa pb in
@@ -111,57 +101,40 @@ let rec sortRange arr start n =
 			let arg = (newpa, tmp2) in
       if newpc <= newpb then arg
       else 
-			let newpb_plus = newpb + 1 in
-			let newpc_minus = newpc - 1 in
       (swap newpb newpc; 
-								 split newpa newpb_plus newpc_minus newpd) 
+								 split newpa (newpb+1) (newpc-1) newpd) 
  	  in 
 
+
     let pm = getPivot a n in
-    let _none = swap a pm in
-    let a_plus = a + 1 in
-    let a_plusn = a + n in
-		let a_plusn_minus = a_plusn - 1 in
-    let pa_pb_pc_pd = split a_plus a_plus a_plusn_minus a_plusn_minus in
+    let _n = swap a pm in
+    let pa_pb_pc_pd = split (a+1) (a+1) (a+n-1) (a+n-1) in
 		let pa = fst pa_pb_pc_pd in
 		let tmp1 = snd pa_pb_pc_pd in
 		let pb = fst tmp1 in
 		let tmp2 = snd tmp1 in
 		let pc = fst tmp2 in
 		let pd = snd tmp2 in 
-		
     let pn = a + n in
+		
+    let r = min (pa-a) (pb-pa) in
+    let _n = vecswap a (pb-r) r in
 
-		let pa_minusa = pa - a in
-		let pb_minuspa = pb - pa in
-
-    let r = min pa_minusa pb_minuspa in
-
-		let pb_minus_r = pb - r in
-
-    let __8_none = vecswap a pb_minus_r r in
-
-		let pd_minuspc = pd - pc in
-		let pn_minuspd = pn - pd in
-		let pn_minuspd_minus = pn_minuspd - 1 in
-
-    let r' = min pd_minuspc pn_minuspd_minus in
-
-		let pn_minus_r' = pn - r' in  
-
-    let __9_none = vecswap pb pn_minus_r' r' in
+      (* this ambiguity here with the minus, that was in his code.. *)
+    let r = min (pd-pc) (pn-pd-1) in
+    let _n = vecswap pb (pn-r) r in
     let n' = pb - pa in
 
     (*let _none = if 1 < n' then if n' > 7 then quickSort a n' else insertSort a n' else () in*)
-    let _none = (fun y -> y) a in
-    let _none = (fun y -> y) n' in
-    let _none = if 1 < n' then sortRange arr a n' else () in
+    let _n = (fun y -> y) a in
+    let _n = (fun y -> y) n' in
+    let _n = if 1 < n' then sortRange arr a n' else () in
     let n' = pd - pc in
 		let pn_minus_n' = pn - n' in
     (*let __11_none = if 1 < n'' then if n'' > 7 then quickSort pn_minus_n'' n'' else insertSort a n'' else () in ()*)
-    let _none = (fun y -> y) pn_minus_n' in
-    let _none = (fun y -> y) n' in
-    let _none = if 1 < n' then sortRange arr pn_minus_n' n' else () in ()
+    let _n = (fun y -> y) pn_minus_n' in
+    let _n = (fun y -> y) n' in
+    let _n = if 1 < n' then sortRange arr pn_minus_n' n' else () in ()
 	in	
 
   (*let sorting _3_start _11_n = if _11_n < 7 then insertSort _3_start _11_n else quickSort _3_start _11_n
@@ -199,12 +172,12 @@ let gen_vec rr =
         else ()
     in fill_arr 0
 in
-let _none = Random.self_init ()in
+let _n = Random.self_init ()in
 let p = Random.int 20 in
 let vec = Array.make p 0 in
 let lent = Array.length vec in
 let _none = gen_vec vec in
-let kill = (fun x -> x) lent in
+let _n = (fun x -> x) lent in
 (*let vec = [|9;8;7;16;6;5;32;4;3;2;1|] in
 let p = 11 in*)
 	sortRange vec 0 lent; sorted vec
