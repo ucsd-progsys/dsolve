@@ -1,4 +1,5 @@
 qualif STARTSIZE(k) : start + k <= Array.length arr;;
+qualif STARTSIZE(k) : start + k < Array.length arr;;
 qualif LEISIZE(n) : n + i <= Array.length arr;;
 qualif LTISIZE(n) : n + i < Array.length arr;;
 qualif LEJSIZE(n) : n + j <= Array.length arr;;

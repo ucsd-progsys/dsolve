@@ -10,15 +10,11 @@ in
 let rec sortRange arr start n =
   let item i = Array.get arr i in
   let swap i j =
-	let ij = item j in
     let tmp = item i in 
-    (Array.set arr i ij; Array.set arr j tmp)
+    (Array.set arr i (item j); Array.set arr j tmp)
   in
   let rec vecswap i j n = 
-		let i_plus = i + 1 in
-		let j_plus = j + 1 in
-		let n_minus = n - 1 in
-		if n = 0 then () else (swap i j; vecswap i_plus j_plus n_minus) 
+		if n = 0 then () else (swap i j; vecswap (i+1) (j+1) (n-1)) 
   in 
 
   (* insertSort is called if there are less than 8 elements to be sorted *)

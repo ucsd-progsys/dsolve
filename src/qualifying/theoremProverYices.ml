@@ -84,11 +84,11 @@ module YicesProver  =
       | Predicate.Pvar (s,i) -> yicesVar me
           (Printf.sprintf "%sprime%d" (Path.unique_name s) i) me.t
       | Predicate.FunApp (f,e) ->
-	  (* huge hack alert *)
-	  if f = "Array.length" then 
+	  (* we don't need this anymore now that we have WF type checking *)
+	  (*if f = "Array.length" | f = "Bigarray.Array2.dim1" || f = "Bigarray.Array2.dim2" then 
 	    let (fn, e') = (yicesVar me f me.f, yicesVar me ((function Predicate.Var(s) -> Path.unique_name s | _ -> Predicate.pprint_pexpr Format.std_formatter e; assert false) e) me.ar) in
 	      Y.yices_mk_app me.c fn [|e'|]
-	  else
+	  else*)
             let (fn, e') = (yicesVar me f me.f, yicesExp me e) in
               Y.yices_mk_app me.c fn [|e'|]
       | Predicate.Binop (e1,op,e2) ->
