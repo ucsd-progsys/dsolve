@@ -17,7 +17,7 @@ let rec sortRange arr start n =
   in 
 
   (* insertSort is called if there are less than 8 elements to be sorted *)
-  let insertSort start n =
+  (*let insertSort start n =
     let limit = start + n in
 		let start_plus = start + 1 in
     let rec outer i =
@@ -33,7 +33,7 @@ let rec sortRange arr start n =
 										outer i_plus
            in inner i
     in outer start_plus
-  in 
+  in*) 
 
   (* calculate the median of three *)
   let med3 a b c =
@@ -128,19 +128,20 @@ let rec sortRange arr start n =
     (*let _none = if 1 < n' then if n' > 7 then quickSort a n' else insertSort a n' else () in*)
     let _n = (fun y -> y) a in
     let _n = (fun y -> y) n' in
-    let _n = if 1 < n' then sortRange arr a n' else () in
+    let _n = if 1 < n' then quickSort a n'(*sortRange arr a n'*) else () in
     let n' = pd - pc in
 		let pn_minus_n' = pn - n' in
     (*let __11_none = if 1 < n'' then if n'' > 7 then quickSort pn_minus_n'' n'' else insertSort a n'' else () in ()*)
     let _n = (fun y -> y) pn_minus_n' in
     let _n = (fun y -> y) n' in
-    let _n = if 1 < n' then sortRange arr pn_minus_n' n' else () in ()
+    let _n = if 1 < n' then quickSort pn_minus_n' n'(*sortRange arr pn_minus_n' n'*) else () in ()
 	in	
 
   (*let sorting _3_start _11_n = if _11_n < 7 then insertSort _3_start _11_n else quickSort _3_start _11_n
   in*) 
   (*sorting start n*) 
-  if n <= 7 then insertSort start n else quickSort start n
+    quickSort start n
+  (*if n <= 7 then insertSort start n else quickSort start n*)
 (* withtype {start:nat}{n:nat | start+n <= size }
          'a vect(size) * int(start) * int(n) * ('a * 'a -> order) -> unit *)
 in 

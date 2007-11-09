@@ -211,16 +211,9 @@ let normalize exp =
         [(fresh_name (), Some (norm_out exp))]
           (* ming: pull sequences out to the closest scope *)
      | Pexp_sequence(e1,e2) ->
-         let ls2 = norm_in e2 in
-         let ls1 = norm_in e1 in
-         let (l1, e1') = List.hd ls1 in
-         let (l2, e2') = List.hd ls2 in
-         let e1'' = match e1' with Some e1 -> e1
-                                |  None -> mk_dum_ident l1 in
-         let e2'' = match e2' with Some e2 -> e2
-                                |  None -> mk_dum_ident l2 in
-           (fresh_name(), Some (rw_expr (mk_sequence e1'' e2'')))
-           ::List.append (List.tl ls2) (List.tl ls1)
+         let e1 = norm_out e1 in
+         let e2 = norm_out e2 in
+        [(fresh_name(), Some (rw_expr (mk_sequence e1 e2)))]
      | Pexp_tuple(es) ->
         proc_list es mk_tuple
      | Pexp_array(es) ->
@@ -274,8 +267,8 @@ let rec normalize_structure sstr =
     [] -> []
     | {pstr_desc = (Pstr_eval exp); pstr_loc = loc} :: srem ->
         let normal_exp = normalize exp in
-        (*let _ = Format.set_margin 170 in
-        let _ = Format.set_max_indent 150 in*)
+        let _ = Format.set_margin 170 in
+        let _ = Format.set_max_indent 150 in
         let _ = printf "@[%a@\n@]" Qdebug.pprint_expression normal_exp in
         ({pstr_desc = (Pstr_eval(normal_exp)) ; pstr_loc = loc}) :: (normalize_structure srem)
     | p :: srem -> p :: (normalize_structure srem)

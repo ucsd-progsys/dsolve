@@ -275,7 +275,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
         (f, cstrs, framemap)
 	| (_, t) ->
       (* As it turns out, giving up and returning true here is actually _very_ unsound!  We won't check subexpressions! *)
-      fprintf err_formatter "@[Warning:@ Don't@ know@ how@ to@ constrain@ expression,@ defaulting@ to@ true@ Ty_structure:@ %s@\n@]" (Frame.type_structure t);
+      fprintf err_formatter "@[Warning:@ Don't@ know@ how@ to@ constrain@ expression,@ structure:@ %a@]" (Frame.type_structure tenv) t; flush stdout;
       assert false
     in (f, cs, LocationMap.add e.exp_loc f fm)
   in constrain exp initenv Predicate.True initcstrs initframemap
@@ -293,6 +293,8 @@ let constrain_structure tenv fenv initquals str =
           constrain_rec newquals cstrs fmap srem
 		| (Tstr_value(_, _))::srem ->
 				Printf.printf "Tstr_val unsupported."; assert false
+    | (Tstr_type(_))::srem ->
+        Printf.printf "Ignoring type decl"; constrain_rec quals cstrs fmap srem
     | _ -> assert false
   in constrain_rec initquals [] LocationMap.empty str
 
