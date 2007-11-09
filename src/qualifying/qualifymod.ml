@@ -1,3 +1,5 @@
+(* -*- tab-width:2; -*- *)
+
 open Asttypes
 open Typedtree
 open Btype
@@ -231,33 +233,6 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
                :: SubFrame (bound_env, guard, body_frame, f)
                :: binding_cstrs,
                fmap2)
-(*
-
-  pmr: is there a reason this stuff was hanging here rather than in a separate AST walker?
-
-            let _ = if !under_lambda = 0 || not(!Clflags.less_qualifs) then Qualgen.add_label (Path.Pident f, e1.exp_type) 
-            else () in
-            let lambda = match e1.exp_desc with
-                Texp_function (_, _) ->
-                  under_lambda := !under_lambda + 1; true
-              | _ -> false in
-
-            let unlabelled_env = Lightenv.add fp unlabelled_f1 env in
-            let (labelled_f1, _, _) = constrain e1 unlabelled_env guard cstrs framemap in
-            let f1' = Frame.label_like unlabelled_f1 labelled_f1 in
-            let env'' = Lightenv.add fp f1' env in
-            let (f1, cstrs'', fm'') = constrain e1 env'' guard cstrs framemap in
-            let env' = Lightenv.add fp f1 env in
-            let _ = if lambda then under_lambda := !under_lambda - 1 else () in
-            let (f2, cstrs', fm') = constrain e2 env' guard cstrs'' fm'' in
-            let f = Frame.fresh_with_labels t f2 in
-              (f,
-               WFFrame (env', f)
-               :: WFFrame (env'', f1')
-               :: SubFrame (env', guard, f2, f)
-               :: SubFrame (env'', guard, f1, f1')
-               :: cstrs',
-               fm') *)
 	| (Texp_array(es), t) ->
             let _ = Qualgen.add_constant (List.length es) in
 						let f = Frame.fresh t in
