@@ -15,7 +15,7 @@ type t =
     Fvar of Path.t
   | Fconstr of Path.t * t list * refinement
   | Farrow of Path.t option * t * t
-  | Ftuple of t * t
+  | Ftuple of t list
   | Funknown
 
 val pprint: formatter -> t -> unit

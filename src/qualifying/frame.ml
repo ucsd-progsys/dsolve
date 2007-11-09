@@ -14,7 +14,7 @@ type t =
     Fvar of Path.t
   | Fconstr of Path.t * t list * refinement
   | Farrow of Path.t option * t * t
-  | Ftuple of t * t
+  | Ftuple of t list
   | Funknown
 
 let pprint_qualifier_expr ppf = function
@@ -43,8 +43,8 @@ let rec pprint ppf = function
       fprintf ppf "@[%s:@ %a@ ->@;<1 2>%a@]" (Path.unique_name id) pprint1 f pprint f'
   | Fconstr (path, l, r) ->
       fprintf ppf "@[{%a@ %s|@;<1 2>%a}@]" pprint (List.hd l) (Path.unique_name path) pprint_refinement r
-   | Ftuple(t1, t2) ->
-      fprintf ppf "@[(%a,@ %a)@]" pprint t1 pprint t2
+   | Ftuple ts ->
+      fprintf ppf "@[(%a)@]" (Oprint.print_list pprint (fun ppf -> fprintf ppf ",@;<1 2>")) ts
   | Funknown ->
       fprintf ppf "[unknown]"
   (*| _ -> assert false*)
@@ -93,9 +93,8 @@ let fresh_with_var_fun ty fresh_ref_var =
             Fconstr (p, List.map fresh_rec tyl, fresh_ref_var ())
       | Tarrow(_, t1, t2, _) ->
           Farrow (None, fresh_rec t1, fresh_rec t2)
-      (* ming: placeholder for full tuples *)
-      | Ttuple(ts) ->
-          Ftuple (fresh_rec (List.hd ts), fresh_rec (List.hd (List.tl ts)))
+      | Ttuple ts ->
+          Ftuple (List.map fresh_rec ts)
       | _ ->
           fprintf err_formatter "@[Warning:@ Freshing@ unsupported@ type@]@.";
           Funknown
@@ -136,8 +135,7 @@ let type_structure env ppf t =
             fprintf ppf "Tunivar"
         | Tpoly(_, _) ->
             fprintf ppf "Tpoly"
-in
-ty_structure ppf t
+  in ty_structure ppf t
 
 (* Create a fresh frame with the same shape as the given type [ty].
    You probably want to consider using fresh_with_labels instead of this
@@ -173,8 +171,8 @@ let instantiate fr ftemplate =
 					(*let _ = if Path.same p p' then () else assert false in*)
 					(*let _ = if r = r' then () else assert false in*)
 					Fconstr(p, List.map2 inst l l', r)
-      | (Ftuple(t1, t2), Ftuple(t1', t2')) ->
-          Ftuple(inst t1 t1', inst t2 t2')
+      | (Ftuple t1s, Ftuple t2s) ->
+          Ftuple (List.map2 inst t1s t2s)
       | (Funknown, Funknown) -> Funknown
       | (f1, f2) ->
           fprintf std_formatter "@[Unsupported@ types@ for@ instantiation:@;<1 2>%a@;<1 2>%a@]@."
@@ -200,8 +198,8 @@ let rec apply_substitution sub = function
      (* ming: let's not prop substitutions into compound types and see what
       * happens *)
      Fconstr (p, l, (sub::subs, qe))
-  | Ftuple(t1, t2) ->
-      Ftuple(apply_substitution sub t1, apply_substitution sub t2)
+  | Ftuple ts ->
+      Ftuple (List.map (apply_substitution sub) ts)
   | Funknown ->
       Funknown
   (*| _ -> assert false*)
@@ -217,8 +215,8 @@ let rec label_like f f' =
         f
     | (Farrow (None, f1, f1'), Farrow(l, f2, f2')) ->
         Farrow (l, label_like f1 f2, label_like f1' f2')
-    | (Ftuple(t1, t2), Ftuple(t1', t2')) ->
-        Ftuple(label_like t1 t1', label_like t2 t2')
+    | (Ftuple t1s, Ftuple t2s) ->
+        Ftuple (List.map2 label_like t1s t2s)
     | _ -> assert false
 
 (* Create a fresh frame with the same shape as [t] and [f],
@@ -236,8 +234,8 @@ let apply_solution solution fr =
         Farrow (x, apply_rec f, apply_rec f')
     | Fconstr (path, fl, r) ->
         Fconstr (path, List.map apply_rec fl, refinement_apply_solution solution r)
-    | Ftuple(t1, t2) ->
-        Ftuple(apply_rec t1, apply_rec t2)
+    | Ftuple ts ->
+        Ftuple (List.map apply_rec ts)
     | Fvar _
     | Funknown as f-> f
   in apply_rec fr
@@ -270,8 +268,8 @@ let rec same_shape t1 t2 =
    Path.same p p'
   | (Farrow(_, i, o), Farrow(_, i', o')) ->
    (same_shape i i') && (same_shape o o')
-  | (Ftuple(f, g), Ftuple(f', g')) ->
-   (same_shape f f') && (same_shape g g')
+  | (Ftuple t1s, Ftuple t2s) ->
+   List.for_all2 same_shape t1s t2s
   | (Funknown, Funknown) -> true
   | t -> false
 

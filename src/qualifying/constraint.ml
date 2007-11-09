@@ -79,8 +79,9 @@ let split cstrs =
                   split_rec (SubRefinement(env, guard, r1, r2)::flat) (List.append (List.map2 subt l1 l2) cs)*)
               else
                   (Printf.printf "Unsupported type into split: %s\n" (Path.name p1); assert false)*)
-          | (Frame.Ftuple(t1, t2), Frame.Ftuple(t1', t2')) ->
-              split_rec flat (List.append [SubFrame(env, guard, t1, t1'); SubFrame(env, guard, t2, t2')] cs) 
+          | (Frame.Ftuple t1s, Frame.Ftuple t2s) ->
+              let make_subframe t1 t2 = SubFrame(env, guard, t1, t2) in
+                split_rec flat ((List.map2 make_subframe t1s t2s) @ cs)
           | (f1, f2) -> printf "@[Can't@ split:@ %a@ <:@ %a@]" Frame.pprint f1 Frame.pprint f2; assert false
         end
     (* ming: for type checking, when we split WFFrames now, we need to keep
@@ -102,8 +103,8 @@ let split cstrs =
               (* We add the test variable to the environment with the current frame;
                  this makes type checking easier *)
               split_rec (WFRefinement (Lightenv.add qual_test_var f env, r) :: flat) cs
-          | Frame.Ftuple (t1, t2) ->
-              split_rec flat (List.append [WFFrame(env, t1); WFFrame(env, t2)] cs)
+          | Frame.Ftuple ts ->
+              split_rec flat ((List.map (fun t -> WFFrame (env, t)) ts) @ cs)
           | Frame.Fvar _
           | Frame.Funknown ->
               split_rec flat cs

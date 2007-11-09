@@ -260,8 +260,8 @@ let tuple_fst_snd_frame name fst =
   let x = Path.mk_ident "x" in
   let tyvara = mk_tyvar () in
   let tyvarb = mk_tyvarb () in
-  (name, mk_fun(x, Frame.Ftuple(tyvara, tyvarb),  
-                                if fst then tyvara else tyvarb))
+    (name, mk_fun(x, Frame.Ftuple [tyvara; tyvarb],
+                  if fst then tyvara else tyvarb))
 
 let ref_path env =
   ("ref", find_type_path ["ref"; "Pervasives"] env)

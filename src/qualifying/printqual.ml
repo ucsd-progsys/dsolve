@@ -15,11 +15,8 @@ let rec qualify_tree_of_type_scheme otyp fr =
         Otyp_constr(id, List.map2 qualify tyl fl, Some (Oqual qualifier_desc))
     | (Otyp_var _, Frame.Fvar _) ->
         otyp
-    | (Otyp_tuple ts, Frame.Ftuple(t1', t2')) ->
-        (* placeholder implementation *)
-        let t1 = List.hd ts in
-        let t2 = List.hd (List.tl ts) in
-        Otyp_tuple([qualify t1 t1'; qualify t2 t2'])
+    | (Otyp_tuple ts, Frame.Ftuple fs) ->
+        Otyp_tuple(List.map2 qualify ts fs)
     | (_, Frame.Funknown) ->
         otyp
     | _ -> assert false
