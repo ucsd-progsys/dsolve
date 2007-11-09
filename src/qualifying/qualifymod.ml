@@ -290,8 +290,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
           | _ -> assert false
         end
   | (Texp_assertfalse, t) ->
-      let f = Frame.fresh t in
-        (f, cstrs, framemap)
+      (Frame.fresh t, cstrs, framemap)
 	| (_, t) ->
       (* As it turns out, giving up and returning true here is actually _very_ unsound!  We won't check subexpressions! *)
       fprintf err_formatter "@[Warning:@ Don't@ know@ how@ to@ constrain@ expression,@ structure:@ %a@]" (Frame.type_structure tenv) t; flush stdout;
