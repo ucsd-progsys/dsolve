@@ -20,6 +20,14 @@ let expression_to_pexpr e =
 
 let under_lambda = ref 0
 
+let rec bind_pattern env pat frame =
+  match (pat.pat_desc, frame) with
+    | (Tpat_var x, f) ->
+        Lightenv.add (Path.Pident x) f env
+    | (Tpat_tuple pats, Frame.Ftuple fs) ->
+        List.fold_left2 bind_pattern env pats fs
+    | _ -> assert false
+
 let constrain_expression tenv initenv exp initcstrs initframemap =
   let rec constrain e env guard cstrs framemap =
     let (f, cs, fm) =
@@ -58,32 +66,37 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
                ::SubFrame(env', guard3, f3, f)
                ::cstrs3,
                fm3)
-	| (Texp_function([({pat_desc = Tpat_var x}, e')], _), t) ->
+	| (Texp_function([(pat, e')], _), t) ->
 	    begin match Frame.fresh t with
-              | Frame.Farrow (_, f, unlabelled_f') ->
-                  let xp = Path.Pident x in
-                  let _ =
-                    match t with 
-                      {desc = Tarrow(_, t_in, t_out, _)} ->
-                        Qualgen.add_label(xp, t_in)
-                      | _ -> assert false
-                  in
-                    (*match e'.exp_type with  
-                      {desc = Tarrow(_, t_in, _, _)} -> Printf.printf "%s%s\n" (Ident.name x) (Frame.type_structure t_in); Qualgen.add_label (xp, t_in)
-                      | {desc = d} -> Printf.printf "%s%s\n" (Ident.name x) (Frame.type_structure e'.exp_type); Qualgen.add_label (xp, e'.exp_type)*)
-                  let env' = Lightenv.add xp f env in
-                  let (f'', cstrs', fm') = constrain e' env' guard cstrs framemap in
-                  (* Since the underlying type system doesn't have dependent
-                     types, fresh can't give us the proper labels for the RHS.
-                     Instead, we have to label it after the fact. *)
-                  let f' = Frame.label_like unlabelled_f' f'' in
-                  let f = Frame.Farrow (Some xp, f, f') in
-                    (f,
-                     WFFrame (env, f)
-                     :: SubFrame (env', guard, f'', f')
-                     :: cstrs',
-                     fm')
-              | _ -> assert false
+        | Frame.Farrow (_, f, unlabelled_f') ->
+            let _ =
+              match (t.desc, pat.pat_desc) with
+                  (* pmr: needs to be generalized to match other patterns *)
+                  (Tarrow(_, t_in, t_out, _), Tpat_var x) ->
+                    Qualgen.add_label(Path.Pident x, t_in)
+                | _ -> ()
+            in
+              (*match e'.exp_type with  
+                {desc = Tarrow(_, t_in, _, _)} -> Printf.printf "%s%s\n" (Ident.name x) (Frame.type_structure t_in); Qualgen.add_label (xp, t_in)
+                | {desc = d} -> Printf.printf "%s%s\n" (Ident.name x) (Frame.type_structure e'.exp_type); Qualgen.add_label (xp, e'.exp_type)*)
+            let env' = bind_pattern env pat f in
+            let (f'', cstrs', fm') = constrain e' env' guard cstrs framemap in
+              (* Since the underlying type system doesn't have dependent
+                 types, fresh can't give us the proper labels for the RHS.
+                 Instead, we have to label it after the fact. *)
+            let f' = Frame.label_like unlabelled_f' f'' in
+              (* pmr: this is probably correct but sucky *)
+            let lab = match pat.pat_desc with
+              | Tpat_var x -> Some (Path.Pident x)
+              | _ -> None
+            in
+            let f = Frame.Farrow (lab, f, f') in
+              (f,
+               WFFrame (env, f)
+               :: SubFrame (env', guard, f'', f')
+               :: cstrs',
+               fm')
+        | _ -> assert false
 	    end 
 	| (Texp_ident _, {desc = Tconstr (p, [], _)}) ->
             (Frame.Fconstr (p, [], Builtins.equality_refinement (expression_to_pexpr e)),
@@ -127,19 +140,22 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
           | _ -> assert false
 	        in List.fold_left constrain_application
                  (constrain e1 env guard cstrs framemap) exps
-	| (Texp_let (Nonrecursive, [({pat_desc = Tpat_var x}, e1)], e2), t) ->
-            let _ = if !under_lambda = 0 || not(!Clflags.less_qualifs) then Qualgen.add_label (Path.Pident x, e1.exp_type) 
-                    else () in
+	| (Texp_let (Nonrecursive, [(pat, e1)], e2), t) ->
+            let _ = if !under_lambda = 0 || not(!Clflags.less_qualifs) then
+              match pat.pat_desc with
+                | Tpat_var x -> Qualgen.add_label (Path.Pident x, e1.exp_type)
+                | _ -> ()
+            else () in
             let lambda = match e1.exp_desc with
                       Texp_function (_, _) -> 
                         under_lambda := !under_lambda + 1; true 
                       | _ -> false in
             let (f1, cstrs'', fm'') = constrain e1 env guard cstrs framemap in
-            let env' = Lightenv.add (Path.Pident x) f1 env in
+            let env' = bind_pattern env pat f1 in
             let _ = if lambda then under_lambda := !under_lambda - 1 else () in
             let (f2, cstrs', fm') = constrain e2 env' guard cstrs'' fm'' in
             let f = Frame.fresh_with_labels t f2 in
-              (f, WFFrame(env', f) :: SubFrame (env', guard, f2, f) :: cstrs', fm')
+              (f, WFFrame(env, f) :: SubFrame (env', guard, f2, f) :: cstrs', fm')
 	| (Texp_let (Recursive, bindings, body_exp), t) ->
             (* pmr: This is horrendous, but about the best we can do
                without using destructive updates.  We need to label
@@ -257,19 +273,21 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
               * into statements, so i guess we can't either *)
             (f2, ((*SubFrame(env, guard, f1, Builtins.mk_unit ())::*)c), m)
   | (Texp_tuple(es), t) ->
-            (* placeholder implementation *)
-            let e1 = List.hd es in
-            let e2 = List.hd (List.tl es) in
-            let (f1, c, m) = constrain e1 env guard cstrs framemap in
-            let (f2, c, m) = constrain e2 env guard c m in
-            let f = Frame.Ftuple(f1, f2) in
-            begin
-            match f with
-              Frame.Ftuple(f1', f2') ->
-                (f, List.append [WFFrame(env, f); SubFrame(env, guard, f1, f1'); SubFrame(env, guard, f2, f2')] 
-                                c, m)
-              | _ -> failwith "Texp_tuple has wrong type"
-            end
+      let constrain_exprs e (fs, (_, c, m)) =
+        let (f, new_c, new_m) = constrain e env guard c m in
+          (f :: fs, (f, new_c, new_m))
+      in
+      (* We use Funknown here because it's never going to get looked at anyway *)
+      let (fs, (_, new_cs, new_m)) = List.fold_right constrain_exprs es ([], (Frame.Funknown, cstrs, framemap)) in
+      let f = Frame.fresh t in
+        begin match f with
+          | Frame.Ftuple fresh_fs ->
+              let new_cs = List.fold_left2
+                (fun cs rec_frame fresh_frame -> SubFrame (env, guard, rec_frame, fresh_frame) :: cs)
+                new_cs fs fresh_fs in
+              (f, WFFrame (env, f) :: new_cs, new_m)
+          | _ -> assert false
+        end
   | (Texp_assertfalse, t) ->
       let f = Frame.fresh t in
         (f, cstrs, framemap)
