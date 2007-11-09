@@ -293,7 +293,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
       (Frame.fresh t, cstrs, framemap)
 	| (_, t) ->
       (* As it turns out, giving up and returning true here is actually _very_ unsound!  We won't check subexpressions! *)
-      fprintf err_formatter "@[Warning:@ Don't@ know@ how@ to@ constrain@ expression,@ structure:@ %a@]" (Frame.type_structure tenv) t; flush stdout;
+      fprintf err_formatter "@[Warning: Don't know how to constrain expression, structure:@ %a@]@.@." Printtyp.raw_type_expr t; flush stderr;
       assert false
     in (f, cs, LocationMap.add e.exp_loc f fm)
   in constrain exp initenv Predicate.True initcstrs initframemap

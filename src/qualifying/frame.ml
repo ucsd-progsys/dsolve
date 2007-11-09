@@ -100,43 +100,6 @@ let fresh_with_var_fun ty fresh_ref_var =
           Funknown
   in fresh_rec ty
 
-let type_structure env ppf t = 
-  let rec ty_list_structure ppf tl = 
-    match tl with
-        t::l -> fprintf ppf "%a,@ %a" ty_structure t ty_list_structure l
-      | [] -> fprintf ppf ".."
-
-  and ty_structure ppf t =
-    let t' = repr t in
-    match t'.desc with
-          Tvar ->
-            fprintf ppf "Tvar" 
-        | Tconstr(p, tyl, _) -> 
-            fprintf ppf "Tconstr:@ path(%s)@ types:@ (%a):@ lookup:@ " (Path.name p) ty_list_structure tyl (*(Env.find_type p env)*)
-        | Tarrow(p, t1, t2, _) ->
-            fprintf ppf "Tarrow:@ path(%s)@ type_in:@ (%a)@ type_out:@ (%a)" (p)
-              ty_structure t1 ty_structure t2
-        | Ttuple(ts) ->
-            fprintf ppf "Ttuple:@ types:@ (%a)" 
-                          ty_list_structure ts
-        | Tobject(_, _) ->
-            fprintf ppf "Tobject"
-        | Tfield(_, _, _, _) ->
-            fprintf ppf "Tfield"
-        | Tnil ->
-            fprintf ppf "Tnil"
-        | Tlink(t) ->
-            fprintf ppf "Tlink: %a" ty_structure t
-        | Tsubst(_) ->
-            fprintf ppf "Tsubst"
-        | Tvariant(_) ->
-            fprintf ppf "Tvariant"
-        | Tunivar ->
-            fprintf ppf "Tunivar"
-        | Tpoly(_, _) ->
-            fprintf ppf "Tpoly"
-  in ty_structure ppf t
-
 (* Create a fresh frame with the same shape as the given type [ty].
    You probably want to consider using fresh_with_labels instead of this
    for subtype constraints. *)
