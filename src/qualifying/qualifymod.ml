@@ -22,6 +22,7 @@ let under_lambda = ref 0
 
 let rec bind_pattern env pat frame =
   match (pat.pat_desc, frame) with
+    | (Tpat_any, _) -> env
     | (Tpat_var x, f) ->
         Lightenv.add (Path.Pident x) f env
     | (Tpat_tuple pats, Frame.Ftuple fs) ->
