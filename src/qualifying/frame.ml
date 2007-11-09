@@ -101,10 +101,10 @@ let fresh_with_var_fun ty fresh_ref_var =
           Funknown
   in fresh_rec ty
 
-let ty_structure env ppf t = 
+let type_structure env ppf t = 
   let rec ty_list_structure ppf tl = 
     match tl with
-        t::l -> fprintf ppf "%a,@ %a" type_structure t ty_list_structure l
+        t::l -> fprintf ppf "%a,@ %a" ty_structure t ty_list_structure l
       | [] -> fprintf ppf ".."
 
   and ty_structure ppf t =
@@ -137,6 +137,7 @@ let ty_structure env ppf t =
         | Tpoly(_, _) ->
             fprintf ppf "Tpoly"
 in
+ty_structure ppf t
 
 (* Create a fresh frame with the same shape as the given type [ty].
    You probably want to consider using fresh_with_labels instead of this
