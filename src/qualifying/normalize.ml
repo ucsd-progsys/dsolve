@@ -87,6 +87,7 @@ let normalize exp =
                          in ({ppat_desc = Ppat_var (li_flatten x); ppat_loc = Location.none}, e)) ls in
       Pexp_let(r, ls, e2) in
 
+    (* still broken for general pattersn *)
   let rec norm_bind_list bs = 
     let single_bind elt =
       match elt with
@@ -126,8 +127,6 @@ let normalize exp =
         exp
      | Pexp_function(lbl, elbl, [(arg, e)]) ->
         rw_expr (mk_function lbl elbl arg (norm_out e))
-     | Pexp_let(r, [({ppat_desc = Ppat_any}, e1)], e2) ->
-        norm_out (rw_expr (mk_let_lbl r (fresh_name ()) e1 e2))
      | Pexp_let(r, [({ppat_desc = Ppat_var x}, e1)], e2) -> 
         let ls = norm_in e1 in 
         (* ming: e2 is already written with lbl x, so we have to ignore the lbl
@@ -139,8 +138,7 @@ let normalize exp =
               | None -> mk_let r x (mk_dum_ident lbl) (norm_out e2)
         in
          rw_expr (List.fold_left (wrap r) init (List.tl ls))
-     (* to be particularly careful, we'll add a special case for mutual
-      * binds (keyword and) *)
+      (* this is generally broken, but OK for actual mutual recursion *)
      | Pexp_let(r, pes, e2) ->
         let (ins, outs) = norm_bind_list pes in        
         let init = norm_out e2 in 
@@ -176,6 +174,8 @@ let normalize exp =
         proc_list es mk_tuple
      | Pexp_array(es) ->
         proc_list es mk_array
+          (* lose location for the whole sequence, but that's generally ok since
+           * we don't lose location of second expression *)
      | Pexp_sequence(e1, e2) ->
         rw_expr (mk_sequence (norm_out e1) (norm_out e2))
      | Pexp_assertfalse ->
@@ -211,9 +211,9 @@ let normalize exp =
         [(fresh_name (), Some (norm_out exp))]
           (* ming: pull sequences out to the closest scope *)
      | Pexp_sequence(e1,e2) ->
-         let e1 = norm_out e1 in
-         let e2 = norm_out e2 in
-        [(fresh_name(), Some (rw_expr (mk_sequence e1 e2)))]
+        let ls1 = norm_in e1 in
+        let ls2 = norm_in e2 in
+          List.append ls2 ls1
      | Pexp_tuple(es) ->
         proc_list es mk_tuple
      | Pexp_array(es) ->
