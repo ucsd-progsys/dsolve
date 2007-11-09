@@ -1,0 +1,148 @@
+open Parsetree
+open Asttypes
+open Format
+
+(* this breaks functors *)
+let li_flatten li = String.concat "." (Longident.flatten li) 
+
+(* constant divisions and multiplications are wreaking havoc on us
+ * because non-const ops turn into uninterpreted functions and make
+ * life difficult *)
+let is_op exp nm = 
+  match exp.pexp_desc with
+    | Pexp_ident(id) ->
+        li_flatten id = nm
+    | _ -> false
+
+let is_mult exp = 
+  is_op exp "*"
+let is_div exp =
+  is_op exp "/"
+               
+let is_const exp =
+  match exp.pexp_desc with
+    | Pexp_constant(Const_int _) ->
+        true
+    | _ -> false
+
+let is_ident exp =
+  match exp.pexp_desc with
+    | Pexp_ident(_) ->
+        true
+    | _ -> false
+
+let is_not_freshed exp =
+  match exp.pexp_desc with
+    | Pexp_constant(_) ->
+        true
+    | Pexp_construct(_) ->
+        true
+    | Pexp_apply(_, _) ->
+        true
+    | Pexp_array(_) ->
+        true
+    | Pexp_tuple(_) ->
+        true
+    | _ -> false
+
+let is_const_div exp = 
+  match exp.pexp_desc with 
+    Pexp_apply(e1, es) ->
+      let es = List.map (fun (_, e) -> e) es in
+      let div = is_div e1 in
+        if div then is_const (List.nth es 1) else false 
+    | _ -> false
+      
+let is_const_mult exp =
+  match exp.pexp_desc with
+      Pexp_apply(e1, es) ->
+        let es = List.map (fun (_, e) -> e) es in
+        let mult = is_mult e1 in
+          if mult then is_const (List.nth es 1) || is_const (List.hd es)
+          else false
+    | _ -> false
+
+let normalize exp =
+  let next_name_cnt = ref 0 in
+  let fresh_name () =
+    let i = !next_name_cnt in
+    let _ = next_name_cnt := !next_name_cnt + 1 in
+      Longident.parse ("__tmp"^(string_of_int i))  
+  in
+
+  let mk_let r x e1 e2 = Pexp_let(r, [({ppat_desc = Ppat_var x; ppat_loc = Location.none}, e1)], e2) in
+  let mk_let_gen r pls e2 = Pexp_let(r, pls, e2) in
+  let mk_let_lbl r x e1 e2 = mk_let r (li_flatten x) e1 e2 in
+  let mk_apply e1 es = Pexp_apply(e1, (List.map (fun e -> ("", e)) es)) in
+  (*let mk_apply_s e1 es = Pexp_apply(e1, es) in*)
+  let mk_ident id = Pexp_ident(id) in
+  let mk_function lbl elbl arg_pat sube = Pexp_function(lbl, elbl, [(arg_pat, sube)]) in
+  let mk_array es = Pexp_array(es) in
+  let mk_tuple es = Pexp_tuple(es) in
+  let mk_sequence e1 e2 = Pexp_sequence(e1, e2) in
+  let mk_ifthenelse e1 e2 e3 = Pexp_ifthenelse(e1, e2, Some e3) in
+
+  let mk_dummy desc = {pexp_desc = desc; pexp_loc = Location.none} in
+
+  let mk_dum_ident id = mk_dummy (mk_ident id) in
+
+  let rec norm_out_simple exp =
+    let rw_expr desc = {pexp_desc = desc; pexp_loc = exp.pexp_loc} in
+    match exp.pexp_desc with
+     | Pexp_ident(_) 
+     | Pexp_constant(_) 
+     | Pexp_construct(_, None, false) ->
+        exp
+     | Pexp_function(lbl, elbl, [(arg, e)]) ->
+        rw_expr (mk_function lbl elbl arg (norm_out_simple e))
+     | Pexp_let(r, binds, e2) ->
+        rw_expr (mk_let_gen r (List.map (fun (pat, e) -> (pat, norm_out_simple e)) binds) (norm_out_simple e2)) 
+     | Pexp_apply(e1, es) ->
+        let es = List.map (fun (_, e) -> e) es in
+        let norm = List.map (fun e -> (is_ident e, fresh_name ())) es in
+        let n1 = List.hd es in
+        let norm = if is_const_div exp then
+                      (List.hd norm)
+                      ::[(true, fresh_name ())]
+                    else norm
+        in  
+        let norm = 
+            if is_const_mult exp then
+              let n2 = List.nth es 1 in
+                      (is_const n1, fresh_name ())
+                      ::[(is_const n2, fresh_name ())]
+            else norm
+        in
+        let ess = List.map2 (fun e (b, f) -> if b then e else mk_dum_ident f) es norm in
+        let fn = fresh_name () in
+        let init = mk_apply (if is_ident e1 then e1 else mk_dum_ident fn) ess in  
+        let body = List.fold_right2 (fun e (b, f) i -> if b then i else mk_let_lbl Nonrecursive f (norm_out_simple e) (mk_dummy i)) es norm init in
+          if is_ident e1 then rw_expr body else rw_expr (mk_let_lbl Nonrecursive fn e1 (mk_dummy body))
+     | Pexp_ifthenelse(e1, e2, Some e3) ->
+        rw_expr (mk_ifthenelse (norm_out_simple e1) (norm_out_simple e2) (norm_out_simple e3))
+     (* this may not normalize tuple and array constants properly. faced with
+ * the possibiliy of doing the apply case nearly over again though, I will
+ * refrain for now *)
+     | Pexp_tuple(es) ->
+        rw_expr (mk_tuple (List.map norm_out_simple es))
+     | Pexp_array(es) ->
+        rw_expr (mk_array (List.map norm_out_simple es))
+     | Pexp_sequence(e1, e2) ->
+        rw_expr (mk_sequence (norm_out_simple e1) (norm_out_simple e2))
+     | Pexp_assertfalse ->
+        exp
+     | e -> printf "@[Bad expr to norm_out:@\n%a@]" Qdebug.pprint_expression exp; assert false
+  in
+  norm_out_simple exp
+
+let rec normalize_structure sstr =
+  match sstr with
+    [] -> []
+    | {pstr_desc = (Pstr_eval exp); pstr_loc = loc} :: srem ->
+        let normal_exp = normalize exp in
+        let _ = Format.set_margin 170 in
+        let _ = Format.set_max_indent 150 in
+        let _ = printf "@[%a@\n@]" Qdebug.pprint_expression normal_exp in
+        ({pstr_desc = (Pstr_eval(normal_exp)) ; pstr_loc = loc}) :: (normalize_structure srem)
+    | p :: srem -> p :: (normalize_structure srem)
+

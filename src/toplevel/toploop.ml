@@ -241,7 +241,7 @@ let execute_phrase print_outcome ppf phr =
           begin
           fprintf std_formatter "@[Dumping@ qualifiers@\n@]";
           Misc.format_list_of_strings err_formatter (";;", Qualgen.dump_qualifs ());
-          fprintf std_formatter "@[Done@ Dumping@ qualifiers@\n@]"
+          fprintf std_formatter "@[Done@ Dumping@ qualifiers@\n@]";flush stderr
           end
       in
       let (newquals, framemap) =
