@@ -13,6 +13,8 @@ let rec qualify_tree_of_type_scheme otyp fr =
         let qualifier_desc = if !Clflags.brief_quals then qualifier_num else
                               qualifier_names in
         Otyp_constr(id, List.map2 qualify tyl fl, Some (Oqual qualifier_desc))
+    | (Otyp_constr _ as ot, Frame.Frecord _) ->
+        ot
     | (Otyp_var _, Frame.Fvar _) ->
         otyp
     | (Otyp_tuple ts, Frame.Ftuple fs) ->

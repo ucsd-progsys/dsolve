@@ -1,5 +1,6 @@
 open Longident
 open Predicate
+open Asttypes
 
 let rec mk_longid = function
   | [] -> assert false
@@ -61,7 +62,7 @@ let mk_array f qs = Frame.Fconstr(Predef.path_array, [f], ([], Frame.Qconst qs))
 
 let mk_named path fs qs env = Frame.Fconstr(find_type_path path env, fs, ([], Frame.Qconst qs))
 
-let mk_ref f qs env = mk_named ["ref"; "Pervasives"] [f] qs env
+let mk_ref f env = Frame.Frecord (find_type_path ["ref"; "Pervasives"] env, [(f, Mutable)])
 
 let mk_bigarray_kind a b qs env = mk_named ["kind"; "Bigarray"] [a; b] qs env
 
@@ -243,17 +244,17 @@ let rand_int_frame =
 let ref_ref_frame env =
   let (x, y) = fresh_2_idents () in
   let tyvar = mk_tyvar () in
-  (["ref"; "Pervasives"], mk_fun(x, tyvar, mk_ref tyvar [] env))
+  (["ref"; "Pervasives"], mk_fun(x, tyvar, mk_ref tyvar env))
 
 let ref_deref_frame env =
   let (x, y) = fresh_2_idents () in
   let tyvar = mk_tyvar () in
-  (["!"; "Pervasives"], mk_fun(x, mk_ref tyvar [] env, tyvar))
+  (["!"; "Pervasives"], mk_fun(x, mk_ref tyvar env, tyvar))
 
 let ref_assgn_frame env =
   let (x, y) = fresh_2_idents () in
   let tyvar = mk_tyvar () in
-  ([":="; "Pervasives"], mk_fun(x, mk_ref tyvar [] env,
+  ([":="; "Pervasives"], mk_fun(x, mk_ref tyvar env,
                     mk_fun(y, tyvar, mk_unit ())))
 
 let tuple_fst_snd_frame name fst =

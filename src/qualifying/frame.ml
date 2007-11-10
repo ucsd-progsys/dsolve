@@ -1,6 +1,7 @@
 open Types
 open Btype
 open Format
+open Asttypes
 
 type substitution = Path.t * Predicate.pexpr
 
@@ -15,6 +16,7 @@ type t =
   | Fconstr of Path.t * t list * refinement
   | Farrow of Path.t option * t * t
   | Ftuple of t list
+  | Frecord of Path.t * (t * mutable_flag) list
   | Funknown
 
 let pprint_qualifier_expr ppf = function
@@ -45,6 +47,8 @@ let rec pprint ppf = function
       fprintf ppf "@[{%a@ %s|@;<1 2>%a}@]" pprint (List.hd l) (Path.unique_name path) pprint_refinement r
    | Ftuple ts ->
       fprintf ppf "@[(%a)@]" (Oprint.print_list pprint (fun ppf -> fprintf ppf ",@;<1 2>")) ts
+   | Frecord (id, _) ->
+       fprintf ppf "%s" (Path.unique_name id)
   | Funknown ->
       fprintf ppf "[unknown]"
   (*| _ -> assert false*)
@@ -68,8 +72,9 @@ let fresh_fvar () = Fvar (Path.mk_ident "a")
 
 (* ming: abbrevs? *)
 (* Create a fresh frame with the same shape as the given type [ty], using
-   [fresh_ref_var] to create new refinement variables. *)
-let fresh_with_var_fun ty fresh_ref_var =
+   [fresh_ref_var] to create new refinement variables.  Uses type environment
+   [env] to find type declarations. *)
+let fresh_with_var_fun ty env fresh_ref_var =
   let vars = ref [] in
   let rec fresh_rec t =
     let t' = repr t in
@@ -86,11 +91,28 @@ let fresh_with_var_fun ty fresh_ref_var =
           but that would require special casing the case below, which is inelegant. *)
        (* pmr: badness; should be handled just fine by well-formedness constraints,
           which would effectively effect the same effect *)
-      | Tconstr(p, tyl, _) -> 
-          if Path.same p Predef.path_unit || Path.same p Predef.path_float then
-            Fconstr (p, [], ([], Qconst []))
-          else
-            Fconstr (p, List.map fresh_rec tyl, fresh_ref_var ())
+      | Tconstr(p, tyl, _) ->
+          let ty_decl = Env.find_type p env in
+            begin match ty_decl.type_kind with
+              | Type_abstract
+              | Type_variant _ ->
+                  if Path.same p Predef.path_unit || Path.same p Predef.path_float then
+                    Fconstr (p, [], ([], Qconst []))
+                  else
+                    Fconstr (p, List.map fresh_rec tyl, fresh_ref_var ())
+              | Type_record (fields, _, _) ->
+                  (* Tedium ahead:
+                     OCaml stores information about record types in two places:
+                     - The type declaration stores everything that's set in stone about the
+                       type: what its fields are and which variables are the type parameters.
+                     - The type list of the Tconstr contains the actual instantiations of
+                       the tyvars in this instantiation of the record. *)
+                  let param_map = List.map2 (fun tyvar tyinst -> (tyvar, tyinst)) ty_decl.type_params tyl in
+                  let fresh_field (_, muta, typ) =
+                    let field_typ = try List.assoc typ param_map with Not_found -> typ in
+                      (fresh_rec field_typ, muta)
+                  in Frecord (p, List.map fresh_field fields)
+          end
       | Tarrow(_, t1, t2, _) ->
           Farrow (None, fresh_rec t1, fresh_rec t2)
       | Ttuple ts ->
@@ -100,15 +122,17 @@ let fresh_with_var_fun ty fresh_ref_var =
           Funknown
   in fresh_rec ty
 
-(* Create a fresh frame with the same shape as the given type [ty].
+(* Create a fresh frame with the same shape as the given type
+   [ty]. Uses type environment [env] to find type declarations.
+
    You probably want to consider using fresh_with_labels instead of this
    for subtype constraints. *)
-let fresh ty = fresh_with_var_fun ty fresh_refinementvar
+let fresh ty env = fresh_with_var_fun ty env fresh_refinementvar
 
 (* Create a fresh frame with the same shape as the given type [ty].
    No refinement variables are created - all refinements are initialized
    to true. *)
-let fresh_without_vars ty = fresh_with_var_fun ty (fun _ -> empty_refinement)
+let fresh_without_vars ty env = fresh_with_var_fun ty env (fun _ -> empty_refinement)
 
 (* Instantiate the vars in f(r) with the corresponding frames in ftemplate.  If a
    variable occurs twice, it will only be instantiated with one frame; which
@@ -123,25 +147,21 @@ let instantiate fr ftemplate =
             vars := (f, ft) :: !vars;
             ft
           end
-        (* this happens in (hopefully) exactly one case *)
-      (*| (Fconstr(p, [], r), Fvar(_)) ->
-          Fconstr(p, [], r) *)
-      | (Fconstr (p, [], r), Fconstr (_, [], _)) ->
-          Fconstr (p, [], r)
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
           Farrow (l, inst f1 f2, inst f1' f2')
-			| (Fconstr (p, l, r), Fconstr(p', l', r')) ->
-					(*let _ = if Path.same p p' then () else assert false in*)
-					(*let _ = if r = r' then () else assert false in*)
-					Fconstr(p, List.map2 inst l l', r)
+      | (Fconstr (p, l, r), Fconstr(p', l', _)) ->
+	  (*let _ = if Path.same p p' then () else assert false in*)
+	  Fconstr(p, List.map2 inst l l', r)
       | (Ftuple t1s, Ftuple t2s) ->
           Ftuple (List.map2 inst t1s t2s)
+      | (Frecord (p, f1s), Frecord (_, f2s)) ->
+          let inst_rec (f1, m) (f2, _) = (inst f1 f2, m) in
+            Frecord (p, List.map2 inst_rec f1s f2s)
       | (Funknown, Funknown) -> Funknown
       | (f1, f2) ->
           fprintf std_formatter "@[Unsupported@ types@ for@ instantiation:@;<1 2>%a@;<1 2>%a@]@."
 	    pprint f1 pprint f2;
 	    assert false
-      (*| _ -> assert false*)
   in inst fr ftemplate
 
 (* Apply a substitution to a frame, distributing over arrows.  Unaliases any
@@ -163,6 +183,9 @@ let rec apply_substitution sub = function
      Fconstr (p, l, (sub::subs, qe))
   | Ftuple ts ->
       Ftuple (List.map (apply_substitution sub) ts)
+  | Frecord (p, fs) ->
+      let apply_rec (f, m) = (apply_substitution sub f, m) in
+        Frecord (p, List.map apply_rec fs)
   | Funknown ->
       Funknown
   (*| _ -> assert false*)
@@ -180,12 +203,16 @@ let rec label_like f f' =
         Farrow (l, label_like f1 f2, label_like f1' f2')
     | (Ftuple t1s, Ftuple t2s) ->
         Ftuple (List.map2 label_like t1s t2s)
+    | (Frecord (p1, f1s), Frecord (p2, f2s)) when Path.same p1 p2 ->
+        let label_rec (f1, muta) (f2, _) = (label_like f1 f2, muta) in
+          Frecord (p1, List.map2 label_rec f1s f2s)
     | _ -> assert false
 
 (* Create a fresh frame with the same shape as [t] and [f],
-   and the same labels as [f]. *)
-let fresh_with_labels t f =
-  label_like (fresh t) f
+   and the same labels as [f]. Uses type environment
+   [env] to find type declarations. *)
+let fresh_with_labels t f env =
+  label_like (fresh t env) f
 
 let refinement_apply_solution solution = function
     (subs, Qvar k) -> (subs, Qconst (Lightenv.find k solution))
@@ -199,6 +226,8 @@ let apply_solution solution fr =
         Fconstr (path, List.map apply_rec fl, refinement_apply_solution solution r)
     | Ftuple ts ->
         Ftuple (List.map apply_rec ts)
+    | Frecord (p, fs) ->
+        Frecord (p, List.map (fun (f, m) -> (apply_rec f, m)) fs)
     | Fvar _
     | Funknown as f-> f
   in apply_rec fr
