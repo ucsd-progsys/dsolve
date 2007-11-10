@@ -10,10 +10,12 @@ let "j = 0"
 catt=""
 argv=""
 frames=""
+enm=""
 for i in ${@/\ //n}
 do
   let "j = $j + 1"
   catt="cat "$i".quals "$i 
+  enm=$i
   if [[ $j<$argc ]] 
   then
     if [[ $i == "-dframes" ]]
@@ -30,7 +32,14 @@ then
 fi
 export LD_LIBRARY_PATH=./yices/lib
 
-$catt | nice -n19 rlwrap ./ocaml$argv
+cat $enm".quals" > /dev/null
+
+if [[ $? = 0 ]]
+then
+  $catt | nice -n19 rlwrap ./ocaml$argv
+else
+  nice -n19 rlwrap ./ocaml$argv < $enm
+fi
 
 EXIT=$?
 
