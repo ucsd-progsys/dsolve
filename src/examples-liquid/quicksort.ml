@@ -10,7 +10,7 @@ let ffor s d body =
   in dofor s
 in
 
-let fwhile b body =
+(*let fwhile b body =
   let rec whiledo _n =
     if b () then (body (); whiledo ()) else ()
   in whiledo ()
@@ -21,11 +21,8 @@ let incr i =
 in
 let decr i =
   i := !i - 1
-in
+in*)
 
-(* There is a known performance bug in the code below.  If you find
-   it, don't bother reporting it.  You're not supposed to use this
-   module anyway. *)
 let sort cmp arr =
   let rec qsort lo hi = 
     if hi - lo >= 6 then begin 
@@ -41,28 +38,31 @@ let sort cmp arr =
         if cmp (Array.get arr mid) (Array.get arr lo) then swap arr mid lo else ()
       end else ();
       let pivot = Array.get arr mid in
-      let i = ref (lo + 1) in
-      let j = ref (hi - 1) in
       if not (cmp pivot (Array.get arr hi))
          || not (cmp (Array.get arr lo) pivot)
       then assert false else ();
-      let b1 _n = !i < !j in
-      let bod1 _n = 
-        let b2 _n = cmp pivot (Array.get arr !i) in
-        let bod2 _n = incr i in
-          fwhile b2 bod2;
-        let b3 _n = cmp (Array.get arr !j) pivot in
-        let bod3 _n = decr j in
-          fwhile b3 bod3; 
-        if !i < !j then swap arr !i !j else ();
-        incr i; decr j
-      in fwhile b1 bod1;
+      let rec bod1 i j = 
+        if i < j then 
+          let i =
+            let rec bod2 i = 
+              if cmp pivot (Array.get arr i) 
+                then bod2 (i+1) else i
+            in bod2 i in
+          let j =
+            let rec bod3 j =
+            if cmp (Array.get arr j) pivot 
+                then bod3 (j-1) else j
+            in bod3 j in
+              (if i < j then swap arr i j else ();
+               bod1 (i+1) (j-1))
+         else
       (* Recursion on smaller half, tail-call on larger half *)
-      if !j - lo <= hi - !i then begin
-        qsort lo !j; qsort !i hi
-      end else begin
-        qsort !i hi; qsort lo !j
-      end
+         if j - lo <= hi - i then begin
+           qsort lo j; qsort i hi
+         end else begin
+           qsort i hi; qsort lo j
+         end
+      in bod1 (lo+1) (hi-1);
     end 
     else () 
   in qsort 0 (Array.length arr - 1);
@@ -71,16 +71,11 @@ let sort cmp arr =
     let val_i = (Array.get arr i) in
     if not (cmp (Array.get arr (i - 1)) val_i) then begin
       Array.set arr i (Array.get arr (i - 1));
-      let j = ref (i - 1) in
-      let _ = (fun x -> x) !j in
-      let _ = (fun x -> x) i in
-      let rec wbod _n =
-        let dj = !j in
-          if dj >= 1 then if not (cmp (Array.get arr (dj - 1)) val_i) then
-            (Array.set arr dj (Array.get arr (dj-1));
-            j := dj - 1; wbod ()) else () else ()
-      in wbod ();
-      Array.set arr !j val_i
+      let rec wbod j =
+          if j >= 1 then if not (cmp (Array.get arr (j - 1)) val_i) then
+            (Array.set arr j (Array.get arr (j-1));
+            wbod (j - 1)) else Array.set arr j val_i else Array.set arr j val_i
+      in wbod (i-1);
     end else ()
   in ffor 1 (Array.length arr - 1) forbod
 in
