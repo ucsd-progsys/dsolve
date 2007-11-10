@@ -8,7 +8,7 @@ let two_pi = 2.0 *. pi in
 let ffor s d body = 
     let rec loop i =
         let i' = i + 1 in 
-        if i < d then (body i; loop i') else () 
+        if i <= d then (body i; loop i') else () 
     in loop s
 in 
 let fft px py n = (* n must be a power of 2! *)

@@ -176,6 +176,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
             let _ = if !under_lambda = 0 || not(!Clflags.less_qualifs) then
               match pat.pat_desc with
                 | Tpat_var x -> Qualgen.add_label (Path.Pident x, e1.exp_type)
+                (*| Tpat_tuple *)
                 | _ -> ()
             else () in
             let lambda = match e1.exp_desc with
@@ -286,7 +287,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
               let new_cs = List.fold_left2
                 (fun cs rec_frame fresh_frame -> SubFrame (env, guard, rec_frame, fresh_frame) :: cs)
                 new_cs fs fresh_fs in
-              (f, WFFrame (env, f) :: new_cs, new_m)
+              (f, (*(env, f) ::*) new_cs, new_m)
           | _ -> assert false
         end
   | (Texp_assertfalse, t) ->

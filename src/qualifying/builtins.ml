@@ -139,6 +139,16 @@ let bool_disj_frame path qname =
                               Predicate.And(mk_int_equals x 0, mk_int_equals y 0)) )) in
     rel_fun_frame path (x, y) (mk_bool [], mk_bool []) qual
 
+let bool_not_frame =
+  let (x, y) = fresh_2_idents () in
+  let qual = (Path.mk_ident "NOT",
+              y,
+              Predicate.And( Predicate.Or(mk_int_equals y 1,
+                                         mk_int_equals x 1),
+                             Predicate.Or(mk_int_equals y 0,
+                                         mk_int_equals x 0))) in
+    (["not"; "Pervasives"], mk_fun (x, mk_bool [], mk_bool [qual]))
+
     
 let ignore_frame =
   let x = Path.mk_ident "x" in
@@ -317,6 +327,7 @@ let _frames = [
   tuple_fst_snd_frame ["snd"; "Pervasives"] false;
   bool_conj_frame ["&&"; "Pervasives"] "&&";
   bool_disj_frame ["||"; "Pervasives"] "||";
+  bool_not_frame;
   array_length_frame;
   array_get_frame;
   array_make_frame;
