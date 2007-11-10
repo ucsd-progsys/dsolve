@@ -17,17 +17,26 @@ let rec print_typed_expression qmap ppf exp =
     | Nonrecursive -> fprintf ppf ""
     | _ -> assert false
   in
+  let rec pprint_pat_list ppf ls =
+    match ls with
+        t::[] -> fprintf ppf "%a" pprint_pattern t
+      | t::rem -> fprintf ppf "%a,@ %a" pprint_pattern t pprint_pat_list rem
+      | [] -> fprintf ppf ""
+  and pprint_pattern ppf pat = 
+    match pat.pat_desc with
+        Tpat_any -> fprintf ppf "_"
+      | Tpat_var x -> fprintf ppf "%s" (Ident.unique_name x)
+      | Tpat_tuple ts -> fprintf ppf "(%a)" pprint_pat_list ts
+      | _ -> assert false
+  in
   let pprint_and ppf = function
     | [] -> fprintf ppf "@ "
     |  _ -> fprintf ppf "@ and@ " 
   in
   let rec pprint_binds ppf = function
-    | ({pat_desc = Tpat_any}, e)::rem ->
-      fprintf ppf "@[_@ =@;<1 2>%a%a%a@]" pprint e pprint_and rem pprint_binds rem
-    | ({pat_desc = Tpat_var f}, e)::rem ->
-      fprintf ppf "@[%s@ =@;<1 2>%a%a%a@]" (Ident.unique_name f) pprint e pprint_and rem pprint_binds rem
+    | (pat, e)::rem ->
+      fprintf ppf "@[%a@ =@;<1 2>%a%a%a@]" pprint_pattern pat pprint e pprint_and rem pprint_binds rem
     | [] -> fprintf ppf ""
-    | _ -> assert false
   in
   let rec pprint_exp ppf e =
     match e.exp_desc with
@@ -79,17 +88,26 @@ let rec pprint_expression ppf exp =
     | Nonrecursive -> fprintf ppf ""
     | _ -> assert false
   in
+  let rec pprint_pat_list ppf ls =
+    match ls with
+        t::[] -> fprintf ppf "%a" pprint_pattern t
+      | t::rem -> fprintf ppf "%a,@ %a" pprint_pattern t pprint_pat_list rem
+      | [] -> fprintf ppf ""
+  and pprint_pattern ppf pat =
+    match pat.ppat_desc with
+        Ppat_any -> fprintf ppf "_"
+      | Ppat_var x -> fprintf ppf "%s" x
+      | Ppat_tuple ts -> fprintf ppf "(%a)" pprint_pat_list ts
+      | _ -> assert false
+  in
   let pprint_and ppf = function
     | [] -> fprintf ppf "@ "
     |  _ -> fprintf ppf "@ and@ " 
   in
   let rec pprint_binds ppf = function
-    | ({ppat_desc = Ppat_any}, e)::rem ->
-      fprintf ppf "@[_@ =@;<1 2>%a%a%a@]" pprint_expression e pprint_and rem pprint_binds rem
-    | ({ppat_desc = Ppat_var f}, e)::rem ->
-      fprintf ppf "@[%s@ =@;<1 2>%a%a%a@]" f pprint_expression e pprint_and rem pprint_binds rem
+    | (pat, e)::rem ->
+      fprintf ppf "@[%a@ =@;<1 2>%a%a%a@]" pprint_pattern pat pprint_expression e pprint_and rem pprint_binds rem
     | [] -> fprintf ppf ""
-    | _ -> assert false
   in
   let rec pprint_exp ppf e =
     match e.pexp_desc with

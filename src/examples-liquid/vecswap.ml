@@ -10,7 +10,7 @@ let rec sortRange arr start n =
     in
     let y = Random.int n in 
      (* vecswap 0 (n/2) (n/2-1)*)
-      vecswap 0 y (min ((n-y)-1) y) 
+      (*vecswap 0 y (min ((n-y)-1) y)*) 
 in 
 let _n = Random.self_init () in
 let vec = Array.make ((Random.int 30) + 5) 0 in
