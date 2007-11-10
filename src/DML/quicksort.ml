@@ -73,68 +73,73 @@ let rec sortRange arr start n =
 	   			 let newpn = med3 pn_minus_2_d pn_minus_d pn in 
 							med3 newp1 newpm newpn*)
 	in	
-
+  (* when the left ends are incremented below we will never be able to prove
+   * this because the qualifiers in pa will have to refer to pb through a
+   * tuple *)
   let rec quickSort a n =
     let rec bottom limit pa pb = 
 			let arg = (pa, pb) in
       if limit < pb then arg else
 			if item a < item pb then arg else
 				if item pb < item a then bottom limit pa (pb+1) else
-						(swap pa pb; bottom limit (pa+1) (pb+1))
+						(swap pa pb; bottom limit pa(*(pa+1)*) (pb+1))
 		in 
     let rec top limit pc pd = 
 			let arg = (pc, pd) in
       if pc < limit then arg else
       if item pc < item a then arg else
 			if item a < item pc then top limit (pc-1) pd else
-			(swap pc pd; top limit (pc-1) (pd-1)) 
+			(swap pc pd; top limit (pc-1) pd(*(pd-1)*)) 
     in 
     let rec split pa pb pc pd =
-			let bot = bottom pc pa pb in
-			let newpa = fst bot in
-			let newpb = snd bot in
-			let top = top pb pc pd in
-			let newpc = fst top in
-			let newpd = snd top in
-      let tmp1 = (newpc, newpd) in
-      let tmp2 = (newpb, tmp1) in
-			let arg = (newpa, tmp2) in
-      if newpc <= newpb then arg
+			let (pa, pb) = bottom pc pa pb in
+      let (pc, pd) = top pb pc pd in
+      if pb >= pc then (pa, pb, pc, pd)
       else 
-      (swap newpb newpc; 
-								 split newpa (newpb+1) (newpc-1) newpd) 
+      (swap pb pc; 
+								 split pa (pb+1) (pc-1) pd) 
  	  in 
 
-
     let pm = getPivot a n in
-    let _n = swap a pm in
-    let pa_pb_pc_pd = split (a+1) (a+1) (a+n-1) (a+n-1) in
-		let pa = fst pa_pb_pc_pd in
-		let tmp1 = snd pa_pb_pc_pd in
-		let pb = fst tmp1 in
-		let tmp2 = snd tmp1 in
-		let pc = fst tmp2 in
-		let pd = snd tmp2 in 
-    let pn = a + n in
+    let _ = swap a pm in
+    let spllit = split (a+1) (a+1) (a+n-1) (a+n-1) in
+    let _ = (fun x -> x) spllit in
+    (*let (pa, pb, pc, pd) = spllit in
+
+
+
+    (*let (pa, pb, pc, pd) = split (a+1) (a+1) (a+n-1) (a+n-1) in*)
+    (*let pn = a + n in
 		
     let r = min (pa-a) (pb-pa) in
-    let _n = vecswap a (pb-r) r in
+    let _ = vecswap a (pb-r) r in
 
-      (* this ambiguity here with the minus, that was in his code.. *)
     let r = min (pd-pc) (pn-pd-1) in
-    let _n = vecswap pb (pn-r) r in
-    let n' = pb - pa in
+    let _ = vecswap pb (pn-r) r in
+    let n' = pb - pa in*)*)
+
+    (*************)
+    let _ = (fun x -> x) a in
+    let _ = (fun x -> x) n in
+    let pn = a + n in
+    let n' = pm in
+    (*************)
 
     (*let _none = if 1 < n' then if n' > 7 then quickSort a n' else insertSort a n' else () in*)
-    let _n = (fun y -> y) a in
-    let _n = (fun y -> y) n' in
-    let _n = if 1 < n' then quickSort a n'(*sortRange arr a n'*) else () in
-    let n' = pd - pc in
+    let _ = (fun y -> y) a in
+    let _ = (fun y -> y) n' in
+    let _ = if 1 < n' then quickSort a n'(*sortRange arr a n'*) else () in
+    (****let n' = pd - pc in*)
+      
+    (************)
+    let n' = n in
+    (************) 
+
 		let pn_minus_n' = pn - n' in
     (*let __11_none = if 1 < n'' then if n'' > 7 then quickSort pn_minus_n'' n'' else insertSort a n'' else () in ()*)
-    let _n = (fun y -> y) pn_minus_n' in
-    let _n = (fun y -> y) n' in
-    let _n = if 1 < n' then quickSort pn_minus_n' n'(*sortRange arr pn_minus_n' n'*) else () in ()
+    let _ = (fun y -> y) pn_minus_n' in
+    let _ = (fun y -> y) n' in
+    let _ = if 1 < n' then quickSort pn_minus_n' n'(*sortRange arr pn_minus_n' n'*) else () in ()
 	in	
 
   (*let sorting _3_start _11_n = if _11_n < 7 then insertSort _3_start _11_n else quickSort _3_start _11_n
@@ -173,15 +178,15 @@ let gen_vec rr =
         else ()
     in fill_arr 0
 in
-let _n = Random.self_init ()in
-let p = Random.int 20 in
+let _ = Random.self_init ()in
+let p = Random.int 20 + 1 in
 let vec = Array.make p 0 in
 let lent = Array.length vec in
-let _none = gen_vec vec in
-let _n = (fun x -> x) lent in
-(*let vec = [|9;8;7;16;6;5;32;4;3;2;1|] in
-let p = 11 in*)
-	sortRange vec 0 lent; sorted vec
+let _ = gen_vec vec in
+let _ = (fun x -> x) lent in
+(*let vec = [|1;5;7;3;68;3;56;9;0;3;21|] in
+let lent = 10 in*)
+	sortRange vec 0 lent; vec(*sorted vec*)
 ;; 
 
 
