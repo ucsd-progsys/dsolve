@@ -11,7 +11,7 @@ let ffor s d body =
 in
 
 let fwhile b body =
-  let rec whiledo () =
+  let rec whiledo _n =
     if b () then (body (); whiledo ()) else ()
   in whiledo ()
 in
@@ -19,12 +19,15 @@ in
 let incr i =
   i := !i + 1
 in
+let decr i =
+  i := !i - 1
+in
 
 (* There is a known performance bug in the code below.  If you find
    it, don't bother reporting it.  You're not supposed to use this
    module anyway. *)
-(*let sort cmp arr =
-  let rec qsort lo hi = 
+let sort cmp arr =
+  (*let rec qsort lo hi = 
     if hi - lo >= 6 then begin 
       let mid = (lo + hi)/2 in
       (* Select median value from among LO, MID, and HI. Rearrange
@@ -43,13 +46,13 @@ in
       if not (cmp pivot (Array.get arr hi))
          || not (cmp (Array.get arr lo) pivot)
       then assert false else ();
-      let b1 () = !i < !j in
-      let bod1 () = 
-        let b2 () = cmp pivot (Array.get arr !i) in
-        let bod2 () = incr i in
+      let b1 _n = !i < !j in
+      let bod1 _n = 
+        let b2 _n = cmp pivot (Array.get arr !i) in
+        let bod2 _n = incr i in
           fwhile b2 bod2;
-        let b3 () = cmp (Array.get arr !j) pivot in
-        let bod3 () = decr j in
+        let b3 _n = cmp (Array.get arr !j) pivot in
+        let bod3 _n = decr j in
           fwhile b3 bod3; 
         if !i < !j then swap arr !i !j else ();
         incr i; decr j
@@ -62,24 +65,24 @@ in
       end
     end 
     else () 
-  in qsort 0 (Array.length arr - 1);
+  in qsort 0 (Array.length arr - 1);*)
   (* Finish sorting by insertion sort *)
   let forbod i = 
     let val_i = (Array.get arr i) in
     if not (cmp (Array.get arr (i - 1)) val_i) then begin
       Array.set arr i (Array.get arr (i - 1));
       let j = ref (i - 1) in
-      let wb () = !j >= 1 && not (cmp (Array.get arr (!j - 1)) val_i) in
-      let wbod () =
+      let wb _n = !j >= 1 && not (cmp (Array.get arr (!j - 1)) val_i) in
+      let wbod _n =
         Array.set arr !j (Array.get arr (!j - 1));
         decr j
       in fwhile wb wbod;
       Array.set arr !j val_i
-    end
+    end else ()
   in ffor 1 (Array.length arr - 1) forbod
 in
 let vec = [|3;5;6;2;4;6;3;345;7;4;2;2;57;3;6;8;3;5;7;4;6;3;6;124;64;34;123|]  in
-sort (<) vec; vec;;*)
+sort (<=) vec; vec;;
 
 
 

@@ -181,7 +181,7 @@ let normalize exp =
         rw_expr (mk_sequence (norm_out e1) (norm_out e2))
      | Pexp_assertfalse ->
         exp
-     | e -> printf "@[Bad expr to norm_out:@\n%a@]" Printast.top_phrase (wrap_printable exp); assert false
+     | e -> printf "@[Bad expr to norm_out:@\n%a@]" Qdebug.pprint_expression exp; flush stdout; assert false
 
   and norm_in exp = 
     let rw_expr desc = {pexp_desc = desc; pexp_loc = exp.pexp_loc} in
