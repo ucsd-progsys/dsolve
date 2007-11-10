@@ -27,7 +27,7 @@ in
    it, don't bother reporting it.  You're not supposed to use this
    module anyway. *)
 let sort cmp arr =
-  (*let rec qsort lo hi = 
+  let rec qsort lo hi = 
     if hi - lo >= 6 then begin 
       let mid = (lo + hi)/2 in
       (* Select median value from among LO, MID, and HI. Rearrange
@@ -65,7 +65,7 @@ let sort cmp arr =
       end
     end 
     else () 
-  in qsort 0 (Array.length arr - 1);*)
+  in qsort 0 (Array.length arr - 1);
   (* Finish sorting by insertion sort *)
   let forbod i = 
     let val_i = (Array.get arr i) in
