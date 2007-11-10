@@ -72,7 +72,10 @@ let sort cmp arr =
     if not (cmp (Array.get arr (i - 1)) val_i) then begin
       Array.set arr i (Array.get arr (i - 1));
       let j = ref (i - 1) in
-      let wb _n = !j >= 1 && not (cmp (Array.get arr (!j - 1)) val_i) in
+      let _ = (fun x -> x) !j in
+      let _ = (fun x -> x) i in
+      (* ocaml quicksort relies on short circuiting, which we don't guarantee *)
+      let wb _n = let dj = !j in if dj >= 1 then not (cmp (Array.get arr (dj - 1)) val_i) else false in
       let wbod _n =
         Array.set arr !j (Array.get arr (!j - 1));
         decr j
@@ -81,7 +84,7 @@ let sort cmp arr =
     end else ()
   in ffor 1 (Array.length arr - 1) forbod
 in
-let vec = [|3;5;6;2;4;6;3;345;7;4;2;2;57;3;6;8;3;5;7;4;6;3;6;124;64;34;123|]  in
+let vec = [|19;18;17;16;15;14;13;12;11;10;9;8;7;6;5;4;3;2;1;0|]  in
 sort (<=) vec; vec;;
 
 
