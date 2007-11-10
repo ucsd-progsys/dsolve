@@ -82,6 +82,15 @@ let split cstrs =
           | (Frame.Ftuple t1s, Frame.Ftuple t2s) ->
               let make_subframe t1 t2 = SubFrame(env, guard, t1, t2) in
                 split_rec flat ((List.map2 make_subframe t1s t2s) @ cs)
+          | (Frame.Frecord (_, recframes1), Frame.Frecord (_, recframes2)) ->
+              let make_subframe rest (recf1, muta) (recf2, _) =
+                let invar_cs = match muta with
+                  | Asttypes.Immutable -> rest
+                  | Asttypes.Mutable -> SubFrame (env, guard, recf2, recf1) :: rest
+                in SubFrame (env, guard, recf1, recf2) :: invar_cs
+              in
+              let new_cs = List.fold_left2 make_subframe cs recframes1 recframes2 in
+                split_rec flat new_cs
           | (f1, f2) -> printf "@[Can't@ split:@ %a@ <:@ %a@]" Frame.pprint f1 Frame.pprint f2; assert false
         end
     (* ming: for type checking, when we split WFFrames now, we need to keep
@@ -105,6 +114,10 @@ let split cstrs =
               split_rec (WFRefinement (Lightenv.add qual_test_var f env, r) :: flat) cs
           | Frame.Ftuple ts ->
               split_rec flat ((List.map (fun t -> WFFrame (env, t)) ts) @ cs)
+          | Frame.Frecord (_, fs) ->
+              let wf_rec rest (recf, _) = WFFrame (env, recf) :: rest in
+              let new_cs = List.fold_left wf_rec cs fs in
+                split_rec flat new_cs
           | Frame.Fvar _
           | Frame.Funknown ->
               split_rec flat cs
