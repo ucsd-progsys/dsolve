@@ -92,15 +92,26 @@ let fresh_with_var_fun ty env fresh_ref_var =
        (* pmr: badness; should be handled just fine by well-formedness constraints,
           which would effectively effect the same effect *)
       | Tconstr(p, tyl, _) ->
-          begin match (Env.find_type p env).type_kind with
-            | Type_abstract
-            | Type_variant _ ->
-                if Path.same p Predef.path_unit || Path.same p Predef.path_float then
-                  Fconstr (p, [], ([], Qconst []))
-                else
-                  Fconstr (p, List.map fresh_rec tyl, fresh_ref_var ())
-            | Type_record (fields, _, _) ->
-                Frecord (p, List.map (fun (_, muta, typ) -> (fresh_rec typ, muta)) fields)
+          let ty_decl = Env.find_type p env in
+            begin match ty_decl.type_kind with
+              | Type_abstract
+              | Type_variant _ ->
+                  if Path.same p Predef.path_unit || Path.same p Predef.path_float then
+                    Fconstr (p, [], ([], Qconst []))
+                  else
+                    Fconstr (p, List.map fresh_rec tyl, fresh_ref_var ())
+              | Type_record (fields, _, _) ->
+                  (* Tedium ahead:
+                     OCaml stores information about record types in two places:
+                     - The type declaration stores everything that's set in stone about the
+                       type: what its fields are and which variables are the type parameters.
+                     - The type list of the Tconstr contains the actual instantiations of
+                       the tyvars in this instantiation of the record. *)
+                  let param_map = List.map2 (fun tyvar tyinst -> (tyvar, tyinst)) ty_decl.type_params tyl in
+                  let fresh_field (_, muta, typ) =
+                    let field_typ = try List.assoc typ param_map with Not_found -> typ in
+                      (fresh_rec field_typ, muta)
+                  in Frecord (p, List.map fresh_field fields)
           end
       | Tarrow(_, t1, t2, _) ->
           Farrow (None, fresh_rec t1, fresh_rec t2)
@@ -136,25 +147,21 @@ let instantiate fr ftemplate =
             vars := (f, ft) :: !vars;
             ft
           end
-        (* this happens in (hopefully) exactly one case *)
-      (*| (Fconstr(p, [], r), Fvar(_)) ->
-          Fconstr(p, [], r) *)
-      | (Fconstr (p, [], r), Fconstr (_, [], _)) ->
-          Fconstr (p, [], r)
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
           Farrow (l, inst f1 f2, inst f1' f2')
-			| (Fconstr (p, l, r), Fconstr(p', l', r')) ->
-					(*let _ = if Path.same p p' then () else assert false in*)
-					(*let _ = if r = r' then () else assert false in*)
-					Fconstr(p, List.map2 inst l l', r)
+      | (Fconstr (p, l, r), Fconstr(p', l', _)) ->
+	  (*let _ = if Path.same p p' then () else assert false in*)
+	  Fconstr(p, List.map2 inst l l', r)
       | (Ftuple t1s, Ftuple t2s) ->
           Ftuple (List.map2 inst t1s t2s)
+      | (Frecord (p, f1s), Frecord (_, f2s)) ->
+          let inst_rec (f1, m) (f2, _) = (inst f1 f2, m) in
+            Frecord (p, List.map2 inst_rec f1s f2s)
       | (Funknown, Funknown) -> Funknown
       | (f1, f2) ->
           fprintf std_formatter "@[Unsupported@ types@ for@ instantiation:@;<1 2>%a@;<1 2>%a@]@."
 	    pprint f1 pprint f2;
 	    assert false
-      (*| _ -> assert false*)
   in inst fr ftemplate
 
 (* Apply a substitution to a frame, distributing over arrows.  Unaliases any
