@@ -78,7 +78,8 @@ let sort cmp arr =
       let wb _n = let dj = !j in if dj >= 1 then not (cmp (Array.get arr (dj - 1)) val_i) else false in
       let wbod _n =
         Array.set arr !j (Array.get arr (!j - 1));
-        decr j
+        (* added this conditional but not clear it would help *)
+        if !j >= 1 then decr j else ()
       in fwhile wb wbod;
       Array.set arr !j val_i
     end else ()
