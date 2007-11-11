@@ -14,5 +14,6 @@ DMLex/heapsort.ml
 DML/fft.ml
 examples-liquid/vecswap.ml
 examples-liquid/split.ml
-examples-liquid/quicksort.ml
 DML/quicksort.ml
+examples-liquid/quicksort.ml
+examples-liquid/mergesort.ml

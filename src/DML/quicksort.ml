@@ -58,8 +58,7 @@ let rec sortRange arr start n =
     else let p1 = a in
 				 let pm = a + n/2 in
 				 let pn = a + n - 1 in
-           med3 p1 pm pn
-       	 (*if n <= 40 then med3 p1 pm pn else
+       	 if n <= 40 then med3 p1 pm pn else
       		 let d = n / 8 in
 					 let _2d = 2 * d in
 					 let p1_plus_d = p1 + d in
@@ -71,7 +70,7 @@ let rec sortRange arr start n =
            let newp1 = med3 p1 p1_plus_d p1_plus_2_d in
 	   			 let newpm = med3 pm_minus_d pm pm_plus_d in
 	   			 let newpn = med3 pn_minus_2_d pn_minus_d pn in 
-							med3 newp1 newpm newpn*)
+							med3 newp1 newpm newpn
 	in	
   (* when the left ends are incremented below we will never be able to prove
    * this because the qualifiers in pa will have to refer to pb through a
@@ -92,8 +91,8 @@ let rec sortRange arr start n =
 			(swap pc pd; top limit (pc-1) pd(*(pd-1)*)) 
     in 
     let rec split pa pb pc pd =
-			let (pa, pb) = bottom pc pa pb in
-      let (pc, pd) = top pb pc pd in
+			let (_, pb) = bottom pc pa pb in
+      let (pc, _) = top pb pc pd in
       if pb >= pc then (pa, pb, pc, pd)
       else 
       (swap pb pc; 
@@ -101,38 +100,40 @@ let rec sortRange arr start n =
  	  in 
 
     let pm = getPivot a n in
+    let pa = a + 1 in
+    let pd = a + n - 1 in
     let _ = swap a pm in
-    let spllit = split (a+1) (a+1) (a+n-1) (a+n-1) in
+    let spllit = split pa pa pd pd in
     let _ = (fun x -> x) spllit in
-    (*let (pa, pb, pc, pd) = spllit in
+    let (_, pb, pc, _) = spllit in
 
 
 
     (*let (pa, pb, pc, pd) = split (a+1) (a+1) (a+n-1) (a+n-1) in*)
-    (*let pn = a + n in
+    let pn = a + n in
 		
     let r = min (pa-a) (pb-pa) in
     let _ = vecswap a (pb-r) r in
 
-    let r = min (pd-pc) (pn-pd-1) in
-    let _ = vecswap pb (pn-r) r in
-    let n' = pb - pa in*)*)
+    (*let r = min (pd-pc) (pn-pd-1) in
+    let _ = vecswap pb (pn-r) r in*)
+    let n' = pb - pa in
 
     (*************)
-    let _ = (fun x -> x) a in
+    (*let _ = (fun x -> x) a in
     let _ = (fun x -> x) n in
     let pn = a + n in
-    let n' = pm in
+    let n' = 0 in*)
     (*************)
 
     (*let _none = if 1 < n' then if n' > 7 then quickSort a n' else insertSort a n' else () in*)
     let _ = (fun y -> y) a in
     let _ = (fun y -> y) n' in
     let _ = if 1 < n' then quickSort a n'(*sortRange arr a n'*) else () in
-    (****let n' = pd - pc in*)
+    let n' = pd - pc in
       
     (************)
-    let n' = n in
+    (*let n' = 0 in*)
     (************) 
 
 		let pn_minus_n' = pn - n' in
@@ -145,7 +146,7 @@ let rec sortRange arr start n =
   (*let sorting _3_start _11_n = if _11_n < 7 then insertSort _3_start _11_n else quickSort _3_start _11_n
   in*) 
   (*sorting start n*) 
-    quickSort start n
+    (*quickSort start n*)
   (*if n <= 7 then insertSort start n else quickSort start n*)
 (* withtype {start:nat}{n:nat | start+n <= size }
          'a vect(size) * int(start) * int(n) * ('a * 'a -> order) -> unit *)

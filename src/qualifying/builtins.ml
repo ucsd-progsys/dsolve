@@ -62,7 +62,7 @@ let mk_array f qs = Frame.Fconstr(Predef.path_array, [f], ([], Frame.Qconst qs))
 
 let mk_named path fs qs env = Frame.Fconstr(find_type_path path env, fs, ([], Frame.Qconst qs))
 
-let mk_ref f env = Frame.Frecord (find_type_path ["ref"; "Pervasives"] env, [(f, Mutable)])
+let mk_ref f env = Frame.Frecord (find_type_path ["ref"; "Pervasives"] env, [(f, "contents", Mutable)], ([], Frame.Qconst []))
 
 let mk_bigarray_kind a b qs env = mk_named ["kind"; "Bigarray"] [a; b] qs env
 
@@ -378,6 +378,13 @@ let equality_refinement exp =
 
 let size_lit_refinement i =
 	let x = Path.mk_ident "x" in
-		([], Frame.Qconst [(Path.mk_ident "<size_lit_eq>",
-											 x,
-											 Predicate.equals(Predicate.FunApp("Array.length", Predicate.Var x), Predicate.PInt(i)))])
+	  ([], Frame.Qconst [(Path.mk_ident "<size_lit_eq>",
+			      x,
+			      Predicate.equals(Predicate.FunApp("Array.length", Predicate.Var x), Predicate.PInt(i)))])
+
+let field_eq_qualifier name pexp =
+  let x = Path.mk_ident "x" in
+    (Path.mk_ident "<field_eq>",
+     x,
+     Predicate.equals (Predicate.Field (name, Predicate.Var x), pexp))
+

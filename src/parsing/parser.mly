@@ -1451,6 +1451,7 @@ predicate:
 pexpression:
     INT                                         { mkpredexp (Ppredexp_int $1) }
   | LIDENT                                      { mkpredexp (Ppredexp_var $1) }
+  | LIDENT DOT LIDENT                           { mkpredexp (Ppredexp_field($3, $1)) }
   /* Note the hack here to keep funapps applied to variables 
      at this point the only funapps we want to allow are Array.length */
 	| val_longident LIDENT {							

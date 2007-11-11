@@ -62,21 +62,32 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
          fields might be permuted. *)
       let (_, sorted_exprs) = List.split (List.sort compare_labels labeled_exprs) in
       let (subframes, new_cs, new_fm) = constrain_subexprs env sorted_exprs cstrs framemap in
-      let subframe_field cs_rest fsub (fsup, _) = SubFrame (env, guard, fsub, fsup) :: cs_rest in
+      let subframe_field cs_rest fsub (fsup, _, _) = SubFrame (env, guard, fsub, fsup) :: cs_rest in
       let f = Frame.fresh t tenv in
       let new_cs = match f with
-        | Frame.Frecord (_, recframes) ->
+        | Frame.Frecord (_, recframes, _) ->
             List.fold_left2 subframe_field new_cs subframes recframes
+        | _ -> assert false
+      in
+      let f = match f with
+        | Frame.Frecord (p, recframes, _) ->
+            let field_qualifier (_, name, _) fexpr = Builtins.field_eq_qualifier name (expression_to_pexpr fexpr) in
+              Frame.Frecord (p, recframes, ([], Frame.Qconst (List.map2 field_qualifier recframes sorted_exprs)))
         | _ -> assert false
       in (f, WFFrame (env, f) :: new_cs, new_fm)
   | (Texp_field (expr, label_desc), t) ->
-      let (record_frame, new_cs, new_fm) = constrain expr env guard cstrs framemap in
-      let (field_frame, _) = match record_frame with
-        | Frame.Frecord (_, recframes) -> List.nth recframes label_desc.lbl_pos
+      let (recframe, new_cs, new_fm) = constrain expr env guard cstrs framemap in
+      let fieldname = match recframe with
+        | Frame.Frecord (_, fs, _) ->
+            begin match List.nth fs label_desc.lbl_pos with
+                (_, name, _) -> name
+            end
         | _ -> assert false
       in
+      let pexpr = Predicate.Field (fieldname, expression_to_pexpr expr) in
       let f = Frame.fresh t tenv in
-        (f, SubFrame (env, guard, field_frame, f) :: WFFrame (env, f) :: new_cs, new_fm)
+      let f = Frame.apply_refinement (Builtins.equality_refinement pexpr) f in
+        (f, WFFrame (env, f) :: new_cs, new_fm)
 	| (Texp_ifthenelse(e1, e2, Some e3), t) ->
             let f = Frame.fresh t tenv in
             let (f1, cstrs1, fm1) = constrain e1 env guard cstrs framemap in
@@ -130,9 +141,11 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
                fm')
         | _ -> assert false
 	    end 
-	| (Texp_ident _, {desc = Tconstr (p, [], _)}) ->
-            (Frame.Fconstr (p, [], Builtins.equality_refinement (expression_to_pexpr e)),
-             cstrs, framemap)
+	| (Texp_ident _, ({desc = Tconstr (p, [], _)} as t)) ->
+      let r = Builtins.equality_refinement (expression_to_pexpr e) in
+      (* Tconstr could be a record or frame to us, so we punt the issue *)
+      let f = Frame.fresh t tenv in
+        (Frame.apply_refinement r f, cstrs, framemap)
   (* ming: subtyping may be better for the inner types when a complex type is
    * pulled up by name, but we have no way of expressing what we actually want,
    * which is that each element is of the same shape with an equality_refinement

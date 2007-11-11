@@ -21,7 +21,8 @@ type pexpr =
   | Var of Path.t
   | Pvar of Path.t * int
   | FunApp of string * pexpr
-  | Binop of pexpr * binop * pexpr 
+  | Binop of pexpr * binop * pexpr
+  | Field of string * pexpr
 
 type t =
     True
@@ -54,6 +55,8 @@ let rec pprint_pexpr ppf = function
         | Times -> "*"
 				| Div -> "/"
       in fprintf ppf "@[(%s@ %a@ %a)@]" opstr pprint_pexpr p pprint_pexpr q
+  | Field (f, pexp) ->
+      fprintf ppf "@[%a.%s@]" pprint_pexpr pexp f
 
 let rec pprint ppf = function
   | True ->
@@ -108,6 +111,8 @@ let rec pexp_map_vars f pexp =
         FunApp (fn, map_rec e)
     | Binop (e1, op, e2) ->
         Binop (map_rec e1, op, map_rec e2)
+    | Field (f, pexp) ->
+        Field (f, map_rec pexp)
     | e ->
         e
   in map_rec pexp
@@ -145,6 +150,8 @@ let vars p =
     | Binop(e1, _, e2) ->
         let vars' = exp_vars_rec vars e1 in
           exp_vars_rec vars' e2
+    | Field(f, e) ->
+        exp_vars_rec vars e
   in
   let rec vars_rec vars = function
       True ->
@@ -183,6 +190,8 @@ let rec transl_predicate p =
 	  FunApp (f, transl_pexpression e)
       | Ppredexp_binop (e1, op, e2) ->
 	  Binop (transl_pexpression e1, transl_op op, transl_pexpression e2)
+      | Ppredexp_field (f, r) ->
+          Field (f, Var (Path.mk_ident r))
   in
   let transl_rel = function
     | Pred_eq -> Eq

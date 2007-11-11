@@ -80,6 +80,12 @@ let rec split3 = function
   | (x, y, z) :: rest ->
       let (rx, ry, rz) = split3 rest in (x :: rx, y :: ry, z :: rz)
 
+let mapi f l =
+  let rec map_rec n = function
+    | [] -> []
+    | h :: rest -> f h n :: map_rec (n + 1) rest
+  in map_rec 0 l
+
 (* Options *)
 
 let may f = function

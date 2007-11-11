@@ -54,9 +54,8 @@ module YicesProver  =
     type yices_instance = { 
       c : Y.yices_context;
       t : Y.yices_type;
-			ar: Y.yices_type;
       f : Y.yices_type;
-			binop: Y.yices_type; (* for uninterp ops *)
+      binop: Y.yices_type; (* for uninterp ops *)
       d : (string,Y.yices_var_decl) Hashtbl.t;
       mutable ds : string list ;
       mutable count : int;
@@ -105,6 +104,11 @@ module YicesProver  =
 	   | Predicate.Div ->
 	       let (fd, e1, e2) = (yicesVar me "_DIV" me.binop, yicesExp me e1, yicesExp me e2) in
 		 Y.yices_mk_app me.c fd [|e1; e2|])
+      | Predicate.Field (f, e) ->
+          (* pmr: this crucially depends on not having two fields with the same name in the
+             same module *)
+          let (fn, e') = (yicesVar me (Printf.sprintf "SELECT_%s" f) me.f, yicesExp me e) in
+            Y.yices_mk_app me.c fn [|e'|]
 
     let rec yicesPred me p = 
       match p with 
@@ -130,13 +134,10 @@ module YicesProver  =
       let c = Y.yices_mk_context () in
       let _ = if !Clflags.log_queries then Y.yices_enable_log_file "yices.log" else () in
       let t = Y.yices_mk_type c "int" in
-      let ar = Y.yices_mk_type c "a' array" in
-      (*let unknown = Y.yices_mk_type c "unk" in*)
-			(* need a blind uninterp function again eventually *)
       let binop = Y.yices_mk_function_type c [| t; t |] t in
-      let f = Y.yices_mk_function_type c [| ar |] t in
+      let f = Y.yices_mk_function_type c [| t |] t in
       let d = Hashtbl.create 37 in
-        { c = c; t = t; ar = ar; f = f; binop = binop; d = d; ds = []; count = 0; i = 0; }
+        { c = c; t = t; f = f; binop = binop; d = d; ds = []; count = 0; i = 0; }
 
     let push p =
       me.count <- me.count + 1;

@@ -17,7 +17,7 @@ type t =
   | Fconstr of Path.t * t list * refinement
   | Farrow of Path.t option * t * t
   | Ftuple of t list
-  | Frecord of Path.t * (t * mutable_flag) list
+  | Frecord of Path.t * (t * string * mutable_flag) list * refinement
   | Funknown
 
 val pprint: formatter -> t -> unit
@@ -33,6 +33,7 @@ val apply_solution: Qualifier.t list Lightenv.t -> t -> t
 val refinement_predicate:
   Qualifier.t list Lightenv.t -> Path.t -> refinement -> Predicate.t
 val refinement_var: t -> Path.t option
+val apply_refinement: refinement -> t -> t
 val predicate:
   Qualifier.t list Lightenv.t -> Path.t -> t -> Predicate.t
 val refinement_well_formed:

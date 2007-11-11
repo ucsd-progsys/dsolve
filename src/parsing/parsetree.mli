@@ -149,6 +149,7 @@ and predexp_desc =
   | Ppredexp_pvar of string * int
   | Ppredexp_app of string * pexpression
   | Ppredexp_binop of pexpression * predexp_op * pexpression
+  | Ppredexp_field of string * string
 
 and predicate_declaration =
     { ppred_desc: pred_desc;

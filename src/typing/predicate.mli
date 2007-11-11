@@ -20,6 +20,7 @@ type pexpr =
   | Pvar of Path.t * int
   | FunApp of string * pexpr
   | Binop of pexpr * binop * pexpr 
+  | Field of string * pexpr
 
 type t =  
     True
