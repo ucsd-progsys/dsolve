@@ -90,7 +90,11 @@ let split cstrs =
                 in SubFrame (env, guard, recf1, recf2) :: invar_cs
               in
               let new_cs = List.fold_left2 make_subframe cs recframes1 recframes2 in
-                split_rec (SubRefinement (env, guard, r1, r2) :: flat) new_cs
+              let new_flat =
+                if List.exists (fun (_, _, muta) -> muta = Asttypes.Mutable) recframes1 then
+                  SubRefinement (env, guard, r2, r1) :: flat
+                else flat
+              in split_rec (SubRefinement (env, guard, r1, r2) :: new_flat) new_cs
           | (f1, f2) -> printf "@[Can't@ split:@ %a@ <:@ %a@]" Frame.pprint f1 Frame.pprint f2; assert false
         end
     (* ming: for type checking, when we split WFFrames now, we need to keep
