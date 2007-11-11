@@ -1,3 +1,4 @@
+examples-liquid/quicksort.ml
 DMLex/simplex.ml
 DMLex/gauss.ml
 examples-liquid/unbounded.ml
@@ -14,5 +15,4 @@ DMLex/heapsort.ml
 DML/fft.ml
 examples-liquid/vecswap.ml
 examples-liquid/split.ml
-examples-liquid/quicksort.ml
 DML/quicksort.ml
