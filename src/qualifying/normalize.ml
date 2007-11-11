@@ -198,6 +198,10 @@ let normalize exp =
         rw_expr (mk_sequence (norm_out e1) (norm_out e2))
      | Pexp_assertfalse ->
         exp
+     | Pexp_record(_, _) 
+     | Pexp_field(_, _) ->
+          (* i will deal with you in the AM, my man *)
+        exp
      | e -> printf "@[Bad expr to norm_out:@\n%a@]" Qdebug.pprint_expression exp; flush stdout; assert false
 
   and norm_in exp = 
@@ -277,6 +281,10 @@ let normalize exp =
                                 | None -> mk_ifthenelse (mk_ident_loc blbl lo_b) (norm_out e2) (norm_out e3)),
                                        dummy) in
          (this, Some (rw_expr e_this), lo_this)::(List.tl b)
+     | Pexp_record(_, _) 
+     | Pexp_field(_, _) ->
+          (* i will deal with you in the AM, my man *)
+         [(fresh_name (), Some exp, loc)]
      | e -> printf "@[Bad expr to norm_in:@\n%a@]" Printast.top_phrase (wrap_printable exp); assert false
   in
   norm_out exp
