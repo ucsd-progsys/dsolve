@@ -303,15 +303,20 @@ let pred_is_well_typed env p =
         (* pmr: I'm not even going to bother right now *)
         (* ming: hence the huge hack *)
         arg_shape (Builtins.ext_find_type_path "array2") frame_int
-      else frame_int (* pmr: yes, I am wickedly subverting this test on purpose *)
+      else assert false
   | Predicate.Binop (p1, op, p2) ->
       let p1_shp = get_expr_shape p1 in
       let p1_int = same_shape p1_shp frame_int in
       let p2_shp = get_expr_shape p2 in
       let p2_int = same_shape p2_shp frame_int in
       if p1_int && p2_int then frame_int else Funknown
-  | Predicate.Field (f, r) ->
-      frame_int (* pmr: obvious scaffolding for the moment *)
+  | Predicate.Field (name, r) ->
+      begin match get_expr_shape r with
+        | Frecord (_, fs, _) ->
+            let is_referenced_field (_, name2, _) = String.compare name name2 = 0 in
+              (match (List.find is_referenced_field fs) with (f, _, _) -> f)
+        | _ -> assert false
+      end
   and pred_shape_is_bool = function
   | Predicate.True -> true
   | Predicate.Not p -> pred_shape_is_bool p 
