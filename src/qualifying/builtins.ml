@@ -371,4 +371,3 @@ let field_eq_qualifier name pexp =
     (Path.mk_ident "<field_eq>",
      x,
      Predicate.equals (Predicate.Field (name, Predicate.Var x), pexp))
-
