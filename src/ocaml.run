@@ -36,9 +36,9 @@ cat $enm".quals" > /dev/null
 
 if [[ $? = 0 ]]
 then
-  $catt | nice -n19 rlwrap ./ocaml$argv
+  $catt | nice -n19 rlwrap ./ocaml $argv
 else
-  nice -n19 rlwrap ./ocaml$argv < $enm
+  nice -n19 rlwrap ./ocaml $argv < $enm
 fi
 
 EXIT=$?
