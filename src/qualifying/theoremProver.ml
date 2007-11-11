@@ -94,4 +94,9 @@ let valid p =
   check_result DefaultProver.valid BackupProver.valid (fixdiv p)
 
 let implies p q =
-  check_result DefaultProver.implies BackupProver.implies (fixdiv p, fixdiv q)
+  let (p, q) = (fixdiv p, fixdiv q) in
+  let res = check_result DefaultProver.implies BackupProver.implies (fixdiv p, fixdiv q) in
+    if !Clflags.dump_queries then
+      Format.printf "@[%a@;<1 0>=>@;<1 0>%a@;<1 2>(%B)@]@.@."
+        Predicate.pprint p Predicate.pprint q res;
+    res

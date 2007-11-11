@@ -44,6 +44,8 @@ val samelist: ('a -> 'a -> bool) -> 'a list -> 'a list -> bool
 
 val split3 : ('a * 'b * 'c) list -> ('a list * 'b list * 'c list)
 
+val mapi : ('a -> int -> 'b) -> 'a list -> 'b list
+
 val may: ('a -> unit) -> 'a option -> unit
 val may_map: ('a -> 'b) -> 'a option -> 'b option
 
