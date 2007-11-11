@@ -338,8 +338,7 @@ let pred_is_well_typed env p =
         (same_shape p1_shp p2_shp) && (same_shape p1_shp frame_int || 
                                        (function Fvar _ -> true | _ -> false) p1_shp ||
                                        same_shape p1_shp frame_float) 
-    in
-      pred_shape_is_bool p
+    in pred_shape_is_bool p
 
 let refinement_well_formed env solution r qual_var =
   let valu = qual_var in
