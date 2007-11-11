@@ -24,7 +24,7 @@ do
   cat $i.quals 1> /dev/null 2> /dev/null
   if [[ $? != 0 ]]
   then
-    ./ocaml $QUALFLAGS < $i 1> /dev/null 2> $i.quals
+    $OCAML $QUALFLAGS $i 1> /dev/null 2> $i.quals
   fi
 done
 
