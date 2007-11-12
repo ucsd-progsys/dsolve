@@ -135,7 +135,10 @@ let normalize exp =
     in
     let proc_list es skel =
      let lss = List.map norm_in es in
-     let lbls = List.map (fun ls -> let (lbl, _, lo) = List.hd ls in (mk_ident_loc lbl lo)) lss in
+     let lbls = List.map (fun ls -> let (lbl, e, lo) = List.hd ls in 
+                                        match e with
+                                            Some e -> if is_const e then e else mk_ident_loc lbl lo
+                                          | None -> mk_ident_loc lbl lo) lss in
      let init = skel lbls in
       rw_expr (List.fold_left (wrap Nonrecursive) init (List.concat (List.rev lss)))
     in
