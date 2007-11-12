@@ -35,21 +35,21 @@ export LD_LIBRARY_PATH=./yices/lib
 #yah, ugly, ok
 catargs="" 
 
-cat $enm".types" > /dev/null
+cat $enm.types &> /dev/null
 
 if [[ $? = 0 ]]
 then
   catargs=$catargs" "$enm".types"
 fi
 
-cat $enm".hquals" > /dev/null
+cat $enm.hquals &> /dev/null
 
 if [[ $? = 0 ]]
 then
   catargs=$catargs" "$enm".hquals"
 fi
 
-cat $enm".quals" > /dev/null
+cat $enm.quals &> /dev/null
 
 if [[ $? = 0 ]]
 then
@@ -58,7 +58,12 @@ fi
 
 catargs=$catargs" "$enm
 
-cat $catargs | nice -n19 rlwrap ./ocaml $argv
+if [[ $enm = "" ]]
+then
+  rlwrap ./ocaml $argv
+else
+  cat$catargs | nice -n19 rlwrap ./ocaml $argv
+fi
 
 EXIT=$?
 

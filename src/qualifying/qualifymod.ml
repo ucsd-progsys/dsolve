@@ -41,7 +41,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
     let (f, cs, fm) =
       match (e.exp_desc, repr e.exp_type) with
 	  (Texp_constant(Const_int n), {desc = Tconstr(path, [], _)}) ->
-            let _ = Qualgen.add_constant n in
+            let _ = if !Clflags.dump_qualifs then Qualgen.add_constant n else 5 in
             (Frame.Fconstr (path, [], Builtins.equality_refinement (Predicate.PInt n)),
              cstrs, framemap)
   | (Texp_constant(Const_float n), t) ->
@@ -116,7 +116,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
               match (t.desc, pat.pat_desc) with
                   (* pmr: needs to be generalized to match other patterns *)
                   (Tarrow(_, t_in, t_out, _), Tpat_var x) ->
-                    Qualgen.add_label(Path.Pident x, t_in)
+                    if !Clflags.dump_qualifs then Qualgen.add_label(Path.Pident x, t_in) else ()
                 | _ -> ()
             in
               (*match e'.exp_type with  
@@ -188,7 +188,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
 	| (Texp_let (Nonrecursive, [(pat, e1)], e2), t) ->
             let _ = if !under_lambda = 0 || not(!Clflags.less_qualifs) then
               match pat.pat_desc with
-                |  Tpat_var x -> Qualgen.add_label (Path.Pident x, e1.exp_type)
+                |  Tpat_var x -> if !Clflags.dump_qualifs then Qualgen.add_label (Path.Pident x, e1.exp_type) else ()
                 (*| Tpat_tuple *)
                 | _ -> ()
             else () in
@@ -230,8 +230,8 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
               (* ming: qualgen code. generate qualifiers for all binding vars if
                * we're currently under a lambda build a bitmap for each bind to
                * manage lambda detection *)
-            let qualgen_addlbls var exp = Qualgen.add_label (var, exp.exp_type) in
-            let _ = if (!under_lambda = 0 || not(!Clflags.less_qualifs)) && !Clflags.dump_qualifs then List.iter2 qualgen_addlbls vars exprs  
+            let qualgen_addlbls var exp = if !Clflags.dump_qualifs then Qualgen.add_label (var, exp.exp_type) else () in
+            let _ = if !under_lambda = 0 || not(!Clflags.less_qualifs) then List.iter2 qualgen_addlbls vars exprs  
                                                                        else () 
             in
             let qualgen_is_function e = 
@@ -273,7 +273,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
                :: binding_cstrs,
                fmap2)
 	| (Texp_array(es), t) ->
-            let _ = Qualgen.add_constant (List.length es) in
+            let _ = if !Clflags.dump_qualifs then Qualgen.add_constant (List.length es) else 5 in
 						let f = Frame.fresh t tenv in
 						let (f, fs) = (function Frame.Fconstr(p, l, _) -> (Frame.Fconstr(p, l, Builtins.size_lit_refinement(List.length es)), l) | _ -> assert false) f in
 						let list_rec (fs, c, m) e = (function (f, c, m) -> (f::fs, c, m)) (constrain e env guard c m) in

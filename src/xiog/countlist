@@ -1,0 +1,13 @@
+DML/simplex.dml
+DML/gauss.dml
+DML/bs2.dml
+DML/matmult.dml
+deCaml/bsearch.ml
+deCaml/dotprod.ml
+deCaml/dotprod2.ml
+deCaml/insertsort.ml
+deCaml/queen.ml
+deCaml/tower.ml
+DML/bcopy.dml
+DML/heapsort.dml
+deCaml/fft.ml

@@ -5,6 +5,7 @@ FLAGS="-dframes -anormal"
 QUALFLAGS="-dqualifs -lqualifs"
 POSFILE=postests
 NEGFILE=negtests
+#HANDQUALS_ONLY="yep"
 
 if [[ $1 == "" ]]
 then
@@ -14,20 +15,26 @@ else
 fi
 
 rm -f $TMPDIR/*.lilog
+rm -f DML/*.quals
+rm -f DMLex/*.quals
 
 FILE=$POSFILE" "$NEGFILE
 
 echo Generating qualifiers where needed...
 
-for i in `cat $FILE`
-do
-  cat $i.quals 1> /dev/null 2> /dev/null
-  if [[ $? != 0 ]]
-  then
-    $OCAML $QUALFLAGS $i 1> /dev/null 2> $i.quals
-  fi
-done
-
+if [[ $HANDQUALS_ONLY ]]
+then
+  echo "User specified hand quals only"
+else
+  for i in `cat $FILE`
+  do
+    cat $i.quals 1> /dev/null 2> /dev/null
+    if [[ $? != 0 ]]
+    then
+      $OCAML $QUALFLAGS $i 1> /dev/null 2> $i.quals
+    fi
+  done
+fi
 echo done.
 
 echo RUNNING POSFILE

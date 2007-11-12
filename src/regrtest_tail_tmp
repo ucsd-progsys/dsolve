@@ -15,5 +15,5 @@ do
    d=`expr "$d" : '\([0-9]*\)'`
    let "s = $d - $s"
    f=`head -n$d $i | tail -n$s -`
-   tot=`expr "$
+   tot=`
 done
