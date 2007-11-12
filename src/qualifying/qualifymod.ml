@@ -188,7 +188,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
 	| (Texp_let (Nonrecursive, [(pat, e1)], e2), t) ->
             let _ = if !under_lambda = 0 || not(!Clflags.less_qualifs) then
               match pat.pat_desc with
-                | Tpat_var x -> Qualgen.add_label (Path.Pident x, e1.exp_type)
+                |  Tpat_var x -> Qualgen.add_label (Path.Pident x, e1.exp_type)
                 (*| Tpat_tuple *)
                 | _ -> ()
             else () in
@@ -349,10 +349,17 @@ exception IllQualified of Frame.t LocationMap.t
 let qualify_structure tenv fenv quals str =
   let (newquals, cstrs, fmap) = constrain_structure tenv fenv quals str in
   let instantiated_quals = instantiate_in_environments cstrs quals in
-    Bstats.reset ();
-    try
-      let solution = Bstats.time "solving" (solve_constraints instantiated_quals) cstrs in
-        Bstats.print stdout "\n\nTime to solve constraints:\n";
-        (newquals, LocationMap.map (Frame.apply_solution solution) fmap)
-    with Unsatisfiable solution ->
-      raise (IllQualified (LocationMap.map (Frame.apply_solution solution) fmap))
+    if List.length cstrs = 0 then
+      (* breaks the trivial program, but will make output cleaner while we
+       * gather data *)
+      (newquals, LocationMap.empty)
+    else
+      begin
+      Bstats.reset ();
+      try
+        let solution = Bstats.time "solving" (solve_constraints instantiated_quals) cstrs in
+          Bstats.print stdout "\n\nTime to solve constraints:\n";
+          (newquals, LocationMap.map (Frame.apply_solution solution) fmap)
+      with Unsatisfiable solution ->
+        raise (IllQualified (LocationMap.map (Frame.apply_solution solution) fmap))
+      end
