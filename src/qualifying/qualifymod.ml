@@ -361,7 +361,7 @@ let qualify_structure tenv fenv quals str =
         let solution = Bstats.time "solving" (solve_constraints instantiated_quals) cstrs in
           Bstats.print stdout "\n\nTime to solve constraints:\n";
           Printf.printf "##endtime##\n";
-          (newquals, LocationMap.map (Frame.apply_solution solution) fmap)
+          (newquals, LocationMap.map (Frame.apply_solution (Solution.find solution)) fmap)
       with Unsatisfiable solution ->
-        raise (IllQualified (LocationMap.map (Frame.apply_solution solution) fmap))
+        raise (IllQualified (LocationMap.map (Frame.apply_solution (Solution.find solution)) fmap))
       end

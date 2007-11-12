@@ -29,12 +29,12 @@ val fresh_with_labels: type_expr -> t -> Env.t -> t
 val instantiate: t -> t -> t
 val apply_substitution: substitution -> t -> t
 val label_like: t -> t -> t
-val apply_solution: Qualifier.t list Lightenv.t -> t -> t
+val apply_solution: (Path.t -> Qualifier.t list) -> t -> t
 val refinement_predicate:
-  Qualifier.t list Lightenv.t -> Path.t -> refinement -> Predicate.t
+  (Path.t -> Qualifier.t list) -> Path.t -> refinement -> Predicate.t
 val refinement_var: t -> Path.t option
 val apply_refinement: refinement -> t -> t
 val predicate:
-  Qualifier.t list Lightenv.t -> Path.t -> t -> Predicate.t
+  (Path.t -> Qualifier.t list) -> Path.t -> t -> Predicate.t
 val refinement_well_formed:
-  t Lightenv.t -> Qualifier.t list Lightenv.t -> refinement -> Path.t -> bool
+  t Lightenv.t -> (Path.t -> Qualifier.t list) -> refinement -> Path.t -> bool

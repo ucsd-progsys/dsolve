@@ -215,7 +215,7 @@ let fresh_with_labels t f env =
   label_like (fresh t env) f
 
 let refinement_apply_solution solution = function
-    (subs, Qvar k) -> (subs, Qconst (Lightenv.find k solution))
+    (subs, Qvar k) -> (subs, Qconst (solution k))
   | r -> r
 
 let apply_solution solution fr =
@@ -234,7 +234,7 @@ let apply_solution solution fr =
 
 let refinement_predicate solution qual_var (subs, qualifiers) =
   let quals = match qualifiers with
-    | Qvar k -> (try Lightenv.find k solution with Not_found -> assert false)
+    | Qvar k -> (try solution k with Not_found -> assert false)
     | Qconst qs -> qs
   in
   let unsubst = Predicate.big_and (List.map (Qualifier.apply qual_var) quals) in

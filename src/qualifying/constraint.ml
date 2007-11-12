@@ -23,6 +23,8 @@ end
 
 module VarMap = Map.Make(VarName)
 
+module Solution = Hashtbl.Make(VarName)
+
 let pprint ppf = function
   | SubFrame (_, _, f1, f2) ->
       fprintf ppf "@[%a@ <:@;<1 2>%a@]" Frame.pprint f1 Frame.pprint f2
@@ -133,18 +135,21 @@ let split cstrs =
         end
   in split_rec [] cstrs
 
+let solution_map solution = Solution.find solution
+
 let environment_predicate solution env =
-  Predicate.big_and (Lightenv.maplist (Frame.predicate solution) env)
+  Predicate.big_and (Lightenv.maplist (Frame.predicate (solution_map solution)) env)
 
 let constraint_sat solution = function
   | SubRefinement (env, guard, r1, r2) ->
       let envp = environment_predicate solution env in
-      let p1 = Frame.refinement_predicate solution qual_test_var r1 in
-      let p2 = Frame.refinement_predicate solution qual_test_var r2 in
+      let smap = solution_map solution in
+      let p1 = Frame.refinement_predicate smap qual_test_var r1 in
+      let p2 = Frame.refinement_predicate smap qual_test_var r2 in
         TheoremProver.implies (Predicate.big_and [envp; guard; p1]) p2
   | WFRefinement (env, r) ->
     (* ming: this is an error check. it shouldn't be possible for this to be tripped*)
-      Frame.refinement_well_formed env solution r qual_test_var
+      Frame.refinement_well_formed env (solution_map solution) r qual_test_var
 
 let pprint_env_pred ppf (solution, env) = 
   Predicate.pprint ppf (environment_predicate solution env)
@@ -155,14 +160,13 @@ let pprint_subref solution ppf (env, guard, r1, r2) =
     Predicate.pprint guard Frame.pprint_refinement r1 Frame.pprint_refinement r2
 
 let pprint_ref_pred ppf (solution, r) =
-  Predicate.pprint ppf (Frame.refinement_predicate solution qual_test_var r)
+  Predicate.pprint ppf (Frame.refinement_predicate (solution_map solution) qual_test_var r)
 
-exception Unsatisfiable of Qualifier.t list Lightenv.t
+exception Unsatisfiable of Qualifier.t list Solution.t
 
 let rec solve_wf_constraints solution = function
-  | [] -> solution
+  | [] -> ()
   | (env, (subs, Frame.Qvar k)) :: cs ->
-      let solution' = solve_wf_constraints solution cs in
       (* ming: we have to pass qual_test_var into the WF checker now because
                we've agreed with the splitting code to use that as the predicate
                var. the only way around this would be to keep the frame from
@@ -170,9 +174,10 @@ let rec solve_wf_constraints solution = function
                splitting. *)
       let refined_quals =
         List.filter
-          (fun q -> Frame.refinement_well_formed env solution' (subs, Frame.Qconst [q]) qual_test_var)
-          (try Lightenv.find k solution' with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k); raise Not_found))
-      in Lightenv.add k refined_quals solution'
+          (fun q -> Frame.refinement_well_formed env (solution_map solution) (subs, Frame.Qconst [q]) qual_test_var)
+          (try Solution.find solution k with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k); raise Not_found))
+      in Solution.replace solution k refined_quals;
+        solve_wf_constraints solution cs
   | _ :: cs -> solve_wf_constraints solution cs
       (* Nothing to do here; we can check satisfiability later *)
 
@@ -182,33 +187,40 @@ let num_refines = ref 0
 let solved_constraints = ref 0
 let valid_constraints = ref 0
 
+type refinement_change =
+  | Solution_unchanged
+  | Solution_changed
+
 (* Refine a constraint with variables on both sides and no substitutions *)
 let refine_simple solution k1 k2 =
-  let k1_quals = Lightenv.find k1 solution in
-    List.filter (fun q -> List.mem q k1_quals) (Lightenv.find k2 solution)
+  let k1_quals = Solution.find solution k1 in
+  let result = ref Solution_unchanged in
+  let filter_qual q =
+    if List.mem q k1_quals then true else (result := Solution_changed; false)
+  in
+  let refined_quals = List.filter filter_qual (Solution.find solution k2) in
+    Solution.replace solution k2 refined_quals;
+    !result
 
 let refine solution = function
   | (_, _, ([], Frame.Qvar k1), ([], Frame.Qvar k2))
       when not (!Clflags.no_simple || !Clflags.verify_simple) ->
-      Lightenv.add k2 (refine_simple solution k1 k2) solution
+      refine_simple solution k1 k2
   | (_, _, r1, (subs, Frame.Qvar k2)) as cstr ->
       let _ = num_refines := !num_refines + 1 in
       let make_lhs (env, guard, r1, _) =
         let envp = environment_predicate solution env in
-        let p1 = Frame.refinement_predicate solution qual_test_var r1 in
+        let p1 = Frame.refinement_predicate (solution_map solution) qual_test_var r1 in
           Predicate.big_and [envp; guard; p1]
       in
         let lhs = make_lhs cstr in
+        let result = ref Solution_unchanged in
         let qual_holds q =
-          let rhs = Frame.refinement_predicate solution qual_test_var (subs, Frame.Qconst [q]) in
+          let rhs = Frame.refinement_predicate (solution_map solution) qual_test_var (subs, Frame.Qconst [q]) in
             begin try
               let res = Bstats.time "refinement query" (TheoremProver.implies lhs) rhs in
                 incr solved_constraints;
-                if res then incr valid_constraints;
-                if !Clflags.dump_queries then begin
-                  Format.printf "@[%a@ =>@ %a@ (%s)@]@.@."
-                    Predicate.pprint lhs Predicate.pprint rhs (if res then "SAT" else "UNSAT");
-                end;
+                if res then incr valid_constraints else result := Solution_changed;
                 res
             with TheoremProver.Provers_disagree (default, backup) ->
               begin
@@ -225,30 +237,11 @@ let refine solution = function
             end
         in
         let refined_quals =
-          List.filter qual_holds (try Lightenv.find k2 solution with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k2); raise Not_found))
+          List.filter qual_holds (try Solution.find solution k2 with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k2); raise Not_found))
         in
-          (* Verify propagation of simple constraint LHSes against using the theorem prover *)
-          if !Clflags.verify_simple then begin
-            match r1 with
-                ([], Frame.Qvar k1) ->
-                  let simple_quals = refine_simple solution k1 k2 in
-                    if not (simple_quals = refined_quals) then begin
-                      Format.printf "@[Theorem@ prover@ and@ simple@ propagation@ disagree@ on@ constraint@ %a:@]@.@."
-                        (pprint_subref solution) cstr;
-                      Format.printf "@[Background@ is@;<1 0>%a@]@.@."
-                        Predicate.pprint lhs;
-                      Format.printf "@[Full@ set:@;<1 2>%a@]@."
-                        Frame.pprint_qualifier_expr (Frame.Qconst (Lightenv.find k2 solution));
-                      Format.printf "@[Prover:@ %a@]@."
-                        Frame.pprint_qualifier_expr (Frame.Qconst refined_quals);
-                      Format.printf "@[Propagation:@ %a@]@."
-                        Frame.pprint_qualifier_expr (Frame.Qconst simple_quals);
-                      assert false
-                    end
-              | _ -> ()
-          end;
-          Lightenv.add k2 refined_quals solution
-  | _ -> solution
+          Solution.replace solution k2 refined_quals;
+          !result
+  | _ -> Solution_unchanged
       (* With anything else, there's nothing to refine, just to check later with
          check_satisfied *)
 
@@ -281,14 +274,17 @@ let make_variable_constraint_map cstrs =
    qualifiers.  This was somewhat easier than adding any notion of "default"
    to Lightenv. *)
 let initial_solution cstrs quals =
-  let add_refinement_var sol = function
-    | (_, Frame.Qconst _) -> sol
-    | (_, Frame.Qvar k) -> Lightenv.add k quals sol
+  let sol = Solution.create 17 in
+  let add_refinement_var = function
+    | (_, Frame.Qconst _) -> ()
+    | (_, Frame.Qvar k) -> Solution.replace sol k quals
   in
-  let add_constraint_vars solution = function
-    | SubRefinement (_, _, r1, r2) -> List.fold_left add_refinement_var solution [r1; r2]
-    | WFRefinement (_, r) -> add_refinement_var solution r
-  in List.fold_left add_constraint_vars Lightenv.empty cstrs
+  let add_constraint_vars = function
+    | SubRefinement (_, _, r1, r2) -> List.iter add_refinement_var [r1; r2]
+    | WFRefinement (_, r) -> add_refinement_var r
+  in
+    List.iter add_constraint_vars cstrs;
+    sol
 
 let check_satisfied solution cstrs =
   try
@@ -327,12 +323,12 @@ module QualifierSet = Set.Make(Qualifier)
 let count_qualifiers solution =
   let quals = ref QualifierSet.empty in
   let add k ql = List.iter (fun q -> quals := QualifierSet.add q !quals) ql in
-  Lightenv.iter add solution; QualifierSet.cardinal !quals 
+  Solution.iter add solution; QualifierSet.cardinal !quals 
 
 let count_variables solution =
   let sum = ref 0 in
   let add k ql = sum := 1 + !sum in
-  Lightenv.iter add solution; !sum
+  Solution.iter add solution; !sum
 
 let count_total_qualifiers solution = 
   let sum = ref 0 in
@@ -344,7 +340,7 @@ let count_total_qualifiers solution =
     max := if l > !max then l else !max;
     min := if !min = 0 then l else
               if l < !min then l else !min in
-  Lightenv.iter add solution; (!sum, !max, !min)
+  Solution.iter add solution; (!sum, !max, !min)
 
 module Constraint = struct
   type t = subrefinement_constraint
@@ -356,26 +352,29 @@ end
 exception Empty_worklist
 
 module Worklist = struct
-  module WHeap = Heap.Functional(Constraint)
+  module WHeap = Heap.Imperative(Constraint)
 
   type t =
     | Workheap of WHeap.t
     | Worklist of subrefinement_constraint list
 
-  let empty () = if !Clflags.use_list then Worklist [] else Workheap (WHeap.empty)
+  let empty () = if !Clflags.use_list then Worklist [] else Workheap (WHeap.create 17)
 
   let pop = function
     | Worklist [] -> raise Empty_worklist
     | Worklist (c :: cs) -> (c, Worklist cs)
-    | Workheap h ->
+    | (Workheap h) as wh ->
         try
-          (WHeap.maximum h, Workheap (WHeap.remove h))
+          let max = WHeap.maximum h in
+            WHeap.remove h;
+            (max, wh)
         with Heap.EmptyHeap -> raise Empty_worklist
 
   let push cs = function
     | Worklist l -> Worklist (l @ cs)
-    | Workheap h ->
-        Workheap (List.fold_left (fun w c -> WHeap.add c w) h cs)
+    | (Workheap h) as wh ->
+        List.iter (fun c -> WHeap.add h c) cs;
+        wh
 end
 
 let solve_constraints quals constrs =
@@ -387,16 +386,16 @@ let solve_constraints quals constrs =
   let inst_quals = List.length quals in
   let _ = Printf.printf "%d instantiated qualifiers\n\n" inst_quals in
 
-  let init_solution = initial_solution cs quals in
+  let solution = initial_solution cs quals in
 
-  let num_vars = count_variables init_solution in
+  let num_vars = count_variables solution in
   let _ = Printf.printf "%d variables\n\n" num_vars in 
   let _ = Printf.printf "%d total quals\n\n" (num_vars * inst_quals) in
 
-  let solution' = Bstats.time "solving wfs" (solve_wf_constraints init_solution) wfs in
+  Bstats.time "solving wfs" (solve_wf_constraints solution) wfs;
 
-  Printf.printf "%d unique qualifiers after solving wf\n\n" (count_qualifiers solution');
-  let (sum, max, min) = count_total_qualifiers solution' in
+  Printf.printf "%d unique qualifiers after solving wf\n\n" (count_qualifiers solution);
+  let (sum, max, min) = count_total_qualifiers solution in
   Printf.printf "Quals:\n\tTotal: %d\n\tAvg: %f\n\tMax: %d\n\tMin: %d\n\n"
                 sum ((float_of_int sum) /. (float_of_int num_vars)) max min;
   Printf.printf "%d split subtyping constraints\n\n" (List.length refis);
@@ -404,7 +403,7 @@ let solve_constraints quals constrs =
     (List.length (List.filter is_simple_constraint refis));
   print_flush ();
   let cstr_map = make_variable_constraint_map refis in
-  let rec solve_rec sol wklist =
+  let rec solve_rec wklist =
     try
       let (cstr, rest) = Worklist.pop wklist in
         match cstr with
@@ -415,14 +414,14 @@ let solve_constraints quals constrs =
               (* pmr: of course, as implemented below, this is quite inefficient - we shouldn't be
                  searching the worklist.  OTOH, we're trying to gain on time spent in the prover, so
                  we can worry about the efficiency of this later *)
-              let sol' = refine sol cstr in
               let wklist' =
-                if not (Lightenv.equal (=) sol' sol) then
-                  Worklist.push (try VarMap.find k cstr_map with Not_found -> []) rest
-                else rest
-              in solve_rec sol' wklist'
-          | _ -> solve_rec sol rest
-    with Empty_worklist -> sol
+                match refine solution cstr with
+                  | Solution_changed ->
+                      Worklist.push (try VarMap.find k cstr_map with Not_found -> []) rest
+                  | Solution_unchanged -> rest
+              in solve_rec wklist'
+          | _ -> solve_rec rest
+    with Empty_worklist -> ()
   in
 
   (* Find the "roots" of the constraint graph - all those constraints that don't
@@ -433,7 +432,7 @@ let solve_constraints quals constrs =
     (*let roots = List.filter (fun c -> match lhs_vars c with [] -> true | _ -> false) refis in*)
   let init_wklist = Worklist.push refis (Worklist.empty ()) in
 
-  let solution = Bstats.time "refining subtypes" (solve_rec solution') init_wklist in
+  Bstats.time "refining subtypes" solve_rec init_wklist;
 
   let _ = Printf.printf "solution refinement completed:\n\t%d iterations of refine\n\n" !num_refines in
   let _ = Format.printf "@[Solved@ %d@ constraints;@ %d@ valid@]@.@." !solved_constraints !valid_constraints in
