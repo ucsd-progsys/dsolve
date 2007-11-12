@@ -109,6 +109,9 @@ let rec pprint_expression ppf exp =
       fprintf ppf "@[%a@ =@;<1 2>%a%a%a@]" pprint_pattern pat pprint_expression e pprint_and rem pprint_binds rem
     | [] -> fprintf ppf ""
   in
+  let rec pprint_binding ppf (lid, exp) =
+    fprintf ppf "@[%s =@;<1 2>%a@]" (print_id lid) pprint_expression exp
+  in
   let rec pprint_exp ppf e =
     match e.pexp_desc with
       | Pexp_constant (Const_int n) ->
@@ -126,8 +129,8 @@ let rec pprint_expression ppf exp =
       | Pexp_ifthenelse (e1, e2, Some e3) ->
           fprintf ppf "@[if@ %a@ then@;<1 4>%a@;<1 0>@[else@;<1 4>%a@]@]"
             pprint_expression e1 pprint_expression e2 pprint_expression e3
-      | Pexp_function (_, _, [({ppat_desc = Ppat_var x}, e)]) ->
-          fprintf ppf "@[fun@ %s@ ->@;<1 2>%a@]" x pprint_expression e
+      | Pexp_function (_, _, [(pat, e)]) ->
+          fprintf ppf "@[fun %a ->@;<1 2>%a@]" pprint_pattern pat pprint_expression e
       | Pexp_apply (e1, exps) ->
           let pprint_arg ppf (_, e) =
             fprintf ppf "(%a)" pprint_expression e
@@ -148,6 +151,10 @@ let rec pprint_expression ppf exp =
           fprintf ppf "@[%a@]" (pprint_list ";" pprint_expression) [e1; e2]
       | Pexp_tuple(es) ->
           fprintf ppf "@[(%a)@]" (pprint_list "," pprint_expression) es
+      | Pexp_record (bindings, None) ->
+          fprintf ppf "@[{%a}@]" (pprint_list ";" pprint_binding) bindings
+      | Pexp_field (e, lid) ->
+          fprintf ppf "@[%a.%s@]" pprint_expression e (print_id lid)
       | Pexp_assertfalse ->
           fprintf ppf "assert@ false"
       | _ -> assert false
