@@ -231,7 +231,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
                * we're currently under a lambda build a bitmap for each bind to
                * manage lambda detection *)
             let qualgen_addlbls var exp = Qualgen.add_label (var, exp.exp_type) in
-            let _ = if !under_lambda = 0 || not(!Clflags.less_qualifs) then List.iter2 qualgen_addlbls vars exprs  
+            let _ = if (!under_lambda = 0 || not(!Clflags.less_qualifs)) && !Clflags.dump_qualifs then List.iter2 qualgen_addlbls vars exprs  
                                                                        else () 
             in
             let qualgen_is_function e = 
