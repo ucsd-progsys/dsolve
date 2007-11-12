@@ -1,11 +1,11 @@
+DML/bsearch.ml
+DML/dotprod.ml
+DML/dotprod2.ml
 DMLex/simplex.ml
 DMLex/gauss.ml
 examples-liquid/unbounded.ml
 DMLex/bs2.ml
 DMLex/matmult.ml
-DML/bsearch.ml
-DML/dotprod.ml
-DML/dotprod2.ml
 DML/insertsort.ml
 DML/queen.ml
 DML/tower.ml

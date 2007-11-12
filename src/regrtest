@@ -61,17 +61,17 @@ do
 done
 echo DONE
 
-FILE=$POSFILE"\n"$NEGFILE
-FILE=${FILE/\//_}
+exit 0
 
-#OUT_FILES=`ls $TMPDIR"/*.lilog"`
-
+OUT_FILES=`ls $TMPDIR"/"*.lilog`
 
 #grovel through output files for stats below:
 
-#IN=0
-#for i in $OUT_FILES
-#do
-#   $IN 
+for i in $OUT_FILES
+do
+   s = `grep -n "\#\#time\#\#" | tail -n1 -` 
+   d = `grep -n "\#\#endtime\#\#" | tail -n1 -`
+   s = expr "$s" : '\([0-9]+\)'
+   d = expr "$d" : '\([0-9]+\)'
 
-#done
+done
