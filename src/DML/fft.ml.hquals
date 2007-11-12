@@ -1,3 +1,1 @@
 qualif LE_N_D2(x) : 2 * x <= n;;
-qualif LE_N_D2(x) : 2 * x <= np;;
-qualif LEN_NP_P1(a) : Array.length a = np + 1;;
