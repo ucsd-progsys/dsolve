@@ -1,0 +1,2 @@
+qualif ONE_MORE_COLUMN(x): Bigarray.Array2.dim2 x = Bigarray.Array2.dim1 x + 1;;
+qualif IS_ROW_LENGTH(x): Array.length x = Bigarray.Array2.dim2 data;;

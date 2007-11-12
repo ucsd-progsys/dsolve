@@ -196,10 +196,7 @@ let normalize exp =
      | Pexp_tuple(es) ->
         proc_list es mk_tuple
      | Pexp_array(es) ->
-        if List.length es > 20 then
-          exp
-        else
-          proc_list es mk_array
+        proc_list es mk_array
           (* lose location for the whole sequence, but that's generally ok since
            * we don't lose location of second expression *)
      | Pexp_sequence(e1, e2) ->
@@ -258,10 +255,7 @@ let normalize exp =
         proc_list es mk_tuple
      | Pexp_array(es) ->
          (* tmp hack for huge constant arrays *)
-        if List.length es > 20 then
-          [(fresh_name (), Some exp, dummy)] 
-        else
-          proc_list es mk_array 
+        proc_list es mk_array 
      | Pexp_apply(e1, es) ->
         let f = norm_in e1 in
         let (flbl, e_f, lo_f) = List.hd f in

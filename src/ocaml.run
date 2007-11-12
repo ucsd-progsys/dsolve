@@ -14,7 +14,7 @@ enm=""
 for i in ${@/\ //n}
 do
   let "j = $j + 1"
-  catt="cat "$i".quals "$i 
+  #catt="cat "$i".quals "$i 
   enm=$i
   if [[ $j<$argc ]] 
   then
@@ -32,13 +32,37 @@ then
 fi
 export LD_LIBRARY_PATH=./yices/lib
 
-cat $enm".quals" > /dev/null
+#yah, ugly, ok
+catargs="" 
+
+cat $enm.types &> /dev/null
 
 if [[ $? = 0 ]]
 then
-  $catt | nice -n19 rlwrap ./ocaml $argv
+  catargs=$catargs" "$enm".types"
+fi
+
+cat $enm.hquals &> /dev/null
+
+if [[ $? = 0 ]]
+then
+  catargs=$catargs" "$enm".hquals"
+fi
+
+cat $enm.quals &> /dev/null
+
+if [[ $? = 0 ]]
+then
+  catargs=$catargs" "$enm".quals"
+fi
+
+catargs=$catargs" "$enm
+
+if [[ $enm = "" ]]
+then
+  rlwrap ./ocaml $argv
 else
-  nice -n19 rlwrap ./ocaml $argv < $enm
+  cat$catargs | nice -n19 rlwrap ./ocaml $argv
 fi
 
 EXIT=$?

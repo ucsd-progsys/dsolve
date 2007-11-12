@@ -1,0 +1,49 @@
+#!/bin/bash
+
+FILES=`cat postests`
+
+let "cnt = 0"
+echo auto_ann hand_anno src %
+for i in $FILES
+do
+  echo $i
+  echo -n chars: 
+  jj="`cat $i.quals`"
+  jj=`echo "$jj" | tr "\n" " " | tr -s "\t" " " | tr -s " " " "`
+  jj=`echo -n "$jj" | wc -m`
+  echo -n "$jj "
+  cat $i.hquals &> /dev/null
+  if [[ $? = 0 ]]
+  then
+    jjj="`cat $i.hquals`"
+    jjj=`echo "$jjj" | tr "\n" " " | tr -s "\t" " " | tr -s " " " "`
+    jjj=`echo -n "$jjj" | wc -m`
+    echo -n "$jjj "
+  else
+    echo -n "0 "
+  fi
+  j=`cat ${i/\.hquals/} | tr "\n" " " | tr -s "\t" " " | tr -s " " " " | wc -m`
+  echo -n "$j "
+  #let "cnt = $j - $jj"
+  #echo -n "$cnt "
+  let "cnt = 100 * $jjj / $j"
+  echo  "$cnt%"
+  echo -n lines: 
+  jj="`cat $i | wc -l`"
+  echo -n "$jj "
+  cat $i.hquals &> /dev/null
+    if [[ $? = 0 ]]
+    then
+      jjj="`cat $i.hquals | tr -s "\n" "\n"`"
+      jjj=`echo -n "$jjj" | wc -l`
+      echo -n "$jjj "
+    else
+      echo -n "0 "
+    fi
+  j=`cat ${i/\.hquals/} | tr -s "\n" "\n" | wc -l`
+  echo -n "$j "
+  #let "cnt = $j - $jj"
+  #echo -n "$cnt "
+  let "cnt = 100 * $jjj / $j"
+  echo "$cnt%"
+done

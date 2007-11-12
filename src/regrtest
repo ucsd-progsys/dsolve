@@ -5,6 +5,7 @@ FLAGS="-dframes -anormal"
 QUALFLAGS="-dqualifs -lqualifs"
 POSFILE=postests
 NEGFILE=negtests
+#HANDQUALS_ONLY="yep"
 
 if [[ $1 == "" ]]
 then
@@ -14,20 +15,26 @@ else
 fi
 
 rm -f $TMPDIR/*.lilog
+rm -f DML/*.quals
+rm -f DMLex/*.quals
 
 FILE=$POSFILE" "$NEGFILE
 
 echo Generating qualifiers where needed...
 
-for i in `cat $FILE`
-do
-  cat $i.quals 1> /dev/null 2> /dev/null
-  if [[ $? != 0 ]]
-  then
-    $OCAML $QUALFLAGS $i 1> /dev/null 2> $i.quals
-  fi
-done
-
+if [[ $HANDQUALS_ONLY ]]
+then
+  echo "User specified hand quals only"
+else
+  for i in `cat $FILE`
+  do
+    cat $i.quals 1> /dev/null 2> /dev/null
+    if [[ $? != 0 ]]
+    then
+      $OCAML $QUALFLAGS $i 1> /dev/null 2> $i.quals
+    fi
+  done
+fi
 echo done.
 
 echo RUNNING POSFILE
@@ -35,7 +42,8 @@ for i in `cat $POSFILE`
 do
   echo RUNNING: $i 
   LOGFILE=$TMPDIR"/"${i/\//_}".lilog"
-  time $OCAML $FLAGS $i &> $LOGFILE
+  echo $i > $LOGFILE
+  time $OCAML $FLAGS $i 1>> $LOGFILE 2>> $LOGFILE
   if [ $? = 0 ] 
   then 
     echo "SUCCESS!"
@@ -46,32 +54,32 @@ do
 done
 echo DONE
 
-echo RUNNING NEGFILE
-for i in `cat $NEGFILE`
-do
-  echo RUNNING: $i 
-  time $OCAML $FLAGS $i &> $TMPDIR"/"${i/\//_}".lilog"
-  if [ $? = 1 ] 
-  then 
-    echo "SUCCESS!"
-  else
-    echo "FAILURE :("
-  fi
-  grep "TOTAL" $LOGFILE | tail -n1
-done
-echo DONE
+#echo RUNNING NEGFILE
+#for i in `cat $NEGFILE`
+#do
+#  echo RUNNING: $i 
+#  time $OCAML $FLAGS $i &> $TMPDIR"/"${i/\//_}".lilog"
+#  if [ $? = 1 ] 
+#  then 
+#    echo "SUCCESS!"
+#  else
+#    echo "FAILURE :("
+#  fi
+#  grep "TOTAL" $LOGFILE | tail -n1
+#done
+#echo DONE
 
-FILE=$POSFILE"\n"$NEGFILE
-FILE=${FILE/\//_}
+exit 0
 
-#OUT_FILES=`ls $TMPDIR"/*.lilog"`
-
+OUT_FILES=`ls $TMPDIR"/"*.lilog`
 
 #grovel through output files for stats below:
 
-#IN=0
-#for i in $OUT_FILES
-#do
-#   $IN 
+for i in $OUT_FILES
+do
+   s = `grep -n "\#\#time\#\#" | tail -n1 -` 
+   d = `grep -n "\#\#endtime\#\#" | tail -n1 -`
+   s = expr "$s" : '\([0-9]+\)'
+   d = expr "$d" : '\([0-9]+\)'
 
-#done
+done

@@ -52,11 +52,11 @@ module YicesProver  =
   struct
     
     type yices_instance = { 
-      c : Y.yices_context;
-      t : Y.yices_type;
-      f : Y.yices_type;
-      binop: Y.yices_type; (* for uninterp ops *)
-      d : (string,Y.yices_var_decl) Hashtbl.t;
+      mutable c : Y.yices_context;
+      mutable t : Y.yices_type;
+      mutable f : Y.yices_type;
+      mutable binop: Y.yices_type; (* for uninterp ops *)
+      mutable d : (string,Y.yices_var_decl) Hashtbl.t;
       mutable ds : string list ;
       mutable count : int;
       mutable i : int;
@@ -168,7 +168,15 @@ module YicesProver  =
 	end
 
     let reset () =
-      Misc.repeat_fn pop me.count
+      Misc.repeat_fn pop me.count;
+      Y.yices_reset me.c;
+      me.t <- Y.yices_mk_type me.c "int";
+      me.binop <- Y.yices_mk_function_type me.c [| me.t; me.t |] me.t;
+      me.f <- Y.yices_mk_function_type me.c [| me.t |] me.t;
+      me.d <- Hashtbl.create 37;
+      me.ds <- [];
+      me.count <- 0;
+      me.i <- 0
 
     let unsat () =
       let res = Y.yices_check me.c = -1 in
