@@ -281,7 +281,7 @@ let rec same_shape t1 t2 =
   | (Funknown, Funknown) -> true
   | t -> false
 
-let pred_is_well_typed env p = 
+let pred_is_well_typed env p =
   let rec get_expr_shape = function
   | Predicate.PInt _ -> frame_int
   | Predicate.Var x  
@@ -315,7 +315,7 @@ let pred_is_well_typed env p =
         | Frecord (_, fs, _) ->
             let is_referenced_field (_, name2, _) = String.compare name name2 = 0 in
               (match (List.find is_referenced_field fs) with (f, _, _) -> f)
-        | _ -> assert false
+        | f -> Funknown
       end
   and pred_shape_is_bool = function
   | Predicate.True -> true
@@ -338,8 +338,7 @@ let pred_is_well_typed env p =
         (same_shape p1_shp p2_shp) && (same_shape p1_shp frame_int || 
                                        (function Fvar _ -> true | _ -> false) p1_shp ||
                                        same_shape p1_shp frame_float) 
-    in
-      pred_shape_is_bool p
+    in pred_shape_is_bool p
 
 let refinement_well_formed env solution r qual_var =
   let valu = qual_var in

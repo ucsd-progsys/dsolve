@@ -144,7 +144,7 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
 	| (Texp_ident _, ({desc = Tconstr (p, [], _)} as t)) ->
       let r = Builtins.equality_refinement (expression_to_pexpr e) in
       (* Tconstr could be a record or frame to us, so we punt the issue *)
-      let f = Frame.fresh t tenv in
+      let f = Frame.fresh_without_vars t tenv in
         (Frame.apply_refinement r f, cstrs, framemap)
   (* ming: subtyping may be better for the inner types when a complex type is
    * pulled up by name, but we have no way of expressing what we actually want,
