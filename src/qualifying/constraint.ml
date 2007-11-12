@@ -404,24 +404,26 @@ let solve_constraints quals constrs =
   print_flush ();
   let cstr_map = make_variable_constraint_map refis in
   let rec solve_rec wklist =
-    try
-      let (cstr, rest) = Worklist.pop wklist in
-        match cstr with
-          | (_, _, _, (_, Frame.Qvar k)) ->
-              (* pmr: removed opt-
-                 Find all the constraints with RHSes identical to this one; they can be solved
-                 in one pass by or-ing all the LHSes together, saving a few prover calls *)
-              (* pmr: of course, as implemented below, this is quite inefficient - we shouldn't be
-                 searching the worklist.  OTOH, we're trying to gain on time spent in the prover, so
-                 we can worry about the efficiency of this later *)
-              let wklist' =
-                match refine solution cstr with
-                  | Solution_changed ->
-                      Worklist.push (try VarMap.find k cstr_map with Not_found -> []) rest
-                  | Solution_unchanged -> rest
-              in solve_rec wklist'
-          | _ -> solve_rec rest
-    with Empty_worklist -> ()
+    let next = try Some (Worklist.pop wklist) with Empty_worklist -> None in
+      match next with
+        | Some (cstr, rest) ->
+            begin match cstr with
+              | (_, _, _, (_, Frame.Qvar k)) ->
+                  (* pmr: removed opt-
+                     Find all the constraints with RHSes identical to this one; they can be solved
+                     in one pass by or-ing all the LHSes together, saving a few prover calls *)
+                  (* pmr: of course, as implemented below, this is quite inefficient - we shouldn't be
+                     searching the worklist.  OTOH, we're trying to gain on time spent in the prover, so
+                     we can worry about the efficiency of this later *)
+                  let wklist' =
+                    match refine solution cstr with
+                      | Solution_changed ->
+                          Worklist.push (try VarMap.find k cstr_map with Not_found -> []) rest
+                      | Solution_unchanged -> rest
+                  in solve_rec wklist'
+              | _ -> solve_rec rest
+            end
+        | None -> ()
   in
 
   (* Find the "roots" of the constraint graph - all those constraints that don't
