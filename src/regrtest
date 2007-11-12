@@ -42,7 +42,8 @@ for i in `cat $POSFILE`
 do
   echo RUNNING: $i 
   LOGFILE=$TMPDIR"/"${i/\//_}".lilog"
-  time $OCAML $FLAGS $i &> $LOGFILE
+  echo $i > $LOGFILE
+  time $OCAML $FLAGS $i 1>> $LOGFILE 2>> $LOGFILE
   if [ $? = 0 ] 
   then 
     echo "SUCCESS!"
@@ -53,20 +54,20 @@ do
 done
 echo DONE
 
-echo RUNNING NEGFILE
-for i in `cat $NEGFILE`
-do
-  echo RUNNING: $i 
-  time $OCAML $FLAGS $i &> $TMPDIR"/"${i/\//_}".lilog"
-  if [ $? = 1 ] 
-  then 
-    echo "SUCCESS!"
-  else
-    echo "FAILURE :("
-  fi
-  grep "TOTAL" $LOGFILE | tail -n1
-done
-echo DONE
+#echo RUNNING NEGFILE
+#for i in `cat $NEGFILE`
+#do
+#  echo RUNNING: $i 
+#  time $OCAML $FLAGS $i &> $TMPDIR"/"${i/\//_}".lilog"
+#  if [ $? = 1 ] 
+#  then 
+#    echo "SUCCESS!"
+#  else
+#    echo "FAILURE :("
+#  fi
+#  grep "TOTAL" $LOGFILE | tail -n1
+#done
+#echo DONE
 
 exit 0
 
