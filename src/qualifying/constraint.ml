@@ -415,12 +415,12 @@ let solve_constraints quals constrs =
                   (* pmr: of course, as implemented below, this is quite inefficient - we shouldn't be
                      searching the worklist.  OTOH, we're trying to gain on time spent in the prover, so
                      we can worry about the efficiency of this later *)
-                  let wklist' =
+                  let _ =
                     match refine solution cstr with
                       | Solution_changed ->
                           Worklist.push (try VarMap.find k cstr_map with Not_found -> []) rest
                       | Solution_unchanged -> rest
-                  in solve_rec wklist'
+                  in solve_rec wklist
               | _ -> solve_rec rest
             end
         | None -> ()
