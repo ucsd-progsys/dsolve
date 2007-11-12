@@ -71,6 +71,8 @@ let normalize exp =
   let mk_tuple es = Pexp_tuple(es) in
   let mk_sequence e1 e2 = Pexp_sequence(e1, e2) in
   let mk_ifthenelse e1 e2 e3 = Pexp_ifthenelse(e1, e2, Some e3) in
+  let mk_field e s = Pexp_field(e, s) in
+  let mk_record es = Pexp_record(es, None) in
 
   let mk_dummy desc = {pexp_desc = desc; pexp_loc = Location.none} in
   let dummy = Location.none in
@@ -198,10 +200,18 @@ let normalize exp =
         rw_expr (mk_sequence (norm_out e1) (norm_out e2))
      | Pexp_assertfalse ->
         exp
-     | Pexp_record(_, _) 
-     | Pexp_field(_, _) ->
-          (* i will deal with you in the AM, my man *)
-        exp
+     | Pexp_field(e, s) ->
+        let ls = norm_in e in
+        let (lbl, _, lo) = List.hd ls in 
+        let init = mk_field (mk_ident_loc lbl lo) s in
+          rw_expr (List.fold_left (wrap Nonrecursive) init ls)
+     | Pexp_record(es, None) ->
+        let ee = List.map (fun (s, e) -> norm_in e) es in 
+        let se = List.map (fun e -> List.hd e) ee in
+        let es' = List.map2 (fun (lbl, _, loc) (s, e) -> (s, mk_ident_loc lbl loc)) se es in
+        let init = mk_record es' in
+        let ee = List.concat (List.rev ee) in
+          rw_expr (List.fold_left (wrap Nonrecursive) init ee)
      | e -> printf "@[Bad expr to norm_out:@\n%a@]" Qdebug.pprint_expression exp; flush stdout; assert false
 
   and norm_in exp = 
@@ -281,10 +291,16 @@ let normalize exp =
                                 | None -> mk_ifthenelse (mk_ident_loc blbl lo_b) (norm_out e2) (norm_out e3)),
                                        dummy) in
          (this, Some (rw_expr e_this), lo_this)::(List.tl b)
-     | Pexp_record(_, _) 
-     | Pexp_field(_, _) ->
-          (* i will deal with you in the AM, my man *)
-         [(fresh_name (), Some exp, loc)]
+     | Pexp_record(es, None) ->
+        let ee = List.map (fun (s, e) -> norm_in e) es in
+        let se = List.map (fun e -> List.hd e) ee in
+        let es' = List.map2 (fun (lbl, _, loc) (s, e) -> (s, mk_ident_loc lbl loc)) se es in
+        let e_this = rw_expr (mk_record es') in
+          (fresh_name (), Some e_this, loc)::(List.concat (List.rev ee)) 
+     | Pexp_field(e, s) ->
+        let ls = norm_in e in 
+        let (lbl, _, lo) = List.hd ls in
+          (fresh_name (), Some (rw_expr (mk_field (mk_ident_loc lbl lo) s)), loc)::ls
      | e -> printf "@[Bad expr to norm_in:@\n%a@]" Printast.top_phrase (wrap_printable exp); assert false
   in
   norm_out exp
