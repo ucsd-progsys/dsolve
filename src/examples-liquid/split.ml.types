@@ -1,0 +1,2 @@
+type ('a, 'b) pr = {ft: 'a; sd: 'b};;
+type ('a, 'b, 'c, 'd) qd = {f: 'a; s: 'b; t: 'c; f: 'd};;

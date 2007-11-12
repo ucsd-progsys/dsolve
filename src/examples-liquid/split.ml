@@ -7,7 +7,7 @@ let rec quickSort arr a n =
     in
     let rec bottom limit pa pb = 
       let _ = (fun x y -> (x, y)) pa pb in
-			let arg = (pa, pb) in
+			let arg = {ft = pa; sd = pb} in
       let ia = item a in
       let pb' = pb + 1 in
       let pa' = pa + 1 in
@@ -18,7 +18,7 @@ let rec quickSort arr a n =
 						(swap pa pb; bottom limit pa pb')
 		in 
     let rec top limit pc pd = 
-			let arg = (pc, pd) in
+			let arg = {ft = pc; sd = pd} in
       if pc < limit then arg else
       if item pc < item a then arg else
 			if item a < item pc then top limit (pc-1) pd else
@@ -26,9 +26,13 @@ let rec quickSort arr a n =
     in 
     let rec split pa pb pc pd =
       let _ = (fun a b c d -> (a, b, c, d)) pa pb pc pd in
-			let (pa, pb) = bottom pc pa pb in
-      let (pc, pd) = top pb pc pd in
-      if pb >= pc then (pa, pb, pc, pd)
+			let papb = bottom pc pa pb in
+      let pa = papb.ft in
+      let pb = papb.sd in
+      let pcpd = top pb pc pd in
+      let pc = pcpd.ft in
+      let pd = pcpd.sd in
+      if pb >= pc then {f = pa; s = pb; t = pc; f = pd}
       else 
         let pb' = pb + 1 in
         let pc' = pc - 1 in
