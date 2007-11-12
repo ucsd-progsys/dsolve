@@ -146,7 +146,7 @@ let constraint_sat solution = function
       let smap = solution_map solution in
       let p1 = Frame.refinement_predicate smap qual_test_var r1 in
       let p2 = Frame.refinement_predicate smap qual_test_var r2 in
-        TheoremProver.implies (Predicate.big_and [envp; guard; p1]) p2
+        TheoremProver.backup_implies (Predicate.big_and [envp; guard; p1]) p2
   | WFRefinement (env, r) ->
     (* ming: this is an error check. it shouldn't be possible for this to be tripped*)
       Frame.refinement_well_formed env (solution_map solution) r qual_test_var

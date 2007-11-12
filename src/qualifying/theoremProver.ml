@@ -60,8 +60,8 @@ let rec fixdiv p =
         | p -> p
     else p
 
-module DefaultProver = TheoremProverYices.Prover
-module BackupProver = TheoremProverSimplify.Prover
+module DefaultProver = TheoremProverSimplify.Prover
+module BackupProver = TheoremProverYices.Prover
 
 exception Provers_disagree of bool * bool
 
@@ -93,11 +93,16 @@ let pop () =
 let valid p =
   check_result DefaultProver.valid BackupProver.valid (fixdiv p)
 
-let implies p q =
+let check_implies default backup p q =
   let (p, q) = (fixdiv p, fixdiv q) in
-  let res = check_result DefaultProver.implies BackupProver.implies (fixdiv p, fixdiv q) in
-    DefaultProver.reset ();
+  let res = check_result default backup (fixdiv p, fixdiv q) in
     if !Clflags.dump_queries then
       Format.printf "@[%a@;<1 0>=>@;<1 0>%a@;<1 2>(%B)@]@.@."
         Predicate.pprint p Predicate.pprint q res;
     res
+
+let implies p q =
+  check_implies DefaultProver.implies BackupProver.implies p q
+
+let backup_implies p q =
+  check_implies BackupProver.implies DefaultProver.implies p q
