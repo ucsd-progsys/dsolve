@@ -28,6 +28,7 @@ do
   #echo -n "$cnt "
   let "cnt = 100 * $jjj / $j"
   echo  "$cnt%"
+  jjj=0
   echo -n lines: 
   jj="`cat $i | wc -l`"
   echo -n "$jj "
