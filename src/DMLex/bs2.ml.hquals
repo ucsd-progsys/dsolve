@@ -1,1 +1,1 @@
-qualif QTHING(x) : x + 1 >= l;;
+qualif T(x) : x + 1 >= l;;

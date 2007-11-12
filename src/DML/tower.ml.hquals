@@ -1,1 +1,1 @@
-qualif X_PLUS_N_LE_SZ(x) : x + n <= sz;;
+qualif X_P_N_LE_SZ(x) : x + n <= sz;;

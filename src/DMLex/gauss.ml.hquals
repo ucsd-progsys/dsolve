@@ -1,1 +1,1 @@
-qualif ONE_MORE_COLUMN(x): Bigarray.Array2.dim2 x = Bigarray.Array2.dim1 x + 1;;
+qualif ONE_M_COL(x): Bigarray.Array2.dim2 x = Bigarray.Array2.dim1 x + 1;;
