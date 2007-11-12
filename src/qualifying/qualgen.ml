@@ -67,12 +67,14 @@ let single_bigarray_array2_qualif path =
   let name = Path.name path in
   let bigarray_array2_dim1 = "Bigarray.Array2.dim1 " ^ name in
   let bigarray_array2_dim2 = "Bigarray.Array2.dim2 " ^ name in
-  List.append (single_simple_qualif "_AA" "_AA" bigarray_array2_dim1)
-    (List.append (single_simple_qualif "_AA" "_AA" bigarray_array2_dim2)
-    (List.append (single_simple_qualif "_AA" "Bigarray.Array2.dim1 _AA" bigarray_array2_dim1)
-    (List.append (single_simple_qualif "_AA" "Bigarray.Array2.dim1 _AA" bigarray_array2_dim2)
-    (List.append (single_simple_qualif "_AA" "Bigarray.Array2.dim2 _AA" bigarray_array2_dim1)
-       (single_simple_qualif "_AA" "Bigarray.Array2.dim2 _AA" bigarray_array2_dim2)))))
+  List.concat [(single_simple_qualif "_AA" "_AA" bigarray_array2_dim1);
+              (single_simple_qualif "_AA" "_AA" bigarray_array2_dim2);
+              (single_simple_qualif "_AA" "Bigarray.Array2.dim1 _AA" bigarray_array2_dim1);
+              (single_simple_qualif "_AA" "Bigarray.Array2.dim1 _AA" bigarray_array2_dim2);
+              (single_simple_qualif "_AA" "Bigarray.Array2.dim2 _AA" bigarray_array2_dim1);
+              (single_simple_qualif "_AA" "Bigarray.Array2.dim2 _AA" bigarray_array2_dim2);
+              (single_simple_qualif "_AA" "Array.length _AA" bigarray_array2_dim1);
+              (single_simple_qualif "_AA" "Array.length _AA" bigarray_array2_dim2);]
                
 let dump_qualifs () =
   let consts = !constants in

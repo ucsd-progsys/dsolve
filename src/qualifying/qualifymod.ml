@@ -355,6 +355,7 @@ let qualify_structure tenv fenv quals str =
       (newquals, LocationMap.empty)
     else
       begin
+      Printf.printf "##solve##\n";
       Bstats.reset ();
       try
         let solution = Bstats.time "solving" (solve_constraints instantiated_quals) cstrs in

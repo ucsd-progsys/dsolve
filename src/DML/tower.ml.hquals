@@ -1,3 +1,1 @@
-qualif X_PLUS_N_LE_SZ(x) : x + n <= sz;;
-qualif X_PLUS_S_LE_SZ(x) : x + s <= sz;;
-qualif SUM_OF_THREE(x) : x = sz + sz - p - s;;
+qualif X_P_N_LE_SZ(x) : x + n <= sz;;

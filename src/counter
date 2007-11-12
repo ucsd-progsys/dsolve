@@ -21,6 +21,7 @@ do
     echo -n "$jjj "
   else
     echo -n "0 "
+    jjj=0
   fi
   j=`cat ${i/\.hquals/} | tr "\n" " " | tr -s "\t" " " | tr -s " " " " | wc -m`
   echo -n "$j "
@@ -39,6 +40,7 @@ do
       echo -n "$jjj "
     else
       echo -n "0 "
+      jjj=0
     fi
   j=`cat ${i/\.hquals/} | tr -s "\n" "\n" | wc -l`
   echo -n "$j "

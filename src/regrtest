@@ -14,7 +14,7 @@ else
   TMPDIR=$1
 fi
 
-rm -f $TMPDIR/*.lilog
+rm -f $TMPDIR/*.lilog*
 rm -f DML/*.quals
 rm -f DMLex/*.quals
 
@@ -44,13 +44,32 @@ do
   LOGFILE=$TMPDIR"/"${i/\//_}".lilog"
   echo $i > $LOGFILE
   time $OCAML $FLAGS $i 1>> $LOGFILE 2>> $LOGFILE
+
+  #some stupid grep tricks to cut down on the output
+  s=`grep -n "\#\#solve\#\#" $LOGFILE | tail -n1 -` 
+  d=`grep -n "\#\#endtime\#\#" $LOGFILE | tail -n1 -`
+  s=`expr "$s" : '\([0-9]*\)'`
+  d=`expr "$d" : '\([0-9]*\)'`
+  let "s = $d - $s - 1"
+  let "d = $d - 1"
+  f=`head -n$d $LOGFILE | tail -n$s -`
+  echo $i > $LOGFILE.min
+  echo "$f" >> $LOGFILE.min
+  echo "
+
+  " >> $LOGFILE.min
+
+  
   if [ $? = 0 ] 
   then 
     echo "SUCCESS!"
   else
     echo "FAILURE :("
   fi
-  grep "TOTAL" $LOGFILE | tail -n1
+  echo -n "Time in solver:  " 
+  t=`grep "TOTAL" $LOGFILE | tail -n1`
+  t=`echo "${t//TOTAL/}" | tr -ds " " " "`
+  echo "$t"
 done
 echo DONE
 
@@ -75,11 +94,15 @@ OUT_FILES=`ls $TMPDIR"/"*.lilog`
 
 #grovel through output files for stats below:
 
+
+echo "Timing: "
 for i in $OUT_FILES
 do
-   s = `grep -n "\#\#time\#\#" | tail -n1 -` 
-   d = `grep -n "\#\#endtime\#\#" | tail -n1 -`
-   s = expr "$s" : '\([0-9]+\)'
-   d = expr "$d" : '\([0-9]+\)'
-
+   s=`grep -n "\#\#solve\#\#" $i | tail -n1 -` 
+   d=`grep -n "\#\#endtime\#\#" $i | tail -n1 -`
+   s=`expr "$s" : '\([0-9]*\)'`
+   d=`expr "$d" : '\([0-9]*\)'`
+   let "s = $d - $s"
+   f=`head -n$d $i | tail -n$s -`
+   tot=`
 done
