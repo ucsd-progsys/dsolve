@@ -1,3 +1,5 @@
+examples-liquid/encrypt_ecb.ml
+examples-liquid/encrypt_cfb8.ml
 DML/bsearch.ml
 DML/dotprod.ml
 DML/dotprod2.ml

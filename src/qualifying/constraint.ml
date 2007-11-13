@@ -231,10 +231,10 @@ let refine solution = function
       let result = ref Solution_unchanged in
       let qual_holds q =
         let res =
-          if lhs_is_variable && not (affected_by_substitutions lhs_subs q) && not (affected_by_substitutions rhs_subs q) then
-            List.mem q lhs_quals
+          if not !Clflags.no_simple_subs &&
+            lhs_is_variable && not (affected_by_substitutions lhs_subs q) && not (affected_by_substitutions rhs_subs q) then
+              List.mem q lhs_quals
           else
-          let (_, _) = (lhs_quals, lhs_subs) in
             let rhs = Frame.refinement_predicate (solution_map solution) qual_test_var (rhs_subs, Frame.Qconst [q]) in
             let lhs = make_lhs cstr in
             let pres = Bstats.time "refinement query" (TheoremProver.implies lhs) rhs in
