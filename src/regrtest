@@ -1,7 +1,7 @@
 #!/bin/bash
 #not actually a regression test
 OCAML=./ocaml.run
-FLAGS="-dframes -anormal"
+FLAGS="-dframes -anormal "
 QUALFLAGS="-dqualifs -lqualifs"
 YFILE=yicestests
 SFILE=simtests
