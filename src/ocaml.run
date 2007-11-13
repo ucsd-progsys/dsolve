@@ -62,7 +62,8 @@ if [[ $enm = "" ]]
 then
   rlwrap ./ocaml $argv
 else
-  cat$catargs | nice -n19 rlwrap ./ocaml $argv
+  #cat$catargs | nice -n19 rlwrap ./ocaml $argv
+  cat$catargs | rlwrap ./ocaml $argv
 fi
 
 EXIT=$?
