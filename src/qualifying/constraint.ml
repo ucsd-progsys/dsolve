@@ -229,6 +229,7 @@ let refine solution = function
       let (lhs_quals, lhs_is_variable) =
         match r1 with Frame.Qconst qs -> ([], false) | Frame.Qvar k1 -> (Solution.find solution k1, true)
       in
+      let lhs_needs_prover = List.exists (affected_by_substitutions lhs_subs) lhs_quals in
       let result = ref Solution_unchanged in
       let qual_holds q =
         let res =
@@ -241,7 +242,7 @@ let refine solution = function
         in
         let resopt =
           if not !Clflags.no_simple_subs &&
-            lhs_is_variable && not (affected_by_substitutions lhs_subs q) && not (affected_by_substitutions rhs_subs q) then
+            lhs_is_variable && not lhs_needs_prover && not (affected_by_substitutions rhs_subs q) then
               List.mem q lhs_quals
           else res
         in
