@@ -219,24 +219,14 @@ let refine solution = function
       let qual_holds q =
         let rhs = Frame.refinement_predicate (solution_map solution) qual_test_var (rhs_subs, Frame.Qconst [q]) in
         let res =
-          let lhs = make_lhs cstr in
-          let pres = Bstats.time "refinement query" (TheoremProver.implies lhs) rhs in
-            incr solved_constraints;
-            if pres then incr valid_constraints;
-            pres
-        in
-        let resopt = (not !Clflags.no_simple_subs && List.mem rhs lhs_preds) || res
-        in
-          if res != resopt then begin
-            (* Format.printf "@[Disagree on query (prover: %B, prop: %B) %a;@;<1 0>%a |- %a <:@;<1 2>%a@]@.@." res resopt
-              pprint_env_pred (solution, env) Predicate.pprint guard
-              Frame.pprint_refinement (lhs_subs, Frame.Qconst lhs_quals) Frame.pprint_refinement (rhs_subs, Frame.Qconst [q]); *)
-            assert false
-          end
-          else begin
-            if not res then result := Solution_changed;
-            res
-          end
+          if not !Clflags.no_simple_subs && List.mem rhs lhs_preds then true
+          else
+            let lhs = make_lhs cstr in
+            let pres = Bstats.time "refinement query" (TheoremProver.implies lhs) rhs in
+              incr solved_constraints;
+              if pres then incr valid_constraints;
+              pres
+        in if not res then result := Solution_changed; res
       in
       let refined_quals = List.filter qual_holds (Solution.find solution k2) in
         Solution.replace solution k2 refined_quals;
