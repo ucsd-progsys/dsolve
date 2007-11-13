@@ -103,6 +103,7 @@ let main () =
      "-cqueries", Arg.Set check_queries, "use a backup prover to check all queries";
      "-bquals", Arg.Set brief_quals, "print out the number of refinements for a type instead of their names";
      "-no-simple", Arg.Set no_simple, "do not propagate in simple constraints";
+     "-no-simple-subs", Arg.Set no_simple_subs, "do not propagate sets when substitutions are present";
      "-verify-simple", Arg.Set verify_simple, "verify simple constraint propagation against theorem prover result";
      "-use-list", Arg.Set use_list, "use worklist instead of heap in solver";
      "-bprover", Arg.Set always_use_backup_prover, "always use backup prover";

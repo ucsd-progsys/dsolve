@@ -99,7 +99,7 @@ let dump_interval = 3000
 let qcache = Hashtbl.create 10000
 
 let dump_simple_stats () =
-  Format.printf "@[Prover cache stats: %d queries, %d cache hits@\n@]" !num_queries !hits; flush stdout
+  Format.printf "@[Prover cache stats:@ %d@ queries,@ %d@ cache@ hits,@ hit rate:@ %d\%@\n@]" !num_queries !hits (!hits/!num_queries); flush stdout
 
 let clear_cache () =
   Hashtbl.clear qcache; num_queries := 0; hits := 0

@@ -67,6 +67,7 @@ val use_list: bool ref
 val kill_simplify: bool ref  
 val always_use_backup_prover: bool ref
 val cache_queries: bool ref 
+val no_simple_subs: bool ref
 val less_qualifs: bool ref
 val make_anormal: bool ref
 val keep_asm_file : bool ref
