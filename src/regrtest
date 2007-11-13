@@ -45,7 +45,7 @@ do
   echo RUNNING: $i 
   LOGFILE=$TMPDIR"/"${i/\//_}".lilog"
   echo $i > $LOGFILE
-  time $OCAML $FLAGS -yices $i 1>> $LOGFILE 2>> $LOGFILE
+  time $OCAML $FLAGS -bprover $i 1>> $LOGFILE 2>> $LOGFILE
 
   SUCC=$?
 
@@ -84,7 +84,7 @@ do
   echo RUNNING: $i 
   LOGFILE=$TMPDIR"/"${i/\//_}".lilog"
   echo $i > $LOGFILE
-  time $OCAML $FLAGS -simplify $i 1>> $LOGFILE 2>> $LOGFILE
+  time $OCAML $FLAGS $i 1>> $LOGFILE 2>> $LOGFILE
 
   SUCC=$?
 

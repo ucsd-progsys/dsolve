@@ -45,8 +45,6 @@ module type PROVER =
     val print_simplify: Predicate.t -> Predicate.t -> unit
 
     val restart_simplify : unit -> unit
-    val dump_simple_stats : unit -> unit
-
   end
 
 module M = Message
@@ -233,46 +231,26 @@ let valid p =
 let reset () = 
   Misc.repeat_fn pop (!simplify_stack_counter)
 
-(* ming: hacking up the query code to try to speed things up *)
-let qcache = Hashtbl.create 10000
-
-let num_queries = ref 1
-let num_queries_cached = ref 1
+let num_queries = ref 0
 let queries_between_resets = 80000
-let queries_between_dumps = 1000
-
-let dump_simple_stats () =
-  Format.printf "@[Simplify cache stats so far: %d queries, %d cached@\n@]" !num_queries !num_queries_cached
 
 let implies (p, q) =
-
-  (* ming: kill simplify to recover memory every once in a while *)
   let _ = incr num_queries in
-  let _ = if !num_queries mod queries_between_resets = 0 then (dump_simple_stats (); restart_simplify (); flush stdout) else () in 
-  let _ = if !num_queries mod queries_between_dumps = 0 then (dump_simple_stats (); flush stdout) else () in
-
-  (* ming: cache queries *)
-  let pstr = Format.fprintf Format.str_formatter "@[%a@]" Predicate.pprint p; Format.flush_str_formatter () in
-  let qstr = Format.fprintf Format.str_formatter "@[%a@]" Predicate.pprint q; Format.flush_str_formatter () in
-  let querystr = String.concat "" [pstr; "__IMPLIES__"; qstr] in
-  let cached = Hashtbl.mem qcache querystr in
-  let _ = cached in
+  let _ = if !Clflags.kill_simplify && !num_queries mod queries_between_resets = 0 then restart_simplify () else () in 
 
   let s = Printf.sprintf "(IMPLIES %s %s)" (convert_pred p) (convert_pred q) in
   let rec qe flag = 
     let _ = flush stdout; flush stderr in 
     try
       let ic,oc = getServer () in
-      let res = secure_output_string oc s;flush oc; isValid ic in
-        Hashtbl.add qcache querystr res; res
+      secure_output_string oc s;flush oc; isValid ic 
     with ChannelException when flag -> failwith "Simplify fails again!" 
        | ChannelException -> restart_simplify (); qe true
        | e -> 
          failwith (Format.fprintf Format.str_formatter
            "Simplify raises %s for %a. Check that Simplify is in your path \n" 
            (Printexc.to_string e) Predicate.pprint p; Format.flush_str_formatter ()) in
-  if not(cached) then qe false else (incr num_queries_cached;try Hashtbl.find
-                                   qcache querystr with Not_found -> assert false)
+    qe false
 
 let print_simplify p q = 
   let ps = convert_pred p in

@@ -64,6 +64,7 @@ val brief_quals: bool ref
 val no_simple: bool ref
 val verify_simple: bool ref
 val use_list: bool ref
+val kill_simplify: bool ref  
 val less_qualifs: bool ref
 val make_anormal: bool ref
 val keep_asm_file : bool ref
