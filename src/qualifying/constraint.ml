@@ -219,7 +219,7 @@ let refine solution = function
   | (_, _, ([], Frame.Qvar k1), ([], Frame.Qvar k2))
       when not (!Clflags.no_simple || !Clflags.verify_simple) ->
       refine_simple solution k1 k2
-  | (_, _, (lhs_subs, r1), (rhs_subs, Frame.Qvar k2)) as cstr ->
+  | (env, guard, (lhs_subs, r1), (rhs_subs, Frame.Qvar k2)) as cstr ->
       let _ = num_refines := !num_refines + 1 in
       let make_lhs (env, guard, r1, _) =
         let envp = environment_predicate solution env in
@@ -232,19 +232,29 @@ let refine solution = function
       let result = ref Solution_unchanged in
       let qual_holds q =
         let res =
+          let rhs = Frame.refinement_predicate (solution_map solution) qual_test_var (rhs_subs, Frame.Qconst [q]) in
+          let lhs = make_lhs cstr in
+          let pres = Bstats.time "refinement query" (TheoremProver.implies lhs) rhs in
+            incr solved_constraints;
+            if pres then incr valid_constraints;
+            pres
+        in
+        let resopt =
           if not !Clflags.no_simple_subs &&
             lhs_is_variable && not (affected_by_substitutions lhs_subs q) && not (affected_by_substitutions rhs_subs q) then
               List.mem q lhs_quals
-          else
-            let rhs = Frame.refinement_predicate (solution_map solution) qual_test_var (rhs_subs, Frame.Qconst [q]) in
-            let lhs = make_lhs cstr in
-            let pres = Bstats.time "refinement query" (TheoremProver.implies lhs) rhs in
-              incr solved_constraints;
-              if pres then incr valid_constraints;
-              pres
+          else res
         in
-          if not res then result := Solution_changed;
-          res
+          if res != resopt then begin
+            Format.printf "@[Disagree on query %a;@;<1 0>%a |- %a <:@;<1 2>%a@]@.@."
+              pprint_env_pred (solution, env) Predicate.pprint guard
+              Frame.pprint_refinement (lhs_subs, Frame.Qconst [q]) Frame.pprint_refinement (rhs_subs, Frame.Qconst [q]);
+            assert false
+          end
+          else begin
+            if not res then result := Solution_changed;
+            res
+          end
       in
       let refined_quals = List.filter qual_holds (Solution.find solution k2) in
         Solution.replace solution k2 refined_quals;
