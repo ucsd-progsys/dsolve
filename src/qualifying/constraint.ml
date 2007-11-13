@@ -242,8 +242,10 @@ let refine solution = function
         in
         let resopt =
           (not !Clflags.no_simple_subs &&
-             lhs_is_variable && not lhs_needs_prover && not (affected_by_substitutions rhs_subs q) &&
-             List.mem q lhs_quals) || res
+             List.mem q lhs_quals &&
+             not (affected_by_substitutions rhs_subs q) &&
+             not (affected_by_substitutions rhs_subs q) &&
+             lhs_is_variable) || res
         in
           if res != resopt then begin
             Format.printf "@[Disagree on query (prover: %B, prop: %B) %a;@;<1 0>%a |- %a <:@;<1 2>%a@]@.@." res resopt
