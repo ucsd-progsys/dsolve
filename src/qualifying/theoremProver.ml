@@ -18,7 +18,7 @@ let rec fixdiv p =
   let rec apply_mult m e =
     match e with
         Predicate.Binop(n, Predicate.Div, Predicate.PInt(d)) ->
-          let _ = assert ((m/d) * d = m) in
+          (*let _ = assert ((m/d) * d = m) in*)
             Predicate.Binop(Predicate.PInt(m/d), Predicate.Times, n) 
       | Predicate.Binop(e1, rel, e2) ->
           Predicate.Binop(apply_mult m e1, rel, apply_mult m e2) 
@@ -95,7 +95,7 @@ let valid p =
 
 let num_queries = ref 0
 let hits = ref 0
-let dump_interval = 3000
+let dump_interval = 10000
 let qcache = Hashtbl.create 10000
 
 let dump_simple_stats () =
@@ -106,7 +106,7 @@ let clear_cache () =
 
 let check_implies default backup p q =
   let _ = incr num_queries in
-  let _ = if !num_queries mod dump_interval = 0 then dump_simple_stats () else () in 
+  let _ = if (!num_queries mod dump_interval) = 0 then dump_simple_stats () else () in 
   let use_cache = !Clflags.cache_queries in
   (*let pstr = if use_cache then Format.fprintf Format.str_formatter "@[%a@]" Predicate.pprint p; Format.flush_str_formatter () in
   let qstr = if use_cache then Format.fprintf Format.str_formatter "@[%a@]" Predicate.pprint q; Format.flush_str_formatter () in

@@ -248,6 +248,7 @@ let execute_phrase print_outcome ppf phr =
         try Qualifymod.qualify_structure newenv !toplevel_fenv oldquals str
         with Qualifymod.IllQualified partial_fmap ->
           begin
+            TheoremProver.dump_simple_stats ();
             dump_qualifs ();
             dump_frames partial_fmap;
             exit 1

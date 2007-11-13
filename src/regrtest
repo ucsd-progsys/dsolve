@@ -5,7 +5,7 @@ FLAGS="-dframes -anormal -cacheq "
 QUALFLAGS="-dqualifs -lqualifs"
 YFILE=yicestests
 SFILE=simtests
-POSFILE=$YFILE" "$SFILE
+POSFILE=posfiles
 NEGFILE=negtests
 #HANDQUALS_ONLY="yep"
 
@@ -20,7 +20,7 @@ rm -f $TMPDIR/*.lilog*
 rm -f DML/*.quals
 rm -f DMLex/*.quals
 
-FILE=$POSFILE" "$NEGFILE
+FILE=`cat $POSFILE`" "$NEGFILE
 
 echo Generating qualifiers where needed...
 
@@ -28,7 +28,7 @@ if [[ $HANDQUALS_ONLY ]]
 then
   echo "User specified hand quals only"
 else
-  for i in `cat $POSFILE`
+        for i in `cat $FILE`
   do
     cat $i.quals 1> /dev/null 2> /dev/null
     if [[ $? != 0 ]]
@@ -39,13 +39,21 @@ else
 fi
 echo done.
 
-echo RUNNING YICES TESTS
-for i in `cat $YFILE`
+for j in `cat $POSFILE`
 do
+echo RUNNING $j TESTS
+for i in `cat $j`
+do
+  YICES=""
+  if [[ "$j" == "yicestests" ]]
+  then
+      YICES="-bprover"
+  fi
+
   echo RUNNING: $i 
   LOGFILE=$TMPDIR"/"${i/\//_}".lilog"
   echo $i > $LOGFILE
-  time $OCAML $FLAGS -bprover $i 1>> $LOGFILE 2>> $LOGFILE
+  time $OCAML $FLAGS $YICES $i 1>> $LOGFILE 2>> $LOGFILE
 
   SUCC=$?
 
@@ -74,49 +82,14 @@ do
   t=`grep "TOTAL" $LOGFILE | tail -n1`
   t=`echo "${t//TOTAL/}" | tr -ds " " " "`
   tt=`grep "cache" $LOGFILE | tail -n1 | tr -s " " " "`
+  ttt=`grep "matching" $LOGFILE | tail -n1 | tr -s " " " "`
   echo "$t"
   echo "$tt"
+  echo "$ttt"
+done
 done
 echo DONE
 
-
-echo RUNNING SIMPLIFY TESTS
-for i in `cat $SFILE`
-do
-  echo RUNNING: $i 
-  LOGFILE=$TMPDIR"/"${i/\//_}".lilog"
-  echo $i > $LOGFILE
-  time $OCAML $FLAGS $i 1>> $LOGFILE 2>> $LOGFILE
-
-  SUCC=$?
-
-  #some stupid grep tricks to cut down on the output
-  s=`grep -n "\#\#solve\#\#" $LOGFILE | tail -n1 -` 
-  d=`grep -n "\#\#endtime\#\#" $LOGFILE | tail -n1 -`
-  s=`expr "$s" : '\([0-9]*\)'`
-  d=`expr "$d" : '\([0-9]*\)'`
-  let "s = $d - $s - 1"
-  let "d = $d - 1"
-  f=`head -n$d $LOGFILE | tail -n$s -`
-  echo $i > $LOGFILE.min
-  echo "$f" >> $LOGFILE.min
-  echo "
-
-  " >> $LOGFILE.min
-
-  
-  if [ $SUCC = 0 ] 
-  then 
-    echo "SUCCESS!"
-  else
-    echo "FAILURE :("
-  fi
-  echo -n "Time in solver:  " 
-  t=`grep "TOTAL" $LOGFILE | tail -n1`
-  t=`echo "${t//TOTAL/}" | tr -ds " " " "`
-  echo "$t"
-done
-echo DONE
 
 #echo RUNNING NEGFILE
 #for i in `cat $NEGFILE`

@@ -203,23 +203,131 @@ let refine_simple solution k1 k2 =
     Solution.replace solution k2 refined_quals;
     !result
 
+      (* this will print out some duplicates, but that should be ok as long as
+       * we don't get _too_ many duplicates *)
+let matching_ctr = ref 0 
+let lhs_tbl = ref (Hashtbl.create 20)
+let this_lhs_tbl = ref (Hashtbl.create 20) 
+let next_lhs_tbl = ref (Hashtbl.create 20)
+let tbl_add_raw (x, y) =
+  Hashtbl.replace !lhs_tbl x [y];
+  Hashtbl.replace !next_lhs_tbl x () 
+let tbl_add (x, y) =
+  if Hashtbl.mem !lhs_tbl x then
+    let yl = Hashtbl.find !lhs_tbl x in
+      if List.mem y yl then () else
+        (Hashtbl.replace !lhs_tbl x (y::yl); Hashtbl.replace !next_lhs_tbl x ())
+  else tbl_add_raw (x, y)
+let tbl_swap () =
+  let tmp = !this_lhs_tbl in
+    this_lhs_tbl := !next_lhs_tbl;
+    next_lhs_tbl := tmp
+let tbl_clear_next () =
+  Hashtbl.clear !next_lhs_tbl
+let tbl_clear () =
+  Hashtbl.clear !next_lhs_tbl;
+  Hashtbl.clear !this_lhs_tbl;
+  Hashtbl.clear !lhs_tbl
+
+    (* ming: i'm getting too tired to think about these properly. some
+     * combination of these should be maximal for getting the whole transitive
+     * closure *)
+let resolve_rels x rel p =
+  let yl = try Hashtbl.find !lhs_tbl x with Not_found -> [] in
+  let rels r1 r2 =
+    match (r1, r2) with
+      | (Predicate.Ne, Predicate.Ne) -> None
+      | (Predicate.Eq, Predicate.Eq) -> Some Predicate.Eq
+      | (Predicate.Lt, Predicate.Lt) -> Some Predicate.Lt
+      (*| (Predicate.Le, Predicate.Le) -> Some Predicate.Le
+      | (Predicate.Gt, Predicate.Gt) -> Some Predicate.Gt
+      | (Predicate.Ge, Predicate.Ge) -> Some Predicate.Ge
+      | (Predicate.Le, Predicate.Lt) -> Some Predicate.Lt
+      | (Predicate.Ge, Predicate.Gt) -> Some Predicate.Gt*) 
+      | (Predicate.Ne, Predicate.Eq) -> Some Predicate.Ne
+      (*| (Predicate.Eq, t) -> Some t *)
+      | (t, t') -> None
+  in
+  let relrev r2 r1 = rels r1 r2
+  in
+  let mk_atom b rel = 
+    match rel with 
+        Some rel -> Predicate.Atom(Predicate.Var qual_test_var, rel, p)::b 
+      | None -> b
+  in
+  let ll = List.append (List.map (rels rel) yl) in (*(List.map (relrev rel) yl) in*)
+    List.fold_left mk_atom [] ll
+
+let fold_env_into_lhs env lhs_preds =
+  let lhs_list = ref [] in
+  let _ = tbl_clear () in
+  let rec build_tbl p =
+    match p with
+      | Predicate.And (t1, t2) -> (build_tbl t1); (build_tbl t2)
+      | Predicate.Atom (Predicate.Var x, rel, Predicate.Var y) -> 
+          if Path.same x qual_test_var then
+            tbl_add (y, rel)
+          else if Path.same y qual_test_var then
+            tbl_add (x, rel)
+          else
+            ()
+      | t -> ()
+  in
+  let _ = List.map build_tbl lhs_preds in
+  let rec walk_env p =
+    match p with
+      | Predicate.And (t1, t2) -> (walk_env t1); (walk_env t2)
+      | Predicate.Atom (Predicate.Var x, rel, p2)
+      | Predicate.Atom (p2, rel, Predicate.Var x) ->
+          if Hashtbl.mem !this_lhs_tbl x then
+            let _ = match p2 with
+                  | Predicate.Var y -> tbl_add (y, rel)
+                  | t -> ()
+            in
+            if Hashtbl.mem !this_lhs_tbl x then 
+              lhs_list := List.append (resolve_rels x rel p2) !lhs_list
+          else
+            ()
+      | t -> ()
+    in
+      while Hashtbl.length !next_lhs_tbl > 0 do
+          tbl_swap ();
+          tbl_clear_next ();
+          walk_env env;
+      done;
+      !lhs_list 
+
+let rec reverse_preds = function
+    Predicate.Atom(p, r, p')::rem ->
+      Predicate.Atom(p', r, p)
+      ::Predicate.Atom(p, r, p')
+      ::reverse_preds rem
+    | t::rem -> t::(reverse_preds rem)
+    | [] -> []
+
+let folding_debug_flag = false
+
 let refine solution = function
   | (_, _, ([], Frame.Qvar k1), ([], Frame.Qvar k2))
       when not (!Clflags.no_simple || !Clflags.verify_simple) ->
       refine_simple solution k1 k2
   | (env, guard, r1, (rhs_subs, Frame.Qvar k2)) as cstr ->
       let _ = num_refines := !num_refines + 1 in
+      let envp = environment_predicate solution env in
       let make_lhs (env, guard, r1, _) =
-        let envp = environment_predicate solution env in
         let p1 = Frame.refinement_predicate (solution_map solution) qual_test_var r1 in
           Predicate.big_and [envp; guard; p1]
       in
       let lhs_preds = Frame.refinement_conjuncts (solution_map solution) qual_test_var r1 in
+      let _ = if folding_debug_flag then printf "@[BEFORE:%a@\n%a@\n@]" Predicate.pprint envp Predicate.pprint (Predicate.big_and lhs_preds)  in
+      let lhs_preds = List.append (fold_env_into_lhs envp lhs_preds) lhs_preds in
+      let _ = if folding_debug_flag then printf "@[AFTER:%a@\n@]" Predicate.pprint (Predicate.big_and lhs_preds)  in
+      (*let lhs_preds = reverse_preds lhs_preds in *)
       let result = ref Solution_unchanged in
       let qual_holds q =
         let rhs = Frame.refinement_predicate (solution_map solution) qual_test_var (rhs_subs, Frame.Qconst [q]) in
         let res =
-          if not !Clflags.no_simple_subs && List.mem rhs lhs_preds then true
+          if not !Clflags.no_simple_subs && List.mem rhs lhs_preds then (incr matching_ctr;true)
           else
             let lhs = make_lhs cstr in
             let pres = Bstats.time "refinement query" (TheoremProver.implies lhs) rhs in
@@ -427,6 +535,7 @@ let solve_constraints quals constrs =
   let _ = Format.printf "@[Solved@ %d@ constraints;@ %d@ valid@]@.@." !solved_constraints !valid_constraints in
   let _ = TheoremProver.dump_simple_stats () in
   let _ = TheoremProver.clear_cache () in
+  let _ = Format.printf "@[Solved@ %d@ constraints@ by@ matching@\n@]" !matching_ctr in
   let _ = flush stdout in
 
   if !Clflags.dump_constraints then

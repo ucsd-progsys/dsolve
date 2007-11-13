@@ -1,13 +1,10 @@
 
 DML/dotprod2.ml
-DMLex/simplex.ml
-DML/fft.ml
 DML/bsearch.ml
 DML/queen.ml
 DML/insertsort.ml
 DMLex/bs2.ml
 examples-liquid/unbounded.ml
-examples-liquid/encrypt_ecb.ml
 examples-liquid/encrypt_cfb8.ml
 DML/dotprod.ml
 DMLex/gauss.ml
@@ -15,3 +12,6 @@ DMLex/matmult.ml
 DML/tower.ml
 DMLex/bcopy.ml
 DMLex/heapsort.ml
+DMLex/simplex.ml
+DML/fft.ml
+examples-liquid/encrypt_ecb.ml
