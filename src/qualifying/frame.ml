@@ -232,14 +232,17 @@ let apply_solution solution fr =
     | Funknown as f-> f
   in apply_rec fr
 
-let refinement_predicate solution qual_var (subs, qualifiers) =
+let refinement_conjuncts solution qual_var (subs, qualifiers) =
   let quals = match qualifiers with
     | Qvar k -> (try solution k with Not_found -> assert false)
     | Qconst qs -> qs
   in
-  let unsubst = Predicate.big_and (List.map (Qualifier.apply qual_var) quals) in
+  let unsubst = List.map (Qualifier.apply qual_var) quals in
   let substitute p (x, e) = Predicate.subst e x p in
-    List.fold_left substitute unsubst subs
+    List.map (fun p -> List.fold_left substitute p subs) unsubst
+
+let refinement_predicate solution qual_var refn =
+  Predicate.big_and (refinement_conjuncts solution qual_var refn)
 
 let rec refinement_vars = function
   | Fconstr (_, _, (_, Qvar k)) ->

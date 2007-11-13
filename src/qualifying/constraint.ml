@@ -203,53 +203,34 @@ let refine_simple solution k1 k2 =
     Solution.replace solution k2 refined_quals;
     !result
 
-let subTable = Hashtbl.create 17
-
-let affected_by_substitutions subs q =
-  let is_affected () =
-    let (subs_domain, _) = List.split subs in
-    let pred = Qualifier.apply qual_test_var q in
-      List.exists (fun x -> List.mem x subs_domain) (Predicate.vars pred)
-  in
-    Frame.pprint_refinement str_formatter (subs, Frame.Qconst [q]);
-    let key = flush_str_formatter () in
-      Misc.do_memo subTable is_affected () key
-
 let refine solution = function
   | (_, _, ([], Frame.Qvar k1), ([], Frame.Qvar k2))
       when not (!Clflags.no_simple || !Clflags.verify_simple) ->
       refine_simple solution k1 k2
-  | (env, guard, (lhs_subs, r1), (rhs_subs, Frame.Qvar k2)) as cstr ->
+  | (env, guard, r1, (rhs_subs, Frame.Qvar k2)) as cstr ->
       let _ = num_refines := !num_refines + 1 in
       let make_lhs (env, guard, r1, _) =
         let envp = environment_predicate solution env in
         let p1 = Frame.refinement_predicate (solution_map solution) qual_test_var r1 in
           Predicate.big_and [envp; guard; p1]
       in
-      let (lhs_quals, lhs_is_variable) =
-        match r1 with Frame.Qconst qs -> ([], false) | Frame.Qvar k1 -> (Solution.find solution k1, true)
-      in
+      let lhs_preds = Frame.refinement_conjuncts (solution_map solution) qual_test_var r1 in
       let result = ref Solution_unchanged in
       let qual_holds q =
+        let rhs = Frame.refinement_predicate (solution_map solution) qual_test_var (rhs_subs, Frame.Qconst [q]) in
         let res =
-          let rhs = Frame.refinement_predicate (solution_map solution) qual_test_var (rhs_subs, Frame.Qconst [q]) in
           let lhs = make_lhs cstr in
           let pres = Bstats.time "refinement query" (TheoremProver.implies lhs) rhs in
             incr solved_constraints;
             if pres then incr valid_constraints;
             pres
         in
-        let resopt =
-          (not !Clflags.no_simple_subs &&
-             List.mem q lhs_quals &&
-             not (affected_by_substitutions lhs_subs q) &&
-             not (affected_by_substitutions rhs_subs q) &&
-             lhs_is_variable) || res
+        let resopt = (not !Clflags.no_simple_subs && List.mem rhs lhs_preds) || res
         in
           if res != resopt then begin
-            Format.printf "@[Disagree on query (prover: %B, prop: %B) %a;@;<1 0>%a |- %a <:@;<1 2>%a@]@.@." res resopt
+            (* Format.printf "@[Disagree on query (prover: %B, prop: %B) %a;@;<1 0>%a |- %a <:@;<1 2>%a@]@.@." res resopt
               pprint_env_pred (solution, env) Predicate.pprint guard
-              Frame.pprint_refinement (lhs_subs, Frame.Qconst lhs_quals) Frame.pprint_refinement (rhs_subs, Frame.Qconst [q]);
+              Frame.pprint_refinement (lhs_subs, Frame.Qconst lhs_quals) Frame.pprint_refinement (rhs_subs, Frame.Qconst [q]); *)
             assert false
           end
           else begin
