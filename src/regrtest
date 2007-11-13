@@ -1,7 +1,7 @@
 #!/bin/bash
 #not actually a regression test
 OCAML=./ocaml.run
-FLAGS="-dframes -anormal -cacheq -no-simple-subs"
+FLAGS="-dframes -anormal -cacheq "
 QUALFLAGS="-dqualifs -lqualifs"
 YFILE=yicestests
 SFILE=simtests
@@ -73,9 +73,9 @@ do
   echo -n "Time in solver:  " 
   t=`grep "TOTAL" $LOGFILE | tail -n1`
   t=`echo "${t//TOTAL/}" | tr -ds " " " "`
-  t=`grep "hit rate" $LOGFILE | tail -n1`
-  t=`echo "${t/hit\ rate:\ \([0-9]\)*\%//1}"% hit rate`
+  tt=`grep "cache" $LOGFILE | tail -n1 | tr -s " " " "`
   echo "$t"
+  echo "$tt"
 done
 echo DONE
 

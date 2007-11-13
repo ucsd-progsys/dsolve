@@ -1,4 +1,5 @@
 
+DML/dotprod2.ml
 DMLex/simplex.ml
 DML/fft.ml
 DML/bsearch.ml
@@ -9,7 +10,6 @@ examples-liquid/unbounded.ml
 examples-liquid/encrypt_ecb.ml
 examples-liquid/encrypt_cfb8.ml
 DML/dotprod.ml
-DML/dotprod2.ml
 DMLex/gauss.ml
 DMLex/matmult.ml
 DML/tower.ml
