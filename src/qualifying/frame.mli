@@ -21,6 +21,7 @@ type t =
   | Funknown
 
 val pprint: formatter -> t -> unit
+val pprint_sub: formatter -> substitution -> unit
 val pprint_refinement: formatter -> refinement -> unit
 val pprint_qualifier_expr: formatter -> qualifier_expr -> unit
 val fresh: type_expr -> Env.t -> t
@@ -32,7 +33,7 @@ val label_like: t -> t -> t
 val apply_solution: (Path.t -> Qualifier.t list) -> t -> t
 val refinement_predicate:
   (Path.t -> Qualifier.t list) -> Path.t -> refinement -> Predicate.t
-val refinement_var: t -> Path.t option
+val refinement_vars: t -> Path.t list
 val apply_refinement: refinement -> t -> t
 val predicate:
   (Path.t -> Qualifier.t list) -> Path.t -> t -> Predicate.t

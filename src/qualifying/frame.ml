@@ -241,10 +241,12 @@ let refinement_predicate solution qual_var (subs, qualifiers) =
   let substitute p (x, e) = Predicate.subst e x p in
     List.fold_left substitute unsubst subs
 
-let refinement_var = function
+let rec refinement_vars = function
   | Fconstr (_, _, (_, Qvar k)) ->
-      Some k
-  | _ -> None
+      [k]
+  | Frecord (_, fs, (_, Qvar k)) ->
+      k :: List.fold_left (fun r (f, _, _) -> refinement_vars f @ r) [] fs
+  | _ -> []
 
 let apply_refinement r = function
   | Fconstr (p, fl, _) ->
