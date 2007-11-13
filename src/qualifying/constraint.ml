@@ -219,7 +219,7 @@ let refine solution = function
   | (_, _, ([], Frame.Qvar k1), ([], Frame.Qvar k2))
       when not (!Clflags.no_simple || !Clflags.verify_simple) ->
       refine_simple solution k1 k2
-  | (_, _, (lhs_subs, r1), (rhs_subs, Frame.Qvar k2)) as cstr ->
+  | (env, guard, (lhs_subs, r1), (rhs_subs, Frame.Qvar k2)) as cstr ->
       let _ = num_refines := !num_refines + 1 in
       let make_lhs (env, guard, r1, _) =
         let envp = environment_predicate solution env in
@@ -246,7 +246,8 @@ let refine solution = function
           else res
         in
           if res != resopt then begin
-            Format.printf "@[Disagree on query %a <:@;<1 2>%a@]@.@."
+            Format.printf "@[Disagree on query %a;@;<1 0>%a |- %a <:@;<1 2>%a@]@.@."
+              pprint_env_pred (solution, env) Predicate.pprint guard
               Frame.pprint_refinement (lhs_subs, Frame.Qconst [q]) Frame.pprint_refinement (rhs_subs, Frame.Qconst [q]);
             assert false
           end
