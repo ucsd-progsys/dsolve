@@ -1,1 +1,1 @@
-qualif LE_N_D2(x) : 2 * x <= n;;
+qualif N(x) : 2 * x <= n;;

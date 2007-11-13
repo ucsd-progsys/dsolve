@@ -92,6 +92,7 @@ let split cstrs =
                 in SubFrame (env, guard, recf1, recf2) :: invar_cs
               in
               let new_cs = List.fold_left2 make_subframe cs recframes1 recframes2 in
+                (* ming: i'm not sure if i believe the following *)
               let new_flat =
                 if List.exists (fun (_, _, muta) -> muta = Asttypes.Mutable) recframes1 then
                   SubRefinement (env, guard, r2, r1) :: flat

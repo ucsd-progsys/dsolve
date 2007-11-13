@@ -13,7 +13,7 @@ fun bs vec key =
 		    else if x > key then bs_aux l (m-1)
 			 else m
 		end
-#	withtype {i:int,j:int | 0 <= i <= j+1 <= n} <j+1-i> =>
+#	withtype {i:int,j:int | 0 <= i <= j+1 <= n}  =>
 #                 int(i) -> int(j) -> int
     in
 	bs_aux 0 (arraysize vec - 1)

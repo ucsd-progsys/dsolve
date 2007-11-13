@@ -45,6 +45,8 @@ do
   echo $i > $LOGFILE
   time $OCAML $FLAGS $i 1>> $LOGFILE 2>> $LOGFILE
 
+  SUCC=$?
+
   #some stupid grep tricks to cut down on the output
   s=`grep -n "\#\#solve\#\#" $LOGFILE | tail -n1 -` 
   d=`grep -n "\#\#endtime\#\#" $LOGFILE | tail -n1 -`
@@ -60,7 +62,7 @@ do
   " >> $LOGFILE.min
 
   
-  if [ $? = 0 ] 
+  if [ $SUCC = 0 ] 
   then 
     echo "SUCCESS!"
   else
