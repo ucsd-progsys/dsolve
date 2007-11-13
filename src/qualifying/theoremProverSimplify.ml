@@ -45,7 +45,6 @@ module type PROVER =
     val print_simplify: Predicate.t -> Predicate.t -> unit
 
     val restart_simplify : unit -> unit
-
   end
 
 module M = Message
@@ -232,20 +231,26 @@ let valid p =
 let reset () = 
   Misc.repeat_fn pop (!simplify_stack_counter)
 
+let num_queries = ref 0
+let queries_between_resets = 80000
+
 let implies (p, q) =
+  let _ = incr num_queries in
+  let _ = if !Clflags.kill_simplify && !num_queries mod queries_between_resets = 0 then restart_simplify () else () in 
+
   let s = Printf.sprintf "(IMPLIES %s %s)" (convert_pred p) (convert_pred q) in
   let rec qe flag = 
     let _ = flush stdout; flush stderr in 
     try
       let ic,oc = getServer () in
-      secure_output_string oc s;flush oc; isValid ic
+      secure_output_string oc s;flush oc; isValid ic 
     with ChannelException when flag -> failwith "Simplify fails again!" 
        | ChannelException -> restart_simplify (); qe true
        | e -> 
          failwith (Format.fprintf Format.str_formatter
            "Simplify raises %s for %a. Check that Simplify is in your path \n" 
            (Printexc.to_string e) Predicate.pprint p; Format.flush_str_formatter ()) in
-  qe false
+    qe false
 
 let print_simplify p q = 
   let ps = convert_pred p in

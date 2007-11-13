@@ -1,6 +1,6 @@
 
-#datatype 'a array2D with (nat,nat) =
-#  {m:nat,n:nat} A(m,n) of ('a array(n)) array(m) * int(m) * int(n)
+datatype 'a array2D with (nat,nat) =
+{m:nat,n:nat} A(m,n) of ('a array(n)) array(m) * int(m) * int(n)
 
 fun('a) nRows (A (_, m, _)) = m
 #withtype {m:nat,n:nat} <> => 'a array2D(m,n) -> int(m)
@@ -14,11 +14,11 @@ fun is_neg_aux (arr2, n, j) =
 	if sub2 (arr2, 0, j) <. 0.0 then true
 	else is_neg_aux (arr2, n, j+1)  
     else false
-#withtype {m:pos,n:pos,j:nat | j <= n} <n-j> =>
+#withtype {m:pos,n:pos,j:nat | j <= n}  =>
 #         (float array(n)) array(m) * int(n) * int(j) -> bool
 
 fun is_neg (arr2, n) = is_neg_aux (arr2, n, 1)
-#withtype {m:pos,n:pos} <> => (float array(n)) array(m) * int(n) -> bool
+#withtype {m:pos,n:pos}  => (float array(n)) array(m) * int(n) -> bool
 
 
 fun unb1 (arr2, m, n, i, j) = 
@@ -26,7 +26,7 @@ fun unb1 (arr2, m, n, i, j) =
 	if sub2 (arr2, 0, j) <. 0.0 then unb2 (arr2, m, n, i+1, j)
 	else unb1 (arr2, m, n, 0, j+1)
     else false
-#withtype {m:pos,n:pos,i:nat,j:nat | i < m, j <= n} <n-j, m-i> =>
+#withtype {m:pos,n:pos,i:nat,j:nat | i < m, j <= n}  =>
 #         (float array(n)) array(m) * int (m) * int(n) * int(i) * int(j) -> bool
 
 and unb2 (arr2, m, n, i, j) =
@@ -34,7 +34,7 @@ and unb2 (arr2, m, n, i, j) =
 	if sub2 (arr2, i, j) <. 0.0 then unb2 (arr2, m, n, i+1, j)
 	else unb1 (arr2, m, n, 0, j+1)
     else true
-#withtype {m:pos,n:pos,i:nat,j:nat | i <= m, j < n} <n-j,m-i> =>
+#withtype {m:pos,n:pos,i:nat,j:nat | i <= m, j < n}  =>
 #         (float array(n)) array(m) * int (m) * int(n) * int(i) * int(j) -> bool
 
 
@@ -48,7 +48,7 @@ fun enter_var (arr2, n, j, c, j') =
 	    else enter_var (arr2, n, j, c, j'+1)
 	end
     else j
-#withtype {m:pos,n:pos,j:pos,j':pos | j+1 < n, j' < n} <n-j'> =>
+#withtype {m:pos,n:pos,j:pos,j':pos | j+1 < n, j' < n}  =>
 #         (float array(n)) array(m) * int(n) * int(j) * float * int(j') ->
 #	 [j:pos | j+1 < n] int(j)
 
@@ -68,7 +68,7 @@ fun depart_var (arr2, m, n, j, i, r, i') =
 	    else depart_var (arr2, m, n, j, i, r, i'+1)
 	end
     else i
-#withtype {m:pos,n:pos,i:pos,i':pos,j:pos | i < m, i' <= m, j < n} <m-i'> =>
+#withtype {m:pos,n:pos,i:pos,i':pos,j:pos | i < m, i' <= m, j < n}  =>
 #         (float array(n)) array(m) * int(m) * int(n) * int(j) * int(i) * float * int(i') ->
 #	 [i:pos | i < m] int(i)
 
@@ -81,7 +81,7 @@ fun init_ratio (arr2, m, n, j, i) =
 	  else init_ratio (arr2, m, n, j, i+1)
       end
   else abort ("init_ratio: negative coefficients!")
-#withtype {m:pos,n:pos,j:pos,i:pos | j < n, i <= m} <m-i> =>
+#withtype {m:pos,n:pos,j:pos,i:pos | j < n, i <= m} =>
 #         (float array(n)) array(m) * int(m) * int(n) * int(j) * int(i) ->
 #         [i:pos | i < m] int(i) * float
 
@@ -94,7 +94,7 @@ fun norm_aux (arr2, n, i, c, j) =
         norm_aux (arr2, n, i, c, j+1)
     end
   else ()
-#withtype {m:pos,n:pos,i:pos,j:pos | i < m, j <= n} <n-j> =>
+#withtype {m:pos,n:pos,i:pos,j:pos | i < m, j <= n}  =>
 #         (float array(n)) array(m) * int(n) * int(i) * float * int(j) -> unit
 
 fun norm (arr2, n, i, j) =
@@ -103,7 +103,7 @@ fun norm (arr2, n, i, j) =
   in
       norm_aux (arr2, n, i, c, 1)
   end
-#withtype {m:pos,n:pos,i:pos,j:pos | i < m, j < n} <> =>
+#withtype {m:pos,n:pos,i:pos,j:pos | i < m, j < n}  =>
 #         (float array(n)) array(m) * int(n) * int(i) * int(j) -> unit
 
 fun row_op_aux1 (arr2, n, i, i', c, j) =
@@ -116,7 +116,7 @@ fun row_op_aux1 (arr2, n, i, i', c, j) =
 	  row_op_aux1 (arr2, n, i, i', c, j+1)
       end
   else ()
-#withtype {m:pos,n:pos,i:pos,i':nat, j:pos | i < m, i' < m, j <= n} <n-j> =>
+#withtype {m:pos,n:pos,i:pos,i':nat, j:pos | i < m, i' < m, j <= n} =>
 #         (float array(n)) array(m) * int(n) * int(i) * int(i') * float * int(j) -> unit
 
 fun row_op_aux2 (arr2, n, i, i', j) =
@@ -125,7 +125,7 @@ fun row_op_aux2 (arr2, n, i, i', j) =
   in
       row_op_aux1 (arr2, n, i, i', c', 1)
   end
-#withtype {m:pos,n:pos,i:pos,i':nat, j:pos | i < m, i' < m, j < n} <> =>
+#withtype {m:pos,n:pos,i:pos,i':nat, j:pos | i < m, i' < m, j < n}  =>
 #         (float array(n)) array(m) * int(n) * int(i) * int(i') * int(j) -> unit
 
 fun row_op_aux3 (arr2, m, n, i, j, i') =
@@ -138,7 +138,7 @@ fun row_op_aux3 (arr2, m, n, i, j, i') =
          end
      else row_op_aux3 (arr2, m, n, i, j, i'+1)
   else ()
-#withtype {m:pos,n:pos,i:pos,j:pos,i':nat | i < m, j < n, i' <= m} <m-i'> =>
+#withtype {m:pos,n:pos,i:pos,j:pos,i':nat | i < m, j < n, i' <= m}  =>
 #         (float array(n)) array(m) * int(m) * int(n) * int(i) * int(j) * int(i') -> unit
 
 fun row_op (arr2, m, n, i, j) =
@@ -147,7 +147,7 @@ fun row_op (arr2, m, n, i, j) =
     in
 	row_op_aux3 (arr2, m, n, i, j, 0)
     end
-#withtype {m:pos,n:pos,i:pos,j:pos| i < m, j < n} <> =>
+#withtype {m:pos,n:pos,i:pos,j:pos| i < m, j < n}  =>
 #         (float array(n)) array(m) * int(m) * int(n) * int(i) * int(j) -> unit
 
 fun simplex (arr2, m, n) =

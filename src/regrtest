@@ -3,7 +3,9 @@
 OCAML=./ocaml.run
 FLAGS="-dframes -anormal"
 QUALFLAGS="-dqualifs -lqualifs"
-POSFILE=postests
+YFILE=yicestests
+SFILE=simtests
+POSFILE=$YFILE" "$SFILE
 NEGFILE=negtests
 #HANDQUALS_ONLY="yep"
 
@@ -26,7 +28,7 @@ if [[ $HANDQUALS_ONLY ]]
 then
   echo "User specified hand quals only"
 else
-  for i in `cat $FILE`
+  for i in `cat $POSFILE`
   do
     cat $i.quals 1> /dev/null 2> /dev/null
     if [[ $? != 0 ]]
@@ -37,13 +39,15 @@ else
 fi
 echo done.
 
-echo RUNNING POSFILE
-for i in `cat $POSFILE`
+echo RUNNING YICES TESTS
+for i in `cat $YFILE`
 do
   echo RUNNING: $i 
   LOGFILE=$TMPDIR"/"${i/\//_}".lilog"
   echo $i > $LOGFILE
-  time $OCAML $FLAGS $i 1>> $LOGFILE 2>> $LOGFILE
+  time $OCAML $FLAGS -bprover $i 1>> $LOGFILE 2>> $LOGFILE
+
+  SUCC=$?
 
   #some stupid grep tricks to cut down on the output
   s=`grep -n "\#\#solve\#\#" $LOGFILE | tail -n1 -` 
@@ -60,7 +64,46 @@ do
   " >> $LOGFILE.min
 
   
-  if [ $? = 0 ] 
+  if [ $SUCC = 0 ] 
+  then 
+    echo "SUCCESS!"
+  else
+    echo "FAILURE :("
+  fi
+  echo -n "Time in solver:  " 
+  t=`grep "TOTAL" $LOGFILE | tail -n1`
+  t=`echo "${t//TOTAL/}" | tr -ds " " " "`
+  echo "$t"
+done
+echo DONE
+
+
+echo RUNNING SIMPLIFY TESTS
+for i in `cat $SFILE`
+do
+  echo RUNNING: $i 
+  LOGFILE=$TMPDIR"/"${i/\//_}".lilog"
+  echo $i > $LOGFILE
+  time $OCAML $FLAGS $i 1>> $LOGFILE 2>> $LOGFILE
+
+  SUCC=$?
+
+  #some stupid grep tricks to cut down on the output
+  s=`grep -n "\#\#solve\#\#" $LOGFILE | tail -n1 -` 
+  d=`grep -n "\#\#endtime\#\#" $LOGFILE | tail -n1 -`
+  s=`expr "$s" : '\([0-9]*\)'`
+  d=`expr "$d" : '\([0-9]*\)'`
+  let "s = $d - $s - 1"
+  let "d = $d - 1"
+  f=`head -n$d $LOGFILE | tail -n$s -`
+  echo $i > $LOGFILE.min
+  echo "$f" >> $LOGFILE.min
+  echo "
+
+  " >> $LOGFILE.min
+
+  
+  if [ $SUCC = 0 ] 
   then 
     echo "SUCCESS!"
   else

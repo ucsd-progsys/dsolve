@@ -109,6 +109,7 @@ let main () =
      "-bprover", Arg.Set always_use_backup_prover, "always use backup prover";
      "-lqualifs", Arg.Set less_qualifs, "generate less qualifiers (lets only under lambdas)";
      "-anormal", Arg.Set make_anormal, "rewrite the AST for a-normality";
+     "-ksimpl", Arg.Set kill_simplify, "kill simplify after a large number of queries to reduce memory usage" 
     ] file_argument usage;
   if not (prepare Format.err_formatter) then exit 2;
   Toploop.loop Format.std_formatter

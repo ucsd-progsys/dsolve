@@ -26,7 +26,7 @@ fun heapify (h, i) =
 	    end
 	else ()
     end
-#withtype {n:nat,i:nat | i < n} <n-i> =>
+#withtype {n:nat,i:nat | i < n}  =>
 #         float heap(n) * int(i) -> unit
 
 
@@ -37,7 +37,7 @@ fun buildheap (h) =
 	    if i >= 0 then
 		let val _ = heapify (h, i) in loop (i - 1) end
 	    else ()
-#	withtype {i:int | i < n} <max(i+1,0)> => int(i) -> unit
+#	withtype {i:int | i < n} => int(i) -> unit
     in
 	loop (size / 2 - 1)
     end	
@@ -59,7 +59,7 @@ fun heapsort (h) =
 		    loop (i-1)
 		end
 	    else ()
-#        withtype {i:int | i < n} <max(i,0)> => int(i) -> unit
+#        withtype {i:int | i < n} => int(i) -> unit
     in
 	loop (max - 1)
     end
@@ -75,11 +75,11 @@ fun print_array	(data, i, j) =
 		    loop (k+1)
 		end
 	    else ()
-#        withtype {k:int | i <= k <= j} <j-k> => int(k) -> unit
+#        withtype {k:int | i <= k <= j}  => int(k) -> unit
     in
 	loop (i)
     end			
-#withtype {n:nat, i:int, j:int | 0 <= i <= j <= n} <j-i> =>
+#withtype {n:nat, i:int, j:int | 0 <= i <= j <= n}  =>
 #         float array(n) * int(i) * int(j) -> unit
 
 

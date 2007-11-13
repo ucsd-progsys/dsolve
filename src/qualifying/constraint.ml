@@ -92,6 +92,7 @@ let split cstrs =
                 in SubFrame (env, guard, recf1, recf2) :: invar_cs
               in
               let new_cs = List.fold_left2 make_subframe cs recframes1 recframes2 in
+                (* ming: i'm not sure if i believe the following *)
               let new_flat =
                 if List.exists (fun (_, _, muta) -> muta = Asttypes.Mutable) recframes1 then
                   SubRefinement (env, guard, r2, r1) :: flat
@@ -442,6 +443,8 @@ let solve_constraints quals constrs =
 
   let _ = Printf.printf "solution refinement completed:\n\t%d iterations of refine\n\n" !num_refines in
   let _ = Format.printf "@[Solved@ %d@ constraints;@ %d@ valid@]@.@." !solved_constraints !valid_constraints in
+  let _ = TheoremProver.dump_simple_stats () in
+  let _ = TheoremProver.clear_cache () in
   let _ = flush stdout in
 
   if !Clflags.dump_constraints then

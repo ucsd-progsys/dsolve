@@ -69,6 +69,7 @@ and verify_simple = ref false           (* -verify-simple *)
 and less_qualifs = ref false            (* -lqualifs *)
 and make_anormal = ref false            (* -anormal *)
 and use_list = ref false                (* -wlist *)
+and kill_simplify = ref false           (* -ksimpl *)
 and always_use_backup_prover = ref false (* -defprover *)
 and no_simple_subs = ref false          (* -no-simple-subs *)
 

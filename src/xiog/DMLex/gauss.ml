@@ -10,7 +10,7 @@ fun('a) rowSwap (data, i, j) =
     in
 	update (data, j, temp)
     end
-#withtype {m:nat,n:nat,i:nat,j:nat | i < m, j < m} <> =>
+#withtype {m:nat,n:nat,i:nat,j:nat | i < m, j < m}  =>
 #         ('a array(n)) array(m) * int(i) * int(j) -> unit
 
 fun norm (r, n, i) =
@@ -25,11 +25,11 @@ fun norm (r, n, i) =
 		    loop (k+1)
 		end
 	    else ()
-#	withtype {k:nat | k <= n} <n-k> => int(k) -> unit
+#	withtype {k:nat | k <= n}  => int(k) -> unit
     in
 	loop (i+1)
     end
-#withtype {n:nat, i:nat | i < n} <> =>
+#withtype {n:nat, i:nat | i < n}  =>
 #         float array(n) * int(n) * int(i) -> unit
 
 fun rowElim (r, s, n, i) =
@@ -44,11 +44,11 @@ fun rowElim (r, s, n, i) =
 		    loop (k+1)
 		end
 	    else ()
-#	withtype {k:nat | k <= n} <n-k> => int(k) -> unit
+#	withtype {k:nat | k <= n}  => int(k) -> unit
     in
 	loop (i+1)
     end		
-#withtype {n:nat, i:nat | i < n} <> =>
+#withtype {n:nat, i:nat | i < n}  =>
 #         float array(n) * float array(n) * int(n) * int(i) -> unit
 
 fun rowMax (data, m, i) =
@@ -63,12 +63,12 @@ fun rowMax (data, m, i) =
 		    else loop (j+1, x, max)
 		end
 	    else max
-#        withtype {j:nat, max:nat | max < j <= m} <m-j> =>
+#        withtype {j:nat, max:nat | max < j <= m}  =>
 #                 int(j) * float * int(max) -> [a:nat | a < m] int(a)
     in
 	loop (i+1, x, i)
     end
-#withtype {m:nat,n:nat,i:nat | i < m, i < n} <> =>
+#withtype {m:nat,n:nat,i:nat | i < m, i < n}  =>
 #         (float array(n)) array(m) * int(m) * int(i) -> [a:nat | a < m] int(a)
 
 datatype 'a matrix with (nat, nat) =
@@ -93,13 +93,13 @@ fun gauss (mat) =
 			      loop2 (j+1)
 			  end
 		      else ()
-#                  withtype {j:nat | j <= n} <n-j> => int(j) -> unit
+#                  withtype {j:nat | j <= n}  => int(j) -> unit
 		  val _ = loop2 (i+1)
 	      in
 		  loop1 (i+1)
 	      end
 	  else ()
-#      withtype {i:nat | i <= n} <n-i> => int(i) -> unit
+#      withtype {i:nat | i <= n}  => int(i) -> unit
   in
       loop1 (0)
   end
@@ -116,7 +116,7 @@ fun print_array	(data, i, j) =
 		    loop (k+1)
 		end
 	    else print_string "\n"
-#        withtype {k:int | i < k <= j} <j-k> => int(k) -> unit
+#        withtype {k:int | i < k <= j}  => int(k) -> unit
     in
 	if i < j then
 	    let
@@ -126,7 +126,7 @@ fun print_array	(data, i, j) =
 	    end
 	else print_string "\n"
     end			
-#withtype {n:nat, i:int, j:int | 0 <= i <= j <= n} <j-i> =>
+#withtype {n:nat, i:int, j:int | 0 <= i <= j <= n}  =>
 #         float array(n) * int(i) * int(j) -> unit
 
 fun print_matrix (mat) =
@@ -140,7 +140,7 @@ fun print_matrix (mat) =
                     loop (i+1)
                 end
 	    else print_string ("\n")
-#        withtype {i:nat | i <= m} <m-i> => int(i) -> unit
+#        withtype {i:nat | i <= m}  => int(i) -> unit
     in
 	loop (0)
     end
