@@ -35,10 +35,14 @@ let single_simple_qualif x fx i =
   let _ = esc ufx ' ' '_' in 
   let _ = esc ufx '.' '_' in
   let _ = esc ufx '-' '_' in
+  let _ = esc ufx '(' '_' in
+  let _ = esc ufx ')' '_' in
   let ui = String.uppercase i in
   let _ = esc ui ' ' '_' in
   let _ = esc ui '.' '_' in
   let _ = esc ui '-' '_' in
+  let _ = esc ui '(' '_' in
+  let _ = esc ui ')' '_' in
   let mk_qualif op pop = Printf.sprintf "qualif Q%s%s%s(%s) : %s %s %s" ufx pop ui x fx op i in
   List.map2 mk_qualif rels prels
   

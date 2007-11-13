@@ -36,10 +36,10 @@ val pprint_pexpr: formatter -> pexpr -> unit
 val big_and: t list -> t
 val big_or: t list -> t
 val equals: (pexpr * pexpr) -> t
+val implies: (t * t) -> t
 
 val subst: pexpr -> Path.t -> t -> t
 val vars: t -> Path.t list
 (* pmr: change to plain old instantiate *)
 val instantiate_named_vars: (string * Path.t) list -> t -> t
 val transl_predicate: Parsetree.predicate_declaration -> t
-

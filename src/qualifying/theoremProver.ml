@@ -99,7 +99,7 @@ let dump_interval = 3000
 let qcache = Hashtbl.create 10000
 
 let dump_simple_stats () =
-  Format.printf "@[Prover cache stats: %d queries, %d cache hits@\n@]" !num_queries !hits; flush stdout
+  Format.printf "@[Prover cache stats:@ %d@ queries,@ %d@ cache@ hits@\n@]" !num_queries !hits; flush stdout
 
 let clear_cache () =
   Hashtbl.clear qcache; num_queries := 0; hits := 0
@@ -107,20 +107,23 @@ let clear_cache () =
 let check_implies default backup p q =
   let _ = incr num_queries in
   let _ = if !num_queries mod dump_interval = 0 then dump_simple_stats () else () in 
-  let pstr = Format.fprintf Format.str_formatter "@[%a@]" Predicate.pprint p; Format.flush_str_formatter () in
-  let qstr = Format.fprintf Format.str_formatter "@[%a@]" Predicate.pprint q; Format.flush_str_formatter () in
-  let querystr = String.concat "" [pstr; "__IMPLIES__"; qstr] in
+  let use_cache = !Clflags.cache_queries in
+  (*let pstr = if use_cache then Format.fprintf Format.str_formatter "@[%a@]" Predicate.pprint p; Format.flush_str_formatter () in
+  let qstr = if use_cache then Format.fprintf Format.str_formatter "@[%a@]" Predicate.pprint q; Format.flush_str_formatter () in
+  let ipq = String.concat "" [pstr; "__IMPLIES__"; qstr] in*)
+    (* strings are hilariously slow *)
+  let ipq = Predicate.implies (p, q) in
 
-  let cached = Hashtbl.mem qcache querystr in
+  let cached = Hashtbl.mem qcache ipq && use_cache in
   let _ = if cached then incr hits in
 
   let (p, q) = (fixdiv p, fixdiv q) in
-  let res = if cached then Hashtbl.find qcache querystr 
+  let res = if cached then Hashtbl.find qcache ipq
                 else check_result default backup (p, q) in
     if !Clflags.dump_queries then
       Format.printf "@[%s%a@;<1 0>=>@;<1 0>%a@;<1 2>(%B)@]@.@."
         (if cached then "cached:" else "") Predicate.pprint p Predicate.pprint q res;
-    (if cached then () else Hashtbl.replace qcache querystr res); res
+    (if cached then () else Hashtbl.replace qcache ipq res); res
 
 let implies p q =
   if !Clflags.always_use_backup_prover then
