@@ -246,7 +246,7 @@ let refine solution = function
           else res
         in
           if res != resopt then begin
-            Format.printf "@[Disagree on query %a;@;<1 0>%a |- %a <:@;<1 2>%a@]@.@."
+            Format.printf "@[Disagree on query (prover: %B, prop: %B) %a;@;<1 0>%a |- %a <:@;<1 2>%a@]@.@." res resopt
               pprint_env_pred (solution, env) Predicate.pprint guard
               Frame.pprint_refinement (lhs_subs, Frame.Qconst [q]) Frame.pprint_refinement (rhs_subs, Frame.Qconst [q]);
             assert false
