@@ -12,4 +12,3 @@ DML/tower.ml
 DMLex/bcopy.ml
 DMLex/heapsort.ml
 DML/fft.ml
-examples-liquid/split.ml
