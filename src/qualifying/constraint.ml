@@ -242,7 +242,7 @@ let refine solution = function
         let resopt =
           (not !Clflags.no_simple_subs &&
              List.mem q lhs_quals &&
-             not (affected_by_substitutions rhs_subs q) &&
+             not (affected_by_substitutions lhs_subs q) &&
              not (affected_by_substitutions rhs_subs q) &&
              lhs_is_variable) || res
         in
