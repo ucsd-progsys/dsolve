@@ -105,6 +105,7 @@ let main () =
      "-no-simple", Arg.Set no_simple, "do not propagate in simple constraints";
      "-verify-simple", Arg.Set verify_simple, "verify simple constraint propagation against theorem prover result";
      "-use-list", Arg.Set use_list, "use worklist instead of heap in solver";
+     "-bprover", Arg.Set always_use_backup_prover, "always use backup prover";
      "-lqualifs", Arg.Set less_qualifs, "generate less qualifiers (lets only under lambdas)";
      "-anormal", Arg.Set make_anormal, "rewrite the AST for a-normality";
      "-ksimpl", Arg.Set kill_simplify, "kill simplify after a large number of queries to reduce memory usage" 

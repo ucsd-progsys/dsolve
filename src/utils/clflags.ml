@@ -70,6 +70,7 @@ and less_qualifs = ref false            (* -lqualifs *)
 and make_anormal = ref false            (* -anormal *)
 and use_list = ref false                (* -wlist *)
 and kill_simplify = ref false           (* -ksimpl *)
+and always_use_backup_prover = ref false (* -defprover *)
 
 let keep_asm_file = ref false           (* -S *)
 let optimize_for_speed = ref true       (* -compact *)
