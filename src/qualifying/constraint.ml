@@ -202,55 +202,59 @@ let refine_simple solution k1 k2 =
     Solution.replace solution k2 refined_quals;
     !result
 
+let subTable = Hashtbl.create 17
+
+let affected_by_substitutions subs q =
+  let is_affected () =
+    let (subs_domain, _) = List.split subs in
+    let pred = Qualifier.apply qual_test_var q in
+      List.exists (fun x -> List.mem x subs_domain) (Predicate.vars pred)
+  in
+    Frame.pprint_refinement str_formatter (subs, Frame.Qconst [q]);
+    let key = flush_str_formatter () in
+      Misc.do_memo subTable is_affected () key
+
 let refine solution = function
   | (_, _, ([], Frame.Qvar k1), ([], Frame.Qvar k2))
       when not (!Clflags.no_simple || !Clflags.verify_simple) ->
       refine_simple solution k1 k2
-  | (_, _, r1, (subs, Frame.Qvar k2)) as cstr ->
+  | (_, _, (lhs_subs, r1), (rhs_subs, Frame.Qvar k2)) as cstr ->
       let _ = num_refines := !num_refines + 1 in
       let make_lhs (env, guard, r1, _) =
         let envp = environment_predicate solution env in
         let p1 = Frame.refinement_predicate (solution_map solution) qual_test_var r1 in
           Predicate.big_and [envp; guard; p1]
       in
-        let lhs = make_lhs cstr in
-        let result = ref Solution_unchanged in
-        let qual_holds q =
-          let rhs = Frame.refinement_predicate (solution_map solution) qual_test_var (subs, Frame.Qconst [q]) in
-            begin try
-              let res = Bstats.time "refinement query" (TheoremProver.implies lhs) rhs in
-                incr solved_constraints;
-                if res then incr valid_constraints else result := Solution_changed;
-                res
-            with TheoremProver.Provers_disagree (default, backup) ->
-              begin
-                fprintf std_formatter
-                  "@[Theorem@ prover@ insanity:@]@.";
-                fprintf std_formatter
-                  "@[Query:@;<1 2>%a@;<1 2>=>@;<1 2>%a@]@."
-                  Predicate.pprint lhs Predicate.pprint rhs;
-                fprintf std_formatter
-                  "@[Default@ prover:@ %B,@ backup@ prover:@ %B@]@."
-                  default backup;
-                assert false
-              end
-            end
+      let (lhs_quals, lhs_is_variable) =
+        match r1 with Frame.Qconst qs -> ([], false) | Frame.Qvar k1 -> (Solution.find solution k1, true)
+      in
+      let result = ref Solution_unchanged in
+      let qual_holds q =
+        let res =
+          if lhs_is_variable && not (affected_by_substitutions lhs_subs q) && not (affected_by_substitutions rhs_subs q) then
+            List.mem q lhs_quals
+          else
+          let (_, _) = (lhs_quals, lhs_subs) in
+            let rhs = Frame.refinement_predicate (solution_map solution) qual_test_var (rhs_subs, Frame.Qconst [q]) in
+            let lhs = make_lhs cstr in
+            let pres = Bstats.time "refinement query" (TheoremProver.implies lhs) rhs in
+              incr solved_constraints;
+              if pres then incr valid_constraints;
+              pres
         in
-        let refined_quals =
-          List.filter qual_holds (try Solution.find solution k2 with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k2); raise Not_found))
-        in
-          Solution.replace solution k2 refined_quals;
-          !result
+          if not res then result := Solution_changed;
+          res
+      in
+      let refined_quals = List.filter qual_holds (Solution.find solution k2) in
+        Solution.replace solution k2 refined_quals;
+        !result
   | _ -> Solution_unchanged
       (* With anything else, there's nothing to refine, just to check later with
          check_satisfied *)
 
 let env_refinement_vars env =
-  let add_var _ f l =
-    match Frame.refinement_var f with
-      | None -> l
-      | Some v -> v::l
-  in Lightenv.fold add_var env []
+  let add_vars _ f l = Frame.refinement_vars f @ l in
+    Lightenv.fold add_vars env []
 
 let lhs_vars (env, _, (_, qe), _) =
   let env_vars = env_refinement_vars env in
