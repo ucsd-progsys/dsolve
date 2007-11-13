@@ -39,5 +39,7 @@ val refinement_vars: t -> Path.t list
 val apply_refinement: refinement -> t -> t
 val predicate:
   (Path.t -> Qualifier.t list) -> Path.t -> t -> Predicate.t
+val conjuncts:
+  (Path.t -> Qualifier.t list) -> Path.t -> t -> Predicate.t list
 val refinement_well_formed:
   t Lightenv.t -> (Path.t -> Qualifier.t list) -> refinement -> Path.t -> bool
