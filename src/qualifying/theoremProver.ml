@@ -102,7 +102,10 @@ let check_implies default backup p q =
     res
 
 let implies p q =
-  check_implies DefaultProver.implies BackupProver.implies p q
+  if !Clflags.always_use_backup_prover then
+    check_implies BackupProver.implies DefaultProver.implies p q
+  else
+    check_implies DefaultProver.implies BackupProver.implies p q
 
 let backup_implies p q =
   check_implies BackupProver.implies DefaultProver.implies p q
