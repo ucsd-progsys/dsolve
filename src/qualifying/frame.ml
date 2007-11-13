@@ -258,6 +258,12 @@ let apply_refinement r = function
       Frecord (p, fs, r)
   | f -> f
 
+(* pmr: sound for our uses but not very informative *)
+let rec conjuncts solution qual_var = function
+  | Fconstr (_, _, r) ->
+      refinement_conjuncts solution qual_var r
+  | _ -> []
+
 let rec predicate solution qual_var = function
     Fconstr(_, _, r) ->
       refinement_predicate solution qual_var r

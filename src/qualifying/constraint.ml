@@ -206,6 +206,8 @@ let refine_simple solution k1 k2 =
       (* this will print out some duplicates, but that should be ok as long as
        * we don't get _too_ many duplicates *)
 let matching_ctr = ref 0 
+
+(*
 let lhs_tbl = ref (Hashtbl.create 20)
 let this_lhs_tbl = ref (Hashtbl.create 20) 
 let next_lhs_tbl = ref (Hashtbl.create 20)
@@ -232,11 +234,10 @@ let tbl_clear () =
     (* ming: i'm getting too tired to think about these properly. some
      * combination of these should be maximal for getting the whole transitive
      * closure *)
-let resolve_rels x rel p =
-  let yl = try Hashtbl.find !lhs_tbl x with Not_found -> [] in
-  let rels r1 r2 =
+(* pmr: maybe we could include negations, too *)
+let resolve_rel yl rel p =
+  let transitive_rel r1 r2 =
     match (r1, r2) with
-      | (Predicate.Ne, Predicate.Ne) -> None
       | (Predicate.Eq, Predicate.Eq) -> Some Predicate.Eq
       | (Predicate.Lt, Predicate.Lt) -> Some Predicate.Lt
       (*| (Predicate.Le, Predicate.Le) -> Some Predicate.Le
@@ -246,19 +247,42 @@ let resolve_rels x rel p =
       | (Predicate.Ge, Predicate.Gt) -> Some Predicate.Gt*) 
       | (Predicate.Ne, Predicate.Eq) -> Some Predicate.Ne
       (*| (Predicate.Eq, t) -> Some t *)
-      | (t, t') -> None
+      | _ -> None
   in
-  let relrev r2 r1 = rels r1 r2
+  let mk_atom rest rel = function
+    | Some rel -> Predicate.Atom(Predicate.Var qual_test_var, rel, p)::rest
+    | None -> rest
   in
-  let mk_atom b rel = 
-    match rel with 
-        Some rel -> Predicate.Atom(Predicate.Var qual_test_var, rel, p)::b 
-      | None -> b
-  in
-  let ll = List.append (List.map (rels rel) yl) in (*(List.map (relrev rel) yl) in*)
+  let ll = List.append (List.map (transitive_rel rel) yl) in
     List.fold_left mk_atom [] ll
+*)
 
-let fold_env_into_lhs env lhs_preds =
+let close_over_env env solution preds =
+  let solmap = solution_map solution in
+  let rec close_rec clo prs =
+    match prs with
+      | [] -> clo
+      | p :: ps ->
+          match p with
+            | Predicate.Atom (Predicate.Var x, Predicate.Eq, Predicate.Var y) ->
+                let transitive_var =
+                  if Path.same x qual_test_var then Some y
+                  else if Path.same y qual_test_var then Some x
+                  else None
+                in begin match transitive_var with
+                  | Some t ->
+                      let transitive_preds = Frame.conjuncts solmap qual_test_var (Lightenv.find t env) in
+                      let new_preds = transitive_preds in
+                        (* pmr: a more general version would look like:
+                           List.filter (follows_transitively rel) transitive_preds in *)
+                        close_rec (p :: clo) (new_preds @ ps)
+                  | None -> close_rec (p :: clo) ps
+                  end
+            | _ -> close_rec (p :: clo) ps
+  in close_rec [] preds
+
+(*
+let fold_env_into_lhs envp lhs_preds =
   let lhs_list = ref [] in
   let _ = tbl_clear () in
   let rec build_tbl p =
@@ -269,8 +293,7 @@ let fold_env_into_lhs env lhs_preds =
             tbl_add (y, rel)
           else if Path.same y qual_test_var then
             tbl_add (x, rel)
-          else
-            ()
+          else ()
       | t -> ()
   in
   let _ = List.map build_tbl lhs_preds in
@@ -293,18 +316,10 @@ let fold_env_into_lhs env lhs_preds =
       while Hashtbl.length !next_lhs_tbl > 0 do
           tbl_swap ();
           tbl_clear_next ();
-          walk_env env;
+          walk_env envp;
       done;
       !lhs_list 
-
-let rec reverse_preds = function
-    Predicate.Atom(p, r, p')::rem ->
-      Predicate.Atom(p', r, p)
-      ::Predicate.Atom(p, r, p')
-      ::reverse_preds rem
-    | t::rem -> t::(reverse_preds rem)
-    | [] -> []
-
+*)
 let folding_debug_flag = false
 
 let refine solution = function
@@ -318,16 +333,17 @@ let refine solution = function
         let p1 = Frame.refinement_predicate (solution_map solution) qual_test_var r1 in
           Predicate.big_and [envp; guard; p1]
       in
-      let lhs_preds = Frame.refinement_conjuncts (solution_map solution) qual_test_var r1 in
+      let solmap = solution_map solution in
+      let lhs_preds = Frame.refinement_conjuncts solmap qual_test_var r1 in
       let _ = if folding_debug_flag then printf "@[BEFORE:%a@\n%a@\n@]" Predicate.pprint envp Predicate.pprint (Predicate.big_and lhs_preds)  in
-      let lhs_preds = List.append (fold_env_into_lhs envp lhs_preds) lhs_preds in
+      let lhs_preds = close_over_env env solution lhs_preds in
       let _ = if folding_debug_flag then printf "@[AFTER:%a@\n@]" Predicate.pprint (Predicate.big_and lhs_preds)  in
-      (*let lhs_preds = reverse_preds lhs_preds in *)
       let result = ref Solution_unchanged in
       let qual_holds q =
         let rhs = Frame.refinement_predicate (solution_map solution) qual_test_var (rhs_subs, Frame.Qconst [q]) in
         let res =
-          if not !Clflags.no_simple_subs && List.mem rhs lhs_preds then (incr matching_ctr;true)
+          if (not !Clflags.no_simple_subs) && List.mem rhs lhs_preds then
+            (incr matching_ctr; true)
           else
             let lhs = make_lhs cstr in
             let pres = Bstats.time "refinement query" (TheoremProver.implies lhs) rhs in
