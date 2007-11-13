@@ -45,6 +45,7 @@ module type PROVER =
     val print_simplify: Predicate.t -> Predicate.t -> unit
 
     val restart_simplify : unit -> unit
+    val dump_simple_stats : unit -> unit
 
   end
 
@@ -237,7 +238,8 @@ let qcache = Hashtbl.create 10000
 
 let num_queries = ref 1
 let num_queries_cached = ref 1
-let queries_between_resets = 1000
+let queries_between_resets = 80000
+let queries_between_dumps = 1000
 
 let dump_simple_stats () =
   Format.printf "@[Simplify cache stats so far: %d queries, %d cached@\n@]" !num_queries !num_queries_cached
@@ -246,7 +248,8 @@ let implies (p, q) =
 
   (* ming: kill simplify to recover memory every once in a while *)
   let _ = incr num_queries in
-  let _ = if !num_queries mod queries_between_resets = 0 then ((*restart_simplify ();*) dump_simple_stats (); flush stdout) else () in 
+  let _ = if !num_queries mod queries_between_resets = 0 then (dump_simple_stats (); restart_simplify (); flush stdout) else () in 
+  let _ = if !num_queries mod queries_between_dumps = 0 then (dump_simple_stats (); flush stdout) else () in
 
   (* ming: cache queries *)
   let pstr = Format.fprintf Format.str_formatter "@[%a@]" Predicate.pprint p; Format.flush_str_formatter () in
@@ -268,9 +271,8 @@ let implies (p, q) =
          failwith (Format.fprintf Format.str_formatter
            "Simplify raises %s for %a. Check that Simplify is in your path \n" 
            (Printexc.to_string e) Predicate.pprint p; Format.flush_str_formatter ()) in
-  (*if not(cached) then qe false else (incr num_queries_cached;try Hashtbl.find
-   * qcache querystr with Not_found -> assert false)*)
-  qe false
+  if not(cached) then qe false else (incr num_queries_cached;try Hashtbl.find
+                                   qcache querystr with Not_found -> assert false)
 
 let print_simplify p q = 
   let ps = convert_pred p in

@@ -439,6 +439,7 @@ let solve_constraints quals constrs =
 
   let _ = Printf.printf "solution refinement completed:\n\t%d iterations of refine\n\n" !num_refines in
   let _ = Format.printf "@[Solved@ %d@ constraints;@ %d@ valid@]@.@." !solved_constraints !valid_constraints in
+  let _ = TheoremProverSimplify.Prover.dump_simple_stats () in
   let _ = flush stdout in
 
   if !Clflags.dump_constraints then
