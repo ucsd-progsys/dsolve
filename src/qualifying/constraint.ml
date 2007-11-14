@@ -346,7 +346,7 @@ let refine solution = function
         let lhs = make_lhs cstr in
         let rhs = Frame.refinement_predicate (solution_map solution) qual_test_var (rhs_subs, Frame.Qconst [q]) in
         let res =
-          let (cached, cres) = Bstats.time "cache check" (TheoremProver.check_table lhs) rhs in
+          let (cached, cres) = if !Clflags.cache_queries then TheoremProver.check_table lhs rhs else (false, false) in
             if cached then cres
             else if (not !Clflags.no_simple_subs) && List.mem rhs lhs_preds then
               (incr matching_ctr; true)

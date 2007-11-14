@@ -19,7 +19,7 @@ let rec quickSort arr a n =
 				if ipb < ia then bottom limit pa pb' else
 						(swap pa pb; bottom limit pa' pb')
 		in 
-    let rec top limit pc pd = 
+    (*let rec top limit pc pd = 
 			let arg = {ft = pc; sd = pd} in
       let pc' = pc - 1 in
       let pd' = pd - 1 in
@@ -27,14 +27,14 @@ let rec quickSort arr a n =
       if item pc < item a then arg else
 			if item a < item pc then top limit pc' pd else
 			(swap pc pd; top limit pc' pd') 
-    in 
+    in*) 
     let rec split pa pb pc pd =
 			let papb = bottom pc pa pb in
       let pa = papb.ft in
       let pb = papb.sd in
-      let pcpd = top pb pc pd in
+      (*let pcpd = top pb pc pd in
       let pc = pcpd.ft in
-      let pd = pcpd.sd in
+      let pd = pcpd.sd in*)
       let _ = (fun x -> x) pa in
       let _ = (fun x -> x) pb in
       let _ = (fun x -> x) pc in
@@ -42,8 +42,8 @@ let rec quickSort arr a n =
       (*let pd = pcpd.sd in*)
       if pb >= pc then {f = pa; s = pb; t = pc; g = pd}
       else 
-        let pb' = pb + 1 in
         let pc' = pc - 1 in
+        let pb' = pb + 1 in
       (swap pb pc; 
 								 split pa pb' pc' pd) 
  	  in 

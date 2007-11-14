@@ -1,5 +1,6 @@
 qualif L(x) : x.ft <= x.sd;;
 qualif M(x) : x.ft >= x.sd;;
+qualif O(x) : x.s <= x.t;;
 qualif STARTSIZE(k) : start + k <= Array.length arr;;
 qualif STARTSIZELT(k) : start + k < Array.length arr;;
 qualif LEISIZE(n) : n + i <= Array.length arr;;

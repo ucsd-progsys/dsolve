@@ -129,7 +129,7 @@ let check_implies default backup p q =
     if !Clflags.dump_queries then
       Format.printf "@[%s%a@;<1 0>=>@;<1 0>%a@;<1 2>(%B)@]@.@."
         (if cached then "cached:" else "") Predicate.pprint p Predicate.pprint q res;
-    (if cached then () else Hashtbl.replace qcache ipq res); res
+    (if cached then () else if use_cache then Hashtbl.replace qcache ipq res); res
 
 let implies p q =
   if !Clflags.always_use_backup_prover then

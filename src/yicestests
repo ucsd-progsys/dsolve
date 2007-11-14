@@ -1,8 +1,8 @@
 
-examples-liquid/vecswap.ml
 examples-liquid/split.ml
 examples-liquid/minisplit.ml
 examples-liquid/encrypt_cfb8.ml
+examples-liquid/vecswap.ml
 DML/dotprod2.ml
 DML/bsearch.ml
 DML/queen.ml
