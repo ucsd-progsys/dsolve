@@ -1,2 +1,2 @@
 type pr = {ft: int; sd: int};;
-type ('a, 'b, 'c, 'd) qd = {f: 'a; s: 'b; t: 'c; g: 'd};;
+type qd = {f: int; s: int; t: int; g: int};;
