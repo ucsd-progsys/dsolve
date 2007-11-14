@@ -141,13 +141,13 @@ module YicesProver  =
 
     let push p =
       me.count <- me.count + 1;
-      if Y.yices_inconsistent me.c = 1 then
+      if (Bstats.time "consistency" Y.yices_inconsistent me.c) = 1 then
 	me.i <- me.i + 1
       else
 	begin
 	  me.ds <- barrier :: me.ds;
-	  Y.yices_push me.c;
-	  Y.yices_assert me.c (yicesPred me p)
+	  Bstats.time "pushing" Y.yices_push me.c;
+	  Bstats.time "asserting" (Y.yices_assert me.c) (Bstats.time "creating predicate" (yicesPred me) p)
 	end
       
     let rec vpop (cs,s) =
@@ -164,7 +164,7 @@ module YicesProver  =
 	  let (cs,ds') = vpop ([],me.ds) in
 	    me.ds <- ds';
 	    List.iter (Hashtbl.remove me.d) cs;
-	    Y.yices_pop me.c
+	    Bstats.time "popping" Y.yices_pop me.c
 	end
 
     let reset () =
@@ -179,7 +179,7 @@ module YicesProver  =
       me.i <- 0
 
     let unsat () =
-      let res = Y.yices_check me.c = -1 in
+      let res = (Bstats.time "consistency" Y.yices_check me.c) = -1 in
         res
 
     let valid p =
@@ -189,9 +189,9 @@ module YicesProver  =
       rv
 
     let implies (p, q) = 
-      let _ = push p in
-      let rv = valid q in
-      let _ = pop () in
+      let _ = Bstats.time "pushing p" push p in
+      let rv = Bstats.time "validating" valid q in
+      let _ = Bstats.time "popping" pop () in
       rv
 
   end

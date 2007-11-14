@@ -45,6 +45,8 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
             (Frame.Fconstr (path, [], Builtins.equality_refinement (Predicate.PInt n)),
              cstrs, framemap)
   | (Texp_constant(Const_float n), t) ->
+      (* pmr: this should be fresh_without_vars.  It's only not unsound because we special
+         case float in fresh *)
             (Frame.fresh t tenv, cstrs, framemap)
   | (Texp_construct(cstrdesc, []), {desc = Tconstr(path, [], _)}) ->
             let cstrref =
@@ -77,16 +79,16 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
       in (f, WFFrame (env, f) :: new_cs, new_fm)
   | (Texp_field (expr, label_desc), t) ->
       let (recframe, new_cs, new_fm) = constrain expr env guard cstrs framemap in
-      let fieldname = match recframe with
+      let (fieldframe, fieldname) = match recframe with
         | Frame.Frecord (_, fs, _) ->
-            begin match List.nth fs label_desc.lbl_pos with
-                (_, name, _) -> name
+            let rf = List.nth fs label_desc.lbl_pos in
+            begin match rf with
+                (fr, name, _) -> (fr, name)
             end
         | _ -> assert false
       in
       let pexpr = Predicate.Field (fieldname, expression_to_pexpr expr) in
-      let f = Frame.fresh t tenv in
-      let f = Frame.apply_refinement (Builtins.equality_refinement pexpr) f in
+      let f = Frame.apply_refinement (Builtins.equality_refinement pexpr) fieldframe in
         (f, WFFrame (env, f) :: new_cs, new_fm)
 	| (Texp_ifthenelse(e1, e2, Some e3), t) ->
             let f = Frame.fresh t tenv in
@@ -141,10 +143,10 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
                fm')
         | _ -> assert false
 	    end 
-	| (Texp_ident _, ({desc = Tconstr (p, [], _)} as t)) ->
+	| (Texp_ident (id, _), {desc = Tconstr (p, [], _)} ) ->
       let r = Builtins.equality_refinement (expression_to_pexpr e) in
       (* Tconstr could be a record or frame to us, so we punt the issue *)
-      let f = Frame.fresh_without_vars t tenv in
+      let f = Lightenv.find id env in
         (Frame.apply_refinement r f, cstrs, framemap)
   (* ming: subtyping may be better for the inner types when a complex type is
    * pulled up by name, but we have no way of expressing what we actually want,

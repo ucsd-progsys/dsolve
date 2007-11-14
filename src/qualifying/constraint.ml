@@ -408,6 +408,7 @@ let check_satisfied solution cstrs =
              either the LHS is a literal and we can't do anything, or it's
              a var which has been pushed up by other constraints and, again,
              we can't do anything *)
+          Bstats.print stdout "\n\nTime to solve constraints:\n";
           fprintf std_formatter
             "@.@.@[Unsatisfiable@ literal@ Subtype:@ (%a@ <:@ %a)@\nEnv:@ %a@\nGuard:@ %a@\nSubref:%a@ ->@ %a@\n@]"
             Frame.pprint_refinement r1 Frame.pprint_refinement r2
