@@ -154,6 +154,7 @@ let normalize exp =
      | Pexp_construct(_, None, false) ->
         let a = fresh_name () in
          rw_expr (mk_let_lbl Nonrecursive a exp (mk_dum_ident a))
+     | Pexp_constraint(_, _, _)
      | Pexp_ident(_) ->
         exp
      | Pexp_function(lbl, elbl, [(arg, e)]) ->
@@ -240,6 +241,7 @@ let normalize exp =
     match exp.pexp_desc with
      | Pexp_assertfalse ->
          [(fresh_name (), Some (norm_out exp), dummy)]
+     | Pexp_constraint(_, _, _)
      | Pexp_constant(_)      
      | Pexp_construct(_, None, false) ->
          [(fresh_name (), Some exp, dummy)]

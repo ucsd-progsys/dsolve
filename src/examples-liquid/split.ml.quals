@@ -1,13 +1,3 @@
-qualif STARTSIZE(k) : start + k <= Array.length arr;;
-qualif STARTSIZELT(k) : start + k < Array.length arr;;
-qualif LEISIZE(n) : n + i <= Array.length arr;;
-qualif LTISIZE(n) : n + i < Array.length arr;;
-qualif LEJSIZE(n) : n + j <= Array.length arr;;
-qualif LTJSIZE(n) : n + j < Array.length arr;;
-qualif LEASIZE(n) : n + a <= Array.length arr;;
-qualif LTASIZE(n) : n + a < Array.length arr;;
-qualif LE_P1SIZE(n) : n <= 1 + Array.length arr;;
-qualif LT_P1SIZE(n) : n < 1 + Array.length arr;;
 qualif QARRAY_LENGTH__AA_GE_0(_AA) : Array.length _AA >= 0;;
 qualif QARRAY_LENGTH__AA_GE_1(_AA) : Array.length _AA >= 1;;
 qualif QARRAY_LENGTH__AA_GE_13(_AA) : Array.length _AA >= 13;;

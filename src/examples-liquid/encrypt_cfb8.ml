@@ -1,10 +1,10 @@
 let encrypt_ecb k b =
   (12, 11, 10, 9)
 in
-
 let encrypt_cfb8 k iv data =
   let l = Array.length data in
-  let data' = Array.make l 0 in
+  let z = let x : garbage = 0 in x in
+  let data' = Array.make l z in
 
   let sr = ref iv in (* shift register *)
     

@@ -19,6 +19,8 @@ fi
 rm -f $TMPDIR/*.lilog*
 rm -f DML/*.quals
 rm -f DMLex/*.quals
+rm -f examples-liquid/split.ml.quals
+rm -f examples-liquid/vecswap.ml.quals
 
 FILE=`cat $POSFILE`" "$NEGFILE
 

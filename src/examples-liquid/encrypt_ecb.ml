@@ -1,24 +1,3 @@
-type key =
-    { data : int array;
-      p_lsb : int array;
-      p_msb : int array;
-      (* subkeys: 18 elements of 16 bits *)
-      p_lsb_rev : int array;
-      p_msb_rev : int array;
-      (* subkeys in reverse order *)
-      s1_lsb : int array;
-      s1_msb : int array;
-      s2_lsb : int array;
-      s2_msb : int array;
-      s3_lsb : int array; 
-      s3_msb : int array;
-      s4_lsb : int array;
-      s4_msb : int array;
-      (* the four s-boxes: sNP, where N=0,1,2,3 denotes the box,
-       * and P=0,1 whether the LSB (0) or MSB (1) of the box
-       * value is stored.
-       *)
-    };;
 
 let encrypt_ecb k (xl_msb,xl_lsb,xr_msb,xr_lsb) =
   (* The 64-bit element (xl, xr) is encrypted using key k with:

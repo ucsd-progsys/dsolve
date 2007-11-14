@@ -77,39 +77,47 @@ let rec sortRange arr start n =
    * tuple *)
   let rec quickSort a n =
     let rec bottom limit pa pb = 
-			let arg = (pa, pb) in
+			let arg = {p1 = pa, p2 = pb} in
+      let pb' = pb + 1 in
+      let pc' = pc + 1 in
       if limit < pb then arg else
 			if item a < item pb then arg else
 				if item pb < item a then bottom limit pa (pb+1) else
-						(swap pa pb; bottom limit pa(*(pa+1)*) (pb+1))
+						(swap pa pb; bottom limit pa (pa+1) (pb+1))
 		in 
     let rec top limit pc pd = 
-			let arg = (pc, pd) in
+			let arg = {p1 = pc, p2 = pd} in
       if pc < limit then arg else
       if item pc < item a then arg else
 			if item a < item pc then top limit (pc-1) pd else
-			(swap pc pd; top limit (pc-1) pd(*(pd-1)*)) 
+			(swap pc pd; top limit (pc-1) pd (pd-1)) 
     in 
     let rec split pa pb pc pd =
-			let (_, pb) = bottom pc pa pb in
-      let (pc, _) = top pb pc pd in
-      if pb >= pc then (pa, pb, pc, pd)
+			let pp1 = bottom pc pa pb in
+      let pa = pp1.p1 in
+      let pb = pp2.p2 in
+      let pp2 = top pb pc pd in
+      let pc = pp2.p1 in
+      let pd = pp2.p2 in
+      if pb >= pc then {q1 = pa, q2 = pb, q3 = pc, q4 = pd}
       else 
+        let pb' = pb + 1 in
+        let pc' = pc - 1 in
       (swap pb pc; 
-								 split pa (pb+1) (pc-1) pd) 
+								 split pa pb' pc' pd) 
  	  in 
 
     let pm = getPivot a n in
     let pa = a + 1 in
     let pd = a + n - 1 in
     let _ = swap a pm in
-    let spllit = split pa pa pd pd in
-    let _ = (fun x -> x) spllit in
-    let (_, pb, pc, _) = spllit in
+    let sp = split pa pa pd pd in
+    let _ = (fun x -> x) sp in
+    let pa = sp.q1 in
+    let pb = sp.q2 in
+    let pc = sp.q3 in
+    let pd = sp.q4 in
 
-
-
-    (*let (pa, pb, pc, pd) = split (a+1) (a+1) (a+n-1) (a+n-1) in*)
     let pn = a + n in
 		
     let r = min (pa-a) (pb-pa) in
