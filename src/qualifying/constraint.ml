@@ -203,22 +203,36 @@ let refine_simple solution k1 k2 =
     Solution.replace solution k2 refined_quals;
     !result
 
-      (* this will print out some duplicates, but that should be ok as long as
-       * we don't get _too_ many duplicates *)
 let matching_ctr = ref 0 
 
-(*
+(*let transitive_rel r1 r2 =
+  match (r1, r2) with
+    | (Some r1, Some r2) ->
+        begin
+        match (r1, r2) with
+          | (Predicate.Ne, Predicate.Ne) -> None
+          | (Predicate.Ne, Predicate.Eq)
+          | (Predicate.Eq, Predicate.Ne) -> Some Predicate.Ne
+          | (t, t') when t = t' -> Some t
+          | (t, Predicate.Eq)
+          | (Predicate.Eq, t) -> Some t
+          | _ -> None
+        end
+    | _ -> None
+
 let lhs_tbl = ref (Hashtbl.create 20)
 let this_lhs_tbl = ref (Hashtbl.create 20) 
 let next_lhs_tbl = ref (Hashtbl.create 20)
 let tbl_add_raw (x, y) =
-  Hashtbl.replace !lhs_tbl x [y];
+  Hashtbl.replace !lhs_tbl x y;
   Hashtbl.replace !next_lhs_tbl x () 
-let tbl_add (x, y) =
+(* need to know how the last edge was related, how this and the last edge are
+ * related then compute the dominant relation between home edge and this edge *)
+let tbl_add (x, y) oldx =
+  let y = transitive_rel oldx y in
   if Hashtbl.mem !lhs_tbl x then
-    let yl = Hashtbl.find !lhs_tbl x in
-      if List.mem y yl then () else
-        (Hashtbl.replace !lhs_tbl x (y::yl); Hashtbl.replace !next_lhs_tbl x ())
+    let oldy = Hashtbl.find !lhs_tbl x in
+      (Hashtbl.replace !lhs_tbl x (transitive_rel oldy y); Hashtbl.replace !next_lhs_tbl x ())
   else tbl_add_raw (x, y)
 let tbl_swap () =
   let tmp = !this_lhs_tbl in
@@ -230,32 +244,58 @@ let tbl_clear () =
   Hashtbl.clear !next_lhs_tbl;
   Hashtbl.clear !this_lhs_tbl;
   Hashtbl.clear !lhs_tbl
+  
+    (* translate raw relations into auot-generated qual equivs *)
+let resolve_rel x rel p =
+  let mk_atom = function
+    | Some Predicate.Eq -> [Predicate.Atom(Predicate.Var qual_test_var, Predicate.Le, p); Predicate.Atom(Predicate.Var qual_test_var, Predicate.Ge, p)]
+    | Some Predicate.Lt -> [Predicate.Atom(Predicate.Var qual_test_var, Predicate.Le, p); Predicate.Atom(Predicate.Var qual_test_var, Predicate.Ne, p)]
+    | Some Predicate.Gt -> [Predicate.Atom(Predicate.Var qual_test_var, Predicate.Ge, p); Predicate.Atom(Predicate.Var qual_test_var, Predicate.Ne, p)]
+    | Some t -> [Predicate.Atom(Predicate.Var qual_test_var, t, p)]
+    | None -> []
+  in
+    mk_atom rel 
 
-    (* ming: i'm getting too tired to think about these properly. some
-     * combination of these should be maximal for getting the whole transitive
-     * closure *)
-(* pmr: maybe we could include negations, too *)
-let resolve_rel yl rel p =
-  let transitive_rel r1 r2 =
-    match (r1, r2) with
-      | (Predicate.Eq, Predicate.Eq) -> Some Predicate.Eq
-      | (Predicate.Lt, Predicate.Lt) -> Some Predicate.Lt
-      (*| (Predicate.Le, Predicate.Le) -> Some Predicate.Le
-      | (Predicate.Gt, Predicate.Gt) -> Some Predicate.Gt
-      | (Predicate.Ge, Predicate.Ge) -> Some Predicate.Ge
-      | (Predicate.Le, Predicate.Lt) -> Some Predicate.Lt
-      | (Predicate.Ge, Predicate.Gt) -> Some Predicate.Gt*) 
-      | (Predicate.Ne, Predicate.Eq) -> Some Predicate.Ne
-      (*| (Predicate.Eq, t) -> Some t *)
-      | _ -> None
+let fold_env_into_lhs envp lhs_preds =
+  let lhs_list = ref [] in
+  let _ = tbl_clear () in
+  let rec build_tbl p =
+    match p with
+      | Predicate.And (t1, t2) -> (build_tbl t1); (build_tbl t2)
+      | Predicate.Atom (Predicate.Var x, rel, Predicate.Var y) -> 
+          if Path.same x qual_test_var then
+            tbl_add_raw (y, Some rel) 
+          else if Path.same y qual_test_var then
+            tbl_add_raw (x, Some rel) 
+          else ()
+      | t -> ()
   in
-  let mk_atom rest rel = function
-    | Some rel -> Predicate.Atom(Predicate.Var qual_test_var, rel, p)::rest
-    | None -> rest
-  in
-  let ll = List.append (List.map (transitive_rel rel) yl) in
-    List.fold_left mk_atom [] ll
-*)
+  let _ = List.map build_tbl lhs_preds in
+  let rec walk_env p =
+    match p with
+      | Predicate.And (t1, t2) -> (walk_env t1); (walk_env t2)
+      | Predicate.Atom (Predicate.Var x, rel, p2)
+      | Predicate.Atom (p2, rel, Predicate.Var x) ->
+          if Hashtbl.mem !this_lhs_tbl x then
+            let x' = Hashtbl.find !lhs_tbl x in
+            begin
+              let _ = match p2 with
+                    | Predicate.Var y -> tbl_add (y, Some rel) x'
+                    | t -> ()
+              in
+              if Hashtbl.mem !this_lhs_tbl x then 
+                lhs_list := List.append (resolve_rel x (transitive_rel x' (Some rel)) p2) !lhs_list
+            end
+          else
+            ()
+      | _ -> ()
+    in
+      while Hashtbl.length !next_lhs_tbl > 0 do
+          tbl_swap ();
+          tbl_clear_next ();
+          walk_env envp;
+      done;
+      !lhs_list *)
 
 let close_over_env env solution preds =
   let solmap = solution_map solution in
@@ -281,45 +321,6 @@ let close_over_env env solution preds =
             | _ -> close_rec (p :: clo) ps
   in close_rec [] preds
 
-(*
-let fold_env_into_lhs envp lhs_preds =
-  let lhs_list = ref [] in
-  let _ = tbl_clear () in
-  let rec build_tbl p =
-    match p with
-      | Predicate.And (t1, t2) -> (build_tbl t1); (build_tbl t2)
-      | Predicate.Atom (Predicate.Var x, rel, Predicate.Var y) -> 
-          if Path.same x qual_test_var then
-            tbl_add (y, rel)
-          else if Path.same y qual_test_var then
-            tbl_add (x, rel)
-          else ()
-      | t -> ()
-  in
-  let _ = List.map build_tbl lhs_preds in
-  let rec walk_env p =
-    match p with
-      | Predicate.And (t1, t2) -> (walk_env t1); (walk_env t2)
-      | Predicate.Atom (Predicate.Var x, rel, p2)
-      | Predicate.Atom (p2, rel, Predicate.Var x) ->
-          if Hashtbl.mem !this_lhs_tbl x then
-            let _ = match p2 with
-                  | Predicate.Var y -> tbl_add (y, rel)
-                  | t -> ()
-            in
-            if Hashtbl.mem !this_lhs_tbl x then 
-              lhs_list := List.append (resolve_rels x rel p2) !lhs_list
-          else
-            ()
-      | t -> ()
-    in
-      while Hashtbl.length !next_lhs_tbl > 0 do
-          tbl_swap ();
-          tbl_clear_next ();
-          walk_env envp;
-      done;
-      !lhs_list 
-*)
 let folding_debug_flag = false
 
 let refine solution = function
@@ -336,6 +337,8 @@ let refine solution = function
       let solmap = solution_map solution in
       let lhs_preds = Frame.refinement_conjuncts solmap qual_test_var r1 in
       let _ = if folding_debug_flag then printf "@[BEFORE:%a@\n%a@\n@]" Predicate.pprint envp Predicate.pprint (Predicate.big_and lhs_preds)  in
+      (*let lhs_preds = List.append (fold_env_into_lhs (environment_predicate
+       * solution env) lhs_preds) lhs_preds in*) 
       let lhs_preds = close_over_env env solution lhs_preds in
       let _ = if folding_debug_flag then printf "@[AFTER:%a@\n@]" Predicate.pprint (Predicate.big_and lhs_preds)  in
       let result = ref Solution_unchanged in
