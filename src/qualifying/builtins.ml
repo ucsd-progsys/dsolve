@@ -110,12 +110,25 @@ let float_to_int_unop path =
   let (x, y) = fresh_2_idents () in
   (path, mk_fun(x, mk_float, mk_int []))
 
-let mod_frame =
+let lsr_frame =
   let (x, y, z) = fresh_idents () in
-    (["mod"; "Pervasives"],
+    (["lsr"; "Pervasives"],
      mk_fun(x, mk_int [],
             mk_fun (y, mk_int [],
-                    mk_int [qint Predicate.Ge 0 z; qrel Predicate.Lt z y])))
+                    mk_int [qint Predicate.Ge 0 z])))
+
+let land_frame =
+  let (x, y, z) = fresh_idents () in
+  let qual = (Path.mk_ident "pos_when_both_pos",
+              z,
+              Predicate.implies
+                (Predicate.And (Predicate.Atom (Predicate.Var x, Predicate.Ge, Predicate.PInt 0),
+                                Predicate.Atom (Predicate.Var y, Predicate.Ge, Predicate.PInt 0)),
+                 Predicate.Atom (Predicate.PInt 0, Predicate.Le, Predicate.Var z))) in
+    (["land"; "Pervasives"],
+     mk_fun(x, mk_int [],
+            mk_fun (y, mk_int [],
+                    mk_int [qual])))
 
 (* ming: connectives could use cleanup ... eventually *)
 
@@ -305,11 +318,10 @@ let _frames = [
   uninterp_float_unop ["~-."; "Pervasives"];
   float_to_int_unop ["float_of_int"; "Pervasives"];
   uninterp_int_binop ["lor"; "Pervasives"];
-  uninterp_int_binop ["land"; "Pervasives"];
+  land_frame;
   uninterp_int_binop ["lxor"; "Pervasives"];
-  uninterp_int_binop ["lsr"; "Pervasives"];
+  lsr_frame;
   uninterp_int_binop ["lsl"; "Pervasives"];
-  mod_frame;
   (*rel_frame ["="; "Pervasives"] "=" Predicate.Eq;
   rel_frame ["!="; "Pervasives"] "!=" Predicate.Ne;
   rel_frame ["<"; "Pervasives"] "<" Predicate.Lt;
