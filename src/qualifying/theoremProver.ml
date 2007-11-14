@@ -104,7 +104,13 @@ let dump_simple_stats () =
 let clear_cache () =
   Hashtbl.clear qcache; num_queries := 0; hits := 0
 
+let check_table p q =
+  let ipq = Predicate.implies (p, q) in
+    if Hashtbl.mem qcache ipq then (incr hits;(true, Hashtbl.find qcache ipq))
+                              else (false, false)
+
 let check_implies default backup p q =
+  
   let _ = incr num_queries in
   let _ = if (!num_queries mod dump_interval) = 0 then dump_simple_stats () else () in 
   let use_cache = !Clflags.cache_queries in

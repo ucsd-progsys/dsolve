@@ -169,4 +169,6 @@ let rec dump_qualified_structure ppf framemap = function
       fprintf ppf "@[qualdef@ %s@ %s@;<1 2>%a@]@." (Ident.name name)
         (Ident.unique_name valu) Predicate.pprint pred;
       dump_qualified_structure ppf framemap srem
+  | (Tstr_type(_))::srem ->
+      fprintf ppf ""; dump_qualified_structure ppf framemap srem
   | _ -> assert false
