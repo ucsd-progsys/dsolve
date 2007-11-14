@@ -206,7 +206,7 @@ let poly_rel_frame path qname rel =
 let array_length_frame = 
 	let (x, y) = (Path.mk_ident "x", Path.mk_ident "y") in (* make 2 idents fresh *)
 	let tyvar = mk_tyvar () in
-	(["length"; "Array"], mk_fun (x, (mk_array tyvar []), mk_int [qsize Predicate.Eq x y y; qint Predicate.Gt 0 y]))
+	(["length"; "Array"], mk_fun (x, (mk_array tyvar []), mk_int [qsize Predicate.Eq x y y; qint Predicate.Ge 0 y]))
 
 let array_set_frame =
   let (x, y, z) = fresh_idents () in
