@@ -69,7 +69,7 @@ exception Provers_disagree of bool * bool
    result to a query *)
 let check_result f g arg =
   if not !Clflags.check_queries then
-    f arg
+    Bstats.time "calling PI" f arg
   else
     let fres = f arg in
     let gres = g arg in
@@ -114,11 +114,11 @@ let check_implies default backup p q =
     (* strings are hilariously slow *)
   let ipq = Predicate.implies (p, q) in
 
-  let cached = Hashtbl.mem qcache ipq && use_cache in
+  let cached = (Bstats.time "cache lookup" (Hashtbl.mem qcache) ipq) && use_cache in
   let _ = if cached then incr hits in
 
-  let (p, q) = (fixdiv p, fixdiv q) in
-  let res = if cached then Hashtbl.find qcache ipq
+  let (p, q) = Bstats.time "fixing div" (fun () -> (fixdiv p, fixdiv q)) () in
+  let res = if cached then Bstats.time "finding in cache " (Hashtbl.find qcache) ipq
                 else check_result default backup (p, q) in
     if !Clflags.dump_queries then
       Format.printf "@[%s%a@;<1 0>=>@;<1 0>%a@;<1 2>(%B)@]@.@."
@@ -127,9 +127,9 @@ let check_implies default backup p q =
 
 let implies p q =
   if !Clflags.always_use_backup_prover then
-    check_implies BackupProver.implies DefaultProver.implies p q
+    Bstats.time "TP.ml prover query" (check_implies BackupProver.implies DefaultProver.implies p) q
   else
-    check_implies DefaultProver.implies BackupProver.implies p q
+    Bstats.time "TP.ml prover query" (check_implies DefaultProver.implies BackupProver.implies p) q
 
 let backup_implies p q =
   check_implies BackupProver.implies DefaultProver.implies p q

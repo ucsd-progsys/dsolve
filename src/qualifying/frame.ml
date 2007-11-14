@@ -269,11 +269,10 @@ let rec predicate solution qual_var = function
       refinement_predicate solution qual_var r
       (* pmr: need to elementify on constructed types, much like below *)
   | Frecord (p, fs, r) ->
-      let make_subframe_pred (f, name, _) i =
+      let make_subframe_pred (f, name, _) =
         let pred = predicate solution qual_var f in
           Predicate.subst (Predicate.Field (name, Predicate.Var qual_var)) qual_var pred
-      in          
-        Predicate.big_and (refinement_predicate solution qual_var r :: Misc.mapi make_subframe_pred fs)
+      in Predicate.big_and (refinement_predicate solution qual_var r :: List.map make_subframe_pred fs)
   | _ -> Predicate.True
 
 let rec same_shape t1 t2 =

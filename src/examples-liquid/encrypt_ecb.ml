@@ -42,7 +42,7 @@ let encrypt_ecb k (xl_msb,xl_lsb,xr_msb,xr_lsb) =
     if i < 16 then begin
       let xl_lsb' = xl_lsb lxor p_lsb.(i) in
       let xl_msb' = xl_msb lxor p_msb.(i) in
-      let a = xl_msb' lsr 8 in
+(*      let a = xl_msb' lsr 8 in
       let b = xl_msb' land 0xff in
       let c = xl_lsb' lsr 8 in
       let d = xl_lsb' land 0xff in
@@ -59,15 +59,16 @@ let encrypt_ecb k (xl_msb,xl_lsb,xr_msb,xr_lsb) =
       let y_msb =
 	after_xor_s_3c_msb + s4_msb.(d) + (y_lsb lsr 16) in
       let xr_lsb' = (y_lsb land 0xffff) lxor xr_lsb in
-      let xr_msb' = (y_msb land 0xffff) lxor xr_msb in
-	compute_rounds (i+1) xr_lsb' xr_msb' xl_lsb' xl_msb' 
+      let xr_msb' = (y_msb land 0xffff) lxor xr_msb in 
+	compute_rounds (i+1) xr_lsb' xr_msb' xl_lsb' xl_msb' *)
+	compute_rounds (i+1) xr_lsb xr_msb xl_lsb' xl_msb'
     end
     else
       (xr_msb lxor p_msb.(17),
        xr_lsb lxor p_lsb.(17),
        xl_msb lxor p_msb.(16),
        xl_lsb lxor p_lsb.(16))
-	
+
   in compute_rounds 0 xl_lsb xl_msb xr_lsb xr_msb
 in
 
