@@ -214,8 +214,8 @@ let matching_ctr = ref 0
           | (Predicate.Ne, Predicate.Eq)
           | (Predicate.Eq, Predicate.Ne) -> Some Predicate.Ne
           | (t, t') when t = t' -> Some t
-          | (t, Predicate.Eq)
-          | (Predicate.Eq, t) -> Some t
+          (*| (t, Predicate.Eq)
+          | (Predicate.Eq, t) -> Some t*)
           | _ -> None
         end
     | _ -> None

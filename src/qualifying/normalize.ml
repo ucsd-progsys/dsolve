@@ -33,6 +33,12 @@ let is_const exp =
         true
     | _ -> false
 
+let is_function exp =
+  match exp.pexp_desc with
+    | Pexp_function(_, _, _) ->
+        true
+    | _ -> false
+
 let is_const_div exp = 
   match exp.pexp_desc with 
     Pexp_apply(e1, es) ->
