@@ -343,16 +343,18 @@ let refine solution = function
       let _ = if folding_debug_flag then printf "@[AFTER:%a@\n@]" Predicate.pprint (Predicate.big_and lhs_preds)  in
       let result = ref Solution_unchanged in
       let qual_holds q =
+        let lhs = make_lhs cstr in
         let rhs = Frame.refinement_predicate (solution_map solution) qual_test_var (rhs_subs, Frame.Qconst [q]) in
         let res =
-          if (not !Clflags.no_simple_subs) && List.mem rhs lhs_preds then
-            (incr matching_ctr; true)
-          else
-            let lhs = make_lhs cstr in
-            let pres = Bstats.time "refinement query" (TheoremProver.implies lhs) rhs in
-              incr solved_constraints;
-              if pres then incr valid_constraints;
-              pres
+          let (cached, cres) = Bstats.time "cache check" (TheoremProver.check_table lhs) rhs in
+            if cached then cres
+            else if (not !Clflags.no_simple_subs) && List.mem rhs lhs_preds then
+              (incr matching_ctr; true)
+            else
+              let pres = Bstats.time "refinement query" (TheoremProver.implies lhs) rhs in
+                incr solved_constraints;
+                if pres then incr valid_constraints;
+                pres
         in if not res then result := Solution_changed; res
       in
       let refined_quals = List.filter qual_holds (Solution.find solution k2) in
