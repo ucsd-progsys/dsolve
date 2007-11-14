@@ -1,2 +1,0 @@
-type pr = {ft: int; sd: int};;
-type qd = {f: int; s: int; t: int; g: int};;
