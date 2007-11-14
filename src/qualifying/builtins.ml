@@ -119,12 +119,15 @@ let lsr_frame =
 
 let land_frame =
   let (x, y, z) = fresh_idents () in
-  let qual = (Path.mk_ident "pos_when_both_pos",
+  let qual = (Path.mk_ident "land",
               z,
               Predicate.implies
                 (Predicate.And (Predicate.Atom (Predicate.Var x, Predicate.Ge, Predicate.PInt 0),
                                 Predicate.Atom (Predicate.Var y, Predicate.Ge, Predicate.PInt 0)),
-                 Predicate.Atom (Predicate.PInt 0, Predicate.Le, Predicate.Var z))) in
+                 Predicate.big_and
+                   [Predicate.Atom (Predicate.PInt 0, Predicate.Le, Predicate.Var z);
+                    Predicate.Atom (Predicate.Var z, Predicate.Le, Predicate.Var x);
+                    Predicate.Atom (Predicate.Var z, Predicate.Le, Predicate.Var y);])) in
     (["land"; "Pervasives"],
      mk_fun(x, mk_int [],
             mk_fun (y, mk_int [],
