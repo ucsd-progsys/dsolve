@@ -28,7 +28,7 @@ do
 done
 if [[ $frames != "" ]]
 then
-  argv=$argv" -dframes "${i%\.ml}".annot"
+  argv=$argv" -dframes "${i%\.ml}".annot "
 fi
 export LD_LIBRARY_PATH=./yices/lib
 
@@ -63,7 +63,7 @@ then
   rlwrap ./ocaml $argv
 else
   #cat$catargs | nice -n19 rlwrap ./ocaml $argv
-  cat$catargs | rlwrap ./ocaml $argv
+  cat $catargs | rlwrap ./ocaml $argv
 fi
 
 EXIT=$?
