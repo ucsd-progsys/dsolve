@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FILES=`cat postests`
+FILES=`cat yicestests`
 
 let "cnt = 0"
 echo auto_ann hand_anno xi-src % #src xi_src %
@@ -23,14 +23,15 @@ do
     echo -n "0 "
     jjj=0
   fi
+  echo ""
   #j=`cat $i | tr "\n" " " | tr -s "\t" " " | tr -s " " " " | wc -m`
   #echo -n "$j "
-  rj=`cat xiog/$i | tr "\n" " " | tr -s "\t" " " | tr -s " " " " | wc -m`
-    echo -n "$rj "
+  #rj=`cat xiog/$i | tr "\n" " " | tr -s "\t" " " | tr -s " " " " | wc -m`
+  #  echo -n "$rj "
   #let "cnt = $j - $jj"
   #echo -n "$cnt "
-  let "cnt = 100 * $jjj / $rj"
-  echo  "$cnt%"
+  #let "cnt = 100 * $jjj / $rj"
+  #echo  "$cnt%"
   echo -n lines: 
   jj="`cat $i | wc -l`"
   echo -n "$jj "
@@ -46,10 +47,11 @@ do
     fi
   #j=`cat $i | tr -s "\n" "\n" | wc -l`
   #echo -n "$j "
-  rj=`cat xiog/$i | wc -l`
-    echo -n "$rj "
+  #rj=`cat xiog/$i | wc -l`
+  #  echo -n "$rj "
   #let "cnt = $j - $jj"
   #echo -n "$cnt "
-  let "cnt = 100 * $jjj / $rj"
-  echo "$cnt%"
+  #let "cnt = 100 * $jjj / $rj"
+  #echo "$cnt%"
+  echo ""
 done
