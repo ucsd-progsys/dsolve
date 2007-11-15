@@ -192,5 +192,5 @@ let _ = Random.self_init ()in
 let p = Random.int 20 + 2 in
 let x = let x : garbage = 0 in x in
 let vec = Array.make p x in
-	sortRange vec 0 (p-1); vec(*sorted vec*);;
+	sortRange vec 0 p; vec(*sorted vec*);;
  
