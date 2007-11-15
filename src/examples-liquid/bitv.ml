@@ -48,7 +48,6 @@ let create n b =
     end
 in
 
-(*
 let normalize v =
   let r = v.length mod 30 in
   if r > 0 then
@@ -61,15 +60,11 @@ in
 
 let copy v = { length = v.length; bits = Array.copy v.bits } in
 
-*)
-
 let pos n =
   let i = n / 30 in
   let j = n mod 30 in
   if j < 0 then (i - 1, j + 30) else (i,j)
 in
-
-(*
 
 (*s Access and assignment. The [n]th bit of a bit vector is the [j]th
     bit of the [i]th integer, where [i = n / 30] and [j = n mod
@@ -78,12 +73,12 @@ in
     mask operation is non-zero, and assigning it is done with a
     bitwiwe operation: an {\em or} with [bit_j] to set it, and an {\em
     and} with [bit_not_j] to unset it. *)
-
+(*
 let unsafe_get v n =
   let (i,j) = pos n in 
   ((Array.get v.bits i) land (Array.get bit_j j)) > 0
 in
-
+*)
 let unsafe_set v n b =
   let (i,j) = pos n in
   if b then
@@ -131,8 +126,13 @@ let init n f =
     v
 in
 
-*)
-
+let s = Random.int 100 + 1 in
+let v = copy (create s true) in
+let _ = init s (fun i -> true) in
+let _ = set v (Random.int s) true in
+  get v (Random.int s);;
+(*
+(*
 (*s Handling bits by packets is the key for efficiency of functions
     [append], [concat], [sub] and [blit]. 
     We start by a very general function [blit_bits a i m v n] which blits 
@@ -635,4 +635,6 @@ let to_nativeint_us = select_to to_int32_us to_int64_us
 
 *)
 
+*)
+*)
 *)

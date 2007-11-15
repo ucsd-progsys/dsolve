@@ -114,6 +114,8 @@ let rec pprint_expression ppf exp =
   in
   let rec pprint_exp ppf e =
     match e.pexp_desc with
+      | Pexp_constraint (_, _, _) ->
+          fprintf ppf ": ty"
       | Pexp_constant (Const_int n) ->
           fprintf ppf "%d" n
       | Pexp_constant (Const_float f) ->

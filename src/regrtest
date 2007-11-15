@@ -2,7 +2,7 @@
 #not actually a regression test
 OCAML=./ocaml.run
 FLAGS="-dframes -anormal -cacheq"
-QUALFLAGS="-dqualifs -lqualifs"
+QUALFLAGS="-bprover -dqualifs -lqualifs"
 YFILE=yicestests
 SFILE=simtests
 POSFILE=posfiles
@@ -19,6 +19,9 @@ fi
 rm -f $TMPDIR/*.lilog*
 rm -f DML/*.quals
 rm -f DMLex/*.quals
+rm -f examples-liquid/split.ml.quals
+rm -f examples-liquid/vecswap.ml.quals
+rm -f examples-liquid/minibot.ml.quals
 
 FILE=`cat $POSFILE`" "$NEGFILE
 
@@ -28,7 +31,7 @@ if [[ $HANDQUALS_ONLY ]]
 then
   echo "User specified hand quals only"
 else
-        for i in `cat $FILE`
+  for i in `cat $FILE`
   do
     cat $i.quals 1> /dev/null 2> /dev/null
     if [[ $? != 0 ]]

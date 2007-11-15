@@ -96,7 +96,7 @@ let fresh_with_var_fun ty env fresh_ref_var =
             begin match ty_decl.type_kind with
               | Type_abstract
               | Type_variant _ ->
-                  if Path.same p Predef.path_unit || Path.same p Predef.path_float then
+                  if Path.same p Predef.path_unit || Path.same p Predef.path_float || Path.name p = "garbage" then
                     Fconstr (p, [], ([], Qconst []))
                   else
                     Fconstr (p, List.map fresh_rec tyl, fresh_ref_var ())
@@ -324,7 +324,9 @@ let pred_is_well_typed env p =
       begin match get_expr_shape r with
         | Frecord (_, fs, _) ->
             let is_referenced_field (_, name2, _) = String.compare name name2 = 0 in
-              (match (List.find is_referenced_field fs) with (f, _, _) -> f)
+              if List.exists is_referenced_field fs then
+                (match (List.find is_referenced_field fs) with (f, _, _) -> f)
+              else Funknown
         | f -> Funknown
       end
   and pred_shape_is_bool = function

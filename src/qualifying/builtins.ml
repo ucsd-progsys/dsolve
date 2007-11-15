@@ -224,7 +224,7 @@ let array_get_frame =
 let array_make_frame =
   let (x, y, z) = fresh_idents () in
   let tyvar = mk_tyvar () in
-  (["make"; "Array"], mk_fun(x, mk_int [],
+  (["make"; "Array"], mk_fun(x, mk_int [qint Predicate.Ge 0 x],
                  mk_fun(y, tyvar, mk_array tyvar [qsize Predicate.Eq z z x])))
 
 let array_copy_frame =
