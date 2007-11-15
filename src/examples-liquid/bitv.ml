@@ -1,4 +1,3 @@
-
 let length v = v.length in
 
 (*s Each element of the array is an integer containing [30] bits, where
@@ -19,13 +18,14 @@ let bit_j = Array.init 30 (fun j -> 1 lsl j) in
 let bit_not_j = Array.init 30 (fun j -> max_int - bit_j.(j)) in
 
 let low_mask = Array.make (30 + 1) 0 in
+
 let _ =
   let loop i =
     if i <= 30 then
       low_mask.(i) <- low_mask.(i-1) lor bit_j.(i - 1)
     else ()
   in loop 1 in
-(*
+
 let keep_lowest_bits a j = a land low_mask.(j) in
 
 let high_mask = Array.init (30 + 1) (fun j -> low_mask.(j) lsl (30-j)) in
@@ -34,7 +34,7 @@ let keep_highest_bits a j = a land high_mask.(j) in
 
 (*s Creating and normalizing a bit vector is easy: it is just a matter of
     taking care of the invariant. Copy is immediate. *)
-*)
+
 let create n b =
   let initv = if b then max_int else 0 in
   let r = n mod 30 in
@@ -48,6 +48,7 @@ let create n b =
     end
 in
 
+(*
 let normalize v =
   let r = v.length mod 30 in
   if r > 0 then
@@ -60,11 +61,15 @@ in
 
 let copy v = { length = v.length; bits = Array.copy v.bits } in
 
+*)
+
 let pos n =
   let i = n / 30 in
   let j = n mod 30 in
   if j < 0 then (i - 1, j + 30) else (i,j)
 in
+
+(*
 
 (*s Access and assignment. The [n]th bit of a bit vector is the [j]th
     bit of the [i]th integer, where [i = n / 30] and [j = n mod
@@ -126,16 +131,7 @@ let init n f =
     v
 in
 
-let vec = copy (create (Random.int 100 + 1) true) in
-let vec = init (Random.int 100 + 1) (fun i -> true) in
-let _ = normalize vec in
-let _ = unsafe_get vec (Random.int 21) in
-let _ = get vec (Random.int 1000) in
-let _ = set vec (Random.int 1000) in vec
-;;
-
-(*
-(*
+*)
 
 (*s Handling bits by packets is the key for efficiency of functions
     [append], [concat], [sub] and [blit]. 
@@ -145,26 +141,70 @@ let _ = set vec (Random.int 1000) in vec
     [n..n+m-1] are respectively valid subparts of [a] and [v]. 
     It is optimized when the bits fit the lowest boundary of an integer 
     (case [j == 0]). *)
-
+(*
 let blit_bits a i m v n =
   let (i',j) = pos n in
   if j == 0 then
-    Array.unsafe_set v i'
+    Array.set v i'
       ((keep_lowest_bits (a lsr i) m) lor
-       (keep_highest_bits (Array.unsafe_get v i') (30 - m)))
+       (keep_highest_bits (Array.get v i') (30 - m)))
   else 
     let d = m + j - 30 in
     if d > 0 then begin
-      Array.unsafe_set v i'
+      Array.set v i'
 	(((keep_lowest_bits (a lsr i) (30 - j)) lsl j) lor
-	 (keep_lowest_bits (Array.unsafe_get v i') j));
-      Array.unsafe_set v (succ i')
+	 (keep_lowest_bits (Array.get v i') j));
+      Array.set v (i' + 1)
 	((keep_lowest_bits (a lsr (i + 30 - j)) d) lor
-	 (keep_highest_bits (Array.unsafe_get v (succ i')) (30 - d)))
+	 (keep_highest_bits (Array.get v (i' + 1)) (30 - d)))
     end else 
-      Array.unsafe_set v i'
+      Array.set v i'
 	(((keep_lowest_bits (a lsr i) m) lsl j) lor
-	 ((Array.unsafe_get v i') land (low_mask.(j) lor high_mask.(-d))))
+	 ((Array.get v i') land (low_mask.(j) lor high_mask.(-d))))
+in
+*)
+(*s When blitting a subpart of a bit vector into another bit vector, there
+    are two possible cases: (1) all the bits are contained in a single integer
+    of the first bit vector, and a single call to [blit_bits] is the
+    only thing to do, or (2) the source bits overlap on several integers of
+    the source array, and then we do a loop of [blit_int], with two calls
+    to [blit_bits] for the two bounds. *)
+
+let unsafe_blit v1 ofs1 v2 ofs2 len =
+  let (bi,bj) = pos ofs1 in
+  let _ = Array.get v1 bi in () (*
+  let (ei,ej) = pos (ofs1 + len - 1) in
+  if bi = ei then
+    let _ = Array.get v1 bi in ()
+    (*blit_bits (Array.get v1 bi) bj len v2 ofs2*)
+  else (*begin
+    (); (*blit_bits (Array.get v1 bi) bj (30 - bj) v2 ofs2;*)
+    let rec loop n i =
+      if i <= ei - 1 then ()
+        (*blit_int (Array.get v1 i) v2 n*)
+      else (); (*blit_bits (Array.get v1 ei) 0 (ej + 1) v2 n *)
+      loop (n + 30) (i+1)
+    in loop (ofs2 + 30 - bj) (bi + 1)
+  end*) () *)
+in
+
+let blit v1 v2 ofs1 ofs2 len =
+  if len < 0 || ofs1 < 0 || ofs1 + len > v1.length
+             || ofs2 < 0 || ofs2 + len > v2.length
+  then
+    assert false
+  else
+    let _ = (fun n -> n + 0) ofs1 in
+      unsafe_blit v1.bits ofs1 v2.bits ofs2 len
+in
+
+let test = create 30 true in
+let test2 = create 30 true in
+  blit test test2 (Random.int 30 + 1) 30 0;
+  ();;
+
+(*
+(*
 
 (*s [blit_int] implements [blit_bits] in the particular case when
     [i=0] and [m=30] i.e. when we blit all the bits of [a]. *)
@@ -181,34 +221,6 @@ let blit_int a v n =
       ((keep_highest_bits (Array.unsafe_get v (succ i)) (30 - j)) lor
        (a lsr (30 - j)))
   end
-
-(*s When blitting a subpart of a bit vector into another bit vector, there
-    are two possible cases: (1) all the bits are contained in a single integer
-    of the first bit vector, and a single call to [blit_bits] is the
-    only thing to do, or (2) the source bits overlap on several integers of
-    the source array, and then we do a loop of [blit_int], with two calls
-    to [blit_bits] for the two bounds. *)
-
-let unsafe_blit v1 ofs1 v2 ofs2 len =
-  let (bi,bj) = pos ofs1 in
-  let (ei,ej) = pos (ofs1 + len - 1) in
-  if bi == ei then
-    blit_bits (Array.unsafe_get v1 bi) bj len v2 ofs2
-  else begin
-    blit_bits (Array.unsafe_get v1 bi) bj (30 - bj) v2 ofs2;
-    let n = ref (ofs2 + 30 - bj) in
-    for i = succ bi to pred ei do
-      blit_int (Array.unsafe_get v1 i) v2 !n;
-      n := !n + 30
-    done;
-    blit_bits (Array.unsafe_get v1 ei) 0 (succ ej) v2 !n
-  end
-
-let blit v1 ofs1 v2 ofs2 len =
-  if len < 0 or ofs1 < 0 or ofs1 + len > v1.length
-             or ofs2 < 0 or ofs2 + len > v2.length
-  then invalid_arg "Bitv.blit";
-  unsafe_blit v1.bits ofs1 v2.bits ofs2 len
 
 (*s Extracting the subvector [ofs..ofs+len-1] of [v] is just creating a
     new vector of length [len] and blitting the subvector of [v] inside. *)
