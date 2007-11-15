@@ -113,21 +113,11 @@ let set v n b =
           ((Array.get v.bits i) land (Array.get bit_not_j j))
 in
 
-let vec = copy (create (Random.int 100 + 1) true) in
-let _ = normalize vec in
-let _ = unsafe_get vec (Random.int 21) in
-let _ = unsafe_set vec (Random.int 20) true in
-let _ = get vec (Random.int 1000) in
-let _ = set vec (Random.int 1000) in vec
-;;
-(*
-(*
 (*s [init] is implemented naively using [unsafe_set]. *)
 let init n f =
   let v = create n false in
-  let stop = n - 1 in
   let rec loop i =
-    if i <= stop then begin
+    if i < n then begin
       unsafe_set v i (f i);
       loop (i + 1)
     end
@@ -136,7 +126,16 @@ let init n f =
     v
 in
 
+let vec = copy (create (Random.int 100 + 1) true) in
+let vec = init (Random.int 100 + 1) (fun i -> true) in
+let _ = normalize vec in
+let _ = unsafe_get vec (Random.int 21) in
+let _ = get vec (Random.int 1000) in
+let _ = set vec (Random.int 1000) in vec
+;;
 
+(*
+(*
 
 (*s Handling bits by packets is the key for efficiency of functions
     [append], [concat], [sub] and [blit]. 
