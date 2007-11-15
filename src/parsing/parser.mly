@@ -1451,16 +1451,17 @@ predicate:
 pexpression:
     INT                                         { mkpredexp (Ppredexp_int $1) }
   | LIDENT                                      { mkpredexp (Ppredexp_var $1) }
+  | LPAREN pexpression RPAREN                   { $2 }
   | LIDENT DOT LIDENT                           { mkpredexp (Ppredexp_field($3, $1)) }
   /* Note the hack here to keep funapps applied to variables 
      at this point the only funapps we want to allow are Array.length */
-	| val_longident LIDENT {							
+	| val_longident pexpression {
 			let rec flatten = function
 				Longident.Lident s -> s
 				| Longident.Ldot (t, s) -> (flatten t) ^ "." ^ s
 				| Longident.Lapply (t, t') -> (flatten t) ^ "(" ^ (flatten t') ^ ")"
 			in
-			mkpredexp (Ppredexp_app (flatten $1, mkpredexp(Ppredexp_var($2)))) }
+			mkpredexp (Ppredexp_app (flatten $1, $2)) }
   | pexpression PLUS pexpression                { mkpredexp (Ppredexp_binop($1, Predexp_plus, $3)) }
   | pexpression MINUS pexpression               { mkpredexp (Ppredexp_binop($1, Predexp_minus, $3)) }
   | pexpression STAR pexpression                { mkpredexp (Ppredexp_binop($1, Predexp_times, $3)) }

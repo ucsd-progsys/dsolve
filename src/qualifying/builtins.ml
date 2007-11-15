@@ -23,6 +23,14 @@ let qfalse = (Path.mk_ident "FALSE", Path.mk_ident "x",
 let qsize rel x y z = (Path.mk_ident ("SIZE_" ^ (Predicate.pprint_rel rel)), y,
 						Predicate.Atom(Predicate.Var z, rel, Predicate.FunApp("Array.length", Predicate.Var x)))
 
+let samesize y =
+  let x = Path.mk_ident "x" in
+    (Path.mk_ident ("SAME_SIZE_AS_" ^ (Path.name y)),
+     x,
+     Predicate.Atom(Predicate.FunApp("Array.length", Predicate.Var x),
+                    Predicate.Eq,
+                    Predicate.FunApp("Array.length", Predicate.Var y)))
+
 let qdim rel dim x y z =
   let dimstr = string_of_int dim in
     (Path.mk_ident ("DIM" ^ dimstr ^ (Predicate.pprint_rel rel)), y,
@@ -133,6 +141,21 @@ let land_frame =
             mk_fun (y, mk_int [],
                     mk_int [qual])))
 
+let mod_frame =
+  let (x, y, z) = fresh_idents () in
+  let qual = (Path.mk_ident "mod",
+              z,
+              Predicate.implies
+                (Predicate.And (Predicate.Atom (Predicate.Var x, Predicate.Ge, Predicate.PInt 0),
+                                Predicate.Atom (Predicate.Var y, Predicate.Ge, Predicate.PInt 0)),
+                 Predicate.big_and
+                   [Predicate.Atom (Predicate.PInt 0, Predicate.Le, Predicate.Var z);
+                    Predicate.Atom (Predicate.Var z, Predicate.Lt, Predicate.Var y);])) in
+    (["mod"; "Pervasives"],
+     mk_fun(x, mk_int [],
+            mk_fun (y, mk_int [],
+                    mk_int [qual])))
+
 (* ming: connectives could use cleanup ... eventually *)
 
 let bool_conj_frame path qname =
@@ -203,6 +226,20 @@ let array_make_frame =
   let tyvar = mk_tyvar () in
   (["make"; "Array"], mk_fun(x, mk_int [qint Predicate.Ge 0 x],
                  mk_fun(y, tyvar, mk_array tyvar [qsize Predicate.Eq z z x])))
+
+let array_copy_frame =
+  let (x, y) = fresh_2_idents () in
+  let tyvar = mk_tyvar () in
+  (["copy"; "Array"], mk_fun(x, mk_array tyvar [],
+                             mk_array tyvar [samesize x]))
+
+let array_init_frame =
+  let (x, y, z) = fresh_idents () in
+  let i = Path.mk_ident "i" in
+  let tyvar = mk_tyvar () in
+  let init = mk_fun (y, mk_int [qint Predicate.Ge 0 y; qrel Predicate.Lt y x], tyvar) in
+    (["init"; "Array"], mk_fun(x, mk_int [qint Predicate.Gt 0 x],
+                               mk_fun(i, init, mk_array tyvar [qsize Predicate.Eq z z x])))
 
 let bigarray_create_frame env =
   let (k, l) = fresh_2_idents () in
@@ -306,6 +343,7 @@ let ref_path env =
 let bigarray_array2_path env =
   ("array2", find_type_path ["t"; "Array2"; "Bigarray"] env)
 
+let max_int_frame = (["max_int"; "Pervasives"], mk_int [])
 
 let _frames = [
   op_frame ["+"; "Pervasives"] "+" Predicate.Plus;
@@ -344,13 +382,17 @@ let _frames = [
   bool_disj_frame ["||"; "Pervasives"] "||";
   bool_not_frame;
   array_length_frame;
+  array_copy_frame;
   array_get_frame;
   array_make_frame;
+  array_init_frame;
   array_set_frame;
   rand_init_frame;
   rand_int_frame;
   void_fun_frame ["self_init"; "Random"];
   ignore_frame;
+  max_int_frame;
+  mod_frame;
 ]
 
 let _lib_frames = [
