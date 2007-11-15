@@ -138,7 +138,7 @@ let rec sortRange arr start n =
     let _ = (fun x -> x) r in
     (*let _ = vecswap pb start (*(pn-r)*) r in*)
     (*if (pn-r) + r <= pn then*)
-      let _ = vecswap (pn-r) (pn-r) r in
+      let _ = vecswap pb (pn-r) r in
     let n' = pb - pa in
 
     (*************)

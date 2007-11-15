@@ -1,6 +1,7 @@
 let anno = (fun x -> x) in
 let rec bot l b =
   if l < b then {p1 = b; p2 = b}
+  else if Random.int 2 = 0 then {p1 = b; p2 = b}
   else bot l (b+1)
 in
 let rec bot2 l b =
