@@ -8,4 +8,3 @@ qualif LEASIZE(n) : n + a <= Array.length arr;;
 qualif LTASIZE(n) : n + a < Array.length arr;;
 qualif LE_P1SIZE(n) : n <= 1 + Array.length arr;;
 qualif LT_P1SIZE(n) : n < 1 + Array.length arr;;
-qualif LT_SZSZ(x) : (2*x < Array.length arr) or (n-x-1 < Array.length arr);;
