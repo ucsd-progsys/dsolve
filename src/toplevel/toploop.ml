@@ -439,7 +439,7 @@ let set_paths () =
 
 let initialize_toplevel_env () =
   toplevel_env := Compile.initial_env();
-  toplevel_fenv := Lightenv.addn (Builtins.frames !toplevel_env) Lightenv.empty
+  toplevel_fenv := Compile.initial_fenv !toplevel_env
 
 (* The interactive loop *)
 

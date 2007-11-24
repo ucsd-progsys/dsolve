@@ -104,6 +104,8 @@ TOPLEVEL=driver/pparse.cmo driver/errors.cmo driver/compile.cmo \
   toplevel/genprintval.cmo toplevel/toploop.cmo \
   toplevel/trace.cmo toplevel/topdirs.cmo toplevel/topmain.cmo
 
+LIQUID=analyzer/liquid.cmo
+
 TOPLEVELLIB=toplevel/toplevellib.cma
 TOPLEVELSTART=toplevel/topstart.cmo
 
@@ -115,6 +117,8 @@ COMPOBJS=$(HOSTLIBS) $(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(COMP) $(BYTEC
 TOPLIB=$(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(COMP) $(BYTECOMP) $(TOPLEVEL)
 
 TOPOBJS=$(HOSTLIBS) $(TOPLEVELLIB) $(TOPLEVELSTART)
+
+LIQOBJS=$(HOSTLIBS) $(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(LIQUID)
 
 OPTOBJS=$(HOSTLIBS) $(OPTUTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(COMP) $(ASMCOMP) $(OPTDRIVER)
 
@@ -329,6 +333,14 @@ toplevel/toplevellib.cma: $(TOPLIB)
 
 partialclean::
 	rm -f ocaml toplevel/toplevellib.cma
+
+# The liquid type analyzer
+
+liquid: $(LIQOBJS)
+	$(CAMLC) $(LINKFLAGS) -o liquid $(LIQOBJS)
+
+partialclean::
+	rm -f liquid
 
 # The configuration file
 
