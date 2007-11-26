@@ -33,7 +33,7 @@ SHELL=/bin/sh
 MKDIR=mkdir -p
 
 INCLUDES=-I utils -I parsing -I typing -I yices/lib/ -I qualifying -I bytecomp \
-         -I asmcomp -I driver -I toplevel
+         -I asmcomp -I driver -I toplevel -I analyzer
 
 UTILS=utils/misc.cmo utils/tbl.cmo utils/config.cmo \
   utils/clflags.cmo utils/terminfo.cmo utils/ccomp.cmo utils/warnings.cmo \
@@ -104,7 +104,7 @@ TOPLEVEL=driver/pparse.cmo driver/errors.cmo driver/compile.cmo \
   toplevel/genprintval.cmo toplevel/toploop.cmo \
   toplevel/trace.cmo toplevel/topdirs.cmo toplevel/topmain.cmo
 
-LIQUID=driver/pparse.cmo analyzer/liquid.cmo
+LIQUID=driver/pparse.cmo analyzer/liqerrors.cmo analyzer/liquid.cmo
 
 TOPLEVELLIB=toplevel/toplevellib.cma
 TOPLEVELSTART=toplevel/topstart.cmo
@@ -712,7 +712,7 @@ partialclean::
 	rm -f *~
 
 depend: beforedepend
-	(for d in utils parsing typing qualifying bytecomp asmcomp driver toplevel; \
+	(for d in utils parsing typing qualifying bytecomp asmcomp driver analyzer toplevel; \
 	 do $(CAMLDEP) $(DEPFLAGS) $$d/*.mli $$d/*.ml; \
 	 done) > .depend
 

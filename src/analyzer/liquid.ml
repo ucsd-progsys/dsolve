@@ -1,6 +1,7 @@
 open Clflags
 open Config
 open Format
+open Liqerrors
 open Misc
 
 let usage = "Usage: liquid <options> [source-file]\noptions are:"
@@ -109,6 +110,7 @@ let main () =
      "-ksimpl", Arg.Set kill_simplify, "kill simplify after a large number of queries to reduce memory usage";
      "-cacheq", Arg.Set cache_queries, "cache theorem prover queries"
   ] file_argument usage;
-  analyze std_formatter !filename
+  try analyze std_formatter !filename
+  with x -> report_error err_formatter x
 
 let _ = main ()
