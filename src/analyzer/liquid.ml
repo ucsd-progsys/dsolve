@@ -1,4 +1,3 @@
-open Clflags
 open Config
 open Format
 open Liqerrors
@@ -38,16 +37,50 @@ let print_if ppf flag printer arg =
   if !flag then fprintf ppf "%a@." printer arg;
   arg
 
+let type_implementation initial_env ast =
+  Typecore.reset_delayed_checks ();
+  let str = Typemod.type_structure initial_env ast in
+    Typecore.force_delayed_checks ();
+    str
+
+let dump_qualifs () =
+  if !Clflags.dump_qualifs then begin
+      fprintf std_formatter "@[Dumping@ qualifiers@\n@]";
+      Misc.format_list_of_strings err_formatter (";;", Qualgen.dump_qualifs ());
+      fprintf std_formatter "@[Done@ Dumping@ qualifiers@\n@]";flush stderr
+  end
+
+let dump_frames fmap =
+  match !Clflags.dump_frames with
+    | None -> ()
+    | Some filename -> Printqual.dump filename fmap
+
 let analyze ppf sourcefile =
   init_path ();
   let env = initial_env () in
-  let _ = initial_fenv env in
-  let modulename =
-    String.capitalize(Filename.basename(chop_extension_if_any sourcefile)) in
-    ignore(
-      Pparse.file ppf sourcefile Parse.implementation ast_impl_magic_number
-      ++ print_if ppf Clflags.dump_parsetree Printast.implementation
-      ++ Typemod.type_implementation sourcefile ".cmo" modulename env)
+  let fenv = initial_fenv env in
+  let (str, _, env) =
+    (Pparse.file ppf sourcefile Parse.implementation ast_impl_magic_number
+     ++ print_if ppf Clflags.dump_parsetree Printast.implementation
+     ++ type_implementation env) in
+  let (_, framemap) =
+    try Qualifymod.qualify_structure env fenv [] str
+    with Qualifymod.IllQualified partial_fmap ->
+      begin
+        TheoremProver.dump_simple_stats ();
+        dump_qualifs ();
+        dump_frames partial_fmap;
+        exit 1
+      end
+  in
+    if !Clflags.dump_qexprs then begin
+      fprintf std_formatter "@.@.";
+      Qdebug.dump_qualified_structure std_formatter framemap str;
+    end;
+    dump_qualifs ();
+    dump_frames framemap
+
+open Clflags
 
 let main () =
   Arg.parse [
@@ -113,4 +146,4 @@ let main () =
   try analyze std_formatter !filename
   with x -> report_error err_formatter x
 
-let _ = main ()
+let _ = main (); exit 0

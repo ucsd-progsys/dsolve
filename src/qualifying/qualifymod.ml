@@ -349,12 +349,12 @@ let instantiate_in_environments cstrs quals =
 exception IllQualified of Frame.t LocationMap.t
 
 let qualify_structure tenv fenv quals str =
-  let (newquals, cstrs, fmap) = constrain_structure tenv fenv quals str in
+  let (quals, cstrs, fmap) = constrain_structure tenv fenv quals str in
   let instantiated_quals = instantiate_in_environments cstrs quals in
     if List.length cstrs = 0 then
       (* breaks the trivial program, but will make output cleaner while we
        * gather data *)
-      (newquals, LocationMap.empty)
+      (quals, LocationMap.empty)
     else
       begin
       Printf.printf "##solve##\n";
@@ -364,7 +364,7 @@ let qualify_structure tenv fenv quals str =
           Printf.printf "##time##\n";
           Bstats.print stdout "\n\nTime to solve constraints:\n";
           Printf.printf "##endtime##\n";
-          (newquals, LocationMap.map (Frame.apply_solution (Solution.find solution)) fmap)
+          (quals, LocationMap.map (Frame.apply_solution (Solution.find solution)) fmap)
       with Unsatisfiable solution ->
         raise (IllQualified (LocationMap.map (Frame.apply_solution (Solution.find solution)) fmap))
       end
