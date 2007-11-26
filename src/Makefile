@@ -104,7 +104,7 @@ TOPLEVEL=driver/pparse.cmo driver/errors.cmo driver/compile.cmo \
   toplevel/genprintval.cmo toplevel/toploop.cmo \
   toplevel/trace.cmo toplevel/topdirs.cmo toplevel/topmain.cmo
 
-LIQUID=analyzer/liquid.cmo
+LIQUID=driver/pparse.cmo analyzer/liquid.cmo
 
 TOPLEVELLIB=toplevel/toplevellib.cma
 TOPLEVELSTART=toplevel/topstart.cmo

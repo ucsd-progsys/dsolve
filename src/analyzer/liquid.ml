@@ -1,13 +1,57 @@
 open Clflags
+open Config
+open Format
+open Misc
 
 let usage = "Usage: liquid <options> [source-file]\noptions are:"
 
-let file_argument _ = ()
+let filename = ref ""
+
+let file_argument fname = filename := fname
+
+let init_path () =
+  let dirs =
+    if !Clflags.use_threads then "+threads" :: !Clflags.include_dirs
+    else if !Clflags.use_vmthreads then "+vmthreads" :: !Clflags.include_dirs
+    else !Clflags.include_dirs in
+  let exp_dirs =
+    List.map (expand_directory Config.standard_library) dirs in
+  load_path := "" :: List.rev_append exp_dirs (Clflags.std_include_dir ());
+  Env.reset_cache ()
+
+let initial_env () =
+  Ident.reinit();
+  try
+    if !Clflags.nopervasives
+    then Env.initial
+    else Env.open_pers_signature "Pervasives" Env.initial
+  with Not_found ->
+    failwith "cannot open pervasives.cmi"
+
+let initial_fenv env =
+  Lightenv.addn (Builtins.frames env) Lightenv.empty
+
+let (++) x f = f x
+
+let print_if ppf flag printer arg =
+  if !flag then fprintf ppf "%a@." printer arg;
+  arg
+
+let analyze ppf sourcefile =
+  init_path ();
+  let env = initial_env () in
+  let _ = initial_fenv env in
+  let modulename =
+    String.capitalize(Filename.basename(chop_extension_if_any sourcefile)) in
+    ignore(
+      Pparse.file ppf sourcefile Parse.implementation ast_impl_magic_number
+      ++ print_if ppf Clflags.dump_parsetree Printast.implementation
+      ++ Typemod.type_implementation sourcefile ".cmo" modulename env)
 
 let main () =
   Arg.parse [
      "-I", Arg.String(fun dir ->
-       let dir = Misc.expand_directory Config.standard_library dir in
+       let dir = expand_directory Config.standard_library dir in
        include_dirs := dir :: !include_dirs),
            "<dir>  Add <dir> to the list of include directories";
      "-init", Arg.String (fun s -> init_file := Some s),
@@ -65,6 +109,6 @@ let main () =
      "-ksimpl", Arg.Set kill_simplify, "kill simplify after a large number of queries to reduce memory usage";
      "-cacheq", Arg.Set cache_queries, "cache theorem prover queries"
   ] file_argument usage;
-  ()
+  analyze std_formatter !filename
 
 let _ = main ()
