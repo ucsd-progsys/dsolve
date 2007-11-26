@@ -316,21 +316,27 @@ let constrain_expression tenv initenv exp initcstrs initframemap =
 
 (* pmr: note we're operating in the environment created by typing the
    structure - it's entirely possible this has some bad corner cases *)
-let constrain_structure tenv fenv initquals str =
-  let rec constrain_rec quals cstrs fmap = function
-    | [] -> (quals, cstrs, fmap)
+let constrain_structure tenv initfenv initquals str =
+  let rec constrain_rec quals fenv cstrs fmap = function
+    | [] -> (quals, fenv, cstrs, fmap)
     | (Tstr_eval exp) :: srem ->
         let (_, cstrs', fmap') = constrain_expression tenv fenv exp cstrs fmap in
-          constrain_rec quals cstrs' fmap' srem
+          constrain_rec quals fenv cstrs' fmap' srem
     | (Tstr_qualifier (name, (valu, pred))) :: srem ->
-        let newquals = (Path.Pident name, Path.Pident valu, pred) :: quals in
-          constrain_rec newquals cstrs fmap srem
-		| (Tstr_value(_, _))::srem ->
-				Printf.printf "Tstr_val unsupported."; assert false
+        let quals = (Path.Pident name, Path.Pident valu, pred) :: quals in
+          constrain_rec quals fenv cstrs fmap srem
+		| (Tstr_value (Nonrecursive, pexps))::srem ->
+        let constrain_bind (pat, exp) (fenv, cstrs, fmap) =
+          let (f, cstrs, fmap) = constrain_expression tenv fenv exp cstrs fmap in
+          let fenv = bind_pattern fenv pat f in
+            (fenv, cstrs, fmap)
+        in
+        let (fenv, cstrs, fmap) = List.fold_right constrain_bind pexps (fenv, cstrs, fmap) in
+          constrain_rec quals fenv cstrs fmap srem
     | (Tstr_type(_))::srem ->
-        Printf.printf "Ignoring type decl"; constrain_rec quals cstrs fmap srem
+        Printf.printf "Ignoring type decl"; constrain_rec quals fenv cstrs fmap srem
     | _ -> assert false
-  in constrain_rec initquals [] LocationMap.empty str
+  in constrain_rec initquals initfenv [] LocationMap.empty str
 
 module QualifierSet = Set.Make(Qualifier)
 
@@ -349,7 +355,7 @@ let instantiate_in_environments cstrs quals =
 exception IllQualified of Frame.t LocationMap.t
 
 let qualify_structure tenv fenv quals str =
-  let (quals, cstrs, fmap) = constrain_structure tenv fenv quals str in
+  let (quals, _, cstrs, fmap) = constrain_structure tenv fenv quals str in
   let instantiated_quals = instantiate_in_environments cstrs quals in
     if List.length cstrs = 0 then
       (* breaks the trivial program, but will make output cleaner while we
