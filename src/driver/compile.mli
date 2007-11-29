@@ -21,4 +21,5 @@ val implementation: formatter -> string -> string -> unit
 val c_file: string -> unit
 
 val initial_env: unit -> Env.t
+val initial_fenv: Env.t -> Frame.t Lightenv.t
 val init_path: unit -> unit
