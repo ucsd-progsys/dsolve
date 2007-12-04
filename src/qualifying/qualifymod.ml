@@ -157,8 +157,8 @@ let rec constrain e tenv env guard cstrs framemap =
                   | Some pat ->
                     (* We _must_ apply a substitution over the whole pattern or
                        else we risk capturing stuff in the environment (e.g,
-                       (a, b) -> v > a in the context where a is defined).
-                       Otherwise, we risk severe unsoundness. *)
+                       apply (a, b) -> v > a in the context where a is defined).
+                       This risks severe unsoundness. *)
                     let subs = Pattern.bind_pexpr pat (expression_to_pexpr e2) in
                       List.fold_right Frame.apply_substitution subs f'
                       (* pmr: The soundness of this next line is suspect,
