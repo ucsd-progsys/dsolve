@@ -48,11 +48,11 @@ let split cstrs =
                  Instead, we just proceed with the best information we have,
                  probably losing chances to assert qualifiers along the way. *)
               let env' = match (l1, l2) with
-                | (Some x, None)
-                | (None, Some x) ->
-                    Lightenv.add x f2 env
-                | (Some x, Some y) when Path.same x y ->
-                    Lightenv.add x f2 env
+                | (Some pat, None)
+                | (None, Some pat) ->
+                  Pattern.env_bind env pat f2
+                | (Some pat1, Some pat2) when Pattern.same pat1 pat2 ->
+                  Pattern.env_bind env pat1 f2
                 | _ -> env
               in split_rec flat
                    (SubFrame (env, guard, f2, f1)
@@ -110,7 +110,7 @@ let split cstrs =
           | Frame.Farrow (l, f, f') ->
               let env' = match l with
                 | None -> env
-                | Some x -> Lightenv.add x f env
+                | Some pat -> Pattern.env_bind env pat f
               in split_rec flat
                    (WFFrame (env, f)
                     :: WFFrame (env', f')

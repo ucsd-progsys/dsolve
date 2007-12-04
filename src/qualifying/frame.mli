@@ -1,4 +1,5 @@
 open Types
+open Typedtree
 open Format
 open Asttypes
 
@@ -15,7 +16,7 @@ val empty_refinement: refinement
 type t =
     Fvar of Path.t
   | Fconstr of Path.t * t list * refinement
-  | Farrow of Path.t option * t * t
+  | Farrow of pattern_desc option * t * t
   | Ftuple of t list
   | Frecord of Path.t * (t * string * mutable_flag) list * refinement
   | Funknown

@@ -171,6 +171,9 @@ let vars p =
 let implies(p, q) =
   Or(Not p, q)
 
+let tuple_nth pexp n =
+  FunApp ("__tuple_nth_" ^ (string_of_int n), pexp)
+
 let rec transl_predicate p =
   let transl_op = function
     | Predexp_plus -> Plus

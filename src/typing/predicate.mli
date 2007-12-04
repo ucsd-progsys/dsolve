@@ -38,6 +38,8 @@ val big_or: t list -> t
 val equals: (pexpr * pexpr) -> t
 val implies: (t * t) -> t
 
+val tuple_nth: pexpr -> int -> pexpr
+
 val subst: pexpr -> Path.t -> t -> t
 val vars: t -> Path.t list
 (* pmr: change to plain old instantiate *)
