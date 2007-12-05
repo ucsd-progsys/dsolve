@@ -80,11 +80,11 @@ let fresh_refinementvar () = ([], Qvar (Path.mk_ident "k"))
 let fresh_fvar () = Fvar (Path.mk_ident "a")
 
 (* ming: abbrevs? *)
-(* Create a fresh frame with the same shape as the given type [ty], using
-   [fresh_ref_var] to create new refinement variables.  Uses type environment
-   [env] to find type declarations. *)
-let fresh_with_var_fun ty env fresh_ref_var =
+(* Create a fresh frame with the same shape as the type of [exp] using
+   [fresh_ref_var] to create new refinement variables. *)
+let fresh_with_var_fun exp fresh_ref_var =
   let vars = ref [] in
+  let (ty, env) = (repr exp.exp_type, exp.exp_env) in
   let rec fresh_rec t =
     let t' = repr t in
     match t'.desc with
@@ -136,12 +136,35 @@ let fresh_with_var_fun ty env fresh_ref_var =
 
    You probably want to consider using fresh_with_labels instead of this
    for subtype constraints. *)
-let fresh ty env = fresh_with_var_fun ty env fresh_refinementvar
+let fresh exp = fresh_with_var_fun exp fresh_refinementvar
 
 (* Create a fresh frame with the same shape as the given type [ty].
    No refinement variables are created - all refinements are initialized
    to true. *)
-let fresh_without_vars ty env = fresh_with_var_fun ty env (fun _ -> empty_refinement)
+let fresh_without_vars exp = fresh_with_var_fun exp (fun _ -> empty_refinement)
+
+(* Label all the function formals in [f] with their corresponding labels in
+   [f'].  Obviously, they are expected to be of the same shape; also, [f]
+   must be completely unlabeled (as frames are after creation by fresh). *)
+let rec label_like f f' =
+  match (f, f') with
+    | (Fvar _, Fvar _)
+    | (Fconstr _, Fconstr _)
+    | (Funknown, Funknown) ->
+        f
+    | (Farrow (None, f1, f1'), Farrow(l, f2, f2')) ->
+        Farrow (l, label_like f1 f2, label_like f1' f2')
+    | (Ftuple t1s, Ftuple t2s) ->
+        Ftuple (List.map2 label_like t1s t2s)
+    | (Frecord (p1, f1s, r), Frecord (p2, f2s, _)) when Path.same p1 p2 ->
+        let label_rec (f1, n, muta) (f2, _, _) = (label_like f1 f2, n, muta) in
+          Frecord (p1, List.map2 label_rec f1s f2s, r)
+    | _ -> assert false
+
+(* Create a fresh frame with the same shape as [exp]'s type and [f],
+   and the same labels as [f]. *)
+let fresh_with_labels exp f =
+  label_like (fresh exp) f
 
 (* Instantiate the vars in f(r) with the corresponding frames in ftemplate.  If a
    variable occurs twice, it will only be instantiated with one frame; which
@@ -198,30 +221,6 @@ let rec apply_substitution sub = function
   | Funknown ->
       Funknown
   (*| _ -> assert false*)
-
-(* Label all the function formals in [f] with their corresponding labels in
-   [f'].  Obviously, they are expected to be of the same shape; also, [f]
-   must be completely unlabeled (as frames are after creation by fresh). *)
-let rec label_like f f' =
-  match (f, f') with
-    | (Fvar _, Fvar _)
-    | (Fconstr _, Fconstr _)
-    | (Funknown, Funknown) ->
-        f
-    | (Farrow (None, f1, f1'), Farrow(l, f2, f2')) ->
-        Farrow (l, label_like f1 f2, label_like f1' f2')
-    | (Ftuple t1s, Ftuple t2s) ->
-        Ftuple (List.map2 label_like t1s t2s)
-    | (Frecord (p1, f1s, r), Frecord (p2, f2s, _)) when Path.same p1 p2 ->
-        let label_rec (f1, n, muta) (f2, _, _) = (label_like f1 f2, n, muta) in
-          Frecord (p1, List.map2 label_rec f1s f2s, r)
-    | _ -> assert false
-
-(* Create a fresh frame with the same shape as [t] and [f],
-   and the same labels as [f]. Uses type environment
-   [env] to find type declarations. *)
-let fresh_with_labels t f env =
-  label_like (fresh t env) f
 
 let refinement_apply_solution solution = function
     (subs, Qvar k) -> (subs, Qconst (solution k))
