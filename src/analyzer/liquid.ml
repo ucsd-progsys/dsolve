@@ -64,7 +64,7 @@ let analyze ppf sourcefile =
      ++ print_if ppf Clflags.dump_parsetree Printast.implementation
      ++ type_implementation env) in
   let (_, framemap) =
-    try Qualifymod.qualify_structure env fenv [] str
+    try Qualifymod.qualify_structure fenv [] str
     with Qualifymod.IllQualified partial_fmap ->
       begin
         TheoremProver.dump_simple_stats ();

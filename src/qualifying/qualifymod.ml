@@ -22,8 +22,8 @@ let expression_to_pexpr e =
 
 let under_lambda = ref 0
 
-let rec constrain e tenv env guard cstrs framemap =
-  let constrain_subexprs subenv exprs cs fm = List.fold_right (subexpr_folder tenv subenv guard) exprs ([], cs, fm) in
+let rec constrain e env guard cstrs framemap =
+  let constrain_subexprs subenv exprs cs fm = List.fold_right (subexpr_folder subenv guard) exprs ([], cs, fm) in
   let (f, cs, fm) =
     match (e.exp_desc, repr e.exp_type) with
   (Texp_constant(Const_int n), {desc = Tconstr(path, [], _)}) ->
@@ -33,7 +33,7 @@ let rec constrain e tenv env guard cstrs framemap =
   | (Texp_constant(Const_float n), t) ->
     (* pmr: this should be fresh_without_vars.  It's only not unsound because we special
        case float in fresh *)
-          (Frame.fresh t tenv, cstrs, framemap)
+          (Frame.fresh e, cstrs, framemap)
   | (Texp_construct(cstrdesc, []), {desc = Tconstr(path, [], _)}) ->
           let cstrref =
             match cstrdesc.cstr_tag with
@@ -41,7 +41,7 @@ let rec constrain e tenv env guard cstrs framemap =
                   Builtins.equality_refinement (Predicate.PInt n)
               | _ -> Frame.empty_refinement
           in (Frame.Fconstr (path, [], cstrref), cstrs, framemap)
-  | (Texp_record (labeled_exprs, None), ({desc = (Tconstr _)} as t)) ->
+  | (Texp_record (labeled_exprs, None), {desc = (Tconstr _)}) ->
     let compare_labels ({lbl_pos = n}, _) ({lbl_pos = m}, _) =
       compare n m
     in
@@ -51,7 +51,7 @@ let rec constrain e tenv env guard cstrs framemap =
     let (_, sorted_exprs) = List.split (List.sort compare_labels labeled_exprs) in
     let (subframes, new_cs, new_fm) = constrain_subexprs env sorted_exprs cstrs framemap in
     let subframe_field cs_rest fsub (fsup, _, _) = SubFrame (env, guard, fsub, fsup) :: cs_rest in
-    let f = Frame.fresh t tenv in
+    let f = Frame.fresh e in
     let new_cs = match f with
       | Frame.Frecord (_, recframes, _) ->
           List.fold_left2 subframe_field new_cs subframes recframes
@@ -64,7 +64,7 @@ let rec constrain e tenv env guard cstrs framemap =
       | _ -> assert false
     in (f, WFFrame (env, f) :: new_cs, new_fm)
   | (Texp_field (expr, label_desc), t) ->
-    let (recframe, new_cs, new_fm) = constrain expr tenv env guard cstrs framemap in
+    let (recframe, new_cs, new_fm) = constrain expr env guard cstrs framemap in
     let (fieldframe, fieldname) = match recframe with
       | Frame.Frecord (_, fs, _) ->
           let rf = List.nth fs label_desc.lbl_pos in
@@ -77,20 +77,20 @@ let rec constrain e tenv env guard cstrs framemap =
     let f = Frame.apply_refinement (Builtins.equality_refinement pexpr) fieldframe in
       (f, WFFrame (env, f) :: new_cs, new_fm)
   | (Texp_ifthenelse(e1, e2, Some e3), t) ->
-          let f = Frame.fresh t tenv in
-          let (f1, cstrs1, fm1) = constrain e1 tenv env guard cstrs framemap in
+          let f = Frame.fresh e in
+          let (f1, cstrs1, fm1) = constrain e1 env guard cstrs framemap in
           let guardvar = Path.mk_ident "guard" in
           let true_tag =
-            match (Env.lookup_constructor (Lident "true") tenv).cstr_tag with
+            match (Env.lookup_constructor (Lident "true") e.exp_env).cstr_tag with
                 Cstr_constant n -> n
               | _ -> assert false
           in
           let guardp = Predicate.equals (Predicate.Var guardvar, Predicate.PInt true_tag) in
           let env' = Lightenv.add guardvar f1 env in
           let guard2 = Predicate.And (guardp, guard) in
-          let (f2, cstrs2, fm2) = constrain e2 tenv env' guard2 cstrs1 fm1 in
+          let (f2, cstrs2, fm2) = constrain e2 env' guard2 cstrs1 fm1 in
           let guard3 = Predicate.And (Predicate.Not guardp, guard) in
-          let (f3, cstrs3, fm3) = constrain e3 tenv env' guard3 cstrs2 fm2 in
+          let (f3, cstrs3, fm3) = constrain e3 env' guard3 cstrs2 fm2 in
             (f,
              WFFrame(env, f)
              ::SubFrame(env', guard2, f2, f)
@@ -98,7 +98,7 @@ let rec constrain e tenv env guard cstrs framemap =
              ::cstrs3,
              fm3)
   | (Texp_function([(pat, e')], _), t) ->
-    begin match Frame.fresh t tenv with
+    begin match Frame.fresh e with
       | Frame.Farrow (_, f, unlabelled_f') ->
           let _ =
             match (t.desc, pat.pat_desc) with
@@ -111,7 +111,7 @@ let rec constrain e tenv env guard cstrs framemap =
               {desc = Tarrow(_, t_in, _, _)} -> Printf.printf "%s%s\n" (Ident.name x) (Frame.type_structure t_in); Qualgen.add_label (xp, t_in)
               | {desc = d} -> Printf.printf "%s%s\n" (Ident.name x) (Frame.type_structure e'.exp_type); Qualgen.add_label (xp, e'.exp_type)*)
           let env' = Pattern.env_bind env pat.pat_desc f in
-          let (f'', cstrs', fm') = constrain e' tenv env' guard cstrs framemap in
+          let (f'', cstrs', fm') = constrain e' env' guard cstrs framemap in
             (* Since the underlying type system doesn't have dependent
                types, fresh can't give us the proper labels for the RHS.
                Instead, we have to label it after the fact. *)
@@ -141,7 +141,7 @@ let rec constrain e tenv env guard cstrs framemap =
               (try Lightenv.find id env
                 with Not_found -> fprintf std_formatter "@[Not_found:@ %s@]" (Path.unique_name id);
                      raise Not_found)
-                , Frame.fresh t tenv) in
+                , Frame.fresh e) in
           (*let _ = fprintf std_formatter "@[instantiating@ %a@ %a@]" Frame.pprint f' Frame.pprint ftemplate in*)
           (*let _ = Frame.pprint Format.err_formatter f' in
           let _ = Frame.pprint Format.err_formatter ftemplate in *)
@@ -152,7 +152,7 @@ let rec constrain e tenv env guard cstrs framemap =
         | (Some e2, _) ->
           begin match f with
 	          | Frame.Farrow (l, f, f') ->
-	            let (f2, cs', fm') = constrain e2 tenv env guard cs fm in
+	            let (f2, cs', fm') = constrain e2 env guard cs fm in
 	            let f'' = match l with
                   | Some pat ->
                     (* We _must_ apply a substitution over the whole pattern or
@@ -173,11 +173,11 @@ let rec constrain e tenv env guard cstrs framemap =
           end
         | _ -> assert false
         in List.fold_left constrain_application
-               (constrain e1 tenv env guard cstrs framemap) exps
+               (constrain e1 env guard cstrs framemap) exps
   | (Texp_let (recflag, bindings, body_exp), t) ->
-    let (env, cstrs, fmap) = constrain_bindings tenv env guard cstrs framemap recflag bindings in 
-    let (body_frame, cstrs, fmap) = constrain body_exp tenv env guard cstrs fmap in
-    let f = Frame.fresh_with_labels t body_frame tenv in
+    let (env, cstrs, fmap) = constrain_bindings env guard cstrs framemap recflag bindings in 
+    let (body_frame, cstrs, fmap) = constrain body_exp env guard cstrs fmap in
+    let f = Frame.fresh_with_labels e body_frame in
       (f,
        WFFrame (env, f)
        :: SubFrame (env, guard, body_frame, f)
@@ -185,27 +185,27 @@ let rec constrain e tenv env guard cstrs framemap =
        fmap)
   | (Texp_array(es), t) ->
           let _ = if !Clflags.dump_qualifs then Qualgen.add_constant (List.length es) else 5 in
-					let f = Frame.fresh t tenv in
+					let f = Frame.fresh e in
 					let (f, fs) = (function Frame.Fconstr(p, l, _) -> (Frame.Fconstr(p, l, Builtins.size_lit_refinement(List.length es)), l) | _ -> assert false) f in
-					let list_rec (fs, c, m) e = (function (f, c, m) -> (f::fs, c, m)) (constrain e tenv env guard c m) in
+					let list_rec (fs, c, m) e = (function (f, c, m) -> (f::fs, c, m)) (constrain e env guard c m) in
 					let (fs', c, m) = List.fold_left list_rec ([], cstrs, framemap) es in
 					let mksub b a = SubFrame(env, guard, a, b) in
 					let c = List.append (List.map (mksub (List.hd fs)) fs') c in
 					(f, WFFrame(env, f)::c, m)	
   | (Texp_sequence(e1, e2), t) ->
-          let (f1, c, m) = constrain e1 tenv env guard cstrs framemap in
-          let (f2, c, m) = constrain e2 tenv env guard c m in
+          let (f1, c, m) = constrain e1 env guard cstrs framemap in
+          let (f2, c, m) = constrain e2 env guard c m in
            (* ming: the ocaml typer isn't constraining sequenced expressions
             * into statements, so i guess we can't either *)
           (f2, ((*SubFrame(env, guard, f1, Builtins.mk_unit ())::*)c), m)
   | (Texp_tuple(es), t) ->
     let constrain_exprs e (fs, (_, c, m)) =
-      let (f, new_c, new_m) = constrain e tenv env guard c m in
+      let (f, new_c, new_m) = constrain e env guard c m in
         (f :: fs, (f, new_c, new_m))
     in
     (* We use Funknown here because it's never going to get looked at anyway *)
     let (fs, (_, new_cs, new_m)) = List.fold_right constrain_exprs es ([], (Frame.Funknown, cstrs, framemap)) in
-    let f = Frame.fresh t tenv in
+    let f = Frame.fresh e in
       begin match f with
         | Frame.Ftuple fresh_fs ->
             let new_cs = List.fold_left2
@@ -215,14 +215,14 @@ let rec constrain e tenv env guard cstrs framemap =
         | _ -> assert false
       end
   | (Texp_assertfalse, t) ->
-    (Frame.fresh t tenv, cstrs, framemap)
+    (Frame.fresh e, cstrs, framemap)
   | (_, t) ->
     (* As it turns out, giving up and returning true here is actually _very_ unsound!  We won't check subexpressions! *)
     fprintf err_formatter "@[Warning: Don't know how to constrain expression, structure:@ %a@ location:@ %a@]@.@." Printtyp.raw_type_expr t Location.print e.exp_loc; flush stderr;
     assert false
   in (f, cs, LocationMap.add e.exp_loc f fm)
 
-and constrain_bindings tenv env guard cstrs framemap recflag bindings =
+and constrain_bindings env guard cstrs framemap recflag bindings =
   match recflag with
   | Default
   | Nonrecursive ->
@@ -237,7 +237,7 @@ and constrain_bindings tenv env guard cstrs framemap recflag bindings =
       | Texp_function (_, _) -> 
         under_lambda := !under_lambda + 1; true 
       | _ -> false in
-      let (f, cstrs, fm) = constrain e tenv env guard cstrs fm in
+      let (f, cstrs, fm) = constrain e env guard cstrs fm in
       let env = Pattern.env_bind env pat.pat_desc f in
       let _ = if lambda then under_lambda := !under_lambda - 1 else () in
         (env, cstrs, fm)
@@ -256,7 +256,7 @@ and constrain_bindings tenv env guard cstrs framemap recflag bindings =
     let (vars, exprs) = List.split bindings in
 
     (* Determine the labels we need to have on our bound frames first *)
-    let no_label_frame e = Frame.fresh e.exp_type tenv in
+    let no_label_frame e = Frame.fresh e in
     let unlabeled_frames = List.map no_label_frame exprs in
     let binding_var = function
     | {pat_desc = Tpat_var f} -> Path.Pident f
@@ -264,7 +264,7 @@ and constrain_bindings tenv env guard cstrs framemap recflag bindings =
     in
     let vars = List.map binding_var vars in
     let unlabeled_env = Lightenv.addn (List.combine vars unlabeled_frames) env in
-    let labeling_constraints = List.map (fun e -> constrain e tenv unlabeled_env guard cstrs framemap) exprs in
+    let labeling_constraints = List.map (fun e -> constrain e unlabeled_env guard cstrs framemap) exprs in
     let (label_frames, _, _) = Misc.split3 labeling_constraints in
     (* pmr: I'm not assuming that constrain always gives us a fresh frame here, otherwise we could
      use label_frames directly *)
@@ -293,10 +293,10 @@ and constrain_bindings tenv env guard cstrs framemap recflag bindings =
     let qualgen_wrap_found_frame_list e b = 
       if qualgen_is_function e then 
         let _ = qualgen_incr_lambda () in
-        let r = subexpr_folder tenv bound_env guard e b in
+        let r = subexpr_folder bound_env guard e b in
         let _ = qualgen_decr_lambda () in
         r  
-      else subexpr_folder tenv bound_env guard e b
+      else subexpr_folder bound_env guard e b
     in
                   
     let (found_frames, cstrs, fmap) = List.fold_right qualgen_wrap_found_frame_list exprs ([], cstrs, framemap) in
@@ -310,25 +310,25 @@ and constrain_bindings tenv env guard cstrs framemap recflag bindings =
      cstrs,
      fmap)
 
-and subexpr_folder tenv subenv guard e (fframes, cs, fm) =
-  let (frame, new_cs, new_fm) = constrain e tenv subenv guard cs fm in
+and subexpr_folder subenv guard e (fframes, cs, fm) =
+  let (frame, new_cs, new_fm) = constrain e subenv guard cs fm in
     (frame :: fframes, new_cs, new_fm)
 
 (* pmr: note we're operating in the environment created by typing the
    structure - it's entirely possible this has some bad corner cases *)
-let constrain_structure tenv initfenv initquals str =
+let constrain_structure initfenv initquals str =
   let rec constrain_rec quals fenv cstrs fmap = function
     | [] -> (quals, fenv, cstrs, fmap)
     | (Tstr_eval exp) :: srem ->
         let (_, cstrs', fmap') =
-          constrain exp tenv fenv Predicate.True cstrs fmap
+          constrain exp fenv Predicate.True cstrs fmap
         in constrain_rec quals fenv cstrs' fmap' srem
     | (Tstr_qualifier (name, (valu, pred))) :: srem ->
         let quals = (Path.Pident name, Path.Pident valu, pred) :: quals in
           constrain_rec quals fenv cstrs fmap srem
 		| (Tstr_value (recflag, bindings))::srem ->
         let (fenv, cstrs, fmap) =
-          constrain_bindings tenv fenv Predicate.True cstrs fmap recflag bindings
+          constrain_bindings fenv Predicate.True cstrs fmap recflag bindings
         in constrain_rec quals fenv cstrs fmap srem
     | (Tstr_type(_))::srem ->
         Printf.printf "Ignoring type decl"; constrain_rec quals fenv cstrs fmap srem
@@ -351,8 +351,8 @@ let instantiate_in_environments cstrs quals =
 
 exception IllQualified of Frame.t LocationMap.t
 
-let qualify_structure tenv fenv quals str =
-  let (quals, _, cstrs, fmap) = constrain_structure tenv fenv quals str in
+let qualify_structure fenv quals str =
+  let (quals, _, cstrs, fmap) = constrain_structure fenv quals str in
   let instantiated_quals = instantiate_in_environments cstrs quals in
     if List.length cstrs = 0 then
       (* breaks the trivial program, but will make output cleaner while we
