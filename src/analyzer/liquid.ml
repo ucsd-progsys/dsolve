@@ -50,10 +50,10 @@ let dump_qualifs () =
       fprintf std_formatter "@[Done@ Dumping@ qualifiers@\n@]";flush stderr
   end
 
-let dump_frames fmap =
-  match !Clflags.dump_frames with
-    | None -> ()
-    | Some filename -> Printqual.dump filename fmap
+let dump_frames sourcefile fmap =
+  if !Clflags.dump_frames then
+    let filename = chop_extension_if_any sourcefile ^ ".annot" in
+      Printqual.dump filename fmap
 
 let analyze ppf sourcefile =
   init_path ();
@@ -69,7 +69,7 @@ let analyze ppf sourcefile =
       begin
         TheoremProver.dump_simple_stats ();
         dump_qualifs ();
-        dump_frames partial_fmap;
+        dump_frames sourcefile partial_fmap;
         exit 1
       end
   in
@@ -78,7 +78,7 @@ let analyze ppf sourcefile =
       Qdebug.dump_qualified_structure std_formatter framemap str;
     end;
     dump_qualifs ();
-    dump_frames framemap
+    dump_frames sourcefile framemap
 
 open Clflags
 
@@ -129,7 +129,7 @@ let main () =
      "-dqexprs", Arg.Set dump_qexprs, "print out all subexpressions with their qualified types";
      "-dqualifs", Arg.Set dump_qualifs, "print out simple qualifiers for all identifiers and integer literals";
      "-dqueries", Arg.Set dump_queries, "print out all theorem prover queries and their results";
-     "-dframes", Arg.String (fun s -> Clflags.dump_frames := Some s), "place frames in an annotation file";
+     "-dframes", Arg.Set dump_frames, "place frames in an annotation file";
      "-lqueries", Arg.Set log_queries, "log queries to [prover].log";
      "-cqueries", Arg.Set check_queries, "use a backup prover to check all queries";
      "-bquals", Arg.Set brief_quals, "print out the number of refinements for a type instead of their names";

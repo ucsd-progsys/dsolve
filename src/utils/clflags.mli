@@ -57,7 +57,7 @@ val dump_constraints: bool ref
 val dump_qexprs: bool ref
 val dump_qualifs: bool ref
 val dump_queries: bool ref
-val dump_frames: string option ref
+val dump_frames: bool ref
 val log_queries: bool ref
 val check_queries: bool ref
 val brief_quals: bool ref

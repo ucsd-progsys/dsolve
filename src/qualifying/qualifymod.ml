@@ -22,15 +22,6 @@ let expression_to_pexpr e =
 
 let under_lambda = ref 0
 
-let rec bind_pattern env pat frame =
-  match (pat.pat_desc, frame) with
-    | (Tpat_any, _) -> env
-    | (Tpat_var x, f) ->
-        Lightenv.add (Path.Pident x) f env
-    | (Tpat_tuple pats, Frame.Ftuple fs) ->
-        List.fold_left2 bind_pattern env pats fs
-    | _ -> assert false
-
 let rec constrain e tenv env guard cstrs framemap =
   let constrain_subexprs subenv exprs cs fm = List.fold_right (subexpr_folder tenv subenv guard) exprs ([], cs, fm) in
   let (f, cs, fm) =
@@ -119,18 +110,13 @@ let rec constrain e tenv env guard cstrs framemap =
             (*match e'.exp_type with  
               {desc = Tarrow(_, t_in, _, _)} -> Printf.printf "%s%s\n" (Ident.name x) (Frame.type_structure t_in); Qualgen.add_label (xp, t_in)
               | {desc = d} -> Printf.printf "%s%s\n" (Ident.name x) (Frame.type_structure e'.exp_type); Qualgen.add_label (xp, e'.exp_type)*)
-          let env' = bind_pattern env pat f in
+          let env' = Pattern.env_bind env pat.pat_desc f in
           let (f'', cstrs', fm') = constrain e' tenv env' guard cstrs framemap in
             (* Since the underlying type system doesn't have dependent
                types, fresh can't give us the proper labels for the RHS.
                Instead, we have to label it after the fact. *)
           let f' = Frame.label_like unlabelled_f' f'' in
-            (* pmr: this is probably correct but sucky *)
-          let lab = match pat.pat_desc with
-            | Tpat_var x -> Some (Path.Pident x)
-            | _ -> None
-          in
-          let f = Frame.Farrow (lab, f, f') in
+          let f = Frame.Farrow (Some pat.pat_desc, f, f') in
             (f,
              WFFrame (env, f)
              :: SubFrame (env', guard, f'', f')
@@ -168,12 +154,18 @@ let rec constrain e tenv env guard cstrs framemap =
 	          | Frame.Farrow (l, f, f') ->
 	            let (f2, cs', fm') = constrain e2 tenv env guard cs fm in
 	            let f'' = match l with
-                        | Some x -> Frame.apply_substitution (x, expression_to_pexpr e2) f'
-                            (* pmr: The soundness of this next line is suspect,
-                               must investigate (i.e., what if there's a var that might
-                               somehow be substituted that isn't because of this?  How
-                               does it interact w/ the None label rules for subtyping? *)
-                        | None -> f' 
+                  | Some pat ->
+                    (* We _must_ apply a substitution over the whole pattern or
+                       else we risk capturing stuff in the environment (e.g,
+                       apply (a, b) -> v > a in the context where a is defined).
+                       This risks severe unsoundness. *)
+                    let subs = Pattern.bind_pexpr pat (expression_to_pexpr e2) in
+                      List.fold_right Frame.apply_substitution subs f'
+                      (* pmr: The soundness of this next line is suspect,
+                         must investigate (i.e., what if there's a var that might
+                         somehow be substituted that isn't because of this?  How
+                         does it interact w/ the None label rules for subtyping? *)
+                  | _ -> f'
               in
               (*let _ = Format.printf "@[%a@\n@]" Frame.pprint f'' in*)
               (f'', SubFrame (env, guard, f2, f) :: cs', fm')
@@ -233,7 +225,7 @@ let rec constrain e tenv env guard cstrs framemap =
 and constrain_bindings tenv env guard cstrs framemap recflag bindings =
   match recflag with
   | Default
-	| Nonrecursive ->
+  | Nonrecursive ->
     let constrain_and_bind (env, cstrs, fm) (pat, e) =
       let _ = if !under_lambda = 0 || not(!Clflags.less_qualifs) then
         match pat.pat_desc with
@@ -246,7 +238,7 @@ and constrain_bindings tenv env guard cstrs framemap recflag bindings =
         under_lambda := !under_lambda + 1; true 
       | _ -> false in
       let (f, cstrs, fm) = constrain e tenv env guard cstrs fm in
-      let env = bind_pattern env pat f in
+      let env = Pattern.env_bind env pat.pat_desc f in
       let _ = if lambda then under_lambda := !under_lambda - 1 else () in
         (env, cstrs, fm)
     in
@@ -256,7 +248,7 @@ and constrain_bindings tenv env guard cstrs framemap recflag bindings =
 	| Recursive ->
     (* pmr: This is horrendous, but about the best we can do
        without using destructive updates.  We need to label
-       the function we're binding in the environment where we
+       the function we're binding (if any) in the environment where we
        also constrain the function.  Unfortunately, we don't
        have that label until after we constrain it!  So we do
        a first pass just to get the labels, then do a second
@@ -335,7 +327,7 @@ let constrain_structure tenv initfenv initquals str =
         let quals = (Path.Pident name, Path.Pident valu, pred) :: quals in
           constrain_rec quals fenv cstrs fmap srem
 		| (Tstr_value (recflag, bindings))::srem ->
-        let (env, cstrs, fmap) =
+        let (fenv, cstrs, fmap) =
           constrain_bindings tenv fenv Predicate.True cstrs fmap recflag bindings
         in constrain_rec quals fenv cstrs fmap srem
     | (Tstr_type(_))::srem ->

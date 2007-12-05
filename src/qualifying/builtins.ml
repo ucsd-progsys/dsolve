@@ -1,4 +1,5 @@
 open Longident
+open Typedtree
 open Predicate
 open Asttypes
 
@@ -80,7 +81,11 @@ let mk_bigarray_type a b c qs env = mk_named ["t"; "Array2"; "Bigarray"] [a; b; 
 
 let mk_unit () = Frame.Fconstr(Predef.path_unit, [], ([], Frame.Qconst []))
 
-let mk_fun (lab, f, f') = Frame.Farrow (Some lab, f, f')
+let mk_fun (path, f, f') =
+  let x = match path with
+  | Path.Pident id -> id
+  | _ -> assert false
+  in Frame.Farrow (Some (Tpat_var x), f, f')
 
 let mk_int_equals x i = Predicate.equals(Predicate.Var x, Predicate.PInt i)
 

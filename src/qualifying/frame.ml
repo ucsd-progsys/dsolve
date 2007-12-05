@@ -1,4 +1,5 @@
 open Types
+open Typedtree
 open Btype
 open Format
 open Asttypes
@@ -14,7 +15,7 @@ type refinement = substitution list * qualifier_expr
 type t =
     Fvar of Path.t
   | Fconstr of Path.t * t list * refinement
-  | Farrow of Path.t option * t * t
+  | Farrow of pattern_desc option * t * t
   | Ftuple of t list
   | Frecord of Path.t * (t * string * mutable_flag) list * refinement
   | Funknown
@@ -34,6 +35,14 @@ let pprint_subs ppf subs =
 let pprint_refinement ppf (subs, qexp) =
   fprintf ppf "@[[%a]@;<1 2>%a@]" pprint_subs subs pprint_qualifier_expr qexp
 
+let rec pprint_pattern ppf = function
+  | Tpat_any -> fprintf ppf "_"
+  | Tpat_var x -> fprintf ppf "%s" (Ident.unique_name x)
+  | Tpat_tuple pats ->
+    let pats = List.map (fun p -> p.pat_desc) pats in
+      fprintf ppf "(%a)" (Oprint.print_list pprint_pattern (fun pff -> fprintf ppf ", ")) pats
+  | _ -> assert false
+
 let rec pprint ppf = function
   | Fvar a ->
       fprintf ppf "Var(%s)" (Path.unique_name a)
@@ -41,8 +50,8 @@ let rec pprint ppf = function
       fprintf ppf "@[{%s@ |@;<1 2>%a}@]" (Path.unique_name path) pprint_refinement r
   | Farrow (None, f, f') ->
       fprintf ppf "@[%a@ ->@;<1 2>%a@]" pprint1 f pprint f'
-  | Farrow (Some id, f, f') ->
-      fprintf ppf "@[%s:@ %a@ ->@;<1 2>%a@]" (Path.unique_name id) pprint1 f pprint f'
+  | Farrow (Some pat, f, f') ->
+      fprintf ppf "@[%a:@ %a@ ->@;<1 2>%a@]" pprint_pattern pat pprint1 f pprint f'
   | Fconstr (path, l, r) ->
       fprintf ppf "@[{%a@ %s|@;<1 2>%a}@]" pprint (List.hd l) (Path.unique_name path) pprint_refinement r
    | Ftuple ts ->
@@ -361,5 +370,3 @@ let refinement_well_formed env solution r qual_var =
     List.for_all var_bound vars
   in
   if in_scope then pred_is_well_typed env pred else false 
-
-
