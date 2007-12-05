@@ -1,4 +1,5 @@
 
+DML/quicksort_sane.cnt.ml
 examples-liquid/bitv.ml
 examples-liquid/quicksort.ml
 DML/quicksort_sane.ml
@@ -6,7 +7,6 @@ examples-liquid/minisplit.ml
 examples-liquid/minibot.ml
 DML/dotprod.ml
 DML/dotprod2.ml
-DML/quicksort_sane.ml
 DML/quicksort_sane.cnt.ml
 examples-liquid/quicksort.cnt.ml
 
