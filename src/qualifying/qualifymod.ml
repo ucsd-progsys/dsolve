@@ -50,7 +50,7 @@ let rec constrain e env guard cstrs framemap =
        fields might be permuted. *)
     let (_, sorted_exprs) = List.split (List.sort compare_labels labeled_exprs) in
     let (subframes, new_cs, new_fm) = constrain_subexprs env sorted_exprs cstrs framemap in
-    let subframe_field cs_rest fsub (fsup, _, _) = SubFrame (env, guard, fsub, fsup) :: cs_rest in
+    let subframe_field cs_rest fsub (fsup, _, _) = SubFrame (env, guard, fsub, fsup, e.exp_loc) :: cs_rest in
     let f = Frame.fresh e in
     let new_cs = match f with
       | Frame.Frecord (_, recframes, _) ->
@@ -62,7 +62,7 @@ let rec constrain e env guard cstrs framemap =
           let field_qualifier (_, name, _) fexpr = Builtins.field_eq_qualifier name (expression_to_pexpr fexpr) in
             Frame.Frecord (p, recframes, ([], Frame.Qconst (List.map2 field_qualifier recframes sorted_exprs)))
       | _ -> assert false
-    in (f, WFFrame (env, f) :: new_cs, new_fm)
+    in (f, WFFrame (env, f, e.exp_loc) :: new_cs, new_fm)
   | (Texp_field (expr, label_desc), t) ->
     let (recframe, new_cs, new_fm) = constrain expr env guard cstrs framemap in
     let (fieldframe, fieldname) = match recframe with
@@ -75,7 +75,7 @@ let rec constrain e env guard cstrs framemap =
     in
     let pexpr = Predicate.Field (fieldname, expression_to_pexpr expr) in
     let f = Frame.apply_refinement (Builtins.equality_refinement pexpr) fieldframe in
-      (f, WFFrame (env, f) :: new_cs, new_fm)
+      (f, WFFrame (env, f, e.exp_loc) :: new_cs, new_fm)
   | (Texp_ifthenelse(e1, e2, Some e3), t) ->
           let f = Frame.fresh e in
           let (f1, cstrs1, fm1) = constrain e1 env guard cstrs framemap in
@@ -92,9 +92,9 @@ let rec constrain e env guard cstrs framemap =
           let guard3 = Predicate.And (Predicate.Not guardp, guard) in
           let (f3, cstrs3, fm3) = constrain e3 env' guard3 cstrs2 fm2 in
             (f,
-             WFFrame(env, f)
-             ::SubFrame(env', guard2, f2, f)
-             ::SubFrame(env', guard3, f3, f)
+             WFFrame(env, f, e.exp_loc)
+             ::SubFrame(env', guard2, f2, f, e.exp_loc)
+             ::SubFrame(env', guard3, f3, f, e.exp_loc)
              ::cstrs3,
              fm3)
   | (Texp_function([(pat, e')], _), t) ->
@@ -118,8 +118,8 @@ let rec constrain e env guard cstrs framemap =
           let f' = Frame.label_like unlabelled_f' f'' in
           let f = Frame.Farrow (Some pat.pat_desc, f, f') in
             (f,
-             WFFrame (env, f)
-             :: SubFrame (env', guard, f'', f')
+             WFFrame (env, f, e.exp_loc)
+             :: SubFrame (env', guard, f'', f', e.exp_loc)
              :: cstrs',
              fm')
       | _ -> assert false
@@ -146,7 +146,7 @@ let rec constrain e env guard cstrs framemap =
           (*let _ = Frame.pprint Format.err_formatter f' in
           let _ = Frame.pprint Format.err_formatter ftemplate in *)
           let f = Frame.instantiate f' ftemplate in
-            (f, WFFrame(env, f)::cstrs, framemap)
+            (f, WFFrame(env, f, e.exp_loc)::cstrs, framemap)
   | (Texp_apply (e1, exps), _) ->
     let constrain_application (f, cs, fm) = function
         | (Some e2, _) ->
@@ -168,7 +168,7 @@ let rec constrain e env guard cstrs framemap =
                   | _ -> f'
               in
               (*let _ = Format.printf "@[%a@\n@]" Frame.pprint f'' in*)
-              (f'', SubFrame (env, guard, f2, f) :: cs', fm')
+              (f'', SubFrame (env, guard, f2, f, e.exp_loc) :: cs', fm')
 	          | _ -> assert false
           end
         | _ -> assert false
@@ -179,8 +179,8 @@ let rec constrain e env guard cstrs framemap =
     let (body_frame, cstrs, fmap) = constrain body_exp env guard cstrs fmap in
     let f = Frame.fresh_with_labels e body_frame in
       (f,
-       WFFrame (env, f)
-       :: SubFrame (env, guard, body_frame, f)
+       WFFrame (env, f, e.exp_loc)
+       :: SubFrame (env, guard, body_frame, f, body_exp.exp_loc)
        :: cstrs,
        fmap)
   | (Texp_array(es), t) ->
@@ -189,9 +189,9 @@ let rec constrain e env guard cstrs framemap =
 					let (f, fs) = (function Frame.Fconstr(p, l, _) -> (Frame.Fconstr(p, l, Builtins.size_lit_refinement(List.length es)), l) | _ -> assert false) f in
 					let list_rec (fs, c, m) e = (function (f, c, m) -> (f::fs, c, m)) (constrain e env guard c m) in
 					let (fs', c, m) = List.fold_left list_rec ([], cstrs, framemap) es in
-					let mksub b a = SubFrame(env, guard, a, b) in
+					let mksub b a = SubFrame(env, guard, a, b, e.exp_loc) in
 					let c = List.append (List.map (mksub (List.hd fs)) fs') c in
-					(f, WFFrame(env, f)::c, m)	
+					(f, WFFrame(env, f, e.exp_loc)::c, m)
   | (Texp_sequence(e1, e2), t) ->
           let (f1, c, m) = constrain e1 env guard cstrs framemap in
           let (f2, c, m) = constrain e2 env guard c m in
@@ -209,7 +209,7 @@ let rec constrain e env guard cstrs framemap =
       begin match f with
         | Frame.Ftuple fresh_fs ->
             let new_cs = List.fold_left2
-              (fun cs rec_frame fresh_frame -> SubFrame (env, guard, rec_frame, fresh_frame) :: cs)
+              (fun cs rec_frame fresh_frame -> SubFrame (env, guard, rec_frame, fresh_frame, e.exp_loc) :: cs)
               new_cs fs fresh_fs in
             (f, (*(env, f) ::*) new_cs, new_m)
         | _ -> assert false
@@ -302,8 +302,10 @@ and constrain_bindings env guard cstrs framemap recflag bindings =
     let (found_frames, cstrs, fmap) = List.fold_right qualgen_wrap_found_frame_list exprs ([], cstrs, framemap) in
     (* Ensure that the types we discovered for each binding are no more general than the types implied by
      their uses *)
+    (* pmr: This is going to take some work to resolve; for now, default on the locations because we don't
+       have anything that'll butt up against it. *)
     let build_found_frame_cstr_list cs found_frame binding_frame =
-      WFFrame (bound_env, binding_frame) :: SubFrame (bound_env, guard, found_frame, binding_frame) :: cs
+      WFFrame (bound_env, binding_frame, Location.none) :: SubFrame (bound_env, guard, found_frame, binding_frame, Location.none) :: cs
     in
     let cstrs = List.fold_left2 build_found_frame_cstr_list cstrs found_frames binding_frames in
     (bound_env,

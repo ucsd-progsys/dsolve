@@ -1,14 +1,14 @@
 open Format
 
 type frame_constraint =
-  | SubFrame of Frame.t Lightenv.t * Predicate.t * Frame.t * Frame.t
-  | WFFrame of Frame.t Lightenv.t * Frame.t
+  | SubFrame of Frame.t Lightenv.t * Predicate.t * Frame.t * Frame.t * Location.t
+  | WFFrame of Frame.t Lightenv.t * Frame.t * Location.t
 
 type subrefinement_constraint =
-    Frame.t Lightenv.t * Predicate.t * Frame.refinement * Frame.refinement
+    Frame.t Lightenv.t * Predicate.t * Frame.refinement * Frame.refinement * Location.t
 
 type well_formed_refinement_constraint =
-    Frame.t Lightenv.t * Frame.refinement
+    Frame.t Lightenv.t * Frame.refinement * Location.t
 
 type refinement_constraint =
   | SubRefinement of subrefinement_constraint
@@ -26,14 +26,14 @@ module VarMap = Map.Make(VarName)
 module Solution = Hashtbl.Make(VarName)
 
 let pprint ppf = function
-  | SubFrame (_, _, f1, f2) ->
+  | SubFrame (_, _, f1, f2, _) ->
       fprintf ppf "@[%a@ <:@;<1 2>%a@]" Frame.pprint f1 Frame.pprint f2
-  | WFFrame (_, f) ->
+  | WFFrame (_, f, _) ->
       Frame.pprint ppf f
 
 let environment = function
-  | SubFrame (env, _, _, _) -> env
-  | WFFrame (env, _) -> env
+  | SubFrame (env, _, _, _, _) -> env
+  | WFFrame (env, _, _) -> env
 
 (* Unique variable to qualify when testing sat, applicability of qualifiers, etc. *)
 let qual_test_var = Path.mk_ident "AA"
@@ -41,7 +41,7 @@ let qual_test_var = Path.mk_ident "AA"
 let split cstrs =
   let rec split_rec flat = function
     | [] -> flat
-    | SubFrame(env, guard, f1, f2) :: cs ->
+    | SubFrame(env, guard, f1, f2, loc) :: cs ->
         begin match (f1, f2) with
           | (Frame.Farrow (l1, f1, f1'), Frame.Farrow (l2, f2, f2')) ->
               (* If the labels disagree, we don't attempt to resolve it.
@@ -55,24 +55,24 @@ let split cstrs =
                   Pattern.env_bind env pat1 f2
                 | _ -> env
               in split_rec flat
-                   (SubFrame (env, guard, f2, f1)
-                    :: SubFrame (env', guard, f1', f2')
+                   (SubFrame (env, guard, f2, f1, loc)
+                    :: SubFrame (env', guard, f1', f2', loc)
                     :: cs)
           | (Frame.Fconstr (p1, [], r1), Frame.Fconstr (p2, [], r2)) ->
-              split_rec (SubRefinement (env, guard, r1, r2) :: flat) cs
+              split_rec (SubRefinement (env, guard, r1, r2, loc) :: flat) cs
           | (Frame.Fvar _, Frame.Fvar _)
           | (Frame.Funknown, Frame.Funknown) ->
               split_rec flat cs
 					| (Frame.Fconstr (p1, l1, r1), Frame.Fconstr(p2, l2, r2)) ->
               let invar r a b =
-                SubFrame(env, guard, a, b)
-                :: SubFrame(env, guard, b, a)
+                SubFrame(env, guard, a, b, loc)
+                :: SubFrame(env, guard, b, a, loc)
                 :: r
               in
                 (* pmr: because we were only filtering through invariant types anyway, we might
                    as well just use invariants until we start getting problems from it ---
                    for now, it's too much trouble to work around all the BigArray stuff *)
-                split_rec (SubRefinement(env, guard, r1, r2)::flat) (List.fold_left2 invar cs l1 l2)
+                split_rec (SubRefinement(env, guard, r1, r2, loc)::flat) (List.fold_left2 invar cs l1 l2)
               (*let subt a b = SubFrame(env, guard, a, b) in*)
               (*if Path.same p1 Predef.path_array
                  || Path.same p1 (Builtins.ext_find_type_path "ref") then
@@ -82,22 +82,22 @@ let split cstrs =
               else
                   (Printf.printf "Unsupported type into split: %s\n" (Path.name p1); assert false)*)
           | (Frame.Ftuple t1s, Frame.Ftuple t2s) ->
-              let make_subframe t1 t2 = SubFrame(env, guard, t1, t2) in
+              let make_subframe t1 t2 = SubFrame(env, guard, t1, t2, loc) in
                 split_rec flat ((List.map2 make_subframe t1s t2s) @ cs)
           | (Frame.Frecord (_, recframes1, r1), Frame.Frecord (_, recframes2, r2)) ->
               let make_subframe rest (recf1, _, muta) (recf2, _, _) =
                 let invar_cs = match muta with
                   | Asttypes.Immutable -> rest
-                  | Asttypes.Mutable -> SubFrame (env, guard, recf2, recf1) :: rest
-                in SubFrame (env, guard, recf1, recf2) :: invar_cs
+                  | Asttypes.Mutable -> SubFrame (env, guard, recf2, recf1, loc) :: rest
+                in SubFrame (env, guard, recf1, recf2, loc) :: invar_cs
               in
               let new_cs = List.fold_left2 make_subframe cs recframes1 recframes2 in
                 (* ming: i'm not sure if i believe the following *)
               let new_flat =
                 if List.exists (fun (_, _, muta) -> muta = Asttypes.Mutable) recframes1 then
-                  SubRefinement (env, guard, r2, r1) :: flat
+                  SubRefinement (env, guard, r2, r1, loc) :: flat
                 else flat
-              in split_rec (SubRefinement (env, guard, r1, r2) :: new_flat) new_cs
+              in split_rec (SubRefinement (env, guard, r1, r2, loc) :: new_flat) new_cs
           | (f1, f2) -> printf "@[Can't@ split:@ %a@ <:@ %a@]" Frame.pprint f1 Frame.pprint f2; assert false
         end
     (* ming: for type checking, when we split WFFrames now, we need to keep
@@ -105,33 +105,33 @@ let split cstrs =
              the frame into the environment, so that's what we do here.
              note that we've just agreed on using the qual_test_var ident
              for predicate vars (it's passed into the solver later...) *)
-    | WFFrame(env, f) :: cs ->
+    | WFFrame(env, f, loc) :: cs ->
         begin match f with
           | Frame.Farrow (l, f, f') ->
               let env' = match l with
                 | None -> env
                 | Some pat -> Pattern.env_bind env pat f
               in split_rec flat
-                   (WFFrame (env, f)
-                    :: WFFrame (env', f')
+                   (WFFrame (env, f, loc)
+                    :: WFFrame (env', f', loc)
                     :: cs)
           | Frame.Fconstr (_, [], r) ->
               (* pmr: this case should go in favor of the general one below *)
               (* We add the test variable to the environment with the current frame;
                  this makes type checking easier *)
-              split_rec (WFRefinement (Lightenv.add qual_test_var f env, r) :: flat) cs
+              split_rec (WFRefinement (Lightenv.add qual_test_var f env, r, loc) :: flat) cs
           | Frame.Ftuple ts ->
-              split_rec flat ((List.map (fun t -> WFFrame (env, t)) ts) @ cs)
+              split_rec flat ((List.map (fun t -> WFFrame (env, t, loc)) ts) @ cs)
           | Frame.Frecord (_, fs, r) ->
-              let wf_rec rest (recf, _, _) = WFFrame (env, recf) :: rest in
+              let wf_rec rest (recf, _, _) = WFFrame (env, recf, loc) :: rest in
               let new_cs = List.fold_left wf_rec cs fs in
-                split_rec (WFRefinement (Lightenv.add qual_test_var f env, r) :: flat) new_cs
+                split_rec (WFRefinement (Lightenv.add qual_test_var f env, r, loc) :: flat) new_cs
           | Frame.Fvar _
           | Frame.Funknown ->
               split_rec flat cs
 	        | Frame.Fconstr (_, l, r) ->
-	            split_rec (WFRefinement(Lightenv.add qual_test_var f env, r)::flat) 
-		          (List.append (List.map (function li -> WFFrame(env, li)) l) cs)
+	            split_rec (WFRefinement(Lightenv.add qual_test_var f env, r, loc)::flat)
+		          (List.append (List.map (function li -> WFFrame(env, li, loc)) l) cs)
           (*| _ -> assert false*)
         end
   in split_rec [] cstrs
@@ -142,20 +142,20 @@ let environment_predicate solution env =
   Predicate.big_and (Lightenv.maplist (Frame.predicate (solution_map solution)) env)
 
 let constraint_sat solution = function
-  | SubRefinement (env, guard, r1, r2) ->
+  | SubRefinement (env, guard, r1, r2, _) ->
       let envp = environment_predicate solution env in
       let smap = solution_map solution in
       let p1 = Frame.refinement_predicate smap qual_test_var r1 in
       let p2 = Frame.refinement_predicate smap qual_test_var r2 in
         TheoremProver.backup_implies (Predicate.big_and [envp; guard; p1]) p2
-  | WFRefinement (env, r) ->
+  | WFRefinement (env, r, _) ->
     (* ming: this is an error check. it shouldn't be possible for this to be tripped*)
       Frame.refinement_well_formed env (solution_map solution) r qual_test_var
 
 let pprint_env_pred ppf (solution, env) = 
   Predicate.pprint ppf (environment_predicate solution env)
 
-let pprint_subref solution ppf (env, guard, r1, r2) =
+let pprint_subref solution ppf (env, guard, r1, r2, _) =
   fprintf ppf "@[Env:@ %a;@;<1 2>Guard:@ %a@;<1 0>|-@;<1 2>%a@;<1 2><:@;<1 2>%a@]"
     pprint_env_pred (solution, env)
     Predicate.pprint guard Frame.pprint_refinement r1 Frame.pprint_refinement r2
@@ -167,7 +167,7 @@ exception Unsatisfiable of Qualifier.t list Solution.t
 
 let rec solve_wf_constraints solution = function
   | [] -> ()
-  | (env, (subs, Frame.Qvar k)) :: cs ->
+  | (env, (subs, Frame.Qvar k), _) :: cs ->
       (* ming: we have to pass qual_test_var into the WF checker now because
                we've agreed with the splitting code to use that as the predicate
                var. the only way around this would be to keep the frame from
@@ -324,13 +324,13 @@ let close_over_env env solution preds =
 let folding_debug_flag = false
 
 let refine solution = function
-  | (_, _, ([], Frame.Qvar k1), ([], Frame.Qvar k2))
+  | (_, _, ([], Frame.Qvar k1), ([], Frame.Qvar k2), _)
       when not (!Clflags.no_simple || !Clflags.verify_simple) ->
       refine_simple solution k1 k2
-  | (env, guard, r1, (rhs_subs, Frame.Qvar k2)) as cstr ->
+  | (env, guard, r1, (rhs_subs, Frame.Qvar k2), _) as cstr ->
       let _ = num_refines := !num_refines + 1 in
       let envp = environment_predicate solution env in
-      let make_lhs (env, guard, r1, _) =
+      let make_lhs (env, guard, r1, _, _) =
         let p1 = Frame.refinement_predicate (solution_map solution) qual_test_var r1 in
           Predicate.big_and [envp; guard; p1]
       in
@@ -368,7 +368,7 @@ let env_refinement_vars env =
   let add_vars _ f l = Frame.refinement_vars f @ l in
     Lightenv.fold add_vars env []
 
-let lhs_vars (env, _, (_, qe), _) =
+let lhs_vars (env, _, (_, qe), _, _) =
   let env_vars = env_refinement_vars env in
     match qe with
       | Frame.Qvar k -> k::env_vars
@@ -376,7 +376,7 @@ let lhs_vars (env, _, (_, qe), _) =
 
 let make_variable_constraint_map cstrs =
   let rec make_rec map = function
-    | (_, _, _, (_, Frame.Qvar k)) as c :: cs ->
+    | (_, _, _, (_, Frame.Qvar k), _) as c :: cs ->
         let add_cstr m v =
           let new_cstrs = c :: (try VarMap.find v m with Not_found -> []) in
             VarMap.add v new_cstrs m
@@ -396,8 +396,8 @@ let initial_solution cstrs quals =
     | (_, Frame.Qvar k) -> Solution.replace sol k quals
   in
   let add_constraint_vars = function
-    | SubRefinement (_, _, r1, r2) -> List.iter add_refinement_var [r1; r2]
-    | WFRefinement (_, r) -> add_refinement_var r
+    | SubRefinement (_, _, r1, r2, _) -> List.iter add_refinement_var [r1; r2]
+    | WFRefinement (_, r, _) -> add_refinement_var r
   in
     List.iter add_constraint_vars cstrs;
     sol
@@ -405,7 +405,7 @@ let initial_solution cstrs quals =
 let check_satisfied solution cstrs =
   try
     match List.find (fun c -> not (constraint_sat solution c)) cstrs with
-      | SubRefinement (env, guard, r1, r2) ->
+      | SubRefinement (env, guard, r1, r2, _) ->
           (* If we have a literal RHS and we're unsatisfied, we're hosed -
              either the LHS is a literal and we can't do anything, or it's
              a var which has been pushed up by other constraints and, again,
@@ -416,7 +416,7 @@ let check_satisfied solution cstrs =
             Frame.pprint_refinement r1 Frame.pprint_refinement r2
             pprint_env_pred (solution, env) Predicate.pprint guard pprint_ref_pred (solution, r1) pprint_ref_pred (solution, r2);
           raise (Unsatisfiable solution)
-      | WFRefinement (env, f) ->
+      | WFRefinement (env, f, _) ->
           fprintf std_formatter "@[Unsatisfied@ WF:@ %a@\nEnv:@ %a@\nWF:@ %a@]" 
             Frame.pprint_refinement f
             (Lightenv.pprint Frame.pprint) env
@@ -432,7 +432,7 @@ let rec divide_constraints_by_form wf refi = function
       divide_constraints_by_form (w :: wf) refi cs
 
 let is_simple_constraint = function
-  | (_, _, ([], _), ([], _)) -> true
+  | (_, _, ([], _), ([], _), _) -> true
   | _ -> false
 
 module QualifierSet = Set.Make(Qualifier)
@@ -461,7 +461,7 @@ let count_total_qualifiers solution =
 
 module Constraint = struct
   type t = subrefinement_constraint
-  let compare (env1, _, _, _) (env2, _, _, _) = -(Lightenv.compare env1 env2)
+  let compare (env1, _, _, _, _) (env2, _, _, _, _) = -(Lightenv.compare env1 env2)
     (* We want the smallest environment to be the maximum because our worklist
        is a priority queue *)
 end
@@ -525,7 +525,7 @@ let solve_constraints quals constrs =
       match next with
         | Some (cstr, rest) ->
             begin match cstr with
-              | (_, _, _, (_, Frame.Qvar k)) ->
+              | (_, _, _, (_, Frame.Qvar k), _) ->
                   (* pmr: removed opt-
                      Find all the constraints with RHSes identical to this one; they can be solved
                      in one pass by or-ing all the LHSes together, saving a few prover calls *)

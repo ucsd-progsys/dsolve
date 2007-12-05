@@ -1,6 +1,6 @@
 type frame_constraint =
-  | SubFrame of Frame.t Lightenv.t * Predicate.t * Frame.t * Frame.t
-  | WFFrame of Frame.t Lightenv.t * Frame.t
+  | SubFrame of Frame.t Lightenv.t * Predicate.t * Frame.t * Frame.t * Location.t
+  | WFFrame of Frame.t Lightenv.t * Frame.t * Location.t
 
 module VarName: sig
   type t = Path.t
