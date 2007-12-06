@@ -199,15 +199,11 @@ qualif Q_AA_NE_SZ_1(_AA) : _AA != sz_1
 let dotprod v1 v2 = 
 	let rec loop n sum i =
 		if i = n then sum else 
-      let get_v1_i = Array.get v1 i in  
-      let get_v2_i = Array.get v2 i in
-      let get_prod_i = get_v1_i * get_v2_i in
-      let get_prod_i_plus_sum = get_prod_i + sum in
-      let i_plus = i + 1 in
-      loop n get_prod_i_plus_sum i_plus
-	in
-  let sz_1 = Array.length v1 in
-    loop sz_1 0 0 
+      let v1_i = Array.get v1 i in  
+      let v2_i = Array.get v2 i in
+      let newsum = (v1_i * v2_i) + sum in
+        loop n newsum (i + 1)
+	in loop (Array.length v1) 0 0 
 
 let res =
   let _none = Random.init 555 in
