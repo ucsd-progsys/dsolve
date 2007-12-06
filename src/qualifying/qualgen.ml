@@ -84,7 +84,7 @@ let single_bigarray_array2_qualif path =
               (single_simple_qualif "_AA" "Array.length _AA" bigarray_array2_dim2);]
                
 let dump_qualifs () =
-  let consts = !constants in
+  let consts = 0::1::!constants  in
   let lbls = !labels in
   let const_qualifs = List.concat (List.map single_const_qualif consts) in
   let lfilter p b ty = 

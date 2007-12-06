@@ -243,7 +243,7 @@ let array_init_frame =
   let i = Path.mk_ident "i" in
   let tyvar = mk_tyvar () in
   let init = mk_fun (y, mk_int [qint Predicate.Ge 0 y; qrel Predicate.Lt y x], tyvar) in
-    (["init"; "Array"], mk_fun(x, mk_int [qint Predicate.Gt 0 x],
+    (["init"; "Array"], mk_fun(x, mk_int [qint Predicate.Ge 0 x],
                                mk_fun(i, init, mk_array tyvar [qsize Predicate.Eq z z x])))
 
 let bigarray_create_frame env =
