@@ -50,11 +50,6 @@ let dump_qualifs () =
       fprintf std_formatter "@[Done@ Dumping@ qualifiers@\n@]";flush stderr
   end
 
-let dump_frames sourcefile fmap =
-  if !Clflags.dump_frames then
-    let filename = chop_extension_if_any sourcefile ^ ".annot" in
-      Printqual.dump filename fmap
-
 let analyze ppf sourcefile =
   init_path ();
   let env = initial_env () in
@@ -63,22 +58,12 @@ let analyze ppf sourcefile =
     (Pparse.file ppf sourcefile Parse.implementation ast_impl_magic_number
      ++ print_if ppf Clflags.dump_parsetree Printast.implementation
      ++ type_implementation env) in
-  let (_, framemap) =
-    try Qualifymod.qualify_structure fenv [] str
-    with Qualifymod.IllQualified partial_fmap ->
-      begin
-        TheoremProver.dump_simple_stats ();
-        dump_qualifs ();
-        dump_frames sourcefile partial_fmap;
-        exit 1
-      end
-  in
+  let framemap = Qualifymod.qualify_implementation sourcefile fenv [] str in
+    dump_qualifs ();
     if !Clflags.dump_qexprs then begin
       fprintf std_formatter "@.@.";
       Qdebug.dump_qualified_structure std_formatter framemap str;
     end;
-    dump_qualifs ();
-    dump_frames sourcefile framemap
 
 open Clflags
 
@@ -144,6 +129,6 @@ let main () =
      "-cacheq", Arg.Set cache_queries, "cache theorem prover queries"
   ] file_argument usage;
   try analyze std_formatter !filename
-  with x -> report_error err_formatter x
+  with x -> (report_error err_formatter x; exit 1)
 
 let _ = main (); exit 0

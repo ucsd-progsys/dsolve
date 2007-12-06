@@ -28,6 +28,8 @@ let report_error ppf exn =
       Includemod.report_error ppf err
   | Typemod.Error(loc, err) ->
       Location.print ppf loc; Typemod.report_error ppf err
+  | Qualifymod.Error(loc, err) ->
+      Location.print ppf loc; Qualifymod.report_error ppf err
   | x -> fprintf ppf "@]"; raise x in
 
   fprintf ppf "@[%a@]@." report exn

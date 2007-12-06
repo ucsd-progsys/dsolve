@@ -1,5 +1,9 @@
 open Constraint
 
+type error
+
+exception Error of Location.t * error
+
 module LocationMap: sig
   type key = Location.t
   type 'a t
@@ -17,8 +21,8 @@ module LocationMap: sig
   val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
 end
 
-exception IllQualified of Frame.t LocationMap.t
+val report_error: Format.formatter -> error -> unit
 
-val qualify_structure:
-  Frame.t Lightenv.t -> Qualifier.t list -> Typedtree.structure ->
-  Qualifier.t list * Frame.t LocationMap.t
+val qualify_implementation:
+  string -> Frame.t Lightenv.t -> Qualifier.t list -> Typedtree.structure ->
+  Frame.t LocationMap.t

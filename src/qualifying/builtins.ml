@@ -433,10 +433,13 @@ let frames env =
   List.append (resolve_names  _frames) (resolve_names (resolve_types _lib_frames))
 
 let equality_refinement exp =
-  let x = Path.mk_ident "x" in
-    ([], Frame.Qconst [(Path.mk_ident "<eq>",
-                        x,
-                        Predicate.equals (Predicate.Var x, exp))])
+  let x = Path.mk_ident "V" in
+    let pred = Predicate.equals (Predicate.Var x, exp) in
+    Predicate.pprint Format.str_formatter pred;
+    let expstr = Format.flush_str_formatter () in
+      ([], Frame.Qconst [(Path.mk_ident expstr,
+                          x,
+                          pred)])
 
 let size_lit_refinement i =
 	let x = Path.mk_ident "x" in

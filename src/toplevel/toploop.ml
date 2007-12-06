@@ -195,14 +195,6 @@ let rec item_list env = function
 
 let toplevel_env = ref Env.empty
 
-(* The current frame environment for the toplevel *)
-
-let toplevel_fenv = ref Lightenv.empty
-
-(* The current qualifier list for the toplevel *)
-
-let toplevel_quals = ref []
-
 (* Print an exception produced by an evaluation *)
 
 let print_out_exception ppf exn outv =
@@ -220,55 +212,19 @@ let directive_table = (Hashtbl.create 13 : (string, directive_fun) Hashtbl.t)
 
 (* Execute a toplevel phrase *)
 
-let dump_frames fmap =
-  match !Clflags.dump_frames with
-    | None -> ()
-    | Some filename -> Printqual.dump filename fmap
-
 let execute_phrase print_outcome ppf phr =
   match phr with
   | Ptop_def sstr ->
       let oldenv = !toplevel_env in
       let _ = Unused_var.warn ppf sstr in
-      (* rewrite the AST to a-normalize *)
-      let sstr = if !Clflags.make_anormal then Normalize.normalize_structure sstr else sstr in
       Typecore.reset_delayed_checks ();
       let (str, sg, newenv) = Typemod.type_structure oldenv sstr in
       Typecore.force_delayed_checks ();
-      let oldquals = !toplevel_quals in
-      let dump_qualifs () = 
-        if !Clflags.dump_qualifs then
-          begin
-          fprintf std_formatter "@[Dumping@ qualifiers@\n@]";
-          Misc.format_list_of_strings err_formatter (";;", Qualgen.dump_qualifs ());
-          fprintf std_formatter "@[Done@ Dumping@ qualifiers@\n@]";flush stderr
-          end
-      in
-      let (newquals, framemap) =
-        try Qualifymod.qualify_structure newenv !toplevel_fenv oldquals str
-        with Qualifymod.IllQualified partial_fmap ->
-          begin
-            TheoremProver.dump_simple_stats ();
-            dump_qualifs ();
-            dump_frames partial_fmap;
-            exit 1
-          end
-      in
-      if !Clflags.dump_qexprs then begin
-        fprintf std_formatter "@.@.";
-        Qdebug.dump_qualified_structure std_formatter framemap str;
-      end;
-      if !Clflags.dump_qualifs then
-        dump_qualifs ();
-      dump_frames framemap;
       let lam = Translmod.transl_toplevel_definition str in
       Warnings.check_fatal ();
       begin try
         toplevel_env := newenv;
-        toplevel_quals := newquals;
-        let _ = fprintf std_formatter "@[Starting@ to@ execute@\n@]" in
         let res = load_lambda ppf lam in
-        let _ = fprintf std_formatter "@[Finished@ executing@\n@]" in
         let out_phr =
           match res with
           | Result v ->
@@ -277,8 +233,6 @@ let execute_phrase print_outcome ppf phr =
                 | [Tstr_eval exp] ->
                     let outv = outval_of_value newenv v exp.exp_type in
                     let ty = Printtyp.tree_of_type_scheme exp.exp_type in
-                    let ty = Printqual.qualify_tree_of_type_scheme ty
-                      (Qualifymod.LocationMap.find exp.exp_loc framemap) in
                     Ophr_eval (outv, ty)
                 | [] -> Ophr_signature []
                 | _ -> Ophr_signature (item_list newenv
@@ -286,7 +240,6 @@ let execute_phrase print_outcome ppf phr =
               else Ophr_signature []
           | Exception exn ->
               toplevel_env := oldenv;
-              toplevel_quals := oldquals;
               if exn = Out_of_memory then Gc.full_major();
               let outv =
                 outval_of_value !toplevel_env (Obj.repr exn) Predef.type_exn
@@ -299,7 +252,7 @@ let execute_phrase print_outcome ppf phr =
         | Ophr_exception _ -> false
         end
       with x ->
-        toplevel_env := oldenv; toplevel_quals := oldquals; raise x
+        toplevel_env := oldenv; raise x
       end
   | Ptop_dir(dir_name, dir_arg) ->
       try
@@ -346,7 +299,7 @@ let use_file ppf name =
         try
           List.iter
             (fun ph ->
-              if !Clflags.dump_parsetree then Printast.top_phrase ppf ph; flush stdout;
+              if !Clflags.dump_parsetree then Printast.top_phrase ppf ph;
               if not (execute_phrase !use_print_results ppf ph) then raise Exit)
             (!parse_use_file lb);
           true
@@ -438,8 +391,7 @@ let set_paths () =
   Dll.add_path !load_path
 
 let initialize_toplevel_env () =
-  toplevel_env := Compile.initial_env();
-  toplevel_fenv := Compile.initial_fenv !toplevel_env
+  toplevel_env := Compile.initial_env()
 
 (* The interactive loop *)
 
