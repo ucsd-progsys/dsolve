@@ -8,7 +8,7 @@ for i in $FILES
 do
   echo $i
   echo -n chars: 
-  jj="`cat $i.quals`"
+  jj="`cat $i`"
   jj=`echo "$jj" | tr "\n" " " | tr -s "\t" " " | tr -s " " " "`
   jj=`echo -n "$jj" | wc -m`
   echo -n "$jj "
@@ -24,17 +24,17 @@ do
     jjj=0
   fi
   echo ""
-  #j=`cat $i | tr "\n" " " | tr -s "\t" " " | tr -s " " " " | wc -m`
-  #echo -n "$j "
+  j=`cat $i | tr "\n" " " | tr -s "\t" " " | tr -s " " " " | wc -m`
+  echo -n "$j "
   #rj=`cat xiog/$i | tr "\n" " " | tr -s "\t" " " | tr -s " " " " | wc -m`
   #  echo -n "$rj "
-  #let "cnt = $j - $jj"
-  #echo -n "$cnt "
+  let "cnt = $j - $jj"
+  echo -n "$cnt "
   #let "cnt = 100 * $jjj / $rj"
   #echo  "$cnt%"
   echo -n lines: 
-  jj="`cat $i | wc -l`"
-  echo -n "$jj "
+  #jj="`cat $i | wc -l`"
+  #echo -n "$jj "
   cat $i.hquals &> /dev/null
     if [[ $? = 0 ]]
     then
@@ -45,8 +45,8 @@ do
       echo -n "0 "
       jjj=0
     fi
-  #j=`cat $i | tr -s "\n" "\n" | wc -l`
-  #echo -n "$j "
+  j=`cat $i | tr -s "\n" "\n" | wc -l`
+  echo -n "$j "
   #rj=`cat xiog/$i | wc -l`
   #  echo -n "$rj "
   #let "cnt = $j - $jj"

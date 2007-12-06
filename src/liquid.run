@@ -1,0 +1,74 @@
+#!/bin/bash
+
+#if the script is given arguments, the last argument is assumed to be a filename
+#everything else is passed straight through except for -dframes which has a
+#filename tacked onto it
+
+argc=`echo $@ | wc -w`
+
+let "j = 0"
+catt=""
+argv=""
+frames=""
+enm=""
+for i in ${@/\ //n}
+do
+  let "j = $j + 1"
+  #catt="cat "$i".quals "$i 
+  enm=$i
+  if [[ $j<$argc ]] 
+  then
+    if [[ $i == "-dframes" ]]
+    then
+      frames="true"
+    else
+      argv=$argv" "$i  
+    fi
+  fi
+done
+if [[ $frames != "" ]]
+then
+  argv=$argv" -dframes "${i%\.ml}".annot "
+fi
+export LD_LIBRARY_PATH=./yices/lib
+
+#yah, ugly, ok
+catargs="gtypes " 
+
+cat $enm.types &> /dev/null
+
+if [[ $? = 0 ]]
+then
+  catargs=$catargs" "$enm".types"
+fi
+
+cat $enm.hquals &> /dev/null
+
+if [[ $? = 0 ]]
+then
+  catargs=$catargs" "$enm".hquals"
+fi
+
+cat $enm.quals &> /dev/null
+
+if [[ $? = 0 ]]
+then
+  catargs=$catargs" "$enm".quals"
+fi
+
+catargs=$catargs" "$enm
+
+if [[ $enm = "" ]]
+then
+  rlwrap ./liquid $argv
+else
+  #cat$catargs | nice -n19 rlwrap ./ocaml $argv
+  cat $catargs > /tmp/tmmmp
+  rlwrap ./liquid $argv /tmp/tmmmp
+fi
+
+EXIT=$?
+
+unset LD_LIBRARY_PATH
+
+exit $EXIT
