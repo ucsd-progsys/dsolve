@@ -1,7 +1,4 @@
-qualif QARRAY_LENGTH__AA_GE_0(_AA) : Array.length _AA >= 0
 qualif QARRAY_LENGTH__AA_GE_1(_AA) : Array.length _AA >= 1
-qualif QARRAY_LENGTH__AA_GE_40(_AA) : Array.length _AA >= 40
-qualif QARRAY_LENGTH__AA_GE_555(_AA) : Array.length _AA >= 555
 qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH_V1'(_AA) : Array.length _AA >= Array.length v1'
 qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH_V1(_AA) : Array.length _AA >= Array.length v1
 qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH_V2'(_AA) : Array.length _AA >= Array.length v2'
