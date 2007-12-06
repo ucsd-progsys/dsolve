@@ -26,10 +26,10 @@ do
     fi
   fi
 done
-if [[ $frames != "" ]]
-then
-  argv=$argv" -dframes "${i%\.ml}".annot "
-fi
+#if [[ $frames != "" ]]
+#then
+#  argv=$argv" -dframes "${i%\.ml}".annot "
+#fi
 export LD_LIBRARY_PATH=./yices/lib
 
 #yah, ugly, ok
