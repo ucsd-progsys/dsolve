@@ -1,6 +1,20 @@
 type frame_constraint =
-  | SubFrame of Frame.t Lightenv.t * Predicate.t * Frame.t * Frame.t * Location.t
-  | WFFrame of Frame.t Lightenv.t * Frame.t * Location.t
+  | SubFrame of Frame.t Lightenv.t * Predicate.t * Frame.t * Frame.t * origin
+  | WFFrame of Frame.t Lightenv.t * Frame.t * origin
+
+and origin =
+  | Loc of Location.t
+  | Cstr of frame_constraint
+
+type subrefinement_constraint =
+    Frame.t Lightenv.t * Predicate.t * Frame.refinement * Frame.refinement * origin
+
+type well_formed_refinement_constraint =
+    Frame.t Lightenv.t * Frame.refinement * origin
+
+type refinement_constraint =
+  | SubRefinement of subrefinement_constraint
+  | WFRefinement of well_formed_refinement_constraint
 
 module VarName: sig
   type t = Path.t
@@ -23,9 +37,9 @@ module Solution: sig
   val length : 'a t -> int
 end
 
+exception Unsatisfiable of refinement_constraint * Qualifier.t list Solution.t
+
 val environment: frame_constraint -> Frame.t Lightenv.t
+val solution_map: 'a Solution.t -> (Solution.key -> 'a)
 val solve_constraints:
   Qualifier.t list -> frame_constraint list -> Qualifier.t list Solution.t
-
-
-exception Unsatisfiable of Qualifier.t list Solution.t

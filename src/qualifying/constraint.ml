@@ -1,14 +1,18 @@
 open Format
 
 type frame_constraint =
-  | SubFrame of Frame.t Lightenv.t * Predicate.t * Frame.t * Frame.t * Location.t
-  | WFFrame of Frame.t Lightenv.t * Frame.t * Location.t
+  | SubFrame of Frame.t Lightenv.t * Predicate.t * Frame.t * Frame.t * origin
+  | WFFrame of Frame.t Lightenv.t * Frame.t * origin
+
+and origin =
+  | Loc of Location.t
+  | Cstr of frame_constraint
 
 type subrefinement_constraint =
-    Frame.t Lightenv.t * Predicate.t * Frame.refinement * Frame.refinement * Location.t
+    Frame.t Lightenv.t * Predicate.t * Frame.refinement * Frame.refinement * origin
 
 type well_formed_refinement_constraint =
-    Frame.t Lightenv.t * Frame.refinement * Location.t
+    Frame.t Lightenv.t * Frame.refinement * origin
 
 type refinement_constraint =
   | SubRefinement of subrefinement_constraint
@@ -41,7 +45,7 @@ let qual_test_var = Path.mk_ident "AA"
 let split cstrs =
   let rec split_rec flat = function
     | [] -> flat
-    | SubFrame(env, guard, f1, f2, loc) :: cs ->
+    | SubFrame (env, guard, f1, f2, _) as parent :: cs ->
         begin match (f1, f2) with
           | (Frame.Farrow (l1, f1, f1'), Frame.Farrow (l2, f2, f2')) ->
               (* If the labels disagree, we don't attempt to resolve it.
@@ -55,24 +59,24 @@ let split cstrs =
                   Pattern.env_bind env pat1 f2
                 | _ -> env
               in split_rec flat
-                   (SubFrame (env, guard, f2, f1, loc)
-                    :: SubFrame (env', guard, f1', f2', loc)
+                   (SubFrame (env, guard, f2, f1, Cstr parent)
+                    :: SubFrame (env', guard, f1', f2', Cstr parent)
                     :: cs)
           | (Frame.Fconstr (p1, [], r1), Frame.Fconstr (p2, [], r2)) ->
-              split_rec (SubRefinement (env, guard, r1, r2, loc) :: flat) cs
+              split_rec (SubRefinement (env, guard, r1, r2, Cstr parent) :: flat) cs
           | (Frame.Fvar _, Frame.Fvar _)
           | (Frame.Funknown, Frame.Funknown) ->
               split_rec flat cs
 					| (Frame.Fconstr (p1, l1, r1), Frame.Fconstr(p2, l2, r2)) ->
               let invar r a b =
-                SubFrame(env, guard, a, b, loc)
-                :: SubFrame(env, guard, b, a, loc)
+                SubFrame(env, guard, a, b, Cstr parent)
+                :: SubFrame(env, guard, b, a, Cstr parent)
                 :: r
               in
                 (* pmr: because we were only filtering through invariant types anyway, we might
                    as well just use invariants until we start getting problems from it ---
                    for now, it's too much trouble to work around all the BigArray stuff *)
-                split_rec (SubRefinement(env, guard, r1, r2, loc)::flat) (List.fold_left2 invar cs l1 l2)
+                split_rec (SubRefinement(env, guard, r1, r2, Cstr parent)::flat) (List.fold_left2 invar cs l1 l2)
               (*let subt a b = SubFrame(env, guard, a, b) in*)
               (*if Path.same p1 Predef.path_array
                  || Path.same p1 (Builtins.ext_find_type_path "ref") then
@@ -82,22 +86,22 @@ let split cstrs =
               else
                   (Printf.printf "Unsupported type into split: %s\n" (Path.name p1); assert false)*)
           | (Frame.Ftuple t1s, Frame.Ftuple t2s) ->
-              let make_subframe t1 t2 = SubFrame(env, guard, t1, t2, loc) in
+              let make_subframe t1 t2 = SubFrame(env, guard, t1, t2, Cstr parent) in
                 split_rec flat ((List.map2 make_subframe t1s t2s) @ cs)
           | (Frame.Frecord (_, recframes1, r1), Frame.Frecord (_, recframes2, r2)) ->
               let make_subframe rest (recf1, _, muta) (recf2, _, _) =
                 let invar_cs = match muta with
                   | Asttypes.Immutable -> rest
-                  | Asttypes.Mutable -> SubFrame (env, guard, recf2, recf1, loc) :: rest
-                in SubFrame (env, guard, recf1, recf2, loc) :: invar_cs
+                  | Asttypes.Mutable -> SubFrame (env, guard, recf2, recf1, Cstr parent) :: rest
+                in SubFrame (env, guard, recf1, recf2, Cstr parent) :: invar_cs
               in
               let new_cs = List.fold_left2 make_subframe cs recframes1 recframes2 in
                 (* ming: i'm not sure if i believe the following *)
               let new_flat =
                 if List.exists (fun (_, _, muta) -> muta = Asttypes.Mutable) recframes1 then
-                  SubRefinement (env, guard, r2, r1, loc) :: flat
+                  SubRefinement (env, guard, r2, r1, Cstr parent) :: flat
                 else flat
-              in split_rec (SubRefinement (env, guard, r1, r2, loc) :: new_flat) new_cs
+              in split_rec (SubRefinement (env, guard, r1, r2, Cstr parent) :: new_flat) new_cs
           | (f1, f2) -> printf "@[Can't@ split:@ %a@ <:@ %a@]" Frame.pprint f1 Frame.pprint f2; assert false
         end
     (* ming: for type checking, when we split WFFrames now, we need to keep
@@ -105,33 +109,33 @@ let split cstrs =
              the frame into the environment, so that's what we do here.
              note that we've just agreed on using the qual_test_var ident
              for predicate vars (it's passed into the solver later...) *)
-    | WFFrame(env, f, loc) :: cs ->
+    | WFFrame (env, f, _) as parent :: cs ->
         begin match f with
           | Frame.Farrow (l, f, f') ->
               let env' = match l with
                 | None -> env
                 | Some pat -> Pattern.env_bind env pat f
               in split_rec flat
-                   (WFFrame (env, f, loc)
-                    :: WFFrame (env', f', loc)
+                   (WFFrame (env, f, Cstr parent)
+                    :: WFFrame (env', f', Cstr parent)
                     :: cs)
           | Frame.Fconstr (_, [], r) ->
               (* pmr: this case should go in favor of the general one below *)
               (* We add the test variable to the environment with the current frame;
                  this makes type checking easier *)
-              split_rec (WFRefinement (Lightenv.add qual_test_var f env, r, loc) :: flat) cs
+              split_rec (WFRefinement (Lightenv.add qual_test_var f env, r, Cstr parent) :: flat) cs
           | Frame.Ftuple ts ->
-              split_rec flat ((List.map (fun t -> WFFrame (env, t, loc)) ts) @ cs)
+              split_rec flat ((List.map (fun t -> WFFrame (env, t, Cstr parent)) ts) @ cs)
           | Frame.Frecord (_, fs, r) ->
-              let wf_rec rest (recf, _, _) = WFFrame (env, recf, loc) :: rest in
+              let wf_rec rest (recf, _, _) = WFFrame (env, recf, Cstr parent) :: rest in
               let new_cs = List.fold_left wf_rec cs fs in
-                split_rec (WFRefinement (Lightenv.add qual_test_var f env, r, loc) :: flat) new_cs
+                split_rec (WFRefinement (Lightenv.add qual_test_var f env, r, Cstr parent) :: flat) new_cs
           | Frame.Fvar _
           | Frame.Funknown ->
               split_rec flat cs
 	        | Frame.Fconstr (_, l, r) ->
-	            split_rec (WFRefinement(Lightenv.add qual_test_var f env, r, loc)::flat)
-		          (List.append (List.map (function li -> WFFrame(env, li, loc)) l) cs)
+	            split_rec (WFRefinement(Lightenv.add qual_test_var f env, r, Cstr parent)::flat)
+		          (List.append (List.map (function li -> WFFrame(env, li, Cstr parent)) l) cs)
           (*| _ -> assert false*)
         end
   in split_rec [] cstrs
@@ -162,8 +166,6 @@ let pprint_subref solution ppf (env, guard, r1, r2, _) =
 
 let pprint_ref_pred ppf (solution, r) =
   Predicate.pprint ppf (Frame.refinement_predicate (solution_map solution) qual_test_var r)
-
-exception Unsatisfiable of Qualifier.t list Solution.t
 
 let rec solve_wf_constraints solution = function
   | [] -> ()
@@ -402,28 +404,6 @@ let initial_solution cstrs quals =
     List.iter add_constraint_vars cstrs;
     sol
 
-let check_satisfied solution cstrs =
-  try
-    match List.find (fun c -> not (constraint_sat solution c)) cstrs with
-      | SubRefinement (env, guard, r1, r2, _) ->
-          (* If we have a literal RHS and we're unsatisfied, we're hosed -
-             either the LHS is a literal and we can't do anything, or it's
-             a var which has been pushed up by other constraints and, again,
-             we can't do anything *)
-          Bstats.print stdout "\n\nTime to solve constraints:\n";
-          fprintf std_formatter
-            "@.@.@[Unsatisfiable@ literal@ Subtype:@ (%a@ <:@ %a)@\nEnv:@ %a@\nGuard:@ %a@\nSubref:%a@ ->@ %a@\n@]"
-            Frame.pprint_refinement r1 Frame.pprint_refinement r2
-            pprint_env_pred (solution, env) Predicate.pprint guard pprint_ref_pred (solution, r1) pprint_ref_pred (solution, r2);
-          raise (Unsatisfiable solution)
-      | WFRefinement (env, f, _) ->
-          fprintf std_formatter "@[Unsatisfied@ WF:@ %a@\nEnv:@ %a@\nWF:@ %a@]" 
-            Frame.pprint_refinement f
-            (Lightenv.pprint Frame.pprint) env
-            pprint_ref_pred (solution, f);
-          raise (Unsatisfiable solution)
-  with Not_found -> ()
-
 let rec divide_constraints_by_form wf refi = function
   | [] -> (wf, refi)
   | SubRefinement r :: cs ->
@@ -494,6 +474,8 @@ module Worklist = struct
         wh
 end
 
+exception Unsatisfiable of refinement_constraint * Qualifier.t list Solution.t
+
 let solve_constraints quals constrs =
   if !Clflags.dump_constraints then
     Oprint.print_list pprint (fun ppf -> fprintf ppf "@.@.")
@@ -521,26 +503,20 @@ let solve_constraints quals constrs =
   print_flush ();
   let cstr_map = make_variable_constraint_map refis in
   let rec solve_rec wklist =
-    let next = try Some (Worklist.pop wklist) with Empty_worklist -> None in
-      match next with
-        | Some (cstr, rest) ->
-            begin match cstr with
-              | (_, _, _, (_, Frame.Qvar k), _) ->
-                  (* pmr: removed opt-
-                     Find all the constraints with RHSes identical to this one; they can be solved
-                     in one pass by or-ing all the LHSes together, saving a few prover calls *)
-                  (* pmr: of course, as implemented below, this is quite inefficient - we shouldn't be
-                     searching the worklist.  OTOH, we're trying to gain on time spent in the prover, so
-                     we can worry about the efficiency of this later *)
-                  let _ =
-                    match refine solution cstr with
-                      | Solution_changed ->
-                          Worklist.push (try VarMap.find k cstr_map with Not_found -> []) rest
-                      | Solution_unchanged -> rest
-                  in solve_rec wklist
-              | _ -> solve_rec rest
-            end
-        | None -> ()
+    (* This awkward control flow is necessary: if we wrap the recursive call in the
+       try block, it's not tail recursive anymore. *)
+    match try Some (Worklist.pop wklist) with Empty_worklist -> None with
+      | Some (cstr, rest) ->
+          begin match cstr with
+            | (_, _, _, (_, Frame.Qvar k), _) ->
+                let wklist = match refine solution cstr with
+                  | Solution_changed ->
+                      Worklist.push (try VarMap.find k cstr_map with Not_found -> []) rest
+                  | Solution_unchanged -> rest
+                in solve_rec wklist
+            | _ -> solve_rec rest
+          end
+      | None -> ()
   in
 
   (* Find the "roots" of the constraint graph - all those constraints that don't
@@ -550,18 +526,19 @@ let solve_constraints quals constrs =
      start to be sure; the heap should ensure we get to the roots first, though *)
     (*let roots = List.filter (fun c -> match lhs_vars c with [] -> true | _ -> false) refis in*)
   let init_wklist = Worklist.push refis (Worklist.empty ()) in
+    Bstats.time "refining subtypes" solve_rec init_wklist;
+  
+    Printf.printf "solution refinement completed:\n\t%d iterations of refine\n\n" !num_refines;
+    Format.printf "@[Solved@ %d@ constraints;@ %d@ valid@]@.@." !solved_constraints !valid_constraints;
+    TheoremProver.dump_simple_stats ();
+    TheoremProver.clear_cache ();
+    Format.printf "@[Solved@ %d@ constraints@ by@ matching@\n@]" !matching_ctr;
+    flush stdout;
+  
+    if !Clflags.dump_constraints then
+      Oprint.print_list (pprint_subref solution) (fun ppf -> fprintf ppf "@.@.")
+        std_formatter refis;
 
-  Bstats.time "refining subtypes" solve_rec init_wklist;
-
-  let _ = Printf.printf "solution refinement completed:\n\t%d iterations of refine\n\n" !num_refines in
-  let _ = Format.printf "@[Solved@ %d@ constraints;@ %d@ valid@]@.@." !solved_constraints !valid_constraints in
-  let _ = TheoremProver.dump_simple_stats () in
-  let _ = TheoremProver.clear_cache () in
-  let _ = Format.printf "@[Solved@ %d@ constraints@ by@ matching@\n@]" !matching_ctr in
-  let _ = flush stdout in
-
-  if !Clflags.dump_constraints then
-    Oprint.print_list (pprint_subref solution) (fun ppf -> fprintf ppf "@.@.")
-      std_formatter refis;
-  Bstats.time "testing solution" (check_satisfied solution) cs;
-  solution
+    let find_unsatisfied solution cstrs = List.find (fun c -> not (constraint_sat solution c)) cstrs in
+      try raise (Unsatisfiable (Bstats.time "testing solution" (find_unsatisfied solution) cs, solution))
+      with Not_found -> solution
