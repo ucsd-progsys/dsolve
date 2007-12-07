@@ -50,6 +50,8 @@ let dump_qualifs () =
       fprintf std_formatter "@[Done@ Dumping@ qualifiers@\n@]";flush stderr
   end
 
+let finalize () = dump_qualifs ()
+
 let analyze ppf sourcefile =
   init_path ();
   let env = initial_env () in
@@ -58,12 +60,7 @@ let analyze ppf sourcefile =
   let str = if !Clflags.no_anormal then str else Normalize.normalize_structure str in
   let str = print_if ppf Clflags.dump_parsetree Printast.implementation str in
   let (str, _, env) = type_implementation env str in
-  (*let (str, _, env) =
-    (Pparse.file ppf sourcefile Parse.implementation ast_impl_magic_number
-     ++ print_if ppf Clflags.dump_parsetree Printast.implementation
-     ++ type_implementation env) in*)
   let framemap = Qualifymod.qualify_implementation sourcefile fenv [] str in
-    dump_qualifs ();
     if !Clflags.dump_qexprs then begin
       fprintf std_formatter "@.@.";
       Qdebug.dump_qualified_structure std_formatter framemap str;
@@ -133,7 +130,7 @@ let main () =
      "-cacheq", Arg.Set cache_queries, "cache theorem prover queries";
      "-verrs", Arg.Set verb_errors, "print very verbose errors when constraints are unsat"
   ] file_argument usage;
-  try analyze std_formatter !filename
-  with x -> (report_error err_formatter x; exit 1)
+  try analyze std_formatter !filename; finalize ()
+  with x -> (report_error std_formatter x; finalize (); exit 1)
 
 let _ = main (); exit 0
