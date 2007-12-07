@@ -404,7 +404,7 @@ let report_error ppf  = function
     fprintf ppf "@[Type %a is ill-formed" Frame.pprint f
 
 let qualify_implementation sourcefile fenv quals str =
-  let (_, _, cstrs, fmap) = constrain_structure fenv quals str in
+  let (quals, _, cstrs, fmap) = constrain_structure fenv quals str in
   let instantiated_quals = instantiate_in_environments cstrs quals in
     if List.length cstrs = 0 then
       (* breaks the trivial program, but will make output cleaner while we
