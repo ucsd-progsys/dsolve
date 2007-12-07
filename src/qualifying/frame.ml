@@ -37,7 +37,7 @@ let pprint_refinement ppf refi =
 
 let rec pprint_pattern ppf = function
   | Tpat_any -> fprintf ppf "_"
-  | Tpat_var x -> fprintf ppf "%s" (Ident.unique_name x)
+  | Tpat_var x -> fprintf ppf "%s" (Ident.name x)
   | Tpat_tuple pats ->
     let pats = List.map (fun p -> p.pat_desc) pats in
       fprintf ppf "(%a)" (Oprint.print_list pprint_pattern (fun pff -> fprintf ppf ", ")) pats
