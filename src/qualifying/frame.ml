@@ -47,7 +47,7 @@ let rec pprint ppf = function
   | Fvar a ->
       fprintf ppf "Var(%s)" (Path.unique_name a)
   | Fconstr (path, [], r) ->
-      fprintf ppf "@[{%s@ |@;<1 2>%a}@]" (Path.unique_name path) pprint_refinement r
+      fprintf ppf "@[{%s@ |@;<1 2>%a}@]" (Path.name path) pprint_refinement r
   | Farrow (None, f, f') ->
       fprintf ppf "@[%a@ ->@;<1 2>%a@]" pprint1 f pprint f'
   | Farrow (Some pat, f, f') ->
