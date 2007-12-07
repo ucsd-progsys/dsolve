@@ -2,8 +2,8 @@ open Format
 
 type t = Path.t * Path.t * Predicate.t
 
-let pprint ppf (path, _, _) =
-  fprintf ppf "%s" (Path.name path)
+let pprint ppf (_, _, pred) =
+  Predicate.pprint ppf pred
 
 let compare = compare
 

@@ -41,6 +41,7 @@ val implies: (t * t) -> t
 val tuple_nth: pexpr -> int -> pexpr
 
 val subst: pexpr -> Path.t -> t -> t
+val apply_substs: (Path.t * pexpr) list -> t -> t
 val vars: t -> Path.t list
 (* pmr: change to plain old instantiate *)
 val instantiate_named_vars: (string * Path.t) list -> t -> t
