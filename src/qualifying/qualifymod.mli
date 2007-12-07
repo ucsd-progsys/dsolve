@@ -3,6 +3,7 @@ open Constraint
 type error
 
 exception Error of Location.t * error
+exception Errors of (Location.t * error) list
 
 module LocationMap: sig
   type key = Location.t
@@ -22,6 +23,7 @@ module LocationMap: sig
 end
 
 val report_error: Format.formatter -> error -> unit
+val report_errors: Format.formatter -> (Location.t * error) list -> unit
 
 val qualify_implementation:
   string -> Frame.t Lightenv.t -> Qualifier.t list -> Typedtree.structure ->

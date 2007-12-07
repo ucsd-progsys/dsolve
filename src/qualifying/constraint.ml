@@ -474,7 +474,7 @@ module Worklist = struct
         wh
 end
 
-exception Unsatisfiable of refinement_constraint * Qualifier.t list Solution.t
+exception Unsatisfiable of refinement_constraint list * Qualifier.t list Solution.t
 
 let solve_constraints quals constrs =
   if !Clflags.dump_constraints then
@@ -539,6 +539,6 @@ let solve_constraints quals constrs =
       Oprint.print_list (pprint_subref solution) (fun ppf -> fprintf ppf "@.@.")
         std_formatter refis;
 
-    let find_unsatisfied solution cstrs = List.find (fun c -> not (constraint_sat solution c)) cstrs in
+    let find_unsatisfied solution cstrs = List.filter (fun c -> not (constraint_sat solution c)) cstrs in
       try raise (Unsatisfiable (Bstats.time "testing solution" (find_unsatisfied solution) cs, solution))
       with Not_found -> solution

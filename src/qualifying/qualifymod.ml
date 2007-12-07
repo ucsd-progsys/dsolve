@@ -14,6 +14,7 @@ type error =
   | IllFormed of Frame.t
 
 exception Error of Location.t * error
+exception Errors of (Location.t * error) list
 
 module LocationMap = Map.Make(struct type t = Location.t
                                      let compare = compare end)
@@ -338,7 +339,7 @@ let constrain_structure initfenv initquals str =
           constrain_bindings fenv Predicate.True cstrs fmap recflag bindings
         in constrain_rec quals fenv cstrs fmap srem
     | (Tstr_type(_))::srem ->
-        Printf.printf "Ignoring type decl"; constrain_rec quals fenv cstrs fmap srem
+        (*Printf.printf "Ignoring type decl";*) constrain_rec quals fenv cstrs fmap srem
     | _ -> assert false
   in constrain_rec initquals initfenv [] LocationMap.empty str
 
@@ -394,8 +395,8 @@ let make_error solution cstr =
   let (loc, cstr) = expand_origin cstr in
   match cstr with
     | SubFrame (_, _, f1, f2, _) -> 
-      Error (loc, NotSubtype (Frame.apply_solution solution f1,  Frame.apply_solution solution f2))
-    | WFFrame (_, f, _) -> Error (loc, IllFormed (Frame.apply_solution solution f))
+      (loc, NotSubtype (Frame.apply_solution solution f1,  Frame.apply_solution solution f2))
+    | WFFrame (_, f, _) -> (loc, IllFormed (Frame.apply_solution solution f))
 
 let report_error ppf  = function
   | NotSubtype (f1, f2) ->
@@ -403,7 +404,17 @@ let report_error ppf  = function
   | IllFormed f ->
     fprintf ppf "@[Type %a is ill-formed" Frame.pprint f
 
+let rec report_errors ppf = function
+  | (l, e) :: es ->
+    fprintf ppf "@[%a%a@\n@\n@]" Location.print l report_error e; report_errors ppf es
+  | [] -> ()
+
 let qualify_implementation sourcefile fenv quals str =
+  let term_bstats () =
+    Printf.printf "##time##\n";
+    Bstats.print stdout "\n\nTime to solve constraints:\n";
+    Printf.printf "##endtime##\n"
+  in
   let (quals, _, cstrs, fmap) = constrain_structure fenv quals str in
   let instantiated_quals = instantiate_in_environments cstrs quals in
     if List.length cstrs = 0 then
@@ -419,13 +430,13 @@ let qualify_implementation sourcefile fenv quals str =
       in
       try
         let solution = Bstats.time "solving" (solve_constraints instantiated_quals) cstrs in
-          Printf.printf "##time##\n";
-          Bstats.print stdout "\n\nTime to solve constraints:\n";
-          Printf.printf "##endtime##\n";
- 
+          term_bstats ();
           finally solution fmap;
           fmap
-      with Constraint.Unsatisfiable (cstr, solution) ->
+      with Constraint.Unsatisfiable (cstrs, solution) ->
+        term_bstats (); 
         finally solution fmap;
-        raise (make_error solution cstr)
+        Printf.printf "Errors encountered during type checking:\n\n";
+        flush stdout;
+        raise (Errors(List.map (make_error solution) cstrs))
     end

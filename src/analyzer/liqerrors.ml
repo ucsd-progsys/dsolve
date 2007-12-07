@@ -30,6 +30,8 @@ let report_error ppf exn =
       Location.print ppf loc; Typemod.report_error ppf err
   | Qualifymod.Error(loc, err) ->
       Location.print ppf loc; Qualifymod.report_error ppf err
+  | Qualifymod.Errors(el) ->
+      Qualifymod.report_errors ppf el
   | x -> fprintf ppf "@]"; raise x in
 
   fprintf ppf "@[%a@]@." report exn

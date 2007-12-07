@@ -37,7 +37,7 @@ module Solution: sig
   val length : 'a t -> int
 end
 
-exception Unsatisfiable of refinement_constraint * Qualifier.t list Solution.t
+exception Unsatisfiable of refinement_constraint list * Qualifier.t list Solution.t
 
 val environment: frame_constraint -> Frame.t Lightenv.t
 val solution_map: 'a Solution.t -> (Solution.key -> 'a)
