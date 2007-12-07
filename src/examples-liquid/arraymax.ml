@@ -16,5 +16,5 @@ let arraymax a =
     foldn (Array.length a) 0 am;;
 
 let arraytest a =
-  let vec = Array.make (Random.int 40 + 1)  0 in
+  let vec = Array.make (Random.int 40)  0 in
     arraymax vec;;

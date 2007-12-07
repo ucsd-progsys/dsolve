@@ -54,10 +54,14 @@ let analyze ppf sourcefile =
   init_path ();
   let env = initial_env () in
   let fenv = initial_fenv env in
-  let (str, _, env) =
+  let str = Pparse.file ppf sourcefile Parse.implementation ast_impl_magic_number in 
+  let str = if !Clflags.no_anormal then str else Normalize.normalize_structure str in
+  let str = print_if ppf Clflags.dump_parsetree Printast.implementation str in
+  let (str, _, env) = type_implementation env str in
+  (*let (str, _, env) =
     (Pparse.file ppf sourcefile Parse.implementation ast_impl_magic_number
      ++ print_if ppf Clflags.dump_parsetree Printast.implementation
-     ++ type_implementation env) in
+     ++ type_implementation env) in*)
   let framemap = Qualifymod.qualify_implementation sourcefile fenv [] str in
     dump_qualifs ();
     if !Clflags.dump_qexprs then begin
@@ -124,9 +128,10 @@ let main () =
      "-use-list", Arg.Set use_list, "use worklist instead of heap in solver";
      "-bprover", Arg.Set always_use_backup_prover, "always use backup prover";
      "-lqualifs", Arg.Set less_qualifs, "generate less qualifiers (lets only under lambdas)";
-     "-anormal", Arg.Set make_anormal, "rewrite the AST for a-normality";
+     "-no-anormal", Arg.Set no_anormal, "don't rewrite the AST for a-normality";
      "-ksimpl", Arg.Set kill_simplify, "kill simplify after a large number of queries to reduce memory usage";
-     "-cacheq", Arg.Set cache_queries, "cache theorem prover queries"
+     "-cacheq", Arg.Set cache_queries, "cache theorem prover queries";
+     "-verrs", Arg.Set verb_errors, "print very verbose errors when constraints are unsat"
   ] file_argument usage;
   try analyze std_formatter !filename
   with x -> (report_error err_formatter x; exit 1)

@@ -328,17 +328,14 @@ let rec normalize_structure sstr =
   match sstr with
     [] -> []
     | {pstr_desc = (Pstr_eval exp); pstr_loc = loc} :: srem ->
-        let _ = printf "@[Pstr_eval@\n@]" in
         let normal_exp = normalize exp in
         let _ = printf "@[%a@\n@]" Qdebug.pprint_expression normal_exp in
         ({pstr_desc = (Pstr_eval(normal_exp)) ; pstr_loc = loc}) :: (normalize_structure srem)
     | {pstr_desc = (Pstr_value(recursive, pl)); pstr_loc = loc} :: srem -> 
         (* assume with all accompanying losses of generality that no one is
          * stupid enough to use and without rec *)
-        let _ = printf "@[Pstr_value@\n@]" in
         let value = {pstr_desc = (Pstr_value(recursive, List.map (fun (p, exp) -> (p, normalize exp)) pl)); pstr_loc = loc} in
         let _ = printf "@[%a@\n@]" Qdebug.pprint_structure value in
         value :: (normalize_structure srem)
     | p :: srem -> 
-        let _ = printf "@[did nothing@\n@]" in
         p :: (normalize_structure srem) 
