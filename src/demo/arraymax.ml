@@ -1,11 +1,7 @@
-type garbage = int;;
-type pr = {p1: int; p2: int};;
-type qd = {q1: int; q2: int; q3: int; q4: int};;
 qualif QARRAY_LENGTH__AA_GE_0(_AA) : Array.length _AA >= 0;;
 qualif QARRAY_LENGTH__AA_GE_1(_AA) : Array.length _AA >= 1;;
 qualif QARRAY_LENGTH__AA_GE_40(_AA) : Array.length _AA >= 40;;
 qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH_A(_AA) : Array.length _AA >= Array.length a;;
-qualif QARRAY_LENGTH__AA_GE_ARRAY_LENGTH_VEC(_AA) : Array.length _AA >= Array.length vec;;
 qualif QARRAY_LENGTH__AA_GE_I(_AA) : Array.length _AA >= i;;
 qualif QARRAY_LENGTH__AA_GE_K(_AA) : Array.length _AA >= k;;
 qualif QARRAY_LENGTH__AA_GE_L(_AA) : Array.length _AA >= l;;
@@ -16,7 +12,6 @@ qualif QARRAY_LENGTH__AA_LE_0(_AA) : Array.length _AA <= 0;;
 qualif QARRAY_LENGTH__AA_LE_1(_AA) : Array.length _AA <= 1;;
 qualif QARRAY_LENGTH__AA_LE_40(_AA) : Array.length _AA <= 40;;
 qualif QARRAY_LENGTH__AA_LE_ARRAY_LENGTH_A(_AA) : Array.length _AA <= Array.length a;;
-qualif QARRAY_LENGTH__AA_LE_ARRAY_LENGTH_VEC(_AA) : Array.length _AA <= Array.length vec;;
 qualif QARRAY_LENGTH__AA_LE_I(_AA) : Array.length _AA <= i;;
 qualif QARRAY_LENGTH__AA_LE_K(_AA) : Array.length _AA <= k;;
 qualif QARRAY_LENGTH__AA_LE_L(_AA) : Array.length _AA <= l;;
@@ -27,7 +22,6 @@ qualif QARRAY_LENGTH__AA_NE_0(_AA) : Array.length _AA != 0;;
 qualif QARRAY_LENGTH__AA_NE_1(_AA) : Array.length _AA != 1;;
 qualif QARRAY_LENGTH__AA_NE_40(_AA) : Array.length _AA != 40;;
 qualif QARRAY_LENGTH__AA_NE_ARRAY_LENGTH_A(_AA) : Array.length _AA != Array.length a;;
-qualif QARRAY_LENGTH__AA_NE_ARRAY_LENGTH_VEC(_AA) : Array.length _AA != Array.length vec;;
 qualif QARRAY_LENGTH__AA_NE_I(_AA) : Array.length _AA != i;;
 qualif QARRAY_LENGTH__AA_NE_K(_AA) : Array.length _AA != k;;
 qualif QARRAY_LENGTH__AA_NE_L(_AA) : Array.length _AA != l;;
@@ -92,7 +86,6 @@ qualif Q_AA_GE_0(_AA) : _AA >= 0;;
 qualif Q_AA_GE_1(_AA) : _AA >= 1;;
 qualif Q_AA_GE_40(_AA) : _AA >= 40;;
 qualif Q_AA_GE_ARRAY_LENGTH_A(_AA) : _AA >= Array.length a;;
-qualif Q_AA_GE_ARRAY_LENGTH_VEC(_AA) : _AA >= Array.length vec;;
 qualif Q_AA_GE_I(_AA) : _AA >= i;;
 qualif Q_AA_GE_K(_AA) : _AA >= k;;
 qualif Q_AA_GE_L(_AA) : _AA >= l;;
@@ -103,7 +96,6 @@ qualif Q_AA_LE_0(_AA) : _AA <= 0;;
 qualif Q_AA_LE_1(_AA) : _AA <= 1;;
 qualif Q_AA_LE_40(_AA) : _AA <= 40;;
 qualif Q_AA_LE_ARRAY_LENGTH_A(_AA) : _AA <= Array.length a;;
-qualif Q_AA_LE_ARRAY_LENGTH_VEC(_AA) : _AA <= Array.length vec;;
 qualif Q_AA_LE_I(_AA) : _AA <= i;;
 qualif Q_AA_LE_K(_AA) : _AA <= k;;
 qualif Q_AA_LE_L(_AA) : _AA <= l;;
@@ -114,32 +106,29 @@ qualif Q_AA_NE_0(_AA) : _AA != 0;;
 qualif Q_AA_NE_1(_AA) : _AA != 1;;
 qualif Q_AA_NE_40(_AA) : _AA != 40;;
 qualif Q_AA_NE_ARRAY_LENGTH_A(_AA) : _AA != Array.length a;;
-qualif Q_AA_NE_ARRAY_LENGTH_VEC(_AA) : _AA != Array.length vec;;
 qualif Q_AA_NE_I(_AA) : _AA != i;;
 qualif Q_AA_NE_K(_AA) : _AA != k;;
 qualif Q_AA_NE_L(_AA) : _AA != l;;
 qualif Q_AA_NE_M(_AA) : _AA != m;;
-qualif Q_AA_NE_M(_AA) : _AA != n;;
+qualif Q_AA_NE_N(_AA) : _AA != n;;
+qualif Q_AA_NE_S(_AA) : _AA != s;;
 let max x y =
-  if x > y then x else y
+  if x > y then x else y;;
 
 let rec sum k =
   if k < 0 then 0 else
     let s = sum (k-1) in
-      s + k
+      s + k;;
 
 let foldn n b f =
   let rec loop i c =
     if i < n then loop (i+1) (f i c) else c in
-    loop 0 b
+    loop 0 b;;
 
 let arraymax a =
-  let sz = Array.length a in
   let am l m = max (Array.get a l) m in
-    foldn sz 0 am
+    foldn (Array.length a) 0 am;;
 
 let arraytest a =
-  let sz = (Random.int 40) in
-  let sz = sz + 1 in
-  let vec = Array.make sz 0 in
-    arraymax vec
+  let vec = Array.make (Random.int 40)  0 in
+    arraymax vec;;

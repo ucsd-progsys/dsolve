@@ -540,5 +540,5 @@ let solve_constraints quals constrs =
         std_formatter refis;
 
     let find_unsatisfied solution cstrs = List.filter (fun c -> not (constraint_sat solution c)) cstrs in
-      try raise (Unsatisfiable (Bstats.time "testing solution" (find_unsatisfied solution) cs, solution))
-      with Not_found -> solution
+    let unsat = Bstats.time "testing solution" (find_unsatisfied solution) cs in
+      if List.length unsat = 0 then solution else raise (Unsatisfiable (unsat, solution))
