@@ -63,8 +63,8 @@ then
   rlwrap ./liquid $argv
 else
   #cat$catargs | nice -n19 rlwrap ./ocaml $argv
-  cat $catargs > /tmp/tmmmp
-  rlwrap ./liquid $argv /tmp/tmmmp
+  cat $catargs > /tmp/liq.ml
+  rlwrap ./liquid $argv /tmp/liq.ml
 fi
 
 EXIT=$?

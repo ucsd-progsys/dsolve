@@ -1,6 +1,7 @@
-examples-liquid/arraymax.ml
 
 DML/dotprod.ml
+examples-liquid/arraymax.ml
+
 DML/quicksort_sane.cnt.ml
 examples-liquid/bitv.ml
 examples-liquid/quicksort.ml
