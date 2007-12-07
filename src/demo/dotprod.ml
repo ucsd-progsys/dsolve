@@ -8,7 +8,7 @@ qualif Leq_v1_length(v) : v <= Array.length v1
 let dotprod v1 v2 = 
 	let rec loop n sum i =
 		if i = n then sum else 
-      let v1_i = Array.get v1 i in  
+      let v1_i = Array.get v1 i in
       let v2_i = Array.get v2 i in
       let newsum = (v1_i * v2_i) + sum in
         loop n newsum (i + 1)
