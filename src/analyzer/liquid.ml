@@ -46,7 +46,7 @@ let type_implementation initial_env ast =
 let dump_qualifs () =
   if !Clflags.dump_qualifs then begin
       fprintf std_formatter "@[Dumping@ qualifiers@\n@]";
-      Misc.format_list_of_strings err_formatter (";;", Qualgen.dump_qualifs ());
+      fprintf err_formatter "@[%s;;@\n@]" (String.concat ";;\n" (Qualgen.dump_qualifs ()));
       fprintf std_formatter "@[Done@ Dumping@ qualifiers@\n@]";flush stderr
   end
 

@@ -30,7 +30,7 @@ let rec esc s oc nc =
 
 let single_simple_qualif x fx i =
   let rels = ["<="; ">="; "!="] in
-  let prels = ["_<=_"; "_>=_"; "_!=_"] in
+  let prels = ["_LE_"; "_GE_"; "_NE_"] in
   let ufx = String.uppercase fx in
   let _ = esc ufx ' ' '_' in 
   let _ = esc ufx '.' '_' in
@@ -105,6 +105,4 @@ let dump_qualifs () =
   let bigarray_lbls = mapfilter (filter (Builtins.ext_find_type_path "array2")) lbls in
   let bigarray_qualifs = List.concat (List.map single_bigarray_array2_qualif bigarray_lbls) in
   let multiset_quals = List.concat [bigarray_qualifs; arr_qualifs; int_qualifs; const_qualifs] in
-  let qualif_set = ref StringSet.empty in
-  let _ = List.iter (fun q -> qualif_set := StringSet.add q !qualif_set) multiset_quals in
-  StringSet.elements !qualif_set
+    StringSet.elements (List.fold_left (fun s q -> StringSet.add q s) StringSet.empty multiset_quals) 
