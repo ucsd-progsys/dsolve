@@ -318,8 +318,6 @@ let pred_is_well_typed env p =
       (* ming: huge hack alert *)
       if s = "Array.length" then arg_shape Predef.path_array frame_int
       else if s = "Bigarray.Array2.dim1" || s = "Bigarray.Array2.dim2" then
-        (* pmr: I'm not even going to bother right now *)
-        (* ming: hence the huge hack *)
         arg_shape (Builtins.ext_find_type_path "array2") frame_int
       else assert false
   | Predicate.Binop (p1, op, p2) ->
