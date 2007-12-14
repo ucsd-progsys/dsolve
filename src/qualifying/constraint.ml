@@ -523,12 +523,6 @@ let solve_constraints quals constrs =
         | Some (cstr, rest) ->
             begin match cstr with
               | (_, _, _, (_, Frame.Qvar k), _) ->
-                  (* pmr: removed opt-
-                     Find all the constraints with RHSes identical to this one; they can be solved
-                     in one pass by or-ing all the LHSes together, saving a few prover calls *)
-                  (* pmr: of course, as implemented below, this is quite inefficient - we shouldn't be
-                     searching the worklist.  OTOH, we're trying to gain on time spent in the prover, so
-                     we can worry about the efficiency of this later *)
                   let _ =
                     match refine solution cstr with
                       | Solution_changed ->
