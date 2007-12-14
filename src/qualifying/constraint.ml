@@ -107,6 +107,11 @@ let split cstrs =
              for predicate vars (it's passed into the solver later...) *)
     | WFFrame(env, f, loc) :: cs ->
         begin match f with
+	      | Frame.Fconstr (_, l, r) ->
+              (* We add the test variable to the environment with the current frame;
+                 this makes type checking easier *)
+	          split_rec (WFRefinement (Lightenv.add qual_test_var f env, r, loc) :: flat)
+		        ((List.map (fun li -> WFFrame (env, li, loc)) l) @ cs)
           | Frame.Farrow (l, f, f') ->
               let env' = match l with
                 | None -> env
@@ -115,11 +120,6 @@ let split cstrs =
                    (WFFrame (env, f, loc)
                     :: WFFrame (env', f', loc)
                     :: cs)
-          | Frame.Fconstr (_, [], r) ->
-              (* pmr: this case should go in favor of the general one below *)
-              (* We add the test variable to the environment with the current frame;
-                 this makes type checking easier *)
-              split_rec (WFRefinement (Lightenv.add qual_test_var f env, r, loc) :: flat) cs
           | Frame.Ftuple ts ->
               split_rec flat ((List.map (fun t -> WFFrame (env, t, loc)) ts) @ cs)
           | Frame.Frecord (_, fs, r) ->
@@ -129,9 +129,6 @@ let split cstrs =
           | Frame.Fvar _
           | Frame.Funknown ->
               split_rec flat cs
-	        | Frame.Fconstr (_, l, r) ->
-	            split_rec (WFRefinement(Lightenv.add qual_test_var f env, r, loc)::flat)
-		          (List.append (List.map (function li -> WFFrame(env, li, loc)) l) cs)
           (*| _ -> assert false*)
         end
   in split_rec [] cstrs
