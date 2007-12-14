@@ -244,7 +244,7 @@ and constrain_bindings env guard cstrs framemap recflag bindings =
          we bind them in.  We might as well do it the fast way. *)
       List.fold_left constrain_and_bind (env, cstrs, framemap) bindings
 	| Recursive ->
-    (* pmr: This is horrendous, but about the best we can do
+    (* This is horrendous, but about the best we can do
        without using destructive updates.  We need to label
        the function we're binding (if any) in the environment where we
        also constrain the function.  Unfortunately, we don't
