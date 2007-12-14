@@ -240,7 +240,7 @@ and constrain_bindings env guard cstrs framemap recflag bindings =
       let _ = if lambda then under_lambda := !under_lambda - 1 else () in
         (env, cstrs, fm)
     in
-      (* pmr: Since these are nonrecursive, I don't think it matters what order
+      (* Since these are nonrecursive, I don't think it matters what order
          we bind them in.  We might as well do it the fast way. *)
       List.fold_left constrain_and_bind (env, cstrs, framemap) bindings
 	| Recursive ->
