@@ -31,9 +31,7 @@ let rec constrain e env guard cstrs framemap =
           (Frame.Fconstr (path, [], Builtins.equality_refinement (Predicate.PInt n)),
            cstrs, framemap)
   | (Texp_constant(Const_float n), t) ->
-    (* pmr: this should be fresh_without_vars.  It's only not unsound because we special
-       case float in fresh *)
-          (Frame.fresh e, cstrs, framemap)
+    (Frame.fresh_without_vars e, cstrs, framemap)
   | (Texp_construct(cstrdesc, []), {desc = Tconstr(path, [], _)}) ->
           let cstrref =
             match cstrdesc.cstr_tag with

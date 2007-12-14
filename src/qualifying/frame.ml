@@ -105,7 +105,7 @@ let fresh_with_var_fun exp fresh_ref_var =
             begin match ty_decl.type_kind with
               | Type_abstract
               | Type_variant _ ->
-                  if Path.same p Predef.path_unit || Path.same p Predef.path_float || Path.name p = "garbage" then
+                  if Path.same p Predef.path_unit || Path.name p = "garbage" then
                     Fconstr (p, [], ([], Qconst []))
                   else
                     Fconstr (p, List.map fresh_rec tyl, fresh_ref_var ())
