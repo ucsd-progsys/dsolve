@@ -94,23 +94,6 @@ let main () =
      "-drawlambda", Arg.Set dump_rawlambda, " (undocumented)";
      "-dlambda", Arg.Set dump_lambda, " (undocumented)";
      "-dinstr", Arg.Set dump_instr, " (undocumented)";
-     "-dconstrs", Arg.Set dump_constraints, "print out subframe constraints";
-     "-dqexprs", Arg.Set dump_qexprs, "print out all subexpressions with their qualified types";
-     "-dqualifs", Arg.Set dump_qualifs, "print out simple qualifiers for all identifiers and integer literals";
-     "-dqueries", Arg.Set dump_queries, "print out all theorem prover queries and their results";
-     "-dframes", Arg.String (fun s -> Clflags.dump_frames := Some s), "place frames in an annotation file";
-     "-lqueries", Arg.Set log_queries, "log queries to [prover].log";
-     "-cqueries", Arg.Set check_queries, "use a backup prover to check all queries";
-     "-bquals", Arg.Set brief_quals, "print out the number of refinements for a type instead of their names";
-     "-no-simple", Arg.Set no_simple, "do not propagate in simple constraints";
-     "-no-simple-subs", Arg.Set no_simple_subs, "do not propagate sets when substitutions are present";
-     "-verify-simple", Arg.Set verify_simple, "verify simple constraint propagation against theorem prover result";
-     "-use-list", Arg.Set use_list, "use worklist instead of heap in solver";
-     "-bprover", Arg.Set always_use_backup_prover, "always use backup prover";
-     "-lqualifs", Arg.Set less_qualifs, "generate less qualifiers (lets only under lambdas)";
-     "-anormal", Arg.Set make_anormal, "rewrite the AST for a-normality";
-     "-ksimpl", Arg.Set kill_simplify, "kill simplify after a large number of queries to reduce memory usage";
-     "-cacheq", Arg.Set cache_queries, "cache theorem prover queries"
     ] file_argument usage;
   if not (prepare Format.err_formatter) then exit 2;
   Toploop.loop Format.std_formatter

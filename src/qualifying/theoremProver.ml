@@ -60,7 +60,8 @@ let rec fixdiv p =
         | p -> p
     else p
 
-module DefaultProver = TheoremProverSimplify.Prover
+(* module DefaultProver = TheoremProverSimplify.Prover *)
+module DefaultProver = TheoremProverYices.Prover
 module BackupProver = TheoremProverYices.Prover
 
 exception Provers_disagree of bool * bool

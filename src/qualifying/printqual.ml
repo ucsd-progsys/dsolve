@@ -23,17 +23,3 @@ let rec qualify_tree_of_type_scheme otyp fr =
     | (_, Frame.Funknown) ->
         otyp
     | _ -> assert false
-
-let dump_frame pp loc fr =
-  if loc = Location.none then () else begin
-  Stypes.print_position pp loc.loc_start;
-  fprintf pp " ";
-  Stypes.print_position pp loc.loc_end;
-  fprintf pp "@.type(@.  ";
-  Frame.pprint pp fr;
-  fprintf pp "@.)@."
-  end
-
-let dump filename framemap =
-  let pp = formatter_of_out_channel (open_out filename) in
-    Qualifymod.LocationMap.iter (dump_frame pp) framemap

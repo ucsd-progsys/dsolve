@@ -65,7 +65,7 @@ QUALIFYING=qualifying/lightenv.cmo \
   qualifying/theoremProverSimplify.cmo qualifying/theoremProverYices.cmo \
   qualifying/theoremProver.cmo \
   qualifying/constraint.cmo qualifying/qualgen.cmo \
-  qualifying/qualifymod.cmo qualifying/printqual.cmo \
+  qualifying/printqual.cmo qualifying/qualifymod.cmo \
   qualifying/qdebug.cmo qualifying/normalize.cmo
 
 COMP=bytecomp/lambda.cmo bytecomp/printlambda.cmo \

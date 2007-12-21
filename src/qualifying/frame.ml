@@ -20,24 +20,24 @@ type t =
   | Frecord of Path.t * (t * string * mutable_flag) list * refinement
   | Funknown
 
-let pprint_qualifier_expr ppf = function
-  | Qvar id ->
-      fprintf ppf "%s" (Path.unique_name id)
-  | Qconst quals ->
-      Oprint.print_list Qualifier.pprint (fun ppf -> fprintf ppf "@ ") ppf quals
-
 let pprint_sub ppf (path, pexp) =
-  fprintf ppf "@[%s@ ->@ %a@]" (Path.unique_name path) Predicate.pprint_pexpr pexp
+  fprintf ppf "@[%s@ ->@ %a@]" (Path.name path) Predicate.pprint_pexpr pexp
 
 let pprint_subs ppf subs =
   Oprint.print_list pprint_sub (fun ppf -> fprintf ppf ";@ ") ppf subs
 
-let pprint_refinement ppf (subs, qexp) =
-  fprintf ppf "@[[%a]@;<1 2>%a@]" pprint_subs subs pprint_qualifier_expr qexp
+let pprint_refinement ppf refi =
+  match refi with
+    | (_, Qvar id ) ->
+      fprintf ppf "%s" (Path.name id)
+    | (subs, Qconst quals) ->
+      let preds = List.map (Qualifier.apply (Path.mk_ident "V")) quals in
+      let preds = List.map (Predicate.apply_substs subs) preds in
+        Oprint.print_list Predicate.pprint (fun ppf -> fprintf ppf "@ ") ppf preds
 
 let rec pprint_pattern ppf = function
   | Tpat_any -> fprintf ppf "_"
-  | Tpat_var x -> fprintf ppf "%s" (Ident.unique_name x)
+  | Tpat_var x -> fprintf ppf "%s" (Ident.name x)
   | Tpat_tuple pats ->
     let pats = List.map (fun p -> p.pat_desc) pats in
       fprintf ppf "(%a)" (Oprint.print_list pprint_pattern (fun pff -> fprintf ppf ", ")) pats
@@ -47,7 +47,7 @@ let rec pprint ppf = function
   | Fvar a ->
       fprintf ppf "Var(%s)" (Path.unique_name a)
   | Fconstr (path, [], r) ->
-      fprintf ppf "@[{%s@ |@;<1 2>%a}@]" (Path.unique_name path) pprint_refinement r
+      fprintf ppf "@[{%s@ |@;<1 2>%a}@]" (Path.name path) pprint_refinement r
   | Farrow (None, f, f') ->
       fprintf ppf "@[%a@ ->@;<1 2>%a@]" pprint1 f pprint f'
   | Farrow (Some pat, f, f') ->
@@ -57,7 +57,7 @@ let rec pprint ppf = function
    | Ftuple ts ->
       fprintf ppf "@[(%a)@]" (Oprint.print_list pprint (fun ppf -> fprintf ppf ",@;<1 2>")) ts
    | Frecord (id, _, r) ->
-       fprintf ppf "@[{%s |@;<1 2>%a}@] " (Path.unique_name id) pprint_refinement r
+       fprintf ppf "@[{%s |@;<1 2>%a}@] " (Path.name id) pprint_refinement r
   | Funknown ->
       fprintf ppf "[unknown]"
   (*| _ -> assert false*)
@@ -246,8 +246,7 @@ let refinement_conjuncts solution qual_var (subs, qualifiers) =
     | Qconst qs -> qs
   in
   let unsubst = List.map (Qualifier.apply qual_var) quals in
-  let substitute p (x, e) = Predicate.subst e x p in
-    List.map (fun p -> List.fold_left substitute p subs) unsubst
+    List.map (Predicate.apply_substs subs) unsubst
 
 let refinement_predicate solution qual_var refn =
   Predicate.big_and (refinement_conjuncts solution qual_var refn)

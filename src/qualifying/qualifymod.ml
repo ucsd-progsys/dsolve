@@ -6,7 +6,15 @@ open Btype
 open Types
 open Constraint
 open Longident
+open Location
 open Format
+
+type error =
+  | NotSubtype of Frame.t * Frame.t
+  | IllFormed of Frame.t
+
+exception Error of Location.t * error
+exception Errors of (Location.t * error) list
 
 module LocationMap = Map.Make(struct type t = Location.t
                                      let compare = compare end)
@@ -48,7 +56,7 @@ let rec constrain e env guard cstrs framemap =
        fields might be permuted. *)
     let (_, sorted_exprs) = List.split (List.sort compare_labels labeled_exprs) in
     let (subframes, new_cs, new_fm) = constrain_subexprs env sorted_exprs cstrs framemap in
-    let subframe_field cs_rest fsub (fsup, _, _) = SubFrame (env, guard, fsub, fsup, e.exp_loc) :: cs_rest in
+    let subframe_field cs_rest fsub (fsup, _, _) = SubFrame (env, guard, fsub, fsup, Loc e.exp_loc) :: cs_rest in
     let f = Frame.fresh e in
     let new_cs = match f with
       | Frame.Frecord (_, recframes, _) ->
@@ -60,7 +68,7 @@ let rec constrain e env guard cstrs framemap =
           let field_qualifier (_, name, _) fexpr = Builtins.field_eq_qualifier name (expression_to_pexpr fexpr) in
             Frame.Frecord (p, recframes, ([], Frame.Qconst (List.map2 field_qualifier recframes sorted_exprs)))
       | _ -> assert false
-    in (f, WFFrame (env, f, e.exp_loc) :: new_cs, new_fm)
+    in (f, WFFrame (env, f, Loc e.exp_loc) :: new_cs, new_fm)
   | (Texp_field (expr, label_desc), t) ->
     let (recframe, new_cs, new_fm) = constrain expr env guard cstrs framemap in
     let (fieldframe, fieldname) = match recframe with
@@ -73,7 +81,7 @@ let rec constrain e env guard cstrs framemap =
     in
     let pexpr = Predicate.Field (fieldname, expression_to_pexpr expr) in
     let f = Frame.apply_refinement (Builtins.equality_refinement pexpr) fieldframe in
-      (f, WFFrame (env, f, e.exp_loc) :: new_cs, new_fm)
+      (f, WFFrame (env, f, Loc e.exp_loc) :: new_cs, new_fm)
   | (Texp_ifthenelse(e1, e2, Some e3), t) ->
           let f = Frame.fresh e in
           let (f1, cstrs1, fm1) = constrain e1 env guard cstrs framemap in
@@ -90,9 +98,9 @@ let rec constrain e env guard cstrs framemap =
           let guard3 = Predicate.And (Predicate.Not guardp, guard) in
           let (f3, cstrs3, fm3) = constrain e3 env' guard3 cstrs2 fm2 in
             (f,
-             WFFrame(env, f, e.exp_loc)
-             ::SubFrame(env', guard2, f2, f, e.exp_loc)
-             ::SubFrame(env', guard3, f3, f, e.exp_loc)
+             WFFrame(env, f, Loc e.exp_loc)
+             ::SubFrame(env', guard2, f2, f, Loc e.exp_loc)
+             ::SubFrame(env', guard3, f3, f, Loc e.exp_loc)
              ::cstrs3,
              fm3)
   | (Texp_function([(pat, e')], _), t) ->
@@ -116,8 +124,8 @@ let rec constrain e env guard cstrs framemap =
           let f' = Frame.label_like unlabelled_f' f'' in
           let f = Frame.Farrow (Some pat.pat_desc, f, f') in
             (f,
-             WFFrame (env, f, e.exp_loc)
-             :: SubFrame (env', guard, f'', f', e.exp_loc)
+             WFFrame (env, f, Loc e.exp_loc)
+             :: SubFrame (env', guard, f'', f', Loc e.exp_loc)
              :: cstrs',
              fm')
       | _ -> assert false
@@ -144,7 +152,7 @@ let rec constrain e env guard cstrs framemap =
           (*let _ = Frame.pprint Format.err_formatter f' in
           let _ = Frame.pprint Format.err_formatter ftemplate in *)
           let f = Frame.instantiate f' ftemplate in
-            (f, WFFrame(env, f, e.exp_loc)::cstrs, framemap)
+            (f, WFFrame(env, f, Loc e.exp_loc)::cstrs, framemap)
   | (Texp_apply (e1, exps), _) ->
     let constrain_application (f, cs, fm) = function
         | (Some e2, _) ->
@@ -166,7 +174,7 @@ let rec constrain e env guard cstrs framemap =
                   | _ -> f'
               in
               (*let _ = Format.printf "@[%a@\n@]" Frame.pprint f'' in*)
-              (f'', SubFrame (env, guard, f2, f, e.exp_loc) :: cs', fm')
+              (f'', SubFrame (env, guard, f2, f, Loc e2.exp_loc) :: cs', fm')
 	          | _ -> assert false
           end
         | _ -> assert false
@@ -177,8 +185,8 @@ let rec constrain e env guard cstrs framemap =
     let (body_frame, cstrs, fmap) = constrain body_exp env guard cstrs fmap in
     let f = Frame.fresh_with_labels e body_frame in
       (f,
-       WFFrame (env, f, e.exp_loc)
-       :: SubFrame (env, guard, body_frame, f, body_exp.exp_loc)
+       WFFrame (env, f, Loc e.exp_loc)
+       :: SubFrame (env, guard, body_frame, f, Loc body_exp.exp_loc)
        :: cstrs,
        fmap)
   | (Texp_array(es), t) ->
@@ -187,9 +195,9 @@ let rec constrain e env guard cstrs framemap =
 					let (f, fs) = (function Frame.Fconstr(p, l, _) -> (Frame.Fconstr(p, l, Builtins.size_lit_refinement(List.length es)), l) | _ -> assert false) f in
 					let list_rec (fs, c, m) e = (function (f, c, m) -> (f::fs, c, m)) (constrain e env guard c m) in
 					let (fs', c, m) = List.fold_left list_rec ([], cstrs, framemap) es in
-					let mksub b a = SubFrame(env, guard, a, b, e.exp_loc) in
+					let mksub b a = SubFrame(env, guard, a, b, Loc e.exp_loc) in
 					let c = List.append (List.map (mksub (List.hd fs)) fs') c in
-					(f, WFFrame(env, f, e.exp_loc)::c, m)
+					(f, WFFrame(env, f, Loc e.exp_loc)::c, m)
   | (Texp_sequence(e1, e2), t) ->
           let (f1, c, m) = constrain e1 env guard cstrs framemap in
           let (f2, c, m) = constrain e2 env guard c m in
@@ -207,7 +215,7 @@ let rec constrain e env guard cstrs framemap =
       begin match f with
         | Frame.Ftuple fresh_fs ->
             let new_cs = List.fold_left2
-              (fun cs rec_frame fresh_frame -> SubFrame (env, guard, rec_frame, fresh_frame, e.exp_loc) :: cs)
+              (fun cs rec_frame fresh_frame -> SubFrame (env, guard, rec_frame, fresh_frame, Loc e.exp_loc) :: cs)
               new_cs fs fresh_fs in
             (f, (*(env, f) ::*) new_cs, new_m)
         | _ -> assert false
@@ -303,7 +311,7 @@ and constrain_bindings env guard cstrs framemap recflag bindings =
     (* pmr: This is going to take some work to resolve; for now, default on the locations because we don't
        have anything that'll butt up against it. *)
     let build_found_frame_cstr_list cs found_frame binding_frame =
-      WFFrame (bound_env, binding_frame, Location.none) :: SubFrame (bound_env, guard, found_frame, binding_frame, Location.none) :: cs
+      WFFrame (bound_env, binding_frame, Loc Location.none) :: SubFrame (bound_env, guard, found_frame, binding_frame, Loc Location.none) :: cs
     in
     let cstrs = List.fold_left2 build_found_frame_cstr_list cstrs found_frames binding_frames in
     (bound_env,
@@ -314,8 +322,6 @@ and subexpr_folder subenv guard e (fframes, cs, fm) =
   let (frame, new_cs, new_fm) = constrain e subenv guard cs fm in
     (frame :: fframes, new_cs, new_fm)
 
-(* pmr: note we're operating in the environment created by typing the
-   structure - it's entirely possible this has some bad corner cases *)
 let constrain_structure initfenv initquals str =
   let rec constrain_rec quals fenv cstrs fmap = function
     | [] -> (quals, fenv, cstrs, fmap)
@@ -331,7 +337,7 @@ let constrain_structure initfenv initquals str =
           constrain_bindings fenv Predicate.True cstrs fmap recflag bindings
         in constrain_rec quals fenv cstrs fmap srem
     | (Tstr_type(_))::srem ->
-        Printf.printf "Ignoring type decl"; constrain_rec quals fenv cstrs fmap srem
+        (*Printf.printf "Ignoring type decl";*) constrain_rec quals fenv cstrs fmap srem
     | _ -> assert false
   in constrain_rec initquals initfenv [] LocationMap.empty str
 
@@ -349,25 +355,86 @@ let instantiate_in_environments cstrs quals =
     in List.fold_left instantiate_in_env qualset envs
   in QualifierSet.elements (List.fold_left instantiate_qual QualifierSet.empty quals)
 
-exception IllQualified of Frame.t LocationMap.t
+let framemap_apply_solution solution fmap = LocationMap.map (Frame.apply_solution (Solution.find solution)) fmap
 
-let qualify_structure fenv quals str =
+let dump_frames sourcefile fmap =
+  let dump_frame pp loc fr =
+    if loc = Location.none then () else begin
+    Stypes.print_position pp loc.loc_start;
+    fprintf pp " ";
+    Stypes.print_position pp loc.loc_end;
+    fprintf pp "@.type(@.  ";
+    Frame.pprint pp fr;
+    fprintf pp "@.)@."
+    end
+  in
+  if !Clflags.dump_frames then
+    let filename = Misc.chop_extension_if_any sourcefile ^ ".annot" in
+    let pp = formatter_of_out_channel (open_out filename) in
+      LocationMap.iter (dump_frame pp) fmap
+
+let rec expand_frame_origin cstr =
+  let orig = match cstr with
+    | SubFrame (_, _, _, _, o)
+    | WFFrame (_, _, o) -> o
+  in
+  match orig with
+    | Loc loc -> (loc, cstr)
+    | Cstr cstr -> expand_frame_origin cstr
+
+let rec expand_origin = function
+  | SubRefinement (_, _, _, _, Cstr orig)
+  | WFRefinement (_, _, Cstr orig) ->
+    expand_frame_origin orig
+  | _ -> assert false
+
+let make_error solution cstr =
+  let solution = solution_map solution in
+  let (loc, cstr) = expand_origin cstr in
+  match cstr with
+    | SubFrame (_, _, f1, f2, _) -> 
+      (loc, NotSubtype (Frame.apply_solution solution f1,  Frame.apply_solution solution f2))
+    | WFFrame (_, f, _) -> (loc, IllFormed (Frame.apply_solution solution f))
+
+let report_error ppf  = function
+  | NotSubtype (f1, f2) ->
+    fprintf ppf "@[@[%a@]@;<1 2>is not a subtype of@;<1 2>@[%a@]" Frame.pprint f1 Frame.pprint f2
+  | IllFormed f ->
+    fprintf ppf "@[Type %a is ill-formed" Frame.pprint f
+
+let rec report_errors ppf = function
+  | (l, e) :: es ->
+    fprintf ppf "@[%a%a@\n@\n@]" Location.print l report_error e; report_errors ppf es
+  | [] -> ()
+
+let qualify_implementation sourcefile fenv quals str =
+  let term_bstats () =
+    Printf.printf "##time##\n";
+    Bstats.print stdout "\n\nTime to solve constraints:\n";
+    Printf.printf "##endtime##\n"
+  in
   let (quals, _, cstrs, fmap) = constrain_structure fenv quals str in
   let instantiated_quals = instantiate_in_environments cstrs quals in
     if List.length cstrs = 0 then
       (* breaks the trivial program, but will make output cleaner while we
        * gather data *)
-      (quals, LocationMap.empty)
-    else
-      begin
+      LocationMap.empty
+    else begin
       Printf.printf "##solve##\n";
       Bstats.reset ();
+      let finally solution fmap =
+        TheoremProver.dump_simple_stats ();
+        dump_frames sourcefile (framemap_apply_solution solution fmap);
+      in
       try
         let solution = Bstats.time "solving" (solve_constraints instantiated_quals) cstrs in
-          Printf.printf "##time##\n";
-          Bstats.print stdout "\n\nTime to solve constraints:\n";
-          Printf.printf "##endtime##\n";
-          (quals, LocationMap.map (Frame.apply_solution (Solution.find solution)) fmap)
-      with Unsatisfiable solution ->
-        raise (IllQualified (LocationMap.map (Frame.apply_solution (Solution.find solution)) fmap))
-      end
+          term_bstats ();
+          finally solution fmap;
+          fmap
+      with Constraint.Unsatisfiable (cstrs, solution) ->
+        term_bstats (); 
+        finally solution fmap;
+        Printf.printf "Errors encountered during type checking:\n\n";
+        flush stdout;
+        raise (Errors(List.map (make_error solution) cstrs))
+    end
