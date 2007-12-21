@@ -385,21 +385,31 @@ let make_variable_constraint_map cstrs =
     | [] -> map
   in make_rec VarMap.empty cstrs
 
+type var_location = LHSVar | RHSVar | WFVar
+
 (* Form the initial solution by mapping all constrained variables to all
    qualifiers.  This was somewhat easier than adding any notion of "default"
    to Lightenv. *)
 let initial_solution cstrs quals =
   let sol = Solution.create 17 in
   let add_refinement_var = function
-    | (_, Frame.Qconst _) -> ()
-    | (_, Frame.Qvar k) -> Solution.replace sol k quals
+    | (_, (_, Frame.Qconst _)) -> ()
+    | (LHSVar, (_, Frame.Qvar k))
+    | (WFVar, (_, Frame.Qvar k)) ->
+      (* If a variable only ever appears on the left hand side, the variable is
+         unconstrained; this generally indicates an uncalled function.
+         When we have such an unconstrained variable, we simply say we don't
+         know anything about its value.  For uncalled functions, this will give
+         us the most general type (i.e., the one that makes the least assumptions
+         about the input). *)
+      if not (Solution.mem sol k) then Solution.replace sol k []
+    | (RHSVar, (_, Frame.Qvar k)) -> Solution.replace sol k quals
   in
   let add_constraint_vars = function
-    | SubRefinement (_, _, r1, r2, _) -> List.iter add_refinement_var [r1; r2]
-    | WFRefinement (_, r, _) -> add_refinement_var r
-  in
-    List.iter add_constraint_vars cstrs;
-    sol
+    | SubRefinement (_, _, r1, r2, _) ->
+      add_refinement_var (LHSVar, r1); add_refinement_var (RHSVar, r2)
+    | WFRefinement (_, r, _) -> add_refinement_var (WFVar, r)
+  in List.iter add_constraint_vars cstrs; sol
 
 let rec divide_constraints_by_form wf refi = function
   | [] -> (wf, refi)
