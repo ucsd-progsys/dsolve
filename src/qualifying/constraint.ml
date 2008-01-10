@@ -6,6 +6,7 @@ type frame_constraint =
 
 and origin =
   | Loc of Location.t
+  | Assert of Location.t
   | Cstr of frame_constraint
 
 type subrefinement_constraint =

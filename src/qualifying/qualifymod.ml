@@ -12,6 +12,7 @@ open Format
 type error =
   | NotSubtype of Frame.t * Frame.t
   | IllFormed of Frame.t
+  | AssertMayFail
 
 exception Error of Location.t * error
 exception Errors of (Location.t * error) list
@@ -27,6 +28,11 @@ let expression_to_pexpr e =
 	Predicate.Var id
     | _ ->
         Predicate.Var (Path.mk_ident "dummy")
+
+let get_true_tag env =
+  match (Env.lookup_constructor (Lident "true") env).cstr_tag with
+      Cstr_constant n -> n
+    | _ -> assert false
 
 let under_lambda = ref 0
 
@@ -86,11 +92,7 @@ let rec constrain e env guard cstrs framemap =
           let f = Frame.fresh e in
           let (f1, cstrs1, fm1) = constrain e1 env guard cstrs framemap in
           let guardvar = Path.mk_ident "guard" in
-          let true_tag =
-            match (Env.lookup_constructor (Lident "true") e.exp_env).cstr_tag with
-                Cstr_constant n -> n
-              | _ -> assert false
-          in
+          let true_tag = get_true_tag e.exp_env in
           let guardp = Predicate.equals (Predicate.Var guardvar, Predicate.PInt true_tag) in
           let env' = Lightenv.add guardvar f1 env in
           let guard2 = Predicate.And (guardp, guard) in
@@ -222,6 +224,18 @@ let rec constrain e env guard cstrs framemap =
       end
   | (Texp_assertfalse, t) ->
     (Frame.fresh e, cstrs, framemap)
+  | (Texp_assert e', t) ->
+    let (f, cstrs, fm) = constrain e' env guard cstrs framemap in
+    let guardvar = Path.mk_ident "assert_guard" in
+    let env = Lightenv.add guardvar f env in
+    let true_tag = get_true_tag e.exp_env in
+    let assert_qualifier =
+      (Path.mk_ident "assertion",
+       Path.mk_ident "null",
+       Predicate.equals (Predicate.Var guardvar, Predicate.PInt true_tag))
+    in (Builtins.mk_unit (),
+        SubFrame (env, guard, Builtins.mk_int [], Builtins.mk_int [assert_qualifier], Assert e.exp_loc) :: cstrs,
+        fm)
   | (_, t) ->
     (* As it turns out, giving up and returning true here is actually _very_ unsound!  We won't check subexpressions! *)
     fprintf err_formatter "@[Warning: Don't know how to constrain expression, structure:@ %a@ location:@ %a@]@.@." Printtyp.raw_type_expr t Location.print e.exp_loc; flush stderr;
@@ -373,30 +387,33 @@ let dump_frames sourcefile fmap =
     let pp = formatter_of_out_channel (open_out filename) in
       LocationMap.iter (dump_frame pp) fmap
 
-let rec expand_frame_origin cstr =
-  let orig = match cstr with
-    | SubFrame (_, _, _, _, o)
-    | WFFrame (_, _, o) -> o
-  in
-  match orig with
-    | Loc loc -> (loc, cstr)
-    | Cstr cstr -> expand_frame_origin cstr
+let make_frame_error solution cstr =
+  let solution = solution_map solution in
+  let rec error_rec cstr =
+    let orig = match cstr with
+      | SubFrame (_, _, _, _, o)
+      | WFFrame (_, _, o) -> o
+    in
+    match orig with
+      | Loc loc ->
+        begin match cstr with
+          | SubFrame (_, _, f1, f2, _) ->
+            (loc, NotSubtype (Frame.apply_solution solution f1,  Frame.apply_solution solution f2))
+          | WFFrame (_, f, _) -> (loc, IllFormed (Frame.apply_solution solution f))
+        end
+      | Assert loc -> (loc, AssertMayFail)
+      | Cstr cstr -> error_rec cstr
+  in error_rec cstr
 
-let rec expand_origin = function
+let make_error solution = function
   | SubRefinement (_, _, _, _, Cstr orig)
   | WFRefinement (_, _, Cstr orig) ->
-    expand_frame_origin orig
+    make_frame_error solution orig
   | _ -> assert false
 
-let make_error solution cstr =
-  let solution = solution_map solution in
-  let (loc, cstr) = expand_origin cstr in
-  match cstr with
-    | SubFrame (_, _, f1, f2, _) -> 
-      (loc, NotSubtype (Frame.apply_solution solution f1,  Frame.apply_solution solution f2))
-    | WFFrame (_, f, _) -> (loc, IllFormed (Frame.apply_solution solution f))
-
 let report_error ppf  = function
+  | AssertMayFail ->
+    fprintf ppf "@[Assertion may fail@]"
   | NotSubtype (f1, f2) ->
     fprintf ppf "@[@[%a@]@;<1 2>is not a subtype of@;<1 2>@[%a@]" Frame.pprint f1 Frame.pprint f2
   | IllFormed f ->
