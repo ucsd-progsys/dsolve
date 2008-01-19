@@ -1,61 +1,50 @@
 open Longident
 open Typedtree
-open Predicate
 open Asttypes
+
+module P = Predicate
 
 let rec mk_longid = function
   | [] -> assert false
   | [id] -> Lident id
   | id :: idrem -> Ldot (mk_longid idrem, id)
 
-let find_path id env =
-  let (path, _) = Env.lookup_value (mk_longid id) env in path
+let find_path id env = fst (Env.lookup_value (mk_longid id) env)
 
 let find_type_path id env =
-  try
-    let (path, _) = Env.lookup_type (mk_longid id) env in path
-  with Not_found ->
-    Printf.printf "Couldn't load %s!\n" (String.concat " " id);
-    assert false
+  try fst (Env.lookup_type (mk_longid id) env)
+  with Not_found -> Printf.printf "Couldn't load %s!\n" (String.concat " " id); assert false
 
-let qfalse = (Path.mk_ident "FALSE", Path.mk_ident "x",
-              Predicate.Not Predicate.True)
-
-let qsize rel x y z = (Path.mk_ident ("SIZE_" ^ (Predicate.pprint_rel rel)), y,
-						Predicate.Atom(Predicate.Var z, rel, Predicate.FunApp("Array.length", Predicate.Var x)))
+let qsize rel x y z = (Path.mk_ident ("SIZE_" ^ (P.pprint_rel rel)), y,
+                       P.Atom(P.Var z, rel, P.FunApp("Array.length", P.Var x)))
 
 let samesize y =
   let x = Path.mk_ident "x" in
     (Path.mk_ident ("SAME_SIZE_AS_" ^ (Path.name y)),
      x,
-     Predicate.Atom(Predicate.FunApp("Array.length", Predicate.Var x),
-                    Predicate.Eq,
-                    Predicate.FunApp("Array.length", Predicate.Var y)))
+     P.Atom(P.FunApp("Array.length", P.Var x),
+                    P.Eq,
+                    P.FunApp("Array.length", P.Var y)))
 
 let qdim rel dim x y z =
   let dimstr = string_of_int dim in
-    (Path.mk_ident ("DIM" ^ dimstr ^ (Predicate.pprint_rel rel)), y,
-     Predicate.Atom(Predicate.Var z, rel,
-                    Predicate.FunApp("Bigarray.Array2.dim" ^ dimstr, Predicate.Var x)))
+    (Path.mk_ident ("DIM" ^ dimstr ^ (P.pprint_rel rel)), y,
+     P.Atom(P.Var z, rel,
+                    P.FunApp("Bigarray.Array2.dim" ^ dimstr, P.Var x)))
 
 let qint rel i y = (Path.mk_ident (Printf.sprintf "INT_%s%d" 
-		(Predicate.pprint_rel rel) i), y, Predicate.Atom(Predicate.Var y, rel, Predicate.PInt i))
+		(P.pprint_rel rel) i), y, P.Atom(P.Var y, rel, P.PInt i))
 
 let qrel rel x y = (Path.mk_ident (Printf.sprintf "_%s%s%s_" 
-                                      (Path.name x) (Predicate.pprint_rel rel) (Path.name y)), 
-                                      x, Predicate.Atom(Predicate.Var x, rel, Predicate.Var y))
+                                      (Path.name x) (P.pprint_rel rel) (Path.name y)), 
+                                      x, P.Atom(P.Var x, rel, P.Var y))
 
 let qbool_rel qname rel (x, y, z) =
-  let truepred = Predicate.Atom (Predicate.Var x, rel, Predicate.Var y) in
-  (Path.mk_ident qname, z, 
-              Predicate.Or (Predicate.And (Predicate.equals (Predicate.Var z, Predicate.PInt 1),
-                                           truepred),
-                            Predicate.And (Predicate.equals (Predicate.Var z, Predicate.PInt 0),
-                                           Predicate.Not truepred))) 
-
-let quals = [
-  qfalse;
-]
+  let truepred = P.Atom (P.Var x, rel, P.Var y) in
+  (Path.mk_ident qname,
+   z, 
+   P.Or (P.And (P.equals (P.Var z, P.PInt 1), truepred),
+         P.And (P.equals (P.Var z, P.PInt 0), P.Not truepred)))
 
 let mk_tyvar () = Frame.Fvar(Path.mk_ident "'a") 
 
@@ -87,7 +76,7 @@ let mk_fun (path, f, f') =
   | _ -> assert false
   in Frame.Farrow (Some (Tpat_var x), f, f')
 
-let mk_int_equals x i = Predicate.equals(Predicate.Var x, Predicate.PInt i)
+let mk_int_equals x i = P.equals(P.Var x, P.PInt i)
 
 let fun_frame path (x, y) qual =
   (path, mk_fun (x, mk_int [], mk_fun (y, mk_int [], mk_int [qual])))
@@ -105,10 +94,8 @@ let op_frame path qname op =
   let (x, y, z) = fresh_idents () in
   let qual = (Path.mk_ident qname,
               z,
-              Predicate.equals
-                (Predicate.Var z,
-                 Predicate.Binop (Predicate.Var x, op, Predicate.Var y))) in
-    fun_frame path (x, y) qual
+              P.equals (P.Var z, P.Binop (P.Var x, op, P.Var y)))
+  in fun_frame path (x, y) qual
 
 let uninterp_float_binop path =
   let (x, y, z) = fresh_idents () in
@@ -128,19 +115,19 @@ let lsr_frame =
     (["lsr"; "Pervasives"],
      mk_fun(x, mk_int [],
             mk_fun (y, mk_int [],
-                    mk_int [qint Predicate.Ge 0 z])))
+                    mk_int [qint P.Ge 0 z])))
 
 let land_frame =
   let (x, y, z) = fresh_idents () in
   let qual = (Path.mk_ident "land",
               z,
-              Predicate.implies
-                (Predicate.And (Predicate.Atom (Predicate.Var x, Predicate.Ge, Predicate.PInt 0),
-                                Predicate.Atom (Predicate.Var y, Predicate.Ge, Predicate.PInt 0)),
-                 Predicate.big_and
-                   [Predicate.Atom (Predicate.PInt 0, Predicate.Le, Predicate.Var z);
-                    Predicate.Atom (Predicate.Var z, Predicate.Le, Predicate.Var x);
-                    Predicate.Atom (Predicate.Var z, Predicate.Le, Predicate.Var y);])) in
+              P.implies
+                (P.And (P.Atom (P.Var x, P.Ge, P.PInt 0),
+                                P.Atom (P.Var y, P.Ge, P.PInt 0)),
+                 P.big_and
+                   [P.Atom (P.PInt 0, P.Le, P.Var z);
+                    P.Atom (P.Var z, P.Le, P.Var x);
+                    P.Atom (P.Var z, P.Le, P.Var y);])) in
     (["land"; "Pervasives"],
      mk_fun(x, mk_int [],
             mk_fun (y, mk_int [],
@@ -150,46 +137,44 @@ let mod_frame =
   let (x, y, z) = fresh_idents () in
   let qual = (Path.mk_ident "mod",
               z,
-              Predicate.implies
-                (Predicate.And (Predicate.Atom (Predicate.Var x, Predicate.Ge, Predicate.PInt 0),
-                                Predicate.Atom (Predicate.Var y, Predicate.Ge, Predicate.PInt 0)),
-                 Predicate.big_and
-                   [Predicate.Atom (Predicate.PInt 0, Predicate.Le, Predicate.Var z);
-                    Predicate.Atom (Predicate.Var z, Predicate.Lt, Predicate.Var y);])) in
+              P.implies
+                (P.And (P.Atom (P.Var x, P.Ge, P.PInt 0),
+                                P.Atom (P.Var y, P.Ge, P.PInt 0)),
+                 P.big_and
+                   [P.Atom (P.PInt 0, P.Le, P.Var z);
+                    P.Atom (P.Var z, P.Lt, P.Var y);])) in
     (["mod"; "Pervasives"],
      mk_fun(x, mk_int [],
             mk_fun (y, mk_int [],
                     mk_int [qual])))
 
-(* ming: connectives could use cleanup ... eventually *)
-
 let bool_conj_frame path qname =
   let (x, y, z) = fresh_idents () in
   let qual = (Path.mk_ident qname,
                 z,
-                Predicate.Or( Predicate.And(mk_int_equals z 1, 
-                              Predicate.And(mk_int_equals x 1, mk_int_equals y 1)),
-                              Predicate.And(mk_int_equals z 0,
-                              Predicate.Or(mk_int_equals x 0, mk_int_equals y 0)) )) in
+                P.Or( P.And(mk_int_equals z 1, 
+                              P.And(mk_int_equals x 1, mk_int_equals y 1)),
+                              P.And(mk_int_equals z 0,
+                              P.Or(mk_int_equals x 0, mk_int_equals y 0)) )) in
     rel_fun_frame path (x, y) (mk_bool [], mk_bool []) qual
   
 let bool_disj_frame path qname =
   let (x, y, z) = fresh_idents () in
   let qual = (Path.mk_ident qname,
                 z,
-                Predicate.Or( Predicate.And(mk_int_equals z 1,
-                              Predicate.Or(mk_int_equals x 1, mk_int_equals y 1)),
-                              Predicate.And(mk_int_equals z 0,
-                              Predicate.And(mk_int_equals x 0, mk_int_equals y 0)) )) in
+                P.Or( P.And(mk_int_equals z 1,
+                              P.Or(mk_int_equals x 1, mk_int_equals y 1)),
+                              P.And(mk_int_equals z 0,
+                              P.And(mk_int_equals x 0, mk_int_equals y 0)) )) in
     rel_fun_frame path (x, y) (mk_bool [], mk_bool []) qual
 
 let bool_not_frame =
   let (x, y) = fresh_2_idents () in
   let qual = (Path.mk_ident "NOT",
               y,
-              Predicate.And( Predicate.Or(mk_int_equals y 1,
+              P.And( P.Or(mk_int_equals y 1,
                                          mk_int_equals x 1),
-                             Predicate.Or(mk_int_equals y 0,
+                             P.Or(mk_int_equals y 0,
                                          mk_int_equals x 0))) in
     (["not"; "Pervasives"], mk_fun (x, mk_bool [], mk_bool [qual]))
 
@@ -211,26 +196,26 @@ let poly_rel_frame path qname rel =
 let array_length_frame = 
 	let (x, y) = (Path.mk_ident "x", Path.mk_ident "y") in (* make 2 idents fresh *)
 	let tyvar = mk_tyvar () in
-	(["length"; "Array"], mk_fun (x, (mk_array tyvar []), mk_int [qsize Predicate.Eq x y y; qint Predicate.Ge 0 y]))
+	(["length"; "Array"], mk_fun (x, (mk_array tyvar []), mk_int [qsize P.Eq x y y; qint P.Ge 0 y]))
 
 let array_set_frame =
   let (x, y, z) = fresh_idents () in
   let tyvar = mk_tyvar () in
   (["set"; "Array"], mk_fun(x, (mk_array tyvar []),
-                mk_fun(y, mk_int [qsize Predicate.Lt x y y; qint Predicate.Ge 0 y],
+                mk_fun(y, mk_int [qsize P.Lt x y y; qint P.Ge 0 y],
                 mk_fun(z, tyvar, mk_unit ()))))
 
 let array_get_frame =
 	let (x, y) = (Path.mk_ident "x", Path.mk_ident "y") in
 	let tyvar = mk_tyvar () in
 	(["get"; "Array"], mk_fun(x, (mk_array tyvar []), 
-				  mk_fun(y, mk_int [qsize Predicate.Lt x y y; qint Predicate.Ge 0 y], (tyvar))))
+				  mk_fun(y, mk_int [qsize P.Lt x y y; qint P.Ge 0 y], (tyvar))))
 
 let array_make_frame =
   let (x, y, z) = fresh_idents () in
   let tyvar = mk_tyvar () in
-  (["make"; "Array"], mk_fun(x, mk_int [qint Predicate.Ge 0 x],
-                 mk_fun(y, tyvar, mk_array tyvar [qsize Predicate.Eq z z x])))
+  (["make"; "Array"], mk_fun(x, mk_int [qint P.Ge 0 x],
+                 mk_fun(y, tyvar, mk_array tyvar [qsize P.Eq z z x])))
 
 let array_copy_frame =
   let (x, y) = fresh_2_idents () in
@@ -242,9 +227,9 @@ let array_init_frame =
   let (x, y, z) = fresh_idents () in
   let i = Path.mk_ident "i" in
   let tyvar = mk_tyvar () in
-  let init = mk_fun (y, mk_int [qint Predicate.Ge 0 y; qrel Predicate.Lt y x], tyvar) in
-    (["init"; "Array"], mk_fun(x, mk_int [qint Predicate.Ge 0 x],
-                               mk_fun(i, init, mk_array tyvar [qsize Predicate.Eq z z x])))
+  let init = mk_fun (y, mk_int [qint P.Ge 0 y; qrel P.Lt y x], tyvar) in
+    (["init"; "Array"], mk_fun(x, mk_int [qint P.Ge 0 x],
+                               mk_fun(i, init, mk_array tyvar [qsize P.Eq z z x])))
 
 let bigarray_create_frame env =
   let (k, l) = fresh_2_idents () in
@@ -253,11 +238,11 @@ let bigarray_create_frame env =
   (["create"; "Array2"; "Bigarray"],
    mk_fun(k, mk_bigarray_kind a b [] env,
           (mk_fun(l, mk_bigarray_layout c [] env,
-          (mk_fun(dim1, mk_int [qint Predicate.Gt 0 dim1],
-          (mk_fun(dim2, mk_int [qint Predicate.Gt 0 dim2],
+          (mk_fun(dim1, mk_int [qint P.Gt 0 dim1],
+          (mk_fun(dim2, mk_int [qint P.Gt 0 dim2],
                   mk_bigarray_type a b c
-                    [qdim Predicate.Eq 1 z z dim1;
-                     qdim Predicate.Eq 2 z z dim2]
+                    [qdim P.Eq 1 z z dim1;
+                     qdim P.Eq 2 z z dim2]
                     env))))))))
 
 let bigarray_int_frame env =
@@ -278,11 +263,11 @@ let bigarray_get_frame env =
     (["get"; "Array2"; "Bigarray"],
      mk_fun(a, mk_bigarray_type ty (mk_tyvar ()) (mk_tyvar ()) [] env,
             mk_fun(i,
-                   mk_int [qint Predicate.Ge 0 i;
-                           qdim Predicate.Lt 1 a i i],
+                   mk_int [qint P.Ge 0 i;
+                           qdim P.Lt 1 a i i],
             mk_fun(j,
-                   mk_int [qint Predicate.Ge 0 j;
-                           qdim Predicate.Lt 2 a j j],
+                   mk_int [qint P.Ge 0 j;
+                           qdim P.Lt 2 a j j],
                    ty))))
 
 let bigarray_set_frame env =
@@ -292,11 +277,11 @@ let bigarray_set_frame env =
     (["set"; "Array2"; "Bigarray"],
      mk_fun(a, mk_bigarray_type ty (mk_tyvar ()) (mk_tyvar ()) [] env,
             mk_fun(i,
-                   mk_int [qint Predicate.Ge 0 i;
-                           qdim Predicate.Lt 1 a i i],
+                   mk_int [qint P.Ge 0 i;
+                           qdim P.Lt 1 a i i],
             mk_fun(j,
-                   mk_int [qint Predicate.Ge 0 j;
-                           qdim Predicate.Lt 2 a j j],
+                   mk_int [qint P.Ge 0 j;
+                           qdim P.Lt 2 a j j],
             mk_fun(v, ty, mk_unit ())))))
 
 let bigarray_dim_frame dim env =
@@ -304,7 +289,7 @@ let bigarray_dim_frame dim env =
   let (a, s) = fresh_2_idents () in
     (["dim" ^ string_of_int dim; "Array2"; "Bigarray"],
      mk_fun(a, mk_bigarray_type ty (mk_tyvar ()) (mk_tyvar ()) [] env,
-            mk_int [qdim Predicate.Eq dim a s s; qint Predicate.Gt 0 s]))
+            mk_int [qdim P.Eq dim a s s; qint P.Gt 0 s]))
 
 let rand_init_frame =
   let x = Path.mk_ident "x" in
@@ -316,8 +301,8 @@ let void_fun_frame name =
 
 let rand_int_frame =
   let (x, y) = fresh_2_idents () in
-  (["int"; "Random"], mk_fun(x, mk_int [qint Predicate.Gt 0 x], 
-                                mk_int [qint Predicate.Ge 0 y; qrel Predicate.Lt y x]))
+  (["int"; "Random"], mk_fun(x, mk_int [qint P.Gt 0 x], 
+                                mk_int [qint P.Ge 0 y; qrel P.Lt y x]))
 
 let ref_ref_frame env =
   let (x, y) = fresh_2_idents () in
@@ -351,10 +336,10 @@ let bigarray_array2_path env =
 let max_int_frame = (["max_int"; "Pervasives"], mk_int [])
 
 let _frames = [
-  op_frame ["+"; "Pervasives"] "+" Predicate.Plus;
-  op_frame ["-"; "Pervasives"] "-" Predicate.Minus;
-  op_frame ["/"; "Pervasives"] "/" Predicate.Div;
-  op_frame ["*"; "Pervasives"] "*" Predicate.Times;
+  op_frame ["+"; "Pervasives"] "+" P.Plus;
+  op_frame ["-"; "Pervasives"] "-" P.Minus;
+  op_frame ["/"; "Pervasives"] "/" P.Div;
+  op_frame ["*"; "Pervasives"] "*" P.Times;
   uninterp_float_binop ["+."; "Pervasives"];
   uninterp_float_binop ["-."; "Pervasives"];
   uninterp_float_binop ["/."; "Pervasives"];
@@ -368,19 +353,13 @@ let _frames = [
   uninterp_int_binop ["lxor"; "Pervasives"];
   lsr_frame;
   uninterp_int_binop ["lsl"; "Pervasives"];
-  (*rel_frame ["="; "Pervasives"] "=" Predicate.Eq;
-  rel_frame ["!="; "Pervasives"] "!=" Predicate.Ne;
-  rel_frame ["<"; "Pervasives"] "<" Predicate.Lt;
-  rel_frame ["<="; "Pervasives"] "<=" Predicate.Le;
-  rel_frame [">"; "Pervasives"] ">" Predicate.Gt;
-  rel_frame ["<="; "Pervasives"] ">=" Predicate.Ge;*)
-  poly_rel_frame ["="; "Pervasives"] "=" Predicate.Eq;
-  poly_rel_frame ["!="; "Pervasives"] "!=" Predicate.Ne;
-  poly_rel_frame ["<>"; "Pervasives"] "<>" Predicate.Ne;
-  poly_rel_frame ["<"; "Pervasives"] "<" Predicate.Lt;
-  poly_rel_frame [">"; "Pervasives"] ">" Predicate.Gt;
-  poly_rel_frame [">="; "Pervasives"] ">=" Predicate.Ge;
-  poly_rel_frame ["<="; "Pervasives"] "<=" Predicate.Le;
+  poly_rel_frame ["="; "Pervasives"] "=" P.Eq;
+  poly_rel_frame ["!="; "Pervasives"] "!=" P.Ne;
+  poly_rel_frame ["<>"; "Pervasives"] "<>" P.Ne;
+  poly_rel_frame ["<"; "Pervasives"] "<" P.Lt;
+  poly_rel_frame [">"; "Pervasives"] ">" P.Gt;
+  poly_rel_frame [">="; "Pervasives"] ">=" P.Ge;
+  poly_rel_frame ["<="; "Pervasives"] "<=" P.Le;
   tuple_fst_snd_frame ["fst"; "Pervasives"] true;
   tuple_fst_snd_frame ["snd"; "Pervasives"] false;
   bool_conj_frame ["&&"; "Pervasives"] "&&";
@@ -434,8 +413,8 @@ let frames env =
 
 let equality_refinement exp =
   let x = Path.mk_ident "V" in
-    let pred = Predicate.equals (Predicate.Var x, exp) in
-    Predicate.pprint Format.str_formatter pred;
+    let pred = P.equals (P.Var x, exp) in
+    P.pprint Format.str_formatter pred;
     let expstr = Format.flush_str_formatter () in
       ([], Frame.Qconst [(Path.mk_ident expstr,
                           x,
@@ -445,10 +424,10 @@ let size_lit_refinement i =
 	let x = Path.mk_ident "x" in
 	  ([], Frame.Qconst [(Path.mk_ident "<size_lit_eq>",
 			      x,
-			      Predicate.equals(Predicate.FunApp("Array.length", Predicate.Var x), Predicate.PInt(i)))])
+			      P.equals(P.FunApp("Array.length", P.Var x), P.PInt(i)))])
 
 let field_eq_qualifier name pexp =
   let x = Path.mk_ident "x" in
     (Path.mk_ident "<field_eq>",
      x,
-     Predicate.equals (Predicate.Field (name, Predicate.Var x), pexp))
+     P.equals (P.Field (name, P.Var x), pexp))
