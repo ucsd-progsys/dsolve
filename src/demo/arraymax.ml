@@ -3,8 +3,8 @@ qualif Geq_y(v) : v >= y
 qualif NonNegative(v) : v >= 0
 qualif Leq_n(v) : v <= n
 qualif Neq_n(v) : v != n
-qualif Leq_a_length(v) : v <= Array.length a
-qualif Neq_a_length(v) : v != Array.length a
+qualif Leq_a_length(v) : v <= (Array.length a)
+qualif Neq_a_length(v) : v != (Array.length a)
 
 let max x y =
   if x > y then x else y

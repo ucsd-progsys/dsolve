@@ -22,8 +22,12 @@ open Parsetree
 
 let mktyp d =
   { ptyp_desc = d; ptyp_loc = symbol_rloc() }
-let mkqual d =
-  { pqual_desc = d; pqual_loc = symbol_rloc() }
+let mkqpat d =
+  { pqual_pat_desc = d; pqual_pat_loc = symbol_rloc() }
+let mkpredpat d =
+  { ppredpat_desc = d; ppredpat_loc = symbol_rloc() }
+let mkpredpatexp d =
+  { ppredpatexp_desc = d; ppredpatexp_loc = symbol_rloc() }
 let mkpred d =
   { ppred_desc = d; ppred_loc = symbol_rloc() }
 let mkpredexp d =
@@ -46,7 +50,6 @@ let mkclass d =
   { pcl_desc = d; pcl_loc = symbol_rloc() }
 let mkcty d =
   { pcty_desc = d; pcty_loc = symbol_rloc() }
-
 let reloc_pat x = { x with ppat_loc = symbol_rloc () };;
 let reloc_exp x = { x with pexp_loc = symbol_rloc () };;
 
@@ -276,6 +279,7 @@ let bigarray_set arr arg newval =
 %token <string> PREFIXOP
 %token PRIVATE
 %token QUALIF
+%token PAT_QUALIF
 %token QUESTION
 %token QUESTIONQUESTION
 %token QUOTE
@@ -454,7 +458,7 @@ structure_item:
       { mkstr(Pstr_primitive($2, {pval_type = $3; pval_prim = $5})) }
   | TYPE type_declarations
       { mkstr(Pstr_type(List.rev $2)) }
-  | QUALIF qualifier_declaration
+  | QUALIF qualifier_pattern_declaration
       { mkstr($2) }
   | EXCEPTION UIDENT constructor_arguments
       { mkstr(Pstr_exception($2, $3)) }
@@ -1397,7 +1401,6 @@ qual_type_declaration:
   qual_type
     { { pqtyp_desc = $1 ; pqtyp_loc = symbol_rloc() } }
 */
-/* this is such an ambiguous grammar. oh my god */
 /*qual_type:
   LPAREN qual_type RPAREN
     { $2 }
@@ -1424,9 +1427,96 @@ qual_type_declaration:
 
 /* Qualifiers */
 
-qualifier_declaration:
+/*qualifier_declaration:
     UIDENT LPAREN LIDENT RPAREN COLON predicate
-      { (Pstr_qualifier($1, mkqual(($3, $6)))) }
+      { (Pstr_qualifier($1, mkqual(($3, $6)))) }*/
+
+qualifier_pattern_declaration:
+    UIDENT LPAREN LIDENT RPAREN LPAREN qual_ty_anno RPAREN  COLON qualifier_pattern  
+    { (Pstr_qualifier($1, mkqpat($3, $6, $9))) }
+  | UIDENT LPAREN LIDENT RPAREN COLON qualifier_pattern
+    { (Pstr_qualifier($1, mkqpat($3, [], $6)))  }
+
+qual_ty_anno:
+    UIDENT COLON simple_core_type_or_tuple
+    { [($1, $3)] } 
+  | UIDENT COLON simple_core_type_or_tuple COMMA qual_ty_anno
+    { ($1, $3)::$5 }
+
+qualifier_pattern:
+    TRUE                                    { mkpredpat Ppredpat_true }                    
+  | qualifier_pattern AND qualifier_pattern { mkpredpat (Ppredpat_and($1, $3)) }
+  | qualifier_pattern OR qualifier_pattern  { mkpredpat (Ppredpat_or($1, $3)) }
+  | MINUSDOT qualifier_pattern              { mkpredpat (Ppredpat_not($2)) }              
+  | LPAREN qualifier_pattern RPAREN         { $2 }
+  | qual_expr qual_rel qual_expr            
+      { mkpredpat (Ppredpat_atom($1, $2, $3)) }
+  
+
+qual_rel:
+    qual_lit_rel                            { [$1] }
+  | LBRACE qual_rel_list RBRACE             { $2 }
+  | LBRACE STAR STAR RBRACE                 
+      { [Pred_eq; Pred_ne; Pred_gt; Pred_lt; Pred_le; Pred_ge] }
+  
+qual_lit_rel:
+    INFIXOP0                
+    {   if $1 = "<=" then Pred_le
+        else if $1 = "!=" then Pred_ne
+				else if $1 = ">=" then Pred_ge
+        else raise Parse_error
+    }
+  | EQUAL                                   { Pred_eq }
+  | GREATER                                 { Pred_gt }
+  | LESS                                    { Pred_lt }
+
+qual_rel_list:
+    qual_lit_rel                            { [$1] }
+  | qual_lit_rel COMMA qual_rel_list        { $1::$3 }
+
+qual_expr:
+    qual_term qual_op qual_expr             
+      { mkpredpatexp (Ppredpatexp_binop($1, $2, $3)) }
+  | qual_term                               { $1 }                             
+  | LPAREN qual_expr RPAREN                 { $2 }
+
+qual_term:
+    LPAREN val_longident qual_term_list RPAREN /* funapp */
+    { mkpredpatexp (Ppredpatexp_funapp($2, $3)) } 
+  | LPAREN UIDENT qual_term_list RPAREN
+    { mkpredpatexp (Ppredpatexp_funapp(Longident.parse $2, $3)) }
+  | val_longident /* literal */
+    { mkpredpatexp (Ppredpatexp_var($1)) }
+  | UIDENT /* var */
+    { mkpredpatexp (Ppredpatexp_mvar($1)) }
+  | INT
+    { mkpredpatexp (Ppredpatexp_int($1)) }
+  | SHARP  /* wild int */
+    { mkpredpatexp Ppredpatexp_any_int }
+
+qual_term_list:
+    qual_term                               { [$1] }
+  | qual_term qual_term_list                { $1::$2 }
+
+qual_op:
+    qual_lit_op                                { [$1]  }
+  | LBRACELESS qual_lit_op_list GREATERRBRACE  { $2 }
+  | LBRACELESS STAR STAR GREATERRBRACE         
+    { [Predexp_plus; Predexp_minus; Predexp_times; Predexp_div] }
+
+qual_lit_op:
+    PLUS                                    { Predexp_plus }
+  | MINUS                                   { Predexp_minus }    
+  | STAR                                    { Predexp_times }  
+  | INFIXOP3                                
+    {  match $1 with 
+			  "/" -> Predexp_div 
+      | _ -> assert false }
+
+qual_lit_op_list:
+    qual_lit_op                             { [$1] }
+  | qual_lit_op COMMA qual_lit_op_list      { $1::$3 }
+ 
 
 /* Predicates */
 
@@ -1452,6 +1542,7 @@ pexpression:
     INT                                         { mkpredexp (Ppredexp_int $1) }
   | LIDENT                                      { mkpredexp (Ppredexp_var $1) }
   | LPAREN pexpression RPAREN                   { $2 }
+  /* this is going to have to be fixed too... */
   | LIDENT DOT LIDENT                           { mkpredexp (Ppredexp_field($3, $1)) }
   /* Note the hack here to keep funapps applied to variables 
      at this point the only funapps we want to allow are Array.length */

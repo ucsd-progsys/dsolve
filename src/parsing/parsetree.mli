@@ -162,13 +162,44 @@ and pred_desc =
   | Ppred_and of predicate_declaration * predicate_declaration
   | Ppred_or of predicate_declaration * predicate_declaration
 
+and predicate_pattern =
+    { ppredpat_desc: predpat_desc;
+      ppredpat_loc: Location.t }
+
+and predpat_desc =
+    Ppredpat_true
+  | Ppredpat_atom of predpatexp * pred_rel list * predpatexp
+  | Ppredpat_not of predicate_pattern
+  | Ppredpat_and of predicate_pattern * predicate_pattern
+  | Ppredpat_or of predicate_pattern * predicate_pattern
+
+and predpatexp =
+  { ppredpatexp_desc: predpatexp_desc;
+    ppredpatexp_loc: Location.t }
+
+and predpatexp_desc =
+    Ppredpatexp_int of int
+  | Ppredpatexp_any_int              
+  | Ppredpatexp_var of Longident.t
+  | Ppredpatexp_mvar of string
+  | Ppredpatexp_funapp of Longident.t * predpatexp list
+  | Ppredpatexp_binop of predpatexp * predexp_op list * predpatexp
+
 (* Qualifier declarations *)
 
+(* delete me *)
 and qualifier_declaration =
     { pqual_desc: qual_desc;
       pqual_loc: Location.t }
 
 and qual_desc = string * predicate_declaration
+
+and qualifier_pattern =
+    { pqual_pat_desc: qual_pat_desc;
+      pqual_pat_loc: Location.t }
+
+and qual_pat_desc = string * qual_pat_type_anno * predicate_pattern 
+and qual_pat_type_anno = (string * core_type) list
 
 (* Type expressions for the class language *)
 
@@ -284,7 +315,7 @@ and structure_item_desc =
   | Pstr_value of rec_flag * (pattern * expression) list
   | Pstr_primitive of string * value_description
   | Pstr_type of (string * type_declaration) list
-  | Pstr_qualifier of string * qualifier_declaration
+  | Pstr_qualifier of string * qualifier_pattern
   | Pstr_exception of string * exception_declaration
   | Pstr_exn_rebind of string * Longident.t
   | Pstr_module of string * module_expr

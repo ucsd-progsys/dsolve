@@ -72,6 +72,7 @@ let keyword_table =
 (*  "parser", PARSER; *)
     "private", PRIVATE;
     "qualif", QUALIF;
+    "pattern", PAT_QUALIF;
     "rec", REC;
     "sig", SIG;
     "struct", STRUCT;
