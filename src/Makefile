@@ -20,7 +20,7 @@ include stdlib/StdlibModules
 CAMLC=ocamlc -nostdlib -I boot
 CAMLOPT=boot/ocamlrun ./ocamlopt -nostdlib -I stdlib
 COMPFLAGS=-warn-error A $(INCLUDES)
-LINKFLAGS=-custom -ccopt -L../external/yices/lib -L../external/ocamlgraph \
+LINKFLAGS=-custom -ccopt -L../external/yices/lib -ccopt -L../external/ocamlgraph \
           -ccopt -L$(LIBDIR) -cclib -loyices \
           -cclib -lgmp -cclib -lyices -I $(LIBDIR)/stublibs -I ../external/yices/lib
 
