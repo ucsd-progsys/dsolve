@@ -20,8 +20,8 @@ include stdlib/StdlibModules
 CAMLC=ocamlc -nostdlib -I boot
 CAMLOPT=boot/ocamlrun ./ocamlopt -nostdlib -I stdlib
 COMPFLAGS=-warn-error A $(INCLUDES)
-LINKFLAGS=-custom -ccopt -Lyices/lib -ccopt -L$(LIBDIR) -cclib -loyices \
-          -cclib -lgmp -cclib -lyices -I $(LIBDIR)/stublibs -I yices/lib
+LINKFLAGS=-custom -ccopt -L../external/yices/lib -ccopt -L$(LIBDIR) -cclib -loyices \
+          -cclib -lgmp -cclib -lyices -I $(LIBDIR)/stublibs -I ../external/yices/lib
 
 CAMLYACC=boot/ocamlyacc
 YACCFLAGS=-v
@@ -32,7 +32,8 @@ CAMLRUN=byterun/ocamlrun
 SHELL=/bin/sh
 MKDIR=mkdir -p
 
-INCLUDES=-I utils -I parsing -I typing -I yices/lib/ -I qualifying -I bytecomp \
+INCLUDES=-I utils -I parsing -I typing -I ../external/yices/lib/ \
+         -I ../external/ocamlgraph/src/ -I qualifying -I bytecomp \
          -I asmcomp -I driver -I toplevel -I analyzer
 
 UTILS=utils/misc.cmo utils/tbl.cmo utils/config.cmo \
@@ -61,7 +62,7 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
 QUALIFYING=qualifying/lightenv.cmo \
   qualifying/qualifier.cmo qualifying/builtins.cmo qualifying/frame.cmo \
   qualifying/message.cmo qualifying/pattern.cmo \
-  yices/lib/oyices.cma \
+  ../external/yices/lib/oyices.cma \
   qualifying/theoremProverSimplify.cmo qualifying/theoremProverYices.cmo \
   qualifying/theoremProver.cmo \
   qualifying/constraint.cmo qualifying/qualgen.cmo \
@@ -135,9 +136,9 @@ defaultentry:
 	@echo "Please refer to the installation instructions in file INSTALL."
 	@echo "If you've just unpacked the distribution, something like"
 	@echo "	./configure"
+	@echo "	make external"
 	@echo "	make world"
-	@echo "	make opt"
-	@echo "	make install"
+	@echo "	make liquid"
 	@echo "should work.  But see the file INSTALL for more details."
 
 # Recompile the system using the bootstrap compiler
@@ -153,6 +154,10 @@ world.remake: partialclean world
 
 # Compile also native code compiler and libraries, fast
 world.opt: coldstart opt.opt
+
+external:
+	cd ../external/yices/include/build; $(MAKE) -f ../Makefile;
+	cd ../external/ocamlgraph; ./configure; $(MAKE);
 
 # Core bootstrapping cycle
 coreboot:
