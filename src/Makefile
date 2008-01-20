@@ -155,9 +155,14 @@ world.remake: partialclean world
 # Compile also native code compiler and libraries, fast
 world.opt: coldstart opt.opt
 
-external: world
+yiceslib:
 	cd ../external/yices/include/build; $(MAKE) -f ../Makefile;
+
+graphlib:
 	cd ../external/ocamlgraph; ./configure; $(MAKE);
+
+external: yiceslib graphlib world
+
 
 # Core bootstrapping cycle
 coreboot:
