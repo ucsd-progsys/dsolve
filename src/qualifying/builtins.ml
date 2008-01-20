@@ -35,8 +35,7 @@ let qbool_rel qname rel (x, y, z) =
   let truepred = Atom (Var x, rel, Var y) in
   (Path.mk_ident qname,
    z, 
-   Or (And (equals (Var z, PInt 1), truepred),
-       And (equals (Var z, PInt 0), Not truepred)))
+   ((Var z ==. PInt 1) &&. truepred) ||. ((Var z ==. PInt 0) &&. (!. truepred)))
 
 let mk_tyvar () = Fvar(Path.mk_ident "'a") 
 
@@ -86,7 +85,7 @@ let op_frame path qname op =
   let (x, y, z) = fresh_idents () in
   let qual = (Path.mk_ident qname,
               z,
-              equals (Var z, Binop (Var x, op, Var y)))
+              Var z ==. Binop (Var x, op, Var y))
   in fun_frame path (x, y) qual
 
 let uninterp_float_binop path =
@@ -113,13 +112,11 @@ let land_frame =
   let (x, y, z) = fresh_idents () in
   let qual = (Path.mk_ident "land",
               z,
-              implies
-                (And (Atom (Var x, Ge, PInt 0),
-                                Atom (Var y, Ge, PInt 0)),
-                 big_and
-                   [Atom (PInt 0, Le, Var z);
-                    Atom (Var z, Le, Var x);
-                    Atom (Var z, Le, Var y);])) in
+              ((Var x >=. PInt 0) &&. (Var y >=. PInt 0))
+                 =>. big_and
+                     [PInt 0 <=. Var z;
+                      Var z <=. Var x;
+                      Var z <=. Var y;]) in
     (["land"; "Pervasives"],
      mk_fun(x, mk_int [],
             mk_fun (y, mk_int [],
@@ -129,12 +126,11 @@ let mod_frame =
   let (x, y, z) = fresh_idents () in
   let qual = (Path.mk_ident "mod",
               z,
-              implies
-                (And (Atom (Var x, Ge, PInt 0),
-                                Atom (Var y, Ge, PInt 0)),
-                 big_and
-                   [Atom (PInt 0, Le, Var z);
-                    Atom (Var z, Lt, Var y);])) in
+              (((Var x >=. PInt 0) &&. (Var y >=. PInt 0))
+               =>.
+               big_and
+                 [PInt 0 <=. Var z;
+                  Var z <. Var y;])) in
     (["mod"; "Pervasives"],
      mk_fun(x, mk_int [],
             mk_fun (y, mk_int [],
@@ -144,30 +140,27 @@ let bool_conj_frame path qname =
   let (x, y, z) = fresh_idents () in
   let qual = (Path.mk_ident qname,
                 z,
-                Or( And(mk_int_equals z 1, 
-                              And(mk_int_equals x 1, mk_int_equals y 1)),
-                              And(mk_int_equals z 0,
-                              Or(mk_int_equals x 0, mk_int_equals y 0)) )) in
-    rel_fun_frame path (x, y) (mk_bool [], mk_bool []) qual
+                (mk_int_equals z 1 &&.
+                 mk_int_equals x 1 &&.
+                 mk_int_equals y 1)
+                 ||. (mk_int_equals z 0 &&.
+                      (mk_int_equals x 0 ||. mk_int_equals y 0)))
+  in rel_fun_frame path (x, y) (mk_bool [], mk_bool []) qual
   
 let bool_disj_frame path qname =
   let (x, y, z) = fresh_idents () in
   let qual = (Path.mk_ident qname,
-                z,
-                Or( And(mk_int_equals z 1,
-                              Or(mk_int_equals x 1, mk_int_equals y 1)),
-                              And(mk_int_equals z 0,
-                              And(mk_int_equals x 0, mk_int_equals y 0)) )) in
+              z,
+              ((mk_int_equals z 1 &&. (mk_int_equals x 1 ||. mk_int_equals y 1)) ||.
+               (mk_int_equals z 0 &&. mk_int_equals x 0 &&. mk_int_equals y 0))) in
     rel_fun_frame path (x, y) (mk_bool [], mk_bool []) qual
 
 let bool_not_frame =
   let (x, y) = fresh_2_idents () in
   let qual = (Path.mk_ident "NOT",
               y,
-              And( Or(mk_int_equals y 1,
-                                         mk_int_equals x 1),
-                             Or(mk_int_equals y 0,
-                                         mk_int_equals x 0))) in
+              ((mk_int_equals y 1 ||. mk_int_equals x 1) &&.
+               (mk_int_equals y 0 ||. mk_int_equals x 0))) in
     (["not"; "Pervasives"], mk_fun (x, mk_bool [], mk_bool [qual]))
 
 let ignore_frame =
