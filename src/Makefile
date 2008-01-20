@@ -20,8 +20,8 @@ include stdlib/StdlibModules
 CAMLC=ocamlc -nostdlib -I boot
 CAMLOPT=boot/ocamlrun ./ocamlopt -nostdlib -I stdlib
 COMPFLAGS=-warn-error A $(INCLUDES)
-LINKFLAGS=-custom -ccopt -Lyices/lib -ccopt -L$(LIBDIR) -cclib -loyices \
-          -cclib -lgmp -cclib -lyices -I $(LIBDIR)/stublibs -I yices/lib
+LINKFLAGS=-custom -ccopt -L$(LIBDIR) -cclib -loyices \
+          -cclib -lgmp -cclib -lyices -I $(LIBDIR)/stublibs -I ../external/yices/lib
 
 CAMLYACC=boot/ocamlyacc
 YACCFLAGS=-v
@@ -32,7 +32,8 @@ CAMLRUN=byterun/ocamlrun
 SHELL=/bin/sh
 MKDIR=mkdir -p
 
-INCLUDES=-I utils -I parsing -I typing -I yices/lib/ -I qualifying -I bytecomp \
+INCLUDES=-I utils -I parsing -I typing -I ../external/yices/lib/ \
+         -I ../external/ocamlgraph/ -I qualifying -I bytecomp \
          -I asmcomp -I driver -I toplevel -I analyzer
 
 UTILS=utils/misc.cmo utils/tbl.cmo utils/config.cmo \
@@ -61,7 +62,7 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
 QUALIFYING=qualifying/lightenv.cmo \
   qualifying/qualifier.cmo qualifying/builtins.cmo qualifying/frame.cmo \
   qualifying/message.cmo qualifying/pattern.cmo \
-  yices/lib/oyices.cma \
+  ../external/yices/lib/oyices.cma ../external/ocamlgraph/graph.cma \
   qualifying/theoremProverSimplify.cmo qualifying/theoremProverYices.cmo \
   qualifying/theoremProver.cmo \
   qualifying/constraint.cmo qualifying/qualgen.cmo \
@@ -112,15 +113,15 @@ TOPLEVELSTART=toplevel/topstart.cmo
 # Libraries we expect to be provided by the host ocaml environment
 HOSTLIBS=$(LIBDIR)/unix.cma $(LIBDIR)/str.cma
 
-COMPOBJS=$(HOSTLIBS) $(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(COMP) $(BYTECOMP) $(DRIVER)
+COMPOBJS=$(HOSTLIBS) $(UTILS) $(PARSING) $(TYPING) $(COMP) $(BYTECOMP) $(DRIVER)
 
-TOPLIB=$(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(COMP) $(BYTECOMP) $(TOPLEVEL)
+TOPLIB=$(UTILS) $(PARSING) $(TYPING) $(COMP) $(BYTECOMP) $(TOPLEVEL)
 
 TOPOBJS=$(HOSTLIBS) $(TOPLEVELLIB) $(TOPLEVELSTART)
 
 LIQOBJS=$(HOSTLIBS) $(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(LIQUID)
 
-OPTOBJS=$(HOSTLIBS) $(OPTUTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(COMP) $(ASMCOMP) $(OPTDRIVER)
+OPTOBJS=$(HOSTLIBS) $(OPTUTILS) $(PARSING) $(TYPING) $(COMP) $(ASMCOMP) $(OPTDRIVER)
 
 EXPUNGEOBJS=utils/misc.cmo utils/tbl.cmo \
   utils/config.cmo utils/clflags.cmo \
@@ -135,9 +136,9 @@ defaultentry:
 	@echo "Please refer to the installation instructions in file INSTALL."
 	@echo "If you've just unpacked the distribution, something like"
 	@echo "	./configure"
+	@echo "	make external"
 	@echo "	make world"
-	@echo "	make opt"
-	@echo "	make install"
+	@echo "	make liquid"
 	@echo "should work.  But see the file INSTALL for more details."
 
 # Recompile the system using the bootstrap compiler
@@ -153,6 +154,15 @@ world.remake: partialclean world
 
 # Compile also native code compiler and libraries, fast
 world.opt: coldstart opt.opt
+
+yiceslib:
+	cd ../external/yices/include/build; $(MAKE) -f ../Makefile;
+
+graphlib:
+	cd ../external/ocamlgraph; ./configure; $(MAKE);
+
+external: yiceslib graphlib world
+
 
 # Core bootstrapping cycle
 coreboot:
