@@ -51,7 +51,7 @@ struct
     let compare = compare
   end
 
-  include Path.Dijkstra(G)(W)
+  include Gpath.Dijkstra(G)(W)
 
   module F = struct
     type label = int
@@ -80,7 +80,7 @@ struct
 
   include Oper.Make(Builder)
 
-  module PathCheck = Path.Check(G)
+  module PathCheck = Gpath.Check(G)
 
   module Topological = Topological.Make(G)
 
