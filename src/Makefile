@@ -113,15 +113,15 @@ TOPLEVELSTART=toplevel/topstart.cmo
 # Libraries we expect to be provided by the host ocaml environment
 HOSTLIBS=$(LIBDIR)/unix.cma $(LIBDIR)/str.cma
 
-COMPOBJS=$(HOSTLIBS) $(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(COMP) $(BYTECOMP) $(DRIVER)
+COMPOBJS=$(HOSTLIBS) $(UTILS) $(PARSING) $(TYPING) $(COMP) $(BYTECOMP) $(DRIVER)
 
-TOPLIB=$(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(COMP) $(BYTECOMP) $(TOPLEVEL)
+TOPLIB=$(UTILS) $(PARSING) $(TYPING) $(COMP) $(BYTECOMP) $(TOPLEVEL)
 
 TOPOBJS=$(HOSTLIBS) $(TOPLEVELLIB) $(TOPLEVELSTART)
 
 LIQOBJS=$(HOSTLIBS) $(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(LIQUID)
 
-OPTOBJS=$(HOSTLIBS) $(OPTUTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(COMP) $(ASMCOMP) $(OPTDRIVER)
+OPTOBJS=$(HOSTLIBS) $(OPTUTILS) $(PARSING) $(TYPING) $(COMP) $(ASMCOMP) $(OPTDRIVER)
 
 EXPUNGEOBJS=utils/misc.cmo utils/tbl.cmo \
   utils/config.cmo utils/clflags.cmo \
@@ -155,7 +155,7 @@ world.remake: partialclean world
 # Compile also native code compiler and libraries, fast
 world.opt: coldstart opt.opt
 
-external:
+external: world
 	cd ../external/yices/include/build; $(MAKE) -f ../Makefile;
 	cd ../external/ocamlgraph; ./configure; $(MAKE);
 
