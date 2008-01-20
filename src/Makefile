@@ -33,7 +33,7 @@ SHELL=/bin/sh
 MKDIR=mkdir -p
 
 INCLUDES=-I utils -I parsing -I typing -I ../external/yices/lib/ \
-         -I ../external/ocamlgraph/src/ -I qualifying -I bytecomp \
+         -I ../external/ocamlgraph/ -I qualifying -I bytecomp \
          -I asmcomp -I driver -I toplevel -I analyzer
 
 UTILS=utils/misc.cmo utils/tbl.cmo utils/config.cmo \
