@@ -1,5 +1,10 @@
+include config/Makefile
+
 CAMLC=ocamlc
 CAMLOPT=ocamlopt
+CAMLYACC=ocamlyacc
+YACCFLAGS=-v
+CAMLLEX=ocamllex
 CAMLDEP=ocamldep
 DEPFLAGS=$(INCLUDES)
 
@@ -48,16 +53,75 @@ liquid: $(LIQOBJS)
 liquid.opt: $(LIQOBJS:.cmo=.cmx)
 	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt str.cmxa unix.cmxa oyices.cmxa $(LIQOBJS:.cmo=.cmx)
 
-depend:
+depend: beforedepend
 	(for d in utils parsing typing qualifying driver analyzer; \
 	 do $(CAMLDEP) $(DEPFLAGS) $$d/*.mli $$d/*.ml; \
 	 done) > .depend
 
-clean:
+clean: partialclean
 	(for d in utils parsing typing qualifying driver analyzer; \
 	 do rm $$d/*.cm* $$d/*.o; \
 	 done);
 	rm liquid liquid.opt
+
+utils/config.ml: utils/config.mlp config/Makefile
+	@rm -f utils/config.ml
+	sed -e 's|%%LIBDIR%%|$(LIBDIR)|' \
+            -e 's|%%BYTERUN%%|$(BINDIR)/ocamlrun|' \
+            -e 's|%%CCOMPTYPE%%|cc|' \
+            -e 's|%%BYTECC%%|$(BYTECC) $(BYTECCCOMPOPTS) $(SHAREDCCCOMPOPTS)|' \
+            -e 's|%%BYTELINK%%|$(BYTECC) $(BYTECCLINKOPTS)|' \
+            -e 's|%%NATIVECC%%|$(NATIVECC) $(NATIVECCCOMPOPTS)|' \
+            -e 's|%%NATIVELINK%%|$(NATIVECC) $(NATIVECCLINKOPTS)|' \
+            -e 's|%%PARTIALLD%%|$(PARTIALLD) $(NATIVECCLINKOPTS)|' \
+            -e 's|%%PACKLD%%|$(PARTIALLD) $(NATIVECCLINKOPTS) -o |' \
+            -e 's|%%BYTECCLIBS%%|$(BYTECCLIBS)|' \
+            -e 's|%%NATIVECCLIBS%%|$(NATIVECCLIBS)|' \
+            -e 's|%%RANLIBCMD%%|$(RANLIBCMD)|' \
+            -e 's|%%CC_PROFILE%%|$(CC_PROFILE)|' \
+            -e 's|%%ARCH%%|$(ARCH)|' \
+            -e 's|%%MODEL%%|$(MODEL)|' \
+            -e 's|%%SYSTEM%%|$(SYSTEM)|' \
+            -e 's|%%EXT_OBJ%%|.o|' \
+            -e 's|%%EXT_ASM%%|.s|' \
+            -e 's|%%EXT_LIB%%|.a|' \
+            -e 's|%%EXT_DLL%%|.so|' \
+            -e 's|%%SYSTHREAD_SUPPORT%%|$(SYSTHREAD_SUPPORT)|' \
+            utils/config.mlp > utils/config.ml
+	@chmod -w utils/config.ml
+
+partialclean::
+	rm -f utils/config.ml
+
+beforedepend:: utils/config.ml
+
+parsing/parser.mli parsing/parser.ml: parsing/parser.mly
+	$(CAMLYACC) $(YACCFLAGS) parsing/parser.mly
+
+partialclean::
+	rm -f parsing/parser.mli parsing/parser.ml parsing/parser.output
+
+beforedepend:: parsing/parser.mli parsing/parser.ml
+
+# The lexer
+
+parsing/lexer.ml: parsing/lexer.mll
+	$(CAMLLEX) parsing/lexer.mll
+
+partialclean::
+	rm -f parsing/lexer.ml
+
+beforedepend:: parsing/lexer.ml
+
+# The auxiliary lexer for counting line numbers
+
+parsing/linenum.ml: parsing/linenum.mll
+	$(CAMLLEX) parsing/linenum.mll
+
+partialclean::
+	rm -f parsing/linenum.ml
+
+beforedepend:: parsing/linenum.ml
 
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
 
