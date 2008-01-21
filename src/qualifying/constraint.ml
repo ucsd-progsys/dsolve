@@ -95,7 +95,7 @@ let pprint_ref so ppf = function
       fprintf ppf "@[%a@ Env:@ %a;@;<1 2>Guard:@ %a@;<1 0>|-@;<1 2>%a@;<1 2><:@;<1 2>%a@]"
       pprint_io io (pprint_env_pred so) env P.pprint g F.pprint_refinement r1 F.pprint_refinement r2 
   | WFRef (env,r,io) ->
-      fprintf ppf "@[%a@ Env:@ %a;@;<1 2>|-@;<1 2>%a@;<1 2>]"
+      fprintf ppf "@[%a@ Env:@ %a;@;<1 2>|-@;<1 2>%a@;<1 2>@]"
       pprint_io io (pprint_env_pred so) env F.pprint_refinement r 
 (**************************************************************)
 (********************* Constraint Splitting *******************) 
@@ -369,7 +369,7 @@ let dump_constraints sri =
   (* if !Clflags.dump_constraints then*)
   printf "Refinement Constraints \n";  
   iter_ref_constraints sri 
-  (fun c -> printf "%a \n" (pprint_ref None) c)
+  (fun c -> printf "@[%a@.@]" (pprint_ref None) c)
     (* let cs = get_ref_constraints sri in 
     Oprint.print_list (pprint_ref None) (fun ppf -> fprintf ppf "@.@.") 
     std_formatter cs *)
