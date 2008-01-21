@@ -1,4 +1,5 @@
 open Format
+open Wellformed
 
 type frame_constraint =
   | SubFrame of Frame.t Lightenv.t * Predicate.t * Frame.t * Frame.t * origin
@@ -152,7 +153,7 @@ let constraint_sat solution = function
         TheoremProver.backup_implies (Predicate.big_and [envp; guard; p1]) p2
   | WFRefinement (env, r, _) ->
     (* ming: this is an error check. it shouldn't be possible for this to be tripped*)
-      Frame.refinement_well_formed env (solution_map solution) r qual_test_var
+      refinement_well_formed env (solution_map solution) r qual_test_var
 
 let pprint_env_pred ppf (solution, env) = 
   Predicate.pprint ppf (environment_predicate solution env)
@@ -175,7 +176,7 @@ let rec solve_wf_constraints solution = function
                splitting. *)
       let refined_quals =
         List.filter
-          (fun q -> Frame.refinement_well_formed env (solution_map solution) (subs, Frame.Qconst [q]) qual_test_var)
+          (fun q -> refinement_well_formed env (solution_map solution) (subs, Frame.Qconst [q]) qual_test_var)
           (try Solution.find solution k with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k); raise Not_found))
       in Solution.replace solution k refined_quals;
         solve_wf_constraints solution cs
