@@ -17,7 +17,7 @@
 include config/Makefile
 include stdlib/StdlibModules
 
-CAMLC=ocamlc -nostdlib -I boot
+CAMLC=ocamlc -nostdlib -dtypes -I boot
 CAMLOPT=boot/ocamlrun ./ocamlopt -nostdlib -I stdlib
 COMPFLAGS=-warn-error A $(INCLUDES)
 LINKFLAGS=-custom -ccopt -Lyices/lib -ccopt -L$(LIBDIR) -cclib -loyices \
@@ -32,12 +32,12 @@ CAMLRUN=byterun/ocamlrun
 SHELL=/bin/sh
 MKDIR=mkdir -p
 
-INCLUDES=-I utils -I parsing -I typing -I yices/lib/ -I qualifying -I bytecomp \
-         -I asmcomp -I driver -I toplevel -I analyzer
+INCLUDES=-I utils  -I parsing -I typing -I yices/lib/ -I qualifying -I bytecomp \
+         -I asmcomp -I driver -I toplevel -I analyzer -I ocamlgraph
 
 UTILS=utils/misc.cmo utils/tbl.cmo utils/config.cmo \
   utils/clflags.cmo utils/terminfo.cmo utils/ccomp.cmo utils/warnings.cmo \
-  utils/consistbl.cmo utils/bstats.cmo utils/heap.cmo
+  utils/consistbl.cmo utils/bstats.cmo utils/heap.cmo ocamlgraph/graph.cmo
 
 OPTUTILS=$(UTILS)
 
@@ -58,7 +58,7 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/typedecl.cmo typing/typeclass.cmo \
   typing/typemod.cmo
 
-QUALIFYING=qualifying/lightenv.cmo \
+QUALIFYING=qualifying/common.cmo qualifying/lightenv.cmo \
   qualifying/qualifier.cmo qualifying/builtins.cmo qualifying/frame.cmo \
   qualifying/message.cmo qualifying/pattern.cmo \
   yices/lib/oyices.cma \
@@ -338,6 +338,9 @@ partialclean::
 
 liquid: $(LIQOBJS)
 	$(CAMLC) $(LINKFLAGS) -o liquid $(LIQOBJS)
+
+liquidclean:
+	rm -f qualifying/*.cm* analyzer/*.cm*
 
 partialclean::
 	rm -f liquid

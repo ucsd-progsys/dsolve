@@ -1,12 +1,7 @@
 (* A small environment module; provided so we (hopefully) won't have to screw
    with OCaml's env. *)
 
-module ComparablePath = struct
-  type t = Path.t
-  let compare = compare
-end
-
-module E = Map.Make(ComparablePath)
+module E = Map.Make(Common.ComparablePath)
 
 include E
 

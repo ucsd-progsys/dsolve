@@ -1,3 +1,7 @@
+1. rj1.ml : SCC get_rank fails on open function
+2. rj2.ml : WF constraints don't get solved
+
+-------------------------------------------------------------------
 Well-formedness doesn't pay any attention to the _types_ of free
 variables in a refinement.  In other words, if you have a predicate
 "Q(x): x < a", and a appears in contexts where it's not an int, the

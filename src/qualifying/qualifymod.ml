@@ -359,17 +359,18 @@ module QualifierSet = Set.Make(Qualifier)
 
 (* Make copies of all the qualifiers where the free identifiers are replaced
    by the appropriate bound identifiers from the environment. *)
-let instantiate_in_environments cstrs quals =
-  let envs = List.map environment cstrs in
+let instantiate_in_environments cs qs =
+  let envs = List.map (function SubFrame (e,_,_,_,_) | WFFrame (e,_,_) -> e) cs in
   let instantiate_qual qualset q =
     let instantiate_in_env qset env =
       try
         QualifierSet.add (Qualifier.instantiate env q) qset
       with Qualifier.Refinement_not_closed -> qset
     in List.fold_left instantiate_in_env qualset envs
-  in QualifierSet.elements (List.fold_left instantiate_qual QualifierSet.empty quals)
+  in QualifierSet.elements (List.fold_left instantiate_qual QualifierSet.empty qs)
 
-let framemap_apply_solution solution fmap = LocationMap.map (Frame.apply_solution (Solution.find solution)) fmap
+let framemap_apply_solution s fmap = 
+  LocationMap.map (Frame.apply_solution s) fmap
 
 let dump_frames sourcefile fmap =
   let dump_frame pp loc fr =
@@ -387,8 +388,7 @@ let dump_frames sourcefile fmap =
     let pp = formatter_of_out_channel (open_out filename) in
       LocationMap.iter (dump_frame pp) fmap
 
-let make_frame_error solution cstr =
-  let solution = solution_map solution in
+let make_frame_error s cstr =
   let rec error_rec cstr =
     let orig = match cstr with
       | SubFrame (_, _, _, _, o)
@@ -398,18 +398,12 @@ let make_frame_error solution cstr =
       | Loc loc ->
         begin match cstr with
           | SubFrame (_, _, f1, f2, _) ->
-            (loc, NotSubtype (Frame.apply_solution solution f1,  Frame.apply_solution solution f2))
-          | WFFrame (_, f, _) -> (loc, IllFormed (Frame.apply_solution solution f))
+            (loc, NotSubtype (Frame.apply_solution s f1,  Frame.apply_solution s f2))
+          | WFFrame (_, f, _) -> (loc, IllFormed (Frame.apply_solution s f))
         end
       | Assert loc -> (loc, AssertMayFail)
       | Cstr cstr -> error_rec cstr
   in error_rec cstr
-
-let make_error solution = function
-  | SubRefinement (_, _, _, _, Cstr orig)
-  | WFRefinement (_, _, Cstr orig) ->
-    make_frame_error solution orig
-  | _ -> assert false
 
 let report_error ppf  = function
   | AssertMayFail ->
@@ -424,34 +418,21 @@ let rec report_errors ppf = function
     fprintf ppf "@[%a%a@\n@\n@]" Location.print l report_error e; report_errors ppf es
   | [] -> ()
 
-let qualify_implementation sourcefile fenv quals str =
-  let term_bstats () =
-    Printf.printf "##time##\n";
-    Bstats.print stdout "\n\nTime to solve constraints:\n";
-    Printf.printf "##endtime##\n"
-  in
-  let (quals, _, cstrs, fmap) = constrain_structure fenv quals str in
-  let instantiated_quals = instantiate_in_environments cstrs quals in
-    if List.length cstrs = 0 then
-      (* breaks the trivial program, but will make output cleaner while we
-       * gather data *)
-      LocationMap.empty
-    else begin
-      Printf.printf "##solve##\n";
-      Bstats.reset ();
-      let finally solution fmap =
-        TheoremProver.dump_simple_stats ();
-        dump_frames sourcefile (framemap_apply_solution solution fmap);
-      in
-      try
-        let solution = Bstats.time "solving" (solve_constraints instantiated_quals) cstrs in
-          term_bstats ();
-          finally solution fmap;
-          fmap
-      with Constraint.Unsatisfiable (cstrs, solution) ->
-        term_bstats (); 
-        finally solution fmap;
-        Printf.printf "Errors encountered during type checking:\n\n";
-        flush stdout;
-        raise (Errors(List.map (make_error solution) cstrs))
-    end
+let pre_solve () = 
+  Printf.printf "##solve##\n"; Bstats.reset ()
+
+let post_solve () = 
+  Printf.printf "##time##\n"; Bstats.print stdout "\n\nTime to solve constraints:\n";
+  Printf.printf "##endtime##\n"; TheoremProver.dump_simple_stats ()
+
+let qualify_implementation sourcefile fenv qs str =
+  let (qs, _, cs, fmap) = constrain_structure fenv qs str in
+  let inst_qs = instantiate_in_environments cs qs in
+  if List.length cs = 0 then LocationMap.empty else
+    let _ = pre_solve () in
+    let (s,cs) = Bstats.time "solving" (solve inst_qs) cs in
+    let _ = post_solve () in
+    let _ = dump_frames sourcefile (framemap_apply_solution s fmap) in
+    match cs with [] -> fmap | _ ->
+      (Printf.printf "Errors encountered during type checking:\n\n";
+      flush stdout; raise (Errors(List.map (make_frame_error s) cs)))
