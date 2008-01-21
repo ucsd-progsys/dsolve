@@ -8,8 +8,8 @@ CAMLLEX=ocamllex
 CAMLDEP=ocamldep
 DEPFLAGS=$(INCLUDES)
 
-COMPFLAGS=-warn-error A $(INCLUDES)
-LINKFLAGS=-cclib -loyices -cclib -lgmp -cclib -lyices -I ../external/yices/lib/
+COMPFLAGS=$(FLAGS) -warn-error A $(INCLUDES)
+LINKFLAGS=$(FLAGS) -cclib -loyices -cclib -lgmp -cclib -lyices -I ../external/yices/lib/
 INCLUDES=-I ../external/yices/lib/ -I ../external/ocamlgraph/ \
          -I utils -I parsing -I typing -I qualifying -I driver -I analyzer
 
