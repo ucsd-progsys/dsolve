@@ -66,13 +66,6 @@ let rec pprint ppf = function
 
 let empty_refinement = ([], Qconst [])
 
-(* ming: note this is a redefinition of builtins.mk_... *)
-
-let frame_cons p = Fconstr(p, [], empty_refinement)
-let frame_int = frame_cons Predef.path_int
-let frame_float = frame_cons Predef.path_float
-let frame_bool = frame_cons Predef.path_bool
-
 let fresh_refinementvar () = ([], Qvar (Path.mk_ident "k"))
 
 let fresh_fvar () = Fvar (Path.mk_ident "a")
@@ -261,83 +254,3 @@ let rec predicate solution qual_var = function
           Predicate.subst (Predicate.Field (name, Predicate.Var qual_var)) qual_var pred
       in Predicate.big_and (refinement_predicate solution qual_var r :: List.map make_subframe_pred fs)
   | _ -> Predicate.True
-
-let rec same_shape t1 t2 =
-  match (t1, t2) with
-  (Fconstr(p, l, _), Fconstr(p', l', _)) ->
-   (Path.same p p') && (List.for_all (fun f -> f) (List.map2 same_shape l l')) 
-  | (Fvar p, Fvar p') ->
-   Path.same p p'
-  | (Farrow(_, i, o), Farrow(_, i', o')) ->
-   (same_shape i i') && (same_shape o o')
-  | (Ftuple t1s, Ftuple t2s) ->
-   List.for_all2 same_shape t1s t2s
-  | (Frecord (p1, f1s, _), Frecord (p2, f2s, _)) when Path.same p1 p2 ->
-      let shape_rec (f1, _, _) (f2, _, _) = same_shape f1 f2 in
-        List.for_all2 shape_rec f1s f2s
-  | (Funknown, Funknown) -> true
-  | t -> false
-
-let pred_is_well_typed env p =
-  let rec get_expr_shape = function
-  | Predicate.PInt _ -> frame_int
-  | Predicate.Var x  
-  | Predicate.Pvar (x, _) -> (try Lightenv.find x env with Not_found -> assert false)
-  | Predicate.FunApp (s, p') -> 
-      let arg_shape shp out_shape =
-          match get_expr_shape p' with
-              Fconstr(a, _, _) ->
-                if Path.same shp a then
-                  out_shape
-                else
-                  Funknown
-            | _ -> Funknown
-      in
-      (* ming: huge hack alert *)
-      if s = "Array.length" then arg_shape Predef.path_array frame_int
-      else if s = "Bigarray.Array2.dim1" || s = "Bigarray.Array2.dim2" then
-        arg_shape (Builtins.ext_find_type_path "array2") frame_int
-      else assert false
-  | Predicate.Binop (p1, op, p2) ->
-      let p1_shp = get_expr_shape p1 in
-      let p1_int = same_shape p1_shp frame_int in
-      let p2_shp = get_expr_shape p2 in
-      let p2_int = same_shape p2_shp frame_int in
-      if p1_int && p2_int then frame_int else Funknown
-  | Predicate.Field (name, r) ->
-      begin match get_expr_shape r with
-        | Frecord (_, fs, _) ->
-            let is_referenced_field (_, name2, _) = String.compare name name2 = 0 in
-              if List.exists is_referenced_field fs then
-                (match (List.find is_referenced_field fs) with (f, _, _) -> f)
-              else Funknown
-        | f -> Funknown
-      end
-  and pred_shape_is_bool = function
-  | Predicate.True -> true
-  | Predicate.Not p -> pred_shape_is_bool p 
-  | Predicate.Or (p1, p2)  
-  | Predicate.And (p1, p2) -> (pred_shape_is_bool p1) && (pred_shape_is_bool p2)
-  | Predicate.Atom (p1, rel, p2) -> 
-      let p1_shp = get_expr_shape p1 in
-      let p2_shp = get_expr_shape p2 in
-        match rel with
-        | Predicate.Ne
-        | Predicate.Eq ->
-         ((same_shape p1_shp p2_shp) && not(same_shape p1_shp Funknown))
-         || ((same_shape p1_shp frame_bool) && (same_shape p2_shp frame_int))
-         || ((same_shape p1_shp frame_int) && (same_shape p2_shp frame_bool))
-        | Predicate.Gt
-        | Predicate.Ge
-        | Predicate.Lt
-        | Predicate.Le ->
-        (same_shape p1_shp p2_shp) && (same_shape p1_shp frame_int || 
-                                       (function Fvar _ -> true | _ -> false) p1_shp ||
-                                       same_shape p1_shp frame_float) 
-    in pred_shape_is_bool p
-
-let refinement_well_formed env solution r qual_var =
-  let pred = refinement_predicate solution qual_var r in
-  let var_bound v = Lightenv.mem v env in
-  let well_scoped = List.for_all var_bound (Predicate.vars pred) in
-    well_scoped && pred_is_well_typed env pred

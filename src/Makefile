@@ -61,7 +61,7 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
 
 QUALIFYING=qualifying/lightenv.cmo \
   qualifying/qualifier.cmo qualifying/builtins.cmo qualifying/frame.cmo \
-  qualifying/message.cmo qualifying/pattern.cmo \
+  qualifying/wellformed.cmo qualifying/message.cmo qualifying/pattern.cmo \
   ../external/yices/lib/oyices.cma ../external/ocamlgraph/graph.cma \
   qualifying/theoremProverSimplify.cmo qualifying/theoremProverYices.cmo \
   qualifying/theoremProver.cmo \
