@@ -53,6 +53,12 @@ depend:
 	 do $(CAMLDEP) $(DEPFLAGS) $$d/*.mli $$d/*.ml; \
 	 done) > .depend
 
+clean:
+	(for d in utils parsing typing qualifying driver analyzer; \
+	 do rm $$d/*.cm* $$d/*.o; \
+	 done);
+	rm liquid liquid.opt
+
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
 
 .ml.cmo:
@@ -63,5 +69,13 @@ depend:
 
 .ml.cmx:
 	$(CAMLOPT) $(COMPFLAGS) -c $<
+
+yiceslib:
+	cd ../external/yices/include/build; $(MAKE) -f ../Makefile;
+
+graphlib:
+	cd ../external/ocamlgraph; ./configure; $(MAKE);
+
+libs: yiceslib graphlib
 
 include .depend
