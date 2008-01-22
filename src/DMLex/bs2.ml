@@ -9,13 +9,13 @@ let bs vec key =
 			 else m
     in
 	bs_aux 0 (Array.length vec - 1)
-in
-let _none = Random.self_init () in
-let ar = Array.make ((Random.int 40) + 2) 0 in
-let rec fill i = 
-  if i < Array.length ar then  
-    (Array.set ar i (Random.int 40); fill (i+1))
-  else ()
-in
-  (fill 0; bs ar (Random.int 40))
-;;
+
+let driver = 
+  let _none = Random.self_init () in
+  let ar = Array.make ((Random.int 40) + 2) 0 in
+  let rec fill i = 
+    if i < Array.length ar then  
+      (Array.set ar i (Random.int 40); fill (i+1))
+    else ()
+  in
+    (fill 0; bs ar (Random.int 40))

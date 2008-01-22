@@ -16,13 +16,13 @@ let bsearch key vec =
   let sv = Array.length vec in
   let sv_minus = sv - 1 in 
     look 0 sv_minus
-in
-let _none = Random.init 555 in
-let sz = Random.int 10 in
-let sz_plus = sz + 2 in
-let ar = Array.make sz_plus 0 in
-  bsearch 5 ar
-;;
+
+let driver =
+  let _none = Random.init 555 in
+  let sz = Random.int 10 in
+  let sz_plus = sz + 2 in
+  let ar = Array.make sz_plus 0 in
+    bsearch 5 ar
 
 
 

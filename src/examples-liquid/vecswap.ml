@@ -1,4 +1,5 @@
-let min a b = if a < b then a else b in
+let min a b = if a < b then a else b 
+
 let rec sortRange arr start n =
     let item i = Array.get arr i in
     let swap i j =
@@ -15,8 +16,8 @@ let rec sortRange arr start n =
         if z + x <= n then
       vecswap x y z
       else () else ()
-in 
-let _n = Random.self_init () in
-let x = let x : garbage = 0 in x in
-let vec = Array.make ((Random.int 30) + 2) x in
-  sortRange vec 0 ((Array.length vec) - 1);;
+
+let driver =
+  let _n = Random.self_init () in
+  let vec = Array.make ((Random.int 30) + 2) 0 in
+    sortRange vec 0 ((Array.length vec) - 1)
