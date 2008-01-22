@@ -76,9 +76,14 @@ let stat_matches = ref 0
 let environment_predicate s env =
   P.big_and (Le.maplist (F.predicate (solution_map s)) env)
 
+let pprint_local_binding ppf = function
+  | (Path.Pident _ as k, v) -> fprintf ppf "@[%s@;=>@;%a,@;@]" (Path.unique_name k) F.pprint v
+  | _ -> ()
+
 let pprint_env_pred so ppf env =
-  let ep = match so with Some s -> environment_predicate s env | _ -> P.True in
-  P.pprint ppf ep 
+  match so with
+  | Some s -> P.pprint ppf (environment_predicate s env)
+  | _ -> Le.iter (fun x t -> pprint_local_binding ppf (x, t)) env
 
 let pprint ppf = function
   | SubFrame (_, _, f1, f2, _) ->
@@ -92,10 +97,10 @@ let pprint_io ppf = function
 
 let pprint_ref so ppf = function
   | SubRef (env,g,r1,r2,io) ->
-      fprintf ppf "@[%a@ Env:@ %a;@;<1 2>Guard:@ %a@;<1 0>|-@;<1 2>%a@;<1 2><:@;<1 2>%a@]"
+      fprintf ppf "@[%a@ Env:@ @[%a@];@;<1 2>Guard:@ %a@;<1 0>|-@;<1 2>%a@;<1 2><:@;<1 2>%a@]"
       pprint_io io (pprint_env_pred so) env P.pprint g F.pprint_refinement r1 F.pprint_refinement r2 
   | WFRef (env,r,io) ->
-      fprintf ppf "@[%a@ Env:@ %a;@;<1 2>|-@;<1 2>%a@;<1 2>@]"
+      fprintf ppf "@[%a@ Env:@ @[%a@];@;<1 2>|-@;<1 2>%a@;<1 2>@]"
       pprint_io io (pprint_env_pred so) env F.pprint_refinement r 
 (**************************************************************)
 (********************* Constraint Splitting *******************) 
@@ -367,7 +372,7 @@ let make_initial_solution sri qs =
  
 let dump_constraints sri = 
   (* if !Clflags.dump_constraints then*)
-  printf "Refinement Constraints \n";  
+  printf "Refinement Constraints @.";
   iter_ref_constraints sri 
   (fun c -> printf "@[%a@.@]" (pprint_ref None) c)
     (* let cs = get_ref_constraints sri in 
