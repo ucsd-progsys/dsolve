@@ -60,9 +60,9 @@ depend: beforedepend
 
 clean: partialclean
 	(for d in utils parsing typing qualifying driver analyzer; \
-	 do rm $$d/*.cm* $$d/*.o; \
+	 do rm -f $$d/*.cm* $$d/*.o; \
 	 done);
-	rm liquid liquid.opt
+	rm -f liquid liquid.opt
 
 utils/config.ml: utils/config.mlp config/Makefile
 	@rm -f utils/config.ml
