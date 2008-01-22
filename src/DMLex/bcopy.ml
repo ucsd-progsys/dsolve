@@ -7,12 +7,13 @@ let rec bcopy_aux src des i m =
         let j = i + 1 in
           bcopy_aux src des j m
     end
-in
+
 let bcopy src des =
   let sz = Array.length src in
     bcopy_aux src des 0 sz
-in
-let sr = [|1; 2; 3|] in
-let asz = 3 in
-let ds = Array.make asz 0 in
-  bcopy sr ds;;
+
+let driver =
+  let sr = [|1; 2; 3|] in
+  let asz = 3 in
+  let ds = Array.make asz 0 in
+    bcopy sr ds;;

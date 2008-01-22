@@ -1,10 +1,9 @@
 let encrypt_ecb k b =
   (12, 11, 10, 9)
-in
+
 let encrypt_cfb8 k iv data =
   let l = Array.length data in
-  let z = let x : garbage = 0 in x in
-  let data' = Array.make l z in
+  let data' = Array.make l 0 in
 
   let sr = ref iv in (* shift register *)
     
@@ -22,9 +21,10 @@ let encrypt_cfb8 k iv data =
     else ()
   in loop 0;
   data'
-in
 
-let iv = (1, 2, 3, 4) in
+let iv = (1, 2, 3, 4) 
 
-let data = Array.make (Random.int 20 + 1) (Random.int 40) in
-  encrypt_cfb8 10 iv data;;
+let data = Array.make (Random.int 20 + 1) (Random.int 40) 
+
+let driver =
+  encrypt_cfb8 10 iv data

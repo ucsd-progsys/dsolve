@@ -1,10 +1,8 @@
 let sub2 data i j = 
   Bigarray.Array2.get data i j 
-in
 
 let update2 data i j x = 
   Bigarray.Array2.set data i j x
-in
 
 let fillar arr2 fill =
   let d1 = Bigarray.Array2.dim1 arr2 in
@@ -24,7 +22,6 @@ let fillar arr2 fill =
       else
           loop i'
   in loop 0
-in
 
 let matmul a b =
   let p = Bigarray.Array2.dim1 a in
@@ -60,19 +57,20 @@ let matmul a b =
 	loop1 i'
     else ()
   in loop1 0; cdata
-in 
-let _none = Random.self_init () in
-let p = Random.int 10 in
-let p = p + 1 in
-let q = Random.int 10 in
-let q = q + 1 in
-let r = Random.int 10 in
-let r = r + 1 in
-let rand _none = Random.int 100 in
-let av = Bigarray.Array2.create Bigarray.int Bigarray.c_layout p q in
-let bv = Bigarray.Array2.create Bigarray.int Bigarray.c_layout q r in 
 
-fillar av rand; fillar bv rand; matmul av bv;;
+
+let driver = 
+  let _none = Random.self_init () in
+  let p = Random.int 10 in
+  let p = p + 1 in
+  let q = Random.int 10 in
+  let q = q + 1 in
+  let r = Random.int 10 in
+  let r = r + 1 in
+  let rand _none = Random.int 100 in
+  let av = Bigarray.Array2.create Bigarray.int Bigarray.c_layout p q in
+  let bv = Bigarray.Array2.create Bigarray.int Bigarray.c_layout q r in 
+    fillar av rand; fillar bv rand; matmul av bv;;
 
 
 (*withtype {p:nat,q:nat,r:nat} <> =>
