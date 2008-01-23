@@ -4,13 +4,13 @@ let dotprod v1 v2 =
         loop n ((Array.get v1 i) * (Array.get v2 i) + sum) (i+1)
 		in
     loop (Array.length v1) 0 0 
-in  
-let _ = Random.init 555 in
-let sz = Random.int 40 in
-let v1 = Array.make sz 1 in
-let v2 = Array.make sz 1 in
-dotprod v1 v2
-;;
+
+let driver =
+  let _ = Random.init 555 in
+  let sz = Random.int 40 in
+  let v1 = Array.make sz 1 in
+  let v2 = Array.make sz 1 in
+    dotprod v1 v2
 
 (*
 let{n:nat} dotprod v1 v2 = begin

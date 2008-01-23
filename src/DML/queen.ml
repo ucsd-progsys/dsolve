@@ -1,6 +1,7 @@
 (* TODO: add all the printing back in *)
 
-let abs x = if x < 0 then let y = 0 - x in y else x in
+let abs x = if x < 0 then let y = 0 - x in y else x 
+
 let queen _1_size =
 begin
   let queenArray = Array.make _1_size 0 in
@@ -57,11 +58,13 @@ begin
         else loop _2_row
       end  
 	in loop 0
-end in
-let _none = Random.init 555 in
-let sz = Random.int 10 in
-let sz_plus = sz + 1 
-in queen sz_plus ;;
+end 
+
+let driver = 
+  let _none = Random.init 555 in
+  let sz = Random.int 10 in
+  let sz_plus = sz + 1 in
+    queen sz_plus 
 
 
 

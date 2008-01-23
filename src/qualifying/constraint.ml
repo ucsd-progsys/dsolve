@@ -1,4 +1,5 @@
 open Format
+open Wellformed
 module F = Frame
 module Le = Lightenv
 module Pat = Pattern
@@ -76,9 +77,14 @@ let stat_matches = ref 0
 let environment_predicate s env =
   P.big_and (Le.maplist (F.predicate (solution_map s)) env)
 
+let pprint_local_binding ppf = function
+  | (Path.Pident _ as k, v) -> fprintf ppf "@[%s@;=>@;<1 2>%a@],@;<1 2>" (Path.unique_name k) F.pprint v
+  | _ -> ()
+
 let pprint_env_pred so ppf env =
-  let ep = match so with Some s -> environment_predicate s env | _ -> P.True in
-  P.pprint ppf ep 
+  match so with
+  | Some s -> P.pprint ppf (environment_predicate s env)
+  | _ -> Le.iter (fun x t -> pprint_local_binding ppf (x, t)) env
 
 let pprint ppf = function
   | SubFrame (_, _, f1, f2, _) ->
@@ -92,10 +98,10 @@ let pprint_io ppf = function
 
 let pprint_ref so ppf = function
   | SubRef (env,g,r1,r2,io) ->
-      fprintf ppf "@[%a@ Env:@ %a;@;<1 2>Guard:@ %a@;<1 0>|-@;<1 2>%a@;<1 2><:@;<1 2>%a@]"
+      fprintf ppf "@[%a@ Env:@ @[%a@];@;<1 2>Guard:@ %a@;<1 0>|-@;<1 2>%a@;<1 2><:@;<1 2>%a@]"
       pprint_io io (pprint_env_pred so) env P.pprint g F.pprint_refinement r1 F.pprint_refinement r2 
   | WFRef (env,r,io) ->
-      fprintf ppf "@[%a@ Env:@ %a;@;<1 2>|-@;<1 2>%a@;<1 2>@]"
+      fprintf ppf "@[%a@ Env:@ @[%a@];@;<1 2>|-@;<1 2>%a@;<1 2>@]"
       pprint_io io (pprint_env_pred so) env F.pprint_refinement r 
 
 (**************************************************************)
@@ -297,7 +303,7 @@ let qual_implied s lhs lhs_ps rhs_subs q =
       rv 
 
 let qual_wf s env subs q =
-  F.refinement_well_formed env (solution_map s) (subs,F.Qconst [q]) qual_test_var
+  refinement_well_formed env (solution_map s) (subs,F.Qconst [q]) qual_test_var
 
 let refine s c = 
   let _ = incr stat_refines in
@@ -331,10 +337,10 @@ let sat s = function
       let p1 = F.refinement_predicate (solution_map s) qual_test_var r1 in
       let p2 = F.refinement_predicate (solution_map s) qual_test_var r2 in
         TP.backup_implies (P.big_and [envp; guard; p1]) p2
-  (* | _ -> true*)
-        | WFRef (env, r, _) as c -> 
+  | WFRef (env, r, _) as c -> 
       let rv = F.refinement_well_formed env (solution_map s) r qual_test_var in
-         Common.asserts (Printf.sprintf "wf is unsat! (%d)" (get_ref_id c)) rv; rv 
+         Common.asserts (Printf.sprintf "wf is unsat! (%d)" (get_ref_id c)) rv;
+         rv 
 
 let unsat_constraints sri s =
   Common.map_partial
@@ -369,7 +375,7 @@ let make_initial_solution sri qs =
  
 let dump_constraints sri = 
   (* if !Clflags.dump_constraints then*)
-  printf "Refinement Constraints \n";  
+  printf "Refinement Constraints @.";
   iter_ref_constraints sri 
   (fun c -> printf "@[%a@.@]" (pprint_ref None) c)
     (* let cs = get_ref_constraints sri in 

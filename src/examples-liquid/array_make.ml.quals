@@ -1,5 +1,0 @@
-qualif A_ARRAY(x) : Array.length x = asize;;
-qualif EQ_ASIZE(x) : x = asize;;
-qualif NNEG(x) : x >= 0;;
-qualif POS(x) : x > 0;;
-qualif ARRAY_POS(x) : Array.length x > 0;;

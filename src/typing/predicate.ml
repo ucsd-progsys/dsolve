@@ -93,14 +93,34 @@ and flatten_disjuncts ppf = function
 let equals(p, q) =
   Atom(p, Eq, q)
 
+let (==.) p q = equals (p, q)
+
+let (!=.) p q = Atom (p, Ne, q)
+
+let (>=.) p q = Atom (p, Ge, q)
+
+let (>.) p q = Atom (p, Gt, q)
+
+let (<=.) p q = Atom (p, Le, q)
+
+let (<.) p q = Atom (p, Lt, q)
+
+let (&&.) p q = And (p, q)
+
+let (||.) p q = Or (p, q)
+
+let (!.) p = Not p
+
+let implies(p, q) = (!. p) ||. q
+
+let (=>.) p q = implies (p, q)
+
 let big_and = function
-  | c :: cs ->
-      List.fold_left (fun p q -> And (p, q)) c cs
+  | c :: cs -> List.fold_left (&&.) c cs
   | [] -> True
 
 let big_or = function
-  | c :: cs ->
-      List.fold_left (fun p q -> Or (p, q)) c cs
+  | c :: cs -> List.fold_left (||.) c cs
   | [] -> Not True
 
 let rec pexp_map_vars f pexp =
@@ -142,12 +162,9 @@ let rec instantiate_named_vars subs pred =
 
 let vars p =
   let rec exp_vars_rec vars = function
-      PInt _ ->
-        vars
-    | Var x ->
-        x::vars
-    | Pvar(x, _) ->
-        x::vars
+      PInt _ -> vars
+    | Var x -> x::vars
+    | Pvar(x, _) -> x::vars
     | FunApp(_, e) ->
         exp_vars_rec vars e
     | Binop(e1, _, e2) ->
@@ -171,9 +188,6 @@ let vars p =
   in
     vars_rec [] p
 
-let implies(p, q) =
-  Or(Not p, q)
-
 let tuple_nth pexp n =
   FunApp ("__tuple_nth_" ^ (string_of_int n), pexp)
 
@@ -182,7 +196,7 @@ let rec transl_predicate p =
     | Predexp_plus -> Plus
     | Predexp_minus -> Minus
     | Predexp_times -> Times
-		| Predexp_div -> Div
+    | Predexp_div -> Div
   in
   let rec transl_pexpression pexp =
     match pexp.ppredexp_desc with
@@ -209,14 +223,10 @@ let rec transl_predicate p =
   in
   let rec transl_pred_rec pred =
     match pred.ppred_desc with
-      | Ppred_true ->
-	  True
+      | Ppred_true -> True
       | Ppred_atom (e1, rel, e2) ->
 	  Atom (transl_pexpression e1, transl_rel rel, transl_pexpression e2)
-      | Ppred_not p ->
-	  Not (transl_pred_rec p)
-      | Ppred_and (p1, p2) ->
-	  And (transl_pred_rec p1, transl_pred_rec p2)
-      | Ppred_or (p1, p2) ->
-	  Or (transl_pred_rec p1, transl_pred_rec p2)
+      | Ppred_not p -> Not (transl_pred_rec p)
+      | Ppred_and (p1, p2) -> And (transl_pred_rec p1, transl_pred_rec p2)
+      | Ppred_or (p1, p2) -> Or (transl_pred_rec p1, transl_pred_rec p2)
   in transl_pred_rec p

@@ -27,7 +27,6 @@ sortRange arr start n =
 		       in inner i  
     in outer start_plus 
   in insertSort start n
-in
 (*let sorting _2_arr = (sortRange _2_arr 0 (Array.length _2_arr) ; _2_arr) in*)
 
 let
@@ -40,14 +39,14 @@ sorted _1_arr =
 				(if _5_i_plus = len then true else s v' _5_i_plus)
   in
   if len < 2 then true else s (Array.get _1_arr 0) 1
-in
-let noners = Random.init 555 in
-let sz = Random.int 10 in
-let sz_plus = sz + 5 in
-let sz_minus = sz_plus - 1 in
-let yarr = Array.make sz_plus 0 in 
-sortRange yarr 0 sz_minus; sorted yarr
-;;
+
+let driver =
+  let noners = Random.init 555 in
+  let sz = Random.int 10 in
+  let sz_plus = sz + 5 in
+  let sz_minus = sz_plus - 1 in
+  let yarr = Array.make sz_plus 0 in 
+    sortRange yarr 0 sz_minus; sorted yarr
 
 (*type order = LESS | EQUAL | GREATER
 ;;

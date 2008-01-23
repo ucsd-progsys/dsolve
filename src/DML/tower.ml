@@ -1,5 +1,6 @@
-let print_newline _1_none = () in
-let print_string _2_none = () in
+let print_newline _1_none = () 
+let print_string _2_none = () 
+
 let
 play sz =
   let leftPost = Array.make sz 0 in
@@ -75,8 +76,8 @@ play sz =
 	in
   (showposts ();
   move sz leftPost 0 rightPost sz middlePost sz)
-in play 10 
-;;
+
+let driver = play 10    
 
 (*
   let rec move (n, source, s, post, p, post', p') =
