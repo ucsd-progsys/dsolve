@@ -15,9 +15,9 @@ else
 fi
 
 rm -f $TMPDIR/*.lilog*
-rm -f DML/*.quals
-rm -f DMLex/*.quals
-rm -f examples-liquid/*.quals
+#rm -f DML/*.quals
+#rm -f DMLex/*.quals
+#rm -f examples-liquid/*.quals
 
 echo Generating qualifiers where needed...
 
@@ -30,6 +30,7 @@ else
 #    cat $i.quals 1> /dev/null 2> /dev/null
 #    if [[ $? != 0 ]]
 #    then
+    rm -f $i.quals
     $OCAML $QUALFLAGS $i 1> /dev/null 2> $i.quals
 #    fi
   done
@@ -48,8 +49,8 @@ do
   SUCC=$?
 
   #temporary fix for liquid.run's broken annotations
-  mv $TMPDIR/liq.ml $TMPDIR/"$printable_name"
-  mv $TMPDIR/liq.annot $TMPDIR/${printable_name%\.ml}".annot"
+  mv -f $TMPDIR/liq.ml $TMPDIR/"$printable_name"
+  mv -f $TMPDIR/liq.annot $TMPDIR/${printable_name%\.ml}".annot"
 
   #some stupid grep tricks to cut down on the output
   s=`grep -n "\#\#solve\#\#" $LOGFILE | tail -n1 -` 
