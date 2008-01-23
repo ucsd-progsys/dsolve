@@ -455,3 +455,6 @@ let qualify_implementation sourcefile fenv quals str =
         flush stdout;
         raise (Errors(List.map (make_error solution) cstrs))
     end
+
+let qualgen_nasty_hack fenv str =
+  ignore (constrain_structure fenv [] str)

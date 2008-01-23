@@ -43,16 +43,23 @@ let type_implementation initial_env ast =
     Typecore.force_delayed_checks ();
     str
 
-let dump_qualifs () =
-  if !Clflags.dump_qualifs then begin
-      fprintf std_formatter "@[Dumping@ qualifiers@\n@]";
-      fprintf err_formatter "@[%s@\n@]" (String.concat "\n" (Qualgen.dump_qualifs ()));
-      fprintf std_formatter "@[Done@ Dumping@ qualifiers@\n@]";flush stderr
-  end
+let analyze ppf sourcefile (str, env, fenv) =
+  let framemap = Qualifymod.qualify_implementation sourcefile fenv [] str in
+    if !Clflags.dump_qexprs then begin
+      fprintf std_formatter "@.@.";
+      Qdebug.dump_qualified_structure std_formatter framemap str;
+    end
 
-let finalize () = dump_qualifs ()
+let dump_qualifiers (str, _, fenv) =
+  Qualifymod.qualgen_nasty_hack fenv str;
+  fprintf std_formatter "@[Dumping@ qualifiers@\n@]";
+  fprintf err_formatter "@[%s@\n@]" (String.concat "\n" (Qualgen.dump_qualifs ()));
+  fprintf std_formatter "@[Done@ Dumping@ qualifiers@\n@]";
+  flush stderr
 
-let analyze ppf sourcefile =
+open Clflags
+
+let load_sourcefile ppf sourcefile =
   init_path ();
   let env = initial_env () in
   let fenv = initial_fenv env in
@@ -60,13 +67,7 @@ let analyze ppf sourcefile =
   let str = if !Clflags.no_anormal then str else Normalize.normalize_structure str in
   let str = print_if ppf Clflags.dump_parsetree Printast.implementation str in
   let (str, _, env) = type_implementation env str in
-  let framemap = Qualifymod.qualify_implementation sourcefile fenv [] str in
-    if !Clflags.dump_qexprs then begin
-      fprintf std_formatter "@.@.";
-      Qdebug.dump_qualified_structure std_formatter framemap str;
-    end;
-
-open Clflags
+    (str, env, fenv)
 
 let main () =
   Arg.parse [
@@ -130,7 +131,11 @@ let main () =
      "-cacheq", Arg.Set cache_queries, "cache theorem prover queries";
      "-verrs", Arg.Set verb_errors, "print very verbose errors when constraints are unsat"
   ] file_argument usage;
-  try analyze std_formatter !filename; finalize ()
-  with x -> (report_error std_formatter x; finalize (); exit 1)
+  let source = load_sourcefile std_formatter !filename in
+  try
+    if not !Clflags.dump_qualifs then
+      analyze std_formatter !filename source
+    else dump_qualifiers source
+  with x -> (report_error std_formatter x; exit 1)
 
 let _ = main (); exit 0
