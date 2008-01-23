@@ -4,6 +4,13 @@
 
 argc=`echo $@ | wc -w`
 
+if [[ $TMPDIR == "" ]]
+then
+  TMPDIR=/tmp
+fi
+
+
+
 #let "j = 0"
 #catt=""
 argv=""
@@ -61,8 +68,8 @@ then
   EXIT=$?
 else
   #cat$catargs | nice -n19 rlwrap ./ocaml $argv
-  cat $catargs > /tmp/liq.ml
-  ./liquid $argv /tmp/liq.ml
+  cat $catargs > $TMPDIR/liq.ml
+  ./liquid $argv $TMPDIR/liq.ml
   EXIT=$?
 fi
 
