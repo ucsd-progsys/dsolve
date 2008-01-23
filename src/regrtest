@@ -9,9 +9,9 @@ NEGFILE=negtests
 
 if [[ $1 == "" ]]
 then
-  TMPDIR=/tmp
+  export TMPDIR=/tmp
 else
-  TMPDIR=$1
+  export TMPDIR=$1
 fi
 
 rm -f $TMPDIR/*.lilog*
@@ -116,3 +116,4 @@ do
    f=`head -n$d $i | tail -n$s -`
    tot=`
 done
+

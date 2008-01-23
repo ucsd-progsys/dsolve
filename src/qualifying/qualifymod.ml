@@ -436,3 +436,6 @@ let qualify_implementation sourcefile fenv qs str =
     match cs with [] -> fmap | _ ->
       (Printf.printf "Errors encountered during type checking:\n\n";
       flush stdout; raise (Errors(List.map (make_frame_error s) cs)))
+
+let qualgen_nasty_hack fenv str =
+  ignore (constrain_structure fenv [] str)

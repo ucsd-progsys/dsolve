@@ -60,7 +60,6 @@ let rec fixdiv p =
         | p -> p
     else p
 
-(* module DefaultProver = TheoremProverSimplify.Prover *)
 module DefaultProver = TheoremProverYices.Prover
 module BackupProver = TheoremProverYices.Prover
 
@@ -69,30 +68,21 @@ exception Provers_disagree of bool * bool
 (* Check that the default and backup provers both provide the same
    result to a query *)
 let check_result f g arg =
-  if not !Clflags.check_queries then
-    Bstats.time "calling PI" f arg
+  if not !Clflags.check_queries then Bstats.time "calling PI" f arg
   else
     let fres = f arg in
     let gres = g arg in
-      if fres != gres then
-        raise (Provers_disagree (fres, gres))
+      if fres != gres then raise (Provers_disagree (fres, gres))
       else fres
 
 let do_both_provers f g arg =
-  f arg;
-  if !Clflags.check_queries then
-    g arg
-  else
-    ()
+  f arg; if !Clflags.check_queries then g arg else ()
 
-let push p =
-  do_both_provers DefaultProver.push BackupProver.push (fixdiv p)
+let push p = do_both_provers DefaultProver.push BackupProver.push (fixdiv p)
 
-let pop () =
-  do_both_provers DefaultProver.pop BackupProver.pop ()
+let pop () = do_both_provers DefaultProver.pop BackupProver.pop ()
 
-let valid p =
-  check_result DefaultProver.valid BackupProver.valid (fixdiv p)
+let valid p = check_result DefaultProver.valid BackupProver.valid (fixdiv p)
 
 let num_queries = ref 0
 let hits = ref 0
@@ -115,10 +105,6 @@ let check_implies default backup p q =
   let _ = incr num_queries in
   let _ = if (!num_queries mod dump_interval) = 0 then dump_simple_stats () else () in 
   let use_cache = !Clflags.cache_queries in
-  (*let pstr = if use_cache then Format.fprintf Format.str_formatter "@[%a@]" Predicate.pprint p; Format.flush_str_formatter () in
-  let qstr = if use_cache then Format.fprintf Format.str_formatter "@[%a@]" Predicate.pprint q; Format.flush_str_formatter () in
-  let ipq = String.concat "" [pstr; "__IMPLIES__"; qstr] in*)
-    (* strings are hilariously slow *)
   let ipq = Predicate.implies (p, q) in
 
   let cached = (Bstats.time "cache lookup" (Hashtbl.mem qcache) ipq) && use_cache in
@@ -138,5 +124,4 @@ let implies p q =
   else
     Bstats.time "TP.ml prover query" (check_implies DefaultProver.implies BackupProver.implies p) q
 
-let backup_implies p q =
-  check_implies BackupProver.implies DefaultProver.implies p q
+let backup_implies p q = check_implies BackupProver.implies DefaultProver.implies p q

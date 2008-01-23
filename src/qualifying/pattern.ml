@@ -4,8 +4,7 @@ let bind pat frame =
   let rec bind_rec bindings pat frame =
     match (pat, frame) with
     | (Tpat_any, _) -> bindings
-    | (Tpat_var x, f) ->
-      (Path.Pident x, f) :: bindings
+    | (Tpat_var x, f) -> (Path.Pident x, f) :: bindings
     | (Tpat_tuple pats, Frame.Ftuple fs) ->
       let pats = List.map (fun p -> p.pat_desc) pats in
         List.fold_left2 bind_rec bindings pats fs

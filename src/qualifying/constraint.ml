@@ -1,4 +1,5 @@
 open Format
+open Wellformed
 module F = Frame
 module Le = Lightenv
 module Pat = Pattern
@@ -301,7 +302,7 @@ let qual_implied s lhs lhs_ps rhs_subs q =
       rv 
 
 let qual_wf s env subs q =
-  F.refinement_well_formed env (solution_map s) (subs,F.Qconst [q]) qual_test_var
+  refinement_well_formed env (solution_map s) (subs,F.Qconst [q]) qual_test_var
 
 let refine s c = 
   let _ = incr stat_refines in
@@ -336,7 +337,7 @@ let sat s = function
       let p2 = F.refinement_predicate (solution_map s) qual_test_var r2 in
         TP.backup_implies (P.big_and [envp; guard; p1]) p2
   | WFRef (env, r, _) ->
-      let rv = F.refinement_well_formed env (solution_map s) r qual_test_var in
+      let rv = refinement_well_formed env (solution_map s) r qual_test_var in
       Common.asserts "wf is unsat!" rv; rv
 
 let unsat_constraints sri s =

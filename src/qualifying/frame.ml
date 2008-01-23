@@ -62,7 +62,6 @@ let rec pprint ppf = function
        fprintf ppf "@[{%s |@;<1 2>%a}@] " (Path.name id) pprint_refinement r
   | Funknown ->
       fprintf ppf "[unknown]"
-  (*| _ -> assert false*)
  and pprint1 ppf = function
    | (Farrow _) as f ->
        fprintf ppf "@[(%a)@]" pprint f
@@ -70,18 +69,10 @@ let rec pprint ppf = function
 
 let empty_refinement = ([], Qconst [])
 
-(* ming: note this is a redefinition of builtins.mk_... *)
-
-let frame_cons p = Fconstr(p, [], empty_refinement)
-let frame_int = frame_cons Predef.path_int
-let frame_float = frame_cons Predef.path_float
-let frame_bool = frame_cons Predef.path_bool
-
 let fresh_refinementvar () = ([], Qvar (Path.mk_ident "k"))
 
 let fresh_fvar () = Fvar (Path.mk_ident "a")
 
-(* ming: abbrevs? *)
 (* Create a fresh frame with the same shape as the type of [exp] using
    [fresh_ref_var] to create new refinement variables. *)
 let fresh_with_var_fun exp fresh_ref_var =
@@ -152,8 +143,7 @@ let rec label_like f f' =
   match (f, f') with
     | (Fvar _, Fvar _)
     | (Fconstr _, Fconstr _)
-    | (Funknown, Funknown) ->
-        f
+    | (Funknown, Funknown) -> f
     | (Farrow (None, f1, f1'), Farrow(l, f2, f2')) ->
         Farrow (l, label_like f1 f2, label_like f1' f2')
     | (Ftuple t1s, Ftuple t2s) ->
@@ -165,10 +155,9 @@ let rec label_like f f' =
 
 (* Create a fresh frame with the same shape as [exp]'s type and [f],
    and the same labels as [f]. *)
-let fresh_with_labels exp f =
-  label_like (fresh exp) f
+let fresh_with_labels exp f = label_like (fresh exp) f
 
-(* Instantiate the vars in f(r) with the corresponding frames in ftemplate.  If a
+(* Instantiate the tyvars in fr with the corresponding frames in ftemplate.  If a
    variable occurs twice, it will only be instantiated with one frame; which
    one is undefined and unimportant. *)
 let instantiate fr ftemplate =
@@ -184,8 +173,7 @@ let instantiate fr ftemplate =
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
           Farrow (l, inst f1 f2, inst f1' f2')
       | (Fconstr (p, l, r), Fconstr(p', l', _)) ->
-	  (*let _ = if Path.same p p' then () else assert false in*)
-	  Fconstr(p, List.map2 inst l l', r)
+	    Fconstr(p, List.map2 inst l l', r)
       | (Ftuple t1s, Ftuple t2s) ->
           Ftuple (List.map2 inst t1s t2s)
       | (Frecord (p, f1s, r), Frecord (_, f2s, _)) ->
@@ -198,34 +186,24 @@ let instantiate fr ftemplate =
 	    assert false
   in inst fr ftemplate
 
-(* Apply a substitution to a frame, distributing over arrows.  Unaliases any
-   aliases created by fresh.
-
-   (If it did not do so, we would get bogus backward-substitutions; imagine
-    applying a function of type x: k int -> y: z int -> k int) *)
+(* Apply a substitution to a frame, distributing over arrows. *)
 let rec apply_substitution sub = function
-    (Fvar _) as f ->
-      f
+  | (Fvar _) as f -> f
   | Fconstr (p, [], (subs, qe)) ->
       Fconstr (p, [], (sub :: subs, qe))
   | Farrow (x, f1, f2) ->
       Farrow (x, apply_substitution sub f1, apply_substitution sub f2)
   | Fconstr (p, l, (subs, qe)) ->
-     (* Fconstr (p, List.map (apply_substitution sub) l, (sub::subs, qe))*)
-     (* ming: let's not prop substitutions into compound types and see what
-      * happens *)
-     Fconstr (p, l, (sub::subs, qe))
+     Fconstr (p, List.map (apply_substitution sub) l, (sub::subs, qe))
   | Ftuple ts ->
       Ftuple (List.map (apply_substitution sub) ts)
   | Frecord (p, fs, (subs, qe)) ->
       let apply_rec (f, n, m) = (apply_substitution sub f, n, m) in
         Frecord (p, List.map apply_rec fs, (sub :: subs, qe))
-  | Funknown ->
-      Funknown
-  (*| _ -> assert false*)
+  | Funknown -> Funknown
 
 let refinement_apply_solution solution = function
-    (subs, Qvar k) -> (subs, Qconst (solution k))
+  | (subs, Qvar k) -> (subs, Qconst (solution k))
   | r -> r
 
 let apply_solution solution fr =
@@ -254,117 +232,28 @@ let refinement_predicate solution qual_var refn =
   Predicate.big_and (refinement_conjuncts solution qual_var refn)
 
 let rec refinement_vars = function
-  | Fconstr (_, _, (_, Qvar k)) ->
-      [k]
+  | Fconstr (_, _, (_, Qvar k)) -> [k]
   | Frecord (_, fs, (_, Qvar k)) ->
       k :: List.fold_left (fun r (f, _, _) -> refinement_vars f @ r) [] fs
   | _ -> []
 
 let apply_refinement r = function
-  | Fconstr (p, fl, _) ->
-      Fconstr (p, fl, r)
-  | Frecord (p, fs, _) ->
-      Frecord (p, fs, r)
+  | Fconstr (p, fl, _) -> Fconstr (p, fl, r)
+  | Frecord (p, fs, _) -> Frecord (p, fs, r)
   | f -> f
 
 (* pmr: sound for our uses but not very informative *)
 let rec conjuncts solution qual_var = function
-  | Fconstr (_, _, r) ->
-      refinement_conjuncts solution qual_var r
+  | Fconstr (_, _, r) -> refinement_conjuncts solution qual_var r
   | _ -> []
 
 let rec predicate solution qual_var = function
     Fconstr(_, _, r) ->
       refinement_predicate solution qual_var r
-      (* pmr: need to elementify on constructed types, much like below *)
+      (* pmr: need to embed on constructed types, much like below *)
   | Frecord (p, fs, r) ->
       let make_subframe_pred (f, name, _) =
         let pred = predicate solution qual_var f in
           Predicate.subst (Predicate.Field (name, Predicate.Var qual_var)) qual_var pred
       in Predicate.big_and (refinement_predicate solution qual_var r :: List.map make_subframe_pred fs)
   | _ -> Predicate.True
-
-let rec same_shape t1 t2 =
-  match (t1, t2) with
-  (Fconstr(p, l, _), Fconstr(p', l', _)) ->
-   (Path.same p p') && (List.for_all (fun f -> f) (List.map2 same_shape l l')) 
-  | (Fvar p, Fvar p') ->
-   Path.same p p'
-  | (Farrow(_, i, o), Farrow(_, i', o')) ->
-   (same_shape i i') && (same_shape o o')
-  | (Ftuple t1s, Ftuple t2s) ->
-   List.for_all2 same_shape t1s t2s
-  | (Frecord (p1, f1s, _), Frecord (p2, f2s, _)) when Path.same p1 p2 ->
-      let shape_rec (f1, _, _) (f2, _, _) = same_shape f1 f2 in
-        List.for_all2 shape_rec f1s f2s
-  | (Funknown, Funknown) -> true
-  | t -> false
-
-let pred_is_well_typed env p =
-  let rec get_expr_shape = function
-  | Predicate.PInt _ -> frame_int
-  | Predicate.Var x  
-  | Predicate.Pvar (x, _) -> (try Lightenv.find x env
-                        with Not_found -> assert false)
-  | Predicate.FunApp (s, p') -> 
-      let arg_shape shp out_shape =
-          match get_expr_shape p' with
-              Fconstr(a, _, _) ->
-                if Path.same shp a then
-                  out_shape
-                else
-                  Funknown
-            | _ -> Funknown
-      in
-      (* ming: huge hack alert *)
-      if s = "Array.length" then arg_shape Predef.path_array frame_int
-      else if s = "Bigarray.Array2.dim1" || s = "Bigarray.Array2.dim2" then
-        arg_shape (Builtins.ext_find_type_path "array2") frame_int
-      else assert false
-  | Predicate.Binop (p1, op, p2) ->
-      let p1_shp = get_expr_shape p1 in
-      let p1_int = same_shape p1_shp frame_int in
-      let p2_shp = get_expr_shape p2 in
-      let p2_int = same_shape p2_shp frame_int in
-      if p1_int && p2_int then frame_int else Funknown
-  | Predicate.Field (name, r) ->
-      begin match get_expr_shape r with
-        | Frecord (_, fs, _) ->
-            let is_referenced_field (_, name2, _) = String.compare name name2 = 0 in
-              if List.exists is_referenced_field fs then
-                (match (List.find is_referenced_field fs) with (f, _, _) -> f)
-              else Funknown
-        | f -> Funknown
-      end
-  and pred_shape_is_bool = function
-  | Predicate.True -> true
-  | Predicate.Not p -> pred_shape_is_bool p 
-  | Predicate.Or (p1, p2)  
-  | Predicate.And (p1, p2) -> (pred_shape_is_bool p1) && (pred_shape_is_bool p2)
-  | Predicate.Atom (p1, rel, p2) -> 
-      let p1_shp = get_expr_shape p1 in
-      let p2_shp = get_expr_shape p2 in
-        match rel with
-        | Predicate.Ne
-        | Predicate.Eq ->
-         ((same_shape p1_shp p2_shp) && not(same_shape p1_shp Funknown))
-         || ((same_shape p1_shp frame_bool) && (same_shape p2_shp frame_int))
-         || ((same_shape p1_shp frame_int) && (same_shape p2_shp frame_bool))
-        | Predicate.Gt
-        | Predicate.Ge
-        | Predicate.Lt
-        | Predicate.Le ->
-        (same_shape p1_shp p2_shp) && (same_shape p1_shp frame_int || 
-                                       (function Fvar _ -> true | _ -> false) p1_shp ||
-                                       same_shape p1_shp frame_float) 
-    in pred_shape_is_bool p
-
-let refinement_well_formed env solution r qual_var =
-  let valu = qual_var in
-  let pred = refinement_predicate solution valu r in
-  let vars = Predicate.vars pred in
-  let in_scope =
-    let var_bound v = Lightenv.mem v env in
-    List.for_all var_bound vars
-  in
-  if in_scope then pred_is_well_typed env pred else false 

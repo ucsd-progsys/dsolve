@@ -48,9 +48,6 @@ let initial_env () =
   with Not_found ->
     fatal_error "cannot open pervasives.cmi"
 
-let initial_fenv env =
-  Lightenv.addn (Builtins.frames env) Lightenv.empty
-
 (* Compile a .mli file *)
 
 let interface ppf sourcefile outputprefix =
