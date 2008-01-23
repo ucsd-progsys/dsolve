@@ -58,22 +58,70 @@ let array_to_index_list a =
 (************* SCC Ranking **************************************)
 (****************************************************************)
 
+(* orig 
 module Int = struct
   type t = int let compare = compare 
   let hash = Hashtbl.hash let equal = (=)
-end
-    
+end    
 module G = Graph.Imperative.Digraph.Concrete(Int)
+*)
+
+module Int : Graph.Sig.COMPARABLE with type t = int =
+struct
+   type t = int
+   let compare = compare
+   let hash = Hashtbl.hash
+   let equal = (=)
+end
+
+module G = Graph.Imperative.Digraph.Concrete(Int)
+
 module SCC = Graph.Components.Make(G)    
+
+ (* Use of Graphviz *)
+
+module DotGraph =
+struct
+   type t = G.t
+   module V = G.V
+   module E = G.E
+   let iter_vertex = G.iter_vertex
+   let iter_edges_e = G.iter_edges_e
+   let graph_attributes g = []
+   let default_vertex_attributes g = [`Shape `Box]
+   let vertex_name v = string_of_int v
+   let vertex_attributes v = let s = string_of_int v in [`Label s]
+   let default_edge_attributes g = []
+   let edge_attributes e = []
+   let get_subgraph v = None
+end
+
+module Dot = Graph.Graphviz.Dot(DotGraph) 
+
+  let dump_graph g = 
+    let oc = open_out "constraints.dot" in
+    Dot.output_graph oc g;
+    close_out oc
+
  
 (* Given list [(u,v)] returns a numbering [(ui,ri)] s.t. 
  * 1. if ui,uj in same SCC then ri = rj
  * 2. if ui -> uj then ui >= uj *)
 
+
+let ints_to_string xs =
+  "["^(String.concat "," (List.map string_of_int xs))^"]"
+
 let scc_rank uvs = 
   let g = G.create () in
   let _ = List.iter (fun (u,v) -> G.add_edge g u v) uvs in
-  let sccs = array_to_index_list (SCC.scc_array g) in
+  let _ = dump_graph g in
+  let a = SCC.scc_array g in
+  let _ = Printf.printf "dep graph: vertices =  %d, sccs = %d \n" (G.nb_vertex g) (Array.length a) in
+  let _ = Printf.printf "scc sizes: " in
+  let _ = Array.iteri (fun i xs -> Printf.printf "%d : %s \n" i (ints_to_string xs)) a in 
+  let _ = Printf.printf "\n" in
+  let sccs = array_to_index_list a in
   flap (fun (i,vs) -> List.map (fun v -> (v,i)) vs) sccs
 
 (*

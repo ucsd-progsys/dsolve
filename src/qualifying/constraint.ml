@@ -188,7 +188,9 @@ type ref_index =
   { orig: frame_constraint SIM.t;                 (* id -> orig *)
     cnst: refinement_constraint SIM.t;  (* id -> refinement_constraint *) 
     rank: int SIM.t;                    (* id -> dependency rank *)
-    depm: subref_id list SIM.t;         (* id -> successor ids *)}
+    depm: subref_id list SIM.t;         (* id -> successor ids *)
+    pend: (subref_id,unit) Hashtbl.t;   (* id -> is in wkl ? *)
+  }
 
 let get_ref_id = 
   function WFRef (_,_,Some i) | SubRef (_,_,_,_,Some i) -> i | _ -> assert false
@@ -221,7 +223,10 @@ let make_rank_map cm =
   let (dm,deps) = 
     SIM.fold
       (fun id c (dm,deps) -> 
-        match rhs_k c with None -> (dm,(id,id)::deps) | Some k -> 
+        match (c, rhs_k c) with 
+        | (WFRef _,_) -> (dm,deps) 
+        | (_,None) -> (dm,(id,id)::deps) 
+        | (_,Some k) -> 
           let kds = get km k in
           let deps' = List.map (fun id' -> (id,id')) (id::kds) in
           (SIM.add id kds dm, List.rev_append deps deps'))
@@ -249,7 +254,7 @@ let make_ref_index ocs =
         (SIM.add i o om, SIM.add i c cm))
       (SIM.empty, SIM.empty) ics in
   let (dm,rm) = make_rank_map cm in
-  {orig = om; cnst = cm; rank = rm; depm = dm}
+  {orig = om; cnst = cm; rank = rm; depm = dm; pend = Hashtbl.create 17}
 
 let get_ref_orig sri c = 
   Common.do_catch "get_ref_orig" (SIM.find (get_ref_id c)) sri.orig
@@ -268,11 +273,21 @@ let iter_ref_constraints sri f =
 
 (* API *)
 let push_worklist sri w cs =
-  List.fold_left (fun w c -> WH.add (get_ref_id c,get_ref_rank sri c) w) w cs
+  List.fold_left 
+    (fun w c -> 
+      let id = get_ref_id c in
+      let _ = Printf.printf "Pushing %d \n" id in 
+      if Hashtbl.mem sri.pend id then w else 
+        let _ = Hashtbl.replace sri.pend id () in
+        WH.add (id,get_ref_rank sri c) w)
+    w cs
 
 (* API *)
 let pop_worklist sri w =
-  try (Some (get_ref_constraint sri (fst(WH.maximum w))), WH.remove w)
+  try 
+    let id = fst (WH.maximum w) in
+    let _ = Hashtbl.remove sri.pend id in
+    (Some (get_ref_constraint sri id), WH.remove w)
   with Heap.EmptyHeap -> (None,w) 
 
 (* API *)
@@ -305,7 +320,7 @@ let qual_implied s lhs lhs_ps rhs_subs q =
 let qual_wf s env subs q =
   refinement_well_formed env (solution_map s) (subs,F.Qconst [q]) qual_test_var
 
-let refine s c = 
+let refine sri s c =
   let _ = incr stat_refines in
   match c with
   | SubRef (_, _, ([], F.Qvar k1), ([], F.Qvar k2), _)
@@ -416,6 +431,7 @@ let dump_solving qs sri s step =
      !stat_solved_constraints !stat_valid_constraints;
      TP.dump_simple_stats ();
      Format.printf "@[Solved@ %d@ constraints@ by@ matching@\n@]" !stat_matches;
+     dump_solution_stats s;
      flush stdout)
 
 (**************************************************************)
@@ -425,12 +441,13 @@ let dump_solving qs sri s step =
 let rec solve_sub sri s w = 
   let _ = if !stat_refines mod 100 = 0 then Printf.printf "num refines = %d \n" !stat_refines in
   match pop_worklist sri w with (None,_) -> s | (Some c, w') ->
-    let w' = if refine s c then push_worklist sri w' (get_ref_deps sri c) else w' in
+    let _ = Printf.printf "Refining: %d in scc %d \n" (get_ref_id c) (get_ref_rank sri c) in
+    let w' = if refine sri s c then push_worklist sri w' (get_ref_deps sri c) else w' in
     solve_sub sri s w'
 
 let solve_wf sri s = 
   iter_ref_constraints sri 
-  (function WFRef _ as c -> ignore (refine s c) | _ -> ()) 
+  (function WFRef _ as c -> ignore (refine sri s c) | _ -> ()) 
 
 let solve qs cs = 
   let sri = make_ref_index (split cs) in
