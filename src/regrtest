@@ -1,11 +1,9 @@
 #!/bin/bash
 #not actually a regression test
 OCAML=./liquid.run
-FLAGS="-dframes -anormal -cacheq"
-QUALFLAGS="-bprover -dqualifs -lqualifs"
-YFILE=yicestests
-SFILE=simtests
-POSFILE=posfiles
+FLAGS="-dframes -cacheq"
+QUALFLAGS="-no-anormal -dqualifs -lqualifs"
+POSFILE=postests
 NEGFILE=negtests
 #HANDQUALS_ONLY="yep"
 
@@ -19,11 +17,7 @@ fi
 rm -f $TMPDIR/*.lilog*
 rm -f DML/*.quals
 rm -f DMLex/*.quals
-rm -f examples-liquid/split.ml.quals
-rm -f examples-liquid/vecswap.ml.quals
-rm -f examples-liquid/minibot.ml.quals
-
-FILE=`cat $POSFILE`" "$NEGFILE
+rm -f examples-liquid/*.quals
 
 echo Generating qualifiers where needed...
 
@@ -31,34 +25,31 @@ if [[ $HANDQUALS_ONLY ]]
 then
   echo "User specified hand quals only"
 else
-  for i in `cat $FILE`
+  for i in `cat $POSFILE $NEGFILE`
   do
-    cat $i.quals 1> /dev/null 2> /dev/null
-    if [[ $? != 0 ]]
-    then
-      $OCAML $QUALFLAGS $i 1> /dev/null 2> $i.quals
-    fi
+#    cat $i.quals 1> /dev/null 2> /dev/null
+#    if [[ $? != 0 ]]
+#    then
+    $OCAML $QUALFLAGS $i 1> /dev/null 2> $i.quals
+#    fi
   done
 fi
 echo done.
 
-for j in `cat $POSFILE`
+echo RUNNING $POSFILE TESTS
+for i in `cat $POSFILE`
 do
-echo RUNNING $j TESTS
-for i in `cat $j`
-do
-  YICES=""
-  if [[ "$j" == "yicestests" ]]
-  then
-      YICES="-bprover"
-  fi
-
   echo RUNNING: $i 
-  LOGFILE=$TMPDIR"/"${i/\//_}".lilog"
+  printable_name=${i/\//_}
+  LOGFILE=$TMPDIR"/"$printable_name".lilog"
   echo $i > $LOGFILE
-  time $OCAML $FLAGS $YICES $i 1>> $LOGFILE 2>> $LOGFILE
+  time $OCAML $FLAGS $i 1>> $LOGFILE 2>> $LOGFILE
 
   SUCC=$?
+
+  #temporary fix for liquid.run's broken annotations
+  mv $TMPDIR/liq.ml $TMPDIR/"$printable_name"
+  mv $TMPDIR/liq.annot $TMPDIR/${printable_name%\.ml}".annot"
 
   #some stupid grep tricks to cut down on the output
   s=`grep -n "\#\#solve\#\#" $LOGFILE | tail -n1 -` 
@@ -90,31 +81,28 @@ do
   echo "$tt"
   echo "$ttt"
 done
-done
 echo DONE
 
-
-#echo RUNNING NEGFILE
-#for i in `cat $NEGFILE`
-#do
-#  echo RUNNING: $i 
-#  time $OCAML $FLAGS $i &> $TMPDIR"/"${i/\//_}".lilog"
-#  if [ $? = 1 ] 
-#  then 
-#    echo "SUCCESS!"
-#  else
-#    echo "FAILURE :("
-#  fi
-#  grep "TOTAL" $LOGFILE | tail -n1
-#done
-#echo DONE
+echo RUNNING NEGFILE
+for i in `cat $NEGFILE`
+do
+  echo RUNNING: $i 
+  time $OCAML $FLAGS $i &> $TMPDIR"/"${i/\//_}".lilog"
+  if [ $? = 1 ] 
+  then 
+    echo "SUCCESS!"
+  else
+    echo "FAILURE :("
+  fi
+  grep "TOTAL" $LOGFILE | tail -n1
+done
+echo DONE
 
 exit 0
 
 OUT_FILES=`ls $TMPDIR"/"*.lilog`
 
 #grovel through output files for stats below:
-
 
 echo "Timing: "
 for i in $OUT_FILES

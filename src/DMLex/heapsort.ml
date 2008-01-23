@@ -25,7 +25,6 @@ let rec heapify size data i =
 	else ()
 (*withtype {n:nat,i:nat | i < n} <n-i> =>
          float heap(n) * int(i) -> unit*)
-in
 
 let buildheap size data =
 	let rec loop i =
@@ -40,7 +39,6 @@ let buildheap size data =
     let size'_1 = size' - 1 in
 	  loop size'_1
 (*withtype {n:nat} float heap(n) -> unit*)
-in
 
 let heapsort maxx size data =
 	let  _none = buildheap size data in
@@ -59,7 +57,6 @@ let heapsort maxx size data =
     let maxx' = maxx - 1 in
 	loop maxx'
 (*withtype {n:nat} float heap(n) -> unit*)
-in
 
 let print_array	data i j =
 	let rec loop k =
@@ -74,7 +71,6 @@ let print_array	data i j =
 	loop i
 (*withtype {n:nat, i:int, j:int | 0 <= i <= j <= n} <j-i> =>
          float array(n) * int(i) * int(j) -> unit*)
-in
 
 let main _none =
 	let maxx = 16 in
@@ -93,7 +89,9 @@ let main _none =
 	let _none = init 0 in
 	heapsort maxx 0 data; print_array data 0 maxx; data
 (*withtype <> => unit -> unit*)
-in main ();;
+
+                                                  
+let driver = main ()
 
 
 (*(*datatype 'a heap with nat =

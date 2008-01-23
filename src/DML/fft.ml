@@ -1,16 +1,17 @@
-let pi = 3.14 in
+let pi = 3.14 
 (*
 ** by: Dave Edelblute, edelblut@cod.nosc.mil, 05 Jan 1993
 ** Modified: R. Mayer to work with hist benchmark routines.
 ** Translated from C to de Caml: Hongwei Xi, 07 Nov 1998
 *)
-let two_pi = 2.0 *. pi in 
+let two_pi = 2.0 *. pi  
+
 let ffor s d body = 
     let rec loop i =
         let i' = i + 1 in 
         if i <= d then (body i; loop i') else () 
     in loop s
-in 
+
 let fft px py n = (* n must be a power of 2! *)
   let rec loop n2 n4 =
     if n2 <= 2 then () else (* the case n2 = 2 is treated below *)
@@ -105,12 +106,11 @@ let fft px py n = (* n must be a power of 2! *)
       end
     in
     loop2 1 1; n
-in 
 
 (* pmr: is this going to cause a problem? *)
 (* ming: we aren't trying to prove anything over floats? *)
 let fabs r = if r > 0.0 then r else (0.0 -. r)
-                                     in
+                                     
 let ffttest np =
   let enp = float_of_int np in
   let n2 = np / 2 in
@@ -149,12 +149,13 @@ let ffttest np =
   let zm = if fabs zr < fabs zi then zi else zr
   in
   (*in print_float zm; print_newline ()*) zm
-in
+
 let rec loop_np i np =
   if i > 16 then () else begin ignore (ffttest np); loop_np (i + 1) (np * 2) end
-in
-let doit _none = loop_np 4 16 in
-  doit ();; 
+
+let doit _none = loop_np 4 16 
+
+let driver = doit ()
 
 (*
 (*

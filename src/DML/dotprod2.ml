@@ -16,14 +16,14 @@ let dotprod v1 v2 =
 					loop () ) 
 		else ()
     in (loop (); !sum)
-in
-let _none = Random.init 555 in
-let sz = Random.int 40 in
-let sz_plus = sz + 1 in
-let v1__ = Array.make sz_plus 1 in
-let v2__ = Array.make sz_plus 1 in
-dotprod v1__ v2__ 
-;;
+
+let driver =
+  let _none = Random.init 555 in
+  let sz = Random.int 40 in
+  let sz_plus = sz + 1 in
+  let v1__ = Array.make sz_plus 1 in
+  let v2__ = Array.make sz_plus 1 in
+    dotprod v1__ v2__ 
 
 
 

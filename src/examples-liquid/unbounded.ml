@@ -17,17 +17,17 @@ and unb2 arr2 m n i j =
       let r = j + 1 in
         unb1 arr2 m n 0 r
   else true
-in
 
-(Random.self_init ();
- let dim1 = Random.int 10 in
- let dim1 = dim1 + 1 in
- let dim2 = Random.int 10 in
- let dim2 = dim2 + 1 in
- let arr =
-   Bigarray.Array2.create
-     Bigarray.int Bigarray.c_layout
-     dim1 dim2 in
- let m = Bigarray.Array2.dim1 arr in
- let n = Bigarray.Array2.dim2 arr in
-   unb1 arr m n 0 1);;
+let driver =
+  (Random.self_init ();
+  let dim1 = Random.int 10 in
+  let dim1 = dim1 + 1 in
+  let dim2 = Random.int 10 in
+  let dim2 = dim2 + 1 in
+  let arr =
+    Bigarray.Array2.create
+      Bigarray.int Bigarray.c_layout
+      dim1 dim2 in
+  let m = Bigarray.Array2.dim1 arr in
+  let n = Bigarray.Array2.dim2 arr in
+    unb1 arr m n 0 1)

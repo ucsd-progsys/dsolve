@@ -1,4 +1,4 @@
-let min m n = if m <= n then m else n in
+let min m n = if m <= n then m else n 
 (*
  * This is an example showing that array bounds checking
  * is not needed for doing quicksort on an array.
@@ -124,7 +124,6 @@ let rec sortRange arr start n =
   sorting start n 
     (*quickSort start n*)
   (*if n <= 7 then insertSort start n else quickSort start n*)
-in 
 (*let qs _1_vec =
   sortRange _1_vec 0 (Array.length _1_vec) *)
 (*withtype {size:nat} 'a vect(size) -> unit*)
@@ -140,8 +139,8 @@ sorted arr =
 	in
 		if len <= 1 then true else 
 			s (Array.get arr 0) 1 
-in 
-(*let gen_vec rr =
+
+let gen_vec rr =
     let rec fill_arr i = 
         let len = Array.length rr in
         if i < len then 
@@ -150,16 +149,15 @@ in
           Array.set rr i (fill ()); fill_arr i' 
         else ()
     in fill_arr 0
-in*)
-let _ = Random.self_init ()in
-let p = Random.int 20 + 2 in
-let x = let x : garbage = 0 in x in
-let vec = Array.make p (x+x) in
-(*let _ = gen_vec vec in*)
-(*let vec = [|1;5;7;3;68;3;56;9;0;3;21|] in
-let lent = 10 in*)
-	sortRange vec 0 p; sorted vec
-;; 
+
+let driver =
+  let _ = Random.self_init ()in
+  let p = Random.int 20 + 2 in
+  let vec = Array.make p 0 in
+  let _ = gen_vec vec in
+  (*let vec = [|1;5;7;3;68;3;56;9;0;3;21|] in
+  let lent = 10 in*)
+	  sortRange vec 0 p; sorted vec
 
 
 
