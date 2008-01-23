@@ -38,19 +38,4 @@ let max x y =
 let v7 = max 10 100
 let v8 = max 10 (-100)
 
-(**************************************************************)
-(*
-let foldn n b f =
-  let rec loop i c =
-    if i < n then loop (i+1) (f i c) else c in
-    loop 0 b
-
-let arraysum a =
-  let am l s = s + (abs (Array.get a l)) in
-    foldn (Array.length a) 0 am
-
-let _ = 
-  let vec = Array.make (Random.int 40) 2 in
-  arraysum vec
-*)
 
