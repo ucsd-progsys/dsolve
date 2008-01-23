@@ -71,8 +71,6 @@ module SCC = Graph.Components.Make(G)
  * 2. if ui -> uj then ui >= uj *)
 
 let scc_rank uvs = 
-  Printf.printf "scc_rank: ";
-  List.iter (fun (u,v) -> Printf.printf "(%d,%d)" u v) uvs;
   let g = G.create () in
   let _ = List.iter (fun (u,v) -> G.add_edge g u v) uvs in
   let sccs = array_to_index_list (SCC.scc_array g) in

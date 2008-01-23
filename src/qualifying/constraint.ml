@@ -97,6 +97,7 @@ let pprint_ref so ppf = function
   | WFRef (env,r,io) ->
       fprintf ppf "@[%a@ Env:@ %a;@;<1 2>|-@;<1 2>%a@;<1 2>@]"
       pprint_io io (pprint_env_pred so) env F.pprint_refinement r 
+
 (**************************************************************)
 (********************* Constraint Splitting *******************) 
 (**************************************************************)
@@ -330,9 +331,10 @@ let sat s = function
       let p1 = F.refinement_predicate (solution_map s) qual_test_var r1 in
       let p2 = F.refinement_predicate (solution_map s) qual_test_var r2 in
         TP.backup_implies (P.big_and [envp; guard; p1]) p2
-  | WFRef (env, r, _) ->
+  (* | _ -> true*)
+        | WFRef (env, r, _) as c -> 
       let rv = F.refinement_well_formed env (solution_map s) r qual_test_var in
-      Common.asserts "wf is unsat!" rv; rv
+         Common.asserts (Printf.sprintf "wf is unsat! (%d)" (get_ref_id c)) rv; rv 
 
 let unsat_constraints sri s =
   Common.map_partial
@@ -425,7 +427,6 @@ let solve_wf sri s =
   (function WFRef _ as c -> ignore (refine s c) | _ -> ()) 
 
 let solve qs cs = 
-  let _ = Printf.printf "This is the new solver \n" in
   let sri = make_ref_index (split cs) in
   let s = make_initial_solution sri qs in
   let _ = dump_solving qs sri s 0  in 
@@ -433,6 +434,7 @@ let solve qs cs =
   let _ = dump_solving qs sri s 1 in
   let w = make_initial_worklist sri in
   let _ = Bstats.time "solving sub" (solve_sub sri s) w in
+  let _ = dump_solving qs sri s 2 in
   let _ = TP.clear_cache () in
   let unsat = Bstats.time "testing solution" (unsat_constraints sri) s in
   (solution_map s,unsat)
