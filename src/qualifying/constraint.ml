@@ -338,7 +338,7 @@ let sat s = function
       let p2 = F.refinement_predicate (solution_map s) qual_test_var r2 in
         TP.backup_implies (P.big_and [envp; guard; p1]) p2
   | WFRef (env, r, _) as c -> 
-      let rv = F.refinement_well_formed env (solution_map s) r qual_test_var in
+      let rv = refinement_well_formed env (solution_map s) r qual_test_var in
          Common.asserts (Printf.sprintf "wf is unsat! (%d)" (get_ref_id c)) rv;
          rv 
 
