@@ -43,9 +43,9 @@ let rec pprint_pexpr ppf = function
   | PInt n ->
       fprintf ppf "%d" n
   | Var id ->
-      fprintf ppf "%s" (Path.name id)
+      fprintf ppf "%s" (Path.unique_name id)
   | Pvar (id, n) ->
-      fprintf ppf "%s-%d" (Path.name id) n
+      fprintf ppf "%s-%d" (Path.unique_name id) n
   | FunApp (f, pexp) ->
       fprintf ppf "@[(%s@ %a)@]" f pprint_pexpr pexp
   | Binop (p, op, q) ->
