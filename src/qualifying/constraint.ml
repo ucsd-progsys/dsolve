@@ -13,18 +13,19 @@ module C = Common
 (**************** Type definitions: Constraints ***************) 
 (**************************************************************)
 
+type fc_id = int option 
 type subref_id = int 
 
 module SIM = Map.Make(struct type t = subref_id let compare = compare end)
 
 type frame_constraint =
-  | SubFrame of F.t Le.t * P.t * F.t * F.t * origin
-  | WFFrame of F.t Le.t * F.t * origin
+  | SubFrame of F.t Le.t * P.t * F.t * F.t * origin * fc_id
+  | WFFrame of F.t Le.t * F.t * origin * fc_id 
 
 and origin =
-  | Loc of Location.t
-  | Assert of Location.t
-  | Cstr of frame_constraint
+  | Loc of Location.t 
+  | Assert of Location.t 
+  | Cstr of frame_constraint 
 
 type refinement_constraint =
   | SubRef of F.t Le.t * P.t * F.refinement * F.refinement * (subref_id option) 
@@ -33,6 +34,13 @@ type refinement_constraint =
 (**************************************************************)
 (********************** Misc. Constants ***********************)
 (**************************************************************)
+
+let fresh_fc_id = 
+  let r = ref 0 in
+  fun () -> incr r; Some (!r)
+
+let get_fc_id = function 
+  | SubFrame (_,_,_,_,_,io) | WFFrame (_,_,_,io) -> io
 
 (* Unique variable to qualify when testing sat, applicability of qualifiers...
  * this is passed into the solver *)
@@ -80,9 +88,9 @@ let pprint_env_pred so ppf env =
   | _ -> Le.iter (fun x t -> pprint_local_binding ppf (x, t)) env
 
 let pprint ppf = function
-  | SubFrame (_, _, f1, f2, _) ->
+  | SubFrame (_,_,f1,f2,_,_) ->
       fprintf ppf "@[%a@ <:@;<1 2>%a@]" F.pprint f1 F.pprint f2
-  | WFFrame (_, f, _) ->
+  | WFFrame (_,f,_,_) ->
       F.pprint ppf f
 
 let pprint_io ppf = function
@@ -92,7 +100,8 @@ let pprint_io ppf = function
 let pprint_ref so ppf = function
   | SubRef (env,g,r1,r2,io) ->
       fprintf ppf "@[%a@ Env:@ @[%a@];@;<1 2>Guard:@ %a@;<1 0>|-@;<1 2>%a@;<1 2><:@;<1 2>%a@]"
-      pprint_io io (pprint_env_pred so) env P.pprint g F.pprint_refinement r1 F.pprint_refinement r2 
+      pprint_io io (pprint_env_pred so) env P.pprint g 
+      F.pprint_refinement r1 F.pprint_refinement r2 
   | WFRef (env,r,io) ->
       fprintf ppf "@[%a@ Env:@ @[%a@];@;<1 2>|-@;<1 2>%a@;<1 2>@]"
       pprint_io io (pprint_env_pred so) env F.pprint_refinement r 
@@ -112,9 +121,10 @@ let pprint_ref so ppf = function
   *)
 
 let lequate_cs eqb env g c f1 f2 =
+  let fci = get_fc_id c in
   if eqb 
-  then [SubFrame(env,g,f1,f2,Cstr c); SubFrame(env,g,f2,f1,Cstr c)]
-  else [SubFrame(env,g,f1,f2,Cstr c)]
+  then [SubFrame(env,g,f1,f2,Cstr c,fci); SubFrame(env,g,f2,f1,Cstr c,fci)]
+  else [SubFrame(env,g,f1,f2,Cstr c,fci)]
 
 let match_and_extend env (l1,f1) (l2,f2) = 
   match (l1,l2) with
@@ -125,7 +135,7 @@ let match_and_extend env (l1,f1) (l2,f2) =
 let is_mutable m = 
   m = Asttypes.Mutable
 
-let split_sub = function WFFrame _ -> assert false | SubFrame (env,g,f1,f2,_) as c -> 
+let split_sub = function WFFrame _ -> assert false | SubFrame (env,g,f1,f2,_,_) as c -> 
   match (f1, f2) with
   | (F.Farrow (l1, f1, f1'), F.Farrow (l2, f2, f2')) -> 
       let env' = match_and_extend env (l1,f1) (l2,f2) in 
@@ -150,25 +160,26 @@ let split_sub = function WFFrame _ -> assert false | SubFrame (env,g,f1,f2,_) as
       (printf "@[Can't@ split:@ %a@ <:@ %a@]" F.pprint f1 F.pprint f2; 
        assert false)
 
-let split_wf = function SubFrame _ -> assert false | WFFrame (env,f,_) as c -> 
+let split_wf = function SubFrame _ -> assert false | WFFrame (env,f,_,_) as c -> 
   match f with
   | F.Fconstr (_, l, r) ->
-      (List.map (fun li -> WFFrame (env, li, Cstr c)) l,
+      (List.map (fun li -> WFFrame (env, li, Cstr c, None)) l,
        [(Cstr c, WFRef (Le.add qual_test_var f env, r, None))])
   | F.Farrow (l, f, f') ->
       let env' = match l with None -> env | Some p -> Pat.env_bind env p f in
-      ([WFFrame (env, f, Cstr c); WFFrame (env', f', Cstr c)],
+      ([WFFrame (env, f, Cstr c, None); WFFrame (env', f', Cstr c, None)],
        [])
   | F.Ftuple fs ->
-      (List.map (fun f' -> WFFrame (env, f', Cstr c)) fs,
+      (List.map (fun f' -> WFFrame (env, f', Cstr c, None)) fs,
        [])
   | F.Frecord (_, fs, r) ->
-      (List.map (fun (f',_,_) -> WFFrame (env, f', Cstr c)) fs,
+      (List.map (fun (f',_,_) -> WFFrame (env, f', Cstr c, None)) fs,
        [(Cstr c, WFRef (Le.add qual_test_var f env, r, None))])
   | F.Fvar _ | F.Funknown ->
       ([],[]) 
 
-let split cs = 
+let split cs =
+  assert (List.for_all (fun c -> None <> get_fc_id c) cs);
   Common.expand 
     (fun c -> match c with SubFrame _ -> split_sub c | WFFrame _ -> split_wf c) 
     cs [] 
@@ -180,15 +191,16 @@ let split cs =
 module WH = 
   Heap.Functional(
     struct 
-      type t = subref_id * (int * bool) 
-      let compare (_,(i,j)) (_,(i',j')) = 
-        if i <> i' then compare i i' else compare j j'
+      type t = subref_id * (int * bool * fc_id) 
+      let compare (_,(i,j,k)) (_,(i',j',k')) = 
+        if i <> i' then compare i i' else 
+          if j <> j' then compare j j' else compare k' k
     end)
 
 type ref_index = 
-  { orig: frame_constraint SIM.t;                 (* id -> orig *)
+  { orig: frame_constraint SIM.t;       (* id -> orig *)
     cnst: refinement_constraint SIM.t;  (* id -> refinement_constraint *) 
-    rank: (int * bool) SIM.t;                    (* id -> dependency rank *)
+    rank: (int * bool * fc_id) SIM.t;           (* id -> dependency rank *)
     depm: subref_id list SIM.t;         (* id -> successor ids *)
     pend: (subref_id,unit) Hashtbl.t;   (* id -> is in wkl ? *)
   }
@@ -213,7 +225,7 @@ let rhs_k = function
   | SubRef (_,_,_,(_,F.Qvar k),_) -> Some k
   | _ -> None
 
-let make_rank_map cm =
+let make_rank_map om cm =
   let get vm k = try VM.find k vm with Not_found -> [] in
   let upd id vm k = VM.add k (id::(get vm k)) vm in
   let km = 
@@ -232,12 +244,14 @@ let make_rank_map cm =
           let deps' = List.map (fun id' -> (id,id')) (id::kds) in
           (SIM.add id kds dm, List.rev_append deps deps'))
       cm (SIM.empty,[]) in
+  let flabel i = Common.io_to_string (get_fc_id (SIM.find i om)) in
   let rm = 
     List.fold_left
       (fun rm (id,r) -> 
         let b = (not !Clflags.psimple) || (is_simple_constraint (SIM.find id cm)) in
-        SIM.add id (r,b) rm)
-      SIM.empty (Common.scc_rank deps) in
+        let fci = get_fc_id (SIM.find id om) in 
+        SIM.add id (r,b,fci) rm)
+      SIM.empty (Common.scc_rank flabel deps) in
   (dm,rm)
 
 let fresh_refc = 
@@ -259,7 +273,7 @@ let make_ref_index ocs =
         let i = get_ref_id c in 
         (SIM.add i o om, SIM.add i c cm))
       (SIM.empty, SIM.empty) ics in
-  let (dm,rm) = make_rank_map cm in
+  let (dm,rm) = make_rank_map om cm in
   {orig = om; cnst = cm; rank = rm; depm = dm; pend = Hashtbl.create 17}
 
 let get_ref_orig sri c = 
@@ -447,8 +461,10 @@ let dump_solving qs sri s step =
 let rec solve_sub sri s w = 
   let _ = if !stat_refines mod 100 = 0 then Printf.printf "num refines = %d \n" !stat_refines in
   match pop_worklist sri w with (None,_) -> s | (Some c, w') ->
-    let (r,b) = get_ref_rank sri c in
-    let _ = Printf.printf "Refining: %d in scc (%d,%b) \n" (get_ref_id c) r b in
+    let (r,b,fci) = get_ref_rank sri c in
+    let _ = 
+      Printf.printf "Refining: %d in scc (%d,%b,%s) \n" 
+      (get_ref_id c) r b (Common.io_to_string fci) in
     let w' = if refine sri s c then push_worklist sri w' (get_ref_deps sri c) else w' in
     solve_sub sri s w'
 
