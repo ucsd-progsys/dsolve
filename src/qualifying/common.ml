@@ -117,10 +117,10 @@ let scc_rank uvs =
   let _ = List.iter (fun (u,v) -> G.add_edge g u v) uvs in
   let _ = dump_graph g in
   let a = SCC.scc_array g in
-  let _ = Printf.printf "dep graph: vertices =  %d, sccs = %d \n" (G.nb_vertex g) (Array.length a) in
-  let _ = Printf.printf "scc sizes: " in
-  let _ = Array.iteri (fun i xs -> Printf.printf "%d : %s \n" i (ints_to_string xs)) a in 
-  let _ = Printf.printf "\n" in
+  let _ = if !Clflags.verbose then Printf.printf "dep graph: vertices =  %d, sccs = %d \n" (G.nb_vertex g) (Array.length a) in
+  let _ = if !Clflags.verbose then Printf.printf "scc sizes: " in
+  let _ = if !Clflags.verbose then Array.iteri (fun i xs -> Printf.printf "%d : %s \n" i (ints_to_string xs)) a in 
+  let _ = if !Clflags.verbose then Printf.printf "\n" in
   let sccs = array_to_index_list a in
   flap (fun (i,vs) -> List.map (fun v -> (v,i)) vs) sccs
 

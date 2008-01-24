@@ -74,6 +74,7 @@ and always_use_backup_prover = ref false (* -defprover *)
 and cache_queries = ref false           (* -cqueries *)
 and no_simple_subs = ref false          (* -no-simple-subs *)
 and verb_errors = ref false               (* -verrs *)
+and verbose = ref false                 (* -verb *)
 
 let keep_asm_file = ref false           (* -S *)
 let optimize_for_speed = ref true       (* -compact *)

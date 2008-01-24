@@ -276,7 +276,7 @@ let push_worklist sri w cs =
   List.fold_left 
     (fun w c -> 
       let id = get_ref_id c in
-      let _ = Printf.printf "Pushing %d \n" id in 
+      let _ = if !Clflags.verbose then Printf.printf "Pushing %d \n" id in 
       if Hashtbl.mem sri.pend id then w else 
         let _ = Hashtbl.replace sri.pend id () in
         WH.add (id,get_ref_rank sri c) w)
@@ -359,7 +359,7 @@ let sat s = function
 
 let unsat_constraints sri s =
   Common.map_partial
-    (fun c -> if sat s c then None else Some (get_ref_orig sri c))
+    (fun c -> if sat s c then None else Some (c, get_ref_orig sri c))
     (get_ref_constraints sri)
 
 (**************************************************************)
@@ -389,13 +389,15 @@ let make_initial_solution sri qs =
 (**************************************************************)
  
 let dump_constraints sri = 
-  (* if !Clflags.dump_constraints then*)
-  printf "Refinement Constraints @.";
-  iter_ref_constraints sri 
-  (fun c -> printf "@[%a@.@]" (pprint_ref None) c)
-    (* let cs = get_ref_constraints sri in 
-    Oprint.print_list (pprint_ref None) (fun ppf -> fprintf ppf "@.@.") 
-    std_formatter cs *)
+   if !Clflags.dump_constraints then
+    begin
+      printf "@[Refinement@ Constraints @.@]";
+      iter_ref_constraints sri 
+      (fun c -> printf "@[%a@.@]" (pprint_ref None) c)
+      (* let cs = get_ref_constraints sri in 
+      Oprint.print_list (pprint_ref None) (fun ppf -> fprintf ppf "@.@.") 
+      std_formatter cs *)
+    end
 
 let dump_solution_stats s = 
   let kn  = Sol.length s in
@@ -439,9 +441,9 @@ let dump_solving qs sri s step =
 (**************************************************************)
 
 let rec solve_sub sri s w = 
-  let _ = if !stat_refines mod 100 = 0 then Printf.printf "num refines = %d \n" !stat_refines in
+  let _ = if !Clflags.verbose then (if !stat_refines mod 100 = 0 then Printf.printf "num refines = %d \n" !stat_refines) in
   match pop_worklist sri w with (None,_) -> s | (Some c, w') ->
-    let _ = Printf.printf "Refining: %d in scc %d \n" (get_ref_id c) (get_ref_rank sri c) in
+    let _ = if !Clflags.verbose then Printf.printf "Refining: %d in scc %d \n" (get_ref_id c) (get_ref_rank sri c) in
     let w' = if refine sri s c then push_worklist sri w' (get_ref_deps sri c) else w' in
     solve_sub sri s w'
 
@@ -460,4 +462,9 @@ let solve qs cs =
   let _ = dump_solving qs sri s 2 in
   let _ = TP.clear_cache () in
   let unsat = Bstats.time "testing solution" (unsat_constraints sri) s in
-  (solution_map s,unsat)
+  let _ = if !Clflags.verb_errors then 
+          begin
+            printf "@[Ref_constraints@ still@ unsatisfied:@\n@]";
+            List.iter (fun (c, b) -> printf "@[%a@.@]" (pprint_ref None) c) unsat
+          end in
+  (solution_map s, (List.map (fun (a, b) -> b)  unsat))
