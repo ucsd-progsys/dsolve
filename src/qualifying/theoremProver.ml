@@ -27,6 +27,7 @@ let rec fixdiv p =
   in
   let rec pred_isdiv = 
     function Predicate.Atom(e, _, e') -> (expr_isdiv e) || (expr_isdiv e')
+      | Predicate.Iff (px, q) -> expr_isdiv px || pred_isdiv q
       | Predicate.And(p, p') -> (pred_isdiv p) || (pred_isdiv p')
       | Predicate.Or(p, p') -> (pred_isdiv p) || (pred_isdiv p')
       | Predicate.True -> false

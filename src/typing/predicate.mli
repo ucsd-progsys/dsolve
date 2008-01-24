@@ -17,7 +17,6 @@ type binrel =
 type pexpr =   
     PInt of int 
   | Var of Path.t
-  | Pvar of Path.t * int
   | FunApp of string * pexpr
   | Binop of pexpr * binop * pexpr 
   | Field of string * pexpr
@@ -25,6 +24,7 @@ type pexpr =
 type t =  
     True
   | Atom of pexpr * binrel * pexpr 
+  | Iff of pexpr * t
   | Not of t
   | And of t * t 
   | Or of t * t 
@@ -37,6 +37,7 @@ val big_and: t list -> t
 val big_or: t list -> t
 val equals: (pexpr * pexpr) -> t
 val implies: (t * t) -> t
+val expand_iff: t -> t
 
 val (==.): pexpr -> pexpr -> t
 val (!=.): pexpr -> pexpr -> t
@@ -48,6 +49,7 @@ val (&&.): t -> t -> t
 val (||.): t -> t -> t
 val (!.): t -> t
 val (=>.): t -> t -> t
+val (<=>.): pexpr -> t -> t
 
 val tuple_nth: pexpr -> int -> pexpr
 
