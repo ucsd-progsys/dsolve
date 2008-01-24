@@ -129,6 +129,7 @@ let main () =
      "-no-anormal", Arg.Set no_anormal, "don't rewrite the AST for a-normality";
      "-ksimpl", Arg.Set kill_simplify, "kill simplify after a large number of queries to reduce memory usage";
      "-cacheq", Arg.Set cache_queries, "cache theorem prover queries";
+     "-psimple", Arg.Set psimple, "prioritize simple constraints";
      "-verrs", Arg.Set verb_errors, "print very verbose errors when constraints are unsat"
   ] file_argument usage;
   let source = load_sourcefile std_formatter !filename in

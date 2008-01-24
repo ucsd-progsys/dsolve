@@ -17,13 +17,6 @@ type subref_id = int
 
 module SIM = Map.Make(struct type t = subref_id let compare = compare end)
 
-module WH = 
-  Heap.Functional(
-    struct 
-      type t = subref_id * int 
-      let compare (_,i) (_,i') = compare i i' 
-    end)
-
 type frame_constraint =
   | SubFrame of F.t Le.t * P.t * F.t * F.t * origin
   | WFFrame of F.t Le.t * F.t * origin
@@ -184,10 +177,18 @@ let split cs =
 (********************* Constraint Indexing ********************) 
 (**************************************************************)
 
+module WH = 
+  Heap.Functional(
+    struct 
+      type t = subref_id * (int * bool) 
+      let compare (_,(i,j)) (_,(i',j')) = 
+        if i <> i' then compare i i' else compare j j'
+    end)
+
 type ref_index = 
   { orig: frame_constraint SIM.t;                 (* id -> orig *)
     cnst: refinement_constraint SIM.t;  (* id -> refinement_constraint *) 
-    rank: int SIM.t;                    (* id -> dependency rank *)
+    rank: (int * bool) SIM.t;                    (* id -> dependency rank *)
     depm: subref_id list SIM.t;         (* id -> successor ids *)
     pend: (subref_id,unit) Hashtbl.t;   (* id -> is in wkl ? *)
   }
@@ -231,8 +232,13 @@ let make_rank_map cm =
           let deps' = List.map (fun id' -> (id,id')) (id::kds) in
           (SIM.add id kds dm, List.rev_append deps deps'))
       cm (SIM.empty,[]) in
-  let ranks = Common.scc_rank deps in
-  (dm,List.fold_left (fun rm (id,r) -> SIM.add id r rm) SIM.empty ranks)
+  let rm = 
+    List.fold_left
+      (fun rm (id,r) -> 
+        let b = (not !Clflags.psimple) || (is_simple_constraint (SIM.find id cm)) in
+        SIM.add id (r,b) rm)
+      SIM.empty (Common.scc_rank deps) in
+  (dm,rm)
 
 let fresh_refc = 
   let i = ref 0 in
@@ -441,7 +447,8 @@ let dump_solving qs sri s step =
 let rec solve_sub sri s w = 
   let _ = if !stat_refines mod 100 = 0 then Printf.printf "num refines = %d \n" !stat_refines in
   match pop_worklist sri w with (None,_) -> s | (Some c, w') ->
-    let _ = Printf.printf "Refining: %d in scc %d \n" (get_ref_id c) (get_ref_rank sri c) in
+    let (r,b) = get_ref_rank sri c in
+    let _ = Printf.printf "Refining: %d in scc (%d,%b) \n" (get_ref_id c) r b in
     let w' = if refine sri s c then push_worklist sri w' (get_ref_deps sri c) else w' in
     solve_sub sri s w'
 
