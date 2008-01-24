@@ -58,17 +58,9 @@ let array_to_index_list a =
 (************* SCC Ranking **************************************)
 (****************************************************************)
 
-(* orig 
-module Int = struct
-  type t = int let compare = compare 
-  let hash = Hashtbl.hash let equal = (=)
-end    
-module G = Graph.Imperative.Digraph.Concrete(Int)
-*)
-
-module Int : Graph.Sig.COMPARABLE with type t = int =
+module Int : Graph.Sig.COMPARABLE with type t = int * string =
 struct
-   type t = int
+   type t = int * string 
    let compare = compare
    let hash = Hashtbl.hash
    let equal = (=)
@@ -80,6 +72,13 @@ module SCC = Graph.Components.Make(G)
 
  (* Use of Graphviz *)
 
+let io_to_string = function 
+  | Some i -> string_of_int i 
+  | None -> "*"
+
+let xs_to_string f xs =
+  "["^(String.concat "," (List.map f xs))^"]"
+
 module DotGraph =
 struct
    type t = G.t
@@ -89,8 +88,8 @@ struct
    let iter_edges_e = G.iter_edges_e
    let graph_attributes g = []
    let default_vertex_attributes g = [`Shape `Box]
-   let vertex_name v = string_of_int v
-   let vertex_attributes v = let s = string_of_int v in [`Label s]
+   let vertex_name (i,s) = Printf.sprintf "(%d,%s)" i s 
+   let vertex_attributes v = [`Label (vertex_name v)]
    let default_edge_attributes g = []
    let edge_attributes e = []
    let get_subgraph v = None
@@ -98,31 +97,32 @@ end
 
 module Dot = Graph.Graphviz.Dot(DotGraph) 
 
-  let dump_graph g = 
-    let oc = open_out "constraints.dot" in
-    Dot.output_graph oc g;
-    close_out oc
+let dump_graph g = 
+  let oc = open_out "constraints.dot" in
+  Dot.output_graph oc g;
+  close_out oc
 
  
 (* Given list [(u,v)] returns a numbering [(ui,ri)] s.t. 
  * 1. if ui,uj in same SCC then ri = rj
  * 2. if ui -> uj then ui >= uj *)
-
-
-let ints_to_string xs =
-  "["^(String.concat "," (List.map string_of_int xs))^"]"
-
-let scc_rank uvs = 
+let scc_rank f ijs = 
   let g = G.create () in
-  let _ = List.iter (fun (u,v) -> G.add_edge g u v) uvs in
+  let _ = List.iter (fun (i,j) -> G.add_edge g (i,(f i)) (j,(f j))) ijs in
   let _ = dump_graph g in
   let a = SCC.scc_array g in
-  let _ = if !Clflags.verbose then Printf.printf "dep graph: vertices =  %d, sccs = %d \n" (G.nb_vertex g) (Array.length a) in
-  let _ = if !Clflags.verbose then Printf.printf "scc sizes: " in
-  let _ = if !Clflags.verbose then Array.iteri (fun i xs -> Printf.printf "%d : %s \n" i (ints_to_string xs)) a in 
-  let _ = if !Clflags.verbose then Printf.printf "\n" in
+  let _ = 
+    if !Clflags.verbose then begin
+    Printf.printf "dep graph: vertices =  %d, sccs = %d \n" 
+    (G.nb_vertex g) (Array.length a);
+    Printf.printf "scc sizes: ";
+    let int_s_to_string (i,s) = Printf.sprintf "(%d,%s)" i s in
+    Array.iteri 
+      (fun i xs -> 
+        Printf.printf "%d : %s \n" i (xs_to_string int_s_to_string xs)) a;
+    Printf.printf "\n" end in
   let sccs = array_to_index_list a in
-  flap (fun (i,vs) -> List.map (fun v -> (v,i)) vs) sccs
+  flap (fun (i,vs) -> List.map (fun (j,_) -> (j,i)) vs) sccs
 
 (*
 let g1 = [(1,2);(2,3);(3,1);(2,4);(3,4);(4,5)];;
