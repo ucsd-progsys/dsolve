@@ -429,7 +429,7 @@ let pre_solve () =
 let post_solve () = 
   if C.ck_olev C.ol_timing then
     (Printf.printf "##time##\n"; Bstats.print stdout "\nTime to solve constraints:\n";
-    Printf.printf "##endtime##\n"; TheoremProver.dump_simple_stats ())
+    Printf.printf "##endtime##\n"; (*TheoremProver.dump_simple_stats ()*))
 
 let qualify_implementation sourcefile fenv qs str =
   let (qs, _, cs, fmap) = constrain_structure fenv qs str in
