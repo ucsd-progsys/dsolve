@@ -326,8 +326,9 @@ let refine_simple s k1 k2 =
   let q2s  = Sol.find s k2 in
   let q2s' = List.filter (fun q -> List.mem q q1s) q2s in
   let _    = Sol.replace s k2 q2s' in
-  let _ = Printf.printf "%d --> %d \n" (List.length q2s) (List.length q2s') in
-  List.length q2s' <> List.length q2s
+  let rv = List.length q2s' <> List.length q2s in
+  let _ = Printf.printf "%d --> %d (%b) \n" (List.length q2s) (List.length q2s') rv in
+  rv
 
 let qual_implied s lhs lhs_ps rhs_subs q =
   let rhs = F.refinement_predicate (solution_map s) qual_test_var (rhs_subs, F.Qconst [q]) in
@@ -356,8 +357,9 @@ let refine upd sri s c =
       let q2s  = solution_map s k2 in
       let q2s' = List.filter (qual_implied s lhs [] rhs_subs) q2s in 
       let _    = if upd then Sol.replace s k2 q2s' in
-      let _ = Printf.printf "%d --> %d \n" (List.length q2s) (List.length q2s') in
-      (List.length q2s <> List.length q2s')
+      let rv =  List.length q2s <> List.length q2s' in
+      let _ = Printf.printf "%d --> %d (%b) \n" (List.length q2s) (List.length q2s') rv in
+      rv
   | WFRef (env,(subs, F.Qvar k),_) -> 
       let qs  = solution_map s k in
       let qs' = List.filter (qual_wf s env subs) qs in

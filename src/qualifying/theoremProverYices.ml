@@ -146,7 +146,8 @@ module YicesProver  =
 	begin
 	  me.ds <- barrier :: me.ds;
 	  Bstats.time "pushing" Y.yices_push me.c;
-	  Bstats.time "asserting" (Y.yices_assert me.c) (Bstats.time "creating predicate" (yicesPred me) p)
+	  Bstats.time "asserting" (Y.yices_assert me.c) 
+          (Bstats.time "creating predicate" (yicesPred me) p)
 	end
       
     let rec vpop (cs,s) =
