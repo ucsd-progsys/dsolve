@@ -130,7 +130,9 @@ let main () =
      "-ksimpl", Arg.Set kill_simplify, "kill simplify after a large number of queries to reduce memory usage";
      "-cacheq", Arg.Set cache_queries, "cache theorem prover queries";
      "-psimple", Arg.Set psimple, "prioritize simple constraints";
-     "-verrs", Arg.Set verb_errors, "print very verbose errors when constraints are unsat"
+     "-verrs", Arg.Set verb_errors, "print very verbose errors when constraints are unsat";
+
+     "-simpguard", Arg.Set simpguard, "simplify guard (remove iff)";
   ] file_argument usage;
   let source = load_sourcefile std_formatter !filename in
   try

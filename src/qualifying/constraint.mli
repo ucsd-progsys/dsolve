@@ -1,7 +1,9 @@
 type fc_id 
 
+type guard_t = (Path.t * bool) list
+
 type frame_constraint =
-  | SubFrame of Frame.t Lightenv.t * Predicate.t * Frame.t * Frame.t * origin * fc_id
+  | SubFrame of Frame.t Lightenv.t * guard_t * Frame.t * Frame.t * origin * fc_id
   | WFFrame of Frame.t Lightenv.t * Frame.t * origin * fc_id
 
 and origin =

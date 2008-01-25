@@ -92,12 +92,12 @@ let rec constrain e env guard cstrs framemap =
           let f = F.fresh e in
           let (f1, cstrs1, fm1) = constrain e1 env guard cstrs framemap in
           let guardvar = Path.mk_ident "guard" in
-          let true_tag = get_true_tag e.exp_env in
-          let guardp = P.equals (P.Var guardvar, P.PInt true_tag) in
+          (* let true_tag = get_true_tag e.exp_env in
+             let guardp = P.equals (P.Var guardvar, P.PInt true_tag) in *)
           let env' = Le.add guardvar f1 env in
-          let guard2 = P.And (guardp, guard) in
+          let guard2 = (guardvar,true)::guard (* P.And (guardp, guard) *) in
           let (f2, cstrs2, fm2) = constrain e2 env' guard2 cstrs1 fm1 in
-          let guard3 = P.And (P.Not guardp, guard) in
+          let guard3 = (guardvar,false)::guard (* P.And (P.Not guardp, guard) *) in
           let (f3, cstrs3, fm3) = constrain e3 env' guard3 cstrs2 fm2 in
             (f,
              WFFrame(env, f, Loc e.exp_loc,fresh_fc_id())::
@@ -345,14 +345,14 @@ let constrain_structure initfenv initquals str =
     | [] -> (quals, fenv, cstrs, fmap)
     | (Tstr_eval exp) :: srem ->
         let (_, cstrs', fmap') =
-          constrain exp fenv P.True cstrs fmap
+          constrain exp fenv []  cstrs fmap
         in constrain_rec quals fenv cstrs' fmap' srem
     | (Tstr_qualifier (name, (valu, pred))) :: srem ->
         let quals = (Path.Pident name, Path.Pident valu, pred) :: quals in
           constrain_rec quals fenv cstrs fmap srem
 		| (Tstr_value (recflag, bindings))::srem ->
         let (fenv, cstrs, fmap) =
-          constrain_bindings fenv P.True cstrs fmap recflag bindings
+          constrain_bindings fenv [] cstrs fmap recflag bindings
         in constrain_rec quals fenv cstrs fmap srem
     | (Tstr_type(_))::srem ->
         (*Printf.printf "Ignoring type decl";*) constrain_rec quals fenv cstrs fmap srem
