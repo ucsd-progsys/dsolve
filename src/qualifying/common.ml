@@ -18,12 +18,6 @@ let rec expand f xs ys =
       let (xs',ys') = f x in
       expand f (xs' @ xs) (ys'@ys)
 
-let rec expand2 f ys z = function 
-  | [] -> (ys,z)
-  | x::xs ->
-      let (xs',ys',z') = f x z in
-      expand2 f (ys'@ys) z' (xs' @ xs) 
-
 let do_catch s f x =
   try f x with ex -> 
      (Printf.printf "%s hits exn: %s \n" s (Printexc.to_string ex); raise ex) 
