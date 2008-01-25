@@ -10,6 +10,7 @@ open Location
 open Format
 
 module P = Predicate
+module C = Common
 module Qg = Qualgen
 module Cf = Clflags
 module B = Builtins
@@ -423,11 +424,12 @@ let rec report_errors ppf = function
   | [] -> ()
 
 let pre_solve () = 
-  Printf.printf "##solve##\n"; Bstats.reset ()
+  C.cprintf C.ol_solve_master "@[##solve##@\n@]"; Bstats.reset ()
 
 let post_solve () = 
-  Printf.printf "##time##\n"; Bstats.print stdout "\n\nTime to solve constraints:\n";
-  Printf.printf "##endtime##\n"; TheoremProver.dump_simple_stats ()
+  if C.ck_olev C.ol_timing then
+    (Printf.printf "##time##\n"; Bstats.print stdout "\nTime to solve constraints:\n";
+    Printf.printf "##endtime##\n"; (*TheoremProver.dump_simple_stats ()*))
 
 let qualify_implementation sourcefile fenv qs str =
   let (qs, _, cs, fmap) = constrain_structure fenv qs str in
