@@ -1,6 +1,5 @@
 let fabs f =
   if (f > 0.0) then f else (0.0 -. f)
-in
 
 let getRow data i =
   let stride = Bigarray.Array2.dim2 data in
@@ -12,7 +11,6 @@ let getRow data i =
   in
     extract 0;
     rowData
-in
 
 let putRow data i row =
   let stride = Array.length row in
@@ -21,13 +19,11 @@ let putRow data i row =
       Bigarray.Array2.set data i j (Array.get row j)
     else ()
   in put 0
-in
 
 let rowSwap data i j =
   let temp = getRow data i in
   let _none = putRow data i (getRow data j) in
     putRow data j temp
-in
 
 let norm r n i =
   let x = Array.get r i in
@@ -38,7 +34,6 @@ let norm r n i =
 	loop (k+1)
     else ()
   in loop (i+1)
-in
 
 let rowElim r s n i =
   let x = Array.get s i in
@@ -50,7 +45,6 @@ let rowElim r s n i =
     else ()
   in
     loop (i+1)
-in
 
 let rowMax data m i =
   let x = fabs (Bigarray.Array2.get data i i) in
@@ -62,7 +56,6 @@ let rowMax data m i =
     else max
   in
     loop (i+1) x i
-in
 
 let gauss data =
   let n = Bigarray.Array2.dim1 data in
@@ -84,13 +77,13 @@ let gauss data =
     else ()
   in
     loop1 (0)
-in
 
+let driver =
 (* pmr: silly printing code removed - who really cares?  come on! *)
-let rows = Random.int 20 + 1 in
-let m = Bigarray.Array2.create Bigarray.float64 Bigarray.c_layout
-  rows (rows + 1) in
-  gauss m;;
+  let rows = Random.int 20 + 1 in
+  let m = Bigarray.Array2.create Bigarray.float64 Bigarray.c_layout
+    rows (rows + 1) in
+    gauss m
 
 (*
 (* Here is a test *)

@@ -17,11 +17,12 @@ let rec same_shape t1 t2 =
   | (Funknown, Funknown) -> true
   | t -> false
 
+let find_or_fail var env = try Lightenv.find var env with Not_found -> assert false
+
 let pred_is_well_typed env p =
   let rec get_expr_shape = function
   | Predicate.PInt _ -> uInt
-  | Predicate.Var x  
-  | Predicate.Pvar (x, _) -> (try Lightenv.find x env with Not_found -> assert false)
+  | Predicate.Var x -> find_or_fail x env
   | Predicate.FunApp (s, p') -> 
       let arg_shape shp out_shape =
           match get_expr_shape p' with
@@ -60,7 +61,7 @@ let pred_is_well_typed env p =
   | Predicate.Atom (p1, rel, p2) -> 
       let p1_shp = get_expr_shape p1 in
       let p2_shp = get_expr_shape p2 in
-        match rel with
+        begin match rel with
         | Predicate.Ne
         | Predicate.Eq ->
          ((same_shape p1_shp p2_shp) && not(same_shape p1_shp Funknown))
@@ -73,7 +74,9 @@ let pred_is_well_typed env p =
         (same_shape p1_shp p2_shp) && (same_shape p1_shp uInt || 
                                        (function Fvar _ -> true | _ -> false) p1_shp ||
                                        same_shape p1_shp uFloat) 
-    in pred_shape_is_bool p
+        end
+  | Predicate.Iff (px, q) -> same_shape (get_expr_shape px) uBool && pred_shape_is_bool q
+  in pred_shape_is_bool p
 
 let refinement_well_formed env solution r qual_var =
   let pred = refinement_predicate solution qual_var r in

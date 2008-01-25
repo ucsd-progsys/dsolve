@@ -19,7 +19,6 @@ type binrel =
 type pexpr =
     PInt of int 
   | Var of Path.t
-  | Pvar of Path.t * int
   | FunApp of string * pexpr
   | Binop of pexpr * binop * pexpr
   | Field of string * pexpr
@@ -27,6 +26,7 @@ type pexpr =
 type t =
     True
   | Atom of pexpr * binrel * pexpr 
+  | Iff of pexpr * t
   | Not of t
   | And of t * t 
   | Or of t * t
@@ -42,10 +42,8 @@ let pprint_rel = function
 let rec pprint_pexpr ppf = function
   | PInt n ->
       fprintf ppf "%d" n
-  | Var id ->
-      fprintf ppf "%s" (Path.name id)
-  | Pvar (id, n) ->
-      fprintf ppf "%s-%d" (Path.name id) n
+  | Var x ->
+      fprintf ppf "%s" (Path.unique_name x)
   | FunApp (f, pexp) ->
       fprintf ppf "@[(%s@ %a)@]" f pprint_pexpr pexp
   | Binop (p, op, q) ->
@@ -63,6 +61,8 @@ let rec pprint ppf = function
       fprintf ppf "true"
   | Atom (p, rel, q) ->
       fprintf ppf "@[(%s@ %a@ %a)@]" (pprint_rel rel) pprint_pexpr p pprint_pexpr q
+  | Iff (px, q) ->
+      fprintf ppf "@[(<=> %a@;<1 2>%a)@]" pprint_pexpr px pprint q
   | Not p ->
       fprintf ppf "@[(not@ %a)@]" pprint p
   | And (p, q) ->
@@ -90,8 +90,7 @@ and flatten_disjuncts ppf = function
         pprint q flatten_disjuncts p1 flatten_disjuncts p2
   | p -> pprint ppf p
 
-let equals(p, q) =
-  Atom(p, Eq, q)
+let equals(p, q) = Atom(p, Eq, q)
 
 let (==.) p q = equals (p, q)
 
@@ -111,9 +110,15 @@ let (||.) p q = Or (p, q)
 
 let (!.) p = Not p
 
+let (<=>.) p q = Iff (p, q)
+
 let implies(p, q) = (!. p) ||. q
 
 let (=>.) p q = implies (p, q)
+
+let expand_iff = function
+  | Iff (px, q) -> ((px ==. PInt 1) &&. q) ||. ((px ==. PInt 0) &&. (!. q))
+  | _ -> assert false
 
 let big_and = function
   | c :: cs -> List.fold_left (&&.) c cs
@@ -125,8 +130,7 @@ let big_or = function
 
 let rec pexp_map_vars f pexp =
   let rec map_rec = function
-      Var y ->
-        f y
+      Var x -> f x
     | FunApp (fn, e) ->
         FunApp (fn, map_rec e)
     | Binop (e1, op, e2) ->
@@ -143,6 +147,7 @@ let rec map_vars f pred =
         True
     | Atom (e1, rel, e2) ->
         Atom (pexp_map_vars f e1, rel, pexp_map_vars f e2)
+    | Iff (px, q) -> Iff (pexp_map_vars f px, map_rec q)
     | Not p ->
         Not (map_rec p)
     | And (p, q) ->
@@ -151,8 +156,7 @@ let rec map_vars f pred =
         Or (map_rec p, map_rec q)
   in map_rec pred
 
-let subst v x pred =
-  map_vars (fun y -> if Path.same x y then v else Var y) pred
+let subst v x pred = map_vars (fun y -> if Path.same x y then v else Var y) pred
 
 let apply_substs subs pred =
   let substitute p (x, e) = subst e x p in List.fold_left substitute pred subs
@@ -164,7 +168,6 @@ let vars p =
   let rec exp_vars_rec vars = function
       PInt _ -> vars
     | Var x -> x::vars
-    | Pvar(x, _) -> x::vars
     | FunApp(_, e) ->
         exp_vars_rec vars e
     | Binop(e1, _, e2) ->
@@ -179,6 +182,9 @@ let vars p =
     | Atom(e1, _, e2) ->
         let vars' = exp_vars_rec vars e1 in
           exp_vars_rec vars' e2
+    | Iff (px, q) ->
+      let vars' = exp_vars_rec vars px in
+        vars_rec vars' q
     | Not p ->
         vars_rec vars p
     | And(p1, p2)
@@ -204,8 +210,6 @@ let rec transl_predicate p =
 	  PInt n
       | Ppredexp_var y ->
 	  Var (Path.mk_ident y)
-      | Ppredexp_pvar (y, n) ->
-	  Pvar (Path.mk_ident y, n)
       | Ppredexp_app (f, e) ->
 	  FunApp (f, transl_pexpression e)
       | Ppredexp_binop (e1, op, e2) ->

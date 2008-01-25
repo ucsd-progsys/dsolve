@@ -82,9 +82,7 @@ let uninterp_unop typ path = (path, defun (fun x -> typ ==> fun y -> typ))
 
 let float_to_int_unop path = (path, defun (fun x -> uFloat ==> fun y -> uInt))
 
-let qbool_rel qname rel (x, y, z) =
-  let truepred = Atom (Var x, rel, Var y) in
-    rBool qname z (((Var z ==. PInt 1) &&. truepred) ||. ((Var z ==. PInt 0) &&.  (!. truepred)))
+let qbool_rel qname rel (x, y, z) = rBool qname z (Var z <=>. Atom (Var x, rel, Var y))
 
 let poly_rel_frame path qname rel =
   (path,
@@ -129,11 +127,7 @@ let _frames = [
   (["&&"; "Pervasives"],
    defun (fun x -> uBool ===>
           fun y -> uBool ==>
-          fun z -> rBool "&&" z
-            (((Var z ==. PInt 1) &&.
-              (Var x ==. PInt 1) &&.
-              (Var y ==. PInt 1))
-             ||. ((Var z ==. PInt 0) &&. ((Var x ==. PInt 0) ||. (Var y ==. PInt 0))))));
+          fun z -> rBool "&&" z (Var z <=>. (Var x ==. PInt 1) &&. (Var y ==. PInt 1))));
 
   (["||"; "Pervasives"],
    defun (fun x -> uBool ===>
@@ -143,10 +137,7 @@ let _frames = [
              ((Var z ==. PInt 0) &&. (Var x ==. PInt 0) &&. (Var y ==. PInt 0)))));
 
   (["not"; "Pervasives"],
-   defun (fun x -> uBool ==>
-          fun y -> rBool "NOT" y
-                     (((Var y ==. PInt 1) ||. (Var x ==. PInt 1)) &&.
-                      ((Var y ==. PInt 0) ||. (Var x ==. PInt 0)))));
+   defun (fun x -> uBool ==> fun y -> rBool "NOT" y (Var y <=>. (Var x ==. PInt 0))));
 
   (["ignore"; "Pervasives"], defun (forall (fun a -> fun x -> a ==> fun y -> uUnit)));
 

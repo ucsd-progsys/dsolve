@@ -23,8 +23,9 @@ module LocationMap: sig
 end
 
 val report_error: Format.formatter -> error -> unit
-val report_errors: Format.formatter -> (Location.t * error) list -> unit
+val report_errors: Format.formatter -> (Location.t * error) list -> unit 
 
 val qualify_implementation:
   string -> Frame.t Lightenv.t -> Qualifier.t list -> Typedtree.structure ->
   Frame.t LocationMap.t
+val qualgen_nasty_hack: Frame.t Lightenv.t -> Typedtree.structure -> unit

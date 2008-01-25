@@ -80,8 +80,6 @@ module YicesProver  =
       match e with 
         Predicate.PInt i -> Y.yices_mk_num me.c i 
       | Predicate.Var s -> yicesVar me (Path.unique_name s) me.t
-      | Predicate.Pvar (s,i) -> yicesVar me
-          (Printf.sprintf "%sprime%d" (Path.unique_name s) i) me.t
       | Predicate.FunApp (f,e) ->
 	  (* we don't need this anymore now that we have WF type checking *)
 	  (*if f = "Array.length" | f = "Bigarray.Array2.dim1" || f = "Bigarray.Array2.dim2" then 
@@ -116,6 +114,7 @@ module YicesProver  =
       | Predicate.Not p' -> Y.yices_mk_not me.c (yicesPred me p')
       | Predicate.And (p1,p2) -> Y.yices_mk_and me.c (Array.map (yicesPred me) [|p1;p2|])
       | Predicate.Or (p1,p2) -> Y.yices_mk_or me.c (Array.map (yicesPred me) [|p1;p2|])
+      | Predicate.Iff _ as iff -> yicesPred me (Predicate.expand_iff iff)
       | Predicate.Atom (e1,Predicate.Lt,e2) ->
           yicesPred me (Atom (e1, Predicate.Le, Binop(e2,Predicate.Minus,PInt 1)))
       | Predicate.Atom (e1,br,e2) ->
@@ -147,7 +146,8 @@ module YicesProver  =
 	begin
 	  me.ds <- barrier :: me.ds;
 	  Bstats.time "pushing" Y.yices_push me.c;
-	  Bstats.time "asserting" (Y.yices_assert me.c) (Bstats.time "creating predicate" (yicesPred me) p)
+	  Bstats.time "asserting" (Y.yices_assert me.c) 
+          (Bstats.time "creating predicate" (yicesPred me) p)
 	end
       
     let rec vpop (cs,s) =

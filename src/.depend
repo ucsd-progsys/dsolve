@@ -275,8 +275,8 @@ typing/unused_var.cmx: utils/warnings.cmx parsing/parsetree.cmi \
     parsing/longident.cmx parsing/location.cmx parsing/asttypes.cmi \
     typing/unused_var.cmi 
 qualifying/constraint.cmi: qualifying/qualifier.cmi typing/predicate.cmi \
-    typing/path.cmi parsing/location.cmi qualifying/lightenv.cmo \
-    qualifying/frame.cmi 
+    parsing/location.cmi qualifying/lightenv.cmo qualifying/frame.cmi \
+    qualifying/common.cmo 
 qualifying/frame.cmi: typing/types.cmi typing/typedtree.cmi \
     qualifying/qualifier.cmi typing/predicate.cmi typing/path.cmi \
     parsing/asttypes.cmi 
@@ -298,18 +298,20 @@ qualifying/builtins.cmo: typing/typedtree.cmi typing/predicate.cmi \
 qualifying/builtins.cmx: typing/typedtree.cmx typing/predicate.cmx \
     typing/predef.cmx typing/path.cmx parsing/longident.cmx \
     qualifying/frame.cmx typing/env.cmx parsing/asttypes.cmi 
+qualifying/common.cmo: typing/path.cmi 
+qualifying/common.cmx: typing/path.cmx 
 qualifying/constraint.cmo: qualifying/wellformed.cmi \
-    qualifying/theoremProver.cmo qualifying/qualifier.cmi \
-    typing/predicate.cmi qualifying/pattern.cmi typing/path.cmi \
-    typing/oprint.cmi parsing/location.cmi qualifying/lightenv.cmo \
-    utils/heap.cmi qualifying/frame.cmi utils/clflags.cmi utils/bstats.cmi \
-    parsing/asttypes.cmi qualifying/constraint.cmi 
+    qualifying/theoremProver.cmo typing/predicate.cmi qualifying/pattern.cmi \
+    typing/path.cmi parsing/location.cmi qualifying/lightenv.cmo \
+    utils/heap.cmi qualifying/frame.cmi qualifying/common.cmo \
+    utils/clflags.cmi utils/bstats.cmi parsing/asttypes.cmi \
+    qualifying/constraint.cmi 
 qualifying/constraint.cmx: qualifying/wellformed.cmx \
-    qualifying/theoremProver.cmx qualifying/qualifier.cmx \
-    typing/predicate.cmx qualifying/pattern.cmx typing/path.cmx \
-    typing/oprint.cmx parsing/location.cmx qualifying/lightenv.cmx \
-    utils/heap.cmx qualifying/frame.cmx utils/clflags.cmx utils/bstats.cmx \
-    parsing/asttypes.cmi qualifying/constraint.cmi 
+    qualifying/theoremProver.cmx typing/predicate.cmx qualifying/pattern.cmx \
+    typing/path.cmx parsing/location.cmx qualifying/lightenv.cmx \
+    utils/heap.cmx qualifying/frame.cmx qualifying/common.cmx \
+    utils/clflags.cmx utils/bstats.cmx parsing/asttypes.cmi \
+    qualifying/constraint.cmi 
 qualifying/frame.cmo: typing/types.cmi typing/typedtree.cmi \
     qualifying/qualifier.cmi typing/predicate.cmi typing/predef.cmi \
     typing/path.cmi typing/oprint.cmi typing/ident.cmi typing/env.cmi \
@@ -318,8 +320,8 @@ qualifying/frame.cmx: typing/types.cmx typing/typedtree.cmx \
     qualifying/qualifier.cmx typing/predicate.cmx typing/predef.cmx \
     typing/path.cmx typing/oprint.cmx typing/ident.cmx typing/env.cmx \
     typing/btype.cmx parsing/asttypes.cmi qualifying/frame.cmi 
-qualifying/lightenv.cmo: typing/path.cmi 
-qualifying/lightenv.cmx: typing/path.cmx 
+qualifying/lightenv.cmo: qualifying/common.cmo 
+qualifying/lightenv.cmx: qualifying/common.cmx 
 qualifying/message.cmo: qualifying/message.cmi 
 qualifying/message.cmx: qualifying/message.cmi 
 qualifying/normalize.cmo: qualifying/qdebug.cmi parsing/printast.cmi \

@@ -1,553 +1,535 @@
 open Format
 open Wellformed
+module F = Frame
+module Le = Lightenv
+module Pat = Pattern
+module P = Predicate
+module TP = TheoremProver
+
+module C = Common
+module VM = Map.Make(C.ComparablePath)
+module Sol = Hashtbl.Make(C.ComparablePath)
+module Cf = Clflags
+
+(**************************************************************)
+(**************** Type definitions: Constraints ***************) 
+(**************************************************************)
+
+type fc_id = int option 
+type subref_id = int 
+
+module SIM = Map.Make(struct type t = subref_id let compare = compare end)
+
+type guard_t = (Path.t * bool) list
 
 type frame_constraint =
-  | SubFrame of Frame.t Lightenv.t * Predicate.t * Frame.t * Frame.t * origin
-  | WFFrame of Frame.t Lightenv.t * Frame.t * origin
+  | SubFrame of F.t Le.t * guard_t * F.t * F.t * origin * fc_id
+  | WFFrame of F.t Le.t * F.t * origin * fc_id 
 
 and origin =
-  | Loc of Location.t
-  | Assert of Location.t
-  | Cstr of frame_constraint
-
-type subrefinement_constraint =
-    Frame.t Lightenv.t * Predicate.t * Frame.refinement * Frame.refinement * origin
-
-type well_formed_refinement_constraint =
-    Frame.t Lightenv.t * Frame.refinement * origin
+  | Loc of Location.t 
+  | Assert of Location.t 
+  | Cstr of frame_constraint 
 
 type refinement_constraint =
-  | SubRefinement of subrefinement_constraint
-  | WFRefinement of well_formed_refinement_constraint
+  | SubRef of F.t Le.t * guard_t * F.refinement * F.refinement * (subref_id option) 
+  | WFRef of F.t Le.t * F.refinement * (subref_id option) 
 
-module VarName = struct
-  type t = Path.t
-  let compare = compare
-  let equal = (=)
-  let hash = Hashtbl.hash
-end
+(**************************************************************)
+(********************** Misc. Constants ***********************)
+(**************************************************************)
 
-module VarMap = Map.Make(VarName)
+let fresh_fc_id = 
+  let r = ref 0 in
+  fun () -> incr r; Some (!r)
 
-module Solution = Hashtbl.Make(VarName)
+let get_fc_id = function 
+  | SubFrame (_,_,_,_,_,io) | WFFrame (_,_,_,io) -> io
 
-let pprint ppf = function
-  | SubFrame (_, _, f1, f2, _) ->
-      fprintf ppf "@[%a@ <:@;<1 2>%a@]" Frame.pprint f1 Frame.pprint f2
-  | WFFrame (_, f, _) ->
-      Frame.pprint ppf f
-
-let environment = function
-  | SubFrame (env, _, _, _, _) -> env
-  | WFFrame (env, _, _) -> env
-
-(* Unique variable to qualify when testing sat, applicability of qualifiers, etc. *)
+(* Unique variable to qualify when testing sat, applicability of qualifiers...
+ * this is passed into the solver *)
 let qual_test_var = Path.mk_ident "AA"
 
-let split cstrs =
-  let rec split_rec flat = function
-    | [] -> flat
-    | SubFrame (env, guard, f1, f2, _) as parent :: cs ->
-        begin match (f1, f2) with
-          | (Frame.Farrow (l1, f1, f1'), Frame.Farrow (l2, f2, f2')) ->
-              (* If the labels disagree, we don't attempt to resolve it.
-                 Instead, we just proceed with the best information we have,
-                 probably losing chances to assert qualifiers along the way. *)
-              let env' = match (l1, l2) with
-                | (Some pat, None)
-                | (None, Some pat) ->
-                  Pattern.env_bind env pat f2
-                | (Some pat1, Some pat2) when Pattern.same pat1 pat2 ->
-                  Pattern.env_bind env pat1 f2
-                | _ -> env
-              in split_rec flat
-                   (SubFrame (env, guard, f2, f1, Cstr parent)
-                    :: SubFrame (env', guard, f1', f2', Cstr parent)
-                    :: cs)
-          | (Frame.Fconstr (p1, [], r1), Frame.Fconstr (p2, [], r2)) ->
-              split_rec (SubRefinement (env, guard, r1, r2, Cstr parent) :: flat) cs
-          | (Frame.Fvar _, Frame.Fvar _)
-          | (Frame.Funknown, Frame.Funknown) ->
-              split_rec flat cs
-					| (Frame.Fconstr (p1, l1, r1), Frame.Fconstr(p2, l2, r2)) ->
-              let invar r a b =
-                SubFrame(env, guard, a, b, Cstr parent)
-                :: SubFrame(env, guard, b, a, Cstr parent)
-                :: r
-              in
-                (* pmr: because we were only filtering through invariant types anyway, we might
-                   as well just use invariants until we start getting problems from it ---
-                   for now, it's too much trouble to work around all the BigArray stuff *)
-                split_rec (SubRefinement(env, guard, r1, r2, Cstr parent)::flat) (List.fold_left2 invar cs l1 l2)
-              (*let subt a b = SubFrame(env, guard, a, b) in*)
-              (*if Path.same p1 Predef.path_array
-                 || Path.same p1 (Builtins.ext_find_type_path "ref") then
-							    split_rec (SubRefinement(env, guard, r1, r2)::flat) (List.append (List.map2 invar l1 l2) cs)
-              (*else if Path.same p1 Predef.path_int then (* must find path for tuple oh no i hope it's a path *)
-                  split_rec (SubRefinement(env, guard, r1, r2)::flat) (List.append (List.map2 subt l1 l2) cs)*)
-              else
-                  (Printf.printf "Unsupported type into split: %s\n" (Path.name p1); assert false)*)
-          | (Frame.Ftuple t1s, Frame.Ftuple t2s) ->
-              let make_subframe t1 t2 = SubFrame(env, guard, t1, t2, Cstr parent) in
-                split_rec flat ((List.map2 make_subframe t1s t2s) @ cs)
-          | (Frame.Frecord (_, recframes1, r1), Frame.Frecord (_, recframes2, r2)) ->
-              let make_subframe rest (recf1, _, muta) (recf2, _, _) =
-                let invar_cs = match muta with
-                  | Asttypes.Immutable -> rest
-                  | Asttypes.Mutable -> SubFrame (env, guard, recf2, recf1, Cstr parent) :: rest
-                in SubFrame (env, guard, recf1, recf2, Cstr parent) :: invar_cs
-              in
-              let new_cs = List.fold_left2 make_subframe cs recframes1 recframes2 in
-                (* ming: i'm not sure if i believe the following *)
-              let new_flat =
-                if List.exists (fun (_, _, muta) -> muta = Asttypes.Mutable) recframes1 then
-                  SubRefinement (env, guard, r2, r1, Cstr parent) :: flat
-                else flat
-              in split_rec (SubRefinement (env, guard, r1, r2, Cstr parent) :: new_flat) new_cs
-          | (f1, f2) -> printf "@[Can't@ split:@ %a@ <:@ %a@]" Frame.pprint f1 Frame.pprint f2; assert false
-        end
-    (* ming: for type checking, when we split WFFrames now, we need to keep
-             the frame around. the paper method for doing this is to insert
-             the frame into the environment, so that's what we do here.
-             note that we've just agreed on using the qual_test_var ident
-             for predicate vars (it's passed into the solver later...) *)
-    | WFFrame (env, f, _) as parent :: cs ->
-        begin match f with
-	      | Frame.Fconstr (_, l, r) ->
-              (* We add the test variable to the environment with the current frame;
-                 this makes type checking easier *)
-	          split_rec (WFRefinement (Lightenv.add qual_test_var f env, r, Cstr parent) :: flat)
-		        ((List.map (fun li -> WFFrame (env, li, Cstr parent)) l) @ cs)
-          | Frame.Farrow (l, f, f') ->
-              let env' = match l with
-                | None -> env
-                | Some pat -> Pattern.env_bind env pat f
-              in split_rec flat
-                   (WFFrame (env, f, Cstr parent)
-                    :: WFFrame (env', f', Cstr parent)
-                    :: cs)
-          | Frame.Ftuple ts ->
-              split_rec flat ((List.map (fun t -> WFFrame (env, t, Cstr parent)) ts) @ cs)
-          | Frame.Frecord (_, fs, r) ->
-              let wf_rec rest (recf, _, _) = WFFrame (env, recf, Cstr parent) :: rest in
-              let new_cs = List.fold_left wf_rec cs fs in
-                split_rec (WFRefinement (Lightenv.add qual_test_var f env, r, Cstr parent) :: flat) new_cs
-          | Frame.Fvar _
-          | Frame.Funknown ->
-              split_rec flat cs
-          (*| _ -> assert false*)
-        end
-  in split_rec [] cstrs
+let is_simple_constraint = function 
+  SubRef (_, _, ([],F.Qvar _), ([], F.Qvar _), _) -> true | _ -> false
 
-let solution_map solution = Solution.find solution
+let is_subref_constraint = function 
+  SubRef _ -> true | _ -> false
 
-let environment_predicate solution env =
-  Predicate.big_and (Lightenv.maplist (Frame.predicate (solution_map solution)) env)
+let is_wfref_constraint = function 
+  WFRef _ -> true | _ -> false
 
-let constraint_sat solution = function
-  | SubRefinement (env, guard, r1, r2, _) ->
-      let envp = environment_predicate solution env in
-      let smap = solution_map solution in
-      let p1 = Frame.refinement_predicate smap qual_test_var r1 in
-      let p2 = Frame.refinement_predicate smap qual_test_var r2 in
-        TheoremProver.backup_implies (Predicate.big_and [envp; guard; p1]) p2
-  | WFRefinement (env, r, _) ->
-    (* ming: this is an error check. it shouldn't be possible for this to be tripped*)
-      refinement_well_formed env (solution_map solution) r qual_test_var
+let solution_map s k = 
+  C.do_catch 
+    (Printf.sprintf "ERROR: solution_map couldn't find: %s" (Path.name k))
+    (Sol.find s) k  
 
-let pprint_env_pred ppf (solution, env) = 
-  Predicate.pprint ppf (environment_predicate solution env)
+(**************************************************************)
+(**************************** Stats ***************************)
+(**************************************************************)
 
-let pprint_subref solution ppf (env, guard, r1, r2, _) =
-  fprintf ppf "@[Env:@ %a;@;<1 2>Guard:@ %a@;<1 0>|-@;<1 2>%a@;<1 2><:@;<1 2>%a@]"
-    pprint_env_pred (solution, env)
-    Predicate.pprint guard Frame.pprint_refinement r1 Frame.pprint_refinement r2
+let stat_refines = ref 0
+let stat_solved_constraints = ref 0
+let stat_valid_constraints = ref 0
+let stat_matches = ref 0 
 
-let pprint_ref_pred ppf (solution, r) =
-  Predicate.pprint ppf (Frame.refinement_predicate (solution_map solution) qual_test_var r)
+(**************************************************************)
+(********************** Pretty Printing ***********************)
+(**************************************************************)
 
-let rec solve_wf_constraints solution = function
-  | [] -> ()
-  | (env, (subs, Frame.Qvar k), _) :: cs ->
-      (* ming: we have to pass qual_test_var into the WF checker now because
-               we've agreed with the splitting code to use that as the predicate
-               var. the only way around this would be to keep the frame from
-               the WFFrame up until here, the solver, essentially obviating
-               splitting. *)
-      let refined_quals =
-        List.filter
-          (fun q -> refinement_well_formed env (solution_map solution) (subs, Frame.Qconst [q]) qual_test_var)
-          (try Solution.find solution k with Not_found -> (Printf.printf "Couldn't find: %s" (Path.name k); raise Not_found))
-      in Solution.replace solution k refined_quals;
-        solve_wf_constraints solution cs
-  | _ :: cs -> solve_wf_constraints solution cs
-      (* Nothing to do here; we can check satisfiability later *)
+(* FIX: 1. arg orders, 2. print index *)
 
-(* ming: we should aggregate these tracking and statistics vals *)
-let num_refines = ref 0
+let guard_predicate () g = 
+  P.big_and 
+    (List.map 
+      (fun (v,b) -> 
+         let p = P.equals (P.Var v, P.PInt 1) in 
+         if b then p else P.Not p) 
+      g)
 
-let solved_constraints = ref 0
-let valid_constraints = ref 0
+let environment_predicate s env =
+  P.big_and (Le.maplist (F.predicate (solution_map s)) env)
 
-type refinement_change =
-  | Solution_unchanged
-  | Solution_changed
+let pprint_local_binding ppf = function
+  | (Path.Pident _ as k, v) -> fprintf ppf "@[%s@;=>@;<1 2>%a@],@;<1 2>" (Path.unique_name k) F.pprint v
+  | _ -> ()
 
-(* Refine a constraint with variables on both sides and no substitutions *)
-let refine_simple solution k1 k2 =
-  let k1_quals = Solution.find solution k1 in
-  let result = ref Solution_unchanged in
-  let filter_qual q =
-    if List.mem q k1_quals then true else (result := Solution_changed; false)
-  in
-  let refined_quals = List.filter filter_qual (Solution.find solution k2) in
-    Solution.replace solution k2 refined_quals;
-    !result
+let pprint_env_pred so ppf env =
+  match so with
+  | Some s -> P.pprint ppf (environment_predicate s env)
+  | _ -> Le.iter (fun x t -> pprint_local_binding ppf (x, t)) env
 
-let matching_ctr = ref 0 
+let pprint ppf = function
+  | SubFrame (_,_,f1,f2,_,_) ->
+      fprintf ppf "@[%a@ <:@;<1 2>%a@]" F.pprint f1 F.pprint f2
+  | WFFrame (_,f,_,_) ->
+      F.pprint ppf f
 
-(*let transitive_rel r1 r2 =
-  match (r1, r2) with
-    | (Some r1, Some r2) ->
-        begin
-        match (r1, r2) with
-          | (Predicate.Ne, Predicate.Ne) -> None
-          | (Predicate.Ne, Predicate.Eq)
-          | (Predicate.Eq, Predicate.Ne) -> Some Predicate.Ne
-          | (t, t') when t = t' -> Some t
-          (*| (t, Predicate.Eq)
-          | (Predicate.Eq, t) -> Some t*)
-          | _ -> None
-        end
-    | _ -> None
+let pprint_io ppf = function
+  | Some id -> fprintf ppf "(%d)" id
+  | None    -> fprintf ppf "()"
 
-let lhs_tbl = ref (Hashtbl.create 20)
-let this_lhs_tbl = ref (Hashtbl.create 20) 
-let next_lhs_tbl = ref (Hashtbl.create 20)
-let tbl_add_raw (x, y) =
-  Hashtbl.replace !lhs_tbl x y;
-  Hashtbl.replace !next_lhs_tbl x () 
-(* need to know how the last edge was related, how this and the last edge are
- * related then compute the dominant relation between home edge and this edge *)
-let tbl_add (x, y) oldx =
-  let y = transitive_rel oldx y in
-  if Hashtbl.mem !lhs_tbl x then
-    let oldy = Hashtbl.find !lhs_tbl x in
-      (Hashtbl.replace !lhs_tbl x (transitive_rel oldy y); Hashtbl.replace !next_lhs_tbl x ())
-  else tbl_add_raw (x, y)
-let tbl_swap () =
-  let tmp = !this_lhs_tbl in
-    this_lhs_tbl := !next_lhs_tbl;
-    next_lhs_tbl := tmp
-let tbl_clear_next () =
-  Hashtbl.clear !next_lhs_tbl
-let tbl_clear () =
-  Hashtbl.clear !next_lhs_tbl;
-  Hashtbl.clear !this_lhs_tbl;
-  Hashtbl.clear !lhs_tbl
-  
-    (* translate raw relations into auot-generated qual equivs *)
-let resolve_rel x rel p =
-  let mk_atom = function
-    | Some Predicate.Eq -> [Predicate.Atom(Predicate.Var qual_test_var, Predicate.Le, p); Predicate.Atom(Predicate.Var qual_test_var, Predicate.Ge, p)]
-    | Some Predicate.Lt -> [Predicate.Atom(Predicate.Var qual_test_var, Predicate.Le, p); Predicate.Atom(Predicate.Var qual_test_var, Predicate.Ne, p)]
-    | Some Predicate.Gt -> [Predicate.Atom(Predicate.Var qual_test_var, Predicate.Ge, p); Predicate.Atom(Predicate.Var qual_test_var, Predicate.Ne, p)]
-    | Some t -> [Predicate.Atom(Predicate.Var qual_test_var, t, p)]
-    | None -> []
-  in
-    mk_atom rel 
+let pprint_ref so ppf = function
+  | SubRef (env,g,r1,r2,io) ->
+      fprintf ppf "@[%a@ Env:@ @[%a@];@;<1 2>Guard:@ %a@;<1 0>|-@;<1 2>%a@;<1 2><:@;<1 2>%a@]"
+      pprint_io io (pprint_env_pred so) env P.pprint (guard_predicate () g) 
+      F.pprint_refinement r1 F.pprint_refinement r2 
+  | WFRef (env,r,io) ->
+      fprintf ppf "@[%a@ Env:@ @[%a@];@;<1 2>|-@;<1 2>%a@;<1 2>@]"
+      pprint_io io (pprint_env_pred so) env F.pprint_refinement r 
 
-let fold_env_into_lhs envp lhs_preds =
-  let lhs_list = ref [] in
-  let _ = tbl_clear () in
-  let rec build_tbl p =
-    match p with
-      | Predicate.And (t1, t2) -> (build_tbl t1); (build_tbl t2)
-      | Predicate.Atom (Predicate.Var x, rel, Predicate.Var y) -> 
-          if Path.same x qual_test_var then
-            tbl_add_raw (y, Some rel) 
-          else if Path.same y qual_test_var then
-            tbl_add_raw (x, Some rel) 
-          else ()
-      | t -> ()
-  in
-  let _ = List.map build_tbl lhs_preds in
-  let rec walk_env p =
-    match p with
-      | Predicate.And (t1, t2) -> (walk_env t1); (walk_env t2)
-      | Predicate.Atom (Predicate.Var x, rel, p2)
-      | Predicate.Atom (p2, rel, Predicate.Var x) ->
-          if Hashtbl.mem !this_lhs_tbl x then
-            let x' = Hashtbl.find !lhs_tbl x in
-            begin
-              let _ = match p2 with
-                    | Predicate.Var y -> tbl_add (y, Some rel) x'
-                    | t -> ()
-              in
-              if Hashtbl.mem !this_lhs_tbl x then 
-                lhs_list := List.append (resolve_rel x (transitive_rel x' (Some rel)) p2) !lhs_list
-            end
-          else
-            ()
-      | _ -> ()
-    in
-      while Hashtbl.length !next_lhs_tbl > 0 do
-          tbl_swap ();
-          tbl_clear_next ();
-          walk_env envp;
-      done;
-      !lhs_list *)
 
-let close_over_env env solution preds =
-  let solmap = solution_map solution in
-  let rec close_rec clo prs =
-    match prs with
-      | [] -> clo
-      | p :: ps ->
-          match p with
-            | Predicate.Atom (Predicate.Var x, Predicate.Eq, Predicate.Var y) ->
-                let transitive_var =
-                  if Path.same x qual_test_var then Some y
-                  else if Path.same y qual_test_var then Some x
-                  else None
-                in begin match transitive_var with
-                  | Some t ->
-                      let transitive_preds = Frame.conjuncts solmap qual_test_var (Lightenv.find t env) in
-                      let new_preds = transitive_preds in
-                        (* pmr: a more general version would look like:
-                           List.filter (follows_transitively rel) transitive_preds in *)
-                        close_rec (p :: clo) (new_preds @ ps)
-                  | None -> close_rec (p :: clo) ps
-                  end
-            | _ -> close_rec (p :: clo) ps
-  in close_rec [] preds
+(**************************************************************)
+(************* Constraint Simplification & Splitting **********) 
+(**************************************************************)
 
-let folding_debug_flag = false
+let simplify_frame gm x f = 
+  if not (Le.mem x gm) then f else
+    let pos = Le.find x gm in
+    match f with 
+    | F.Fconstr (a,b,(subs,F.Qconst[(v1,v2,P.Iff (P.Var v3,p))])) when v2 = v3 ->
+        let p' = if pos then p else P.Not p in
+        F.Fconstr (a,b,(subs,F.Qconst[(v1,v2,p')])) 
+    | F.Frecord (a,b,(subs,F.Qconst[(v1,v2,P.Iff (P.Var v3,p))])) when v2 = v3 ->
+        let p' = if pos then p else P.Not p in
+        F.Frecord (a,b,(subs,F.Qconst[(v1,v2,p')])) 
+    | _ -> f
 
-let refine solution = function
-  | (_, _, ([], Frame.Qvar k1), ([], Frame.Qvar k2), _)
-      when not (!Clflags.no_simple || !Clflags.verify_simple) ->
-      refine_simple solution k1 k2
-  | (env, guard, r1, (rhs_subs, Frame.Qvar k2), _) as cstr ->
-      let _ = num_refines := !num_refines + 1 in
-      let envp = environment_predicate solution env in
-      let make_lhs (env, guard, r1, _, _) =
-        let p1 = Frame.refinement_predicate (solution_map solution) qual_test_var r1 in
-          Predicate.big_and [envp; guard; p1]
-      in
-      let solmap = solution_map solution in
-      let lhs_preds = Frame.refinement_conjuncts solmap qual_test_var r1 in
-      let _ = if folding_debug_flag then printf "@[BEFORE:%a@\n%a@\n@]" Predicate.pprint envp Predicate.pprint (Predicate.big_and lhs_preds)  in
-      (*let lhs_preds = List.append (fold_env_into_lhs (environment_predicate
-       * solution env) lhs_preds) lhs_preds in*) 
-      let lhs_preds = close_over_env env solution lhs_preds in
-      let _ = if folding_debug_flag then printf "@[AFTER:%a@\n@]" Predicate.pprint (Predicate.big_and lhs_preds)  in
-      let result = ref Solution_unchanged in
-      let qual_holds q =
-        let lhs = make_lhs cstr in
-        let rhs = Frame.refinement_predicate (solution_map solution) qual_test_var (rhs_subs, Frame.Qconst [q]) in
-        let res =
-          let (cached, cres) = if !Clflags.cache_queries then TheoremProver.check_table lhs rhs else (false, false) in
-            if cached then cres
-            else if (not !Clflags.no_simple_subs) && List.mem rhs lhs_preds then
-              (incr matching_ctr; true)
-            else
-              let pres = Bstats.time "refinement query" (TheoremProver.implies lhs) rhs in
-                incr solved_constraints;
-                if pres then incr valid_constraints;
-                pres
-        in if not res then result := Solution_changed; res
-      in
-      let refined_quals = List.filter qual_holds (Solution.find solution k2) in
-        Solution.replace solution k2 refined_quals;
-        !result
-  | _ -> Solution_unchanged
-      (* With anything else, there's nothing to refine, just to check later with
-         check_satisfied *)
+let simplify_env env g =
+  let gm = List.fold_left (fun m (x,b)  -> Le.add x b m) Le.empty g in
+  Le.fold 
+    (fun x f env' -> 
+      match f with | F.Fconstr _ | F.Frecord _ -> 
+        Le.add x (simplify_frame gm x f) env' 
+      | _ -> env')
+    env Le.empty
 
-let env_refinement_vars env =
-  let add_vars _ f l = Frame.refinement_vars f @ l in
-    Lightenv.fold add_vars env []
+let simplify_fc  c = 
+  match c with 
+  | WFFrame _ -> c 
+  | SubFrame (env,g,a,b,c,d) -> SubFrame(simplify_env env g, g, a,b,c,d)
 
-let lhs_vars (env, _, (_, qe), _, _) =
-  let env_vars = env_refinement_vars env in
-    match qe with
-      | Frame.Qvar k -> k::env_vars
-      | _ -> env_vars
 
-let make_variable_constraint_map cstrs =
-  let rec make_rec map = function
-    | (_, _, _, (_, Frame.Qvar k), _) as c :: cs ->
-        let add_cstr m v =
-          let new_cstrs = c :: (try VarMap.find v m with Not_found -> []) in
-            VarMap.add v new_cstrs m
-        in
-        let map = List.fold_left add_cstr map (lhs_vars c) in make_rec map cs
-    | _ :: cs -> make_rec map cs
-    | [] -> map
-  in make_rec VarMap.empty cstrs
+(* Notes:
+  * 1. If the labels disagree, we don't resolve. Instead, we 
+  * proceed with the best information we have, probably losing 
+  * chances to assert qualifiers along the way. 
+  * 2. pmr: because we were only filtering through invariant types 
+  * anyway, we might as well just use invariants until we start 
+  * getting problems from it --- for now, it's too much trouble 
+  * to work around all the BigArray stuff
+  *)
 
-type var_location = LHSVar | RHSVar | WFVar
+let lequate_cs eqb env g c f1 f2 =
+  let fci = get_fc_id c in
+  if eqb 
+  then [SubFrame(env,g,f1,f2,Cstr c,fci); SubFrame(env,g,f2,f1,Cstr c,fci)]
+  else [SubFrame(env,g,f1,f2,Cstr c,fci)]
 
-(* Form the initial solution by mapping all constrained variables to all
-   qualifiers.  This was somewhat easier than adding any notion of "default"
-   to Lightenv. *)
-let initial_solution cstrs quals =
-  let sol = Solution.create 17 in
-  let add_refinement_var = function
-    | (_, (_, Frame.Qconst _)) -> ()
-    | (LHSVar, (_, Frame.Qvar k))
-    | (WFVar, (_, Frame.Qvar k)) ->
-      (* If a variable only ever appears on the left hand side, the variable is
-         unconstrained; this generally indicates an uncalled function.
-         When we have such an unconstrained variable, we simply say we don't
-         know anything about its value.  For uncalled functions, this will give
-         us the most general type (i.e., the one that makes the least assumptions
-         about the input). *)
-      if not (Solution.mem sol k) then Solution.replace sol k []
-    | (RHSVar, (_, Frame.Qvar k)) -> Solution.replace sol k quals
-  in
-  let add_constraint_vars = function
-    | SubRefinement (_, _, r1, r2, _) ->
-      add_refinement_var (LHSVar, r1); add_refinement_var (RHSVar, r2)
-    | WFRefinement (_, r, _) -> add_refinement_var (WFVar, r)
-  in List.iter add_constraint_vars cstrs; sol
+let match_and_extend env (l1,f1) (l2,f2) = 
+  match (l1,l2) with
+  | (Some p, None) | (None, Some p) -> Pat.env_bind env p f2
+  | (Some p1, Some p2) when Pat.same p1 p2 -> Pat.env_bind env p1 f2
+  | _  -> env (* 1 *)
+ 
+let is_mutable m = 
+  m = Asttypes.Mutable
 
-let rec divide_constraints_by_form wf refi = function
-  | [] -> (wf, refi)
-  | SubRefinement r :: cs ->
-      divide_constraints_by_form wf (r :: refi) cs
-  | WFRefinement w :: cs ->
-      divide_constraints_by_form (w :: wf) refi cs
+let split_sub = function WFFrame _ -> assert false | SubFrame (env,g,f1,f2,_,_) as c -> 
+  match (f1, f2) with
+  | (F.Farrow (l1, f1, f1'), F.Farrow (l2, f2, f2')) -> 
+      let env' = match_and_extend env (l1,f1) (l2,f2) in 
+      ((lequate_cs false env g c f2 f1) @ (lequate_cs false env' g c f1' f2'),
+       [])
+  | (F.Fvar _, F.Fvar _) | (F.Funknown, F.Funknown) ->
+      ([],[]) 
+  | (F.Fconstr (p1, f1s, r1), F.Fconstr(p2, f2s, r2)) ->  (* 2 *)
+      (C.flap2 (lequate_cs true env g c) f1s f2s,
+       [(Cstr c, SubRef(env,g,r1,r2,None))])
+  | (F.Ftuple f1s, F.Ftuple f2s) ->
+      (C.flap2 (lequate_cs false env g c) f1s f2s,
+       [])
+  | (F.Frecord (_, fld1s, r1), F.Frecord (_, fld2s, r2)) ->
+      (C.flap2 
+         (fun (f1',_,m) (f2',_,_) -> lequate_cs (is_mutable m) env g c f1' f2') 
+         fld1s fld2s, 
+       if List.exists (fun (_, _,m) -> is_mutable m) fld1s 
+       then [(Cstr c, SubRef (env,g,r1,r2,None)); (Cstr c, SubRef (env,g,r2,r1,None))]
+       else [(Cstr c, SubRef (env,g,r1,r2,None))])
+  | (_,_) -> 
+      (printf "@[Can't@ split:@ %a@ <:@ %a@]" F.pprint f1 F.pprint f2; 
+       assert false)
 
-let is_simple_constraint = function
-  | (_, _, ([], _), ([], _), _) -> true
+let split_wf = function SubFrame _ -> assert false | WFFrame (env,f,_,_) as c -> 
+  match f with
+  | F.Fconstr (_, l, r) ->
+      (List.map (fun li -> WFFrame (env, li, Cstr c, None)) l,
+       [(Cstr c, WFRef (Le.add qual_test_var f env, r, None))])
+  | F.Farrow (l, f, f') ->
+      let env' = match l with None -> env | Some p -> Pat.env_bind env p f in
+      ([WFFrame (env, f, Cstr c, None); WFFrame (env', f', Cstr c, None)],
+       [])
+  | F.Ftuple fs ->
+      (List.map (fun f' -> WFFrame (env, f', Cstr c, None)) fs,
+       [])
+  | F.Frecord (_, fs, r) ->
+      (List.map (fun (f',_,_) -> WFFrame (env, f', Cstr c, None)) fs,
+       [(Cstr c, WFRef (Le.add qual_test_var f env, r, None))])
+  | F.Fvar _ | F.Funknown ->
+      ([],[]) 
+
+let split cs =
+  assert (List.for_all (fun c -> None <> get_fc_id c) cs);
+  C.expand 
+    (fun c -> match c with SubFrame _ -> split_sub c | WFFrame _ -> split_wf c) 
+    cs [] 
+
+(**************************************************************)
+(********************* Constraint Indexing ********************) 
+(**************************************************************)
+
+module WH = 
+  Heap.Functional(
+    struct 
+      type t = subref_id * (int * bool * fc_id) 
+      let compare (_,(i,j,k)) (_,(i',j',k')) = 
+        if i <> i' then compare i i' else 
+          if j <> j' then compare j j' else compare k' k
+    end)
+
+type ref_index = 
+  { orig: frame_constraint SIM.t;       (* id -> orig *)
+    cnst: refinement_constraint SIM.t;  (* id -> refinement_constraint *) 
+    rank: (int * bool * fc_id) SIM.t;           (* id -> dependency rank *)
+    depm: subref_id list SIM.t;         (* id -> successor ids *)
+    pend: (subref_id,unit) Hashtbl.t;   (* id -> is in wkl ? *)
+  }
+
+let get_ref_id = 
+  function WFRef (_,_,Some i) | SubRef (_,_,_,_,Some i) -> i | _ -> assert false
+
+let get_ref_rank sri c = 
+  (* C.do_catch "get_rank" (SIM.find (get_ref_id c)) sri.rank *)
+  try SIM.find (get_ref_id c) sri.rank with Not_found ->
+    (printf "ERROR: @[No@ rank@ for:@ %a@\n@]" (pprint_ref None) c; 
+     raise Not_found)
+
+let get_ref_constraint sri i = 
+  C.do_catch "ERROR: get_constraint" (SIM.find i) sri.cnst
+
+let lhs_ks = function WFRef _ -> assert false | SubRef (env,_,(_,qe),_,_) ->
+  let ks = Le.fold (fun _ f l -> F.refinement_vars f @ l) env [] in
+  match qe with F.Qvar k -> k::ks | _ -> ks 
+
+let rhs_k = function
+  | SubRef (_,_,_,(_,F.Qvar k),_) -> Some k
+  | _ -> None
+
+let make_rank_map om cm =
+  let get vm k = try VM.find k vm with Not_found -> [] in
+  let upd id vm k = VM.add k (id::(get vm k)) vm in
+  let km = 
+    SIM.fold 
+      (fun id c vm -> match c with WFRef _ -> vm 
+        | SubRef _ -> List.fold_left (upd id) vm (lhs_ks c))
+      cm VM.empty in
+  let (dm,deps) = 
+    SIM.fold
+      (fun id c (dm,deps) -> 
+        match (c, rhs_k c) with 
+        | (WFRef _,_) -> (dm,deps) 
+        | (_,None) -> (dm,(id,id)::deps) 
+        | (_,Some k) -> 
+          let kds = get km k in
+          let deps' = List.map (fun id' -> (id,id')) (id::kds) in
+          (SIM.add id kds dm, List.rev_append deps deps'))
+      cm (SIM.empty,[]) in
+  let flabel i = C.io_to_string (get_fc_id (SIM.find i om)) in
+  let rm = 
+    List.fold_left
+      (fun rm (id,r) -> 
+        let b = (not !Cf.psimple) || (is_simple_constraint (SIM.find id cm)) in
+        let fci = get_fc_id (SIM.find id om) in 
+        SIM.add id (r,b,fci) rm)
+      SIM.empty (C.scc_rank flabel deps) in
+  (dm,rm)
+
+let fresh_refc = 
+  let i = ref 0 in
+  fun c -> 
+    let i' = incr i; !i in
+    match c with  
+    | WFRef (env,r,None) -> WFRef (env,r,Some i')
+    | SubRef (env,g,r1,r2,None) -> SubRef (env,g,r1,r2,Some i')
+    | _ -> assert false
+
+(* API *)
+let make_ref_index ocs = 
+  let ics = List.map (fun (o,c) -> (o,fresh_refc c)) ocs in
+  let (om,cm) = 
+    List.fold_left 
+      (fun (om,cm) (o,c) ->
+        let o = match o with Cstr fc -> fc | _ -> assert false in
+        let i = get_ref_id c in 
+        (SIM.add i o om, SIM.add i c cm))
+      (SIM.empty, SIM.empty) ics in
+  let (dm,rm) = make_rank_map om cm in
+  {orig = om; cnst = cm; rank = rm; depm = dm; pend = Hashtbl.create 17}
+
+let get_ref_orig sri c = 
+  C.do_catch "ERROR: get_ref_orig" (SIM.find (get_ref_id c)) sri.orig
+(* API *)
+let get_ref_deps sri c =
+  let is' = try SIM.find (get_ref_id c) sri.depm with Not_found -> [] in
+  List.map (get_ref_constraint sri) is'
+
+(* API *)
+let get_ref_constraints sri = 
+  SIM.fold (fun _ c cs -> c::cs) sri.cnst [] 
+
+(* API *)
+let iter_ref_constraints sri f = 
+  SIM.iter (fun _ c -> f c) sri.cnst
+
+(* API *)
+let push_worklist sri w cs =
+  List.fold_left 
+    (fun w c -> 
+      let id = get_ref_id c in
+      let _ = C.cprintf C.ol_solve "@[Pushing@ %d@\n@]" id in 
+      if Hashtbl.mem sri.pend id then w else 
+        let _ = Hashtbl.replace sri.pend id () in
+        WH.add (id,get_ref_rank sri c) w)
+    w cs
+
+(* API *)
+let pop_worklist sri w =
+  try 
+    let id = fst (WH.maximum w) in
+    let _ = Hashtbl.remove sri.pend id in
+    (Some (get_ref_constraint sri id), WH.remove w)
+  with Heap.EmptyHeap -> (None,w) 
+
+(* API *)
+let make_initial_worklist sri =
+  let cs = List.filter is_subref_constraint (get_ref_constraints sri) in
+  push_worklist sri WH.empty cs 
+
+(**************************************************************)
+(************************** Refinement ************************)
+(**************************************************************)
+
+let refine_simple s k1 k2 =
+  let q1s  = Sol.find s k1 in
+  let q2s  = Sol.find s k2 in
+  let q2s' = List.filter (fun q -> List.mem q q1s) q2s in
+  let _    = Sol.replace s k2 q2s' in
+  let _ = C.cprintf C.ol_refine "@[%d@ -->@ %d@\n@]" (List.length q2s) (List.length q2s') in
+  List.length q2s' <> List.length q2s
+
+let qual_implied s lhs lhs_ps rhs_subs q =
+  let rhs = F.refinement_predicate (solution_map s) qual_test_var (rhs_subs, F.Qconst [q]) in
+  let (cached, cres) = if !Cf.cache_queries then TP.check_table lhs rhs else (false, false) in
+  if cached then cres else 
+    if (not !Cf.no_simple_subs) && List.mem rhs lhs_ps then (incr stat_matches; true) else
+      let rv = Bstats.time "refinement query" (TP.implies lhs) rhs in
+      let _ = incr stat_solved_constraints in
+      let _ = if rv then incr stat_valid_constraints in
+      rv 
+
+let qual_wf s env subs q =
+  refinement_well_formed env (solution_map s) (subs,F.Qconst [q]) qual_test_var
+
+let refine sri s c =
+  let _ = incr stat_refines in
+  match c with
+  | SubRef (_, _, ([], F.Qvar k1), ([], F.Qvar k2), _)
+    when not (!Cf.no_simple || !Cf.verify_simple) -> 
+      refine_simple s k1 k2
+  | SubRef (env,g,r1, (rhs_subs, F.Qvar k2), _)  ->
+      let lhs = 
+        let gp = Bstats.time "make guardp" (guard_predicate ()) g in
+        let envp = Bstats.time "make envp" (environment_predicate s) env in
+        let r1p = Bstats.time "make r1p" (F.refinement_predicate (solution_map s) qual_test_var) r1 in
+        P.big_and [envp;gp;r1p] in
+      let q2s  = solution_map s k2 in
+      let q2s' = List.filter (qual_implied s lhs [] rhs_subs) q2s in 
+      let _ = Sol.replace s k2 q2s' in
+      let _ = C.cprintf C.ol_refine "@[%d@ -->@ %d@\n@]" (List.length q2s) (List.length q2s') in
+      (List.length q2s <> List.length q2s')
+  | WFRef (env,(subs, F.Qvar k),_) -> 
+      let qs  = solution_map s k in
+      let qs' = List.filter (qual_wf s env subs) qs in
+      let _   = Sol.replace s k qs' in
+      (List.length qs <> List.length qs')
   | _ -> false
 
-module QualifierSet = Set.Make(Qualifier)
 
-let count_qualifiers solution =
-  let quals = ref QualifierSet.empty in
-  let add k ql = List.iter (fun q -> quals := QualifierSet.add q !quals) ql in
-  Solution.iter add solution; QualifierSet.cardinal !quals 
+(**************************************************************)
+(********************** Constraint Satisfaction ***************)
+(**************************************************************)
 
-let count_variables solution =
-  let sum = ref 0 in
-  let add k ql = sum := 1 + !sum in
-  Solution.iter add solution; !sum
+let sat s = function
+  | SubRef (env, g, r1, r2, _) ->
+      let gp = Bstats.time "make guardp" (guard_predicate ()) g in
+      let envp = environment_predicate s env in
+      let p1 = F.refinement_predicate (solution_map s) qual_test_var r1 in
+      let p2 = F.refinement_predicate (solution_map s) qual_test_var r2 in
+        TP.backup_implies (P.big_and [envp; gp; p1]) p2
+  | WFRef (env, r, _) as c -> 
+      let rv = refinement_well_formed env (solution_map s) r qual_test_var in
+         C.asserts (Printf.sprintf "ERROR: wf is unsat! (%d)" (get_ref_id c)) rv;
+         rv 
 
-let count_total_qualifiers solution = 
-  let sum = ref 0 in
-  let max = ref 0 in
-  let min = ref 0 in
-  let add k ql = 
-    let l = List.length ql in
-    sum := l + !sum;
-    max := if l > !max then l else !max;
-    min := if !min = 0 then l else
-              if l < !min then l else !min in
-  Solution.iter add solution; (!sum, !max, !min)
+let unsat_constraints sri s =
+  C.map_partial
+    (fun c -> if sat s c then None else Some (c, get_ref_orig sri c))
+    (get_ref_constraints sri)
 
-module Constraint = struct
-  type t = subrefinement_constraint
-  let compare (env1, _, _, _, _) (env2, _, _, _, _) = -(Lightenv.compare env1 env2)
-    (* We want the smallest environment to be the maximum because our worklist
-       is a priority queue *)
-end
+(**************************************************************)
+(************************ Initial Solution ********************)
+(**************************************************************)
 
-exception Empty_worklist
+(* If a variable only ever appears on the left hand side, the variable is
+ * unconstrained; this generally indicates an uncalled function.
+ * When we have such an unconstrained variable, we simply say we don't
+ * know anything about its value.  For uncalled functions, this will give
+ * us the type which makes the least assumptions about the input. *)
 
-module Worklist = struct
-  module WHeap = Heap.Imperative(Constraint)
+let make_initial_solution sri qs =
+  let s = Sol.create 17 in
+  let addrv = function
+  | ((_, F.Qconst _),_) -> ()
+  | ((_, F.Qvar k),true) -> Sol.replace s k qs
+  | ((_, F.Qvar k),false) -> if not (Sol.mem s k) then Sol.replace s k [] in
+  SIM.iter 
+    (fun _ c -> match c with 
+    | SubRef (_, _, r1, r2, _) -> addrv (r1,false); addrv (r2,true)
+    | WFRef (_, r, _) -> addrv (r,false)) sri.cnst;
+  s
 
-  type t =
-    | Workheap of WHeap.t
-    | Worklist of subrefinement_constraint list
+(**************************************************************)
+(****************** Debug/Profile Information *****************)
+(**************************************************************)
+ 
+let dump_constraints sri = 
+  if !Cf.dump_constraints then
+  (printf "@[Refinement Constraints@.@\n@]";
+  iter_ref_constraints sri
+  (fun c -> printf "@[%a@.@]" (pprint_ref None) c))
+    (* let cs = get_ref_constraints sri in
+    Oprint.print_list (pprint_ref None) (fun ppf -> fprintf ppf "@.@.")
+    std_formatter cs *)
 
-  let empty () = if !Clflags.use_list then Worklist [] else Workheap (WHeap.create 17)
-
-  let pop = function
-    | Worklist [] -> raise Empty_worklist
-    | Worklist (c :: cs) -> (c, Worklist cs)
-    | (Workheap h) as wh ->
-        try
-          let max = WHeap.maximum h in
-            WHeap.remove h;
-            (max, wh)
-        with Heap.EmptyHeap -> raise Empty_worklist
-
-  let push cs = function
-    | Worklist l -> Worklist (l @ cs)
-    | (Workheap h) as wh ->
-        List.iter (fun c -> WHeap.add h c) cs;
-        wh
-end
-
-exception Unsatisfiable of refinement_constraint list * Qualifier.t list Solution.t
-
-let solve_constraints quals constrs =
-  if !Clflags.dump_constraints then
-    Oprint.print_list pprint (fun ppf -> fprintf ppf "@.@.")
-      std_formatter constrs;
-  let cs = split constrs in
-  let (wfs, refis) = divide_constraints_by_form [] [] cs in
-  let inst_quals = List.length quals in
-  let _ = Printf.printf "%d instantiated qualifiers\n\n" inst_quals in
-
-  let solution = initial_solution cs quals in
-
-  let num_vars = count_variables solution in
-  let _ = Printf.printf "%d variables\n\n" num_vars in 
-  let _ = Printf.printf "%d total quals\n\n" (num_vars * inst_quals) in
-
-  Bstats.time "solving wfs" (solve_wf_constraints solution) wfs;
-
-  Printf.printf "%d unique qualifiers after solving wf\n\n" (count_qualifiers solution);
-  let (sum, max, min) = count_total_qualifiers solution in
-  Printf.printf "Quals:\n\tTotal: %d\n\tAvg: %f\n\tMax: %d\n\tMin: %d\n\n"
-                sum ((float_of_int sum) /. (float_of_int num_vars)) max min;
-  Printf.printf "%d split subtyping constraints\n\n" (List.length refis);
-  Printf.printf "%d simple subtyping constraints\n\n"
-    (List.length (List.filter is_simple_constraint refis));
-  print_flush ();
-  let cstr_map = make_variable_constraint_map refis in
-  let rec solve_rec wklist =
-    (* This awkward control flow is necessary: if we wrap the recursive call in the
-       try block, it's not tail recursive anymore. *)
-    match try Some (Worklist.pop wklist) with Empty_worklist -> None with
-      | Some (cstr, rest) ->
-          begin match cstr with
-            | (_, _, _, (_, Frame.Qvar k), _) ->
-                let wklist = match refine solution cstr with
-                  | Solution_changed ->
-                      Worklist.push (try VarMap.find k cstr_map with Not_found -> []) rest
-                  | Solution_unchanged -> rest
-                in solve_rec wklist
-            | _ -> solve_rec rest
-          end
-      | None -> ()
-  in
-
-  (* Find the "roots" of the constraint graph - all those constraints that don't
-     have a variable in the LHS AND also the vars we solved for well-formedness in the previous
-     round (because we need to be sure we visit their children) *)
-  (* pmr: this is sounding like basically everything, so we'll just throw everything on at the
-     start to be sure; the heap should ensure we get to the roots first, though *)
-    (*let roots = List.filter (fun c -> match lhs_vars c with [] -> true | _ -> false) refis in*)
-  let init_wklist = Worklist.push refis (Worklist.empty ()) in
-    Bstats.time "refining subtypes" solve_rec init_wklist;
+let dump_solution_stats s = 
+  let kn  = Sol.length s in
+  let (sum, max, min) =   
+    (Sol.fold (fun _ qs x -> (+) x (List.length qs)) s 0,
+     Sol.fold (fun _ qs x -> max x (List.length qs)) s min_int,
+     Sol.fold (fun _ qs x -> min x (List.length qs)) s max_int) in
+  C.cprintf C.ol_solve_stats "@[Quals:@\n\tTotal:@ %d@\n\tAvg:@ %f@\n\tMax:@ %d@\n\tMin:@ %d@\n@\n@]"
+  sum ((float_of_int sum) /. (float_of_int kn)) max min;
+  print_flush ()
   
-    Printf.printf "solution refinement completed:\n\t%d iterations of refine\n\n" !num_refines;
-    Format.printf "@[Solved@ %d@ constraints;@ %d@ valid@]@.@." !solved_constraints !valid_constraints;
-    TheoremProver.dump_simple_stats ();
-    TheoremProver.clear_cache ();
-    Format.printf "@[Solved@ %d@ constraints@ by@ matching@\n@]" !matching_ctr;
-    flush stdout;
-  
-    if !Clflags.dump_constraints then
-      Oprint.print_list (pprint_subref solution) (fun ppf -> fprintf ppf "@.@.")
-        std_formatter refis;
+let dump_solving qs sri s step =
+  if step = 0 then 
+    let cs = get_ref_constraints sri in 
+    let qn  = List.length qs in
+    let kn  = Sol.length s in
+    let wcn = List.length (List.filter is_wfref_constraint cs) in
+    let rcn = List.length (List.filter is_subref_constraint cs) in
+    let scn = List.length (List.filter is_simple_constraint cs) in
+    (dump_constraints sri;
+     C.cprintf C.ol_solve_stats "@[%d@ instantiated@ qualifiers@\n@\n@]" qn; 
+     C.cprintf C.ol_solve_stats "@[%d@ variables@\n@\n@]" kn;
+     C.cprintf C.ol_solve_stats "@[%d@ total@ quals@\n@\n@]" (kn * qn); 
+     C.cprintf C.ol_solve_stats "@[%d@ split@ wf@ constraints@\n@\n@]" wcn;
+     C.cprintf C.ol_solve_stats "@[%d@ split@ subtyping@ constraints@\n@\n@]" rcn;
+     C.cprintf C.ol_solve_stats "@[%d@ simple@ subtyping@ constraints@\n@\n@]" scn;
+     dump_solution_stats s) 
+  else if step = 1 then
+    dump_solution_stats s
+  else if step = 2 then
+    (C.cprintf C.ol_solve_stats "@[solution@ refinement@ completed:@\n\t%d@ iterations@ of@ refine@\n@\n@]" !stat_refines;
+     C.cprintf C.ol_solve_stats "@[Solved@ %d@ constraints;@ %d@ valid@]@.@." 
+     !stat_solved_constraints !stat_valid_constraints;
+     TP.dump_simple_stats ();
+     C.cprintf C.ol_solve_stats "@[Solved@ %d@ constraints@ by@ matching@\n@]" !stat_matches;
+     dump_solution_stats s;
+     flush stdout)
 
-    let find_unsatisfied solution cstrs = List.filter (fun c -> not (constraint_sat solution c)) cstrs in
-    let unsat = Bstats.time "testing solution" (find_unsatisfied solution) cs in
-      if List.length unsat = 0 then solution else raise (Unsatisfiable (unsat, solution))
+(**************************************************************)
+(******************** Iterative - Refinement  *****************)
+(**************************************************************)
+
+let rec solve_sub sri s w = 
+  let _ = if !stat_refines mod 100 = 0 then C.cprintf C.ol_solve "@[num@ refines@ =@ %d@\n@]" !stat_refines in
+  match pop_worklist sri w with (None,_) -> s | (Some c, w') ->
+    let (r,b,fci) = get_ref_rank sri c in
+    let _ = C.cprintf C.ol_solve "@[Refining:@ %d@ in@ scc@ (%d,%b,%s):@\n@]"
+            (get_ref_id c) r b (C.io_to_string fci) in
+    let w' = if refine sri s c then push_worklist sri w' (get_ref_deps sri c) else w' in
+    solve_sub sri s w'
+
+let solve_wf sri s = 
+  iter_ref_constraints sri 
+  (function WFRef _ as c -> ignore (refine sri s c) | _ -> ())
+
+let solve qs cs = 
+  let cs = if !Cf.simpguard then List.map simplify_fc cs else cs in
+  let sri = make_ref_index (split cs) in
+  let s = make_initial_solution sri qs in
+  let _ = dump_solving qs sri s 0  in 
+  let _ = Bstats.time "solving wfs" (solve_wf sri) s in
+  let _ = dump_solving qs sri s 1 in
+  let w = make_initial_worklist sri in
+  let _ = Bstats.time "solving sub" (solve_sub sri s) w in
+  let _ = dump_solving qs sri s 2 in
+  let _ = TP.clear_cache () in
+  let unsat = Bstats.time "testing solution" (unsat_constraints sri) s in
+  let _ = if List.length unsat != 0 then 
+          begin
+            C.cprintf C.ol_solve_error "@[Ref_constraints@ still@ unsatisfied:@\n@]";
+            List.iter (fun (c, b) -> C.cprintf C.ol_solve_error "@[%a@.@\n@]" (pprint_ref None) c) unsat
+          end in
+  (solution_map s, (List.map (fun (a, b) -> b)  unsat))

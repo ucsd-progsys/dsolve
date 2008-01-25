@@ -1,3 +1,8 @@
+
+qualif NNEG(v): v >= 0 
+qualif LT_n(v): v < n
+qualif LT_len_a(v): v < Array.length a
+
 let max x y =
   if x > y then x else y
 

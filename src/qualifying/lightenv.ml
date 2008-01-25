@@ -1,12 +1,7 @@
 (* A small environment module; provided so we (hopefully) won't have to screw
    with OCaml's env. *)
 
-module ComparablePath = struct
-  type t = Path.t
-  let compare = compare
-end
-
-module E = Map.Make(ComparablePath)
+module E = Map.Make(Common.ComparablePath)
 
 include E
 
@@ -21,9 +16,6 @@ let mapfilter f env =
 
 let addn items env =
   List.fold_left (fun e (k, v) -> add k v e) env items
-
-let pprint pprint_range ppf env =
-  iter (fun x t -> Format.fprintf ppf "@[%s@ ->@ %a;@\n@]" (Path.unique_name x) pprint_range t) env 
 
 let cardinality e = fold (fun _ _ c -> c + 1) e 0
 

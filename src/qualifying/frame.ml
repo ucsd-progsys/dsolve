@@ -28,7 +28,10 @@ let pprint_subs ppf subs =
 
 let pprint_refinement ppf refi =
   match refi with
-    | (_, Qvar id ) -> fprintf ppf "%s" (Path.name id)
+    | (_, Qvar id ) ->
+      fprintf ppf "%s" (Path.unique_name id)
+    | (subs, Qconst []) ->
+      fprintf ppf "true"
     | (subs, Qconst quals) ->
       let preds = List.map (Qualifier.apply (Path.mk_ident "V")) quals in
       let preds = List.map (Predicate.apply_substs subs) preds in

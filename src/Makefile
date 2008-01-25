@@ -7,9 +7,8 @@ YACCFLAGS=-v
 CAMLLEX=ocamllex
 CAMLDEP=ocamldep
 DEPFLAGS=$(INCLUDES)
-
-COMPFLAGS=$(FLAGS) -warn-error A $(INCLUDES)
-LINKFLAGS=$(FLAGS) -cclib -loyices -cclib -lgmp -cclib -lyices -I ../external/yices/lib/
+COMPFLAGS=$(FLAGS) -dtypes -warn-error A $(INCLUDES)
+LINKFLAGS=$(FLAGS) -cclib -loyices -cclib -lgmp -cclib -lyices -I ../external/yices/lib/ -I ../external/ocamlgraph/
 INCLUDES=-I ../external/yices/lib/ -I ../external/ocamlgraph/ \
          -I utils -I parsing -I typing -I qualifying -I driver -I analyzer
 
@@ -34,7 +33,7 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/typedecl.cmo typing/typeclass.cmo \
   typing/typemod.cmo
 
-QUALIFYING=qualifying/lightenv.cmo \
+QUALIFYING=qualifying/common.cmo qualifying/lightenv.cmo \
   qualifying/qualifier.cmo qualifying/builtins.cmo qualifying/frame.cmo \
   qualifying/wellformed.cmo qualifying/message.cmo qualifying/pattern.cmo \
   qualifying/theoremProverSimplify.cmo qualifying/theoremProverYices.cmo \
@@ -48,10 +47,10 @@ LIQUID=driver/pparse.cmo analyzer/liqerrors.cmo analyzer/liquid.cmo
 LIQOBJS=$(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(LIQUID)
 
 liquid: $(LIQOBJS)
-	$(CAMLC) $(LINKFLAGS) -custom -o liquid str.cma unix.cma oyices.cma $(LIQOBJS)
+	$(CAMLC) $(LINKFLAGS) -custom -o liquid str.cma unix.cma oyices.cma graph.cma $(LIQOBJS)
 
 liquid.opt: $(LIQOBJS:.cmo=.cmx)
-	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt str.cmxa unix.cmxa oyices.cmxa $(LIQOBJS:.cmo=.cmx)
+	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt str.cmxa unix.cmxa oyices.cmxa graph.cmxa $(LIQOBJS:.cmo=.cmx)
 
 depend: beforedepend
 	(for d in utils parsing typing qualifying driver analyzer; \
@@ -60,9 +59,9 @@ depend: beforedepend
 
 clean: partialclean
 	(for d in utils parsing typing qualifying driver analyzer; \
-	 do rm $$d/*.cm* $$d/*.o; \
+	 do rm -f $$d/*.cm* $$d/*.o; \
 	 done);
-	rm liquid liquid.opt
+	rm -f liquid liquid.opt
 
 utils/config.ml: utils/config.mlp config/Makefile
 	@rm -f utils/config.ml

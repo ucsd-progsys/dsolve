@@ -72,9 +72,11 @@ and use_list = ref false                (* -wlist *)
 and kill_simplify = ref false           (* -ksimpl *)
 and always_use_backup_prover = ref false (* -defprover *)
 and cache_queries = ref false           (* -cqueries *)
+and psimple = ref true                  (* -psimple *)
 and no_simple_subs = ref false          (* -no-simple-subs *)
-and verb_errors = ref false               (* -verrs *)
-
+and verb_errors = ref false             (* -verrs *)
+and simpguard = ref true                (* simplify guard *)
+and verbose = ref false                 (* -verb *)
 let keep_asm_file = ref false           (* -S *)
 let optimize_for_speed = ref true       (* -compact *)
 

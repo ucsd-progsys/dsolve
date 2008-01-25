@@ -27,6 +27,7 @@ let rec fixdiv p =
   in
   let rec pred_isdiv = 
     function Predicate.Atom(e, _, e') -> (expr_isdiv e) || (expr_isdiv e')
+      | Predicate.Iff (px, q) -> expr_isdiv px || pred_isdiv q
       | Predicate.And(p, p') -> (pred_isdiv p) || (pred_isdiv p')
       | Predicate.Or(p, p') -> (pred_isdiv p) || (pred_isdiv p')
       | Predicate.True -> false
@@ -90,7 +91,7 @@ let dump_interval = 10000
 let qcache = Hashtbl.create 10000
 
 let dump_simple_stats () =
-  Format.printf "@[Prover cache stats:@ %d@ queries,@ %d@ cache@ hits@\n@]" !num_queries !hits; flush stdout
+  Common.cprintf Common.ol_solve_stats "@[Prover cache stats:@ %d@ queries,@ %d@ cache@ hits@\n@]" !num_queries !hits; flush stdout
 
 let clear_cache () =
   Hashtbl.clear qcache; num_queries := 0; hits := 0
