@@ -326,7 +326,7 @@ let refine_simple s k1 k2 =
   let q2s  = Sol.find s k2 in
   let q2s' = List.filter (fun q -> List.mem q q1s) q2s in
   let _    = Sol.replace s k2 q2s' in
-  let _ = Printf.printf "%d --> %d \n" (List.length q2s) (List.length q2s') in
+  let _ = if !Clflags.verbose then Printf.printf "%d --> %d \n" (List.length q2s) (List.length q2s') in
   List.length q2s' <> List.length q2s
 
 let qual_implied s lhs lhs_ps rhs_subs q =
@@ -356,7 +356,7 @@ let refine upd sri s c =
       let q2s  = solution_map s k2 in
       let q2s' = List.filter (qual_implied s lhs [] rhs_subs) q2s in 
       let _    = if upd then Sol.replace s k2 q2s' in
-      let _ = Printf.printf "%d --> %d \n" (List.length q2s) (List.length q2s') in
+      let _ = if !Clflags.verbose then Printf.printf "%d --> %d \n" (List.length q2s) (List.length q2s') in
       (List.length q2s <> List.length q2s')
   | WFRef (env,(subs, F.Qvar k),_) -> 
       let qs  = solution_map s k in
@@ -383,13 +383,8 @@ let sat s = function
 *)
 
 let unsat_constraints sri s =
-<<<<<<< HEAD:src/qualifying/constraint.ml
-  Common.map_partial
-    (fun c -> if sat s c then None else Some (c, get_ref_orig sri c))
-=======
   C.map_partial
-    (fun c -> if refine false sri s c then Some (get_ref_orig sri c) else None)
->>>>>>> c5979b46ecd634a721c1099fafa768c58e313a0e:src/qualifying/constraint.ml
+    (fun c -> if refine false sri s c then Some (c, get_ref_orig sri c) else None)
     (get_ref_constraints sri)
 
 (**************************************************************)
@@ -419,21 +414,9 @@ let make_initial_solution sri qs =
 (**************************************************************)
  
 let dump_constraints sri = 
-<<<<<<< HEAD:src/qualifying/constraint.ml
-   if !Clflags.dump_constraints then
-    begin
-      printf "@[Refinement@ Constraints @.@]";
-      iter_ref_constraints sri 
-      (fun c -> printf "@[%a@.@]" (pprint_ref None) c)
-      (* let cs = get_ref_constraints sri in 
-      Oprint.print_list (pprint_ref None) (fun ppf -> fprintf ppf "@.@.") 
-      std_formatter cs *)
-    end
-=======
   if !Cf.dump_constraints then
     (printf "Refinement Constraints @.";
      iter_ref_constraints sri (fun c -> printf "@[%a@.@]" (pprint_ref None) c))
->>>>>>> c5979b46ecd634a721c1099fafa768c58e313a0e:src/qualifying/constraint.ml
 
 let dump_solution_stats s = 
   let kn  = Sol.length s in
@@ -481,7 +464,7 @@ let rec solve_sub sri s w =
   match pop_worklist sri w with (None,_) -> s | (Some c, w') ->
     let (r,b,fci) = get_ref_rank sri c in
     let _ = 
-      if Clflags.verbose then begin
+      if !Clflags.verbose then begin
         Printf.printf "\n Refining: %d in scc (%d,%b,%s) :" 
         (get_ref_id c) r b (C.io_to_string fci) end in
     let w' = if refine true sri s c then push_worklist sri w' (get_ref_deps sri c) else w' in
@@ -502,7 +485,7 @@ let solve qs cs =
   let _ = dump_solving qs sri s 2 in
   let _ = TP.clear_cache () in
   let unsat = Bstats.time "testing solution" (unsat_constraints sri) s in
-  let _ = if !Clflags.verb_errors then 
+  let _ = if !Clflags.verb_errors && List.length unsat != 0 then 
           begin
             printf "@[Ref_constraints@ still@ unsatisfied:@\n@]";
             List.iter (fun (c, b) -> printf "@[%a@.@]" (pprint_ref None) c) unsat
