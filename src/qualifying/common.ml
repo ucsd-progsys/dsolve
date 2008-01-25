@@ -86,6 +86,8 @@ let fcprintf ppf l = if ck_olev l then Format.fprintf ppf else nprintf
 
 let icprintf printer l ppf = if ck_olev l then printer ppf else printer null_formatter
 
+let cprintln l s = if ck_olev l then Printf.ksprintf (Format.printf "@[%s@\n@]") s else nprintf
+
 (****************************************************************)
 (************* SCC Ranking **************************************)
 (****************************************************************)
