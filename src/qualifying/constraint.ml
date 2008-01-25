@@ -342,7 +342,7 @@ let qual_implied s lhs lhs_ps rhs_subs q =
 let qual_wf s env subs q =
   refinement_well_formed env (solution_map s) (subs,F.Qconst [q]) qual_test_var
 
-let refine upd sri s c =
+let refine sri s c =
   let _ = incr stat_refines in
   match c with
   | SubRef (_, _, ([], F.Qvar k1), ([], F.Qvar k2), _)
@@ -355,15 +355,16 @@ let refine upd sri s c =
         P.big_and [envp;g;r1p] in
       let q2s  = solution_map s k2 in
       let q2s' = List.filter (qual_implied s lhs [] rhs_subs) q2s in 
-      let _    = if upd then Sol.replace s k2 q2s' in
+      let _ = Sol.replace s k2 q2s' in
       let _ = C.cprintf C.ol_refine "@[%d@ -->@ %d@\n@]" (List.length q2s) (List.length q2s') in
       (List.length q2s <> List.length q2s')
   | WFRef (env,(subs, F.Qvar k),_) -> 
       let qs  = solution_map s k in
       let qs' = List.filter (qual_wf s env subs) qs in
-      let _   = if upd then Sol.replace s k qs' in
+      let _   = Sol.replace s k qs' in
       (List.length qs <> List.length qs')
-  | _ -> false 
+  | _ -> false
+
 
 (**************************************************************)
 (********************** Constraint Satisfaction ***************)
@@ -412,9 +413,13 @@ let make_initial_solution sri qs =
 (**************************************************************)
  
 let dump_constraints sri = 
-  if !Cf.dump_constraints then
-    (printf "Refinement Constraints @.";
-     iter_ref_constraints sri (fun c -> printf "@[%a@.@]" (pprint_ref None) c))
+  (* if !Cf.dump_constraints then*)
+  printf "Refinement Constraints @.";
+  iter_ref_constraints sri
+  (fun c -> printf "@[%a@.@]" (pprint_ref None) c)
+    (* let cs = get_ref_constraints sri in
+    Oprint.print_list (pprint_ref None) (fun ppf -> fprintf ppf "@.@.")
+    std_formatter cs *)
 
 let dump_solution_stats s = 
   let kn  = Sol.length s in
@@ -463,12 +468,12 @@ let rec solve_sub sri s w =
     let (r,b,fci) = get_ref_rank sri c in
     let _ = C.cprintf C.ol_solve "@[Refining:@ %d@ in@ scc@ (%d,%b,%s):@\n@]"
             (get_ref_id c) r b (C.io_to_string fci) in
-    let w' = if refine true sri s c then push_worklist sri w' (get_ref_deps sri c) else w' in
+    let w' = if refine sri s c then push_worklist sri w' (get_ref_deps sri c) else w' in
     solve_sub sri s w'
 
 let solve_wf sri s = 
   iter_ref_constraints sri 
-  (function WFRef _ as c -> ignore (refine true sri s c) | _ -> ()) 
+  (function WFRef _ as c -> ignore (refine sri s c) | _ -> ())
 
 let solve qs cs = 
   let sri = make_ref_index (split cs) in
