@@ -55,6 +55,38 @@ let array_to_index_list a =
     (Array.fold_left (fun (i,rv) v -> (i+1,(i,v)::rv)) (0,[]) a))
 
 (****************************************************************)
+(************* Output levels ************************************)
+(****************************************************************)
+
+(* verbosity levels by purpose *)
+let ol_always = 0
+let ol_solve_error = 1
+let ol_warning = 1
+let ol_solve_master = 2
+let ol_solve_stats = 2
+let ol_timing = 2
+let ol_default = 2
+let ol_normalized = 3
+let ol_solve = 10 
+let ol_refine = 11 
+let ol_scc =12 
+
+
+let verbose_level = ref ol_default
+
+let null_formatter = Format.make_formatter (fun a b c -> ()) ignore
+let nprintf a = Format.fprintf null_formatter a
+let ck_olev l = l <= !verbose_level
+
+let cprintf l = if ck_olev l then Format.printf else nprintf
+
+let ecprintf l = if ck_olev l then Format.eprintf else nprintf
+
+let fcprintf ppf l = if ck_olev l then Format.fprintf ppf else nprintf
+
+let icprintf printer l ppf = if ck_olev l then printer ppf else printer null_formatter
+
+(****************************************************************)
 (************* SCC Ranking **************************************)
 (****************************************************************)
 
@@ -111,16 +143,14 @@ let scc_rank f ijs =
   let _ = List.iter (fun (i,j) -> G.add_edge g (i,(f i)) (j,(f j))) ijs in
   let _ = dump_graph g in
   let a = SCC.scc_array g in
-  let _ = 
-    if !Clflags.verbose then begin
-    Printf.printf "dep graph: vertices =  %d, sccs = %d \n" 
-    (G.nb_vertex g) (Array.length a);
-    Printf.printf "scc sizes: ";
-    let int_s_to_string (i,s) = Printf.sprintf "(%d,%s)" i s in
-    Array.iteri 
-      (fun i xs -> 
-        Printf.printf "%d : %s \n" i (xs_to_string int_s_to_string xs)) a;
-    Printf.printf "\n" end in
+  let _ = cprintf ol_scc "@[dep@ graph:@ vertices@ =@ @ %d,@ sccs@ =@ %d@ @\n@]" 
+          (G.nb_vertex g) (Array.length a);
+          cprintf ol_scc "@[scc@ sizes:@\n@]";
+          let int_s_to_string (i,s) = Printf.sprintf "(%d,%s)" i s in
+          Array.iteri 
+          (fun i xs -> 
+          cprintf ol_scc "@[%d@ :@ %s@ @\n@]" i (xs_to_string int_s_to_string xs)) a;
+          cprintf ol_scc "@[@\n@]" in
   let sccs = array_to_index_list a in
   flap (fun (i,vs) -> List.map (fun (j,_) -> (j,i)) vs) sccs
 
@@ -140,3 +170,5 @@ let n4 = make_scc_num g4 ;; *)
 let asserts s b = 
   try assert b with ex -> 
     Printf.printf "Common.asserts failure: %s " s; raise ex
+
+

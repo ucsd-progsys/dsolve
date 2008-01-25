@@ -129,8 +129,16 @@ let main () =
      "-no-anormal", Arg.Set no_anormal, "don't rewrite the AST for a-normality";
      "-ksimpl", Arg.Set kill_simplify, "kill simplify after a large number of queries to reduce memory usage";
      "-cacheq", Arg.Set cache_queries, "cache theorem prover queries";
-     "-verrs", Arg.Set verb_errors, "print very verbose errors when constraints are unsat";
-     "-verbose", Arg.Set verbose, "generally verbose about solving";
+     "-v", Arg.Int (fun c -> Common.verbose_level := c), 
+              "<level> Set degree of analyzer verbosity:\n\
+               \032    0      No output\n\
+               \032    1      +Verbose errors\n\
+               \032    [2]    +Verbose stats, timing\n\
+               \032    3      +Print normalized source\n\
+               \032    11     +Verbose solver\n\
+               \032    13     +Dump constraint graph\n\
+               \032    64     +Drowning in output";
+     "-verrs", Arg.Set verb_errors, "redacted";
      "-psimple", Arg.Set psimple, "prioritize simple constraints"
   ] file_argument usage;
   let source = load_sourcefile std_formatter !filename in

@@ -59,7 +59,7 @@ let is_wfref_constraint = function
 
 let solution_map s k = 
   C.do_catch 
-    (Printf.sprintf "solution_map couldn't find: %s" (Path.name k))
+    (Printf.sprintf "ERROR: solution_map couldn't find: %s" (Path.name k))
     (Sol.find s) k  
 
 (**************************************************************)
@@ -213,11 +213,11 @@ let get_ref_id =
 let get_ref_rank sri c = 
   (* C.do_catch "get_rank" (SIM.find (get_ref_id c)) sri.rank *)
   try SIM.find (get_ref_id c) sri.rank with Not_found ->
-    (printf "@[No@ rank@ for:@ %a@]" (pprint_ref None) c; 
+    (printf "ERROR: @[No@ rank@ for:@ %a@\n@]" (pprint_ref None) c; 
      raise Not_found)
 
 let get_ref_constraint sri i = 
-  C.do_catch  "get_constraint" (SIM.find i) sri.cnst
+  C.do_catch "ERROR: get_constraint" (SIM.find i) sri.cnst
 
 let lhs_ks = function WFRef _ -> assert false | SubRef (env,_,(_,qe),_,_) ->
   let ks = Le.fold (fun _ f l -> F.refinement_vars f @ l) env [] in
@@ -279,7 +279,7 @@ let make_ref_index ocs =
   {orig = om; cnst = cm; rank = rm; depm = dm; pend = Hashtbl.create 17}
 
 let get_ref_orig sri c = 
-  C.do_catch "get_ref_orig" (SIM.find (get_ref_id c)) sri.orig
+  C.do_catch "ERROR: get_ref_orig" (SIM.find (get_ref_id c)) sri.orig
 (* API *)
 let get_ref_deps sri c =
   let is' = try SIM.find (get_ref_id c) sri.depm with Not_found -> [] in
@@ -298,7 +298,7 @@ let push_worklist sri w cs =
   List.fold_left 
     (fun w c -> 
       let id = get_ref_id c in
-      let _ = if !Clflags.verbose then Printf.printf "Pushing %d \n" id in 
+      let _ = C.cprintf C.ol_solve "@[Pushing@ %d@\n@]" id in 
       if Hashtbl.mem sri.pend id then w else 
         let _ = Hashtbl.replace sri.pend id () in
         WH.add (id,get_ref_rank sri c) w)
@@ -326,7 +326,7 @@ let refine_simple s k1 k2 =
   let q2s  = Sol.find s k2 in
   let q2s' = List.filter (fun q -> List.mem q q1s) q2s in
   let _    = Sol.replace s k2 q2s' in
-  let _ = if !Clflags.verbose then Printf.printf "%d --> %d \n" (List.length q2s) (List.length q2s') in
+  let _ = C.cprintf C.ol_refine "@[%d@ -->@ %d@\n@]" (List.length q2s) (List.length q2s') in
   List.length q2s' <> List.length q2s
 
 let qual_implied s lhs lhs_ps rhs_subs q =
@@ -356,7 +356,7 @@ let refine upd sri s c =
       let q2s  = solution_map s k2 in
       let q2s' = List.filter (qual_implied s lhs [] rhs_subs) q2s in 
       let _    = if upd then Sol.replace s k2 q2s' in
-      let _ = if !Clflags.verbose then Printf.printf "%d --> %d \n" (List.length q2s) (List.length q2s') in
+      let _ = C.cprintf C.ol_refine "@[%d@ -->@ %d@\n@]" (List.length q2s) (List.length q2s') in
       (List.length q2s <> List.length q2s')
   | WFRef (env,(subs, F.Qvar k),_) -> 
       let qs  = solution_map s k in
@@ -369,7 +369,6 @@ let refine upd sri s c =
 (********************** Constraint Satisfaction ***************)
 (**************************************************************)
 
-  (*
 let sat s = function
   | SubRef (env, guard, r1, r2, _) ->
       let envp = environment_predicate s env in
@@ -378,13 +377,12 @@ let sat s = function
         TP.backup_implies (P.big_and [envp; guard; p1]) p2
   | WFRef (env, r, _) as c -> 
       let rv = refinement_well_formed env (solution_map s) r qual_test_var in
-         C.asserts (Printf.sprintf "wf is unsat! (%d)" (get_ref_id c)) rv;
+         C.asserts (Printf.sprintf "ERROR: wf is unsat! (%d)" (get_ref_id c)) rv;
          rv 
-*)
 
 let unsat_constraints sri s =
   C.map_partial
-    (fun c -> if refine false sri s c then Some (c, get_ref_orig sri c) else None)
+    (fun c -> if sat s c then None else Some (c, get_ref_orig sri c))
     (get_ref_constraints sri)
 
 (**************************************************************)
@@ -424,7 +422,7 @@ let dump_solution_stats s =
     (Sol.fold (fun _ qs x -> (+) x (List.length qs)) s 0,
      Sol.fold (fun _ qs x -> max x (List.length qs)) s min_int,
      Sol.fold (fun _ qs x -> min x (List.length qs)) s max_int) in
-  Printf.printf "Quals:\n\tTotal: %d\n\tAvg: %f\n\tMax: %d\n\tMin: %d\n\n"
+  C.cprintf C.ol_solve_stats "@[Quals:@\n\tTotal:@ %d@\n\tAvg:@ %f@\n\tMax:@ %d@\n\tMin:@ %d@\n@\n@]"
   sum ((float_of_int sum) /. (float_of_int kn)) max min;
   print_flush ()
   
@@ -437,21 +435,21 @@ let dump_solving qs sri s step =
     let rcn = List.length (List.filter is_subref_constraint cs) in
     let scn = List.length (List.filter is_simple_constraint cs) in
     (dump_constraints sri;
-     Printf.printf "%d instantiated qualifiers\n\n" qn; 
-     Printf.printf "%d variables\n\n" kn;
-     Printf.printf "%d total quals\n\n" (kn * qn); 
-     Printf.printf "%d split wf constraints\n\n" wcn;
-     Printf.printf "%d split subtyping constraints\n\n" rcn;
-     Printf.printf "%d simple subtyping constraints\n\n" scn;
+     C.cprintf C.ol_solve_stats "@[%d@ instantiated@ qualifiers@\n@\n@]" qn; 
+     C.cprintf C.ol_solve_stats "@[%d@ variables@\n@\n@]" kn;
+     C.cprintf C.ol_solve_stats "@[%d@ total@ quals@\n@\n@]" (kn * qn); 
+     C.cprintf C.ol_solve_stats "@[%d@ split@ wf@ constraints@\n@\n@]" wcn;
+     C.cprintf C.ol_solve_stats "@[%d@ split@ subtyping@ constraints@\n@\n@]" rcn;
+     C.cprintf C.ol_solve_stats "@[%d@ simple@ subtyping@ constraints@\n@\n@]" scn;
      dump_solution_stats s) 
   else if step = 1 then
     dump_solution_stats s
   else if step = 2 then
-    (Printf.printf "solution refinement completed:\n\t%d iterations of refine\n\n" !stat_refines;
-     Format.printf "@[Solved@ %d@ constraints;@ %d@ valid@]@.@." 
+    (C.cprintf C.ol_solve_stats "@[solution@ refinement@ completed:@\n\t%d@ iterations@ of@ refine@\n@\n@]" !stat_refines;
+     C.cprintf C.ol_solve_stats "@[Solved@ %d@ constraints;@ %d@ valid@]@.@." 
      !stat_solved_constraints !stat_valid_constraints;
      TP.dump_simple_stats ();
-     Format.printf "@[Solved@ %d@ constraints@ by@ matching@\n@]" !stat_matches;
+     C.cprintf C.ol_solve_stats "@[Solved@ %d@ constraints@ by@ matching@\n@]" !stat_matches;
      dump_solution_stats s;
      flush stdout)
 
@@ -460,13 +458,11 @@ let dump_solving qs sri s step =
 (**************************************************************)
 
 let rec solve_sub sri s w = 
-  let _ = if !Clflags.verbose then (if !stat_refines mod 100 = 0 then Printf.printf "num refines = %d \n" !stat_refines) in
+  let _ = if !stat_refines mod 100 = 0 then C.cprintf C.ol_solve "@[num@ refines@ =@ %d@\n@]" !stat_refines in
   match pop_worklist sri w with (None,_) -> s | (Some c, w') ->
     let (r,b,fci) = get_ref_rank sri c in
-    let _ = 
-      if !Clflags.verbose then begin
-        Printf.printf "\n Refining: %d in scc (%d,%b,%s) :" 
-        (get_ref_id c) r b (C.io_to_string fci) end in
+    let _ = C.cprintf C.ol_solve "@[Refining:@ %d@ in@ scc@ (%d,%b,%s):@\n@]"
+            (get_ref_id c) r b (C.io_to_string fci) in
     let w' = if refine true sri s c then push_worklist sri w' (get_ref_deps sri c) else w' in
     solve_sub sri s w'
 
@@ -485,9 +481,9 @@ let solve qs cs =
   let _ = dump_solving qs sri s 2 in
   let _ = TP.clear_cache () in
   let unsat = Bstats.time "testing solution" (unsat_constraints sri) s in
-  let _ = if !Clflags.verb_errors && List.length unsat != 0 then 
+  let _ = if List.length unsat != 0 then 
           begin
-            printf "@[Ref_constraints@ still@ unsatisfied:@\n@]";
-            List.iter (fun (c, b) -> printf "@[%a@.@]" (pprint_ref None) c) unsat
+            C.cprintf C.ol_solve_error "@[Ref_constraints@ still@ unsatisfied:@\n@]";
+            List.iter (fun (c, b) -> C.cprintf C.ol_solve_error "@[%a@.@\n@]" (pprint_ref None) c) unsat
           end in
   (solution_map s, (List.map (fun (a, b) -> b)  unsat))
