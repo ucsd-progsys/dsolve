@@ -413,10 +413,10 @@ let make_initial_solution sri qs =
 (**************************************************************)
  
 let dump_constraints sri = 
-  (* if !Cf.dump_constraints then*)
-  printf "Refinement Constraints @.";
+  if !Cf.dump_constraints then
+  (printf "@[Refinement Constraints@.@\n@]";
   iter_ref_constraints sri
-  (fun c -> printf "@[%a@.@]" (pprint_ref None) c)
+  (fun c -> printf "@[%a@.@]" (pprint_ref None) c))
     (* let cs = get_ref_constraints sri in
     Oprint.print_list (pprint_ref None) (fun ppf -> fprintf ppf "@.@.")
     std_formatter cs *)
