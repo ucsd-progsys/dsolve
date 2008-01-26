@@ -28,8 +28,7 @@ let initial_env () =
   with Not_found ->
     failwith "cannot open pervasives.cmi"
 
-let initial_fenv env =
-  Lightenv.addn (Builtins.frames env) Lightenv.empty
+let initial_fenv env = Lightenv.addn (Builtins.frames env) Lightenv.empty
 
 let (++) x f = f x
 
@@ -44,11 +43,8 @@ let type_implementation initial_env ast =
     str
 
 let analyze ppf sourcefile (str, env, fenv) =
-  let framemap = Qualifymod.qualify_implementation sourcefile fenv [] str in
-    if !Clflags.dump_qexprs then begin
-      fprintf std_formatter "@.@.";
-      Qdebug.dump_qualified_structure std_formatter framemap str;
-    end
+  Qualifymod.qualify_implementation sourcefile fenv [] str;
+  if !Clflags.dump_frames then Qualifymod.write_frame_log (Misc.chop_extension_if_any sourcefile ^ ".annot")
 
 let dump_qualifiers (str, _, fenv) =
   Qualifymod.qualgen_nasty_hack fenv str;
@@ -144,8 +140,7 @@ let main () =
   ] file_argument usage;
   let source = load_sourcefile std_formatter !filename in
   try
-    if not !Clflags.dump_qualifs then
-      analyze std_formatter !filename source
+    if not !Clflags.dump_qualifs then analyze std_formatter !filename source
     else dump_qualifiers source
   with x -> (report_error std_formatter x; exit 1)
 
