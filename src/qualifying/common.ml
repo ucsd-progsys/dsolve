@@ -1,4 +1,4 @@
-module StringMap = Map.Make(struct t = string let compare = compare)
+module StringMap = Map.Make(struct type t = string let compare = compare end)
 
 module ComparablePath = struct
   type t = Path.t

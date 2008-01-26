@@ -9,7 +9,6 @@ module TP = TheoremProver
 module C = Common
 module VM = C.PathMap 
 module Sol = Hashtbl.Make(C.ComparablePath)
-module SM = C.StringMap
 module Cf = Clflags
 
 (**************************************************************)
@@ -359,7 +358,21 @@ let make_initial_worklist sri =
 (************************** Refinement ************************)
 (**************************************************************)
 
-let pred_to_string p = Format.sprintf "@[%a@]" P.pprint p 
+module PM = Map.Make(struct type t = P.t let compare = compare end)
+(*let pred_to_string p = Format.sprintf "@[%a@]" P.pprint p *)
+
+let close_over_env env s ps =
+  let rec close_rec clo = function
+      | [] -> clo
+      | ((P.Atom (P.Var x, P.Eq, P.Var y)) as p)::ps ->
+          let tvar =
+            if Path.same x qual_test_var then Some y else 
+              if Path.same y qual_test_var then Some x else None in
+          (match tvar with None -> close_rec (p :: clo) ps | Some t ->
+            let ps' = F.conjuncts s qual_test_var (Le.find t env) in
+            close_rec (p :: clo) (ps'@ps))
+      | p::ps -> close_rec (p :: clo) ps in
+  close_rec [] ps 
 
 let refine_simple s k1 k2 =
   let q1s  = Sol.find s k1 in
@@ -373,7 +386,7 @@ let qual_implied s lhs lhsm rhs_subs q =
   let rhs = F.refinement_predicate (solution_map s) qual_test_var (rhs_subs, F.Qconst [q]) in
   let (cached, cres) = if !Cf.cache_queries then TP.check_table lhs rhs else (false, false) in
   if cached then cres else 
-    if (not !Cf.no_simple_subs) && SM.mem (pred_to_string rhs) lhsm then (incr stat_matches; true) else
+    if (not !Cf.no_simple_subs) && PM.mem rhs lhsm then (incr stat_matches; true) else
       let rv = Bstats.time "refinement query" (TP.implies lhs) rhs in
       let _ = incr stat_solved_constraints in
       let _ = if rv then incr stat_valid_constraints in
@@ -389,13 +402,17 @@ let refine sri s c =
     when not (!Cf.no_simple || !Cf.verify_simple) -> 
       refine_simple s k1 k2
   | SubRef (env,g,r1, (rhs_subs, F.Qvar k2), _)  ->
+      let sm = solution_map s in 
+      let lhsm = 
+        List.fold_left (fun pm p -> PM.add p true pm) PM.empty 
+        (close_over_env env sm (F.refinement_conjuncts sm qual_test_var r1)) in
       let lhs = 
         let gp = Bstats.time "make guardp" (guard_predicate ()) g in
         let envp = Bstats.time "make envp" (environment_predicate s) env in
-        let r1p = Bstats.time "make r1p" (F.refinement_predicate (solution_map s) qual_test_var) r1 in
+        let r1p = Bstats.time "make r1p" (F.refinement_predicate sm qual_test_var) r1 in
         P.big_and [envp;gp;r1p] in
       let q2s  = solution_map s k2 in
-      let q2s' = List.filter (qual_implied s lhs [] rhs_subs) q2s in 
+      let q2s' = List.filter (qual_implied s lhs lhsm rhs_subs) q2s in 
       let _ = Sol.replace s k2 q2s' in
       let _ = C.cprintf C.ol_refine "@[%d --> %d@.@]" (List.length q2s) (List.length q2s') in
       (List.length q2s <> List.length q2s')
