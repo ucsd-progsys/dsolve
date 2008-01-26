@@ -7,8 +7,9 @@ module P = Predicate
 module TP = TheoremProver
 
 module C = Common
-module VM = Map.Make(C.ComparablePath)
+module VM = C.PathMap 
 module Sol = Hashtbl.Make(C.ComparablePath)
+module SM = C.StringMap
 module Cf = Clflags
 
 (**************************************************************)
@@ -148,7 +149,6 @@ let simplify_fc  c =
   match c with 
   | WFFrame _ -> c 
   | SubFrame (env,g,a,b,c,d) -> SubFrame(simplify_env env g, g, a,b,c,d)
-
 
 (* Notes:
   * 1. If the labels disagree, we don't resolve. Instead, we 
@@ -359,19 +359,21 @@ let make_initial_worklist sri =
 (************************** Refinement ************************)
 (**************************************************************)
 
+let pred_to_string p = Format.sprintf "@[%a@]" P.pprint p 
+
 let refine_simple s k1 k2 =
   let q1s  = Sol.find s k1 in
   let q2s  = Sol.find s k2 in
   let q2s' = List.filter (fun q -> List.mem q q1s) q2s in
   let _    = Sol.replace s k2 q2s' in
-  let _ = C.cprintf C.ol_refine "@[%d@ -->@ %d@\n@]" (List.length q2s) (List.length q2s') in
+  let _ = C.cprintf C.ol_refine "@[%d --> %d@.@]" (List.length q2s) (List.length q2s') in
   List.length q2s' <> List.length q2s
 
-let qual_implied s lhs lhs_ps rhs_subs q =
+let qual_implied s lhs lhsm rhs_subs q =
   let rhs = F.refinement_predicate (solution_map s) qual_test_var (rhs_subs, F.Qconst [q]) in
   let (cached, cres) = if !Cf.cache_queries then TP.check_table lhs rhs else (false, false) in
   if cached then cres else 
-    if (not !Cf.no_simple_subs) && List.mem rhs lhs_ps then (incr stat_matches; true) else
+    if (not !Cf.no_simple_subs) && SM.mem (pred_to_string rhs) lhsm then (incr stat_matches; true) else
       let rv = Bstats.time "refinement query" (TP.implies lhs) rhs in
       let _ = incr stat_solved_constraints in
       let _ = if rv then incr stat_valid_constraints in
@@ -395,7 +397,7 @@ let refine sri s c =
       let q2s  = solution_map s k2 in
       let q2s' = List.filter (qual_implied s lhs [] rhs_subs) q2s in 
       let _ = Sol.replace s k2 q2s' in
-      let _ = C.cprintf C.ol_refine "@[%d@ -->@ %d@\n@]" (List.length q2s) (List.length q2s') in
+      let _ = C.cprintf C.ol_refine "@[%d --> %d@.@]" (List.length q2s) (List.length q2s') in
       (List.length q2s <> List.length q2s')
   | WFRef (env,(subs, F.Qvar k),_) -> 
       let qs  = solution_map s k in
@@ -506,7 +508,7 @@ let rec solve_sub sri s w =
   let _ = if !stat_refines mod 100 = 0 then C.cprintf C.ol_solve "@[num@ refines@ =@ %d@\n@]" !stat_refines in
   match pop_worklist sri w with (None,_) -> s | (Some c, w') ->
     let (r,b,fci) = get_ref_rank sri c in
-    let _ = C.cprintf C.ol_solve "@[Refining:@ %d@ in@ scc@ (%d,%b,%s):@\n@]"
+    let _ = C.cprintf C.ol_solve "@[Refining:@ %d@ in@ scc@ (%d,%b,%s):@]"
             (get_ref_id c) r b (C.io_to_string fci) in
     let w' = if refine sri s c then push_worklist sri w' (get_ref_deps sri c) else w' in
     solve_sub sri s w'

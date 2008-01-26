@@ -183,13 +183,14 @@ let rec constrain e env guard cstrs framemap =
                (constrain e1 env guard cstrs framemap) exps
   | (Texp_let (recflag, bindings, body_exp), t) ->
     let (env, cstrs, fmap) = constrain_bindings env guard cstrs framemap recflag bindings in 
-    let (body_frame, cstrs, fmap) = constrain body_exp env guard cstrs fmap in
-    let f = F.fresh_with_labels e body_frame in
+    let (body_frame, cstrs, fmap) as rv = constrain body_exp env guard cstrs fmap in
+    (match body_exp.exp_desc with Texp_let _ -> rv | _ ->
+      let f = F.fresh_with_labels e body_frame in
       (f,
        WFFrame (env, f, Loc e.exp_loc,fresh_fc_id())
        :: SubFrame (env, guard, body_frame, f, Loc body_exp.exp_loc, fresh_fc_id())
        :: cstrs,
-       fmap)
+       fmap))
   | (Texp_array(es), t) ->
           let _ = if !Cf.dump_qualifs then Qg.add_constant (List.length es) else 5 in
           let f = F.fresh e in

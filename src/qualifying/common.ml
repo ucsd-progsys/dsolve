@@ -1,9 +1,13 @@
+module StringMap = Map.Make(struct t = string let compare = compare)
+
 module ComparablePath = struct
   type t = Path.t
   let compare = compare
   let equal = (=)
   let hash = Hashtbl.hash
 end
+
+module PathMap = Map.Make(ComparablePath)
 
 let flap f xs = 
   List.flatten (List.map f xs)
@@ -71,15 +75,12 @@ let ol_solve = 10
 let ol_refine = 11 
 let ol_scc =12 
 
-
 let verbose_level = ref ol_default
-
 let null_formatter = Format.make_formatter (fun a b c -> ()) ignore
 let nprintf a = Format.fprintf null_formatter a
 let ck_olev l = l <= !verbose_level
 
 let cprintf l = if ck_olev l then Format.printf else nprintf
-
 let ecprintf l = if ck_olev l then Format.eprintf else nprintf
 
 let fcprintf ppf l = if ck_olev l then Format.fprintf ppf else nprintf

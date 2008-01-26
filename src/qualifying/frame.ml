@@ -4,6 +4,9 @@ open Btype
 open Format
 open Asttypes
 
+
+module PM = Common.PathMap
+
 type substitution = Path.t * Predicate.pexpr
 
 type qualifier_expr =
@@ -73,8 +76,46 @@ let fresh_refinementvar () = ([], Qvar (Path.mk_ident "k"))
 
 let fresh_fvar () = Fvar (Path.mk_ident "a")
 
+
+(* 1. Tedium ahead:
+   OCaml stores information about record types in two places:
+    - The type declaration stores everything that's set in stone about the
+     type: what its fields are and which variables are the type parameters.
+    - The type list of the Tconstr contains the actual instantiations of
+     the tyvars in this instantiation of the record. *)
+
 (* Create a fresh frame with the same shape as the type of [exp] using
    [fresh_ref_var] to create new refinement variables. *)
+
+let fresh_with_var_fun exp fresh_ref_var =
+  let vars = ref [] in
+  let (ty, env) = (repr exp.exp_type, exp.exp_env) in
+  let rec fresh_rec freshf t =
+    let t' = repr t in
+    match t'.desc with
+        Tvar ->
+          (try List.assq t' !vars with Not_found ->
+            let fv = fresh_fvar () in 
+            vars := (t', fv) :: !vars; fv)
+      | Tconstr(p, tyl, _) ->
+          let ty_decl = Env.find_type p env in
+          (match ty_decl.type_kind with
+           | Type_abstract | Type_variant _ ->
+               if Path.same p Predef.path_unit || Path.name p = "garbage" then Fconstr (p, [], ([], Qconst [])) else
+                 let f' = fun _ -> empty_refinement in 
+                 Fconstr (p, List.map (fresh_rec f') tyl, freshf ())
+           | Type_record (fields, _, _) -> (* 1 *)
+               let param_map = List.map2 (fun tyvar tyinst -> (tyvar, tyinst)) ty_decl.type_params tyl in
+               let fresh_field (name, muta, typ) =
+                 let field_typ = try List.assoc typ param_map with Not_found -> typ in
+                 (fresh_rec freshf field_typ, name, muta) in
+               Frecord (p, List.map fresh_field fields, freshf ()))
+      | Tarrow(_, t1, t2, _) -> Farrow (None, fresh_rec freshf t1, fresh_rec freshf t2)
+      | Ttuple ts -> Ftuple (List.map (fresh_rec freshf) ts)
+      | _ -> fprintf err_formatter "@[Warning:@ Freshing@ unsupported@ type@]@."; Funknown in 
+  fresh_rec fresh_ref_var ty
+
+  (*
 let fresh_with_var_fun exp fresh_ref_var =
   let vars = ref [] in
   let (ty, env) = (repr exp.exp_type, exp.exp_env) in
@@ -88,11 +129,6 @@ let fresh_with_var_fun exp fresh_ref_var =
               vars := (t', fv) :: !vars;
               fv
           end
-       (* ming: there are some types that we'd like to essentially leave unrefined
-          -- for readability and generally being careful we'd like these refined as true,
-          but that would require special casing the case below, which is inelegant. *)
-       (* pmr: badness; should be handled just fine by well-formedness constraints,
-          which would effectively effect the same effect *)
       | Tconstr(p, tyl, _) ->
           let ty_decl = Env.find_type p env in
             begin match ty_decl.type_kind with
@@ -102,14 +138,8 @@ let fresh_with_var_fun exp fresh_ref_var =
                     Fconstr (p, [], ([], Qconst []))
                   else
                     Fconstr (p, List.map fresh_rec tyl, fresh_ref_var ())
-              | Type_record (fields, _, _) ->
-                  (* Tedium ahead:
-                     OCaml stores information about record types in two places:
-                     - The type declaration stores everything that's set in stone about the
-                       type: what its fields are and which variables are the type parameters.
-                     - The type list of the Tconstr contains the actual instantiations of
-                       the tyvars in this instantiation of the record. *)
-                  let param_map = List.map2 (fun tyvar tyinst -> (tyvar, tyinst)) ty_decl.type_params tyl in
+              | Type_record (fields, _, _) -> (* 1 *)
+                                    let param_map = List.map2 (fun tyvar tyinst -> (tyvar, tyinst)) ty_decl.type_params tyl in
                   let fresh_field (name, muta, typ) =
                     let field_typ = try List.assoc typ param_map with Not_found -> typ in
                       (fresh_rec field_typ, name, muta)
@@ -123,6 +153,7 @@ let fresh_with_var_fun exp fresh_ref_var =
           fprintf err_formatter "@[Warning:@ Freshing@ unsupported@ type@]@.";
           Funknown
   in fresh_rec ty
+*)
 
 (* Create a fresh frame with the same shape as the given type
    [ty]. Uses type environment [env] to find type declarations.
