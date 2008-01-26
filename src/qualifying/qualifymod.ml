@@ -192,11 +192,12 @@ and constrain_application (env, guard, _, f) func exps = List.fold_left (apply_o
 and constrain_let (env, guard, loc, f) recflag bindings body =
   let (env, cstrs1) = constrain_bindings env guard recflag bindings in
   let (body_frame, cstrs2) = constrain body env guard in
-  let f = F.label_like f body_frame in
-    (f,
-     WFFrame (env, f, Loc loc, fresh_fc_id())
-     :: SubFrame (env, guard, body_frame, f, Loc body.exp_loc, fresh_fc_id())
-     :: cstrs1 @ cstrs2)
+  match body.exp_desc with
+    | Texp_let _ -> (body_frame, WFFrame (env, body_frame, Loc loc, fresh_fc_id()) :: cstrs1 @ cstrs2)
+    | _ -> let f = F.label_like f body_frame in
+            (f, WFFrame (env, f, Loc loc, fresh_fc_id())
+             :: SubFrame (env, guard, body_frame, f, Loc body.exp_loc, fresh_fc_id())
+             :: cstrs1 @ cstrs2)
 
 and constrain_array (env, guard, loc, f) elements =
   let _ = if !Cf.dump_qualifs then ignore (Qg.add_constant (List.length elements)) in
