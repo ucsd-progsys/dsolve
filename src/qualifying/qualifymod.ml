@@ -29,11 +29,6 @@ let expression_to_pexpr e =
     | Texp_ident (id, _) -> P.Var id
     | _ -> P.Var (Path.mk_ident "dummy")
 
-let get_true_tag env =
-  match (Env.lookup_constructor (Lident "true") env).cstr_tag with
-    |  Cstr_constant n -> n
-    | _ -> assert false
-
 let under_lambda = ref 0
 
 let frame_log_buffer = Buffer.create 17
@@ -219,13 +214,10 @@ and constrain_assert (env, guard, _) e =
   let (f, cstrs) = constrain e env guard in
   let guardvar = Path.mk_ident "assert_guard" in
   let env = Le.add guardvar f env in
-  (* pmr: this is actually incorrect - we define false = 0, true = 1, and we're
-   * just lucking out if true_tag conforms to this *)
-  let true_tag = get_true_tag e.exp_env in
   let assert_qualifier =
     (Path.mk_ident "assertion",
      Path.mk_ident "null",
-     P.equals (P.Var guardvar, P.PInt true_tag))
+     P.equals (P.Var guardvar, P.int_true))
   in (B.mk_unit (), [SubFrame (env, guard, B.mk_int [], B.mk_int [assert_qualifier])], cstrs)
 
 and constrain_and_bind guard (env, cstrs) (pat, e) =

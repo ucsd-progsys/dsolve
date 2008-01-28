@@ -37,6 +37,8 @@ val big_and: t list -> t
 val big_or: t list -> t
 val equals: (pexpr * pexpr) -> t
 val implies: (t * t) -> t
+val int_true: pexpr
+val int_false: pexpr
 val expand_iff: t -> t
 
 val (==.): pexpr -> pexpr -> t
