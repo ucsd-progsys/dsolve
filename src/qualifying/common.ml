@@ -16,7 +16,7 @@ let rec expand f xs ys =
   | [] -> ys
   | x::xs ->
       let (xs',ys') = f x in
-      expand f (xs' @ xs) (ys'@ys)
+      expand f (List.rev_append xs' xs) (List.rev_append ys' ys)
 
 let do_catch s f x =
   try f x with ex -> 

@@ -1395,13 +1395,13 @@ label:
 ;
 
 
-/* Qualified types -- really nasty version */
-/*
-qual_type_declaration:
+/* Qualified types */
+
+/*qual_type_declaration:
   qual_type
     { { pqtyp_desc = $1 ; pqtyp_loc = symbol_rloc() } }
-*/
-/*qual_type:
+
+qual_type:
   LPAREN qual_type RPAREN
     { $2 }
   | LBRACE qual_type BAR predicate RBRACE
@@ -1421,15 +1421,10 @@ qual_type_declaration:
   | qual_type MINUSGREATER qual_type
     { Pqtyp_func($1, $3) }
   | qual_type STAR qual_type
-    { Pqtyp_pair($1, $3) }
-;*/
+    { Pqtyp_pair($1, $3) }*/
 
 
 /* Qualifiers */
-
-/*qualifier_declaration:
-    UIDENT LPAREN LIDENT RPAREN COLON predicate
-      { (Pstr_qualifier($1, mkqual(($3, $6)))) }*/
 
 qualifier_pattern_declaration:
     UIDENT LPAREN LIDENT RPAREN LPAREN qual_ty_anno RPAREN  COLON qualifier_pattern  

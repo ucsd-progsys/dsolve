@@ -1,17 +1,91 @@
+open Types
+
+module L = Lightenv
+
+include L
+
+let collect_under_lambda = false 
+
+(* visitor for qualgen *)
+
+let visit_str sstr = 
+  let visit_str_exp = function 
+    | Tstr_eval(_) ->
+        (*Some(visit_exp exp)*) None
+    | Tstr_qualifier(_, _) ->
+        None
+    | Tstr_type(_) -> 
+        None
+    | Tstr_value(_, bindings) -> 
+        Some(flap visit_binding bindings)
+  in
+  List.flatten (map_partial visit_str_exp sstr)
+
+let 
+
+
+let rec visit_binding (pat, exp) as pe = 
+  let v_p p =
+    let ptyp = p.pat_type in
+    match p.pattern_desc with
+    | Tpat_tuple(pl)
+        (pl, [])
+    | Tpat_any
+        ([], [])
+    | Tpat_var(id)
+        ([], [(Ident.name id, ptyp)])
+    | Tpat_alias(pat, id) 
+        (pat, [(Ident.name id, ptyp)])
+    | Tpat_variant(_, _, _)
+    | Tpat_construct(_, _)
+        ([], []) (* xx fix me *)
+    | Tpat_record(lpl)
+        (List.map snd lpl, []) 
+    | Tpat_array(pl)
+        (pl, []) 
+    | Tpat_or(p1, p2, _)
+        ([p1, p2], [])
+  in
+  let v_pp pl =
+    C.expand v_p pl
+  in
+  let rec visit_bind_exp e =
+    let etyp = e.exp_type in
+    match e.exp_desc with
+    | Texp_function(al, _) ->
+       (C.flap (fun (a, b) -> C.expand visit_pat a) @ 
+       (C.flap (fun (a, b) -> visit_bind_exp b) al)
+    | _ -> []
+  in 
+  (fun (p, e) -> 
+    let es = visit_bind_exp e in
+    let ps = if List.length es != 0 then C.expand visit_pat p in
+      es @ ps) pe
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (* Bookkeeping for qualifier generation *)
 
-open Types
 
 let constants : int list ref = ref []
 
 let add_constant i =  
    try List.find (fun n -> n = i) !constants
       with Not_found -> constants := i::(!constants); -1
-
-
-module L = Lightenv
-
-include L
 
 let labels : Types.type_expr list t ref = ref empty 
 
