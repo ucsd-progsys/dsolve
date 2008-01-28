@@ -127,7 +127,7 @@ let _frames = [
   (["&&"; "Pervasives"],
    defun (fun x -> uBool ===>
           fun y -> uBool ==>
-          fun z -> rBool "&&" z (Var z <=>. (Var x ==. PInt 1) &&. (Var y ==. PInt 1))));
+          fun z -> rBool "&&" z (Var z <=>. ((Var x ==. PInt 1) &&. (Var y ==.  PInt 1)))));
 
   (["||"; "Pervasives"],
    defun (fun x -> uBool ===>
