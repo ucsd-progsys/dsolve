@@ -71,7 +71,7 @@ let rec constrain e env guard =
       | (Texp_array es, _) -> constrain_array environment es
       | (Texp_sequence (e1, e2), _) -> constrain_sequence environment e1 e2
       | (Texp_tuple es, _) -> constrain_tuple environment es
-      (* | (Texp_assertfalse, _) -> (F.fresh e, []) *)
+      | (Texp_assertfalse, _) -> constrain_assertfalse environment
       | (Texp_assert e, _) -> constrain_assert environment e
       | (_, t) ->
         (* As it turns out, giving up and returning true here is actually _very_ unsound!  We won't check subexpressions! *)
@@ -209,6 +209,8 @@ and constrain_tuple (env, guard, f) es =
           [] fs fresh_fs
         in (f, WFFrame (env, f) :: new_cs, subexp_cs)
     | _ -> assert false
+
+and constrain_assertfalse (env, _, f) = (f, [WFFrame (env, f)], [])
 
 and constrain_assert (env, guard, _) e =
   let (f, cstrs) = constrain e env guard in
