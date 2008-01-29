@@ -21,41 +21,54 @@ let visit_str sstr =
   in
   List.flatten (map_partial visit_str_exp sstr)
 
-let 
+let M = Map.make(Types.type_expr)
+let S = Set.make(String)
 
+let tymap = ref M.empty   
+
+let addm (typ, id) = 
+  let id = Ident.name id in
+    tymap := M.add typ (S.add (M.get typ !tymap) id) !tymap
+
+let rec qbound_idents pat = 
+    let ptyp = pat.type_desc in
+    match pat.pat_desc with 
+      Tpat_var id -> addm (ptyp, id) 
+      | Tpat_alias(p, id) -> qbound_idents p; addm (ptyp, id)
+      | Tpat_or(p, _, _) -> qbound_idents p
+      | d -> Typedtree.iter_pattern_desc qbound_idents d
+
+let is_function e =
+  match e.exp_desc with
+    | Texp_function(_, _) -> true
+    | _ -> false 
+
+let iter_bind in_l (p, e) =
+  let is_f = is_function e in
+  let ps = if in_l || is_f then [] else qbound_idents p in
+  let es = if in_l then [] else iter_pats false e in
+    ps @ es
+
+let rec iter_pats in_l e =
+  let ve e =
+    let etyp = e.exp_type in
+      match e.exp_desc with
+        | Texp_function(al, _) ->
+            iter_bind 
+        | Texp_let(_, bl, ee) ->
+            
 
 let rec visit_binding (pat, exp) as pe = 
-  let v_p p =
-    let ptyp = p.pat_type in
-    match p.pattern_desc with
-    | Tpat_tuple(pl)
-        (pl, [])
-    | Tpat_any
-        ([], [])
-    | Tpat_var(id)
-        ([], [(Ident.name id, ptyp)])
-    | Tpat_alias(pat, id) 
-        (pat, [(Ident.name id, ptyp)])
-    | Tpat_variant(_, _, _)
-    | Tpat_construct(_, _)
-        ([], []) (* xx fix me *)
-    | Tpat_record(lpl)
-        (List.map snd lpl, []) 
-    | Tpat_array(pl)
-        (pl, []) 
-    | Tpat_or(p1, p2, _)
-        ([p1, p2], [])
-  in
-  let v_pp pl =
-    C.expand v_p pl
-  in
+  let vp pat = qbound_idents pat in
   let rec visit_bind_exp e =
     let etyp = e.exp_type in
     match e.exp_desc with
-    | Texp_function(al, _) ->
-       (C.flap (fun (a, b) -> C.expand visit_pat a) @ 
-       (C.flap (fun (a, b) -> visit_bind_exp b) al)
-    | _ -> []
+    | (_, Texp_function(al, _)) ->
+       (C.flap (fun (p, e) -> vp p) @ 
+       (if !more_qls then C.flap (fun (p, e) -> ve e) al else [])
+    | (p, Texp_let(_, bl, e)) ->
+
+    | (p, e) ->
   in 
   (fun (p, e) -> 
     let es = visit_bind_exp e in

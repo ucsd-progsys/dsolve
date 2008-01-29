@@ -677,10 +677,6 @@ let transl_type_decl env name_sdecl_list =
   (* Done *)
   (final_decls, final_env)
 
-(* Translate a qualifier declaration *)
-let transl_qualifier {Parsetree.pqual_desc = (valu, pred)} =
-  (Ident.create valu, Predicate.transl_predicate pred)
-
 (* Translate an exception declaration *)
 let transl_exception env excdecl =
   reset_type_variables();
