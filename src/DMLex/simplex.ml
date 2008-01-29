@@ -3,10 +3,8 @@ let rec is_neg_aux arr2 n j =
     if Bigarray.Array2.get arr2 0 j < 0.0 then true
     else is_neg_aux arr2 n (j+1)
   else false
-in
 
 let is_neg arr2 n = is_neg_aux arr2 n 1
-in
 
 (* step 2 *)
 (* pmr: oh no - mutual recursion! *)
@@ -15,14 +13,13 @@ let rec unb1 arr2 m n i j =
     if (Bigarray.Array2.get arr2 0 j) < 0.0 then unb2 arr2 m n (i+1) j
     else unb1 arr2 m n 0 (j+1)
   else false
-
+         
 and unb2 arr2 m n i j =
   if i < m then
     if Bigarray.Array2.get arr2 i j < 0.0 then unb2 arr2 m n (i+1) j
     else unb1 arr2 m n 0 (j+1)
   else true
-in
-
+         
 (* step 3 *)
 
 let rec enter_var arr2 n j c j' =
@@ -32,8 +29,7 @@ let rec enter_var arr2 n j c j' =
 	else enter_var arr2 n j c (j'+1)
       end
   else j
-in
-
+         
 (* step 4 *)
 
 let rec depart_var arr2 m n j i r i' =
@@ -47,23 +43,20 @@ let rec depart_var arr2 m n j i r i' =
       else depart_var arr2 m n j i r (i'+1)
     end
   else i
-in
 
 (*let rec init_ratio_left arr2 m n j i =
   if i < m then
     let c = Bigarray.Array2.get arr2 i j in
       if c > 0.0 then i
       else init_ratio_left arr2 m n j (i+1)
-  else assert false
-in
+  else i
 
 let rec init_ratio_right arr2 m n j i =
   if i < m then
     let c = Bigarray.Array2.get arr2 i j in
       if c > 0.0 then (Bigarray.Array2.get arr2 i (n-1)) /. c
       else init_ratio_right arr2 m n j (i+1)
-  else assert false
-in*)
+  else assert false*)
 
 let rec init_ratio arr2 m n j i =
   if i < m then
@@ -71,8 +64,7 @@ let rec init_ratio arr2 m n j i =
       if c > 0.0 then (i, (Bigarray.Array2.get arr2 i (n-1)) /. c)
       else init_ratio arr2 m n j (i+1)
   else assert false
-in
-
+         
 (* step 5 *)
 
 let rec norm_aux arr2 n i c j =
@@ -80,13 +72,11 @@ let rec norm_aux arr2 n i c j =
     let _none = Bigarray.Array2.set arr2 i j ((Bigarray.Array2.get arr2 i j) /. c) in
       norm_aux arr2 n i c (j+1)
   else ()
-in
-
+         
 let norm arr2 n i j =
   let c = Bigarray.Array2.get arr2 i j in
     norm_aux arr2 n i c 1
-in
-
+      
 let rec row_op_aux1 arr2 n i i' c j =
   if j < n then
     let cj =  Bigarray.Array2.get arr2 i j in
@@ -94,13 +84,11 @@ let rec row_op_aux1 arr2 n i i' c j =
     let _none = Bigarray.Array2.set arr2 i' j (cj' -. cj *. c) in
       row_op_aux1 arr2 n i i' c (j+1)
   else ()
-in
-
+         
 let row_op_aux2 arr2 n i i' j =
   let c' = Bigarray.Array2.get arr2 i' j in
     row_op_aux1 arr2 n i i' c' 1
-in
-
+      
 let rec row_op_aux3 arr2 m n i j i' =
   if i' < m then
     if i' <> i then
@@ -108,13 +96,11 @@ let rec row_op_aux3 arr2 m n i j i' =
 	row_op_aux3 arr2 m n i j (i'+1)
     else row_op_aux3 arr2 m n i j (i'+1)
   else ()
-in
-
+         
 let row_op arr2 m n i j =
     let _none = norm arr2 n i j in
       row_op_aux3 arr2 m n i j 0
-in
-
+        
 let rec simplex arr2 m n =
   if is_neg arr2 n then
     if unb1 arr2 m n 0 1 then assert false
@@ -127,10 +113,9 @@ let rec simplex arr2 m n =
       let r = snd zz in
       let i = depart_var arr2 m n j i r (i+1) in
       let _none = row_op arr2 m n i j in
-	simplex arr2 m n
+	simplex arr2 m n 
   else ()
-in
-
+         
 let main a =
   let m = Bigarray.Array2.dim1 a in
   let n = Bigarray.Array2.dim2 a in
@@ -139,12 +124,13 @@ let main a =
       else assert false
     end
     else assert false
-in
+
+let driver =
   Random.self_init();
   let arr = Bigarray.Array2.create Bigarray.float64 Bigarray.c_layout
-    (Random.int 20 + 1)
-    (Random.int 30 + 1) in
-    main arr;;
+    (Random.int 20 + 2)
+    (Random.int 30 + 3) in
+    main arr
 
 (*
 (* An implementation of the simplex method in DML *)
