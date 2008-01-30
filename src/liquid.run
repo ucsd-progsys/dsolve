@@ -69,7 +69,7 @@ then
 else
   #cat$catargs | nice -n19 rlwrap ./ocaml $argv
   cat $catargs > $TMPDIR/liq.ml
-  echo $tool $argv $TMPDIR/liq.ml
+  $tool $argv $TMPDIR/liq.ml
   EXIT=$?
 fi
 
