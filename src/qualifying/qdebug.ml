@@ -73,6 +73,7 @@ and pprint_pattern ppf pat =
     Ppat_any -> fprintf ppf "_"
   | Ppat_var x -> fprintf ppf "%s" x
   | Ppat_tuple ts -> fprintf ppf "(%a)" pprint_pat_list ts
+  | Ppat_constraint (p, _) -> pprint_pattern ppf p
   | _ -> assert false
 and pprint_and ppf = function
   | [] -> fprintf ppf "@ "
