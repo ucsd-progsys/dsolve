@@ -31,24 +31,30 @@ let expression_to_pexpr e =
 
 let under_lambda = ref 0
 
-let frame_log_buffer = Buffer.create 17
-let frame_log = formatter_of_buffer frame_log_buffer
+module FrameLog = Map.Make(struct type t = Location.t
+                                  let compare = compare end)
+let flog = ref FrameLog.empty
 
 let log_frame loc fr =
   if loc = Location.none then ()
-  else
-    Stypes.print_position frame_log loc.loc_start;
-    fprintf frame_log " ";
-    Stypes.print_position frame_log loc.loc_end;
-    fprintf frame_log "@.type(@.  ";
-    F.pprint frame_log fr;
-    fprintf frame_log "@.)@."
+  else flog := FrameLog.add loc fr !flog
 
-let write_frame_log filename =
-  let oc = open_out filename in
-    Format.pp_print_flush frame_log ();
-    Buffer.output_buffer oc frame_log_buffer;
-    close_out oc
+let framemap_apply_solution s fmap = FrameLog.map (F.apply_solution s) fmap
+
+let dump_frame pp loc fr =
+  if loc <> Location.none then
+    Stypes.print_position pp loc.loc_start;
+    fprintf pp " ";
+    Stypes.print_position pp loc.loc_end;
+    fprintf pp "@.type(@.  ";
+    F.pprint pp fr;
+    fprintf pp "@.)@."
+
+let dump_frames sourcefile fmap =
+  if !Cf.dump_frames then
+    let filename = Misc.chop_extension_if_any sourcefile ^ ".annot" in
+    let pp = formatter_of_out_channel (open_out filename) in
+      FrameLog.iter (dump_frame pp) fmap
 
 let label_constraint exp fc =
   let org = match exp.exp_desc with Texp_assert _ -> Assert exp.exp_loc | _ -> Loc exp.exp_loc in
@@ -380,6 +386,7 @@ let qualify_implementation sourcefile fenv qs str =
   let _ = pre_solve () in
   let (s,cs) = Bstats.time "solving" (solve inst_qs) cs in
   let _ = post_solve () in
+  let _ = dump_frames sourcefile (framemap_apply_solution s !flog) in
   match cs with [] -> () | _ ->
     (Printf.printf "Errors encountered during type checking:\n\n";
     flush stdout; raise (Errors(List.map (make_frame_error s) cs)))
