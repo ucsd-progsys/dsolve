@@ -36,13 +36,13 @@ module FrameLog = Map.Make(struct type t = Location.t
 let flog = ref FrameLog.empty
 
 let log_frame loc fr =
-  if loc = Location.none then ()
+  if loc = Location.none || loc.loc_ghost then ()
   else flog := FrameLog.add loc fr !flog
 
 let framemap_apply_solution s fmap = FrameLog.map (F.apply_solution s) fmap
 
 let dump_frame pp loc fr =
-  if loc <> Location.none then
+  if loc <> Location.none && not(loc.loc_ghost) then
     Stypes.print_position pp loc.loc_start;
     fprintf pp " ";
     Stypes.print_position pp loc.loc_end;
