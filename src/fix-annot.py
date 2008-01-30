@@ -6,8 +6,6 @@ qualfile = open(sys.argv[1] + ".quals")
 quallines = qualfile.readlines()
 lineoffset = len(quallines)
 charoffset = len("".join(quallines))
-print charoffset
-print quallines
 
 for line in sys.stdin.readlines():
     fields = line.split(" ")
