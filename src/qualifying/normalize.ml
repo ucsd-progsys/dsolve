@@ -210,7 +210,15 @@ let normalize exp =
      | Pexp_assertfalse ->
         exp
      | Pexp_assert(e) ->
-        rw_expr (mk_assert (norm_out e))
+        let c = norm_in e in 
+        let (lbl, e', lo) = List.hd c in
+        let inner = 
+          match e' with 
+          | Some e -> e
+          | None -> mk_ident_loc lbl lo
+        in
+        let init = mk_assert inner in
+          rw_expr (List.fold_left (wrap Nonrecursive) init (List.tl c))
      | Pexp_field(e, s) ->
         let ls = norm_in e in
         let (lbl, _, lo) = List.hd ls in 
