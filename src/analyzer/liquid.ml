@@ -43,7 +43,9 @@ let type_implementation initial_env ast =
     str
 
 let analyze ppf sourcefile (str, env, fenv) =
-  Qualifymod.qualify_implementation sourcefile fenv [] str;
+  Qualifymod.qualify_implementation sourcefile fenv [] str
+
+let finalize sourcefile =
   if !Clflags.dump_frames then Qualifymod.write_frame_log (Misc.chop_extension_if_any sourcefile ^ ".annot")
 
 let dump_qualifiers (str, _, fenv) =
@@ -140,8 +142,8 @@ let main () =
   ] file_argument usage;
   let source = load_sourcefile std_formatter !filename in
   try
-    if not !Clflags.dump_qualifs then analyze std_formatter !filename source
+    if not !Clflags.dump_qualifs then (analyze std_formatter !filename source; finalize !filename)
     else dump_qualifiers source
-  with x -> (report_error std_formatter x; exit 1)
+  with x -> (report_error std_formatter x; finalize !filename; exit 1)
 
 let _ = main (); exit 0
