@@ -57,6 +57,8 @@ let rec pprint_expression ppf exp =
           fprintf ppf "@[%a.%s@]" pprint_expression e (print_id lid)
       | Pexp_assertfalse ->
           fprintf ppf "assert@ false"
+      | Pexp_assert e ->
+          fprintf ppf "assert@ %a" pprint_expression e
       | _ -> assert false
   in fprintf ppf "@[%a@]" pprint_exp exp
 and pprint_rec ppf = function
