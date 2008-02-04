@@ -1,4 +1,6 @@
-let length v = v.length in
+type t = { length : int; bits : int array }
+
+let length v = v.length
 
 (*s Each element of the array is an integer containing [30] bits, where
     [30] is determined according to the machine word size. Since we do not
@@ -9,28 +11,28 @@ let length v = v.length in
     using [normalize]. [bit_j], [bit_not_j], [low_mask] and [up_mask]
     are arrays used to extract and mask bits in a single integer. *)
 
-let bpi0 = 32 - 2 in
+let bpi0 = 32 - 2
 
-let max_length = 32768 * 30 in
+let max_length = 32768 * 30
 
-let bit_j = Array.init 30 (fun j -> 1 lsl j) in
+let bit_j = Array.init 30 (fun j -> 1 lsl j)
 
-let bit_not_j = Array.init 30 (fun j -> max_int - bit_j.(j)) in
+let bit_not_j = Array.init 30 (fun j -> max_int - bit_j.(j))
 
-let low_mask = Array.make (30 + 1) 0 in
+let low_mask = Array.make (30 + 1) 0
 
 let _ =
   let loop i =
     if i <= 30 then
       low_mask.(i) <- low_mask.(i-1) lor bit_j.(i - 1)
     else ()
-  in loop 1 in
+  in loop 1
 
-let keep_lowest_bits a j = a land low_mask.(j) in
+(*let keep_lowest_bits a j = a land low_mask.(j)
 
-let high_mask = Array.init (30 + 1) (fun j -> low_mask.(j) lsl (30-j)) in
+let high_mask = Array.init (30 + 1) (fun j -> low_mask.(j) lsl (30-j))
 
-let keep_highest_bits a j = a land high_mask.(j) in
+let keep_highest_bits a j = a land high_mask.(j)*)
 
 (*s Creating and normalizing a bit vector is easy: it is just a matter of
     taking care of the invariant. Copy is immediate. *)
@@ -46,8 +48,7 @@ let create n b =
         b.(s) <- b.(s) land low_mask.(r);
         { length = n; bits = b }
     end
-in
-
+(*
 let normalize v =
   let r = v.length mod 30 in
   if r > 0 then
@@ -55,16 +56,13 @@ let normalize v =
     let s = Array.length b in
     b.(s-1) <- b.(s-1) land low_mask.(r)
   else ()
-
-in
-
-let copy v = { length = v.length; bits = Array.copy v.bits } in
+*)
+let copy v = { length = v.length; bits = Array.copy v.bits }
 
 let pos n =
   let i = n / 30 in
   let j = n mod 30 in
   if j < 0 then (i - 1, j + 30) else (i,j)
-in
 
 (*s Access and assignment. The [n]th bit of a bit vector is the [j]th
     bit of the [i]th integer, where [i = n / 30] and [j = n mod
@@ -87,7 +85,6 @@ let unsafe_set v n b =
   else 
     Array.set v.bits i
       ((Array.get v.bits i) land (Array.get bit_not_j j))
-in
 
 (*s The corresponding safe operations test the validiy of the access. *)
 
@@ -97,8 +94,6 @@ let get v n =
   else
     let (i,j) = pos n in
       ((Array.get v.bits i) land (Array.get bit_j j)) > 0
-in
-
 
 let set v n b =
   if n < 0 || n >= v.length then
@@ -111,7 +106,6 @@ let set v n b =
       else
         Array.set v.bits i
           ((Array.get v.bits i) land (Array.get bit_not_j j))
-in
 
 (*s [init] is implemented naively using [unsafe_set]. *)
 let init n f =
@@ -124,13 +118,13 @@ let init n f =
     else ()
   in loop 0;
     v
-in
 
-let s = Random.int 100 + 1 in
-let v = copy (create s true) in
-let _ = init s (fun i -> true) in
-let _ = set v (Random.int s) true in
-  get v (Random.int s);;
+let _ =
+  let s = Random.int 100 + 1 in
+  let v = copy (create s true) in
+  let _ = init s (fun i -> true) in
+  let _ = set v (Random.int s) true in
+    get v (Random.int s);;
 (*
 (*
 (*s Handling bits by packets is the key for efficiency of functions

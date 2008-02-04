@@ -1,4 +1,3 @@
-
-qualif BITLENGTH(v): v.length <= (Array.length v.bits) * 30;;
-qualif DIVBY30(x): 30 * x <= n;;
-qualif LESSLEN(n): n < v.length;;
+qualif BITLENGTH(v): v.length <= (Array.length v.bits) * 30
+qualif DIVBY30(x): 30 * x <= n
+qualif LESSLEN(n): n < v.length
