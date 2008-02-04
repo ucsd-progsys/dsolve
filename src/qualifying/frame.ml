@@ -72,6 +72,8 @@ let rec pprint ppf = function
 
 let empty_refinement = ([], Qconst [])
 
+let false_refinement = ([], Qconst [(Path.mk_ident "false", Path.mk_ident "V", Predicate.Not (Predicate.True))])
+
 let fresh_refinementvar () = ([], Qvar (Path.mk_ident "k"))
 
 let fresh_fvar () = Fvar (Path.mk_ident "a")
@@ -166,6 +168,8 @@ let fresh exp = fresh_with_var_fun exp fresh_refinementvar
    No refinement variables are created - all refinements are initialized
    to true. *)
 let fresh_without_vars exp = fresh_with_var_fun exp (fun _ -> empty_refinement)
+
+let fresh_unconstrained exp = fresh_with_var_fun exp (fun _ -> false_refinement)
 
 (* Label all the function formals in [f] with their corresponding labels in
    [f'].  Obviously, they are expected to be of the same shape; also, [f]
