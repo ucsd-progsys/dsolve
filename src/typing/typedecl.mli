@@ -20,8 +20,8 @@ open Format
 val transl_type_decl:
     Env.t -> (string * Parsetree.type_declaration) list ->
                                   (Ident.t * type_declaration) list * Env.t
-val transl_qualifier:
-    Parsetree.qualifier_declaration -> qualifier_declaration
+(*val transl_qualifier:
+    Parsetree.qualifier_declaration -> qualifier_declaration*)
 val transl_exception:
     Env.t -> Parsetree.exception_declaration -> exception_declaration
 

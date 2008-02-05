@@ -24,13 +24,13 @@ type patpexpr =
   | PFunApp of Longident.t * patpexpr list 
   | PBinop of patpexpr * binop list * patpexpr
 
-type t =
+type tpat =
   | PTrue
   | PAtom of patpexpr * binrel list * patpexpr
   | PIff of patpexpr * tpat
-  | PNot of t
-  | PAnd of t * t
-  | POr of t * t
+  | PNot of tpat
+  | PAnd of tpat * tpat
+  | POr of tpat * tpat
 
 (************)
 

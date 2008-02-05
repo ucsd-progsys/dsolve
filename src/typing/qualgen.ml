@@ -1,10 +1,10 @@
-open Types
+(*open Types
 
 module L = Lightenv
 
-include L
+include L*)
 
-let collect_under_lambda = false 
+(*let collect_under_lambda = false 
 
 (* visitor for qualgen *)
 
@@ -88,15 +88,15 @@ let rec visit_binding (pat, exp) as pe =
 
 
 
-
+*)
 
 type base = int list  
 type var_base_int = int * base
 
 let decode (x, b) =
-  let f (x, ds) d =
-    ((x / d), ds @ (x % d)) in
-    snd (fold_right f x b)
+  let f d (x, ds) =
+    ((x / d), ds @ [(x mod d)]) in
+  snd (List.fold_right f x b)
 
 
 
@@ -113,7 +113,7 @@ let decode (x, b) =
 (* Bookkeeping for qualifier generation *)
 
 
-let constants : int list ref = ref []
+(*let constants : int list ref = ref []
 
 let add_constant i =  
    try List.find (fun n -> n = i) !constants
@@ -211,4 +211,4 @@ let dump_qualifs () =
   let bigarray_lbls = mapfilter (filter (Builtins.ext_find_type_path "array2")) lbls in
   let bigarray_qualifs = List.concat (List.map single_bigarray_array2_qualif bigarray_lbls) in
   let multiset_quals = List.concat [bigarray_qualifs; arr_qualifs; int_qualifs; const_qualifs] in
-    StringSet.elements (List.fold_left (fun s q -> StringSet.add q s) StringSet.empty multiset_quals) 
+    StringSet.elements (List.fold_left (fun s q -> StringSet.add q s) StringSet.empty multiset_quals) *)

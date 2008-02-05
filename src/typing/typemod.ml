@@ -599,10 +599,10 @@ and type_structure anchor env sstr =
         (Tstr_type decls :: str_rem,
          map_rec' (fun rs (id, info) -> Tsig_type(id, info, rs)) decls sig_rem,
          final_env)
-    | {pstr_desc = Pstr_qualifier (name, decl)} :: srem ->
+    | {pstr_desc = Pstr_qualifier (name, pat)} :: srem ->
         let (str_rem, sig_rem, final_env) = type_struct env srem in
-        (Tstr_qualifier (Ident.create name, Qualdecl.transl_declaration decl)
-         (Tstr_open(Predef.path_int)
+        (Tstr_qualifier (Ident.create name, Qualdecl.transl_pattern pat)
+         (*(Tstr_open(Predef.path_int)*)
          :: str_rem,
          sig_rem,
          final_env)

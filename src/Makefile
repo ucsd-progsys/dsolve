@@ -31,14 +31,15 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/includemod.cmo typing/parmatch.cmo \
   typing/typetexp.cmo typing/stypes.cmo typing/typecore.cmo \
   typing/typedecl.cmo typing/typeclass.cmo \
-  typing/typemod.cmo
+	typing/qualgen.cmo typing/qualdecl.cmo \
+  typing/typemod.cmo 
 
 QUALIFYING=qualifying/common.cmo qualifying/lightenv.cmo \
   qualifying/qualifier.cmo qualifying/builtins.cmo qualifying/frame.cmo \
   qualifying/wellformed.cmo qualifying/message.cmo qualifying/pattern.cmo \
   qualifying/theoremProverSimplify.cmo qualifying/theoremProverYices.cmo \
   qualifying/theoremProver.cmo \
-  qualifying/constraint.cmo qualifying/qualgen.cmo \
+  qualifying/constraint.cmo  \
   qualifying/printqual.cmo qualifying/qualifymod.cmo \
   qualifying/qdebug.cmo qualifying/normalize.cmo
 
