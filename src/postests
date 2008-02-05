@@ -1,3 +1,4 @@
+examples-liquid/quicksort.ml
 examples-liquid/bitv.ml
 DMLex/simplex.ml
 examples-liquid/sum.ml

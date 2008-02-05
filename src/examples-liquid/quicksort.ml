@@ -2,13 +2,11 @@ let swap arr i j =
   let tmp = Array.get arr i in
     (Array.set arr i (Array.get arr j);
   Array.set arr j tmp)
-in
 
 let ffor s d body =
   let rec dofor i =
     if i <= d then (body i; dofor (i+1)) else ()
   in dofor s
-in
 
 let sort cmp arr =
   let rec qsort lo hi = 
@@ -64,11 +62,22 @@ let sort cmp arr =
       in wbod (i-1);
     end else ()
   in ffor 1 (Array.length arr - 1) forbod
-in
-let p = Random.int 40 + 1 in
-let x = let x : garbage = 0 in x in
-let vec = Array.make p (x + x) in
-sort (<=) vec; vec;;
+
+let gen_vec rr =
+    let rec fill_arr i = 
+        let len = Array.length rr in
+        if i < len then 
+          let fill _none = Random.int 1000 in
+          let i' = i + 1 in
+          Array.set rr i (fill ()); fill_arr i' 
+        else ()
+    in fill_arr 0
+
+let driver =
+  let p = Random.int 40 + 1 in
+  let vec = Array.make p 0 in
+  let _ = gen_vec vec in
+    (sort (<=) vec; vec)
 
 
 
