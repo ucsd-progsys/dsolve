@@ -16,6 +16,24 @@ type binrel =
   | Lt
   | Le 
 
+(* patterns *)
+
+type patpexpr =
+    PPInt of int list
+  | PVar of Path.t list
+  | PFunApp of Longident.t * patpexpr list 
+  | PBinop of patpexpr * binop list * patpexpr
+
+type t =
+  | PTrue
+  | PAtom of patpexpr * binrel list * patpexpr
+  | PIff of patpexpr * tpat
+  | PNot of t
+  | PAnd of t * t
+  | POr of t * t
+
+(************)
+
 type pexpr =
     PInt of int 
   | Var of Path.t

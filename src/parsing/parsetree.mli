@@ -186,13 +186,6 @@ and predpatexp_desc =
 
 (* Qualifier declarations *)
 
-(* delete me *)
-and qualifier_declaration =
-    { pqual_desc: qual_desc;
-      pqual_loc: Location.t }
-
-and qual_desc = string * predicate_declaration
-
 and qualifier_pattern =
     { pqual_pat_desc: qual_pat_desc;
       pqual_pat_loc: Location.t }

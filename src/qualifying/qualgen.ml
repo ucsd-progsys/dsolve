@@ -21,10 +21,21 @@ let visit_str sstr =
   in
   List.flatten (map_partial visit_str_exp sstr)
 
-let M = Map.make(Types.type_expr)
-let S = Set.make(String)
+module M = Map.make(Types.type_expr)
+module S = Set.make(String)
+module Si = Set.make(int)
+
+(* on load: walk the AST for idents.
+ * read qualpats, generate ordering of quals
+ * *)
+
+(* tymap: map from shapes to all idents of that shape *)
+(* idset: set of all idents *)
+(* intset: set of all int constants. ignored or set {0,1} if lquals set? *)
 
 let tymap = ref M.empty   
+let idset = ref S.empty
+let intset = ref Si.empty
 
 let addm (typ, id) = 
   let id = Ident.name id in
@@ -79,9 +90,17 @@ let rec visit_binding (pat, exp) as pe =
 
 
 
+type base = int list  
+type var_base_int = int * base
+
+let decode (x, b) =
+  let f (x, ds) d =
+    ((x / d), ds @ (x % d)) in
+    snd (fold_right f x b)
 
 
 
+    
 
 
 

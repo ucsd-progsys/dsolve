@@ -1452,7 +1452,7 @@ qual_rel:
     qual_lit_rel                            { [$1] }
   | LBRACE qual_rel_list RBRACE             { $2 }
   | LBRACE STAR STAR RBRACE                 
-      { [Pred_eq; Pred_ne; Pred_gt; Pred_lt; Pred_le; Pred_ge] }
+    { [] (*[Pred_ne; Pred_le; Pred_ge]*) }
   
 qual_lit_rel:
     INFIXOP0                
@@ -1476,18 +1476,30 @@ qual_expr:
   | LPAREN qual_expr RPAREN                 { $2 }
 
 qual_term:
-    LPAREN val_longident qual_term_list RPAREN /* funapp */
-    { mkpredpatexp (Ppredpatexp_funapp($2, $3)) } 
+    LPAREN qual_path qual_term_list RPAREN /* funapp */
+    { mkpredpatexp (Ppredpatexp_funapp(Longident.parse $2, $3)) } 
   | LPAREN UIDENT qual_term_list RPAREN
     { mkpredpatexp (Ppredpatexp_funapp(Longident.parse $2, $3)) }
-  | val_longident /* literal */
-    { mkpredpatexp (Ppredpatexp_var($1)) }
+  | qual_litident /* literal */
+    { mkpredpatexp (Ppredpatexp_var(Longident.parse $1)) }
   | UIDENT /* var */
     { mkpredpatexp (Ppredpatexp_mvar($1)) }
   | INT
     { mkpredpatexp (Ppredpatexp_int($1)) }
   | SHARP  /* wild int */
     { mkpredpatexp Ppredpatexp_any_int }
+
+qual_litident:
+    qual_path DOT qual_fields               { $1 ^ "." ^ $3 }
+  | qual_path                               { $1 }
+
+qual_path:
+    UIDENT DOT qual_path                    { $1 ^ "." ^ $3 }
+  | LIDENT                                  { $1 }
+
+qual_fields:
+    LIDENT                                  { $1 }
+  | LIDENT DOT qual_fields                  { $1 ^ "." ^ $3 }  
 
 qual_term_list:
     qual_term                               { [$1] }
@@ -1497,7 +1509,7 @@ qual_op:
     qual_lit_op                                { [$1]  }
   | LBRACELESS qual_lit_op_list GREATERRBRACE  { $2 }
   | LBRACELESS STAR STAR GREATERRBRACE         
-    { [Predexp_plus; Predexp_minus; Predexp_times; Predexp_div] }
+    { [] (*[Predexp_plus; Predexp_minus; Predexp_times; Predexp_div]*) }
 
 qual_lit_op:
     PLUS                                    { Predexp_plus }
