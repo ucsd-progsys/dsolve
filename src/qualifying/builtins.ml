@@ -56,6 +56,7 @@ let uUnit = mk_unit ()
 
 let uInt = mk_int []
 let rInt name v p = mk_int [(Path.mk_ident name, v, p)]
+let rArray b name v p = mk_array b [(Path.mk_ident name, v, p)]
 
 let defun f =
   let (x, y) = (Path.mk_ident "x", Path.mk_ident "y") in
@@ -183,6 +184,11 @@ let _frames = [
           fun x -> rInt "NonNegSize" x (PInt 0 <=. Var x) ===>
           fun i -> (defun (fun y -> rInt "Bounded" y ((PInt 0 <=. Var y) &&. (Var y <. Var x)) ==> fun _ -> a)) ==>
           fun z -> mk_array a [qsize Eq z z x])));
+
+  (["copy"; "Array"],
+   defun (forall (fun a ->
+          fun arr -> mk_array a [] ==>
+          fun c -> rArray a "SameSize" c (FunApp("Array.length", Var c) ==. FunApp("Array.length", Var arr)))));
 
   (["init"; "Random"], defun (fun x -> uInt ==> fun y -> uUnit));
 

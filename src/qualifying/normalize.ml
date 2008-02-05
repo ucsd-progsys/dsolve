@@ -2,9 +2,6 @@ open Parsetree
 open Asttypes
 open Format
 
-  (* ming: TODO -- we cna just add a location to subexpr pairs that are passed
-   * up (making them triples) to keep ident lcoations *)
-
 
 let wrap_printable exp = (Ptop_def([{pstr_desc = (Pstr_eval exp); pstr_loc = Location.none}])) 
     
@@ -56,8 +53,9 @@ let is_const_mult exp =
           else false
     | _ -> false
 
+let next_name_cnt = ref 0 
+
 let normalize exp =
-  let next_name_cnt = ref 0 in
   let fresh_name () =
     let i = !next_name_cnt in
     let _ = next_name_cnt := !next_name_cnt + 1 in
@@ -79,6 +77,7 @@ let normalize exp =
   let mk_ifthenelse e1 e2 e3 = Pexp_ifthenelse(e1, e2, Some e3) in
   let mk_field e s = Pexp_field(e, s) in
   let mk_record es = Pexp_record(es, None) in
+  let mk_assert e = Pexp_assert(e) in
 
   let mk_dummy desc = {pexp_desc = desc; pexp_loc = Location.none} in
   let dummy = Location.none in
@@ -210,6 +209,16 @@ let normalize exp =
         rw_expr (mk_sequence (norm_out e1) (norm_out e2))
      | Pexp_assertfalse ->
         exp
+     | Pexp_assert(e) ->
+        let c = norm_in e in 
+        let (lbl, e', lo) = List.hd c in
+        let inner = 
+          match e' with 
+          | Some e -> e
+          | None -> mk_ident_loc lbl lo
+        in
+        let init = mk_assert inner in
+          rw_expr (List.fold_left (wrap Nonrecursive) init (List.tl c))
      | Pexp_field(e, s) ->
         let ls = norm_in e in
         let (lbl, _, lo) = List.hd ls in 
@@ -239,6 +248,7 @@ let normalize exp =
     let loc = exp.pexp_loc in
 
     match exp.pexp_desc with
+     | Pexp_assert(_)  
      | Pexp_assertfalse ->
          [(fresh_name (), Some (norm_out exp), dummy)]
      | Pexp_constraint(_, _, _)
@@ -328,13 +338,13 @@ let rec normalize_structure sstr =
     [] -> []
     | {pstr_desc = (Pstr_eval exp); pstr_loc = loc} :: srem ->
         let normal_exp = normalize exp in
-        let _ = Common.cprintf Common.ol_normalized "@[%a@\n@]" Qdebug.pprint_expression normal_exp in
+        let _ = Common.cprintf Common.ol_normalized "@[%a@\n@]@." Qdebug.pprint_expression normal_exp in
         ({pstr_desc = (Pstr_eval(normal_exp)) ; pstr_loc = loc}) :: (normalize_structure srem)
     | {pstr_desc = (Pstr_value(recursive, pl)); pstr_loc = loc} :: srem -> 
         (* assume with all accompanying losses of generality that no one is
          * stupid enough to use and without rec *)
         let value = {pstr_desc = (Pstr_value(recursive, List.map (fun (p, exp) -> (p, normalize exp)) pl)); pstr_loc = loc} in
-        let _ = Common.cprintf Common.ol_normalized "@[%a@\n@]" Qdebug.pprint_structure value in
+        let _ = Common.cprintf Common.ol_normalized "@[%a@\n@]@." Qdebug.pprint_structure value in
         value :: (normalize_structure srem)
     | p :: srem -> 
         p :: (normalize_structure srem) 

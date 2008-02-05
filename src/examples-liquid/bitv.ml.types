@@ -1,1 +1,0 @@
-type t = { length : int; bits : int array };;

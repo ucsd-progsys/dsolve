@@ -21,7 +21,7 @@ PARSING=parsing/linenum.cmo parsing/location.cmo parsing/longident.cmo \
   parsing/lexer.cmo parsing/parse.cmo parsing/printast.cmo
 
 TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
-  typing/predicate.cmo typing/primitive.cmo typing/types.cmo \
+  typing/primitive.cmo typing/types.cmo \
   typing/btype.cmo typing/oprint.cmo \
   typing/subst.cmo typing/predef.cmo \
   typing/datarepr.cmo typing/env.cmo \
@@ -30,6 +30,7 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/mtype.cmo typing/includecore.cmo \
   typing/includemod.cmo typing/parmatch.cmo \
   typing/typetexp.cmo typing/stypes.cmo typing/typecore.cmo \
+  typing/predicate.cmo \
   typing/typedecl.cmo typing/typeclass.cmo \
 	typing/qualgen.cmo typing/qualdecl.cmo \
   typing/typemod.cmo 

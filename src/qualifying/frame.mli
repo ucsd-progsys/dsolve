@@ -26,6 +26,7 @@ val pprint_sub: formatter -> substitution -> unit
 val pprint_refinement: formatter -> refinement -> unit
 val fresh: expression -> t
 val fresh_without_vars: expression -> t
+val fresh_unconstrained: expression -> t
 val fresh_with_labels: expression -> t -> t
 val instantiate: t -> t -> t
 val apply_substitution: substitution -> t -> t

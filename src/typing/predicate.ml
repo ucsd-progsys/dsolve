@@ -1,5 +1,6 @@
 open Parsetree
 open Asttypes
+open Types
 open Format
 
 type binop =
@@ -134,8 +135,15 @@ let implies(p, q) = (!. p) ||. q
 
 let (=>.) p q = implies (p, q)
 
+let find_const c =
+  match (Env.lookup_constructor (Longident.Lident c) Env.initial).cstr_tag with
+    |  Cstr_constant n -> n
+    | _ -> assert false
+
+let (int_true, int_false) = (PInt (find_const "true"), PInt (find_const "false"))
+
 let expand_iff = function
-  | Iff (px, q) -> ((px ==. PInt 1) &&. q) ||. ((px ==. PInt 0) &&. (!. q))
+  | Iff (px, q) -> ((px ==. int_true) &&. q) ||. ((px ==. int_false) &&. (!. q))
   | _ -> assert false
 
 let big_and = function

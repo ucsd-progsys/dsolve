@@ -29,31 +29,32 @@ let expression_to_pexpr e =
     | Texp_ident (id, _) -> P.Var id
     | _ -> P.Var (Path.mk_ident "dummy")
 
-let get_true_tag env =
-  match (Env.lookup_constructor (Lident "true") env).cstr_tag with
-    |  Cstr_constant n -> n
-    | _ -> assert false
-
 let under_lambda = ref 0
 
-let frame_log_buffer = Buffer.create 17
-let frame_log = formatter_of_buffer frame_log_buffer
+module FrameLog = Map.Make(struct type t = Location.t
+                                  let compare = compare end)
+let flog = ref FrameLog.empty
 
 let log_frame loc fr =
-  if loc = Location.none then ()
-  else
-    Stypes.print_position frame_log loc.loc_start;
-    fprintf frame_log " ";
-    Stypes.print_position frame_log loc.loc_end;
-    fprintf frame_log "@.type(@.  ";
-    F.pprint frame_log fr;
-    fprintf frame_log "@.)@."
+  if loc <> Location.none then 
+    flog := FrameLog.add loc fr !flog
 
-let write_frame_log filename =
-  let oc = open_out filename in
-    Format.pp_print_flush frame_log ();
-    Buffer.output_buffer oc frame_log_buffer;
-    close_out oc
+let framemap_apply_solution s fmap = FrameLog.map (F.apply_solution s) fmap
+
+let dump_frame pp loc fr =
+  if loc.loc_start <> Lexing.dummy_pos && loc.loc_end <> Lexing.dummy_pos then
+    Stypes.print_position pp loc.loc_start;
+    fprintf pp " ";
+    Stypes.print_position pp loc.loc_end;
+    fprintf pp "@.type(@.  ";
+    F.pprint pp fr;
+    fprintf pp "@.)@."
+
+let dump_frames sourcefile fmap =
+  if !Cf.dump_frames then
+    let filename = Misc.chop_extension_if_any sourcefile ^ ".annot" in
+    let pp = formatter_of_out_channel (open_out filename) in
+      FrameLog.iter (dump_frame pp) fmap
 
 let label_constraint exp fc =
   let org = match exp.exp_desc with Texp_assert _ -> Assert exp.exp_loc | _ -> Loc exp.exp_loc in
@@ -76,7 +77,7 @@ let rec constrain e env guard =
       | (Texp_array es, _) -> constrain_array environment es
       | (Texp_sequence (e1, e2), _) -> constrain_sequence environment e1 e2
       | (Texp_tuple es, _) -> constrain_tuple environment es
-      (* | (Texp_assertfalse, _) -> (F.fresh e, []) *)
+      | (Texp_assertfalse, _) -> constrain_assertfalse environment e
       | (Texp_assert e, _) -> constrain_assert environment e
       | (_, t) ->
         (* As it turns out, giving up and returning true here is actually _very_ unsound!  We won't check subexpressions! *)
@@ -215,17 +216,16 @@ and constrain_tuple (env, guard, f) es =
         in (f, WFFrame (env, f) :: new_cs, subexp_cs)
     | _ -> assert false
 
+and constrain_assertfalse (env, _, _) e = (F.fresh_unconstrained e, [], [])
+
 and constrain_assert (env, guard, _) e =
   let (f, cstrs) = constrain e env guard in
   let guardvar = Path.mk_ident "assert_guard" in
   let env = Le.add guardvar f env in
-  (* pmr: this is actually incorrect - we define false = 0, true = 1, and we're
-   * just lucking out if true_tag conforms to this *)
-  let true_tag = get_true_tag e.exp_env in
   let assert_qualifier =
     (Path.mk_ident "assertion",
      Path.mk_ident "null",
-     P.equals (P.Var guardvar, P.PInt true_tag))
+     P.equals (P.Var guardvar, P.int_true))
   in (B.mk_unit (), [SubFrame (env, guard, B.mk_int [], B.mk_int [assert_qualifier])], cstrs)
 
 and constrain_and_bind guard (env, cstrs) (pat, e) =
@@ -386,6 +386,7 @@ let qualify_implementation sourcefile fenv qs str =
   let _ = pre_solve () in
   let (s,cs) = Bstats.time "solving" (solve inst_qs) cs in
   let _ = post_solve () in
+  let _ = dump_frames sourcefile (framemap_apply_solution s !flog) in
   match cs with [] -> () | _ ->
     (Printf.printf "Errors encountered during type checking:\n\n";
     flush stdout; raise (Errors(List.map (make_frame_error s) cs)))
