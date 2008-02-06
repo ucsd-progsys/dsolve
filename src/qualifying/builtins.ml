@@ -281,7 +281,7 @@ let equality_refinement exp =
 
 let tag_refinement tag =
   let x = Path.mk_ident "V" in
-    let pred = tag (Var x) ==. PInt tag in
+    let pred = (Var x) ==. PInt tag in
     Predicate.pprint Format.str_formatter pred;
     let expstr = Format.flush_str_formatter () in
       ([], Qconst [(Path.mk_ident expstr, x, pred)])
