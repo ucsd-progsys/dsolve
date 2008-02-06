@@ -93,7 +93,7 @@ and constrain_constant path = function
 
 and constrain_constructed path cstrdesc =
   let cstrref = match cstrdesc.cstr_tag with
-    | Cstr_constant n -> B.equality_refinement (P.PInt n)
+    | Cstr_constant n -> B.tag_refinement n
     | _ -> F.empty_refinement
   in (F.Fconstr (path, [], cstrref), [], [])
 

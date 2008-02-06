@@ -33,7 +33,8 @@ let fun_app_shapes = lazy(
   let array2_path = Builtins.ext_find_type_path "array2" in
     [("Array.length", constr_app_shape Predef.path_array uInt);
      ("Bigarray.Array2.dim1", constr_app_shape array2_path uInt);
-     ("Bigarray.Array2.dim2", constr_app_shape array2_path uInt)]
+     ("Bigarray.Array2.dim2", constr_app_shape array2_path uInt);
+     (Builtins.tag_function, (function Fconstr _ -> uInt | _ -> Funknown))]
 )
 
 let pred_is_well_typed env p =
@@ -78,7 +79,7 @@ let pred_is_well_typed env p =
                                        (function Fvar _ -> true | _ -> false) p1_shp ||
                                        same_shape p1_shp uFloat) 
         end
-  | Predicate.Iff (px, q) -> same_shape (get_expr_shape px) uBool && pred_shape_is_bool q
+  | Predicate.Iff (px, q) -> same_shape (get_expr_shape px) uInt && pred_shape_is_bool q
   in pred_shape_is_bool p
 
 let refinement_well_formed env solution r qual_var =

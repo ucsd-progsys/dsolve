@@ -5,6 +5,7 @@ module Le = Lightenv
 module Pat = Pattern
 module P = Predicate
 module TP = TheoremProver
+module B = Builtins
 
 module C = Common
 module VM = C.PathMap 
@@ -86,7 +87,7 @@ let guard_predicate () g =
   P.big_and 
     (List.map 
       (fun (v,b) -> 
-         let p = P.equals (P.Var v, P.PInt 1) in 
+         let p = P.equals (B.tag (P.Var v), P.PInt 1) in
          if b then p else P.Not p) 
       g)
 
