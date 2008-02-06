@@ -8,6 +8,7 @@ DMLex/bs2.ml
 DML/insertsort.ml
 DML/queen.ml
 DMLex/gauss.ml
+DMLex/simplex.ml
 examples-liquid/unbounded.ml
 examples-liquid/vecswap.ml
 examples-liquid/arraymax.ml
