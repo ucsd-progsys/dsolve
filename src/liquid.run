@@ -18,10 +18,10 @@ argv=""
 enm=""
 for i in ${@/\ //n}
 do
-#  let "j = $j + 1"
+  let "j = $j + 1"
 #  #catt="cat "$i".quals "$i 
   enm=$i
-  if [[ $j<$argc ]] 
+  if (("$j" < "$argc"))  
   then
 #    if [[ $i == "-dframes" ]]
 #    then

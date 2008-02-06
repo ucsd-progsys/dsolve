@@ -43,8 +43,7 @@ let type_implementation initial_env ast =
     str
 
 let analyze ppf sourcefile (str, env, fenv) =
-  Qualifymod.qualify_implementation sourcefile fenv [] str;
-  if !Clflags.dump_frames then Qualifymod.write_frame_log (Misc.chop_extension_if_any sourcefile ^ ".annot")
+  Qualifymod.qualify_implementation sourcefile fenv [] str
 
 let dump_qualifiers (str, _, fenv) =
   Qualifymod.qualgen_nasty_hack fenv str;

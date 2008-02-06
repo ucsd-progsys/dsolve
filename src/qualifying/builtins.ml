@@ -56,6 +56,7 @@ let uUnit = mk_unit ()
 
 let uInt = mk_int []
 let rInt name v p = mk_int [(Path.mk_ident name, v, p)]
+let rArray b name v p = mk_array b [(Path.mk_ident name, v, p)]
 
 let defun f =
   let (x, y) = (Path.mk_ident "x", Path.mk_ident "y") in
@@ -82,7 +83,11 @@ let uninterp_unop typ path = (path, defun (fun x -> typ ==> fun y -> typ))
 
 let float_to_int_unop path = (path, defun (fun x -> uFloat ==> fun y -> uInt))
 
-let qbool_rel qname rel (x, y, z) = rBool qname z (Var z <=>. Atom (Var x, rel, Var y))
+let tag_function = "__tag"
+
+let tag x = FunApp(tag_function, x)
+
+let qbool_rel qname rel (x, y, z) = rBool qname z (tag (Var z) <=>. Atom (Var x, rel, Var y))
 
 let poly_rel_frame path qname rel =
   (path,
@@ -127,17 +132,17 @@ let _frames = [
   (["&&"; "Pervasives"],
    defun (fun x -> uBool ===>
           fun y -> uBool ==>
-          fun z -> rBool "&&" z (Var z <=>. ((Var x ==. PInt 1) &&. (Var y ==.  PInt 1)))));
+          fun z -> rBool "&&" z (tag (Var z) <=>. ((tag (Var x) ==. PInt 1) &&. (tag (Var y) ==.  PInt 1)))));
 
   (["||"; "Pervasives"],
    defun (fun x -> uBool ===>
           fun y -> uBool ==>
           fun z -> rBool "||" z
-            (((Var z ==. PInt 1) &&. ((Var x ==. PInt 1) ||. (Var y ==. PInt 1))) ||.
-             ((Var z ==. PInt 0) &&. (Var x ==. PInt 0) &&. (Var y ==. PInt 0)))));
+            (((tag (Var z) ==. PInt 1) &&. ((tag (Var x) ==. PInt 1) ||. (tag (Var y) ==. PInt 1))) ||.
+             ((tag (Var z) ==. PInt 0) &&. (tag (Var x) ==. PInt 0) &&. (tag (Var y) ==. PInt 0)))));
 
   (["not"; "Pervasives"],
-   defun (fun x -> uBool ==> fun y -> rBool "NOT" y (Var y <=>. (Var x ==. PInt 0))));
+   defun (fun x -> uBool ==> fun y -> rBool "NOT" y (tag (Var y) <=>. (tag (Var x) ==. PInt 0))));
 
   (["ignore"; "Pervasives"], defun (forall (fun a -> fun x -> a ==> fun y -> uUnit)));
 
@@ -183,6 +188,11 @@ let _frames = [
           fun x -> rInt "NonNegSize" x (PInt 0 <=. Var x) ===>
           fun i -> (defun (fun y -> rInt "Bounded" y ((PInt 0 <=. Var y) &&. (Var y <. Var x)) ==> fun _ -> a)) ==>
           fun z -> mk_array a [qsize Eq z z x])));
+
+  (["copy"; "Array"],
+   defun (forall (fun a ->
+          fun arr -> mk_array a [] ==>
+          fun c -> rArray a "SameSize" c (FunApp("Array.length", Var c) ==. FunApp("Array.length", Var arr)))));
 
   (["init"; "Random"], defun (fun x -> uInt ==> fun y -> uUnit));
 
@@ -265,6 +275,13 @@ let frames env =
 let equality_refinement exp =
   let x = Path.mk_ident "V" in
     let pred = Var x ==. exp in
+    Predicate.pprint Format.str_formatter pred;
+    let expstr = Format.flush_str_formatter () in
+      ([], Qconst [(Path.mk_ident expstr, x, pred)])
+
+let tag_refinement tag =
+  let x = Path.mk_ident "V" in
+    let pred = tag (Var x) ==. PInt tag in
     Predicate.pprint Format.str_formatter pred;
     let expstr = Format.flush_str_formatter () in
       ([], Qconst [(Path.mk_ident expstr, x, pred)])

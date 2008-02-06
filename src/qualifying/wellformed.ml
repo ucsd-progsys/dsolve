@@ -19,25 +19,29 @@ let rec same_shape t1 t2 =
 
 let find_or_fail var env = try Lightenv.find var env with Not_found -> assert false
 
+let constr_app_shape path out_shape = function
+    Fconstr(a, _, _) ->
+      if Path.same path a then
+        out_shape
+      else
+        Funknown
+  | _ -> Funknown
+
+(* ext_find_type_path isn't initialized until sometime late in ocaml startup, so
+   we'll suspend this and force it when we know it's safe *)
+let fun_app_shapes = lazy(
+  let array2_path = Builtins.ext_find_type_path "array2" in
+    [("Array.length", constr_app_shape Predef.path_array uInt);
+     ("Bigarray.Array2.dim1", constr_app_shape array2_path uInt);
+     ("Bigarray.Array2.dim2", constr_app_shape array2_path uInt);
+     (Builtins.tag_function, (function Fconstr _ -> uInt | _ -> Funknown))]
+)
+
 let pred_is_well_typed env p =
   let rec get_expr_shape = function
   | Predicate.PInt _ -> uInt
   | Predicate.Var x -> find_or_fail x env
-  | Predicate.FunApp (s, p') -> 
-      let arg_shape shp out_shape =
-          match get_expr_shape p' with
-              Fconstr(a, _, _) ->
-                if Path.same shp a then
-                  out_shape
-                else
-                  Funknown
-            | _ -> Funknown
-      in
-      (* ming: huge hack alert *)
-      if s = "Array.length" then arg_shape Predef.path_array uInt
-      else if s = "Bigarray.Array2.dim1" || s = "Bigarray.Array2.dim2" then
-        arg_shape (Builtins.ext_find_type_path "array2") uInt
-      else assert false
+  | Predicate.FunApp (s, p') -> (List.assoc s (Lazy.force fun_app_shapes)) (get_expr_shape p')
   | Predicate.Binop (p1, op, p2) ->
       let p1_shp = get_expr_shape p1 in
       let p1_int = same_shape p1_shp uInt in
@@ -75,7 +79,7 @@ let pred_is_well_typed env p =
                                        (function Fvar _ -> true | _ -> false) p1_shp ||
                                        same_shape p1_shp uFloat) 
         end
-  | Predicate.Iff (px, q) -> same_shape (get_expr_shape px) uBool && pred_shape_is_bool q
+  | Predicate.Iff (px, q) -> same_shape (get_expr_shape px) uInt && pred_shape_is_bool q
   in pred_shape_is_bool p
 
 let refinement_well_formed env solution r qual_var =
