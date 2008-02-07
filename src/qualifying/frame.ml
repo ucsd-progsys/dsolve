@@ -107,7 +107,7 @@ let fresh_with_var_fun exp fresh_ref_var =
                  let f' = fun _ -> empty_refinement in 
                  Fconstr (p, List.map (fresh_rec f') tyl, freshf ())
            | Type_record (fields, _, _) -> (* 1 *)
-               let param_map = List.map2 (fun tyvar tyinst -> (tyvar, tyinst)) ty_decl.type_params tyl in
+               let param_map = List.combine ty_decl.type_params tyl in
                let fresh_field (name, muta, typ) =
                  let field_typ = try List.assoc typ param_map with Not_found -> typ in
                  (fresh_rec freshf field_typ, name, muta) in
