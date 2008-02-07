@@ -10,4 +10,3 @@ val report_errors: Format.formatter -> (Location.t * error) list -> unit
 
 val qualify_implementation:
   string -> Frame.t Lightenv.t -> Qualifier.t list -> Typedtree.structure -> unit
-val qualgen_nasty_hack: Frame.t Lightenv.t -> Typedtree.structure -> unit

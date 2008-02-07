@@ -264,8 +264,6 @@ and constrain_bindings env guard recflag bindings =
     (* Redo constraints now that we know what the right labels are --- note that unlabeled_frames are all
      still essentially fresh, since we're discarding any constraints on them *)
     let bound_env = Le.addn (List.combine vars binding_frames) env in
-    (* qualgen, continued.. wrap the fold function in another that
-     * pushes onto the lambda stack while constraining functions *)
     let found_frame_list e b = 
         subexpr_folder bound_env guard e b in
                   
@@ -360,5 +358,3 @@ let qualify_implementation sourcefile fenv qs str =
   match cs with [] -> () | _ ->
     (Printf.printf "Errors encountered during type checking:\n\n";
     flush stdout; raise (Errors(List.map (make_frame_error s) cs)))
-
-let qualgen_nasty_hack fenv str = ignore (constrain_structure fenv [] str)
