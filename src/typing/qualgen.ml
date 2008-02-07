@@ -90,6 +90,11 @@ let rec visit_binding (pat, exp) as pe =
 
 *)
 
+let all_consts = [1;2;3]
+let lookup_ids a = [Path.mk_ident "asdf"]
+let all_ids = [Path.mk_ident "asdf"]
+let all_types = []
+
 type base = int list  
 type var_base_int = int * base
 

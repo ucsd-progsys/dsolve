@@ -17,8 +17,6 @@ type binrel =
   | Lt
   | Le 
 
-(* patterns *)
-
 type patpexpr =
     PPInt of int list
   | PVar of Path.t list
@@ -26,14 +24,12 @@ type patpexpr =
   | PBinop of patpexpr * binop list * patpexpr
 
 type tpat =
-  | PTrue
+    PTrue
   | PAtom of patpexpr * binrel list * patpexpr
   | PIff of patpexpr * tpat
   | PNot of tpat
   | PAnd of tpat * tpat
   | POr of tpat * tpat
-
-(************)
 
 type pexpr =
     PInt of int 
@@ -223,13 +219,21 @@ let vars p =
 let tuple_nth pexp n =
   FunApp ("__tuple_nth_" ^ (string_of_int n), pexp)
 
+let transl_op = function
+  | Predexp_plus -> Plus
+  | Predexp_minus -> Minus
+  | Predexp_times -> Times
+  | Predexp_div -> Div
+ 
+let transl_rel = function
+  | Pred_eq -> Eq
+  | Pred_ne -> Ne
+  | Pred_gt -> Gt
+  | Pred_ge -> Ge
+  | Pred_lt -> Lt
+  | Pred_le -> Le
+ 
 let rec transl_predicate p =
-  let transl_op = function
-    | Predexp_plus -> Plus
-    | Predexp_minus -> Minus
-    | Predexp_times -> Times
-    | Predexp_div -> Div
-  in
   let rec transl_pexpression pexp =
     match pexp.ppredexp_desc with
       | Ppredexp_int n ->
@@ -242,14 +246,6 @@ let rec transl_predicate p =
 	  Binop (transl_pexpression e1, transl_op op, transl_pexpression e2)
       | Ppredexp_field (f, r) ->
           Field (f, Var (Path.mk_ident r))
-  in
-  let transl_rel = function
-    | Pred_eq -> Eq
-    | Pred_ne -> Ne
-    | Pred_gt -> Gt
-    | Pred_ge -> Ge
-    | Pred_lt -> Lt
-    | Pred_le -> Le
   in
   let rec transl_pred_rec pred =
     match pred.ppred_desc with

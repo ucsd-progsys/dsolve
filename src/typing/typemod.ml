@@ -602,7 +602,6 @@ and type_structure anchor env sstr =
     | {pstr_desc = Pstr_qualifier (name, pat)} :: srem ->
         let (str_rem, sig_rem, final_env) = type_struct env srem in
         (Tstr_qualifier (Ident.create name, Qualdecl.transl_pattern pat)
-         (*(Tstr_open(Predef.path_int)*)
          :: str_rem,
          sig_rem,
          final_env)

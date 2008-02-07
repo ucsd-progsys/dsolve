@@ -14,6 +14,20 @@ type binrel =
   | Lt
   | Le 
 
+type patpexpr =
+    PPInt of int list
+  | PVar of Path.t list
+  | PFunApp of Longident.t * patpexpr list 
+  | PBinop of patpexpr * binop list * patpexpr
+
+type tpat =
+    PTrue
+  | PAtom of patpexpr * binrel list * patpexpr
+  | PIff of patpexpr * tpat
+  | PNot of tpat
+  | PAnd of tpat * tpat
+  | POr of tpat * tpat
+
 type pexpr =   
     PInt of int 
   | Var of Path.t
@@ -60,4 +74,6 @@ val apply_substs: (Path.t * pexpr) list -> t -> t
 val vars: t -> Path.t list
 (* pmr: change to plain old instantiate *)
 val instantiate_named_vars: (string * Path.t) list -> t -> t
+val transl_op: Asttypes.predexp_op -> binop                                                             
+val transl_rel: Asttypes.pred_rel -> binrel
 val transl_predicate: Parsetree.predicate_declaration -> t
