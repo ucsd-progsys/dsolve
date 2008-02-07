@@ -87,7 +87,7 @@ let rec constrain e env guard =
   in log_frame e.exp_loc f; (f, (List.map (label_constraint e) cstrs) @ rec_cstrs)
 
 and constrain_constant path = function
-  | Const_int n -> let _ = if !Cf.dump_qualifs then ignore (Qg.add_constant n) in (F.Fconstr (path, [], B.equality_refinement (P.PInt n)), [], [])
+  | Const_int n -> (F.Fconstr (path, [], B.equality_refinement (P.PInt n)), [], [])
   | Const_float _ -> (F.Fconstr (path, [], F.empty_refinement), [], [])
   | _ -> assert false
 
@@ -139,7 +139,7 @@ and constrain_function (env, guard, f) t pat e' =
         match (t.desc, pat.pat_desc) with
             (* pmr: needs to be generalized to match other patterns *)
           | (Tarrow(_, t_in, t_out, _), Tpat_var x) ->
-              if !Cf.dump_qualifs then Qg.add_label(Path.Pident x, t_in) else ()
+              ()
           | _ -> ()
       in
       let env' = Pattern.env_bind env pat.pat_desc f in
@@ -191,7 +191,6 @@ and constrain_let (env, guard, f) recflag bindings body =
         (f, [WFFrame (env, f); SubFrame (env', guard, body_frame, f)], cstrs1 @ cstrs2)
 
 and constrain_array (env, guard, f) elements =
-  let _ = if !Cf.dump_qualifs then ignore (Qg.add_constant (List.length elements)) in
   let (f, fs) =
     (match f with
       | F.Fconstr(p, l, _) -> (F.Fconstr(p, l, B.size_lit_refinement(List.length elements)), l)
@@ -229,17 +228,9 @@ and constrain_assert (env, guard, _) e =
   in (B.mk_unit (), [SubFrame (env, guard, B.mk_int [], B.mk_int [assert_qualifier])], cstrs)
 
 and constrain_and_bind guard (env, cstrs) (pat, e) =
-  begin if !under_lambda = 0 || not(!Cf.less_qualifs) then
-    match pat.pat_desc with
-    | Tpat_var x -> if !Cf.dump_qualifs then Qg.add_label (Path.Pident x, e.exp_type) else ()
-    | _ -> ()
-  end;
-  let lambda = match e.exp_desc with
-    | Texp_function (_, _) -> under_lambda := !under_lambda + 1; true
-    | _ -> false in
   let (f, cstrs') = constrain e env guard in
   let env = Pattern.env_bind env pat.pat_desc f in
-  let _ = if lambda then under_lambda := !under_lambda - 1 else () in (env, cstrs @ cstrs')
+  (env, cstrs @ cstrs')
 
 and constrain_bindings env guard recflag bindings =
   match recflag with
@@ -270,36 +261,15 @@ and constrain_bindings env guard recflag bindings =
      use label_frames directly *)
     let binding_frames = List.map2 F.label_like unlabeled_frames label_frames in
             
-    (* ming: qualgen code. generate qualifiers for all binding vars if
-     * we're currently under a lambda build a bitmap for each bind to
-     * manage lambda detection *)
-    let qualgen_addlbls var exp = if !Cf.dump_qualifs then Qg.add_label (var, exp.exp_type) else () in
-    let _ = if !under_lambda = 0 || not(!Cf.less_qualifs) then List.iter2 qualgen_addlbls vars exprs  
-            else () 
-    in
-    let qualgen_is_function e = 
-    match e.exp_desc with
-    | Texp_function (_, _) -> true
-    | _ -> false 
-    in
-    let qualgen_incr_lambda () = under_lambda := !under_lambda + 1 in
-    let qualgen_decr_lambda () = under_lambda := !under_lambda - 1 in
-
     (* Redo constraints now that we know what the right labels are --- note that unlabeled_frames are all
      still essentially fresh, since we're discarding any constraints on them *)
     let bound_env = Le.addn (List.combine vars binding_frames) env in
     (* qualgen, continued.. wrap the fold function in another that
      * pushes onto the lambda stack while constraining functions *)
-    let qualgen_wrap_found_frame_list e b = 
-      if qualgen_is_function e then 
-        let _ = qualgen_incr_lambda () in
-        let r = subexpr_folder bound_env guard e b in
-        let _ = qualgen_decr_lambda () in
-        r  
-      else subexpr_folder bound_env guard e b
-    in
+    let found_frame_list e b = 
+        subexpr_folder bound_env guard e b in
                   
-    let (found_frames, subexp_cstrs) = List.fold_right qualgen_wrap_found_frame_list exprs ([], []) in
+    let (found_frames, subexp_cstrs) = List.fold_right found_frame_list exprs ([], []) in
     (* Ensure that the types we discovered for each binding are no more general than the types implied by
      their uses *)
     (* pmr: This is going to take some work to resolve; for now, default on the locations because we don't
@@ -321,9 +291,9 @@ let constrain_structure initfenv initquals str =
     | (Tstr_eval exp) :: srem ->
         let (_, cstrs') = constrain exp fenv []
         in constrain_rec quals fenv (cstrs' @ cstrs) srem
-    | (Tstr_qualifier (name, (valu, pred))) :: srem ->
+    (*| (Tstr_qualifier (name, (valu, pred))) :: srem ->
         let quals = (Path.Pident name, Path.Pident valu, pred) :: quals in
-          constrain_rec quals fenv cstrs srem
+          constrain_rec quals fenv cstrs srem*)
 		| (Tstr_value (recflag, bindings))::srem ->
         let (fenv, cstrs') = constrain_bindings fenv [] recflag bindings
         in constrain_rec quals fenv (cstrs @ cstrs') srem

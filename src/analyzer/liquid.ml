@@ -45,12 +45,12 @@ let type_implementation initial_env ast =
 let analyze ppf sourcefile (str, env, fenv) =
   Qualifymod.qualify_implementation sourcefile fenv [] str
 
-let dump_qualifiers (str, _, fenv) =
+(*let dump_qualifiers (str, _, fenv) =
   Qualifymod.qualgen_nasty_hack fenv str;
   fprintf std_formatter "@[Dumping@ qualifiers@\n@]";
   fprintf err_formatter "@[%s@\n@]" (String.concat "\n" (Qualgen.dump_qualifs ()));
   fprintf std_formatter "@[Done@ Dumping@ qualifiers@\n@]";
-  flush stderr
+  flush stderr*)
 
 open Clflags
 
@@ -139,8 +139,7 @@ let main () =
   ] file_argument usage;
   let source = load_sourcefile std_formatter !filename in
   try
-    if not !Clflags.dump_qualifs then analyze std_formatter !filename source
-    else dump_qualifiers source
+    analyze std_formatter !filename source
   with x -> (report_error std_formatter x; exit 1)
 
 let _ = main (); exit 0
