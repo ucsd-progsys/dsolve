@@ -1,5 +1,6 @@
 include config/Makefile
 
+QPHOME=/home/rjhala/research/qp/
 CAMLC=ocamlc
 CAMLOPT=ocamlopt
 CAMLYACC=ocamlyacc
@@ -8,8 +9,8 @@ CAMLLEX=ocamllex
 CAMLDEP=ocamldep
 DEPFLAGS=$(INCLUDES)
 COMPFLAGS=$(FLAGS) -dtypes -warn-error A $(INCLUDES)
-LINKFLAGS=$(FLAGS) -cclib -loyices -cclib -lgmp -cclib -lyices -I ../external/yices/lib/ -I ../external/ocamlgraph/
-INCLUDES=-I ../external/yices/lib/ -I ../external/ocamlgraph/ \
+LINKFLAGS=$(FLAGS) -cclib -loyices -cclib -lgmp -cclib -lyices -I ../external/yices/lib/ -I ../external/ocamlgraph/ -I $(QPHOME)
+INCLUDES=-I ../external/yices/lib/ -I ../external/ocamlgraph/ -I $(QPHOME) \
          -I utils -I parsing -I typing -I qualifying -I driver -I analyzer
 
 UTILS=utils/misc.cmo utils/config.cmo \
@@ -48,10 +49,10 @@ LIQUID=driver/pparse.cmo analyzer/liqerrors.cmo analyzer/liquid.cmo
 LIQOBJS=$(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(LIQUID)
 
 liquid: $(LIQOBJS)
-	$(CAMLC) $(LINKFLAGS) -custom -o liquid str.cma unix.cma oyices.cma graph.cma $(LIQOBJS)
+	$(CAMLC) $(LINKFLAGS) -custom -o liquid str.cma unix.cma oyices.cma graph.cma libqp.cma $(LIQOBJS)
 
 liquid.opt: $(LIQOBJS:.cmo=.cmx)
-	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt str.cmxa unix.cmxa oyices.cmxa graph.cmxa $(LIQOBJS:.cmo=.cmx)
+	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt str.cmxa unix.cmxa oyices.cmxa graph.cmxa libqp.cmxa $(LIQOBJS:.cmo=.cmx)
 
 depend: beforedepend
 	(for d in utils parsing typing qualifying driver analyzer; \
@@ -140,6 +141,9 @@ yiceslib:
 graphlib:
 	cd ../external/ocamlgraph; ./configure; $(MAKE);
 
-libs: yiceslib graphlib
+qplib:
+	cd $(QPHOME); $(MAKE) qp.opt; $(MAKE) all
+
+libs: yiceslib graphlib qplib
 
 include .depend
