@@ -107,7 +107,7 @@ let fresh_with_var_fun exp fresh_ref_var =
                  let f' = fun _ -> empty_refinement in 
                  Fconstr (p, List.map (fresh_rec f') tyl, freshf ())
            | Type_record (fields, _, _) -> (* 1 *)
-               let param_map = List.map2 (fun tyvar tyinst -> (tyvar, tyinst)) ty_decl.type_params tyl in
+               let param_map = List.combine ty_decl.type_params tyl in
                let fresh_field (name, muta, typ) =
                  let field_typ = try List.assoc typ param_map with Not_found -> typ in
                  (fresh_rec freshf field_typ, name, muta) in
@@ -116,46 +116,6 @@ let fresh_with_var_fun exp fresh_ref_var =
       | Ttuple ts -> Ftuple (List.map (fresh_rec freshf) ts)
       | _ -> fprintf err_formatter "@[Warning:@ Freshing@ unsupported@ type@]@."; Funknown in 
   fresh_rec fresh_ref_var ty
-
-  (*
-let fresh_with_var_fun exp fresh_ref_var =
-  let vars = ref [] in
-  let (ty, env) = (repr exp.exp_type, exp.exp_env) in
-  let rec fresh_rec t =
-    let t' = repr t in
-    match t'.desc with
-        Tvar ->
-          begin try List.assq t' !vars
-          with Not_found ->
-            let fv = fresh_fvar () in
-              vars := (t', fv) :: !vars;
-              fv
-          end
-      | Tconstr(p, tyl, _) ->
-          let ty_decl = Env.find_type p env in
-            begin match ty_decl.type_kind with
-              | Type_abstract
-              | Type_variant _ ->
-                  if Path.same p Predef.path_unit || Path.name p = "garbage" then
-                    Fconstr (p, [], ([], Qconst []))
-                  else
-                    Fconstr (p, List.map fresh_rec tyl, fresh_ref_var ())
-              | Type_record (fields, _, _) -> (* 1 *)
-                                    let param_map = List.map2 (fun tyvar tyinst -> (tyvar, tyinst)) ty_decl.type_params tyl in
-                  let fresh_field (name, muta, typ) =
-                    let field_typ = try List.assoc typ param_map with Not_found -> typ in
-                      (fresh_rec field_typ, name, muta)
-                  in Frecord (p, List.map fresh_field fields, fresh_ref_var ())
-          end
-      | Tarrow(_, t1, t2, _) ->
-          Farrow (None, fresh_rec t1, fresh_rec t2)
-      | Ttuple ts ->
-          Ftuple (List.map fresh_rec ts)
-      | _ ->
-          fprintf err_formatter "@[Warning:@ Freshing@ unsupported@ type@]@.";
-          Funknown
-  in fresh_rec ty
-*)
 
 (* Create a fresh frame with the same shape as the given type
    [ty]. Uses type environment [env] to find type declarations.
@@ -208,7 +168,7 @@ let instantiate fr ftemplate =
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
           Farrow (l, inst f1 f2, inst f1' f2')
       | (Fconstr (p, l, r), Fconstr(p', l', _)) ->
-	    Fconstr(p, List.map2 inst l l', r)
+	  Fconstr(p, List.map2 inst l l', r)
       | (Ftuple t1s, Ftuple t2s) ->
           Ftuple (List.map2 inst t1s t2s)
       | (Frecord (p, f1s, r), Frecord (_, f2s, _)) ->
@@ -221,39 +181,35 @@ let instantiate fr ftemplate =
 	    assert false
   in inst fr ftemplate
 
-(* Apply a substitution to a frame, distributing over arrows. *)
-let rec apply_substitution sub = function
-  | (Fvar _) as f -> f
-  | Fconstr (p, [], (subs, qe)) ->
-      Fconstr (p, [], (sub :: subs, qe))
-  | Farrow (x, f1, f2) ->
-      Farrow (x, apply_substitution sub f1, apply_substitution sub f2)
-  | Fconstr (p, l, (subs, qe)) ->
-     Fconstr (p, List.map (apply_substitution sub) l, (sub::subs, qe))
-  | Ftuple ts ->
-      Ftuple (List.map (apply_substitution sub) ts)
-  | Frecord (p, fs, (subs, qe)) ->
-      let apply_rec (f, n, m) = (apply_substitution sub f, n, m) in
-        Frecord (p, List.map apply_rec fs, (sub :: subs, qe))
-  | Funknown -> Funknown
+let map_frame f frm =
+  let rec map_rec = function
+    | Fvar _ as fr -> f fr
+    | Fconstr (p, fs, re) -> f (Fconstr (p, List.map map_rec fs, re))
+    | Farrow (x, f1, f2) -> f (Farrow (x, map_rec f1, map_rec f2))
+    | Ftuple fs -> f (Ftuple (List.map map_rec fs))
+    | Frecord(p, fs, re) ->
+        let apply_rec (fieldf, n, m) = (f fieldf, n, m) in
+          f (Frecord (p, List.map apply_rec fs, re))
+    | Funknown -> f Funknown
+  in map_rec frm
+
+let map_apply_substitution sub = function
+  | Fconstr (p, fs, (subs, qe)) -> Fconstr (p, fs, (sub :: subs, qe))
+  | Frecord (p, fs, (subs, qe)) -> Frecord (p, fs, (sub :: subs, qe))
+  | f -> f
+
+let apply_substitution sub f = map_frame (map_apply_substitution sub) f
 
 let refinement_apply_solution solution = function
   | (subs, Qvar k) -> (subs, Qconst (solution k))
   | r -> r
 
-let apply_solution solution fr =
-  let rec apply_rec = function
-    | Farrow (x, f, f') ->
-        Farrow (x, apply_rec f, apply_rec f')
-    | Fconstr (path, fl, r) ->
-        Fconstr (path, List.map apply_rec fl, refinement_apply_solution solution r)
-    | Ftuple ts ->
-        Ftuple (List.map apply_rec ts)
-    | Frecord (p, fs, r) ->
-        Frecord (p, List.map (fun (f, n, m) -> (apply_rec f, n, m)) fs, refinement_apply_solution solution r)
-    | Fvar _
-    | Funknown as f-> f
-  in apply_rec fr
+let map_apply_solution solution = function
+  | Fconstr (path, fl, r) -> Fconstr (path, fl, refinement_apply_solution solution r)
+  | Frecord (path, fs, r) -> Frecord (path, fs, refinement_apply_solution solution r)
+  | f -> f
+
+let apply_solution solution fr = map_frame (map_apply_solution solution) fr
 
 let refinement_conjuncts solution qual_var (subs, qualifiers) =
   let quals = match qualifiers with
