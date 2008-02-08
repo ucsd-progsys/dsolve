@@ -15,11 +15,13 @@ val empty_refinement: refinement
 
 type t =
     Fvar of Path.t
-  | Fconstr of Path.t * t list * refinement
+  | Fconstr of Path.t * t list * frame_constructor list * refinement
   | Farrow of pattern_desc option * t * t
   | Ftuple of t list
   | Frecord of Path.t * (t * string * mutable_flag) list * refinement
   | Funknown
+
+and frame_constructor = constructor_tag * t
 
 val pprint: formatter -> t -> unit
 val pprint_sub: formatter -> substitution -> unit

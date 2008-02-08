@@ -17,11 +17,13 @@ type refinement = substitution list * qualifier_expr
 
 type t =
     Fvar of Path.t
-  | Fconstr of Path.t * t list * refinement
+  | Fconstr of Path.t * t list * frame_constructor list * refinement
   | Farrow of pattern_desc option * t * t
   | Ftuple of t list
   | Frecord of Path.t * (t * string * mutable_flag) list * refinement
   | Funknown
+
+and frame_constructor = constructor_tag * t
 
 let pprint_sub ppf (path, pexp) =
   fprintf ppf "@[%s@ ->@ %a@]" (Path.name path) Predicate.pprint_pexpr pexp
@@ -51,13 +53,13 @@ let rec pprint_pattern ppf = function
 let rec pprint ppf = function
   | Fvar a ->
       fprintf ppf "Var(%s)" (Path.unique_name a)
-  | Fconstr (path, [], r) ->
+  | Fconstr (path, [], _, r) ->
       fprintf ppf "@[{%s@ |@;<1 2>%a}@]" (Path.name path) pprint_refinement r
   | Farrow (None, f, f') ->
       fprintf ppf "@[%a@ ->@;<1 2>%a@]" pprint1 f pprint f'
   | Farrow (Some pat, f, f') ->
       fprintf ppf "@[%a:@ %a@ ->@;<1 2>%a@]" pprint_pattern pat pprint1 f pprint f'
-  | Fconstr (path, l, r) ->
+  | Fconstr (path, l, _, r) ->
       fprintf ppf "@[{%a@ %s|@;<1 2>%a}@]" pprint (List.hd l) (Path.unique_name path) pprint_refinement r
    | Ftuple ts ->
       fprintf ppf "@[(%a)@]" (Oprint.print_list pprint (fun ppf -> fprintf ppf ",@;<1 2>")) ts
@@ -77,7 +79,6 @@ let false_refinement = ([], Qconst [(Path.mk_ident "false", Path.mk_ident "V", P
 let fresh_refinementvar () = ([], Qvar (Path.mk_ident "k"))
 
 let fresh_fvar () = Fvar (Path.mk_ident "a")
-
 
 (* 1. Tedium ahead:
    OCaml stores information about record types in two places:
@@ -103,9 +104,10 @@ let fresh_with_var_fun exp fresh_ref_var =
           let ty_decl = Env.find_type p env in
           (match ty_decl.type_kind with
            | Type_abstract | Type_variant _ ->
-               if Path.same p Predef.path_unit || Path.name p = "garbage" then Fconstr (p, [], ([], Qconst [])) else
-                 let f' = fun _ -> empty_refinement in 
-                 Fconstr (p, List.map (fresh_rec f') tyl, freshf ())
+               if Path.same p Predef.path_unit || Path.name p = "garbage" then Fconstr (p, [], [], ([], Qconst [])) else
+                 let f' = fun _ -> empty_refinement in
+                 let cstrs = List.map (fresh_cstr freshf) (Env.constructors_of_type p ty_decl) in
+                   Fconstr (p, List.map (fresh_rec f') tyl, cstrs, freshf ())
            | Type_record (fields, _, _) -> (* 1 *)
                let param_map = List.combine ty_decl.type_params tyl in
                let fresh_field (name, muta, typ) =
@@ -114,8 +116,9 @@ let fresh_with_var_fun exp fresh_ref_var =
                Frecord (p, List.map fresh_field fields, freshf ()))
       | Tarrow(_, t1, t2, _) -> Farrow (None, fresh_rec freshf t1, fresh_rec freshf t2)
       | Ttuple ts -> Ftuple (List.map (fresh_rec freshf) ts)
-      | _ -> fprintf err_formatter "@[Warning:@ Freshing@ unsupported@ type@]@."; Funknown in 
-  fresh_rec fresh_ref_var ty
+      | _ -> fprintf err_formatter "@[Warning:@ Freshing@ unsupported@ type@]@."; Funknown
+  and fresh_cstr freshf (_, cstr) = (cstr.cstr_tag, Ftuple (List.map (fresh_rec freshf) cstr.cstr_args)) in
+    fresh_rec fresh_ref_var ty
 
 (* Create a fresh frame with the same shape as the given type
    [ty]. Uses type environment [env] to find type declarations.
@@ -167,8 +170,9 @@ let instantiate fr ftemplate =
           end
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
           Farrow (l, inst f1 f2, inst f1' f2')
-      | (Fconstr (p, l, r), Fconstr(p', l', _)) ->
-	  Fconstr(p, List.map2 inst l l', r)
+      | (Fconstr (p, l, cstrs, r), Fconstr(p', l', cstrs', _)) ->
+          let inst_cstr (tag, arg1) (_, arg2) = (tag, inst arg1 arg2) in
+	    Fconstr(p, List.map2 inst l l', List.map2 inst_cstr cstrs cstrs', r)
       | (Ftuple t1s, Ftuple t2s) ->
           Ftuple (List.map2 inst t1s t2s)
       | (Frecord (p, f1s, r), Frecord (_, f2s, _)) ->
@@ -184,7 +188,7 @@ let instantiate fr ftemplate =
 let map_frame f frm =
   let rec map_rec = function
     | Fvar _ as fr -> f fr
-    | Fconstr (p, fs, re) -> f (Fconstr (p, List.map map_rec fs, re))
+    | Fconstr (p, fs, cstrs, re) -> f (Fconstr (p, List.map map_rec fs, cstrs, re))
     | Farrow (x, f1, f2) -> f (Farrow (x, map_rec f1, map_rec f2))
     | Ftuple fs -> f (Ftuple (List.map map_rec fs))
     | Frecord(p, fs, re) ->
@@ -194,7 +198,7 @@ let map_frame f frm =
   in map_rec frm
 
 let map_apply_substitution sub = function
-  | Fconstr (p, fs, (subs, qe)) -> Fconstr (p, fs, (sub :: subs, qe))
+  | Fconstr (p, fs, cstrs, (subs, qe)) -> Fconstr (p, fs, cstrs, (sub :: subs, qe))
   | Frecord (p, fs, (subs, qe)) -> Frecord (p, fs, (sub :: subs, qe))
   | f -> f
 
@@ -205,7 +209,7 @@ let refinement_apply_solution solution = function
   | r -> r
 
 let map_apply_solution solution = function
-  | Fconstr (path, fl, r) -> Fconstr (path, fl, refinement_apply_solution solution r)
+  | Fconstr (path, fl, cstrs, r) -> Fconstr (path, fl, cstrs, refinement_apply_solution solution r)
   | Frecord (path, fs, r) -> Frecord (path, fs, refinement_apply_solution solution r)
   | f -> f
 
@@ -223,23 +227,23 @@ let refinement_predicate solution qual_var refn =
   Predicate.big_and (refinement_conjuncts solution qual_var refn)
 
 let rec refinement_vars = function
-  | Fconstr (_, _, (_, Qvar k)) -> [k]
+  | Fconstr (_, _, _, (_, Qvar k)) -> [k]
   | Frecord (_, fs, (_, Qvar k)) ->
       k :: List.fold_left (fun r (f, _, _) -> refinement_vars f @ r) [] fs
   | _ -> []
 
 let apply_refinement r = function
-  | Fconstr (p, fl, _) -> Fconstr (p, fl, r)
+  | Fconstr (p, fl, cstrs, _) -> Fconstr (p, fl, cstrs, r)
   | Frecord (p, fs, _) -> Frecord (p, fs, r)
   | f -> f
 
 (* pmr: sound for our uses but not very informative *)
 let rec conjuncts solution qual_var = function
-  | Fconstr (_, _, r) -> refinement_conjuncts solution qual_var r
+  | Fconstr (_, _, _, r) -> refinement_conjuncts solution qual_var r
   | _ -> []
 
 let rec predicate solution qual_var = function
-    Fconstr(_, _, r) ->
+    Fconstr(_, _, _, r) ->
       refinement_predicate solution qual_var r
       (* pmr: need to embed on constructed types, much like below *)
   | Frecord (p, fs, r) ->

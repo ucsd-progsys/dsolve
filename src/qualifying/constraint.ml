@@ -131,9 +131,9 @@ let simplify_frame gm x f =
   if not (Le.mem x gm) then f else
     let pos = Le.find x gm in
     match f with 
-    | F.Fconstr (a,b,(subs,F.Qconst[(v1,v2,P.Iff (P.Var v3,p))])) when v2 = v3 ->
+    | F.Fconstr (a,b,c,(subs,F.Qconst[(v1,v2,P.Iff (P.Var v3,p))])) when v2 = v3 ->
         let p' = if pos then p else P.Not p in
-        F.Fconstr (a,b,(subs,F.Qconst[(v1,v2,p')])) 
+        F.Fconstr (a,b,c,(subs,F.Qconst[(v1,v2,p')]))
     | F.Frecord (a,b,(subs,F.Qconst[(v1,v2,P.Iff (P.Var v3,p))])) when v2 = v3 ->
         let p' = if pos then p else P.Not p in
         F.Frecord (a,b,(subs,F.Qconst[(v1,v2,p')])) 
@@ -186,7 +186,7 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
        [])
   | (F.Fvar _, F.Fvar _) | (F.Funknown, F.Funknown) ->
       ([],[]) 
-  | (F.Fconstr (p1, f1s, r1), F.Fconstr(p2, f2s, r2)) ->  (* 2 *)
+  | (F.Fconstr (p1, f1s, _, r1), F.Fconstr(p2, f2s, _, r2)) ->  (* 2 *)
       (C.flap2 (lequate_cs true env g c) f1s f2s,
        [(Cstr c, SubRef(env,g,r1,r2,None))])
   | (F.Ftuple f1s, F.Ftuple f2s) ->
@@ -206,7 +206,7 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
 let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFrame (env,f)} as c ->
   let make_wff env f = {lc_cstr = WFFrame (env, f); lc_orig = Cstr c; lc_id = None} in
   match f with
-  | F.Fconstr (_, l, r) ->
+  | F.Fconstr (_, l, _, r) ->
       (List.map (make_wff env) l,
        [(Cstr c, WFRef (Le.add qual_test_var f env, r, None))])
   | F.Farrow (l, f, f') ->

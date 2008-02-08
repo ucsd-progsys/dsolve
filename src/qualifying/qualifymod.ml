@@ -87,15 +87,17 @@ let rec constrain e env guard =
   in log_frame e.exp_loc f; (f, (List.map (label_constraint e) cstrs) @ rec_cstrs)
 
 and constrain_constant path = function
-  | Const_int n -> let _ = if !Cf.dump_qualifs then ignore (Qg.add_constant n) in (F.Fconstr (path, [], B.equality_refinement (P.PInt n)), [], [])
-  | Const_float _ -> (F.Fconstr (path, [], F.empty_refinement), [], [])
+  | Const_int n ->
+      let _ = if !Cf.dump_qualifs then ignore (Qg.add_constant n) in
+        (B.mk_int [B.equality_qualifier (P.PInt n)], [], [])
+  | Const_float _ -> (B.uFloat, [], [])
   | _ -> assert false
 
 and constrain_constructed path cstrdesc =
   let cstrref = match cstrdesc.cstr_tag with
     | Cstr_constant n -> B.tag_refinement n
     | _ -> F.empty_refinement
-  in (F.Fconstr (path, [], cstrref), [], [])
+  in (F.Fconstr (path, [], [], cstrref), [], [])
 
 and constrain_record (env, guard, f) labeled_exprs =
   let compare_labels ({lbl_pos = n}, _) ({lbl_pos = m}, _) = compare n m in
@@ -194,7 +196,7 @@ and constrain_array (env, guard, f) elements =
   let _ = if !Cf.dump_qualifs then ignore (Qg.add_constant (List.length elements)) in
   let (f, fs) =
     (match f with
-      | F.Fconstr(p, l, _) -> (F.Fconstr(p, l, B.size_lit_refinement(List.length elements)), l)
+      | F.Fconstr(p, l, _, _) -> (F.Fconstr(p, l, [], B.size_lit_refinement(List.length elements)), l)
       | _ -> assert false) in
   let list_rec (fs, c) e = (fun (f, cs) -> (f::fs, cs @ c)) (constrain e env guard) in
   let (fs', sub_cs) = List.fold_left list_rec ([], []) elements in

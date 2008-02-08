@@ -27,21 +27,21 @@ let qrel rel x y =
 
 let mk_tyvar () = Fvar(Path.mk_ident "'a")
 
-let mk_int qs = Fconstr(Predef.path_int, [], ([], Qconst qs))
+let mk_int qs = Fconstr(Predef.path_int, [], [], ([], Qconst qs))
 
-let uFloat = Fconstr(Predef.path_float, [], ([], Qconst []))
+let uFloat = Fconstr(Predef.path_float, [], [], ([], Qconst []))
 
-let mk_bool qs = Fconstr(Predef.path_bool, [], ([], Qconst qs)) 
+let mk_bool qs = Fconstr(Predef.path_bool, [], [], ([], Qconst qs))
 let uBool = mk_bool []
 let rBool name v p = mk_bool [(Path.mk_ident name, v, p)]
 
-let mk_array f qs = Fconstr(Predef.path_array, [f], ([], Qconst qs))
+let mk_array f qs = Fconstr(Predef.path_array, [f], [], ([], Qconst qs))
 
 let find_type_path id env =
   try fst (Env.lookup_type (mk_longid id) env)
   with Not_found -> Printf.printf "Couldn't load %s!\n" (String.concat " " id); assert false
 
-let mk_named path fs qs env = Fconstr(find_type_path path env, fs, ([], Qconst qs))
+let mk_named path fs qs env = Fconstr(find_type_path path env, fs, [], ([], Qconst qs))
 
 let mk_ref f env = Frecord (find_type_path ["ref"; "Pervasives"] env, [(f, "contents", Mutable)], ([], Qconst []))
 
@@ -51,7 +51,7 @@ let mk_bigarray_layout a qs env = mk_named ["layout"; "Bigarray"] [a] qs env
 
 let mk_bigarray_type a b c qs env = mk_named ["t"; "Array2"; "Bigarray"] [a; b; c] qs env
 
-let mk_unit () = Fconstr(Predef.path_unit, [], ([], Qconst []))
+let mk_unit () = Fconstr(Predef.path_unit, [], [], ([], Qconst []))
 let uUnit = mk_unit ()
 
 let uInt = mk_int []
@@ -272,12 +272,13 @@ let frames env =
   let resolve_names x = List.map (fun (id, fr) -> (find_path id env, fr)) x in
   List.append (resolve_names  _frames) (resolve_names (_lib_frames env))
 
-let equality_refinement exp =
+let equality_qualifier exp =
   let x = Path.mk_ident "V" in
     let pred = Var x ==. exp in
     Predicate.pprint Format.str_formatter pred;
-    let expstr = Format.flush_str_formatter () in
-      ([], Qconst [(Path.mk_ident expstr, x, pred)])
+    let expstr = Format.flush_str_formatter () in (Path.mk_ident expstr, x, pred)
+
+let equality_refinement exp = ([], Qconst [equality_qualifier exp])
 
 let tag_refinement t =
   let x = Path.mk_ident "V" in
