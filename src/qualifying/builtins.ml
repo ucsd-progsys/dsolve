@@ -4,6 +4,8 @@ open Predicate
 open Frame
 open Asttypes
 
+module T = Types
+
 let rec mk_longid = function
   | [] -> assert false
   | [id] -> Lident id
@@ -31,7 +33,7 @@ let mk_int qs = Fconstr(Predef.path_int, [], [], ([], Qconst qs))
 
 let uFloat = Fconstr(Predef.path_float, [], [], ([], Qconst []))
 
-let mk_bool qs = Fconstr(Predef.path_bool, [], [], ([], Qconst qs))
+let mk_bool qs = Fconstr(Predef.path_bool, [], [(T.Cstr_constant 0, []); (T.Cstr_constant 1, [])], ([], Qconst qs))
 let uBool = mk_bool []
 let rBool name v p = mk_bool [(Path.mk_ident name, v, p)]
 

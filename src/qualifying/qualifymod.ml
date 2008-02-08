@@ -65,7 +65,7 @@ let rec constrain e env guard =
   let (f, cstrs, rec_cstrs) =
     match (e.exp_desc,repr e.exp_type) with
       | (Texp_constant const_typ, {desc = Tconstr(path, [], _)}) -> constrain_constant path const_typ
-      | (Texp_construct (cstrdesc, []), {desc = Tconstr(path, [], _)}) -> constrain_constructed path cstrdesc
+      | (Texp_construct (cstrdesc, args), {desc = Tconstr(_, _, _)}) -> constrain_constructed environment cstrdesc args
       | (Texp_record (labeled_exprs, None), {desc = (Tconstr _)}) -> constrain_record environment labeled_exprs
       | (Texp_field (expr, label_desc), _) -> constrain_field environment expr label_desc
       | (Texp_ifthenelse (e1, e2, Some e3), _) -> constrain_if environment e1 e2 e3
@@ -93,11 +93,20 @@ and constrain_constant path = function
   | Const_float _ -> (B.uFloat, [], [])
   | _ -> assert false
 
-and constrain_constructed path cstrdesc =
-  let cstrref = match cstrdesc.cstr_tag with
-    | Cstr_constant n -> B.tag_refinement n
-    | _ -> F.empty_refinement
-  in (F.Fconstr (path, [], [], cstrref), [], [])
+and constrain_constructed (env, guard, f) cstrdesc args =
+  match f with
+    | F.Fconstr (path, tyargframes, cstrs, _) ->
+        let tag = cstrdesc.cstr_tag in
+        let (cstrref, cstrargframes) =
+          match tag with
+            | Cstr_constant n -> (B.tag_refinement n, [])
+            | Cstr_block n -> (B.tag_refinement n, List.assoc tag cstrs)
+            | Cstr_exception _ -> assert false
+        in
+        let f = F.Fconstr (path, tyargframes, cstrs, cstrref) in
+        let (argframes, argcstrs) = constrain_subexprs env guard args in
+          (f, [SubFrame(env, guard, F.Ftuple argframes, F.Ftuple cstrargframes); WFFrame(env, f)], argcstrs)
+    | _ -> assert false
 
 and constrain_record (env, guard, f) labeled_exprs =
   let compare_labels ({lbl_pos = n}, _) ({lbl_pos = m}, _) = compare n m in

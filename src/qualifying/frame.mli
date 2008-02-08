@@ -21,7 +21,7 @@ type t =
   | Frecord of Path.t * (t * string * mutable_flag) list * refinement
   | Funknown
 
-and frame_constructor = constructor_tag * t
+and frame_constructor = constructor_tag * t list
 
 val pprint: formatter -> t -> unit
 val pprint_sub: formatter -> substitution -> unit

@@ -23,7 +23,7 @@ type t =
   | Frecord of Path.t * (t * string * mutable_flag) list * refinement
   | Funknown
 
-and frame_constructor = constructor_tag * t
+and frame_constructor = constructor_tag * t list
 
 let pprint_sub ppf (path, pexp) =
   fprintf ppf "@[%s@ ->@ %a@]" (Path.name path) Predicate.pprint_pexpr pexp
@@ -76,6 +76,33 @@ let empty_refinement = ([], Qconst [])
 
 let false_refinement = ([], Qconst [(Path.mk_ident "false", Path.mk_ident "V", Predicate.Not (Predicate.True))])
 
+(* Instantiate the tyvars in fr with the corresponding frames in ftemplate.
+   This function must guarantee that a constructed type's arguments are instantiated first,
+   then its constructors; this way, we ensure that the constructors take the proper types.
+   If a variable occurs twice, it will only be instantiated with one frame; which
+   one is undefined and unimportant. *)
+let instantiate fr ftemplate =
+  let vars = ref [] in
+  let rec inst f ft =
+    match (f, ft) with
+      | (Fvar _, _) -> (try List.assq f !vars with Not_found -> vars := (f, ft) :: !vars; ft)
+      | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
+          Farrow (l, inst f1 f2, inst f1' f2')
+      | (Fconstr (p, l, cstrs, r), Fconstr(p', l', cstrs', _)) ->
+          let inst_cstr (tag, arg1) (_, arg2) = (tag, List.map2 inst arg1 arg2) in
+          let inst_tyargs = List.map2 inst l l' in Fconstr(p, inst_tyargs, List.map2 inst_cstr cstrs cstrs', r)
+      | (Ftuple t1s, Ftuple t2s) ->
+          Ftuple (List.map2 inst t1s t2s)
+      | (Frecord (p, f1s, r), Frecord (_, f2s, _)) ->
+          let inst_rec (f1, name, m) (f2, _, _) = (inst f1 f2, name, m) in
+            Frecord (p, List.map2 inst_rec f1s f2s, r)
+      | (Funknown, Funknown) -> Funknown
+      | (f1, f2) ->
+          fprintf std_formatter "@[Unsupported@ types@ for@ instantiation:@;<1 2>%a@;<1 2>%a@]@."
+	    pprint f1 pprint f2;
+	    assert false
+  in inst fr ftemplate
+
 let fresh_refinementvar () = ([], Qvar (Path.mk_ident "k"))
 
 let fresh_fvar () = Fvar (Path.mk_ident "a")
@@ -105,9 +132,12 @@ let fresh_with_var_fun exp fresh_ref_var =
           (match ty_decl.type_kind with
            | Type_abstract | Type_variant _ ->
                if Path.same p Predef.path_unit || Path.name p = "garbage" then Fconstr (p, [], [], ([], Qconst [])) else
+                 (* pmr: this line has to change immediately to make constructed types of any real use *)
                  let f' = fun _ -> empty_refinement in
                  let cstrs = List.map (fresh_cstr freshf) (Env.constructors_of_type p ty_decl) in
-                   Fconstr (p, List.map (fresh_rec f') tyl, cstrs, freshf ())
+                 let abstract_frame = Fconstr(p, List.map (fresh_rec f') ty_decl.type_params, cstrs, freshf ()) in
+                 let concrete_frame = Fconstr(p, List.map (fresh_rec f') tyl, cstrs, freshf ()) in
+                   instantiate abstract_frame concrete_frame
            | Type_record (fields, _, _) -> (* 1 *)
                let param_map = List.combine ty_decl.type_params tyl in
                let fresh_field (name, muta, typ) =
@@ -117,7 +147,7 @@ let fresh_with_var_fun exp fresh_ref_var =
       | Tarrow(_, t1, t2, _) -> Farrow (None, fresh_rec freshf t1, fresh_rec freshf t2)
       | Ttuple ts -> Ftuple (List.map (fresh_rec freshf) ts)
       | _ -> fprintf err_formatter "@[Warning:@ Freshing@ unsupported@ type@]@."; Funknown
-  and fresh_cstr freshf (_, cstr) = (cstr.cstr_tag, Ftuple (List.map (fresh_rec freshf) cstr.cstr_args)) in
+  and fresh_cstr freshf (_, cstr) = (cstr.cstr_tag, List.map (fresh_rec freshf) cstr.cstr_args) in
     fresh_rec fresh_ref_var ty
 
 (* Create a fresh frame with the same shape as the given type
@@ -154,36 +184,6 @@ let rec label_like f f' =
 (* Create a fresh frame with the same shape as [exp]'s type and [f],
    and the same labels as [f]. *)
 let fresh_with_labels exp f = label_like (fresh exp) f
-
-(* Instantiate the tyvars in fr with the corresponding frames in ftemplate.  If a
-   variable occurs twice, it will only be instantiated with one frame; which
-   one is undefined and unimportant. *)
-let instantiate fr ftemplate =
-  let vars = ref [] in
-  let rec inst f ft =
-    match (f, ft) with
-      | (Fvar _, _) ->
-          begin try List.assq f !vars
-          with Not_found ->
-            vars := (f, ft) :: !vars;
-            ft
-          end
-      | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
-          Farrow (l, inst f1 f2, inst f1' f2')
-      | (Fconstr (p, l, cstrs, r), Fconstr(p', l', cstrs', _)) ->
-          let inst_cstr (tag, arg1) (_, arg2) = (tag, inst arg1 arg2) in
-	    Fconstr(p, List.map2 inst l l', List.map2 inst_cstr cstrs cstrs', r)
-      | (Ftuple t1s, Ftuple t2s) ->
-          Ftuple (List.map2 inst t1s t2s)
-      | (Frecord (p, f1s, r), Frecord (_, f2s, _)) ->
-          let inst_rec (f1, name, m) (f2, _, _) = (inst f1 f2, name, m) in
-            Frecord (p, List.map2 inst_rec f1s f2s, r)
-      | (Funknown, Funknown) -> Funknown
-      | (f1, f2) ->
-          fprintf std_formatter "@[Unsupported@ types@ for@ instantiation:@;<1 2>%a@;<1 2>%a@]@."
-	    pprint f1 pprint f2;
-	    assert false
-  in inst fr ftemplate
 
 let map_frame f frm =
   let rec map_rec = function
