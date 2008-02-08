@@ -34,7 +34,7 @@ type tpat =
 type pexpr =
     PInt of int 
   | Var of Path.t
-  | FunApp of string * pexpr
+  | FunApp of string * pexpr (* list *) (* convert at some better time... *)  
   | Binop of pexpr * binop * pexpr
   | Field of string * pexpr
 

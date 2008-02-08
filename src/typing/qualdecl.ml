@@ -16,19 +16,17 @@ let lst s k = s::k
 
 let conflat y = String.concat "." (Longident.flatten y)
 
-
-
-let fold_patpred_lists g p =
+(*let fold_patpred_lists g p =
   let rec fold_expr_rec pe =
     match pe with
       | PPInt (ns) ->
-          List.length ns 
+          [List.length ns] 
       | PVar (ps) ->
-          List.length ps
+          [List.length ps]
       | PFunApp (f, es) ->
           g (List.map fold_expr_rec es) 
       | PBinop (e1, ops, e2) ->
-          g [(List.length ops); fold_expr_rec e1; fold_expr_rec e2] 
+          g [[List.length ops]; fold_expr_rec e1; fold_expr_rec e2] 
   in    
   let rec fold_pred_rec pd =
     match pd with
@@ -40,10 +38,10 @@ let fold_patpred_lists g p =
       | PAnd (p1, p2) ->
           g [fold_pred_rec p1; fold_pred_rec p2]
       | PAtom (p1, rels, p2) ->      
-          g [(List.length rels); fold_expr_rec p1; fold_expr_rec p2]
+          g [[List.length rels]; fold_expr_rec p1; fold_expr_rec p2]
       | PIff (p1, p2) ->
           g [fold_expr_rec p1; fold_pred_rec p2]
-  in fold_pred_rec p
+  in fold_pred_rec p*)
 
 (*let fold_patpred_lists f g p =
   let rec fold_expr_rec pe =
@@ -115,8 +113,6 @@ let transl_patpred tymap p =
   in transl_pred_rec p
 
 
-
-
 (* relies on deterministic traversal order -- should be OK *)
 (*let gen_patpred_digits b p =
   let b = ref b in
@@ -124,17 +120,17 @@ let transl_patpred tymap p =
   let rec gen_expr_rec pe =
     match pe with
       | PPInt (ns) ->
-          PInt (List.nth (hdb ()) ns)  
+          PInt (List.nth ns (hdb ()))  
       | PVar (ps) ->
-          Var (List.nth (hdb ()) ps) 
+          Var (List.nth ps (hdb ())) 
       | PFunApp (f, es) ->
-          FunApp (f, List.map gen_expr_rec es)  
+          FunApp (conflat f, gen_expr_rec (List.hd es) (* List.map gen_expr_rec es *)) (* P.FunApp is only single argument for time being... *) 
       | PBinop (e1, ops, e2) ->
-          BinOp (gen_expr_rec e1, List.nth (hdb ()) ops, gen_expr_rec e2)  
+          Binop (gen_expr_rec e1, List.nth ops (hdb ()), gen_expr_rec e2)  
   in    
   let rec gen_pred_rec pd =
-    match pd.ppredpat_desc with
-      | PTrue 
+    match pd with
+      | PTrue ->
           True 
       | PNot (p) ->  
           Not (gen_pred_rec p) 
@@ -142,25 +138,89 @@ let transl_patpred tymap p =
           Or (gen_pred_rec p1, gen_pred_rec p2)
       | PAnd (p1, p2) ->
           And (gen_pred_rec p1, gen_pred_rec p2)
-      | PAtom (p1, rels, p2) ->      
-          Atom (gen_pred_rec p1, List.nth (hdb ()) rels, gen_pred_rec p2)
+      | PAtom (e1, rels, e2) ->      
+          Atom (gen_expr_rec e1, List.nth rels (hdb ()), gen_expr_rec e2)
+      | PIff (e1, p1) ->
+          Iff (gen_expr_rec e1, gen_pred_rec p1)
   in gen_pred_rec p
-
-let size_pred = fold_patpred_lists (List.fold_left ( * ) 1)
 
 let list_pred = fold_patpred_lists (List.flatten)
 
-let build_nth_pred n pat = 
-  let base = ref (list_pred pat) in
-  let digits = ref (QG.decode (n, !base)) in
-    gen_patpred_digits digits pat*) 
+let size_pred a = List.fold_left ( * ) 1 (list_pred a)
 
-let gen_predicates v a = 
-  [(Ident.create v, True)]
+(*let build_nth_pred base n pat = 
+  let digits = ref (QG.decode (n, base)) in
+    gen_patpred_digits digits pat*) *)
+
+(*let gen_predicates v a = 
+  [(Ident.create v, True)]*)
+
+let flap f s = List.flatten (List.map f s)
+
+let rec lflap es =
+  match es with
+    | s :: es ->
+        flap (fun c -> List.map (fun d -> c :: d) (lflap es)) s
+    | [] ->
+        []
+
+let tflap3 (e1, e2, e3) f =
+  flap (fun c -> flap (fun d -> List.map (fun e -> f c d e) e3) e2) e1
+
+let tflap2 (e1, e2) f =
+  flap (fun c -> List.map (fun d -> f c d) e2) e1
+
+let gen_preds p =
+  let rec gen_expr_rec pe =
+    match pe with
+      | PPInt (ns) ->
+          List.map (fun c -> PInt (c)) ns  
+      | PVar (ps) ->
+          List.map (fun c -> Var (c)) ps
+      | PFunApp (f, es) ->
+          let f' = conflat f in
+          let ess = List.map gen_expr_rec es in
+            List.map (fun e -> FunApp (f', List.hd e (* convert at some better time *))) (lflap ess) 
+      | PBinop (e1, ops, e2) ->
+          let e1s = gen_expr_rec e1 in
+          let e2s = gen_expr_rec e2 in
+            tflap3 (e1s, ops, e2s) (fun c d e -> Binop (c, d, e))
+            (*List.map (fun c -> flap (fun d -> (List.map (fun e -> Binop(c, d,
+             * e)) e2s)) ops) e1s*)
+  in    
+  let rec gen_pred_rec pd =
+    match pd with
+      | PTrue ->
+          [True] 
+      | PNot (p) ->  
+          List.map (fun c -> Not (c)) (gen_pred_rec p) 
+      | POr (p1, p2) ->
+          let p1s = gen_pred_rec p1 in
+          let p2s = gen_pred_rec p2 in
+            tflap2 (p1s, p2s) (fun c d -> Or (c, d))
+      | PAnd (p1, p2) ->
+          let p1s = gen_pred_rec p1 in
+          let p2s = gen_pred_rec p2 in
+            tflap2 (p1s, p2s) (fun c d -> And (c, d))
+      | PAtom (e1, rels, e2) ->      
+          let e1s = gen_expr_rec e1 in
+          let e2s = gen_expr_rec e2 in
+            tflap3 (e1s, rels, e2s) (fun c d e -> Atom (c, d, e))
+      | PIff (e1, p1) ->
+          let e1s = gen_expr_rec e1 in
+          let p1s = gen_pred_rec p1 in
+            tflap2 (e1s, p1s) (fun c d -> Iff (c, d))
+  in gen_pred_rec p
+
+let gen_quals nm ppat =
+  let num = ref 0 in
+  let n () = incr num; string_of_int !num in
+  List.map (fun c -> (Ident.create (nm ^ (n ())) , c)) (gen_preds ppat)
 
 (* Translate a qualifier declaration *)
 let transl_pattern {Parsetree.pqual_pat_desc = (valu, anno, pred)} =
-    (gen_predicates valu (transl_patpred (List.fold_left fa AM.empty anno) pred))
+    (gen_quals valu (transl_patpred (List.fold_left fa AM.empty anno) pred))
+
 
 
 (*let build_preds p =

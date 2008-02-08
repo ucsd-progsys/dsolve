@@ -4,7 +4,11 @@ module L = Lightenv
 
 include L*)
 
-(*let collect_under_lambda = false 
+
+let flap f s = List.flatten (List.map f s) (* move to avoid collision in cleanup *)
+
+let col_lev = ref 0 (* amount of crap to collect *)
+
 
 (* visitor for qualgen *)
 
@@ -88,20 +92,20 @@ let rec visit_binding (pat, exp) as pe =
 
 
 
-*)
+
 
 let all_consts = [1;2;3]
 let lookup_ids a = [Path.mk_ident "asdf"]
 let all_ids = [Path.mk_ident "asdf"]
 let all_types = []
 
-type base = int list  
+(*type base = int list  
 type var_base_int = int * base
 
 let decode (x, b) =
   let f d (x, ds) =
     ((x / d), ds @ [(x mod d)]) in
-  snd (List.fold_right f x b)
+  snd (List.fold_right f x b)*)
 
 
 
