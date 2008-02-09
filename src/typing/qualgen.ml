@@ -5,10 +5,14 @@ module L = Lightenv
 include L*)
 
 
-let flap f s = List.flatten (List.map f s) (* move to avoid collision in cleanup *)
+(*let flap f s = List.flatten (List.map f s) (* move to avoid collision in cleanup *)
 
 let col_lev = ref 0 (* amount of crap to collect *)
 
+                (*
+                core_type: Typedecl.transl_value_decl?
+  let ty = Typetexp.transl_type_scheme env valdecl.pval_type in
+                 *)
 
 (* visitor for qualgen *)
 
@@ -25,9 +29,9 @@ let visit_str sstr =
   in
   List.flatten (map_partial visit_str_exp sstr)
 
-module M = Map.make(Types.type_expr)
-module S = Set.make(String)
-module Si = Set.make(int)
+module M = Map.Make(Types.type_expr)
+module S = Set.Make(String)
+module Si = Set.Make(Int)
 
 (* on load: walk the AST for idents.
  * read qualpats, generate ordering of quals
@@ -93,7 +97,7 @@ let rec visit_binding (pat, exp) as pe =
 
 
 
-
+ *)
 let all_consts = [1;2;3]
 let lookup_ids a = [Path.mk_ident "asdf"]
 let all_ids = [Path.mk_ident "asdf"]

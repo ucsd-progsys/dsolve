@@ -1,16 +1,19 @@
 open Parsetree
 open Predicate
 
+
+module T = Types
 module QG = Qualgen
 module AM = Map.Make(String)
 module IS = Set.Make(struct
-                      type t = Parsetree.core_type
+                      type t = T.type_expr 
                       let compare = compare
                      end)
 
-let fa m (id, ty) =
+
+let fa env m (id, ty) =
   let s = if AM.mem id m then AM.find id m else IS.empty in
-  AM.add id (IS.add ty s) m 
+  AM.add id (IS.add (Typetexp.transl_type_scheme env ty) s) m 
    
 let lst s k = s::k
 
@@ -218,8 +221,8 @@ let gen_quals nm ppat =
   List.map (fun c -> (Ident.create (nm ^ (n ())) , c)) (gen_preds ppat)
 
 (* Translate a qualifier declaration *)
-let transl_pattern {Parsetree.pqual_pat_desc = (valu, anno, pred)} =
-    (gen_quals valu (transl_patpred (List.fold_left fa AM.empty anno) pred))
+let transl_pattern env {Parsetree.pqual_pat_desc = (valu, anno, pred)} =
+    (gen_quals valu (transl_patpred (List.fold_left (fa env) AM.empty anno) pred))
 
 
 
