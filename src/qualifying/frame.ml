@@ -4,8 +4,8 @@ open Btype
 open Format
 open Asttypes
 
-
-module PM = Common.PathMap
+module C = Common
+module PM = C.PathMap
 
 type substitution = Path.t * Predicate.pexpr
 

@@ -34,8 +34,13 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/typedecl.cmo typing/typeclass.cmo \
   typing/typemod.cmo
 
-QUALIFYING=qualifying/lightenv.cmo \
+<<<<<<< HEAD:src/Makefile
+QUALIFYING=qualifying/common.cmo qualifying/lightenv.cmo \
   qualifying/qualifier.cmo qualifying/frame.cmo qualifying/builtins.cmo \
+=======
+QUALIFYING=qualifying/lightenv.cmo \
+  qualifying/qualifier.cmo qualifying/builtins.cmo qualifying/frame.cmo \
+>>>>>>> bb7378bca12de99a29e663f8aaabcdd9a311c635:src/Makefile
   qualifying/wellformed.cmo qualifying/message.cmo qualifying/pattern.cmo \
   qualifying/theoremProverSimplify.cmo qualifying/theoremProverYices.cmo \
   qualifying/theoremProver.cmo \
