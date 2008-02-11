@@ -30,11 +30,11 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/mtype.cmo typing/includecore.cmo \
   typing/includemod.cmo typing/parmatch.cmo \
   typing/typetexp.cmo typing/stypes.cmo typing/typecore.cmo \
-  typing/predicate.cmo \
+  typing/common.cmo typing/predicate.cmo \
   typing/typedecl.cmo typing/typeclass.cmo \
   typing/typemod.cmo
 
-QUALIFYING=qualifying/common.cmo qualifying/lightenv.cmo \
+QUALIFYING=qualifying/lightenv.cmo \
   qualifying/qualifier.cmo qualifying/builtins.cmo qualifying/frame.cmo \
   qualifying/wellformed.cmo qualifying/message.cmo qualifying/pattern.cmo \
   qualifying/theoremProverSimplify.cmo qualifying/theoremProverYices.cmo \

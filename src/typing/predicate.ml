@@ -44,7 +44,9 @@ let rec pprint_pexpr ppf = function
   | PInt n ->
       fprintf ppf "%d" n
   | Var x ->
-      fprintf ppf "%s" (Path.unique_name x)
+      fprintf ppf "%s" (if Common.ck_olev Common.ol_unique_names then 
+                          Path.unique_name x else
+                          Path.name x)
   | FunApp (f, pexp) ->
       fprintf ppf "@[(%s@ %a)@]" f pprint_pexpr pexp
   | Binop (p, op, q) ->
