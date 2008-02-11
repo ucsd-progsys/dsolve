@@ -146,7 +146,7 @@ and pexpression =
 and predexp_desc =
     Ppredexp_int of int
   | Ppredexp_var of string
-  | Ppredexp_app of string * pexpression
+  | Ppredexp_app of string * pexpression list
   | Ppredexp_binop of pexpression * predexp_op * pexpression
   | Ppredexp_field of string * string
 

@@ -183,7 +183,7 @@ let gen_preds p =
       | PFunApp (f, es) ->
           let f' = conflat f in
           let ess = List.map gen_expr_rec es in
-            List.map (fun e -> FunApp (f', List.hd e (* convert at some better time *))) (lflap ess) 
+            List.map (fun e -> FunApp (f', e) (lflap ess) 
       | PBinop (e1, ops, e2) ->
           let e1s = gen_expr_rec e1 in
           let e2s = gen_expr_rec e2 in

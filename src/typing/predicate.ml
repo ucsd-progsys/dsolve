@@ -34,7 +34,7 @@ type tpat =
 type pexpr =
     PInt of int 
   | Var of Path.t
-  | FunApp of string * pexpr (* list *) (* convert at some better time... *)  
+  | FunApp of string * pexpr list  
   | Binop of pexpr * binop * pexpr
   | Field of string * pexpr
 
@@ -154,7 +154,7 @@ let rec pexp_map_vars f pexp =
   let rec map_rec = function
       Var x -> f x
     | FunApp (fn, e) ->
-        FunApp (fn, map_rec e)
+        FunApp (fn, List.map map_rec e)
     | Binop (e1, op, e2) ->
         Binop (map_rec e1, op, map_rec e2)
     | Field (f, pexp) ->
@@ -191,7 +191,7 @@ let vars p =
       PInt _ -> vars
     | Var x -> x::vars
     | FunApp(_, e) ->
-        exp_vars_rec vars e
+        List.fold_left (exp_vars_rec) vars e
     | Binop(e1, _, e2) ->
         let vars' = exp_vars_rec vars e1 in
           exp_vars_rec vars' e2
@@ -241,7 +241,7 @@ let rec transl_predicate p =
       | Ppredexp_var y ->
 	  Var (Path.mk_ident y)
       | Ppredexp_app (f, e) ->
-	  FunApp (f, transl_pexpression e)
+	  FunApp (f, List.map transl_pexpression e)
       | Ppredexp_binop (e1, op, e2) ->
 	  Binop (transl_pexpression e1, transl_op op, transl_pexpression e2)
       | Ppredexp_field (f, r) ->
