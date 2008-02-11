@@ -176,7 +176,7 @@ let rec convert_exp e =
                else convert_exp (Binop(PInt(0), Minus, PInt(abs i))) 
   | Var x -> convertPath x
   | Binop (e1,op,e2) -> Printf.sprintf "(%s %s %s)" (convert_op op) (convert_exp e1) (convert_exp e2)
-  | FunApp (f,e) -> Printf.sprintf "(%s %s)" (convertSymbol f) (convert_exp e)
+  | FunApp (f,e) -> Printf.sprintf "(%s %s)" (convertSymbol f) (convert_exp (List.hd e)) (* this is incorrect, e is a list *)
   | Field (f, e) -> Printf.sprintf "(SELECT_%s %s)" f (convert_exp e)
 
 let rec convert_pred p = 

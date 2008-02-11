@@ -2,6 +2,7 @@ open Parsetree
 open Predicate
 
 
+module C = Common
 module T = Types
 module QG = Qualgen
 module AM = Map.Make(String)
@@ -9,7 +10,6 @@ module IS = Set.Make(struct
                       type t = T.type_expr 
                       let compare = compare
                      end)
-
 
 let fa env m (id, ty) =
   let s = if AM.mem id m then AM.find id m else IS.empty in
@@ -158,20 +158,18 @@ let size_pred a = List.fold_left ( * ) 1 (list_pred a)
 (*let gen_predicates v a = 
   [(Ident.create v, True)]*)
 
-let flap f s = List.flatten (List.map f s)
-
 let rec lflap es =
   match es with
     | s :: es ->
-        flap (fun c -> List.map (fun d -> c :: d) (lflap es)) s
+        C.flap (fun c -> List.map (fun d -> c :: d) (lflap es)) s
     | [] ->
         []
 
 let tflap3 (e1, e2, e3) f =
-  flap (fun c -> flap (fun d -> List.map (fun e -> f c d e) e3) e2) e1
+  C.flap (fun c -> C.flap (fun d -> List.map (fun e -> f c d e) e3) e2) e1
 
 let tflap2 (e1, e2) f =
-  flap (fun c -> List.map (fun d -> f c d) e2) e1
+  C.flap (fun c -> List.map (fun d -> f c d) e2) e1
 
 let gen_preds p =
   let rec gen_expr_rec pe =
@@ -183,7 +181,7 @@ let gen_preds p =
       | PFunApp (f, es) ->
           let f' = conflat f in
           let ess = List.map gen_expr_rec es in
-            List.map (fun e -> FunApp (f', e) (lflap ess) 
+            List.map (fun e -> FunApp (f', e)) (lflap ess) 
       | PBinop (e1, ops, e2) ->
           let e1s = gen_expr_rec e1 in
           let e2s = gen_expr_rec e2 in

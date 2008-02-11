@@ -5,10 +5,7 @@ open Parsetree
 open Asttypes
 open Types
 open Format
-
-let pprint_list sepstr pp =
-  (fun ppf -> Oprint.print_list pp
-     (fun ppf -> fprintf ppf "%s@;<1 2>" sepstr) ppf)
+open Common
 
 let print_id id =
   String.concat "." (Longident.flatten id)

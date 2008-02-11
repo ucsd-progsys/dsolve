@@ -19,7 +19,7 @@ let bind_pexpr pat pexp =
     | Tpat_any -> subs
     | Tpat_var x -> (Path.Pident x, pexp) :: subs
     | Tpat_tuple pats ->
-      let pexps = Misc.mapi (fun pat i -> (pat.pat_desc, Predicate.tuple_nth pexp i)) pats in
+      let pexps = Misc.mapi (fun pat i -> (pat.pat_desc, Predicate.tuple_nth [pexp] i)) pats in
         List.fold_left bind_rec subs pexps
     | _ -> assert false
   in bind_rec [] (pat, pexp)

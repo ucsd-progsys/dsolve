@@ -1,3 +1,5 @@
+module F = Format
+
 module StringMap = Map.Make(struct type t = string let compare = compare end)
 
 module ComparablePath = struct
@@ -52,6 +54,11 @@ let array_to_index_list a =
   List.rev (snd 
     (Array.fold_left (fun (i,rv) v -> (i+1,(i,v)::rv)) (0,[]) a))
 
+let pprint_list sepstr pp =
+  (fun ppf -> Oprint.print_list pp
+     (fun ppf -> F.fprintf ppf "%s@;<1 2>" sepstr) ppf)
+
+
 (****************************************************************)
 (************* Output levels ************************************)
 (****************************************************************)
@@ -71,18 +78,18 @@ let ol_refine = 11
 let ol_scc =12 
 
 let verbose_level = ref ol_default
-let null_formatter = Format.make_formatter (fun a b c -> ()) ignore
-let nprintf a = Format.fprintf null_formatter a
+let null_formatter = F.make_formatter (fun a b c -> ()) ignore
+let nprintf a = F.fprintf null_formatter a
 let ck_olev l = l <= !verbose_level
 
-let cprintf l = if ck_olev l then Format.printf else nprintf
-let ecprintf l = if ck_olev l then Format.eprintf else nprintf
+let cprintf l = if ck_olev l then F.printf else nprintf
+let ecprintf l = if ck_olev l then F.eprintf else nprintf
 
-let fcprintf ppf l = if ck_olev l then Format.fprintf ppf else nprintf
+let fcprintf ppf l = if ck_olev l then F.fprintf ppf else nprintf
 
 let icprintf printer l ppf = if ck_olev l then printer ppf else printer null_formatter
 
-let cprintln l s = if ck_olev l then Printf.ksprintf (Format.printf "@[%s@\n@]") s else nprintf
+let cprintln l s = if ck_olev l then Printf.ksprintf (F.printf "@[%s@\n@]") s else nprintf
 
 let path_name () = if ck_olev ol_unique_names then Path.unique_name else Path.name
 

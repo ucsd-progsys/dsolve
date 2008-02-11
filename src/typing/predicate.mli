@@ -31,7 +31,7 @@ type tpat =
 type pexpr =   
     PInt of int 
   | Var of Path.t
-  | FunApp of string * pexpr (*list*) (* convert at some better time *)
+  | FunApp of string * pexpr list 
   | Binop of pexpr * binop * pexpr 
   | Field of string * pexpr
 
@@ -67,7 +67,7 @@ val (!.): t -> t
 val (=>.): t -> t -> t
 val (<=>.): pexpr -> t -> t
 
-val tuple_nth: pexpr -> int -> pexpr
+val tuple_nth: pexpr list -> int -> pexpr
 
 val subst: pexpr -> Path.t -> t -> t
 val apply_substs: (Path.t * pexpr) list -> t -> t

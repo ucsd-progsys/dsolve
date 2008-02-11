@@ -143,4 +143,6 @@ graphlib:
 
 libs: yiceslib graphlib
 
+world: liquid liquid.opt
+
 include .depend

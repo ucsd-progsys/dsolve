@@ -19,29 +19,34 @@ let rec same_shape t1 t2 =
 
 let find_or_fail var env = try Lightenv.find var env with Not_found -> assert false
 
-let constr_app_shape path out_shape = function
-    Fconstr(a, _, _) ->
-      if Path.same path a then
-        out_shape
+let constr_app_shape paths out_shape in_shapes = 
+  let f i o = 
+    match o with
+      Fconstr(a, _, _) ->
+        if Path.same i a then
+        true
       else
-        Funknown
-  | _ -> Funknown
+        false
+      | _ -> false
+  in if (List.length paths = List.length in_shapes) && 
+        (List.for_all2 f paths in_shapes) 
+          then out_shape else Funknown
 
 (* ext_find_type_path isn't initialized until sometime late in ocaml startup, so
    we'll suspend this and force it when we know it's safe *)
 let fun_app_shapes = lazy(
   let array2_path = Builtins.ext_find_type_path "array2" in
-    [("Array.length", constr_app_shape Predef.path_array uInt);
-     ("Bigarray.Array2.dim1", constr_app_shape array2_path uInt);
-     ("Bigarray.Array2.dim2", constr_app_shape array2_path uInt);
-     (Builtins.tag_function, (function Fconstr _ -> uInt | _ -> Funknown))]
+    [("Array.length", constr_app_shape [Predef.path_array] uInt);
+     ("Bigarray.Array2.dim1", constr_app_shape [array2_path] uInt);
+     ("Bigarray.Array2.dim2", constr_app_shape [array2_path] uInt);
+     (Builtins.tag_function, (function [Fconstr _] -> uInt | _ -> Funknown))]
 )
 
 let pred_is_well_typed env p =
   let rec get_expr_shape = function
   | Predicate.PInt _ -> uInt
   | Predicate.Var x -> find_or_fail x env
-  | Predicate.FunApp (s, p') -> (List.assoc s (Lazy.force fun_app_shapes)) (get_expr_shape p')
+  | Predicate.FunApp (s, p') -> (List.assoc s (Lazy.force fun_app_shapes)) (List.map get_expr_shape p')
   | Predicate.Binop (p1, op, p2) ->
       let p1_shp = get_expr_shape p1 in
       let p1_int = same_shape p1_shp uInt in

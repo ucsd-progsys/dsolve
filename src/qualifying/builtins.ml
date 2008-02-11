@@ -10,12 +10,12 @@ let rec mk_longid = function
   | id :: idrem -> Ldot (mk_longid idrem, id)
 
 let qsize rel x y z = (Path.mk_ident ("SIZE_" ^ (pprint_rel rel)), y,
-                       Atom(Var z, rel, FunApp("Array.length", Var x)))
+                       Atom(Var z, rel, FunApp("Array.length", [Var x])))
 
 let qdim rel dim x y z =
   let dimstr = string_of_int dim in
     (Path.mk_ident ("DIM" ^ dimstr ^ (pprint_rel rel)), y,
-     Atom(Var z, rel, FunApp("Bigarray.Array2.dim" ^ dimstr, Var x)))
+     Atom(Var z, rel, FunApp("Bigarray.Array2.dim" ^ dimstr, [Var x])))
 
 let qint rel i y =
   (Path.mk_ident (Printf.sprintf "INT_%s%d" (pprint_rel rel) i), y, Atom(Var y, rel, PInt i))
@@ -85,7 +85,7 @@ let float_to_int_unop path = (path, defun (fun x -> uFloat ==> fun y -> uInt))
 
 let tag_function = "__tag"
 
-let tag x = FunApp(tag_function, x)
+let tag x = FunApp(tag_function, [x])
 
 let qbool_rel qname rel (x, y, z) = rBool qname z (tag (Var z) <=>. Atom (Var x, rel, Var y))
 
@@ -192,7 +192,7 @@ let _frames = [
   (["copy"; "Array"],
    defun (forall (fun a ->
           fun arr -> mk_array a [] ==>
-          fun c -> rArray a "SameSize" c (FunApp("Array.length", Var c) ==. FunApp("Array.length", Var arr)))));
+          fun c -> rArray a "SameSize" c (FunApp("Array.length", [Var c]) ==. FunApp("Array.length", [Var arr])))));
 
   (["init"; "Random"], defun (fun x -> uInt ==> fun y -> uUnit));
 
@@ -290,7 +290,7 @@ let size_lit_refinement i =
   let x = Path.mk_ident "x" in
     ([], Qconst [(Path.mk_ident "<size_lit_eq>",
                   x,
-                  FunApp("Array.length", Var x) ==. PInt i)])
+                  FunApp("Array.length", [Var x]) ==. PInt i)])
 
 let field_eq_qualifier name pexp =
   let x = Path.mk_ident "x" in (Path.mk_ident "<field_eq>", x, Field (name, Var x) ==. pexp)
