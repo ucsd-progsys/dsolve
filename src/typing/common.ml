@@ -84,6 +84,8 @@ let icprintf printer l ppf = if ck_olev l then printer ppf else printer null_for
 
 let cprintln l s = if ck_olev l then Printf.ksprintf (Format.printf "@[%s@\n@]") s else nprintf
 
+let path_name () = if ck_olev ol_unique_names then Path.unique_name else Path.name
+
 (****************************************************************)
 (************* SCC Ranking **************************************)
 (****************************************************************)
