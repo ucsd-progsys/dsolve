@@ -163,11 +163,12 @@ let simplify_fc c =
   * to work around all the BigArray stuff
   *)
 
-let lequate_cs eqb env g c f1 f2 =
-  let make_lc fc = {lc_cstr = fc; lc_orig = Cstr c; lc_id = c.lc_id} in
-  if eqb 
-  then [make_lc (SubFrame(env,g,f1,f2)); make_lc (SubFrame(env,g,f2,f1))]
-  else [make_lc (SubFrame(env,g,f1,f2))]
+let make_lc c fc = {lc_cstr = fc; lc_orig = Cstr c; lc_id = c.lc_id}
+
+let lequate_cs env g c variance f1 f2 = match variance with
+  | F.Invariant -> [make_lc c (SubFrame(env,g,f1,f2)); make_lc c (SubFrame(env,g,f2,f1))]
+  | F.Covariant -> [make_lc c (SubFrame(env,g,f1,f2))]
+  | F.Contravariant -> [make_lc c (SubFrame(env,g,f2,f1))]
 
 let match_and_extend env (l1,f1) (l2,f2) = 
   match (l1,l2) with
@@ -175,28 +176,27 @@ let match_and_extend env (l1,f1) (l2,f2) =
   | (Some p1, Some p2) when Pat.same p1 p2 -> Pat.env_bind env p1 f2
   | _  -> env (* 1 *)
  
-let is_mutable m = 
-  m = Asttypes.Mutable
+let mutable_variance = function Asttypes.Mutable -> F.Invariant | _ -> F.Covariant
 
 let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubFrame (env,g,f1,f2)} as c ->
   match (f1, f2) with
   | (F.Farrow (l1, f1, f1'), F.Farrow (l2, f2, f2')) -> 
       let env' = match_and_extend env (l1,f1) (l2,f2) in 
-      ((lequate_cs false env g c f2 f1) @ (lequate_cs false env' g c f1' f2'),
+      ((lequate_cs env g c F.Covariant f2 f1) @ (lequate_cs env' g c F.Covariant f1' f2'),
        [])
   | (F.Fvar _, F.Fvar _) | (F.Funknown, F.Funknown) ->
       ([],[]) 
-  | (F.Fconstr (p1, f1s, _, r1), F.Fconstr(p2, f2s, _, r2)) ->  (* 2 *)
-      (C.flap2 (lequate_cs true env g c) f1s f2s,
+  | (F.Fconstr (p1, f1s, variances, r1), F.Fconstr(p2, f2s, _, r2)) ->  (* 2 *)
+      (C.flap3 (lequate_cs env g c) variances f1s f2s,
        [(Cstr c, SubRef(env,g,r1,r2,None))])
   | (F.Ftuple f1s, F.Ftuple f2s) ->
-      (C.flap2 (lequate_cs false env g c) f1s f2s,
+      (C.flap2 (lequate_cs env g c F.Covariant) f1s f2s,
        [])
   | (F.Frecord (_, fld1s, r1), F.Frecord (_, fld2s, r2)) ->
       (C.flap2 
-         (fun (f1',_,m) (f2',_,_) -> lequate_cs (is_mutable m) env g c f1' f2') 
+         (fun (f1',_,m) (f2',_,_) -> lequate_cs env g c (mutable_variance m) f1' f2')
          fld1s fld2s, 
-       if List.exists (fun (_, _,m) -> is_mutable m) fld1s 
+       if List.exists (fun (_, _,m) -> m = Asttypes.Mutable) fld1s
        then [(Cstr c, SubRef (env,g,r1,r2,None)); (Cstr c, SubRef (env,g,r2,r1,None))]
        else [(Cstr c, SubRef (env,g,r1,r2,None))])
   | (_,_) -> 

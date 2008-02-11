@@ -35,7 +35,7 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/typemod.cmo
 
 QUALIFYING=qualifying/common.cmo qualifying/lightenv.cmo \
-  qualifying/qualifier.cmo qualifying/builtins.cmo qualifying/frame.cmo \
+  qualifying/qualifier.cmo qualifying/frame.cmo qualifying/builtins.cmo \
   qualifying/wellformed.cmo qualifying/message.cmo qualifying/pattern.cmo \
   qualifying/theoremProverSimplify.cmo qualifying/theoremProverYices.cmo \
   qualifying/theoremProver.cmo \

@@ -3,8 +3,7 @@ open Typedtree
 open Predicate
 open Frame
 open Asttypes
-
-module T = Types
+open Types
 
 let rec mk_longid = function
   | [] -> assert false
@@ -27,25 +26,29 @@ let qrel rel x y =
      x,
      Atom(Var x, rel, Var y))
 
-let mk_tyvar () = Fvar(Path.mk_ident "'a")
+let mk_tyvar () = Frame.Fvar(Path.mk_ident "'a")
 
 let mk_int qs = Fconstr(Predef.path_int, [], [], ([], Qconst qs))
 
 let uFloat = Fconstr(Predef.path_float, [], [], ([], Qconst []))
 
-let mk_bool qs = Fconstr(Predef.path_bool, [], [(T.Cstr_constant 0, []); (T.Cstr_constant 1, [])], ([], Qconst qs))
+let mk_bool qs = Fconstr(Predef.path_bool, [], [], ([], Qconst qs))
 let uBool = mk_bool []
 let rBool name v p = mk_bool [(Path.mk_ident name, v, p)]
 
-let mk_array f qs = Fconstr(Predef.path_array, [f], [], ([], Qconst qs))
+let mk_array f qs = Fconstr(Predef.path_array, [f], [Invariant], ([], Qconst qs))
 
-let find_type_path id env =
-  try fst (Env.lookup_type (mk_longid id) env)
-  with Not_found -> Printf.printf "Couldn't load %s!\n" (String.concat " " id); assert false
+let find_constructed_type id env =
+  let path =
+    try fst (Env.lookup_type (mk_longid id) env)
+    with Not_found -> Printf.printf "Couldn't load %s!\n" (String.concat " " id); assert false
+  in
+  let decl = Env.find_type path env in (path, List.map translate_variance decl.type_variance)
 
-let mk_named path fs qs env = Fconstr(find_type_path path env, fs, [], ([], Qconst qs))
+let mk_named id fs qs env =
+  let (path, varis) = find_constructed_type id env in Fconstr(path, fs, varis, ([], Qconst qs))
 
-let mk_ref f env = Frecord (find_type_path ["ref"; "Pervasives"] env, [(f, "contents", Mutable)], ([], Qconst []))
+let mk_ref f env = Frecord (fst (find_constructed_type ["ref"; "Pervasives"] env), [(f, "contents", Mutable)], ([], Qconst []))
 
 let mk_bigarray_kind a b qs env = mk_named ["kind"; "Bigarray"] [a; b] qs env
 
@@ -72,7 +75,7 @@ let (==>) x y = (x, y)
 
 let (===>) x y = x ==> fun _ -> defun y
 
-let forall f = f (Fvar(Path.mk_ident "'a"))
+let forall f = f (Frame.Fvar(Path.mk_ident "'a"))
 
 let op_frame path qname op =
   (path, defun (fun x -> uInt ===>
@@ -256,16 +259,17 @@ let _lib_frames env = [
 ]
 
 let _type_path_constrs env = [
-  ("ref", find_type_path ["ref"; "Pervasives"] env);
-  ("array2", find_type_path ["t"; "Array2"; "Bigarray"] env);
+  ("ref", find_constructed_type ["ref"; "Pervasives"] env);
+  ("array2", find_constructed_type ["t"; "Array2"; "Bigarray"] env);
 ]
 
 let _type_paths = ref None
 
 let ext_find_type_path t =
-  (fun (a, b) -> b) (List.find (fun (a, _) -> (a = t)) 
-                      (match !_type_paths with None -> assert false
-                                             | Some b -> b))
+  let (_, (path, _)) = (List.find (fun (a, _) -> (a = t))
+                          (match !_type_paths with None -> assert false
+                             | Some b -> b))
+  in path
 
 let find_path id env = fst (Env.lookup_value (mk_longid id) env)
 

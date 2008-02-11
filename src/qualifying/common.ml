@@ -9,11 +9,19 @@ end
 
 module PathMap = Map.Make(ComparablePath)
 
+let rec map3 f xs ys zs = match (xs, ys, zs) with
+  | ([], [], []) -> []
+  | (x :: xs, y :: ys, z :: zs) -> f x y z :: map3 f xs ys zs
+  | _ -> assert false
+
 let flap f xs = 
   List.flatten (List.map f xs)
 
 let flap2 f xs ys = 
   List.flatten (List.map2 f xs ys)
+
+let flap3 f xs ys zs =
+  List.flatten (map3 f xs ys zs)
 
 let rec expand f xs ys =
   match xs with
