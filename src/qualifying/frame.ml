@@ -60,9 +60,9 @@ let rec pprint ppf = function
   | Farrow (Some pat, f, f') ->
       fprintf ppf "@[%a:@ %a@ ->@;<1 2>%a@]" pprint_pattern pat pprint1 f pprint f'
   | Fconstr (path, l, _, r) ->
-      fprintf ppf "@[{%a@ %s|@;<1 2>%a}@]" pprint (List.hd l) (Path.unique_name path) pprint_refinement r
+      fprintf ppf "@[{%a@ %s|@;<1 2>%a}@]" pprint_list l (Path.unique_name path) pprint_refinement r
    | Ftuple ts ->
-      fprintf ppf "@[(%a)@]" (Oprint.print_list pprint (fun ppf -> fprintf ppf ",@;<1 2>")) ts
+      fprintf ppf "@[(%a)@]" pprint_list ts
    | Frecord (id, _, r) ->
        fprintf ppf "@[{%s |@;<1 2>%a}@] " (Path.name id) pprint_refinement r
   | Funknown ->
@@ -71,6 +71,7 @@ let rec pprint ppf = function
    | (Farrow _) as f ->
        fprintf ppf "@[(%a)@]" pprint f
    | _ as f -> pprint ppf f
+ and pprint_list ppf = Oprint.print_list pprint (fun ppf -> fprintf ppf ",@;<1 2>") ppf
 
 let empty_refinement = ([], Qconst [])
 
