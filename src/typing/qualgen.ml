@@ -6,39 +6,22 @@ include L*)
 
 
 
-(*let col_lev = ref 0 (* amount of crap to collect *)
+let col_lev = ref 0 (* amount of crap to collect *)
 
-
-(* visitor for qualgen *)
-
-let visit_str sstr = 
-  let visit_str_exp = function 
-    | Tstr_eval(_) ->
-        (*Some(visit_exp exp)*) None
-    | Tstr_qualifier(_, _) ->
-        None
-    | Tstr_type(_) -> 
-        None
-    | Tstr_value(_, bindings) -> 
-        Some(flap visit_binding bindings)
-  in
-  List.flatten (map_partial visit_str_exp sstr)
-
-module M = Map.Make(Types.type_expr)
-module S = Set.Make(String)
-module Si = Set.Make(Int)
-
-(* on load: walk the AST for idents.
- * read qualpats, generate ordering of quals
- * *)
+module TM = Map.Make(struct
+                       type t = Types.type_expr
+                       let compare = compare
+                     end)
+module IS = Set.Make(String)
+(*module CS = Set.Make(Int)*)
 
 (* tymap: map from shapes to all idents of that shape *)
 (* idset: set of all idents *)
 (* intset: set of all int constants. ignored or set {0,1} if lquals set? *)
 
-let tymap = ref M.empty   
-let idset = ref S.empty
-let intset = ref Si.empty
+(*let tymap = ref TM.empty   
+let idset = ref IS.empty
+let intset = ref CS.empty
 
 let addm (typ, id) = 
   let id = Ident.name id in
@@ -55,15 +38,15 @@ let rec qbound_idents pat =
 let is_function e =
   match e.exp_desc with
     | Texp_function(_, _) -> true
-    | _ -> false 
+    | _ -> false *)
 
-let iter_bind in_l (p, e) =
+(*let iter_bind in_l (p, e) =
   let is_f = is_function e in
   let ps = if in_l || is_f then [] else qbound_idents p in
   let es = if in_l then [] else iter_pats false e in
-    ps @ es
+    ps @ es*)
 
-let rec iter_pats in_l e =
+(*let rec iter_pats in_l e =
   let ve e =
     let etyp = e.exp_type in
       match e.exp_desc with
@@ -71,6 +54,9 @@ let rec iter_pats in_l e =
             iter_bind 
         | Texp_let(_, bl, ee) ->
             
+
+let rec visit_binding (pat, exp) =
+  let 
 
 let rec visit_binding (pat, exp) as pe = 
   let vp pat = qbound_idents pat in
@@ -87,25 +73,19 @@ let rec visit_binding (pat, exp) as pe =
   (fun (p, e) -> 
     let es = visit_bind_exp e in
     let ps = if List.length es != 0 then C.expand visit_pat p in
-      es @ ps) pe
+      es @ ps) pe*)
+
+let iter_bindings defs = ()
+  (*List.iter visit_binding defs*)
 
 
 
 
  
- *)let all_consts = [1;2;3]
+let all_consts = [1;2;3]
 let lookup_ids a = [Path.mk_ident "asdf"]
 let all_ids = [Path.mk_ident "asdf"]
-let all_types = [] (*
-
-(*type base = int list  
-type var_base_int = int * base
-
-let decode (x, b) =
-  let f d (x, ds) =
-    ((x / d), ds @ [(x mod d)]) in
-  snd (List.fold_right f x b)*)
-
+let all_types = [] 
 
 
     
@@ -117,7 +97,7 @@ let decode (x, b) =
 
 
 
-
+(*
 (* Bookkeeping for qualifier generation *)
 
 

@@ -6,14 +6,14 @@ module C = Common
 module T = Types
 module QG = Qualgen
 module AM = Map.Make(String)
-module IS = Set.Make(struct
+module TS = Set.Make(struct
                       type t = T.type_expr 
                       let compare = compare
                      end)
 
 let fa env m (id, ty) =
-  let s = if AM.mem id m then AM.find id m else IS.empty in
-  AM.add id (IS.add (Typetexp.transl_type_scheme env ty) s) m 
+  let s = if AM.mem id m then AM.find id m else TS.empty in
+  AM.add id (TS.add (Typetexp.transl_type_scheme env ty) s) m 
    
 let lst s k = s::k
 
@@ -41,7 +41,7 @@ let transl_patpred tymap p =
 	        PVar ([Path.mk_ident (conflat y)])
       | Ppredpatexp_mvar (y) ->
           PVar (if AM.mem y tymap then 
-                  List.flatten (List.map QG.lookup_ids (IS.elements (AM.find y tymap))) 
+                  List.flatten (List.map QG.lookup_ids (TS.elements (AM.find y tymap))) 
                 else QG.all_ids)
       | Ppredpatexp_funapp (f, es) ->
 	        PFunApp (f, List.map transl_expr_rec es)
