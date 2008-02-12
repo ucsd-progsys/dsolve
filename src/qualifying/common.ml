@@ -1,5 +1,3 @@
-module F = Format
-
 module StringMap = Map.Make(struct type t = string let compare = compare end)
 
 module ComparablePath = struct
@@ -11,10 +9,13 @@ end
 
 module PathMap = Map.Make(ComparablePath)
 
-let rec map3 f xs ys zs = match (xs, ys, zs) with
-  | ([], [], []) -> []
-  | (x :: xs, y :: ys, z :: zs) -> f x y z :: map3 f xs ys zs
-  | _ -> assert false
+let fsprintf f p = 
+  Format.fprintf Format.str_formatter "@[%a@]" f p;
+  Format.flush_str_formatter ()
+
+let zip_partition xs bs =
+  let (xbs,xbs') = List.partition snd (List.combine xs bs) in
+  (List.map fst xbs, List.map fst xbs')
 
 let flap f xs = 
   List.flatten (List.map f xs)
@@ -22,15 +23,12 @@ let flap f xs =
 let flap2 f xs ys = 
   List.flatten (List.map2 f xs ys)
 
-let flap3 f xs ys zs =
-  List.flatten (map3 f xs ys zs)
-
 let rec expand f xs ys =
   match xs with
   | [] -> ys
   | x::xs ->
       let (xs',ys') = f x in
-      expand f (List.rev_append xs' xs) (List.rev_append ys' ys)
+      expand f (xs' @ xs) (ys'@ys)
 
 let do_catch s f x =
   try f x with ex -> 
@@ -39,6 +37,12 @@ let do_catch s f x =
 let do_catch_ret s f x y = 
   try f x with ex -> 
      (Printf.printf "%s hits exn: %s \n" s (Printexc.to_string ex); y) 
+
+let do_memo t f arg key =
+  try Hashtbl.find t key with Not_found ->
+    let rv = f arg in
+    let _ = Hashtbl.replace t key rv in
+    rv
 
 let rec map_partial f = function 
   | [] -> [] | x::xs -> 
@@ -62,11 +66,6 @@ let array_to_index_list a =
   List.rev (snd 
     (Array.fold_left (fun (i,rv) v -> (i+1,(i,v)::rv)) (0,[]) a))
 
-let pprint_list sepstr pp =
-  (fun ppf -> Oprint.print_list pp
-     (fun ppf -> F.fprintf ppf "%s@;<1 2>" sepstr) ppf)
-
-
 (****************************************************************)
 (************* Output levels ************************************)
 (****************************************************************)
@@ -80,26 +79,23 @@ let ol_solve_stats = 2
 let ol_timing = 2
 let ol_default = 2
 let ol_normalized = 3
-let ol_unique_names = 9
 let ol_solve = 10 
 let ol_refine = 11 
 let ol_scc =12 
 
 let verbose_level = ref ol_default
-let null_formatter = F.make_formatter (fun a b c -> ()) ignore
-let nprintf a = F.fprintf null_formatter a
+let null_formatter = Format.make_formatter (fun a b c -> ()) ignore
+let nprintf a = Format.fprintf null_formatter a
 let ck_olev l = l <= !verbose_level
 
-let cprintf l = if ck_olev l then F.printf else nprintf
-let ecprintf l = if ck_olev l then F.eprintf else nprintf
+let cprintf l = if ck_olev l then Format.printf else nprintf
+let ecprintf l = if ck_olev l then Format.eprintf else nprintf
 
-let fcprintf ppf l = if ck_olev l then F.fprintf ppf else nprintf
+let fcprintf ppf l = if ck_olev l then Format.fprintf ppf else nprintf
 
 let icprintf printer l ppf = if ck_olev l then printer ppf else printer null_formatter
 
-let cprintln l s = if ck_olev l then Printf.ksprintf (F.printf "@[%s@\n@]") s else nprintf
-
-let path_name () = if ck_olev ol_unique_names then Path.unique_name else Path.name
+let cprintln l s = if ck_olev l then Printf.ksprintf (Format.printf "@[%s@\n@]") s else nprintf
 
 (****************************************************************)
 (************* SCC Ranking **************************************)
@@ -184,7 +180,7 @@ let n4 = make_scc_num g4 ;; *)
 
 let asserts s b = 
   try assert b with ex -> 
-    Printf.printf "Common.asserts failure: %s " s; raise ex
+    Printf.printf "\n Common.asserts failure: %s " s; raise ex
 
 let append_to_file f s = 
   let oc = Unix.openfile f [Unix.O_WRONLY; Unix.O_APPEND; Unix.O_CREAT] 420  in
@@ -202,10 +198,8 @@ let write_to_file f s =
 (****************** Type Specific to_string routines **********************)
 (**************************************************************************)
 
-let fsprintf f p = 
-  Format.fprintf Format.str_formatter "@[%a@]" f p;
-  Format.flush_str_formatter ()
-(*
+  (*
 let pred_to_string p = 
   fsprintf Predicate.pprint p
 *)
+

@@ -25,9 +25,9 @@
 
 open Predicate
 
-
 module type PROVER = 
   sig
+    (*
     (* push p: tell prover to assume fact p *)
     val push : Predicate.t -> unit 
     
@@ -39,18 +39,21 @@ module type PROVER =
     
     (* valid p : do the currently assumed facts imply p ? *)
     val valid : Predicate.t -> bool
+    *)
 
-    (* implies (p, q) = true iff predicate p (provably) implies predicate q *)
-    val implies : (Predicate.t * Predicate.t) -> bool
-    
+    (* implies p q = true iff predicate p (provably) implies predicate q *)
+    val implies : Predicate.t -> Predicate.t -> bool
+
+    val finish : unit -> unit
+
+    val print_stats : unit -> unit
   end
 
 
 module Y = Oyices
 
-module YicesProver  = 
+module YicesProver : PROVER = 
   struct
-    
     type yices_instance = { 
       mutable c : Y.yices_context;
       mutable t : Y.yices_type;
@@ -60,7 +63,10 @@ module YicesProver  =
       mutable ds : string list ;
       mutable count : int;
       mutable i : int;
+      mutable consistent: bool;
     }
+
+    let nb_yices_push = ref 0
 
     let barrier = "0" 
 
@@ -111,6 +117,9 @@ module YicesProver  =
       | Predicate.Iff _ as iff -> yicesPred me (Predicate.expand_iff iff)
       | Predicate.Atom (e1,Predicate.Lt,e2) ->
           yicesPred me (Atom (e1, Predicate.Le, Binop(e2,Predicate.Minus,PInt 1)))
+    (* RJ: why not this ?
+     * | P.Atom (e1,P.Gt,e2) -> 
+          yicesPred me (Atom (e2, P.Le, Binop(e1,P.Minus,PInt 1))) *)
       | Predicate.Atom (e1,br,e2) ->
           let e1' = yicesExp me e1 in
           let e2' = yicesExp me e2 in
@@ -118,7 +127,7 @@ module YicesProver  =
              Predicate.Eq -> Y.yices_mk_eq me.c e1' e2' 
            | Predicate.Ne -> Y.yices_mk_diseq me.c e1' e2'
            | Predicate.Gt -> Y.yices_mk_gt me.c e1' e2'
-					 | Predicate.Ge -> Y.yices_mk_ge me.c e1' e2'
+           | Predicate.Ge -> Y.yices_mk_ge me.c e1' e2'
            | Predicate.Lt -> Y.yices_mk_lt me.c e1' e2'
            | Predicate.Le -> Y.yices_mk_le me.c e1' e2')
    
@@ -130,19 +139,17 @@ module YicesProver  =
       let binop = Y.yices_mk_function_type c [| t; t |] t in
       let f = Y.yices_mk_function_type c [| t |] t in
       let d = Hashtbl.create 37 in
-        { c = c; t = t; f = f; binop = binop; d = d; ds = []; count = 0; i = 0; }
+        { c = c; t = t; f = f; binop = binop; d = d; 
+          ds = []; count = 0; i = 0; consistent = true}
 
     let push p =
       me.count <- me.count + 1;
-      if (Bstats.time "consistency" Y.yices_inconsistent me.c) = 1 then
-	me.i <- me.i + 1
-      else
-	begin
-	  me.ds <- barrier :: me.ds;
-	  Bstats.time "pushing" Y.yices_push me.c;
-	  Bstats.time "asserting" (Y.yices_assert me.c) 
-          (Bstats.time "creating predicate" (yicesPred me) p)
-	end
+      if (Bstats.time "Yices consistency" Y.yices_inconsistent me.c) = 1 
+      then me.i <- me.i + 1 else
+        let p' = Bstats.time "Yices mk pred" (yicesPred me) p in
+        let _ = me.ds <- barrier :: me.ds in
+        let _ = Bstats.time "Yices stackpush" Y.yices_push me.c in
+        Bstats.time "Yices assert" (Y.yices_assert me.c) p' 
       
     let rec vpop (cs,s) =
       match s with [] -> (cs,s)
@@ -151,15 +158,11 @@ module YicesProver  =
 
     let pop () =
       me.count <- me.count - 1;
-      if me.i > 0 then
-	me.i <- me.i - 1
-      else
-	begin
-	  let (cs,ds') = vpop ([],me.ds) in
-	    me.ds <- ds';
-	    List.iter (Hashtbl.remove me.d) cs;
-	    Bstats.time "popping" Y.yices_pop me.c
-	end
+      if me.i > 0 then me.i <- me.i - 1 else
+        let (cs,ds') = vpop ([],me.ds) in
+	let _ = me.ds <- ds' in
+	let _ = List.iter (Hashtbl.remove me.d) cs in
+        Bstats.time "popping" Y.yices_pop me.c
 
     let reset () =
       Misc.repeat_fn pop me.count;
@@ -173,21 +176,35 @@ module YicesProver  =
       me.i <- 0
 
     let unsat () =
-      let res = (Bstats.time "consistency" Y.yices_check me.c) = -1 in
-        res
+      let rv = (Bstats.time "Yices unsat" Y.yices_check me.c) = -1 in
+      rv
 
     let valid p =
-      let _ = push (Predicate.Not p) in
-      let rv = unsat () in
-      let _ = pop () in
-      rv
+      if unsat () then true else 
+        let _ = push (Predicate.Not p) in
+        let rv = unsat () in
+        let _ = pop () in rv
+    
+    let implies p =
+      let _ = incr nb_yices_push; Bstats.time "Yices push" push p in
+      fun q -> Bstats.time "Yices valid" valid q
 
-    let implies (p, q) = 
-      let _ = Bstats.time "pushing p" push p in
-      let rv = Bstats.time "validating" valid q in
-      let _ = Bstats.time "popping" pop () in
-      rv
+    let finish () = 
+      Bstats.time "YI pop" pop (); 
+      assert (me.count = 0)
+  
+(*
+  let implies p q = 
+      let _ = (* Bstats.time "pushing p" *) push p in
+      let rv = (* Bstats.time "validating" *) valid q in
+      let _ = (* Bstats.time "popping" *) pop () in
+      rv 
+  let finish () = ()
+*)
+  
+  let print_stats () = 
+    Printf.printf "Yices pushes = %d \n" !nb_yices_push
 
-  end
+end
 
 module Prover = YicesProver

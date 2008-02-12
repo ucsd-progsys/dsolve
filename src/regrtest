@@ -2,7 +2,7 @@
 #not actually a regression test
 OCAML=./liquid.run
 FLAGS="-dframes -cacheq -v 9"
-QUALFLAGS="-no-anormal -dqualifs -lqualifs"
+QUALFLAGS="-no-simple-subs -no-anormal -dqualifs -lqualifs"
 POSFILE=postests
 NEGFILE=negtests
 #HANDQUALS_ONLY="yep"
