@@ -22,6 +22,7 @@ type patpexpr =
   | PVar of Path.t list
   | PFunApp of Longident.t * patpexpr list 
   | PBinop of patpexpr * binop list * patpexpr
+  | PField of string * patpexpr 
 
 type tpat =
     PTrue

@@ -19,59 +19,6 @@ let lst s k = s::k
 
 let conflat y = String.concat "." (Longident.flatten y)
 
-(*let fold_patpred_lists g p =
-  let rec fold_expr_rec pe =
-    match pe with
-      | PPInt (ns) ->
-          [List.length ns] 
-      | PVar (ps) ->
-          [List.length ps]
-      | PFunApp (f, es) ->
-          g (List.map fold_expr_rec es) 
-      | PBinop (e1, ops, e2) ->
-          g [[List.length ops]; fold_expr_rec e1; fold_expr_rec e2] 
-  in    
-  let rec fold_pred_rec pd =
-    match pd with
-      | PTrue -> 
-          g [] 
-      | PNot (p) ->  
-          fold_pred_rec p 
-      | POr (p1, p2)
-      | PAnd (p1, p2) ->
-          g [fold_pred_rec p1; fold_pred_rec p2]
-      | PAtom (p1, rels, p2) ->      
-          g [[List.length rels]; fold_expr_rec p1; fold_expr_rec p2]
-      | PIff (p1, p2) ->
-          g [fold_expr_rec p1; fold_pred_rec p2]
-  in fold_pred_rec p*)
-
-(*let fold_patpred_lists f g p =
-  let rec fold_expr_rec pe =
-    match pe with
-      | PPInt (ns) ->
-          f ns 
-      | PVar (ps) ->
-          f ps
-      | PFunApp (f, es) ->
-          g (List.map fold_expr_rec es) 
-      | PBinop (e1, ops, e2) ->
-          g [(f ops); fold_expr_rec e1; fold_expr_rec e2] 
-  in    
-  let rec fold_pred_rec pd =
-    match pd with
-      | PTrue -> 
-          g [] 
-      | PNot (p) ->  
-          fold_pred_rec p 
-      | POr (p1, p2)
-      | PAnd (p1, p2) ->
-          g [fold_pred_rec p1; fold_pred_rec p2]
-      | PAtom (p1, rels, p2) ->      
-          g [(f rels); fold_pred_rec p1; fold_pred_rec p2]
-  in fold_pred_rec p*)
-
-
 let rel_star = [Ge; Le; Ne]
 let op_star = [Plus; Minus; Times; Div]
 let transl_ops ops = 
@@ -100,6 +47,8 @@ let transl_patpred tymap p =
 	        PFunApp (f, List.map transl_expr_rec es)
       | Ppredpatexp_binop (e1, ops, e2) ->
 	        PBinop (transl_expr_rec e1, transl_ops ops, transl_expr_rec e2)
+      | Ppredpatexp_field (f, e1) ->
+          PField (f, transl_expr_rec e1)
   in
   let rec transl_pred_rec pd =
     match pd.ppredpat_desc with
@@ -114,49 +63,6 @@ let transl_patpred tymap p =
       | Ppredpat_or (p1, p2) -> 
           POr (transl_pred_rec p1, transl_pred_rec p2)
   in transl_pred_rec p
-
-
-(* relies on deterministic traversal order -- should be OK *)
-(*let gen_patpred_digits b p =
-  let b = ref b in
-  let hdb () = let bb = List.hd !b in (b := List.tl !b; bb) in
-  let rec gen_expr_rec pe =
-    match pe with
-      | PPInt (ns) ->
-          PInt (List.nth ns (hdb ()))  
-      | PVar (ps) ->
-          Var (List.nth ps (hdb ())) 
-      | PFunApp (f, es) ->
-          FunApp (conflat f, gen_expr_rec (List.hd es) (* List.map gen_expr_rec es *)) (* P.FunApp is only single argument for time being... *) 
-      | PBinop (e1, ops, e2) ->
-          Binop (gen_expr_rec e1, List.nth ops (hdb ()), gen_expr_rec e2)  
-  in    
-  let rec gen_pred_rec pd =
-    match pd with
-      | PTrue ->
-          True 
-      | PNot (p) ->  
-          Not (gen_pred_rec p) 
-      | POr (p1, p2) ->
-          Or (gen_pred_rec p1, gen_pred_rec p2)
-      | PAnd (p1, p2) ->
-          And (gen_pred_rec p1, gen_pred_rec p2)
-      | PAtom (e1, rels, e2) ->      
-          Atom (gen_expr_rec e1, List.nth rels (hdb ()), gen_expr_rec e2)
-      | PIff (e1, p1) ->
-          Iff (gen_expr_rec e1, gen_pred_rec p1)
-  in gen_pred_rec p
-
-let list_pred = fold_patpred_lists (List.flatten)
-
-let size_pred a = List.fold_left ( * ) 1 (list_pred a)
-
-(*let build_nth_pred base n pat = 
-  let digits = ref (QG.decode (n, base)) in
-    gen_patpred_digits digits pat*) *)
-
-(*let gen_predicates v a = 
-  [(Ident.create v, True)]*)
 
 let rec lflap es =
   match es with
@@ -186,8 +92,9 @@ let gen_preds p =
           let e1s = gen_expr_rec e1 in
           let e2s = gen_expr_rec e2 in
             tflap3 (e1s, ops, e2s) (fun c d e -> Binop (c, d, e))
-            (*List.map (fun c -> flap (fun d -> (List.map (fun e -> Binop(c, d,
-             * e)) e2s)) ops) e1s*)
+      | PField (f, e1) ->
+          let e1s = gen_expr_rec e1 in
+            List.map (fun e -> Field(f, e)) e1s
   in    
   let rec gen_pred_rec pd =
     match pd with

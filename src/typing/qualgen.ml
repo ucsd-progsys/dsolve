@@ -5,14 +5,9 @@ module L = Lightenv
 include L*)
 
 
-(*let flap f s = List.flatten (List.map f s) (* move to avoid collision in cleanup *)
 
-let col_lev = ref 0 (* amount of crap to collect *)
+(*let col_lev = ref 0 (* amount of crap to collect *)
 
-                (*
-                core_type: Typedecl.transl_value_decl?
-  let ty = Typetexp.transl_type_scheme env valdecl.pval_type in
-                 *)
 
 (* visitor for qualgen *)
 
@@ -97,11 +92,11 @@ let rec visit_binding (pat, exp) as pe =
 
 
 
- *)
-let all_consts = [1;2;3]
+ 
+ *)let all_consts = [1;2;3]
 let lookup_ids a = [Path.mk_ident "asdf"]
 let all_ids = [Path.mk_ident "asdf"]
-let all_types = []
+let all_types = [] (*
 
 (*type base = int list  
 type var_base_int = int * base
@@ -224,4 +219,4 @@ let dump_qualifs () =
   let bigarray_lbls = mapfilter (filter (Builtins.ext_find_type_path "array2")) lbls in
   let bigarray_qualifs = List.concat (List.map single_bigarray_array2_qualif bigarray_lbls) in
   let multiset_quals = List.concat [bigarray_qualifs; arr_qualifs; int_qualifs; const_qualifs] in
-    StringSet.elements (List.fold_left (fun s q -> StringSet.add q s) StringSet.empty multiset_quals) *)
+    StringSet.elements (List.fold_left (fun s q -> StringSet.add q s) StringSet.empty multiset_quals) *) *)

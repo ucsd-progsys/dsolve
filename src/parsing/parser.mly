@@ -1476,7 +1476,7 @@ qual_expr:
   | LPAREN qual_expr RPAREN                 { $2 }
 
 qual_term:
-    LPAREN qual_path qual_term_list RPAREN /* funapp */
+    LPAREN qual_litident qual_term_list RPAREN /* funapp */
     { mkpredpatexp (Ppredpatexp_funapp(Longident.parse $2, $3)) } 
   | LPAREN UIDENT qual_term_list RPAREN
     { mkpredpatexp (Ppredpatexp_funapp(Longident.parse $2, $3)) }
@@ -1487,19 +1487,13 @@ qual_term:
   | INT
     { mkpredpatexp (Ppredpatexp_int($1)) }
   | SHARP  /* wild int */
-    { mkpredpatexp Ppredpatexp_any_int }
+    { mkpredpatexp (Ppredpatexp_any_int) }
+  | qual_term DOT LIDENT                
+    { mkpredpatexp (Ppredpatexp_field($3, $1)) }
 
 qual_litident:
-    qual_path DOT qual_fields               { $1 ^ "." ^ $3 }
-  | qual_path                               { $1 }
-
-qual_path:
-    UIDENT DOT qual_path                    { $1 ^ "." ^ $3 }
+    UIDENT DOT qual_litident                { $1 ^ "." ^ $3 }
   | LIDENT                                  { $1 }
-
-qual_fields:
-    LIDENT                                  { $1 }
-  | LIDENT DOT qual_fields                  { $1 ^ "." ^ $3 }  
 
 qual_term_list:
     qual_term                               { [$1] }
