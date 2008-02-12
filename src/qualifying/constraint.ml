@@ -71,17 +71,17 @@ let solution_map s k =
 (**************************************************************)
 (**************************** Stats ***************************)
 (**************************************************************)
-
+let stat_wf_refines = ref 0
+let stat_sub_refines = ref 0
+let stat_simple_refines = ref 0
 let stat_refines = ref 0
-let stat_solved_constraints = ref 0
-let stat_valid_constraints = ref 0
+let stat_imp_queries = ref 0
+let stat_valid_imp_queries = ref 0
 let stat_matches = ref 0 
 
 (**************************************************************)
 (********************** Pretty Printing ***********************)
 (**************************************************************)
-
-(* FIX: 1. arg orders, 2. print index *)
 
 let guard_predicate () g = 
   P.big_and 
@@ -91,8 +91,8 @@ let guard_predicate () g =
          if b then p else P.Not p) 
       g)
 
-let environment_predicate s env =
-  P.big_and (Le.maplist (F.predicate (solution_map s)) env)
+let environment_predicate sm env =
+  P.big_and (Le.maplist (F.predicate sm) env)
 
 let pprint_local_binding ppf = function
   | (Path.Pident _ as k, v) -> fprintf ppf "@[%s@;=>@;<1 2>%a@],@;<1 2>" (Path.unique_name k) F.pprint v
@@ -100,7 +100,7 @@ let pprint_local_binding ppf = function
 
 let pprint_env_pred so ppf env =
   match so with
-  | Some s -> P.pprint ppf (environment_predicate s env)
+  | Some s -> P.pprint ppf (environment_predicate (solution_map s) env)
   | _ -> Le.iter (fun x t -> pprint_local_binding ppf (x, t)) env
 
 let pprint ppf = function
@@ -131,10 +131,10 @@ let simplify_frame gm x f =
   if not (Le.mem x gm) then f else
     let pos = Le.find x gm in
     match f with 
-    | F.Fconstr (a,b,(subs,F.Qconst[(v1,v2,P.Iff (P.Var v3,p))])) when v2 = v3 ->
+    | F.Fconstr (a,b,c,(subs,F.Qconst[(v1,v2,P.Iff (v3,p))])) when v3 = B.tag (P.Var v2) ->
         let p' = if pos then p else P.Not p in
-        F.Fconstr (a,b,(subs,F.Qconst[(v1,v2,p')])) 
-    | F.Frecord (a,b,(subs,F.Qconst[(v1,v2,P.Iff (P.Var v3,p))])) when v2 = v3 ->
+        F.Fconstr (a,b,c,(subs,F.Qconst[(v1,v2,p')])) 
+    | F.Frecord (a,b,(subs,F.Qconst[(v1,v2,P.Iff (v3,p))])) when v3 = B.tag (P.Var v2) ->
         let p' = if pos then p else P.Not p in
         F.Frecord (a,b,(subs,F.Qconst[(v1,v2,p')])) 
     | _ -> f
@@ -151,7 +151,10 @@ let simplify_env env g =
 let simplify_fc c =
   match c.lc_cstr with
   | WFFrame _ -> c 
-  | SubFrame (env,g,a,b) -> {c with lc_cstr = SubFrame(simplify_env env g, g, a, b)}
+  | SubFrame (env,g,a,b) ->
+      let env' = simplify_env env g in
+      (* let _ = printf "@[Simplify env to: %a@.@]" (pprint_env_pred None) env' in *)
+      {c with lc_cstr = SubFrame(env', g, a, b)}
 
 (* Notes:
   * 1. If the labels disagree, we don't resolve. Instead, we 
@@ -163,11 +166,12 @@ let simplify_fc c =
   * to work around all the BigArray stuff
   *)
 
-let lequate_cs eqb env g c f1 f2 =
-  let make_lc fc = {lc_cstr = fc; lc_orig = Cstr c; lc_id = c.lc_id} in
-  if eqb 
-  then [make_lc (SubFrame(env,g,f1,f2)); make_lc (SubFrame(env,g,f2,f1))]
-  else [make_lc (SubFrame(env,g,f1,f2))]
+let make_lc c fc = {lc_cstr = fc; lc_orig = Cstr c; lc_id = c.lc_id}
+
+let lequate_cs env g c variance f1 f2 = match variance with
+  | F.Invariant -> [make_lc c (SubFrame(env,g,f1,f2)); make_lc c (SubFrame(env,g,f2,f1))]
+  | F.Covariant -> [make_lc c (SubFrame(env,g,f1,f2))]
+  | F.Contravariant -> [make_lc c (SubFrame(env,g,f2,f1))]
 
 let match_and_extend env (l1,f1) (l2,f2) = 
   match (l1,l2) with
@@ -175,28 +179,27 @@ let match_and_extend env (l1,f1) (l2,f2) =
   | (Some p1, Some p2) when Pat.same p1 p2 -> Pat.env_bind env p1 f2
   | _  -> env (* 1 *)
  
-let is_mutable m = 
-  m = Asttypes.Mutable
+let mutable_variance = function Asttypes.Mutable -> F.Invariant | _ -> F.Covariant
 
 let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubFrame (env,g,f1,f2)} as c ->
   match (f1, f2) with
   | (F.Farrow (l1, f1, f1'), F.Farrow (l2, f2, f2')) -> 
       let env' = match_and_extend env (l1,f1) (l2,f2) in 
-      ((lequate_cs false env g c f2 f1) @ (lequate_cs false env' g c f1' f2'),
+      ((lequate_cs env g c F.Covariant f2 f1) @ (lequate_cs env' g c F.Covariant f1' f2'),
        [])
   | (F.Fvar _, F.Fvar _) | (F.Funknown, F.Funknown) ->
       ([],[]) 
-  | (F.Fconstr (p1, f1s, r1), F.Fconstr(p2, f2s, r2)) ->  (* 2 *)
-      (C.flap2 (lequate_cs true env g c) f1s f2s,
+  | (F.Fconstr (p1, f1s, variances, r1), F.Fconstr(p2, f2s, _, r2)) ->  (* 2 *)
+      (C.flap3 (lequate_cs env g c) variances f1s f2s,
        [(Cstr c, SubRef(env,g,r1,r2,None))])
   | (F.Ftuple f1s, F.Ftuple f2s) ->
-      (C.flap2 (lequate_cs false env g c) f1s f2s,
+      (C.flap2 (lequate_cs env g c F.Covariant) f1s f2s,
        [])
   | (F.Frecord (_, fld1s, r1), F.Frecord (_, fld2s, r2)) ->
       (C.flap2 
-         (fun (f1',_,m) (f2',_,_) -> lequate_cs (is_mutable m) env g c f1' f2') 
+         (fun (f1',_,m) (f2',_,_) -> lequate_cs env g c (mutable_variance m) f1' f2')
          fld1s fld2s, 
-       if List.exists (fun (_, _,m) -> is_mutable m) fld1s 
+       if List.exists (fun (_, _,m) -> m = Asttypes.Mutable) fld1s
        then [(Cstr c, SubRef (env,g,r1,r2,None)); (Cstr c, SubRef (env,g,r2,r1,None))]
        else [(Cstr c, SubRef (env,g,r1,r2,None))])
   | (_,_) -> 
@@ -206,7 +209,7 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
 let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFrame (env,f)} as c ->
   let make_wff env f = {lc_cstr = WFFrame (env, f); lc_orig = Cstr c; lc_id = None} in
   match f with
-  | F.Fconstr (_, l, r) ->
+  | F.Fconstr (_, l, _, r) ->
       (List.map (make_wff env) l,
        [(Cstr c, WFRef (Le.add qual_test_var f env, r, None))])
   | F.Farrow (l, f, f') ->
@@ -385,43 +388,67 @@ let refine_simple s k1 k2 =
   let _ = C.cprintf C.ol_refine "@[%d --> %d@.@]" (List.length q2s) (List.length q2s') in
   List.length q2s' <> List.length q2s
 
+(*
 let qual_implied s lhs lhsm rhs_subs q =
   let rhs = F.refinement_predicate (solution_map s) qual_test_var (rhs_subs, F.Qconst [q]) in
   let (cached, cres) = if !Cf.cache_queries then TP.check_table lhs rhs else (false, false) in
   if cached then cres else 
     if (not !Cf.no_simple_subs) && PM.mem rhs lhsm then (incr stat_matches; true) else
       let rv = Bstats.time "refinement query" (TP.implies lhs) rhs in
-      let _ = incr stat_solved_constraints in
-      let _ = if rv then incr stat_valid_constraints in
+      let _ = incr stat_imp_queries in
+      let _ = if rv then incr stat_valid_imp_queries in
       rv 
+*)
+let implies_match env sm r1 = 
+  let lhsm =
+    Bstats.time "close_over_env" 
+      (fun () ->
+        List.fold_left (fun pm p -> PM.add p true pm) PM.empty 
+        ((close_over_env env sm) (F.refinement_conjuncts sm qual_test_var r1))) () in
+  fun (_,p) -> 
+    let rv = (not !Cf.no_simple_subs) && PM.mem p lhsm in
+    let _ = if rv then incr stat_matches in rv
 
-let qual_wf s env subs q =
-  refinement_well_formed env (solution_map s) (subs,F.Qconst [q]) qual_test_var
+let implies_tp env g sm r1 = 
+  let lhs = 
+    let gp = Bstats.time "make guardp" (guard_predicate ()) g in
+    let envp = Bstats.time "make envp" (environment_predicate sm) env in
+    let r1p = Bstats.time "make r1p" (F.refinement_predicate sm qual_test_var) r1 in
+    P.big_and [envp;gp;r1p] in
+  let ch = Bstats.time "TP implies" TP.implies lhs in
+  fun (_,p) -> Bstats.time "ch" ch p 
+
+let qual_wf sm env subs q =
+  refinement_well_formed env sm (subs,F.Qconst [q]) qual_test_var 
 
 let refine sri s c =
   let _ = incr stat_refines in
+  let sm = solution_map s in 
   match c with
   | SubRef (_, _, ([], F.Qvar k1), ([], F.Qvar k2), _)
     when not (!Cf.no_simple || !Cf.verify_simple) -> 
-      refine_simple s k1 k2
-  | SubRef (env,g,r1, (rhs_subs, F.Qvar k2), _)  ->
-      let sm = solution_map s in 
-      let lhsm = 
-        List.fold_left (fun pm p -> PM.add p true pm) PM.empty 
-        (close_over_env env sm (F.refinement_conjuncts sm qual_test_var r1)) in
-      let lhs = 
-        let gp = Bstats.time "make guardp" (guard_predicate ()) g in
-        let envp = Bstats.time "make envp" (environment_predicate s) env in
-        let r1p = Bstats.time "make r1p" (F.refinement_predicate sm qual_test_var) r1 in
-        P.big_and [envp;gp;r1p] in
-      let q2s  = solution_map s k2 in
-      let q2s' = List.filter (qual_implied s lhs lhsm rhs_subs) q2s in 
-      let _ = Sol.replace s k2 q2s' in
-      let _ = C.cprintf C.ol_refine "@[%d --> %d@.@]" (List.length q2s) (List.length q2s') in
-      (List.length q2s <> List.length q2s')
+      let _ = incr stat_simple_refines in
+      Bstats.time "refine_simple" (refine_simple s k1) k2
+  | SubRef (env,g,r1, (sub2s, F.Qvar k2), _)  ->
+      let _ = incr stat_sub_refines in
+      let qp2s = 
+        List.map 
+          (fun q -> (q,F.refinement_predicate sm qual_test_var (sub2s,F.Qconst[q]))) 
+          (sm k2) in
+      let (qp2s1,qp2s') = Bstats.time "match check" (List.partition (implies_match env sm r1)) qp2s in
+      let tpc = Bstats.time "implies_tp" (implies_tp env g sm) r1 in
+      let (qp2s2,_)    = Bstats.time "imp check" (List.partition tpc) qp2s' in
+      let _ = Bstats.time "finish" TP.finish () in
+      let q2s'' = List.map fst (qp2s1 @ qp2s2) in
+      let _ = Sol.replace s k2 q2s'' in
+      let _ = C.cprintf C.ol_refine "@[%d --> %d@.@]" (List.length qp2s) (List.length q2s'') in
+      let _ = stat_imp_queries := !stat_imp_queries + (List.length qp2s) in
+      let _ = stat_valid_imp_queries := !stat_valid_imp_queries + (List.length q2s'') in
+      (List.length qp2s  <> List.length q2s'')
   | WFRef (env,(subs, F.Qvar k),_) -> 
+      let _ = incr stat_wf_refines in
       let qs  = solution_map s k in
-      let qs' = List.filter (qual_wf s env subs) qs in
+      let qs' = List.filter (qual_wf sm env subs) qs in
       let _   = Sol.replace s k qs' in
       (List.length qs <> List.length qs')
   | _ -> false
@@ -434,14 +461,15 @@ let refine sri s c =
 let sat s = function
   | SubRef (env, g, r1, r2, _) ->
       let gp = Bstats.time "make guardp" (guard_predicate ()) g in
-      let envp = environment_predicate s env in
+      let envp = environment_predicate (solution_map s) env in
       let p1 = F.refinement_predicate (solution_map s) qual_test_var r1 in
       let p2 = F.refinement_predicate (solution_map s) qual_test_var r2 in
-        TP.backup_implies (P.big_and [envp; gp; p1]) p2
-  | WFRef (env, r, _) as c -> 
+      let rv = TP.implies (P.big_and [envp; gp; p1]) p2 in TP.finish ();rv
+  | WFRef (env,((subs,F.Qvar k) as r), _) as c -> 
       let rv = refinement_well_formed env (solution_map s) r qual_test_var in
-         C.asserts (Printf.sprintf "ERROR: wf is unsat! (%d)" (get_ref_id c)) rv;
-         rv 
+      C.asserts (Printf.sprintf "ERROR: wf is unsat! (%d)" (get_ref_id c)) rv;
+      rv 
+  | _ -> true
 
 let unsat_constraints sri s =
   C.map_partial
@@ -477,11 +505,7 @@ let make_initial_solution sri qs =
 let dump_constraints sri = 
   if !Cf.dump_constraints then
   (printf "@[Refinement Constraints@.@\n@]";
-  iter_ref_constraints sri
-  (fun c -> printf "@[%a@.@]" (pprint_ref None) c))
-    (* let cs = get_ref_constraints sri in
-    Oprint.print_list (pprint_ref None) (fun ppf -> fprintf ppf "@.@.")
-    std_formatter cs *)
+  iter_ref_constraints sri (fun c -> printf "@[%a@.@]" (pprint_ref None) c))
 
 let dump_solution_stats s = 
   let kn  = Sol.length s in
@@ -512,11 +536,11 @@ let dump_solving qs sri s step =
   else if step = 1 then
     dump_solution_stats s
   else if step = 2 then
-    (C.cprintf C.ol_solve_stats "@[solution@ refinement@ completed:@\n\t%d@ iterations@ of@ refine@\n@\n@]" !stat_refines;
-     C.cprintf C.ol_solve_stats "@[Solved@ %d@ constraints;@ %d@ valid@]@.@." 
-     !stat_solved_constraints !stat_valid_constraints;
-     TP.dump_simple_stats ();
-     C.cprintf C.ol_solve_stats "@[Solved@ %d@ constraints@ by@ matching@\n@]" !stat_matches;
+    (C.cprintf C.ol_solve_stats "@[Refine Iterations: %d@ total (wf=%d,si=%d,su=%d)\n@\n@]" 
+       !stat_refines !stat_wf_refines !stat_simple_refines !stat_sub_refines;
+     C.cprintf C.ol_solve_stats "@[Implication Queries: %d@ total;@ %d@ valid;@ %d@ match@]@.@." 
+       !stat_imp_queries !stat_valid_imp_queries !stat_matches;
+     TP.print_stats ();
      dump_solution_stats s;
      flush stdout)
 
@@ -530,7 +554,7 @@ let rec solve_sub sri s w =
     let (r,b,fci) = get_ref_rank sri c in
     let _ = C.cprintf C.ol_solve "@[Refining:@ %d@ in@ scc@ (%d,%b,%s):@]"
             (get_ref_id c) r b (C.io_to_string fci) in
-    let w' = if refine sri s c then push_worklist sri w' (get_ref_deps sri c) else w' in
+    let w' = if Bstats.time "refine" (refine sri s) c then push_worklist sri w' (get_ref_deps sri c) else w' in
     solve_sub sri s w'
 
 let solve_wf sri s = 
@@ -547,11 +571,9 @@ let solve qs cs =
   let w = make_initial_worklist sri in
   let _ = Bstats.time "solving sub" (solve_sub sri s) w in
   let _ = dump_solving qs sri s 2 in
-  let _ = TP.clear_cache () in
+  let _ = TP.reset () in
   let unsat = Bstats.time "testing solution" (unsat_constraints sri) s in
-  let _ = if List.length unsat != 0 then 
-          begin
-            C.cprintf C.ol_solve_error "@[Ref_constraints@ still@ unsatisfied:@\n@]";
-            List.iter (fun (c, b) -> C.cprintf C.ol_solve_error "@[%a@.@\n@]" (pprint_ref None) c) unsat
-          end in
+  (if List.length unsat > 0 then 
+    C.cprintf C.ol_solve_error "@[Ref_constraints@ still@ unsatisfied:@\n@]";
+    List.iter (fun (c, b) -> C.cprintf C.ol_solve_error "@[%a@.@\n@]" (pprint_ref None) c) unsat);
   (solution_map s, (List.map (fun (a, b) -> b)  unsat))

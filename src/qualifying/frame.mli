@@ -12,22 +12,27 @@ type qualifier_expr =
 type refinement = substitution list * qualifier_expr
 
 val empty_refinement: refinement
+val false_refinement: refinement
 
 type t =
     Fvar of Path.t
-  | Fconstr of Path.t * t list * refinement
+  | Fconstr of Path.t * t list * variance list * refinement
   | Farrow of pattern_desc option * t * t
   | Ftuple of t list
   | Frecord of Path.t * (t * string * mutable_flag) list * refinement
   | Funknown
 
+and variance = Covariant | Contravariant | Invariant
+
 val pprint: formatter -> t -> unit
 val pprint_sub: formatter -> substitution -> unit
 val pprint_refinement: formatter -> refinement -> unit
-val fresh: expression -> t
-val fresh_without_vars: expression -> t
-val fresh_unconstrained: expression -> t
-val fresh_with_labels: expression -> t -> t
+val translate_variance: (bool * bool * bool) -> variance
+val fresh: Env.t -> type_expr -> t
+val fresh_without_vars: Env.t -> type_expr -> t
+val fresh_unconstrained: Env.t -> type_expr -> t
+val fresh_with_labels: Env.t -> type_expr -> t -> t
+val fresh_constructor: Env.t -> constructor_description -> t -> t
 val instantiate: t -> t -> t
 val apply_substitution: substitution -> t -> t
 val label_like: t -> t -> t
