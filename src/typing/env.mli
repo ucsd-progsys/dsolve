@@ -45,6 +45,9 @@ val lookup_modtype: Longident.t -> t -> Path.t * modtype_declaration
 val lookup_class: Longident.t -> t -> Path.t * class_declaration
 val lookup_cltype: Longident.t -> t -> Path.t * cltype_declaration
 
+(* Find all the descriptors of all type constructors of a type *)
+val constructors_of_type: Path.t -> type_declaration -> (string * constructor_description) list
+
 (* Insertion by identifier *)
 
 val add_value: Ident.t -> value_description -> t -> t

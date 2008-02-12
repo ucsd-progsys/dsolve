@@ -3,7 +3,7 @@ open Frame
 
 let rec same_shape t1 t2 =
   match (t1, t2) with
-  (Fconstr(p, l, _), Fconstr(p', l', _)) ->
+  (Fconstr(p, l, _, _), Fconstr(p', l', _, _)) ->
    (Path.same p p') && (List.for_all (fun f -> f) (List.map2 same_shape l l')) 
   | (Fvar p, Fvar p') ->
    Path.same p p'
@@ -22,11 +22,8 @@ let find_or_fail var env = try Lightenv.find var env with Not_found -> assert fa
 let constr_app_shape paths out_shape in_shapes = 
   let f i o = 
     match o with
-      Fconstr(a, _, _) ->
-        if Path.same i a then
-        true
-      else
-        false
+      Fconstr(a, _, _, _) ->
+        Path.same i a 
       | _ -> false
   in if (List.length paths = List.length in_shapes) && 
         (List.for_all2 f paths in_shapes) 
