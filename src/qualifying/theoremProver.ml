@@ -94,9 +94,10 @@ let reset () =
   nb_cache_miss := 0;
   nb_qp_miss := 0
 
+(*
 let imp_to_string p q = 
   Printf.sprintf "%s => %s" (C.pred_to_string p) (C.pred_to_string q)
-
+*)
 
 (* API *)
 let implies p = 

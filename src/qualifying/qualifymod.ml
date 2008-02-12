@@ -61,11 +61,11 @@ let label_constraint exp fc =
     {lc_cstr = fc; lc_orig = org; lc_id = fresh_fc_id()}
 
 let rec constrain e env guard =
-  let environment = (env, guard, Frame.fresh e) in
+  let environment = (env, guard, Frame.fresh e.exp_env e.exp_type) in
   let (f, cstrs, rec_cstrs) =
-    match (e.exp_desc,repr e.exp_type) with
+    match (e.exp_desc, repr e.exp_type) with
       | (Texp_constant const_typ, {desc = Tconstr(path, [], _)}) -> constrain_constant path const_typ
-      | (Texp_construct (cstrdesc, []), {desc = Tconstr(path, [], _)}) -> constrain_constructed path cstrdesc
+      | (Texp_construct (cstrdesc, args), {desc = Tconstr(_, _, _)}) -> constrain_constructed environment e.exp_env cstrdesc args
       | (Texp_record (labeled_exprs, None), {desc = (Tconstr _)}) -> constrain_record environment labeled_exprs
       | (Texp_field (expr, label_desc), _) -> constrain_field environment expr label_desc
       | (Texp_ifthenelse (e1, e2, Some e3), _) -> constrain_if environment e1 e2 e3
@@ -87,15 +87,26 @@ let rec constrain e env guard =
   in log_frame e.exp_loc f; (f, (List.map (label_constraint e) cstrs) @ rec_cstrs)
 
 and constrain_constant path = function
-  | Const_int n -> let _ = if !Cf.dump_qualifs then ignore (Qg.add_constant n) in (F.Fconstr (path, [], B.equality_refinement (P.PInt n)), [], [])
-  | Const_float _ -> (F.Fconstr (path, [], F.empty_refinement), [], [])
+  | Const_int n ->
+      let _ = if !Cf.dump_qualifs then ignore (Qg.add_constant n) in
+        (B.mk_int [B.equality_qualifier (P.PInt n)], [], [])
+  | Const_float _ -> (B.uFloat, [], [])
   | _ -> assert false
 
-and constrain_constructed path cstrdesc =
-  let cstrref = match cstrdesc.cstr_tag with
-    | Cstr_constant n -> B.tag_refinement n
-    | _ -> F.empty_refinement
-  in (F.Fconstr (path, [], cstrref), [], [])
+and constrain_constructed (env, guard, f) tyenv cstrdesc args = match f with
+  | F.Fconstr (path, tyargframes, cstrs, _) ->
+      let tag = cstrdesc.cstr_tag in
+      let cstrref = match tag with
+        | Cstr_constant n | Cstr_block n -> B.tag_refinement n
+        | Cstr_exception _ -> assert false
+      in
+      let f = F.Fconstr (path, tyargframes, cstrs, cstrref) in
+      let argtuple = F.fresh_constructor tyenv cstrdesc f in
+      let (argframes, argcstrs) = constrain_subexprs env guard args in
+        (f, [SubFrame(env, guard, F.Ftuple argframes, argtuple);
+             SubFrame(env, guard, F.Ftuple tyargframes, F.Ftuple tyargframes);
+             WFFrame(env, f)], argcstrs)
+  | _ -> assert false
 
 and constrain_record (env, guard, f) labeled_exprs =
   let compare_labels ({lbl_pos = n}, _) ({lbl_pos = m}, _) = compare n m in
@@ -155,9 +166,9 @@ and constrain_function (env, guard, f) t pat e' =
 and constrain_base_identifier env id e =
   (F.apply_refinement (B.equality_refinement (expression_to_pexpr e)) (Le.find id env), [], [])
 
-and constrain_identifier (env, _, ftemplate) id =
+and constrain_identifier (env, guard, ftemplate) id =
   let f' = try Le.find id env with Not_found -> fprintf std_formatter "@[Not_found:@ %s@]" (Path.unique_name id); raise Not_found in
-  let f = F.instantiate f' ftemplate in (f, [WFFrame(env, f)], [])
+  let f = F.instantiate f' ftemplate in (f, [SubFrame(env, guard, f, f); WFFrame(env, f)], [])
 
 and apply_once env guard (f, cstrs, subexp_cstrs) e = match (f, e) with
   | (F.Farrow (l, f, f'), (Some e2, _)) ->
@@ -194,7 +205,7 @@ and constrain_array (env, guard, f) elements =
   let _ = if !Cf.dump_qualifs then ignore (Qg.add_constant (List.length elements)) in
   let (f, fs) =
     (match f with
-      | F.Fconstr(p, l, _) -> (F.Fconstr(p, l, B.size_lit_refinement(List.length elements)), l)
+      | F.Fconstr(p, l, varis, _) -> (F.Fconstr(p, l, varis, B.size_lit_refinement(List.length elements)), l)
       | _ -> assert false) in
   let list_rec (fs, c) e = (fun (f, cs) -> (f::fs, cs @ c)) (constrain e env guard) in
   let (fs', sub_cs) = List.fold_left list_rec ([], []) elements in
@@ -216,7 +227,7 @@ and constrain_tuple (env, guard, f) es =
         in (f, WFFrame (env, f) :: new_cs, subexp_cs)
     | _ -> assert false
 
-and constrain_assertfalse (env, _, _) e = (F.fresh_unconstrained e, [], [])
+and constrain_assertfalse (env, _, _) e = (F.fresh_unconstrained e.exp_env e.exp_type, [], [])
 
 and constrain_assert (env, guard, _) e =
   let (f, cstrs) = constrain e env guard in
@@ -256,7 +267,7 @@ and constrain_bindings env guard recflag bindings =
     let (vars, exprs) = List.split bindings in
 
     (* Determine the labels we need to have on our bound frames first *)
-    let no_label_frame e = F.fresh e in
+    let no_label_frame e = F.fresh e.exp_env e.exp_type in
     let unlabeled_frames = List.map no_label_frame exprs in
     let binding_var = function
     | {pat_desc = Tpat_var f} -> Path.Pident f

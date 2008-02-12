@@ -9,19 +9,19 @@ end
 
 module PathMap = Map.Make(ComparablePath)
 
-let fsprintf f p = 
-  Format.fprintf Format.str_formatter "@[%a@]" f p;
-  Format.flush_str_formatter ()
-
-let zip_partition xs bs =
-  let (xbs,xbs') = List.partition snd (List.combine xs bs) in
-  (List.map fst xbs, List.map fst xbs')
+let rec map3 f xs ys zs = match (xs, ys, zs) with
+  | ([], [], []) -> []
+  | (x :: xs, y :: ys, z :: zs) -> f x y z :: map3 f xs ys zs
+  | _ -> assert false
 
 let flap f xs = 
   List.flatten (List.map f xs)
 
 let flap2 f xs ys = 
   List.flatten (List.map2 f xs ys)
+
+let flap3 f xs ys zs =
+  List.flatten (map3 f xs ys zs)
 
 let rec expand f xs ys =
   match xs with
@@ -37,12 +37,6 @@ let do_catch s f x =
 let do_catch_ret s f x y = 
   try f x with ex -> 
      (Printf.printf "%s hits exn: %s \n" s (Printexc.to_string ex); y) 
-
-let do_memo t f arg key =
-  try Hashtbl.find t key with Not_found ->
-    let rv = f arg in
-    let _ = Hashtbl.replace t key rv in
-    rv
 
 let rec map_partial f = function 
   | [] -> [] | x::xs -> 
@@ -79,6 +73,7 @@ let ol_solve_stats = 2
 let ol_timing = 2
 let ol_default = 2
 let ol_normalized = 3
+let ol_unique_names = 9
 let ol_solve = 10 
 let ol_refine = 11 
 let ol_scc =12 
@@ -96,6 +91,8 @@ let fcprintf ppf l = if ck_olev l then Format.fprintf ppf else nprintf
 let icprintf printer l ppf = if ck_olev l then printer ppf else printer null_formatter
 
 let cprintln l s = if ck_olev l then Printf.ksprintf (Format.printf "@[%s@\n@]") s else nprintf
+
+let path_name () = if ck_olev ol_unique_names then Path.unique_name else Path.name
 
 (****************************************************************)
 (************* SCC Ranking **************************************)
@@ -180,7 +177,7 @@ let n4 = make_scc_num g4 ;; *)
 
 let asserts s b = 
   try assert b with ex -> 
-    Printf.printf "\n Common.asserts failure: %s " s; raise ex
+    Printf.printf "Common.asserts failure: %s " s; raise ex
 
 let append_to_file f s = 
   let oc = Unix.openfile f [Unix.O_WRONLY; Unix.O_APPEND; Unix.O_CREAT] 420  in
@@ -198,8 +195,10 @@ let write_to_file f s =
 (****************** Type Specific to_string routines **********************)
 (**************************************************************************)
 
-  (*
+let fsprintf f p = 
+  Format.fprintf Format.str_formatter "@[%a@]" f p;
+  Format.flush_str_formatter ()
+(*
 let pred_to_string p = 
   fsprintf Predicate.pprint p
 *)
-
