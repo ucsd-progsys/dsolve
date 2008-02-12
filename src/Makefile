@@ -1,6 +1,6 @@
 include config/Makefile
 
-QPHOME=/home/rjhala/research/qp/
+QPHOME=../external/qp/
 CAMLC=ocamlc
 CAMLOPT=ocamlopt
 CAMLYACC=ocamlyacc
