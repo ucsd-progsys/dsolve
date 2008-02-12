@@ -9,6 +9,14 @@ end
 
 module PathMap = Map.Make(ComparablePath)
 
+let fsprintf f p = 
+  Format.fprintf Format.str_formatter "@[%a@]" f p;
+  Format.flush_str_formatter ()
+
+let zip_partition xs bs =
+  let (xbs,xbs') = List.partition snd (List.combine xs bs) in
+  (List.map fst xbs, List.map fst xbs')
+
 let flap f xs = 
   List.flatten (List.map f xs)
 
@@ -29,6 +37,12 @@ let do_catch s f x =
 let do_catch_ret s f x y = 
   try f x with ex -> 
      (Printf.printf "%s hits exn: %s \n" s (Printexc.to_string ex); y) 
+
+let do_memo t f arg key =
+  try Hashtbl.find t key with Not_found ->
+    let rv = f arg in
+    let _ = Hashtbl.replace t key rv in
+    rv
 
 let rec map_partial f = function 
   | [] -> [] | x::xs -> 
@@ -166,6 +180,25 @@ let n4 = make_scc_num g4 ;; *)
 
 let asserts s b = 
   try assert b with ex -> 
-    Printf.printf "Common.asserts failure: %s " s; raise ex
+    Printf.printf "\n Common.asserts failure: %s " s; raise ex
+
+let append_to_file f s = 
+  let oc = Unix.openfile f [Unix.O_WRONLY; Unix.O_APPEND; Unix.O_CREAT] 420  in
+  ignore (Unix.write oc s 0 ((String.length s)-1) ); 
+  Unix.close oc
+
+let write_to_file f s =
+  let oc = open_out f in
+  output_string oc s; 
+  close_out oc
+
+
+
+(**************************************************************************)
+(****************** Type Specific to_string routines **********************)
+(**************************************************************************)
+
+let pred_to_string p = 
+  fsprintf Predicate.pprint p
 
 

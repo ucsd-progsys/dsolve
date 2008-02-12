@@ -1,6 +1,3 @@
-examples-liquid/quicksort.ml
-examples-liquid/bitv.ml
-DMLex/simplex.ml
 examples-liquid/sum.ml
 examples-liquid/dotprod0.ml
 DML/bsearch.ml
@@ -21,7 +18,7 @@ examples-liquid/encrypt_cfb8.ml
 DMLex/matmult.ml
 DML/fft.ml
 DML/tower.ml
+DMLex/simplex.ml
 DML/quicksort_sane.ml
-
-
-
+examples-liquid/quicksort.ml
+examples-liquid/bitv.ml

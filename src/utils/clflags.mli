@@ -66,6 +66,8 @@ val verify_simple: bool ref
 val use_list: bool ref
 val kill_simplify: bool ref  
 val always_use_backup_prover: bool ref
+val use_qprover : bool ref
+val qpdump : bool ref
 val cache_queries: bool ref 
 val psimple: bool ref
 val simpguard : bool ref

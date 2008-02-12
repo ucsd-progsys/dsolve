@@ -4,13 +4,13 @@ type binop =
     Plus
   | Minus
   | Times
-	| Div
+  | Div
 
 type binrel =
     Eq
   | Ne
   | Gt
-	| Ge
+  | Ge
   | Lt
   | Le 
 
@@ -19,7 +19,7 @@ type pexpr =
   | Var of Path.t
   | FunApp of string * pexpr
   | Binop of pexpr * binop * pexpr 
-  | Field of string * pexpr
+  | Field of string * pexpr     (* INVARIANT: disjoint fields in same module *)
 
 type t =  
     True

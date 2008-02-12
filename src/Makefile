@@ -38,7 +38,9 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
 QUALIFYING=qualifying/common.cmo qualifying/lightenv.cmo \
   qualifying/qualifier.cmo qualifying/builtins.cmo qualifying/frame.cmo \
   qualifying/wellformed.cmo qualifying/message.cmo qualifying/pattern.cmo \
-  qualifying/theoremProverSimplify.cmo qualifying/theoremProverYices.cmo \
+  qualifying/theoremProverSimplify.cmo \
+  qualifying/theoremProverYices.cmo \
+  qualifying/theoremProverQprover.cmo \
   qualifying/theoremProver.cmo \
   qualifying/constraint.cmo qualifying/qualgen.cmo \
   qualifying/printqual.cmo qualifying/qualifymod.cmo \
@@ -49,10 +51,10 @@ LIQUID=driver/pparse.cmo analyzer/liqerrors.cmo analyzer/liquid.cmo
 LIQOBJS=$(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(LIQUID)
 
 liquid: $(LIQOBJS)
-	$(CAMLC) $(LINKFLAGS) -custom -o liquid str.cma unix.cma oyices.cma graph.cma libqp.cma $(LIQOBJS)
+	$(CAMLC) $(LINKFLAGS) -custom -o liquid str.cma unix.cma nums.cma oyices.cma graph.cma libqp.cma $(LIQOBJS)
 
 liquid.opt: $(LIQOBJS:.cmo=.cmx)
-	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt str.cmxa unix.cmxa oyices.cmxa graph.cmxa libqp.cmxa $(LIQOBJS:.cmo=.cmx)
+	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt str.cmxa unix.cmxa nums.cmxa oyices.cmxa graph.cmxa libqp.cmxa $(LIQOBJS:.cmo=.cmx)
 
 depend: beforedepend
 	(for d in utils parsing typing qualifying driver analyzer; \

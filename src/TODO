@@ -1,5 +1,13 @@
-1. rj1.ml : SCC get_rank fails on open function
-2. rj2.ml : WF constraints don't get solved
+1. run with -qprover
+./liquid.run -qprover gauss.ml
+
+2. switch on the thing that dumps the last qprover query to file
+
+DEBUG above...
+
+3. switch off the "close_over_env" see if you get any hits with qprover
+
+4. implement separation constraints for qprover ...
 
 -------------------------------------------------------------------
 Well-formedness doesn't pay any attention to the _types_ of free
