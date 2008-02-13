@@ -54,7 +54,7 @@ let rec bound_idents pat =
     ps @ es*)
 
 
-and visit_binding (pat, exp) = 
+(*and visit_binding (pat, exp) = 
   let rec ve e =
     let etyp = e.exp_type in
     match e.exp_desc with
@@ -104,9 +104,9 @@ and visit_binding (pat, exp) =
   in 
   (fun (p, e) -> 
     let _ = if is_function e then bound_idents p else () in 
-    let es = visit_bind_exp e in
+    let es = visit_bind_exp e in*)
 
-(*let visit_binding a = ()*)
+let visit_binding a = ()
 
 let iter_bindings defs = 
   List.iter visit_binding defs

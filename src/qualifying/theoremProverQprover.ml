@@ -29,7 +29,7 @@ let is_const = function P.PInt i -> Some i | _ -> None
 let rec convertExp = function
   | P.PInt i -> mk_const i 
   | P.Var s -> QA.Variable (Path.unique_name s) 
-  | P.FunApp (f,e) -> QA.Application (f,[convertExp e])
+  | P.FunApp (f, e) -> QA.Application (f, List.map convertExp e)
   | P.Field (f, e) -> QA.Application (fld_sym^f, [convertExp e])
   | P.Binop (e1,P.Plus,e2) -> QA.Sum [convertExp e1; convertExp e2] 
   | P.Binop (e1,P.Minus,e2) -> QA.Sum [convertExp e1; QA.Coeff (QA.Constant.Int (-1), convertExp e2)] 
