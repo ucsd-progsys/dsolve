@@ -34,6 +34,9 @@ let tymap = ref TM.empty
 let idset = ref IS.empty
 let intset = ref CS.empty
 
+let addi n =
+  intset := CS.add n !intset
+
 let addm (typ, id) = 
   let id = Ident.name id in
   let s = try TM.find typ !tymap with Not_found -> IS.empty in
@@ -54,26 +57,23 @@ let rec bound_idents pat =
     ps @ es*)
 
 
-(*and visit_binding (pat, exp) = 
+and visit_binding (pat, exp) = 
   let rec ve e =
     let etyp = e.exp_type in
     match e.exp_desc with
-   | (p, Texp_let(_, bl, e)) ->
          
-    | (p, e) ->
-
 (*I Texp_ident of Path.t * value_description
-  | Texp_constant of constant*)
-(*| Texp_let of rec_flag * (pattern * expression) list * expression *)
+ *| Texp_let of rec_flag * (pattern * expression) list * expression *)
+  | (p, Texp_let(_, bl, e)) ->
 
-  | (_, Texp_constant c)
-
+  | (_, Texp_constant (Const_int n))
+     addi n
   | (_, Texp_function(al, _)) ->
      (C.flap (fun (p, e) -> vp p) @ 
      (if !more_qls then C.flap (fun (p, e) -> ve e) al else []))
- 
-(*| Texp_apply of expression * (expression option * optional) list
-  | Texp_match of expression * (pattern * expression) list * partial
+  | (_, Texp_apply (e, el)) ->
+     ve e; 
+ (* | Texp_match of expression * (pattern * expression) list * partial
   x Texp_try of expression * (pattern * expression) list
   | Texp_tuple of expression list
   | Texp_construct of constructor_description * expression list
@@ -104,9 +104,8 @@ let rec bound_idents pat =
   in 
   (fun (p, e) -> 
     let _ = if is_function e then bound_idents p else () in 
-    let es = visit_bind_exp e in*)
+    let es = visit_bind_exp e in
 
-let visit_binding a = ()
 
 let iter_bindings defs = 
   List.iter visit_binding defs
