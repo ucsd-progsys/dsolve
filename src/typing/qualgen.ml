@@ -1,5 +1,6 @@
 open Typedtree
 open Types
+open Asttypes
 (*open Types
 
 module L = Lightenv
@@ -16,10 +17,14 @@ let is_function e =
     | Texp_function(_, _) -> true
     | _ -> false 
 
-module TM = Map.Make(struct
-                       type t = Types.type_expr
-                       let compare = compare
-                     end)
+module CTy = 
+struct
+  type t = Types.type_expr
+  let compare = compare
+end
+
+module TM = Map.Make(CTy)
+module TS = Set.Make(CTy)
 module IS = Set.Make(String)
 module CS = Set.Make(struct
                        type t = int
@@ -31,16 +36,28 @@ module CS = Set.Make(struct
 (* intset: set of all int constants. ignored or set {0,1} if lquals set? *)
 
 let tymap = ref TM.empty   
+let tyset = ref TS.empty
 let idset = ref IS.empty
 let intset = ref CS.empty
+
+
 
 let addi n =
   intset := CS.add n !intset
 
+let addt t =
+  tyset := TS.add t !tyset
+
+let addid i =
+  idset := IS.add i !idset
+
+let findm ty = try TM.find ty !tymap with Not_found -> IS.empty
+
 let addm (typ, id) = 
   let id = Ident.name id in
-  let s = try TM.find typ !tymap with Not_found -> IS.empty in
-    tymap := TM.add typ (IS.add id s) !tymap
+  let _ = addt typ in
+  let _ = addid id in 
+    tymap := TM.add typ (IS.add id (findm typ)) !tymap
 
 let rec bound_idents pat = 
   let ptyp = pat.pat_type in
@@ -50,6 +67,12 @@ let rec bound_idents pat =
     | Tpat_or(p, _, _) -> bound_idents p
     | d -> Typedtree.iter_pattern_desc bound_idents d
 
+let all_consts () = CS.elements !intset 
+let lookup_ids = findm 
+let all_ids () = IS.elements !idset
+let all_types () = TS.elements !tyset 
+
+
 (*let iter_bind in_l (p, e) =
   let is_f = is_function e in
   let ps = if in_l || is_f then [] else qbound_idents p in
@@ -57,34 +80,36 @@ let rec bound_idents pat =
     ps @ es*)
 
 
-and visit_binding (pat, exp) = 
+let rec visit_binding (pat, exp) = 
   let rec ve e =
-    let etyp = e.exp_type in
-    match e.exp_desc with
-         
-(*I Texp_ident of Path.t * value_description
- *| Texp_let of rec_flag * (pattern * expression) list * expression *)
-  | (p, Texp_let(_, bl, e)) ->
-
-  | (_, Texp_constant (Const_int n))
+    match (e.exp_type, e.exp_desc) with
+(*| Texp_let of rec_flag * (pattern * expression) list * expression *)
+  | (_, Texp_let (_, bl, e2)) ->
+     List.iter visit_binding bl; ve e2  
+  | (_, Texp_constant (Const_int (n))) ->
      addi n
-  | (_, Texp_function(al, _)) ->
-     (C.flap (fun (p, e) -> vp p) @ 
-     (if !more_qls then C.flap (fun (p, e) -> ve e) al else []))
+  | (_, Texp_function([(pat, e)], _)) -> 
+     bound_idents pat; ve e
   | (_, Texp_apply (e, el)) ->
-     ve e; 
- (* | Texp_match of expression * (pattern * expression) list * partial
-  x Texp_try of expression * (pattern * expression) list
-  | Texp_tuple of expression list
-  | Texp_construct of constructor_description * expression list
-  | Texp_variant of label * expression option
-  | Texp_record of (label_description * expression) list * expression option
-  | Texp_field of expression * label_description
-  | Texp_setfield of expression * label_description * expression
-  | Texp_array of expression list
-  | Texp_ifthenelse of expression * expression * expression option
-  | Texp_sequence of expression * expression
-  x Texp_while of expression * expression
+     ve e; List.iter (function (Some(e), _) -> ve e | _ -> ()) el
+(*| Texp_match of expression * (pattern * expression) list * partial
+  x Texp_try of expression * (pattern * expression) list *)
+  | (_, Texp_array (el))
+  | (_, Texp_tuple (el)) 
+  | (_, Texp_construct (_, el)) ->
+     List.iter ve el
+(*x Texp_variant of label * expression option*)
+  | (_, Texp_record (el, None)) ->
+     List.iter (fun (l, e) -> ve e) el
+  | (_, Texp_assert (e))
+  | (_, Texp_field (e, _)) ->
+     ve e
+  | (_, Texp_sequence (e1, e2))
+  | (_, Texp_setfield (e1, _, e2)) ->
+     ve e1; ve e2
+  | (_, Texp_ifthenelse (e1, e2, e3)) ->
+     ve e1; ve e2; (fun e3 -> match e3 with Some(e3) -> ve e3 | _ -> ()) e3
+(*x Texp_while of expression * expression
   x Texp_for of
       Ident.t * expression * expression * direction_flag * expression
   x Texp_when of expression * expression
@@ -93,31 +118,23 @@ and visit_binding (pat, exp) =
   x Texp_instvar of Path.t * Path.t
   x Texp_setinstvar of Path.t * Path.t * expression
   x Texp_override of Path.t * (Path.t * expression) list
-  x Texp_letmodule of Ident.t * module_expr * expression
-  | Texp_assert of expression
-  I Texp_assertfalse
+  x Texp_letmodule of Ident.t * module_expr * expression 
   x Texp_lazy of expression
   x Texp_object of class_structure * class_signature * string list *)
-
-
-
+  | (_, Texp_assertfalse)
+  | (_, Texp_ident (_, _)) ->
+      ()
+  | _ ->
+      assert false
   in 
-  (fun (p, e) -> 
-    let _ = if is_function e then bound_idents p else () in 
-    let es = visit_bind_exp e in
-
+  let _ = if is_function exp then bound_idents pat else () in 
+    ve exp
 
 let iter_bindings defs = 
   List.iter visit_binding defs
 
 
-
  
-let all_consts = [1;2;3]
-let lookup_ids a = [Path.mk_ident "asdf"]
-let all_ids = [Path.mk_ident "asdf"]
-let all_types = [] 
-
 
     
 
