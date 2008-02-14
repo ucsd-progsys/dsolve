@@ -1427,7 +1427,7 @@ qual_type:
 /* Qualifiers */
 
 qualifier_pattern_declaration:
-    UIDENT LPAREN LIDENT RPAREN LPAREN qual_ty_anno RPAREN  COLON qualifier_pattern  
+    UIDENT LPAREN LIDENT RPAREN LPAREN qual_ty_anno RPAREN COLON qualifier_pattern  
     { (Pstr_qualifier($1, mkqpat($3, $6, $9))) }
   | UIDENT LPAREN LIDENT RPAREN COLON qualifier_pattern
     { (Pstr_qualifier($1, mkqpat($3, [], $6)))  }
@@ -1469,18 +1469,22 @@ qual_rel_list:
     qual_lit_rel                            { [$1] }
   | qual_lit_rel COMMA qual_rel_list        { $1::$3 }
 
+qual_expr_1: /* this is great except it binds ops more tightly than funapps
+which is opposite of what we expect */
+  | qual_litident qual_expr_list 
+    { mkpredpatexp (Ppredpatexp_funapp(Longident.parse $1, $2)) } 
+  | qual_expr                               { $1 }
+
 qual_expr:
     qual_term qual_op qual_expr             
       { mkpredpatexp (Ppredpatexp_binop($1, $2, $3)) }
   | qual_term                               { $1 }                             
   | LPAREN qual_expr RPAREN                 { $2 }
-
-qual_term:
-    LPAREN qual_litident qual_term_list RPAREN /* funapp */
-    { mkpredpatexp (Ppredpatexp_funapp(Longident.parse $2, $3)) } 
-  | LPAREN UIDENT qual_term_list RPAREN
+  | LPAREN qual_litident qual_expr_list RPAREN
     { mkpredpatexp (Ppredpatexp_funapp(Longident.parse $2, $3)) }
-  | qual_litident /* literal */
+
+qual_term: 
+    qual_litident /* literal */
     { mkpredpatexp (Ppredpatexp_var(Longident.parse $1)) }
   | UIDENT /* var */
     { mkpredpatexp (Ppredpatexp_mvar($1)) }
@@ -1495,9 +1499,10 @@ qual_litident:
     UIDENT DOT qual_litident                { $1 ^ "." ^ $3 }
   | LIDENT                                  { $1 }
 
-qual_term_list:
-    qual_term                               { [$1] }
-  | qual_term qual_term_list                { $1::$2 }
+qual_expr_list:
+    qual_expr                               { [$1] }
+  | qual_expr qual_expr_list                { $1::$2 }
+
 
 qual_op:
     qual_lit_op                                { [$1]  }
