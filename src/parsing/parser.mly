@@ -1459,6 +1459,9 @@ qual_lit_rel:
     {   if $1 = "<=" then Pred_le
         else if $1 = "!=" then Pred_ne
 				else if $1 = ">=" then Pred_ge
+        else if $1 = "=" then Pred_eq
+        else if $1 = "<" then Pred_lt
+        else if $1 = ">" then Pred_gt
         else raise Parse_error
     }
   | EQUAL                                   { Pred_eq }
@@ -1469,28 +1472,25 @@ qual_rel_list:
     qual_lit_rel                            { [$1] }
   | qual_lit_rel COMMA qual_rel_list        { $1::$3 }
 
-qual_expr_1: /* this is great except it binds ops more tightly than funapps
-which is opposite of what we expect */
-  | qual_litident qual_expr_list 
-    { mkpredpatexp (Ppredpatexp_funapp(Longident.parse $1, $2)) } 
-  | qual_expr                               { $1 }
-
 qual_expr:
-    qual_term qual_op qual_expr             
-      { mkpredpatexp (Ppredpatexp_binop($1, $2, $3)) }
-  | qual_term                               { $1 }                             
-  | LPAREN qual_expr RPAREN                 { $2 }
-  | LPAREN qual_litident qual_expr_list RPAREN
-    { mkpredpatexp (Ppredpatexp_funapp(Longident.parse $2, $3)) }
+    qual_expr_1 qual_op qual_expr           
+    { mkpredpatexp (Ppredpatexp_binop($1, $2, $3)) }
+  | qual_expr_1                             { $1 }
 
-qual_term: 
-    qual_litident /* literal */
-    { mkpredpatexp (Ppredpatexp_var(Longident.parse $1)) }
-  | UIDENT /* var */
-    { mkpredpatexp (Ppredpatexp_mvar($1)) }
+qual_expr_1: 
+  | qual_litident qual_term_list 
+    { mkpredpatexp (Ppredpatexp_funapp(Longident.parse $1, $2)) } 
+  | qual_term                               { $1 }
+
+qual_term:
+    LPAREN qual_expr RPAREN                 { $2 }
+  | qual_litident /* literal */
+    { mkpredpatexp (Ppredpatexp_var(Longident.parse $1)) } 
+  | TILDE UIDENT /* var */
+    { mkpredpatexp (Ppredpatexp_mvar($2)) } 
   | INT
     { mkpredpatexp (Ppredpatexp_int($1)) }
-  | SHARP  /* wild int */
+  | INFIXOP1  /* wild int @ */
     { mkpredpatexp (Ppredpatexp_any_int) }
   | qual_term DOT LIDENT                
     { mkpredpatexp (Ppredpatexp_field($3, $1)) }
@@ -1499,10 +1499,9 @@ qual_litident:
     UIDENT DOT qual_litident                { $1 ^ "." ^ $3 }
   | LIDENT                                  { $1 }
 
-qual_expr_list:
-    qual_expr                               { [$1] }
-  | qual_expr qual_expr_list                { $1::$2 }
-
+qual_term_list:
+    qual_term                               { [$1] }
+  | qual_term qual_term_list                { $1::$2 }
 
 qual_op:
     qual_lit_op                                { [$1]  }
@@ -1517,7 +1516,8 @@ qual_lit_op:
   | INFIXOP3                                
     {  match $1 with 
 			  "/" -> Predexp_div 
-      | _ -> assert false }
+      | "*" -> Predexp_times
+      | _ -> raise Parse_error }
 
 qual_lit_op_list:
     qual_lit_op                             { [$1] }
