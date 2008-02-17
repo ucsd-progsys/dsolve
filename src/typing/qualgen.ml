@@ -57,7 +57,7 @@ let addm (typ, id) =
   let id = Ident.name id in
   let _ = addt typ in
   let _ = addid id in 
-    tymap := TM.add typ (IS.add id (findm typ)) !tymap
+    if (String.sub id 0 5 = "__tmp") then () else tymap := TM.add typ (IS.add id (findm typ)) !tymap
 
 let rec bound_idents pat = 
   let ptyp = pat.pat_type in
@@ -71,14 +71,6 @@ let all_consts () = CS.elements !intset
 let lookup_ids = findm 
 let all_ids () = IS.elements !idset
 let all_types () = TS.elements !tyset 
-
-
-(*let iter_bind in_l (p, e) =
-  let is_f = is_function e in
-  let ps = if in_l || is_f then [] else qbound_idents p in
-  let es = if in_l then [] else iter_pats false e in
-    ps @ es*)
-
 
 let rec visit_binding (pat, exp) = 
   let rec ve e =
@@ -129,6 +121,14 @@ let rec visit_binding (pat, exp) =
   in 
   let _ = if is_function exp then bound_idents pat else () in 
     ve exp
+      
+let rec visit_str sstr = 
+  match sstr with
+      Tstr_value (_, bl) :: srem ->
+       List.iter visit_binding bl; visit_str sstr 
+    | _ :: srem ->
+       visit_str sstr
+    | [] -> ()
 
 let iter_bindings defs = 
   List.iter visit_binding defs
