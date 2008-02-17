@@ -78,8 +78,6 @@ let empty_refinement = ([], Qconst [])
 let false_refinement = ([], Qconst [(Path.mk_ident "false", Path.mk_ident "V", Predicate.Not (Predicate.True))])
 
 (* Instantiate the tyvars in fr with the corresponding frames in ftemplate.
-   This function must guarantee that a constructed type's arguments are instantiated first,
-   then its constructors; this way, we ensure that the constructors take the proper types.
    If a variable occurs twice, it will only be instantiated with one frame; which
    one is undefined and unimportant. *)
 let instantiate fr ftemplate =
