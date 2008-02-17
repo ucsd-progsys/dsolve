@@ -298,9 +298,9 @@ let constrain_structure initfenv initquals str =
     | (Tstr_eval exp) :: srem ->
         let (_, cstrs') = constrain exp fenv []
         in constrain_rec quals fenv (cstrs' @ cstrs) srem
-    (*| (Tstr_qualifier (name, (valu, pred))) :: srem ->
+    | (Tstr_qualifier (name, (valu, pred))) :: srem ->
         let quals = (Path.Pident name, Path.Pident valu, pred) :: quals in
-          constrain_rec quals fenv cstrs srem*)
+          constrain_rec quals fenv cstrs srem
 		| (Tstr_value (recflag, bindings))::srem ->
         let (fenv, cstrs') = constrain_bindings fenv [] recflag bindings
         in constrain_rec quals fenv (cstrs @ cstrs') srem

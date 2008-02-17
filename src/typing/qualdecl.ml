@@ -118,44 +118,11 @@ let gen_preds p =
             tflap2 (e1s, p1s) (fun c d -> Iff (c, d))
   in gen_pred_rec p
 
-let gen_quals nm ppat =
-  let num = ref 0 in
-  let n () = incr num; string_of_int !num in
-  List.map (fun c -> (Ident.create (nm ^ (n ())) , c)) (gen_preds ppat)
+let gen_quals v ppat =
+  List.map (fun c -> (Ident.create v, c)) (gen_preds ppat)
 
 (* Translate a qualifier declaration *)
 let transl_pattern env {Parsetree.pqual_pat_desc = (valu, anno, pred)} =
     (gen_quals valu (transl_patpred (List.fold_left (fa env) AM.empty anno) pred))
 
 
-
-(*let build_preds p =
-  let max = ref (size_pred pat) in*)
-  
-
-
-(*let fold_patpred_lists f g p =
-  let fa a f = f a in
-  let rec fold_expr_rec pe =
-    match pe.ppredpatexp_desc with
-      | (fs, PPInt (ns)) ->
-          List.forall (fun n -> preds := (List.fold_left fa (PInt(n)) fs)::!preds) ns 
-      | (fs, PVar (ds)) ->
-          List.forall (fun d -> preds := (List.fold_left fa (PVar(s)) fs)::!preds) ds
-      | PFunApp (f, es) ->
-           (List.map fold_expr_rec es) 
-      | PBinop (e1, ops, e2) ->
-          g [(f ops); fold_expr_rec e1; fold_expr_rec e2] 
-  in    
-  let rec fold_pred_rec pd =
-    match pd.ppredpat_desc with
-      | PTrue 
-          g [] 
-      | PNot (p) ->  
-          fold_pred_rec p 
-      | POr (p1, p2) ->
-      | PAnd (p1, p2) ->
-          g [fold_pred_rec p1; fold_pred_rec p2]
-      | PAtom (p1, rels, p2) ->      
-          g [(f rels); fold_pred_rec p1; fold_pred_rec p2]
-  in fold_pred_rec p*)

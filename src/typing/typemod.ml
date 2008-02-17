@@ -601,9 +601,11 @@ and type_structure anchor env sstr =
          map_rec' (fun rs (id, info) -> Tsig_type(id, info, rs)) decls sig_rem,
          final_env)
     | {pstr_desc = Pstr_qualifier (name, pat)} :: srem ->
+        let num = ref 0 in
+        let nm () = incr num; name ^ (string_of_int !num) in
         let (str_rem, sig_rem, final_env) = type_struct env srem in
-        (Tstr_qualifier (Ident.create name, Qualdecl.transl_pattern env pat)
-         :: str_rem,
+        (List.map (fun p -> Tstr_qualifier (Ident.create (nm ()), p)) (Qualdecl.transl_pattern env pat)
+         @ str_rem,
          sig_rem,
          final_env)
     | {pstr_desc = Pstr_exception(name, sarg)} :: srem ->
