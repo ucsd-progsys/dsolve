@@ -163,7 +163,7 @@ let fresh_constructor env cstrdesc = function
   | Fconstr (_, fl, _, _) ->
       let tyargs = match cstrdesc.cstr_res.desc with Tconstr(_, args, _) -> args | _ -> assert false in
       let argmap = ref (List.combine (List.map repr tyargs) fl) in
-        fresh_with_var_fun argmap env {desc = Ttuple cstrdesc.cstr_args; id = 0; level = 0} fresh_refinementvar
+        List.map (fun t -> fresh_with_var_fun argmap env t fresh_refinementvar) cstrdesc.cstr_args
   | _ -> assert false
 
 (* Label all the function formals in [f] with their corresponding labels in

@@ -101,9 +101,9 @@ and constrain_constructed (env, guard, f) tyenv cstrdesc args = match f with
         | Cstr_exception _ -> assert false
       in
       let f = F.Fconstr (path, tyargframes, cstrs, cstrref) in
-      let argtuple = F.fresh_constructor tyenv cstrdesc f in
+      let cstrargs = F.fresh_constructor tyenv cstrdesc f in
       let (argframes, argcstrs) = constrain_subexprs env guard args in
-        (f, [SubFrame(env, guard, F.Ftuple argframes, argtuple);
+        (f, [SubFrame(env, guard, F.Ftuple argframes, F.Ftuple cstrargs);
              SubFrame(env, guard, F.Ftuple tyargframes, F.Ftuple tyargframes);
              WFFrame(env, f)], argcstrs)
   | _ -> assert false
