@@ -118,11 +118,8 @@ let gen_preds p =
             tflap2 (e1s, p1s) (fun c d -> Iff (c, d))
   in gen_pred_rec p
 
-let gen_quals v ppat =
-  List.map (fun c -> (Ident.create v, c)) (gen_preds ppat)
-
 (* Translate a qualifier declaration *)
 let transl_pattern env {Parsetree.pqual_pat_desc = (valu, anno, pred)} =
-    (gen_quals valu (transl_patpred (List.fold_left (fa env) AM.empty anno) pred))
+    (gen_preds (transl_patpred (List.fold_left (fa env) AM.empty anno) pred))
 
 

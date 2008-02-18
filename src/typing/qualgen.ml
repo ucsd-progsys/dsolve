@@ -57,7 +57,7 @@ let addm (typ, id) =
   let id = Ident.name id in
   let _ = addt typ in
   let _ = addid id in 
-    if (String.sub id 0 5 = "__tmp") then () else tymap := TM.add typ (IS.add id (findm typ)) !tymap
+    if (try String.sub id 0 5 = "__tmp" with Invalid_argument s -> false) then () else tymap := TM.add typ (IS.add id (findm typ)) !tymap 
 
 let rec bound_idents pat = 
   let ptyp = pat.pat_type in
