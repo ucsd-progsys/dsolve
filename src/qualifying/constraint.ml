@@ -29,6 +29,7 @@ type frame_constraint =
 
 type labeled_constraint = {
   lc_cstr: frame_constraint;
+  lc_tenv: Env.t;
   lc_orig: origin;
   lc_id: fc_id;
 }
@@ -166,25 +167,25 @@ let simplify_fc c =
   * to work around all the BigArray stuff
   *)
 
-let make_lc c fc = {lc_cstr = fc; lc_orig = Cstr c; lc_id = c.lc_id}
+let make_lc c fc = {lc_cstr = fc; lc_tenv = c.lc_tenv; lc_orig = Cstr c; lc_id = c.lc_id}
 
 let lequate_cs env g c variance f1 f2 = match variance with
   | F.Invariant -> [make_lc c (SubFrame(env,g,f1,f2)); make_lc c (SubFrame(env,g,f2,f1))]
   | F.Covariant -> [make_lc c (SubFrame(env,g,f1,f2))]
   | F.Contravariant -> [make_lc c (SubFrame(env,g,f2,f1))]
 
-let match_and_extend env (l1,f1) (l2,f2) = 
+let match_and_extend tenv env (l1,f1) (l2,f2) =
   match (l1,l2) with
-  | (Some p, None) | (None, Some p) -> Pat.env_bind env p f2
-  | (Some p1, Some p2) when Pat.same p1 p2 -> Pat.env_bind env p1 f2
+  | (Some p, None) | (None, Some p) -> Pat.env_bind tenv env p f2
+  | (Some p1, Some p2) when Pat.same p1 p2 -> Pat.env_bind tenv env p1 f2
   | _  -> env (* 1 *)
  
 let mutable_variance = function Asttypes.Mutable -> F.Invariant | _ -> F.Covariant
 
-let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubFrame (env,g,f1,f2)} as c ->
+let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubFrame (env,g,f1,f2); lc_tenv = tenv} as c ->
   match (f1, f2) with
   | (F.Farrow (l1, f1, f1'), F.Farrow (l2, f2, f2')) -> 
-      let env' = match_and_extend env (l1,f1) (l2,f2) in 
+      let env' = match_and_extend tenv env (l1,f1) (l2,f2) in
       ((lequate_cs env g c F.Covariant f2 f1) @ (lequate_cs env' g c F.Covariant f1' f2'),
        [])
   | (F.Fvar _, F.Fvar _) | (F.Funknown, F.Funknown) ->
@@ -206,14 +207,14 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       (printf "@[Can't@ split:@ %a@ <:@ %a@]" F.pprint f1 F.pprint f2; 
        assert false)
 
-let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFrame (env,f)} as c ->
-  let make_wff env f = {lc_cstr = WFFrame (env, f); lc_orig = Cstr c; lc_id = None} in
+let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFrame (env,f); lc_tenv = tenv} as c ->
+  let make_wff env f = {lc_cstr = WFFrame (env, f); lc_tenv = tenv; lc_orig = Cstr c; lc_id = None} in
   match f with
   | F.Fconstr (_, l, _, r) ->
       (List.map (make_wff env) l,
        [(Cstr c, WFRef (Le.add qual_test_var f env, r, None))])
   | F.Farrow (l, f, f') ->
-      let env' = match l with None -> env | Some p -> Pat.env_bind env p f in
+      let env' = match l with None -> env | Some p -> Pat.env_bind tenv env p f in
       ([make_wff env f; make_wff env' f'], [])
   | F.Ftuple fs ->
       (List.map (make_wff env) fs, [])

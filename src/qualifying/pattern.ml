@@ -1,17 +1,21 @@
 open Typedtree
 
-let bind pat frame =
+let pattern_descs = List.map (fun p -> p.pat_desc)
+
+let bind env pat frame =
   let rec bind_rec bindings pat frame =
     match (pat, frame) with
     | (Tpat_any, _) -> bindings
     | (Tpat_var x, f) -> (Path.Pident x, f) :: bindings
     | (Tpat_tuple pats, Frame.Ftuple fs) ->
-      let pats = List.map (fun p -> p.pat_desc) pats in
-        List.fold_left2 bind_rec bindings pats fs
+        List.fold_left2 bind_rec bindings (pattern_descs pats) fs
+    | (Tpat_construct (cstrdesc, pats), f) ->
+        List.fold_left2 bind_rec bindings (pattern_descs pats)
+          (Frame.fresh_constructor env cstrdesc f)
     | _ -> assert false
   in bind_rec [] pat frame
 
-let env_bind env pat frame = Lightenv.addn (bind pat frame) env
+let env_bind tenv env pat frame = Lightenv.addn (bind tenv pat frame) env
 
 let bind_pexpr pat pexp =
   let rec bind_rec subs (pat, pexp) =
