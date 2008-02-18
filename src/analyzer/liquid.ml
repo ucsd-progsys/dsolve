@@ -135,18 +135,23 @@ let main () =
   (* nasty obvious hack *)
   let _ = if !dump_qualifs then
     let qs = 
-         ["qualif I(v) : v { * * } ^";
-          "qualif Int_rel_array_id(v) : Array.length v { * * } ^";
-          "qualif Int_rel_bigarray1_id(v) : Bigarray.Array2.dim1 v { * * } ^";
-          "qualif Int_rel_bigarray2_id(v) : Bigarray.Array2.dim2 v { * * } ^";
-          "qualif Id_rel_id(v) : v { * * } ~A";
-          "qualif Id_rel_array_id(v) : ~A { * * } Array.length v";
-          "qualif Id_rel_array_idd(v) : v { * * } Array.length ~A";
-          "qualif Id_rel_bigarray1_id(v) : ~A { * * } Bigarray.Array2.dim1 v"; 
-          "qualif Id_rel_bigarray2_id(v) : ~A { * * } Bigarray.Array2.dim2 v";
-          "qualif Id_rel_bigarray1_idd(v) : v { * * } Bigarray.Array2.dim1 ~A"; 
-          "qualif Id_rel_bigarray2_idd(v) : v { * * } Bigarray.Array2.dim2 ~A"]
- 
+     ["qualif I(_V) : _V { * * } ^";
+      "qualif Int_rel_array_id(_V) : Array.length _V { * * } ^";
+      "qualif Int_rel_bigarray1_id(_V) : Bigarray.Array2.dim1 _V { * * } ^";
+      "qualif Int_rel_bigarray2_id(_V) : Bigarray.Array2.dim2 _V { * * } ^";
+      "qualif Id_rel_id(_V) : _V { * * } ~A";
+      "qualif Id_rel_array_id(_V) : ~A { * * } Array.length _V";
+      "qualif Id_rel_array_idd(_V) : _V { * * } Array.length ~A";
+      "qualif Av_rel_a(_V) : Array.length _V { * * } Array.length ~A";
+      "qualif Id_rel_bigarray1_id(_V) : ~A { * * } Bigarray.Array2.dim1 _V";
+      "qualif Id_rel_bigarray2_id(_V) : ~A { * * } Bigarray.Array2.dim2 _V";
+      "qualif Id_rel_bigarray1_idd(_V) : _V { * * } Bigarray.Array2.dim1 ~A";
+      "qualif Id_rel_bigarray2_idd(_V) : _V { * * } Bigarray.Array2.dim2 ~A";
+      "qualif Big1v_rel_big1(_V) : Bigarray.Array2.dim1 _V { * * } Bigarray.Array2.dim1 ~A";
+      "qualif Big2v_rel_big2(_V) : Bigarray.Array2.dim2 _V { * * } Bigarray.Array2.dim2 ~A";
+      "qualif Big1v_rel_big2(_V) : Bigarray.Array2.dim1 _V { * * } Bigarray.Array2.dim2 ~A";
+      "qualif Big2v_rel_big1(_V) : Bigarray.Array2.dim2 _V { * * } Bigarray.Array2.dim1 ~A";
+      "qualif Big1v_rel_big2v(_V) : Bigarray.Array1.dim1 _V { * * } Bigarray.Array2.dim2 _V"]
     in
     eprintf "@[%s@\n@]" (String.concat "\n" qs); exit 0
   in

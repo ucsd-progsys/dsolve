@@ -34,7 +34,7 @@ module CS = Set.Make(struct
 let tymap = ref TM.empty   
 let tyset = ref TS.empty
 let idset = ref IS.empty
-let intset = ref CS.empty
+let intset = ref (CS.add 0 (CS.add 1 CS.empty))
 
 let addi n =
   intset := CS.add n !intset 
@@ -89,7 +89,8 @@ let rec visit_binding n (pat, exp) =
      ve n e; List.iter (function (Some(e), _) -> ve n e | _ -> ()) el
 (*| Texp_match of expression * (pattern * expression) list * partial
   x Texp_try of expression * (pattern * expression) list *)
-  | (_, Texp_array (el))
+  | (_, Texp_array (el)) ->
+      List.iter (ve n) el; addi (List.length el)
   | (_, Texp_tuple (el)) 
   | (_, Texp_construct (_, el)) ->
      List.iter (ve n) el
@@ -123,14 +124,14 @@ let rec visit_binding n (pat, exp) =
   | _ ->
       assert false
   in 
-    if is_function exp then (bound_idents n pat; ve (n+1) exp)
-                       else ve n exp 
+    if is_function exp then (ve (n+1) exp)
+                       else (bound_idents n pat; ve n exp) 
 
 
 let rec visit_str sstr = 
   match sstr with
       Tstr_value (_, bl) :: srem ->
-       addi 0; addi 1; List.iter (visit_binding 0) bl; visit_str sstr 
+       List.iter (visit_binding 0) bl; visit_str sstr 
     | _ :: srem ->
        visit_str sstr
     | [] -> ()
