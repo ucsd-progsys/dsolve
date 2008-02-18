@@ -26,7 +26,7 @@ type uif = {
 }
 
 type instance = { 
-  new_fact : int -> predicate -> (predicate -> unit) -> unit; (* callback to register prover for new fact *)
+  new_fact : predicate -> unit; (* callback to register prover for new fact *)
   vars : variable Vector.vector; (* the variables *)
   uifs : uif Vector.vector; (* the uninterpreted functions *)
   exprVart : int ExprHash.t;
@@ -53,20 +53,6 @@ let add_var me v =
 let get_var me x = 
   Vector.get me.vars x
 
-let new_instance new_fact =
-  let me =
-    { new_fact = new_fact;
-      vars = Vector.make 0 fake_var;
-      uifs = Vector.make 0 fake_not_uif;
-      cong = Cong.new_instance (); 
-      exprVart = ExprHash.create 251;
-      symbolFunt = SymbolHash.create 251;
-      consistent = true;
-      merges = [];
-      diseqs = [];
-    } in
-  Cong.set_merge_callback me.cong (fun i j -> me.merges <- (i,j)::me.merges);
-  me
 
 let rec make_var me e =
   let n = 
@@ -115,6 +101,22 @@ let add_diseq me xv yv =
 (**************************************************************************)
 (************************* API functions **********************************)
 (**************************************************************************)
+
+(* API *)
+let new_instance new_fact =
+  let me =
+    { new_fact = new_fact;
+      vars = Vector.make 0 fake_var;
+      uifs = Vector.make 0 fake_not_uif;
+      cong = Cong.new_instance (); 
+      exprVart = ExprHash.create 251;
+      symbolFunt = SymbolHash.create 251;
+      consistent = true;
+      merges = [];
+      diseqs = [];
+    } in
+  Cong.set_merge_callback me.cong (fun i j -> me.merges <- (i,j)::me.merges);
+  me
 
 (* API *)  
 let push me = function 
