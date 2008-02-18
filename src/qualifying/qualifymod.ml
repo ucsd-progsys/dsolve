@@ -1,5 +1,6 @@
 open Asttypes
 open Typedtree
+open Parsetree
 open Btype
 open Types
 open Constraint
@@ -301,6 +302,12 @@ let constrain_structure initfenv initquals str =
     | (Tstr_qualifier (name, (valu, pred))) :: srem ->
         let quals = (Path.Pident name, Path.Pident valu, pred) :: quals in
           constrain_rec quals fenv cstrs srem
+    | (Tstr_prequalifier (name, pat, env)) :: srem ->
+        let (valu, _, _) = pat.pqual_pat_desc in
+        let num = ref 0 in
+        let nm () = incr num; name ^ (string_of_int !num) in
+        let quals = (List.map (fun p -> (Ident.create (nm ()), Path.Pident (Ident.create valu), p)) (Qualdecl.transl_pattern env pat)) @ quals in
+          constrain_rec quals fenv cstrs srem 
 		| (Tstr_value (recflag, bindings))::srem ->
         let (fenv, cstrs') = constrain_bindings fenv [] recflag bindings
         in constrain_rec quals fenv (cstrs @ cstrs') srem

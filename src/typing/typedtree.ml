@@ -135,6 +135,7 @@ and structure_item =
   | Tstr_primitive of Ident.t * value_description
   | Tstr_type of (Ident.t * type_declaration) list
   | Tstr_qualifier of Ident.t * qualifier_declaration 
+  | Tstr_prequalifier of string * Parsetree.qualifier_pattern * Env.t
   | Tstr_exception of Ident.t * exception_declaration
   | Tstr_exn_rebind of Ident.t * Path.t
   | Tstr_module of Ident.t * module_expr
