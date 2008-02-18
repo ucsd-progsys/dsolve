@@ -1,12 +1,6 @@
 open Typedtree
 open Types
 open Asttypes
-(*open Types
-
-module L = Lightenv
-
-include L*)
-
 
 
 let col_lev = ref 0 (* amount of crap to collect *)
@@ -16,6 +10,8 @@ let is_function e =
   match e.exp_desc with
     | Texp_function(_, _) -> true
     | _ -> false 
+
+module C = Common
 
 module CTy = 
 struct
@@ -40,8 +36,6 @@ let tyset = ref TS.empty
 let idset = ref IS.empty
 let intset = ref CS.empty
 
-
-
 let addi n =
   intset := CS.add n !intset
 
@@ -54,10 +48,17 @@ let addid i =
 let findm ty = try TM.find ty !tymap with Not_found -> IS.empty
 
 let addm (typ, id) = 
+(*  let _ = C.cprintf C.ol_always "@[%i@ %i@ %i@ %i@\n@]" 
+                                (C.map_cnt TM.fold !tymap)
+                                (C.set_cnt TS.elements !tyset)
+                                (C.set_cnt IS.elements !idset)
+                                (C.set_cnt CS.elements !intset)
+  in*)
   let id = Ident.name id in
-  let _ = addt typ in
-  let _ = addid id in 
-    if (try String.sub id 0 5 = "__tmp" with Invalid_argument s -> false) then () else tymap := TM.add typ (IS.add id (findm typ)) !tymap 
+  let tmp = try (String.sub id 0 5) = "__tmp" with Invalid_argument s -> false in
+  let _ = if tmp then () else addt typ in
+  let _ = if tmp then () else addid id in 
+    if tmp then () else tymap := TM.add typ (IS.add id (findm typ)) !tymap 
 
 let rec bound_idents pat = 
   let ptyp = pat.pat_type in

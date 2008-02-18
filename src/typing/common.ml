@@ -209,3 +209,12 @@ let fsprintf f p =
 let pred_to_string p = 
   fsprintf Predicate.pprint p
 *)
+
+(*************************************************************************)
+
+let map_cnt f m =
+  let cnt a b n = n + 1 in
+    f cnt m 0
+
+let set_cnt f s =
+   List.length (f s)
