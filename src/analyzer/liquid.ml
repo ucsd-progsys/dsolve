@@ -151,7 +151,11 @@ let main () =
       "qualif Big2v_rel_big2(_V) : Bigarray.Array2.dim2 _V { * * } Bigarray.Array2.dim2 ~A";
       "qualif Big1v_rel_big2(_V) : Bigarray.Array2.dim1 _V { * * } Bigarray.Array2.dim2 ~A";
       "qualif Big2v_rel_big1(_V) : Bigarray.Array2.dim2 _V { * * } Bigarray.Array2.dim1 ~A";
-      "qualif Big1v_rel_big2v(_V) : Bigarray.Array2.dim1 _V { * * } Bigarray.Array2.dim2 _V"]
+      "qualif Big1v_rel_big2v(_V) : Bigarray.Array2.dim1 _V { * * } Bigarray.Array2.dim2 _V";
+      "qualif Av_rel_big1(_V) : Array.length _V { * * } Bigarray.Array2.dim1 ~A";
+      "qualif Av_rel_big2(_V) : Array.length _V { * * } Bigarray.Array2.dim2 ~A";
+      "qualif A_rel_big1v(_V) : Array.length ~A { * * } Bigarray.Array2.dim1 _V";
+      "qualif A_rel_big2v(_V) : Array.length ~A { * * } Bigarray.Array2.dim2 _V"]
     in
     eprintf "@[%s@\n@]" (String.concat "\n" qs); exit 0
   in
