@@ -135,14 +135,18 @@ let main () =
   (* nasty obvious hack *)
   let _ = if !dump_qualifs then
     let qs = 
-         ["qualif I(v) : ~A { * * } ^";
-          "qualif Int_rel_array_id(v) : Array.length ~A { * * } ^";
+         ["qualif I(v) : v { * * } ^";
+          "qualif Int_rel_array_id(v) : Array.length v { * * } ^";
           "qualif Int_rel_bigarray1_id(v) : Bigarray.Array2.dim1 v { * * } ^";
           "qualif Int_rel_bigarray2_id(v) : Bigarray.Array2.dim2 v { * * } ^";
-          "qualif Id_rel_id(v) : ~A { * * } ~B";
-          "qualif Id_rel_array_id(v) : ~A { * * } Array.length ~B";
+          "qualif Id_rel_id(v) : v { * * } ~A";
+          "qualif Id_rel_array_id(v) : ~A { * * } Array.length v";
+          "qualif Id_rel_array_idd(v) : v { * * } Array.length ~A";
           "qualif Id_rel_bigarray1_id(v) : ~A { * * } Bigarray.Array2.dim1 v"; 
-          "qualif Id_rel_bigarray2_id(v) : ~A { * * } Bigarray.Array2.dim2 v"]
+          "qualif Id_rel_bigarray2_id(v) : ~A { * * } Bigarray.Array2.dim2 v";
+          "qualif Id_rel_bigarray1_idd(v) : v { * * } Bigarray.Array2.dim1 ~A"; 
+          "qualif Id_rel_bigarray2_idd(v) : v { * * } Bigarray.Array2.dim2 ~A"]
+ 
     in
     eprintf "@[%s@\n@]" (String.concat "\n" qs); exit 0
   in

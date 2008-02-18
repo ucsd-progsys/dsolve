@@ -3,7 +3,7 @@ open Types
 open Asttypes
 
 
-let col_lev = ref 2 (* amount of crap to collect *)
+let col_lev = ref 100 (* amount of crap to collect *)
 let ck_clev l = (l <= !col_lev)
 
 let is_function e =
@@ -36,8 +36,8 @@ let tyset = ref TS.empty
 let idset = ref IS.empty
 let intset = ref CS.empty
 
-let addi l n =
-  if ck_clev l then intset := CS.add n !intset else ()
+let addi n =
+  intset := CS.add n !intset 
 
 let addt t =
   tyset := TS.add t !tyset
@@ -79,13 +79,12 @@ let all_types () = TS.elements !tyset
 let rec visit_binding n (pat, exp) = 
   let rec ve n e =
     match (e.exp_type, e.exp_desc) with
-(*| Texp_let of rec_flag * (pattern * expression) list * expression *)
   | (_, Texp_let (_, bl, e2)) ->
      List.iter (visit_binding n) bl; ve n e2  
   | (_, Texp_constant (Const_int (i))) ->
-     addi n i
-  | (_, Texp_function([(pat, e)], _)) -> 
-     bound_idents n pat; ve n e
+     addi i
+  | (_, Texp_function(pl, _)) -> 
+     List.iter (fun (pat, e) -> bound_idents n pat; ve n e) pl
   | (_, Texp_apply (e, el)) ->
      ve n e; List.iter (function (Some(e), _) -> ve n e | _ -> ()) el
 (*| Texp_match of expression * (pattern * expression) list * partial
@@ -130,7 +129,7 @@ let rec visit_binding n (pat, exp) =
 let rec visit_str sstr = 
   match sstr with
       Tstr_value (_, bl) :: srem ->
-       List.iter (visit_binding 0) bl; visit_str sstr 
+       addi 0; addi 1; List.iter (visit_binding 0) bl; visit_str sstr 
     | _ :: srem ->
        visit_str sstr
     | [] -> ()
