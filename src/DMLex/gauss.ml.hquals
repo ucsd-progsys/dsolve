@@ -1,1 +1,1 @@
-qualif O(x): Bigarray.Array2.dim2 x = (Bigarray.Array2.dim1 x) + 1
+qualif O(_V): Bigarray.Array2.dim2 _V = (Bigarray.Array2.dim1 _V) + 1
