@@ -116,6 +116,7 @@ let rec visit_binding n (pat, exp) =
   x Texp_letmodule of Ident.t * module_expr * expression 
   x Texp_lazy of expression
   x Texp_object of class_structure * class_signature * string list *)
+  | (_, Texp_constant (_))
   | (_, Texp_assertfalse)
   | (_, Texp_ident (_, _)) ->
       ()
