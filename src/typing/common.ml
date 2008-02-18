@@ -80,10 +80,11 @@ let ol_solve_stats = 2
 let ol_timing = 2
 let ol_default = 2
 let ol_normalized = 3
+let ol_dquals = 4 
 let ol_unique_names = 9
 let ol_solve = 10 
 let ol_refine = 11 
-let ol_scc =12 
+let ol_scc = 12 
 
 let verbose_level = ref ol_default
 let null_formatter = F.make_formatter (fun a b c -> ()) ignore

@@ -64,6 +64,8 @@ let transl_patpred tymap p =
 
 let rec lflap es =
   match es with
+    | s :: [] ->
+        List.map (fun c -> [c]) s
     | s :: es ->
         C.flap (fun c -> List.map (fun d -> c :: d) (lflap es)) s
     | [] ->
@@ -122,5 +124,5 @@ let gen_preds p =
 let transl_pattern env {Parsetree.pqual_pat_desc = (valu, anno, pred)} =
   let preds = (gen_preds (transl_patpred (List.fold_left (fa env) AM.empty anno) pred))
   in
-  let _ = List.iter (fun p -> C.cprintf C.ol_always "@[%a@.@]" pprint p) preds
+  let _ = List.iter (fun p -> C.cprintf C.ol_dquals "@[%a@.@]" pprint p) preds
   in preds
