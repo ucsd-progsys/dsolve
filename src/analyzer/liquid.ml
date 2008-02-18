@@ -135,11 +135,11 @@ let main () =
   (* nasty obvious hack *)
   let _ = if !dump_qualifs then
     let qs = 
-         ["qualif I(v) (A : int) : ~A { * * } ^";
+         ["qualif I(v) : ~A { * * } ^";
           "qualif Int_rel_array_id(v) : Array.length ~A { * * } ^";
           "qualif Int_rel_bigarray1_id(v) : Bigarray.Array2.dim1 v { * * } ^";
           "qualif Int_rel_bigarray2_id(v) : Bigarray.Array2.dim2 v { * * } ^";
-          "qualif Id_rel_id(v) (A : int, B : int) : ~A { * * } ~B";
+          "qualif Id_rel_id(v) : ~A { * * } ~B";
           "qualif Id_rel_array_id(v) : ~A { * * } Array.length ~B";
           "qualif Id_rel_bigarray1_id(v) : ~A { * * } Bigarray.Array2.dim1 v"; 
           "qualif Id_rel_bigarray2_id(v) : ~A { * * } Bigarray.Array2.dim2 v"]
