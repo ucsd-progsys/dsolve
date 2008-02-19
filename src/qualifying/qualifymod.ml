@@ -368,8 +368,8 @@ let post_solve () =
 
 let qualify_implementation sourcefile fenv qs str =
   let (qs, _, cs) = constrain_structure fenv qs str in
-  let inst_qs = instantiate_in_environments cs qs in
   let _ = pre_solve () in
+  let inst_qs = Bstats.time "instantiating quals" (instantiate_in_environments cs) qs in
   let (s,cs) = Bstats.time "solving" (solve inst_qs) cs in
   let _ = post_solve () in
   let _ = dump_frames sourcefile (framemap_apply_solution s !flog) in
