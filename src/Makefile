@@ -47,7 +47,7 @@ QUALIFYING=qualifying/lightenv.cmo \
   qualifying/printqual.cmo qualifying/qualifymod.cmo \
   qualifying/qdebug.cmo qualifying/normalize.cmo
 
-LIQUID=driver/pparse.cmo analyzer/liqerrors.cmo analyzer/liquid.cmo
+LIQUID=driver/pparse.cmo analyzer/qdump.cmo analyzer/liqerrors.cmo analyzer/liquid.cmo
 
 LIQOBJS=$(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(LIQUID)
 

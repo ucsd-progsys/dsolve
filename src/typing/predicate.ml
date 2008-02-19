@@ -57,7 +57,8 @@ let pprint_rel = function
 
 let rec pprint_pexpr ppf = function
   | PInt n ->
-      fprintf ppf "%d" n
+      if n < 0 then fprintf ppf "(0 - %d)" (-n)
+      else fprintf ppf "%d" n
   | Var x ->
       fprintf ppf "%s" ((Common.path_name ()) x) 
   | FunApp (f, pexp) ->
@@ -68,7 +69,7 @@ let rec pprint_pexpr ppf = function
         | Minus -> "-"
         | Times -> "*"
 				| Div -> "/"
-      in fprintf ppf "@[(%s@ %a@ %a)@]" opstr pprint_pexpr p pprint_pexpr q
+      in fprintf ppf "@[(%a@ %s@ %a)@]" pprint_pexpr p opstr pprint_pexpr q
   | Field (f, pexp) ->
       fprintf ppf "@[%a.%s@]" pprint_pexpr pexp f
 
@@ -76,15 +77,15 @@ let rec pprint ppf = function
   | True ->
       fprintf ppf "true"
   | Atom (p, rel, q) ->
-      fprintf ppf "@[(%s@ %a@ %a)@]" (pprint_rel rel) pprint_pexpr p pprint_pexpr q
+      fprintf ppf "@[(%a@ %s@ %a)@]" pprint_pexpr p (pprint_rel rel) pprint_pexpr q
   | Iff (px, q) ->
-      fprintf ppf "@[(<=> %a@;<1 2>%a)@]" pprint_pexpr px pprint q
+      fprintf ppf "@[(%a@ <=>@;<1 2>%a)@]" pprint_pexpr px pprint q
   | Not p ->
       fprintf ppf "@[(not@ %a)@]" pprint p
   | And (p, q) ->
-      fprintf ppf "@[(and@;<1 2>%a@;<1 2>%a)@]" flatten_conjuncts p flatten_conjuncts q
+      fprintf ppf "@[(%a@ and@;<1 2>@;<1 2>%a)@]" flatten_conjuncts p flatten_conjuncts q
   | Or (p, q) ->
-      fprintf ppf "@[(or@;<1 2>%a@;<1 2>%a)@]" flatten_disjuncts p flatten_disjuncts q
+      fprintf ppf "@[(%a@ or@;<1 2>@;<1 2>%a)@]" flatten_disjuncts p flatten_disjuncts q
 and flatten_conjuncts ppf = function
   | And (And (p1, p2), And (q1, q2)) ->
       fprintf ppf "@[%a@;<1 0>%a@;<1 0>%a@;<1 0>%a@]"

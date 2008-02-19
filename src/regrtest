@@ -1,7 +1,7 @@
 #!/bin/bash
 #not actually a regression test
 OCAML=./liquid.run
-FLAGS="-dframes -cacheq -v 9"
+FLAGS="-dframes -cacheq -v 8"
 QUALFLAGS="-no-simple-subs -no-anormal -dqualifs -lqualifs"
 POSFILE=postests
 NEGFILE=negtests

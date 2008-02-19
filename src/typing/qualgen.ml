@@ -3,7 +3,7 @@ open Types
 open Asttypes
 
 
-let col_lev = ref 100 (* amount of crap to collect *)
+let col_lev = ref 1 (* max number of lambdas to collect under *)
 let ck_clev l = (l <= !col_lev)
 
 let is_function e =
@@ -125,15 +125,14 @@ let rec visit_binding n (pat, exp) =
       assert false
   in 
     if is_function exp then (ve (n+1) exp)
-                       else (bound_idents n pat; ve n exp) 
-
+                       else ((if not(!Clflags.less_qualifs) then bound_idents n pat); ve n exp) 
 
 let rec visit_str sstr = 
   match sstr with
       Tstr_value (_, bl) :: srem ->
-       List.iter (visit_binding 0) bl; visit_str sstr 
+       List.iter (visit_binding 0) bl; visit_str srem 
     | _ :: srem ->
-       visit_str sstr
+       visit_str srem
     | [] -> ()
 
 let iter_bindings defs = 

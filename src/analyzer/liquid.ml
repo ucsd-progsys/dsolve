@@ -115,7 +115,7 @@ let main () =
      "-bprover", Arg.Set always_use_backup_prover, "always use backup prover";
      "-qprover", Arg.Set use_qprover , "use Qprover";
      "-qpdump", Arg.Set qpdump, "dump Qprover queries";
-     "-lqualifs", Arg.Set less_qualifs, "generate less qualifiers (lets only under lambdas)";
+     "-lqualifs", Arg.Set less_qualifs, "only collect formal parameter identifiers";
      "-no-anormal", Arg.Set no_anormal, "don't rewrite the AST for a-normality";
      "-ksimpl", Arg.Set kill_simplify, "kill simplify after a large number of queries to reduce memory usage";
      "-cacheq", Arg.Set cache_queries, "cache theorem prover queries";
@@ -130,36 +130,14 @@ let main () =
                \032    11     +Verbose solver\n\
                \032    13     +Dump constraint graph\n\
                \032    64     +Drowning in output";
+     "-collect", Arg.Int (fun c -> Qualgen.col_lev := c), "[1] number of lambdas to collect identifiers under";
      "-verrs", Arg.Set verb_errors, "redacted"
   ] file_argument usage;
-  (* nasty obvious hack *)
-  let _ = if !dump_qualifs then
-    let qs = 
-     ["qualif I(_V) : _V { * * } ^";
-      "qualif Int_rel_array_id(_V) : Array.length _V { * * } ^";
-      "qualif Int_rel_bigarray1_id(_V) : Bigarray.Array2.dim1 _V { * * } ^";
-      "qualif Int_rel_bigarray2_id(_V) : Bigarray.Array2.dim2 _V { * * } ^";
-      "qualif Id_rel_id(_V) : _V { * * } ~A";
-      "qualif Id_rel_array_id(_V) : ~A { * * } Array.length _V";
-      "qualif Id_rel_array_idd(_V) : _V { * * } Array.length ~A";
-      "qualif Av_rel_a(_V) : Array.length _V { * * } Array.length ~A";
-      "qualif Id_rel_bigarray1_id(_V) : ~A { * * } Bigarray.Array2.dim1 _V";
-      "qualif Id_rel_bigarray2_id(_V) : ~A { * * } Bigarray.Array2.dim2 _V";
-      "qualif Id_rel_bigarray1_idd(_V) : _V { * * } Bigarray.Array2.dim1 ~A";
-      "qualif Id_rel_bigarray2_idd(_V) : _V { * * } Bigarray.Array2.dim2 ~A";
-      "qualif Big1v_rel_big1(_V) : Bigarray.Array2.dim1 _V { * * } Bigarray.Array2.dim1 ~A";
-      "qualif Big2v_rel_big2(_V) : Bigarray.Array2.dim2 _V { * * } Bigarray.Array2.dim2 ~A";
-      "qualif Big1v_rel_big2(_V) : Bigarray.Array2.dim1 _V { * * } Bigarray.Array2.dim2 ~A";
-      "qualif Big2v_rel_big1(_V) : Bigarray.Array2.dim2 _V { * * } Bigarray.Array2.dim1 ~A";
-      "qualif Big1v_rel_big2v(_V) : Bigarray.Array2.dim1 _V { * * } Bigarray.Array2.dim2 _V";
-      "qualif Av_rel_big1(_V) : Array.length _V { * * } Bigarray.Array2.dim1 ~A";
-      "qualif Av_rel_big2(_V) : Array.length _V { * * } Bigarray.Array2.dim2 ~A";
-      "qualif A_rel_big1v(_V) : Array.length ~A { * * } Bigarray.Array2.dim1 _V";
-      "qualif A_rel_big2v(_V) : Array.length ~A { * * } Bigarray.Array2.dim2 _V"]
-    in
-    eprintf "@[%s@\n@]" (String.concat "\n" qs); exit 0
-  in
-  let source = load_sourcefile std_formatter !filename in
+ let source = load_sourcefile std_formatter !filename in
+ if !Clflags.dump_qualifs 
+ then 
+  Qdump.dump_default_qualifiers source
+ else
   try
     analyze std_formatter !filename source
   with x -> (report_error std_formatter x; exit 1)
