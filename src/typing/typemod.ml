@@ -574,7 +574,7 @@ and type_structure anchor env sstr =
     | {pstr_desc = Pstr_value(rec_flag, sdefs)} :: srem ->
         let (defs, newenv) =
           Typecore.type_binding env rec_flag sdefs in
-        let _ = Qualgen.iter_bindings defs in  
+        (*let _ = Qualgen.iter_bindings defs in*)  
         let (str_rem, sig_rem, final_env) = type_struct newenv srem in
         let bound_idents = let_bound_idents defs in
         let make_sig_value id =
@@ -601,10 +601,18 @@ and type_structure anchor env sstr =
          map_rec' (fun rs (id, info) -> Tsig_type(id, info, rs)) decls sig_rem,
          final_env)
     | {pstr_desc = Pstr_qualifier (name, pat)} :: srem ->
-       let (str_rem, sig_rem, final_env) = type_struct env srem in
+        let (str_rem, sig_rem, final_env) = type_struct env srem in
          (Tstr_prequalifier (name, pat, env) :: str_rem,
           sig_rem,
-         final_env)
+          final_env)
+    | {pstr_desc = Pstr_qualifier_single (name, pat)} :: srem ->
+        let (str_rem, sig_rem, final_env) = type_struct env srem in
+        let (valu, _, pred) = pat.pqual_pat_desc in
+        let valu = Ident.create valu in 
+        let pred = Qualdecl.transl_patpred_single pred in
+         (Tstr_qualifier (Ident.create name, (valu, pred)) :: str_rem,
+          sig_rem,
+          final_env)
     | {pstr_desc = Pstr_exception(name, sarg)} :: srem ->
         let arg = Typedecl.transl_exception env sarg in
         let (id, newenv) = Env.enter_exception name arg env in

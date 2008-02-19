@@ -279,7 +279,7 @@ let bigarray_set arr arg newval =
 %token <string> PREFIXOP
 %token PRIVATE
 %token QUALIF
-%token PAT_QUALIF
+%token SINGLE_QUALIF
 %token QUESTION
 %token QUESTIONQUESTION
 %token QUOTE
@@ -460,6 +460,10 @@ structure_item:
       { mkstr(Pstr_type(List.rev $2)) }
   | QUALIF qualifier_pattern_declaration
       { mkstr($2) }
+  | SINGLE_QUALIF qualifier_pattern_declaration
+      { mkstr(match $2 with
+         Pstr_qualifier(a, b) -> Pstr_qualifier_single(a, b) 
+        | _ -> assert false) }
   | EXCEPTION UIDENT constructor_arguments
       { mkstr(Pstr_exception($2, $3)) }
   | EXCEPTION UIDENT EQUAL constr_longident

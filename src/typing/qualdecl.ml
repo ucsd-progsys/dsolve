@@ -27,6 +27,37 @@ let transl_rels rels =
   match rels with 
       [] -> rel_star 
     | _ -> List.map transl_rel rels
+
+(* nasty obvious hack *)
+let transl_patpred_single p =
+  let rec transl_expr_rec pe =
+    match pe.ppredpatexp_desc with
+      | Ppredpatexp_int (n) ->
+	        PInt (n)
+      | Ppredpatexp_var (y) -> (* flatten longidents for now -- need to look these up? *)
+	        Var (Path.mk_ident (conflat y))
+      | Ppredpatexp_funapp (f, es) ->
+	        FunApp (conflat f, List.map transl_expr_rec es)
+      | Ppredpatexp_binop (e1, ops, e2) ->
+	        Binop (transl_expr_rec e1, transl_op (List.hd ops), transl_expr_rec e2)
+      | Ppredpatexp_field (f, e1) ->
+          Field (f, transl_expr_rec e1)
+      | _ -> assert false
+  in
+  let rec transl_pred_rec pd =
+    match pd.ppredpat_desc with
+      | Ppredpat_true -> 
+          True
+      | Ppredpat_atom (e1, rels, e2) ->
+	        Atom (transl_expr_rec e1, transl_rel (List.hd rels), transl_expr_rec e2)
+      | Ppredpat_not (p) -> 
+          Not (transl_pred_rec p)
+      | Ppredpat_and (p1, p2) -> 
+          And (transl_pred_rec p1, transl_pred_rec p2)
+      | Ppredpat_or (p1, p2) -> 
+          Or (transl_pred_rec p1, transl_pred_rec p2)
+  in transl_pred_rec p
+
              
 let transl_patpred tymap p =
   let rec transl_expr_rec pe =

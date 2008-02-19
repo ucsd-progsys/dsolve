@@ -308,7 +308,7 @@ let constrain_structure initfenv initquals str =
         let nm () = incr num; name ^ (string_of_int !num) in
         let name () = Path.Pident (Ident.create (nm ())) in
         let valu = Path.Pident (Ident.create valu) in
-        let quals = (List.map (fun p -> (name (), valu, p)) (Qualdecl.transl_pattern env pat)) @ quals in
+        let quals = List.rev_append (List.map (fun p -> (name (), valu, p)) (Qualdecl.transl_pattern env pat)) quals in
           constrain_rec quals fenv cstrs srem 
 		| (Tstr_value (recflag, bindings))::srem ->
         let (fenv, cstrs') = constrain_bindings fenv [] recflag bindings
