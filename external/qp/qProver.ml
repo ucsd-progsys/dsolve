@@ -26,7 +26,7 @@ let is_valid me q =
   if is_atom q then Eq.is_valid me q else false
 
 let check_imp p =
-  let me = incr nb_instance; Eq.new_instance (fun _ _ _ -> ()) in   
+  let me = incr nb_instance; Eq.new_instance (fun _ -> ()) in   
   let _ = List.iter (push me) (atoms p) in
   fun q -> is_valid me q
 
