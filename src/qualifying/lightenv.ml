@@ -8,6 +8,9 @@ include E
 let maplist f env =
   fold (fun k v r -> (f k v)::r) env []
 
+let maplistfilter f env =
+  fold (fun k v r -> let c = f k v in match c with Some c -> c::r | None -> r) env []
+
 let filterlist f env =
   fold (fun k v r -> if f k v then v::r else r) env []
 

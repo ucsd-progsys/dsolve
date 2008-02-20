@@ -8,5 +8,5 @@ val apply: Path.t -> t -> Predicate.t
 
 exception Refinement_not_closed
 
-val instantiate: 'a Lightenv.t -> t -> t
+val instantiate: 'a Lightenv.t -> t -> t option
 val pprint: formatter -> t -> unit

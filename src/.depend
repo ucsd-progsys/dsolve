@@ -76,7 +76,8 @@ typing/parmatch.cmi: typing/types.cmi typing/typedtree.cmi \
     parsing/location.cmi typing/env.cmi 
 typing/path.cmi: typing/ident.cmi 
 typing/predef.cmi: typing/types.cmi typing/path.cmi typing/ident.cmi 
-typing/predicate.cmi: typing/path.cmi parsing/parsetree.cmi 
+typing/predicate.cmi: typing/path.cmi parsing/parsetree.cmi \
+    parsing/longident.cmi parsing/asttypes.cmi 
 typing/printtyp.cmi: typing/types.cmi typing/path.cmi typing/outcometree.cmi \
     parsing/longident.cmi typing/ident.cmi 
 typing/stypes.cmi: typing/typedtree.cmi parsing/location.cmi 
@@ -91,7 +92,8 @@ typing/typedecl.cmi: typing/types.cmi typing/path.cmi parsing/parsetree.cmi \
     parsing/longident.cmi parsing/location.cmi typing/ident.cmi \
     typing/env.cmi 
 typing/typedtree.cmi: typing/types.cmi typing/primitive.cmi typing/path.cmi \
-    parsing/location.cmi typing/ident.cmi typing/env.cmi parsing/asttypes.cmi 
+    parsing/parsetree.cmi parsing/location.cmi typing/ident.cmi \
+    typing/env.cmi parsing/asttypes.cmi 
 typing/typemod.cmi: typing/types.cmi typing/typedtree.cmi \
     parsing/parsetree.cmi parsing/longident.cmi parsing/location.cmi \
     typing/includemod.cmi typing/ident.cmi typing/env.cmi 
@@ -104,8 +106,8 @@ typing/btype.cmo: typing/types.cmi typing/path.cmi utils/misc.cmi \
     typing/btype.cmi 
 typing/btype.cmx: typing/types.cmx typing/path.cmx utils/misc.cmx \
     typing/btype.cmi 
-typing/common.cmo: typing/path.cmi 
-typing/common.cmx: typing/path.cmx 
+typing/common.cmo: typing/path.cmi typing/oprint.cmi 
+typing/common.cmx: typing/path.cmx typing/oprint.cmx 
 typing/ctype.cmo: typing/types.cmi typing/subst.cmi typing/path.cmi \
     utils/misc.cmi parsing/longident.cmi typing/ident.cmi typing/env.cmi \
     utils/clflags.cmi typing/btype.cmi parsing/asttypes.cmi typing/ctype.cmi 
@@ -186,6 +188,16 @@ typing/printtyp.cmx: typing/types.cmx typing/primitive.cmx typing/predef.cmx \
     parsing/longident.cmx typing/ident.cmx typing/env.cmx typing/ctype.cmx \
     utils/clflags.cmx typing/btype.cmx parsing/asttypes.cmi \
     typing/printtyp.cmi 
+typing/qualdecl.cmo: typing/typetexp.cmi typing/types.cmi typing/qualgen.cmo \
+    typing/predicate.cmi typing/path.cmi parsing/parsetree.cmi \
+    parsing/longident.cmi typing/common.cmo 
+typing/qualdecl.cmx: typing/typetexp.cmx typing/types.cmx typing/qualgen.cmx \
+    typing/predicate.cmx typing/path.cmx parsing/parsetree.cmi \
+    parsing/longident.cmx typing/common.cmx 
+typing/qualgen.cmo: typing/types.cmi typing/typedtree.cmi typing/ident.cmi \
+    typing/common.cmo utils/clflags.cmi parsing/asttypes.cmi 
+typing/qualgen.cmx: typing/types.cmx typing/typedtree.cmx typing/ident.cmx \
+    typing/common.cmx utils/clflags.cmx parsing/asttypes.cmi 
 typing/stypes.cmo: typing/typedtree.cmi typing/printtyp.cmi \
     parsing/location.cmi utils/clflags.cmi typing/stypes.cmi 
 typing/stypes.cmx: typing/typedtree.cmx typing/printtyp.cmx \
@@ -224,29 +236,27 @@ typing/typecore.cmx: utils/warnings.cmx typing/typetexp.cmx typing/types.cmx \
     parsing/asttypes.cmi typing/typecore.cmi 
 typing/typedecl.cmo: typing/typetexp.cmi typing/types.cmi \
     typing/typedtree.cmi typing/subst.cmi typing/printtyp.cmi \
-    typing/primitive.cmi typing/predicate.cmi typing/predef.cmi \
-    typing/path.cmi parsing/parsetree.cmi utils/misc.cmi \
-    parsing/longident.cmi parsing/location.cmi typing/includecore.cmi \
-    typing/ident.cmi typing/env.cmi typing/ctype.cmi utils/config.cmi \
-    utils/clflags.cmi typing/btype.cmi parsing/asttypes.cmi \
-    typing/typedecl.cmi 
+    typing/primitive.cmi typing/predef.cmi typing/path.cmi \
+    parsing/parsetree.cmi utils/misc.cmi parsing/longident.cmi \
+    parsing/location.cmi typing/includecore.cmi typing/ident.cmi \
+    typing/env.cmi typing/ctype.cmi utils/config.cmi utils/clflags.cmi \
+    typing/btype.cmi parsing/asttypes.cmi typing/typedecl.cmi 
 typing/typedecl.cmx: typing/typetexp.cmx typing/types.cmx \
     typing/typedtree.cmx typing/subst.cmx typing/printtyp.cmx \
-    typing/primitive.cmx typing/predicate.cmx typing/predef.cmx \
-    typing/path.cmx parsing/parsetree.cmi utils/misc.cmx \
-    parsing/longident.cmx parsing/location.cmx typing/includecore.cmx \
-    typing/ident.cmx typing/env.cmx typing/ctype.cmx utils/config.cmx \
-    utils/clflags.cmx typing/btype.cmx parsing/asttypes.cmi \
-    typing/typedecl.cmi 
+    typing/primitive.cmx typing/predef.cmx typing/path.cmx \
+    parsing/parsetree.cmi utils/misc.cmx parsing/longident.cmx \
+    parsing/location.cmx typing/includecore.cmx typing/ident.cmx \
+    typing/env.cmx typing/ctype.cmx utils/config.cmx utils/clflags.cmx \
+    typing/btype.cmx parsing/asttypes.cmi typing/typedecl.cmi 
 typing/typedtree.cmo: typing/types.cmi typing/primitive.cmi typing/path.cmi \
-    utils/misc.cmi parsing/location.cmi typing/ident.cmi typing/env.cmi \
-    parsing/asttypes.cmi typing/typedtree.cmi 
+    parsing/parsetree.cmi utils/misc.cmi parsing/location.cmi \
+    typing/ident.cmi typing/env.cmi parsing/asttypes.cmi typing/typedtree.cmi 
 typing/typedtree.cmx: typing/types.cmx typing/primitive.cmx typing/path.cmx \
-    utils/misc.cmx parsing/location.cmx typing/ident.cmx typing/env.cmx \
-    parsing/asttypes.cmi typing/typedtree.cmi 
+    parsing/parsetree.cmi utils/misc.cmx parsing/location.cmx \
+    typing/ident.cmx typing/env.cmx parsing/asttypes.cmi typing/typedtree.cmi 
 typing/typemod.cmo: typing/types.cmi typing/typedtree.cmi typing/typedecl.cmi \
     typing/typecore.cmi typing/typeclass.cmi typing/subst.cmi \
-    typing/stypes.cmi typing/printtyp.cmi typing/path.cmi \
+    typing/stypes.cmi typing/qualdecl.cmo typing/printtyp.cmi typing/path.cmi \
     parsing/parsetree.cmi typing/mtype.cmi utils/misc.cmi \
     parsing/longident.cmi parsing/location.cmi typing/includemod.cmi \
     typing/ident.cmi typing/env.cmi typing/ctype.cmi utils/config.cmi \
@@ -254,7 +264,7 @@ typing/typemod.cmo: typing/types.cmi typing/typedtree.cmi typing/typedecl.cmi \
     typing/typemod.cmi 
 typing/typemod.cmx: typing/types.cmx typing/typedtree.cmx typing/typedecl.cmx \
     typing/typecore.cmx typing/typeclass.cmx typing/subst.cmx \
-    typing/stypes.cmx typing/printtyp.cmx typing/path.cmx \
+    typing/stypes.cmx typing/qualdecl.cmx typing/printtyp.cmx typing/path.cmx \
     parsing/parsetree.cmi typing/mtype.cmx utils/misc.cmx \
     parsing/longident.cmx parsing/location.cmx typing/includemod.cmx \
     typing/ident.cmx typing/env.cmx typing/ctype.cmx utils/config.cmx \
@@ -303,8 +313,6 @@ qualifying/builtins.cmx: typing/types.cmx typing/typedtree.cmx \
     typing/predicate.cmx typing/predef.cmx typing/path.cmx \
     parsing/longident.cmx qualifying/frame.cmx typing/env.cmx \
     parsing/asttypes.cmi 
-qualifying/common.cmo: typing/path.cmi 
-qualifying/common.cmx: typing/path.cmx 
 qualifying/constraint.cmo: qualifying/wellformed.cmi \
     qualifying/theoremProver.cmo typing/predicate.cmi qualifying/pattern.cmi \
     typing/path.cmi parsing/location.cmi qualifying/lightenv.cmo \
@@ -317,6 +325,16 @@ qualifying/constraint.cmx: qualifying/wellformed.cmx \
     utils/heap.cmx qualifying/frame.cmx typing/common.cmx utils/clflags.cmx \
     qualifying/builtins.cmx utils/bstats.cmx parsing/asttypes.cmi \
     qualifying/constraint.cmi 
+qualifying/constraint_old.cmo: qualifying/theoremProver.cmo \
+    qualifying/qualifier.cmi typing/predicate.cmi qualifying/pattern.cmi \
+    typing/path.cmi typing/oprint.cmi parsing/location.cmi \
+    qualifying/lightenv.cmo utils/heap.cmi qualifying/frame.cmi \
+    utils/clflags.cmi utils/bstats.cmi parsing/asttypes.cmi 
+qualifying/constraint_old.cmx: qualifying/theoremProver.cmx \
+    qualifying/qualifier.cmx typing/predicate.cmx qualifying/pattern.cmx \
+    typing/path.cmx typing/oprint.cmx parsing/location.cmx \
+    qualifying/lightenv.cmx utils/heap.cmx qualifying/frame.cmx \
+    utils/clflags.cmx utils/bstats.cmx parsing/asttypes.cmi 
 qualifying/frame.cmo: typing/types.cmi typing/typedtree.cmi \
     qualifying/qualifier.cmi typing/predicate.cmi typing/predef.cmi \
     typing/path.cmi typing/oprint.cmi typing/ident.cmi typing/env.cmi \
@@ -350,34 +368,32 @@ qualifying/printqual.cmx: typing/path.cmx typing/outcometree.cmi \
     parsing/location.cmx qualifying/frame.cmx utils/clflags.cmx \
     qualifying/printqual.cmi 
 qualifying/qdebug.cmo: typing/types.cmi typing/typedtree.cmi \
-    qualifying/qualifymod.cmi parsing/parsetree.cmi typing/oprint.cmi \
-    parsing/longident.cmi typing/btype.cmi parsing/asttypes.cmi \
+    qualifying/qualifymod.cmi parsing/parsetree.cmi parsing/longident.cmi \
+    typing/common.cmo typing/btype.cmi parsing/asttypes.cmi \
     qualifying/qdebug.cmi 
 qualifying/qdebug.cmx: typing/types.cmx typing/typedtree.cmx \
-    qualifying/qualifymod.cmx parsing/parsetree.cmi typing/oprint.cmx \
-    parsing/longident.cmx typing/btype.cmx parsing/asttypes.cmi \
+    qualifying/qualifymod.cmx parsing/parsetree.cmi parsing/longident.cmx \
+    typing/common.cmx typing/btype.cmx parsing/asttypes.cmi \
     qualifying/qdebug.cmi 
-qualifying/qualgen.cmo: typing/types.cmi typing/predef.cmi typing/path.cmi \
-    qualifying/lightenv.cmo typing/ctype.cmi qualifying/builtins.cmo 
-qualifying/qualgen.cmx: typing/types.cmx typing/predef.cmx typing/path.cmx \
-    qualifying/lightenv.cmx typing/ctype.cmx qualifying/builtins.cmx 
 qualifying/qualifier.cmo: typing/predicate.cmi typing/path.cmi \
-    qualifying/lightenv.cmo qualifying/qualifier.cmi 
+    qualifying/lightenv.cmo utils/bstats.cmi qualifying/qualifier.cmi 
 qualifying/qualifier.cmx: typing/predicate.cmx typing/path.cmx \
-    qualifying/lightenv.cmx qualifying/qualifier.cmi 
+    qualifying/lightenv.cmx utils/bstats.cmx qualifying/qualifier.cmi 
 qualifying/qualifymod.cmo: typing/types.cmi typing/typedtree.cmi \
-    typing/stypes.cmi qualifying/qualifier.cmi qualifying/qualgen.cmo \
+    typing/stypes.cmi qualifying/qualifier.cmi typing/qualdecl.cmo \
     typing/printtyp.cmi typing/predicate.cmi qualifying/pattern.cmi \
-    typing/path.cmi utils/misc.cmi parsing/longident.cmi parsing/location.cmi \
-    qualifying/lightenv.cmo qualifying/frame.cmi qualifying/constraint.cmi \
+    typing/path.cmi parsing/parsetree.cmi utils/misc.cmi \
+    parsing/longident.cmi parsing/location.cmi qualifying/lightenv.cmo \
+    typing/ident.cmi qualifying/frame.cmi qualifying/constraint.cmi \
     typing/common.cmo utils/clflags.cmi qualifying/builtins.cmo \
     typing/btype.cmi utils/bstats.cmi parsing/asttypes.cmi \
     qualifying/qualifymod.cmi 
 qualifying/qualifymod.cmx: typing/types.cmx typing/typedtree.cmx \
-    typing/stypes.cmx qualifying/qualifier.cmx qualifying/qualgen.cmx \
+    typing/stypes.cmx qualifying/qualifier.cmx typing/qualdecl.cmx \
     typing/printtyp.cmx typing/predicate.cmx qualifying/pattern.cmx \
-    typing/path.cmx utils/misc.cmx parsing/longident.cmx parsing/location.cmx \
-    qualifying/lightenv.cmx qualifying/frame.cmx qualifying/constraint.cmx \
+    typing/path.cmx parsing/parsetree.cmi utils/misc.cmx \
+    parsing/longident.cmx parsing/location.cmx qualifying/lightenv.cmx \
+    typing/ident.cmx qualifying/frame.cmx qualifying/constraint.cmx \
     typing/common.cmx utils/clflags.cmx qualifying/builtins.cmx \
     typing/btype.cmx utils/bstats.cmx parsing/asttypes.cmi \
     qualifying/qualifymod.cmi 
@@ -429,14 +445,14 @@ driver/errors.cmx: utils/warnings.cmx typing/typetexp.cmx typing/typemod.cmx \
     parsing/syntaxerr.cmx driver/pparse.cmx parsing/location.cmx \
     parsing/lexer.cmx typing/includemod.cmx typing/env.cmx typing/ctype.cmx \
     driver/errors.cmi 
+driver/main_args.cmo: driver/main_args.cmi 
+driver/main_args.cmx: driver/main_args.cmi 
 driver/main.cmo: utils/warnings.cmi utils/misc.cmi driver/main_args.cmi \
     driver/errors.cmi utils/config.cmi driver/compile.cmi utils/clflags.cmi \
     driver/main.cmi 
 driver/main.cmx: utils/warnings.cmx utils/misc.cmx driver/main_args.cmx \
     driver/errors.cmx utils/config.cmx driver/compile.cmx utils/clflags.cmx \
     driver/main.cmi 
-driver/main_args.cmo: driver/main_args.cmi 
-driver/main_args.cmx: driver/main_args.cmi 
 driver/optcompile.cmo: utils/warnings.cmi typing/unused_var.cmi \
     typing/typemod.cmi typing/typedtree.cmi typing/printtyp.cmi \
     parsing/printast.cmi driver/pparse.cmi parsing/parse.cmi utils/misc.cmi \
@@ -478,14 +494,22 @@ analyzer/liqerrors.cmx: typing/typetexp.cmx typing/typemod.cmx \
     parsing/location.cmx parsing/lexer.cmx typing/includemod.cmx \
     typing/env.cmx typing/ctype.cmx analyzer/liqerrors.cmi 
 analyzer/liquid.cmo: utils/warnings.cmi typing/typemod.cmi \
-    typing/typecore.cmi qualifying/qualifymod.cmi qualifying/qualgen.cmo \
-    parsing/printast.cmi driver/pparse.cmi parsing/parse.cmi \
-    qualifying/normalize.cmo utils/misc.cmi analyzer/liqerrors.cmi \
-    qualifying/lightenv.cmo typing/ident.cmi typing/env.cmi utils/config.cmi \
-    typing/common.cmo utils/clflags.cmi qualifying/builtins.cmo 
+    typing/typecore.cmi qualifying/qualifymod.cmi typing/qualgen.cmo \
+    analyzer/qdump.cmo parsing/printast.cmi driver/pparse.cmi \
+    parsing/parse.cmi qualifying/normalize.cmo utils/misc.cmi \
+    analyzer/liqerrors.cmi qualifying/lightenv.cmo typing/ident.cmi \
+    typing/env.cmi utils/config.cmi typing/common.cmo utils/clflags.cmi \
+    qualifying/builtins.cmo 
 analyzer/liquid.cmx: utils/warnings.cmx typing/typemod.cmx \
-    typing/typecore.cmx qualifying/qualifymod.cmx qualifying/qualgen.cmx \
-    parsing/printast.cmx driver/pparse.cmx parsing/parse.cmx \
-    qualifying/normalize.cmx utils/misc.cmx analyzer/liqerrors.cmx \
-    qualifying/lightenv.cmx typing/ident.cmx typing/env.cmx utils/config.cmx \
-    typing/common.cmx utils/clflags.cmx qualifying/builtins.cmx 
+    typing/typecore.cmx qualifying/qualifymod.cmx typing/qualgen.cmx \
+    analyzer/qdump.cmx parsing/printast.cmx driver/pparse.cmx \
+    parsing/parse.cmx qualifying/normalize.cmx utils/misc.cmx \
+    analyzer/liqerrors.cmx qualifying/lightenv.cmx typing/ident.cmx \
+    typing/env.cmx utils/config.cmx typing/common.cmx utils/clflags.cmx \
+    qualifying/builtins.cmx 
+analyzer/qdump.cmo: typing/qualgen.cmo typing/qualdecl.cmo \
+    typing/predicate.cmi driver/pparse.cmi parsing/parsetree.cmi \
+    parsing/parse.cmi utils/config.cmi typing/common.cmo parsing/asttypes.cmi 
+analyzer/qdump.cmx: typing/qualgen.cmx typing/qualdecl.cmx \
+    typing/predicate.cmx driver/pparse.cmx parsing/parsetree.cmi \
+    parsing/parse.cmx utils/config.cmx typing/common.cmx parsing/asttypes.cmi 

@@ -28,6 +28,6 @@ let instantiate env (path, valu, pred) =
   (* Don't instantiate the bound variable *)
   let names_to_paths =
      (Path.name valu, valu) ::
-       (Lightenv.maplist (fun path _ -> (Path.name path, path)) env) in
-    try (path, valu, Predicate.instantiate_named_vars names_to_paths pred)
-    with Not_found -> raise Refinement_not_closed
+       (Lightenv.maplistfilter (fun path _ -> let name = Path.ident_name path in match name with Some name -> Some (name, path) | None -> None) env) in
+    try Some (path, valu, Bstats.time "instantiating" (Predicate.instantiate_named_vars names_to_paths) pred)
+    with Not_found -> None

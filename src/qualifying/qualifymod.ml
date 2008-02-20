@@ -326,9 +326,10 @@ let instantiate_in_environments cs qs =
   let envs = List.map (fun c -> match c.lc_cstr with SubFrame (e,_,_,_) | WFFrame (e,_) -> e) cs in
   let instantiate_qual qualset q =
     let instantiate_in_env qset env =
-      try
-        QualifierSet.add (Qualifier.instantiate env q) qset
-      with Qualifier.Refinement_not_closed -> qset
+      let inv = Qualifier.instantiate env q in
+        match inv with
+            Some inv -> QualifierSet.add inv qset
+          | None -> qset
     in List.fold_left instantiate_in_env qualset envs
   in QualifierSet.elements (List.fold_left instantiate_qual QualifierSet.empty qs)
 

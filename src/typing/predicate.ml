@@ -186,7 +186,7 @@ let apply_substs subs pred =
   let substitute p (x, e) = subst e x p in List.fold_left substitute pred subs
 
 let rec instantiate_named_vars subs pred =
-  map_vars (fun y -> Var (List.assoc (Path.name y) subs)) pred
+  map_vars (fun y -> Var (List.assoc (Path.ident_name_crash y) subs)) pred
 
 let vars p =
   let rec exp_vars_rec vars = function
