@@ -88,7 +88,7 @@ let ol_scc = 12
 
 let verbose_level = ref ol_default
 let null_formatter = F.make_formatter (fun a b c -> ()) ignore
-let nprintf a = F.ifprintf null_formatter a
+let nprintf a = F.fprintf null_formatter a
 let ck_olev l = l <= !verbose_level
 
 let cprintf l = if ck_olev l then F.printf else nprintf
