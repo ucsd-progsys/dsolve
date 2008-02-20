@@ -16,6 +16,10 @@ let rec map3 f xs ys zs = match (xs, ys, zs) with
   | (x :: xs, y :: ys, z :: zs) -> f x y z :: map3 f xs ys zs
   | _ -> assert false
 
+let zip_partition xs bs =
+  let (xbs,xbs') = List.partition snd (List.combine xs bs) in
+  (List.map fst xbs, List.map fst xbs')
+
 let flap f xs = 
   List.flatten (List.map f xs)
 
@@ -39,6 +43,12 @@ let do_catch s f x =
 let do_catch_ret s f x y = 
   try f x with ex -> 
      (Printf.printf "%s hits exn: %s \n" s (Printexc.to_string ex); y) 
+       
+let do_memo t f arg key =
+  try Hashtbl.find t key with Not_found ->
+    let rv = f arg in
+    let _ = Hashtbl.replace t key rv in
+    rv
 
 let rec map_partial f = function 
   | [] -> [] | x::xs -> 
