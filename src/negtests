@@ -3,5 +3,6 @@ DMLex/matmult-bad.ml
 DMLex/bcopy-bad.ml
 DML/bsearch-bad.ml
 examples-liquid/dotprod0-bad.ml
+examples-liquid/access-bad.ml
 DMLex/gauss-bad.ml
 DML/queen-bad.ml
