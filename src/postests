@@ -22,3 +22,4 @@ DMLex/simplex.ml
 DML/quicksort_sane.ml
 examples-liquid/quicksort.ml
 examples-liquid/bitv.ml
+examples-liquid/assert_fun.ml
