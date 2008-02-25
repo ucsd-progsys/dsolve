@@ -60,10 +60,20 @@ let label_constraint exp fc =
   let org = match exp.exp_desc with Texp_assert _ -> Assert exp.exp_loc | _ -> Loc exp.exp_loc in
     {lc_cstr = fc; lc_orig = org; lc_id = fresh_fc_id()}
 
+let is_poly_instantiation = function
+  | (Texp_ident _, {desc = Tconstr (_, [], _)}) -> false
+  | (Texp_construct _, _)
+  | (Texp_ident _, _)
+  | (Texp_assertfalse, _) -> true
+  | _ -> false
+
+let expr_fresh desc_and_ty = if is_poly_instantiation desc_and_ty then Frame.fresh_unconstrained else Frame.fresh
+
 let rec constrain e env guard =
-  let environment = (env, guard, Frame.fresh e.exp_env e.exp_type) in
+  let desc_ty = (e.exp_desc, repr e.exp_type) in
+  let environment = (env, guard, expr_fresh desc_ty e.exp_env e.exp_type) in
   let (f, cstrs, rec_cstrs) =
-    match (e.exp_desc, repr e.exp_type) with
+    match desc_ty with
       | (Texp_constant const_typ, {desc = Tconstr(path, [], _)}) -> constrain_constant path const_typ
       | (Texp_construct (cstrdesc, args), {desc = Tconstr(_, _, _)}) -> constrain_constructed environment cstrdesc args e
       | (Texp_record (labeled_exprs, None), {desc = (Tconstr _)}) -> constrain_record environment labeled_exprs
@@ -71,13 +81,13 @@ let rec constrain e env guard =
       | (Texp_ifthenelse (e1, e2, Some e3), _) -> constrain_if environment e1 e2 e3
       | (Texp_function ([(pat, e')], _), t) -> constrain_function environment t pat e'
       | (Texp_ident (id, _), {desc = Tconstr (p, [], _)} ) -> constrain_base_identifier env id e
-      | (Texp_ident (id, _), _) -> constrain_identifier environment id e
+      | (Texp_ident (id, _), _) -> constrain_identifier environment id
       | (Texp_apply (e1, exps), _) -> constrain_application environment e1 exps
       | (Texp_let (recflag, bindings, body_exp), t) -> constrain_let environment recflag bindings body_exp
       | (Texp_array es, _) -> constrain_array environment es
       | (Texp_sequence (e1, e2), _) -> constrain_sequence environment e1 e2
       | (Texp_tuple es, _) -> constrain_tuple environment es
-      | (Texp_assertfalse, _) -> constrain_assertfalse environment e
+      | (Texp_assertfalse, _) -> constrain_assertfalse environment
       | (Texp_assert e, _) -> constrain_assert environment e
       | (_, t) ->
         (* As it turns out, giving up and returning true here is actually _very_ unsound!  We won't check subexpressions! *)
@@ -92,8 +102,8 @@ and constrain_constant path = function
   | Const_float _ -> (B.uFloat, [], [])
   | _ -> assert false
 
-and constrain_constructed (env, guard, _) cstrdesc args e =
-  match Frame.fresh_unconstrained e.exp_env e.exp_type with
+and constrain_constructed (env, guard, f) cstrdesc args e =
+  match f with
   | F.Fconstr (path, tyargframes, cstrs, _) ->
       let tag = cstrdesc.cstr_tag in
       let cstrref = match tag with
@@ -164,9 +174,9 @@ and constrain_function (env, guard, f) t pat e' =
 and constrain_base_identifier env id e =
   (F.apply_refinement (B.equality_refinement (expression_to_pexpr e)) (Le.find id env), [], [])
 
-and constrain_identifier (env, guard, _) id e =
+and constrain_identifier (env, guard, f) id =
   let f' = try Le.find id env with Not_found -> fprintf std_formatter "@[Not_found:@ %s@]" (Path.unique_name id); raise Not_found in
-  let f = F.instantiate f' (F.fresh_unconstrained e.exp_env e.exp_type) in (f, [WFFrame(env, f)], [])
+  let f = F.instantiate f' f in (f, [WFFrame(env, f)], [])
 
 and apply_once env guard (f, cstrs, subexp_cstrs) e = match (f, e) with
   | (F.Farrow (l, f, f'), (Some e2, _)) ->
@@ -224,7 +234,7 @@ and constrain_tuple (env, guard, f) es =
         in (f, WFFrame (env, f) :: new_cs, subexp_cs)
     | _ -> assert false
 
-and constrain_assertfalse _ e = (F.fresh_unconstrained e.exp_env e.exp_type, [], [])
+and constrain_assertfalse (_, _, f) = (f, [], [])
 
 and constrain_assert (env, guard, _) e =
   let (f, cstrs) = constrain e env guard in
