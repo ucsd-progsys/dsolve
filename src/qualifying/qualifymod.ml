@@ -58,7 +58,7 @@ let dump_frames sourcefile fmap =
 
 let label_constraint exp fc =
   let org = match exp.exp_desc with Texp_assert _ -> Assert exp.exp_loc | _ -> Loc exp.exp_loc in
-    {lc_cstr = fc; lc_orig = org; lc_id = fresh_fc_id()}
+    {lc_cstr = fc; lc_tenv = exp.exp_env; lc_orig = org; lc_id = fresh_fc_id()}
 
 let is_poly_instantiation = function
   | (Texp_ident _, {desc = Tconstr (_, [], _)}) -> false
@@ -79,6 +79,7 @@ let rec constrain e env guard =
       | (Texp_record (labeled_exprs, None), {desc = (Tconstr _)}) -> constrain_record environment labeled_exprs
       | (Texp_field (expr, label_desc), _) -> constrain_field environment expr label_desc
       | (Texp_ifthenelse (e1, e2, Some e3), _) -> constrain_if environment e1 e2 e3
+      | (Texp_match (e, pexps, partial), _) -> constrain_match environment e pexps partial
       | (Texp_function ([(pat, e')], _), t) -> constrain_function environment t pat e'
       | (Texp_ident (id, _), {desc = Tconstr (p, [], _)} ) -> constrain_base_identifier env id e
       | (Texp_ident (id, _), _) -> constrain_identifier environment id
@@ -111,9 +112,9 @@ and constrain_constructed (env, guard, f) cstrdesc args e =
         | Cstr_exception _ -> assert false
       in
       let f = F.Fconstr (path, tyargframes, cstrs, cstrref) in
-      let argtuple = F.fresh_constructor e.exp_env cstrdesc f in
+      let cstrargs = F.fresh_constructor e.exp_env cstrdesc f in
       let (argframes, argcstrs) = constrain_subexprs env guard args in
-        (f, [SubFrame(env, guard, F.Ftuple argframes, argtuple); WFFrame(env, f)], argcstrs)
+        (f, [SubFrame(env, guard, F.Ftuple argframes, F.Ftuple cstrargs); WFFrame(env, f)], argcstrs)
   | _ -> assert false
 
 and constrain_record (env, guard, f) labeled_exprs =
@@ -151,6 +152,17 @@ and constrain_if (env, guard, f) e1 e2 e3 =
     [WFFrame(env, f); SubFrame(env', guard2, f2, f); SubFrame(env', guard3, f3, f)],
     cstrs1 @ cstrs2 @ cstrs3)
 
+and constrain_case (env, guard, f) matchf (pat, e) =
+  let env' = Pattern.env_bind e.exp_env env pat.pat_desc matchf in
+  let (fe, subcs) = constrain e env' guard in
+    (SubFrame (env', guard, fe, f), subcs)
+
+and constrain_match ((env, guard, f) as environment) e pexps partial =
+  let (matchf, matchcstrs) = constrain e env guard in
+  let cases = List.map (constrain_case environment matchf) pexps in
+  let (cstrs, subcstrs) = List.split cases in
+    (f, WFFrame (env, f) :: cstrs, List.concat (matchcstrs :: subcstrs))
+
 and constrain_function (env, guard, f) t pat e' =
   match f with
     | (F.Farrow (_, f, unlabelled_f')) ->
@@ -161,7 +173,7 @@ and constrain_function (env, guard, f) t pat e' =
               ()
           | _ -> ()
       in
-      let env' = Pattern.env_bind env pat.pat_desc f in
+      let env' = Pattern.env_bind e'.exp_env env pat.pat_desc f in
       let (f'', cstrs) = constrain e' env' guard in
         (* Since the underlying type system doesn't have dependent
            types, fresh can't give us the proper labels for the RHS.
@@ -248,8 +260,7 @@ and constrain_assert (env, guard, _) e =
 
 and constrain_and_bind guard (env, cstrs) (pat, e) =
   let (f, cstrs') = constrain e env guard in
-  let env = Pattern.env_bind env pat.pat_desc f in
-  (env, cstrs @ cstrs')
+  let env = Pattern.env_bind e.exp_env env pat.pat_desc f in (env, cstrs @ cstrs')
 
 and constrain_bindings env guard recflag bindings =
   match recflag with
@@ -291,7 +302,8 @@ and constrain_bindings env guard recflag bindings =
      their uses *)
     (* pmr: This is going to take some work to resolve; for now, default on the locations because we don't
        have anything that'll butt up against it. *)
-    let make_cstr fc = {lc_cstr = fc; lc_orig = Loc Location.none; lc_id = fresh_fc_id ()} in
+    let tenv = (snd (List.hd bindings)).exp_env in
+    let make_cstr fc = {lc_cstr = fc; lc_tenv = tenv; lc_orig = Loc Location.none; lc_id = fresh_fc_id ()} in
     let build_found_frame_cstr_list cs found_frame binding_frame =
       make_cstr (WFFrame (bound_env, binding_frame)) ::
       make_cstr (SubFrame (bound_env, guard, found_frame, binding_frame)) :: cs

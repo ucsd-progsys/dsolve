@@ -34,7 +34,7 @@ val fresh: Env.t -> type_expr -> t
 val fresh_without_vars: Env.t -> type_expr -> t
 val fresh_unconstrained: Env.t -> type_expr -> t
 val fresh_with_labels: Env.t -> type_expr -> t -> t
-val fresh_constructor: Env.t -> constructor_description -> t -> t
+val fresh_constructor: Env.t -> constructor_description -> t -> t list
 val instantiate: t -> t -> t
 val apply_substitution: substitution -> t -> t
 val label_like: t -> t -> t

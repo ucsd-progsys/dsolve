@@ -8,6 +8,7 @@ type frame_constraint =
 
 type labeled_constraint = {
   lc_cstr: frame_constraint;
+  lc_tenv: Env.t;
   lc_orig: origin;
   lc_id: fc_id;
 }
