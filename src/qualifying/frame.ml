@@ -9,8 +9,10 @@ module PM = C.PathMap
 
 type substitution = Path.t * Predicate.pexpr
 
+type open_assignment = Top | Bottom
+
 type qualifier_expr =
-    Qvar of Path.t                      (* Qualifier variable *)
+    Qvar of (Path.t * open_assignment)  (* Qualifier variable *)
   | Qconst of Qualifier.t list          (* Constant qualifier set *)
 
 type refinement = substitution list * qualifier_expr
@@ -33,7 +35,7 @@ let pprint_subs ppf subs =
 
 let pprint_refinement ppf refi =
   match refi with
-    | (_, Qvar id ) ->
+    | (_, Qvar (id, _) ) ->
       fprintf ppf "%s" (Path.unique_name id)
     | (subs, Qconst []) ->
       fprintf ppf "true"
@@ -101,7 +103,7 @@ let instantiate fr ftemplate =
 	    assert false
   in inst fr ftemplate
 
-let fresh_refinementvar () = ([], Qvar (Path.mk_ident "k"))
+let fresh_refinementvar open_assn () = ([], Qvar (Path.mk_ident "k", open_assn))
 
 let fresh_fvar () = Fvar (Path.mk_ident "a")
 
@@ -150,20 +152,20 @@ let fresh_with_var_fun vars env ty fresh_ref_var =
 
    You probably want to consider using fresh_with_labels instead of this
    for subtype constraints. *)
-let fresh env ty = fresh_with_var_fun (ref []) env ty fresh_refinementvar
+let fresh env ty = fresh_with_var_fun (ref []) env ty (fresh_refinementvar Top)
 
 (* Create a fresh frame with the same shape as the given type [ty].
    No refinement variables are created - all refinements are initialized
    to true. *)
 let fresh_without_vars env ty = fresh_with_var_fun (ref []) env ty (fun _ -> empty_refinement)
 
-let fresh_unconstrained env ty = fresh_with_var_fun (ref []) env ty (fun _ -> false_refinement)
+let fresh_unconstrained env ty = fresh_with_var_fun (ref []) env ty (fresh_refinementvar Bottom)
 
 let fresh_constructor env cstrdesc = function
   | Fconstr (_, fl, _, _) ->
       let tyargs = match cstrdesc.cstr_res.desc with Tconstr(_, args, _) -> args | _ -> assert false in
       let argmap = ref (List.combine (List.map repr tyargs) fl) in
-        fresh_with_var_fun argmap env {desc = Ttuple cstrdesc.cstr_args; id = 0; level = 0} fresh_refinementvar
+        fresh_with_var_fun argmap env {desc = Ttuple cstrdesc.cstr_args; id = 0; level = 0} (fresh_refinementvar Top)
   | _ -> assert false
 
 (* Label all the function formals in [f] with their corresponding labels in
@@ -207,7 +209,7 @@ let map_apply_substitution sub = function
 let apply_substitution sub f = map_frame (map_apply_substitution sub) f
 
 let refinement_apply_solution solution = function
-  | (subs, Qvar k) -> (subs, Qconst (solution k))
+  | (subs, Qvar (k, _)) -> (subs, Qconst (solution k))
   | r -> r
 
 let map_apply_solution solution = function
@@ -219,7 +221,7 @@ let apply_solution solution fr = map_frame (map_apply_solution solution) fr
 
 let refinement_conjuncts solution qual_var (subs, qualifiers) =
   let quals = match qualifiers with
-    | Qvar k -> (try solution k with Not_found -> assert false)
+    | Qvar (k, _) -> (try solution k with Not_found -> assert false)
     | Qconst qs -> qs
   in
   let unsubst = List.map (Qualifier.apply qual_var) quals in
@@ -229,8 +231,8 @@ let refinement_predicate solution qual_var refn =
   Predicate.big_and (refinement_conjuncts solution qual_var refn)
 
 let rec refinement_vars = function
-  | Fconstr (_, _, _, (_, Qvar k)) -> [k]
-  | Frecord (_, fs, (_, Qvar k)) ->
+  | Fconstr (_, _, _, (_, Qvar (k, _))) -> [k]
+  | Frecord (_, fs, (_, Qvar (k, _))) ->
       k :: List.fold_left (fun r (f, _, _) -> refinement_vars f @ r) [] fs
   | _ -> []
 

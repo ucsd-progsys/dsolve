@@ -264,10 +264,10 @@ let get_ref_constraint sri i =
 
 let lhs_ks = function WFRef _ -> assert false | SubRef (env,_,(_,qe),_,_) ->
   let ks = Le.fold (fun _ f l -> F.refinement_vars f @ l) env [] in
-  match qe with F.Qvar k -> k::ks | _ -> ks 
+  match qe with F.Qvar (k, _) -> k::ks | _ -> ks
 
 let rhs_k = function
-  | SubRef (_,_,_,(_,F.Qvar k),_) -> Some k
+  | SubRef (_,_,_,(_,F.Qvar (k, _)),_) -> Some k
   | _ -> None
 
 let make_rank_map om cm =
@@ -425,11 +425,11 @@ let refine sri s c =
   let _ = incr stat_refines in
   let sm = solution_map s in 
   match c with
-  | SubRef (_, _, ([], F.Qvar k1), ([], F.Qvar k2), _)
+  | SubRef (_, _, ([], F.Qvar (k1, _)), ([], F.Qvar (k2, _)), _)
     when not (!Cf.no_simple || !Cf.verify_simple) -> 
       let _ = incr stat_simple_refines in
       Bstats.time "refine_simple" (refine_simple s k1) k2
-  | SubRef (env,g,r1, (sub2s, F.Qvar k2), _)  ->
+  | SubRef (env,g,r1, (sub2s, F.Qvar (k2, _)), _)  ->
       let _ = incr stat_sub_refines in
       let qp2s = 
         List.map 
@@ -445,7 +445,7 @@ let refine sri s c =
       let _ = stat_imp_queries := !stat_imp_queries + (List.length qp2s) in
       let _ = stat_valid_imp_queries := !stat_valid_imp_queries + (List.length q2s'') in
       (List.length qp2s  <> List.length q2s'')
-  | WFRef (env,(subs, F.Qvar k),_) -> 
+  | WFRef (env,(subs, F.Qvar (k, _)),_) ->
       let _ = incr stat_wf_refines in
       let qs  = solution_map s k in
       let qs' = List.filter (qual_wf sm env subs) qs in
@@ -490,8 +490,8 @@ let make_initial_solution sri qs =
   let s = Sol.create 17 in
   let addrv = function
   | ((_, F.Qconst _),_) -> ()
-  | ((_, F.Qvar k),true) -> Sol.replace s k qs
-  | ((_, F.Qvar k),false) -> if not (Sol.mem s k) then Sol.replace s k [] in
+  | ((_, F.Qvar (k, F.Top)),false) -> if not (Sol.mem s k) then Sol.replace s k []
+  | ((_, F.Qvar (k, _)),_) -> Sol.replace s k qs in
   SIM.iter 
     (fun _ c -> match c with 
     | SubRef (_, _, r1, r2, _) -> addrv (r1,false); addrv (r2,true)

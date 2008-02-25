@@ -65,13 +65,13 @@ let rec constrain e env guard =
   let (f, cstrs, rec_cstrs) =
     match (e.exp_desc, repr e.exp_type) with
       | (Texp_constant const_typ, {desc = Tconstr(path, [], _)}) -> constrain_constant path const_typ
-      | (Texp_construct (cstrdesc, args), {desc = Tconstr(_, _, _)}) -> constrain_constructed environment e.exp_env cstrdesc args
+      | (Texp_construct (cstrdesc, args), {desc = Tconstr(_, _, _)}) -> constrain_constructed environment cstrdesc args e
       | (Texp_record (labeled_exprs, None), {desc = (Tconstr _)}) -> constrain_record environment labeled_exprs
       | (Texp_field (expr, label_desc), _) -> constrain_field environment expr label_desc
       | (Texp_ifthenelse (e1, e2, Some e3), _) -> constrain_if environment e1 e2 e3
       | (Texp_function ([(pat, e')], _), t) -> constrain_function environment t pat e'
       | (Texp_ident (id, _), {desc = Tconstr (p, [], _)} ) -> constrain_base_identifier env id e
-      | (Texp_ident (id, _), _) -> constrain_identifier environment id
+      | (Texp_ident (id, _), _) -> constrain_identifier environment id e
       | (Texp_apply (e1, exps), _) -> constrain_application environment e1 exps
       | (Texp_let (recflag, bindings, body_exp), t) -> constrain_let environment recflag bindings body_exp
       | (Texp_array es, _) -> constrain_array environment es
@@ -92,7 +92,8 @@ and constrain_constant path = function
   | Const_float _ -> (B.uFloat, [], [])
   | _ -> assert false
 
-and constrain_constructed (env, guard, f) tyenv cstrdesc args = match f with
+and constrain_constructed (env, guard, _) cstrdesc args e =
+  match Frame.fresh_unconstrained e.exp_env e.exp_type with
   | F.Fconstr (path, tyargframes, cstrs, _) ->
       let tag = cstrdesc.cstr_tag in
       let cstrref = match tag with
@@ -100,11 +101,9 @@ and constrain_constructed (env, guard, f) tyenv cstrdesc args = match f with
         | Cstr_exception _ -> assert false
       in
       let f = F.Fconstr (path, tyargframes, cstrs, cstrref) in
-      let argtuple = F.fresh_constructor tyenv cstrdesc f in
+      let argtuple = F.fresh_constructor e.exp_env cstrdesc f in
       let (argframes, argcstrs) = constrain_subexprs env guard args in
-        (f, [SubFrame(env, guard, F.Ftuple argframes, argtuple);
-             SubFrame(env, guard, F.Ftuple tyargframes, F.Ftuple tyargframes);
-             WFFrame(env, f)], argcstrs)
+        (f, [SubFrame(env, guard, F.Ftuple argframes, argtuple); WFFrame(env, f)], argcstrs)
   | _ -> assert false
 
 and constrain_record (env, guard, f) labeled_exprs =
@@ -165,9 +164,9 @@ and constrain_function (env, guard, f) t pat e' =
 and constrain_base_identifier env id e =
   (F.apply_refinement (B.equality_refinement (expression_to_pexpr e)) (Le.find id env), [], [])
 
-and constrain_identifier (env, guard, ftemplate) id =
+and constrain_identifier (env, guard, _) id e =
   let f' = try Le.find id env with Not_found -> fprintf std_formatter "@[Not_found:@ %s@]" (Path.unique_name id); raise Not_found in
-  let f = F.instantiate f' ftemplate in (f, [SubFrame(env, guard, f, f); WFFrame(env, f)], [])
+  let f = F.instantiate f' (F.fresh_unconstrained e.exp_env e.exp_type) in (f, [WFFrame(env, f)], [])
 
 and apply_once env guard (f, cstrs, subexp_cstrs) e = match (f, e) with
   | (F.Farrow (l, f, f'), (Some e2, _)) ->
@@ -225,7 +224,7 @@ and constrain_tuple (env, guard, f) es =
         in (f, WFFrame (env, f) :: new_cs, subexp_cs)
     | _ -> assert false
 
-and constrain_assertfalse (env, _, _) e = (F.fresh_unconstrained e.exp_env e.exp_type, [], [])
+and constrain_assertfalse _ e = (F.fresh_unconstrained e.exp_env e.exp_type, [], [])
 
 and constrain_assert (env, guard, _) e =
   let (f, cstrs) = constrain e env guard in
