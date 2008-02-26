@@ -1,4 +1,4 @@
-qualif POS(x): 0 < x
+qualif POS(x): 0 <= x
 qualif NEG(x): x < 0
 
 type 'a tree = | Empty
@@ -21,3 +21,13 @@ let _ = four_node
 
 let five_node = Node (empty, 5, four_node)
 let _ = five_node
+
+let abs x =
+  if x > 0 then x else (0 - x)
+
+let rec map f t =
+  match t with
+    | Empty -> Empty
+    | Node (l, t, r) -> Node (map f l, f t, map f r)
+
+let _ = map abs three_node
