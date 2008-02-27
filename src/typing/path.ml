@@ -37,6 +37,7 @@ let rec binding_time = function
   | Pdot(p, s, pos) -> binding_time p
   | Papply(p1, p2) -> max (binding_time p1) (binding_time p2)
 
+(* temporary hack *)
 let ident_name = function
     Pident id -> Some (Ident.name id)
   | _ -> None

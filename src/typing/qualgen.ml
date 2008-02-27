@@ -78,32 +78,32 @@ let all_types () = TS.elements !tyset
 
 let rec visit_binding n (pat, exp) = 
   let rec ve n e =
-    match (e.exp_type, e.exp_desc) with
-  | (_, Texp_let (_, bl, e2)) ->
+    match e.exp_desc with
+  | Texp_let (_, bl, e2) ->
      List.iter (visit_binding n) bl; ve n e2  
-  | (_, Texp_constant (Const_int (i))) ->
+  | Texp_constant (Const_int (i)) ->
      addi i
-  | (_, Texp_function(pl, _)) -> 
+  | Texp_function(pl, _) -> 
      List.iter (fun (pat, e) -> bound_idents n pat; ve n e) pl
-  | (_, Texp_apply (e, el)) ->
+  | Texp_apply (e, el) ->
      ve n e; List.iter (function (Some(e), _) -> ve n e | _ -> ()) el
 (*| Texp_match of expression * (pattern * expression) list * partial
   x Texp_try of expression * (pattern * expression) list *)
-  | (_, Texp_array (el)) ->
+  | Texp_array (el) ->
       List.iter (ve n) el; addi (List.length el)
-  | (_, Texp_tuple (el)) 
-  | (_, Texp_construct (_, el)) ->
+  | Texp_tuple (el) 
+  | Texp_construct (_, el) ->
      List.iter (ve n) el
 (*x Texp_variant of label * expression option*)
-  | (_, Texp_record (el, None)) ->
+  | Texp_record (el, None) ->
      List.iter (fun (l, e) -> ve n e) el
-  | (_, Texp_assert (e))
-  | (_, Texp_field (e, _)) ->
+  | Texp_assert (e)
+  | Texp_field (e, _) ->
      ve n e
-  | (_, Texp_sequence (e1, e2))
-  | (_, Texp_setfield (e1, _, e2)) ->
+  | Texp_sequence (e1, e2)
+  | Texp_setfield (e1, _, e2) ->
      ve n e1; ve n e2
-  | (_, Texp_ifthenelse (e1, e2, e3)) ->
+  | Texp_ifthenelse (e1, e2, e3) ->
      ve n e1; ve n e2; (fun e3 -> match e3 with Some(e3) -> ve n e3 | _ -> ()) e3
 (*x Texp_while of expression * expression
   x Texp_for of
@@ -117,9 +117,9 @@ let rec visit_binding n (pat, exp) =
   x Texp_letmodule of Ident.t * module_expr * expression 
   x Texp_lazy of expression
   x Texp_object of class_structure * class_signature * string list *)
-  | (_, Texp_constant (_))
-  | (_, Texp_assertfalse)
-  | (_, Texp_ident (_, _)) ->
+  | Texp_constant (_)
+  | Texp_assertfalse
+  | Texp_ident (_, _) ->
       ()
   | _ ->
       assert false

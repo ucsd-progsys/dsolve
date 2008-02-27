@@ -574,7 +574,7 @@ and type_structure anchor env sstr =
     | {pstr_desc = Pstr_value(rec_flag, sdefs)} :: srem ->
         let (defs, newenv) =
           Typecore.type_binding env rec_flag sdefs in
-        (*let _ = Qualgen.iter_bindings defs in*)  
+        let _ = Qualgen.iter_bindings defs in  
         let (str_rem, sig_rem, final_env) = type_struct newenv srem in
         let bound_idents = let_bound_idents defs in
         let make_sig_value id =

@@ -28,7 +28,6 @@ let transl_rels rels =
       [] -> rel_star 
     | _ -> List.map transl_rel rels
 
-(* nasty obvious hack *)
 let transl_patpred_single p =
   let rec transl_expr_rec pe =
     match pe.ppredpatexp_desc with
