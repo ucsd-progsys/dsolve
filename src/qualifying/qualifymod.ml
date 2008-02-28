@@ -183,11 +183,13 @@ and constrain_function (env, guard, f) t pat e' =
         (f, [WFFrame (env, f); SubFrame (env', guard, f'', f')], cstrs)
     | _ -> assert false
 
-and constrain_base_identifier env id e =
-  (F.apply_refinement (B.equality_refinement (expression_to_pexpr e)) (Le.find id env), [], [])
-
 and frame_of_ml_type tenv id =
   Frame.fresh_without_vars tenv ((Env.find_value id tenv).val_type)
+
+and constrain_base_identifier env id e =
+  if Le.mem id env then
+    (F.apply_refinement (B.equality_refinement (expression_to_pexpr e)) (Le.find id env), [], [])
+  else (frame_of_ml_type e.exp_env id, [], [])
 
 and constrain_identifier (env, guard, f) id tenv =
   let f' = try Le.find id env with Not_found -> frame_of_ml_type tenv id in

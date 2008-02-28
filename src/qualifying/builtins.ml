@@ -178,8 +178,6 @@ let _frames = [
 
   (["int"; "Random"], defun (fun x -> rInt "PosMax" x (PInt 0 <. Var x) ==>
                              fun y -> rInt "RandBounds" y ((PInt 0 <=. Var y) &&. (Var y <. Var x))));
-
-  (["max_int"; "Pervasives"], uInt);
 ]
 
 let bigarray_dim_frame dim env =
@@ -196,15 +194,6 @@ let _lib_frames env = [
           fun dim1 -> mk_int [qint Gt 0 dim1] ===>
           fun dim2 -> mk_int [qint Gt 0 dim2] ==>
           fun z -> mk_bigarray_type a b c [qdim Eq 1 z z dim1; qdim Eq 2 z z dim2] env)))));
-
-  (["int"; "Bigarray"],
-   mk_named ["kind"; "Bigarray"] [mk_int []; mk_named ["int_elt"; "Bigarray"] [] [] env] [] env);
-
-  (["float64"; "Bigarray"],
-   mk_named ["kind"; "Bigarray"] [mk_int []; mk_named ["float64_elt"; "Bigarray"] [] [] env] [] env);
-
-  (["c_layout"; "Bigarray"],
-   mk_named ["layout"; "Bigarray"] [mk_named ["c_layout"; "Bigarray"] [] [] env] [] env);
 
   (["get"; "Array2"; "Bigarray"],
    defun (forall (fun a ->
