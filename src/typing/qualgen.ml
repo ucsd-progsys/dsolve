@@ -87,8 +87,9 @@ let rec visit_binding n (pat, exp) =
      List.iter (fun (pat, e) -> bound_idents n pat; ve n e) pl
   | Texp_apply (e, el) ->
      ve n e; List.iter (function (Some(e), _) -> ve n e | _ -> ()) el
-(*| Texp_match of expression * (pattern * expression) list * partial
-  x Texp_try of expression * (pattern * expression) list *)
+  | Texp_match (e1, pel, _) ->
+     ve n e1; List.iter (fun (p, e) -> (if not(!Clflags.less_qualifs) then bound_idents n p); ve n e) pel 
+(*x Texp_try of expression * (pattern * expression) list *)
   | Texp_array (el) ->
       List.iter (ve n) el; addi (List.length el)
   | Texp_tuple (el) 
