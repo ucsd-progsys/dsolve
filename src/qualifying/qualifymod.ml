@@ -61,7 +61,6 @@ let label_constraint exp fc =
     {lc_cstr = fc; lc_tenv = exp.exp_env; lc_orig = org; lc_id = fresh_fc_id()}
 
 let is_poly_instantiation = function
-  | (Texp_ident _, {desc = Tconstr (_, [], _)}) -> false
   | (Texp_construct _, _)
   | (Texp_ident _, _)
   | (Texp_assertfalse, _) -> true
@@ -337,7 +336,7 @@ let constrain_structure initfenv initquals str =
         let valu = Path.Pident (Ident.create valu) in
         let quals = List.rev_append (List.map (fun p -> (name (), valu, p)) (Qualdecl.transl_pattern env pat)) quals in
           constrain_rec quals fenv cstrs srem 
-		| (Tstr_value (recflag, bindings))::srem ->
+    | (Tstr_value (recflag, bindings))::srem ->
         let (fenv, cstrs') = constrain_bindings fenv [] recflag bindings
         in constrain_rec quals fenv (cstrs @ cstrs') srem
     | (Tstr_type(_))::srem ->
