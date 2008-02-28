@@ -82,12 +82,6 @@ let op_frame path qname op =
                 fun y -> uInt ==>
                 fun z -> rInt qname z (Var z ==. Binop (Var x, op, Var y))))
 
-let uninterp_binop typ path = (path, defun (fun x -> typ ===> fun y -> typ ==> fun z -> typ))
-
-let uninterp_unop typ path = (path, defun (fun x -> typ ==> fun y -> typ))
-
-let float_to_int_unop path = (path, defun (fun x -> uFloat ==> fun y -> uInt))
-
 let tag_function = "__tag"
 
 let tag x = FunApp(tag_function, [x])
@@ -98,23 +92,11 @@ let poly_rel_frame path qname rel =
   (path,
    defun (forall (fun a -> fun x -> a ===> fun y -> a ==> fun z -> qbool_rel qname rel (x, y, z))))
 
-let void_fun_frame name = (name, defun (fun x -> uUnit ==> fun y -> uUnit))
-
 let _frames = [
   op_frame ["+"; "Pervasives"] "+" Plus;
   op_frame ["-"; "Pervasives"] "-" Minus;
   op_frame ["/"; "Pervasives"] "/" Div;
   op_frame ["*"; "Pervasives"] "*" Times;
-  uninterp_binop uFloat ["+."; "Pervasives"];
-  uninterp_binop uFloat ["-."; "Pervasives"];
-  uninterp_binop uFloat ["/."; "Pervasives"];
-  uninterp_binop uFloat ["*."; "Pervasives"];
-  uninterp_unop uFloat ["sin"; "Pervasives"];
-  uninterp_unop uFloat ["cos"; "Pervasives"];
-  uninterp_unop uFloat ["~-."; "Pervasives"];
-  float_to_int_unop ["float_of_int"; "Pervasives"];
-  uninterp_binop uInt ["lor"; "Pervasives"];
-  uninterp_binop uInt ["lxor"; "Pervasives"];
 
   (["lsr"; "Pervasives"],
    defun (fun x -> uInt ===> fun y -> uInt ==> fun z -> rInt "lsr" z (PInt 0 <=. Var z)));
@@ -151,7 +133,6 @@ let _frames = [
 
   (["ignore"; "Pervasives"], defun (forall (fun a -> fun x -> a ==> fun y -> uUnit)));
 
-  uninterp_binop uInt ["lsl"; "Pervasives"];
   poly_rel_frame ["="; "Pervasives"] "=" Eq;
   poly_rel_frame ["!="; "Pervasives"] "!=" Ne;
   poly_rel_frame ["<>"; "Pervasives"] "<>" Ne;
@@ -159,10 +140,6 @@ let _frames = [
   poly_rel_frame [">"; "Pervasives"] ">" Gt;
   poly_rel_frame [">="; "Pervasives"] ">=" Ge;
   poly_rel_frame ["<="; "Pervasives"] "<=" Le;
-
-  (["fst"; "Pervasives"], defun (forall (fun a -> forall (fun b -> fun x -> Ftuple [a; b] ==> fun _ -> a))));
-
-  (["snd"; "Pervasives"], defun (forall (fun a -> forall (fun b -> fun x -> Ftuple [a; b] ==> fun _ -> b))));
 
   (["length"; "Array"],
    defun (forall (fun a ->
@@ -199,12 +176,8 @@ let _frames = [
           fun arr -> mk_array a [] ==>
           fun c -> rArray a "SameSize" c (FunApp("Array.length", [Var c]) ==. FunApp("Array.length", [Var arr])))));
 
-  (["init"; "Random"], defun (fun x -> uInt ==> fun y -> uUnit));
-
   (["int"; "Random"], defun (fun x -> rInt "PosMax" x (PInt 0 <. Var x) ==>
                              fun y -> rInt "RandBounds" y ((PInt 0 <=. Var y) &&. (Var y <. Var x))));
-
-  void_fun_frame ["self_init"; "Random"];
 
   (["max_int"; "Pervasives"], uInt);
 ]
@@ -216,12 +189,6 @@ let bigarray_dim_frame dim env =
           fun s -> mk_int [qdim Eq dim r s s; qint Gt 0 s])))
 
 let _lib_frames env = [
-  (["ref"; "Pervasives"], defun (forall (fun a -> fun x -> a ==> fun y -> mk_ref a env)));
-
-  (["!"; "Pervasives"], defun (forall (fun a -> fun x -> mk_ref a env ==> fun y -> a)));
-
-  ([":="; "Pervasives"], defun (forall (fun a -> fun _ -> mk_ref a env ===> fun _ -> a ==> fun _ -> uUnit)));
-
   (["create"; "Array2"; "Bigarray"],
    defun (forall (fun a -> forall (fun b -> forall (fun c ->
           fun k -> mk_bigarray_kind a b [] env ===>
