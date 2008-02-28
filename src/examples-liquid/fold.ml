@@ -16,10 +16,16 @@ let abs x =
 
 let ys = [1;2;3;-4;-12]
 
-let _ = map abs ys
+let check_pos x = 
+  assert(0 <= x)
 
 let add x y =
   let t = abs y in
   x + t
 
-let _ = fold add 0 ys
+let m = map abs ys
+
+let _ = map check_pos m
+
+let f = fold add 0 ys
+let _ = assert(0 <= f)

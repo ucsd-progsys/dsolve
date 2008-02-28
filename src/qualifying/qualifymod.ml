@@ -255,7 +255,7 @@ and constrain_assert (env, guard, _) e =
   let assert_qualifier =
     (Path.mk_ident "assertion",
      Path.mk_ident "null",
-     P.equals (P.Var guardvar, P.int_true))
+     P.equals (B.tag(P.Var guardvar), P.int_true))
   in (B.mk_unit (), [SubFrame (env, guard, B.mk_int [], B.mk_int [assert_qualifier])], cstrs)
 
 and constrain_and_bind guard (env, cstrs) (pat, e) =
