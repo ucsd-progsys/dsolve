@@ -1,3 +1,4 @@
+
 type 'a mlist = {
   mutable value : 'a;
   mutable next  : 'a mlist;
@@ -30,5 +31,6 @@ let rec mkml xs =
       n
 
 let m1 = mkml [1;2;3]
+
 let _ = printff string_of_int m1 
 
