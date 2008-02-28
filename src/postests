@@ -24,3 +24,4 @@ examples-liquid/quicksort.ml
 examples-liquid/bitv.ml
 examples-liquid/assert_fun.ml
 examples-liquid/fold.ml
+examples-liquid/baseinst.ml

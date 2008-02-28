@@ -81,7 +81,7 @@ let rec constrain e env guard =
       | (Texp_ifthenelse (e1, e2, Some e3), _) -> constrain_if environment e1 e2 e3
       | (Texp_match (e, pexps, partial), _) -> constrain_match environment e pexps partial
       | (Texp_function ([(pat, e')], _), t) -> constrain_function environment t pat e'
-      | (Texp_ident (id, _), {desc = Tconstr (p, [], _)} ) -> constrain_base_identifier env id e
+      | (Texp_ident (id, _), {desc = Tconstr (p, [], _)} ) -> constrain_base_identifier environment id e
       | (Texp_ident (id, _), _) -> constrain_identifier environment id e.exp_env
       | (Texp_apply (e1, exps), _) -> constrain_application environment e1 exps
       | (Texp_let (recflag, bindings, body_exp), t) -> constrain_let environment recflag bindings body_exp
@@ -183,17 +183,18 @@ and constrain_function (env, guard, f) t pat e' =
         (f, [WFFrame (env, f); SubFrame (env', guard, f'', f')], cstrs)
     | _ -> assert false
 
-and frame_of_ml_type tenv id =
-  Frame.fresh_without_vars tenv ((Env.find_value id tenv).val_type)
+and instantiate_id id f env tenv =
+  let env_f =
+    try Le.find id env
+    with Not_found -> Frame.fresh_without_vars tenv ((Env.find_value id tenv).val_type)
+  in F.instantiate env_f f
 
-and constrain_base_identifier env id e =
-  if Le.mem id env then
-    (F.apply_refinement (B.equality_refinement (expression_to_pexpr e)) (Le.find id env), [], [])
-  else (frame_of_ml_type e.exp_env id, [], [])
+and constrain_base_identifier (env, _, f) id e =
+  let refn = if Le.mem id env then B.equality_refinement (expression_to_pexpr e) else F.empty_refinement in
+    (F.apply_refinement refn (instantiate_id id f env e.exp_env), [], [])
 
 and constrain_identifier (env, guard, f) id tenv =
-  let f' = try Le.find id env with Not_found -> frame_of_ml_type tenv id in
-  let f = F.instantiate f' f in (f, [WFFrame(env, f)], [])
+  let f = instantiate_id id f env tenv in (f, [WFFrame(env, f)], [])
 
 and apply_once env guard (f, cstrs, subexp_cstrs) e = match (f, e) with
   | (F.Farrow (l, f, f'), (Some e2, _)) ->
