@@ -1,6 +1,9 @@
 module Misc = QpMisc
-module Eq = QpEquality
+module Eq = QpEquality.Prover
+module Dc = QpDiff.Prover
 open QpDag
+
+type fact = EqFact of predicate | DcFact of predicate
 
 let nb_instance = ref 0
 
@@ -18,19 +21,32 @@ let rec atoms p =
   | And ps,_ -> Misc.flap atoms ps  
   | _ -> [] 
 
-let push me p =
-  assert (is_atom p);
-  Eq.push me p
+let grind eq dc q = 
+  while not (Queue.is_empty q) do
+    (match Queue.pop q with 
+    | EqFact p -> Dc.push dc p
+    | DcFact p -> Eq.push eq p);
+  done
 
-let is_valid me q = 
-  if is_atom q then Eq.is_valid me q else false
+let push eq dc p =
+  assert (is_atom p);
+  Eq.push eq p; 
+  Dc.push dc p
+
+let is_valid eq dc q = 
+  if is_atom q then (Eq.is_valid eq q || Dc.is_valid dc q) else false
 
 let check_imp p =
-  let me = incr nb_instance; Eq.new_instance (fun _ -> ()) in   
-  let _ = List.iter (push me) (atoms p) in
-  fun q -> is_valid me q
+  let pending = Queue.create () in
+  let _ = incr nb_instance in
+  let eq_inst = Eq.new_instance (fun p -> Queue.push (EqFact p) pending) in   
+  let dc_inst = Dc.new_instance (fun p -> Queue.push (DcFact p) pending) in   
+  let _ = List.iter (push eq_inst dc_inst) (atoms p) in
+  let _ = grind eq_inst dc_inst pending in
+  fun q -> is_valid eq_inst dc_inst q
 
-let check_imps p = List.map (check_imp p)
+let check_imps p = 
+  List.map (check_imp p)
 
 let print_stats () = 
   Printf.printf "QProver Instances = %d \n" !nb_instance

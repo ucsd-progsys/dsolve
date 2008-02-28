@@ -29,8 +29,10 @@ OCAML_LIB_OBJ  = qpVector qpErrormsg \
 		 qpMisc \
 		 qpAst \
 		 qpDag \
+		 qpArch \
 		 cong \
 		 qpEquality \
+		 qpDiff \
 		 qProver \
 		 qpParse qpLex 
 

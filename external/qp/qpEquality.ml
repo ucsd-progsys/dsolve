@@ -13,6 +13,10 @@ module SymbolHashStruct = struct
   let hash = Hashtbl.hash
 end
 module SymbolHash = Hashtbl.Make(SymbolHashStruct)
+open QpArch
+
+module Prover : PROVER =
+  struct 
 
 exception Inconsistent
 
@@ -53,14 +57,13 @@ let add_var me v =
 let get_var me x = 
   Vector.get me.vars x
 
-
 let rec make_var me e =
   let n = 
     match e with
       | Application(s,l),_ ->
  	  Cong.new_application me.cong s (List.map (find_var me) l)
       | _ -> Cong.new_atom me.cong in
-    { id = n; def = e; }
+  { id = n; def = e; }
 
 and find_var me e =
   try ExprHash.find me.exprVart e with Not_found ->
@@ -80,7 +83,9 @@ and find_var_subexps me e =
     | Constant _,_ -> ()
 
 let do_merges me = 
-  (* do stuff on List.rev me.merges *)
+  List.iter 
+    (fun (i,j) -> me.new_fact (pEquality ((get_var me i).def,(get_var me j).def)))
+    (List.rev (me.merges));
   me.merges <- []
 
 let is_eq me i j = 
@@ -159,4 +164,6 @@ let is_valid me = function
         check_consistency me
     | _ -> () }}} *)
 
+
+  end
 

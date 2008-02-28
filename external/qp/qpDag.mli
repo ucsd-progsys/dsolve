@@ -134,6 +134,8 @@ sig
 end
 
 val zero : expression
+val p_one: expression
+val m_one: expression
 
 (* a concrete term is either an individual variable
    an application of a function symbol to constants *)

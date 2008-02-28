@@ -562,8 +562,10 @@ module Predicate =
 	  pwr (And(foo :: !cnsts))
     end
       
-let zero = ewr (Constant(Constant.Int(0)))
-	     
+let zero  = ewr (Constant(Constant.Int(0)))
+let p_one = ewr (Constant(Constant.Int(1)))
+let m_one = ewr (Constant(Constant.Int(-1)))
+
 module Concrete = 
 struct
   type concrete =
