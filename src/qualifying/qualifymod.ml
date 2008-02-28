@@ -82,7 +82,7 @@ let rec constrain e env guard =
       | (Texp_match (e, pexps, partial), _) -> constrain_match environment e pexps partial
       | (Texp_function ([(pat, e')], _), t) -> constrain_function environment t pat e'
       | (Texp_ident (id, _), {desc = Tconstr (p, [], _)} ) -> constrain_base_identifier env id e
-      | (Texp_ident (id, _), _) -> constrain_identifier environment id
+      | (Texp_ident (id, _), _) -> constrain_identifier environment id e.exp_env
       | (Texp_apply (e1, exps), _) -> constrain_application environment e1 exps
       | (Texp_let (recflag, bindings, body_exp), t) -> constrain_let environment recflag bindings body_exp
       | (Texp_array es, _) -> constrain_array environment es
@@ -186,8 +186,11 @@ and constrain_function (env, guard, f) t pat e' =
 and constrain_base_identifier env id e =
   (F.apply_refinement (B.equality_refinement (expression_to_pexpr e)) (Le.find id env), [], [])
 
-and constrain_identifier (env, guard, f) id =
-  let f' = try Le.find id env with Not_found -> fprintf std_formatter "@[Not_found:@ %s@]" (Path.unique_name id); raise Not_found in
+and frame_of_ml_type tenv id =
+  Frame.fresh_without_vars tenv ((Env.find_value id tenv).val_type)
+
+and constrain_identifier (env, guard, f) id tenv =
+  let f' = try Le.find id env with Not_found -> frame_of_ml_type tenv id in
   let f = F.instantiate f' f in (f, [WFFrame(env, f)], [])
 
 and apply_once env guard (f, cstrs, subexp_cstrs) e = match (f, e) with
