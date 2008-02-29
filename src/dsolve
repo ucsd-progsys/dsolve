@@ -2,11 +2,26 @@
 
 OCAML=./liquid.run
 QUALFLAGS="-no-anormal -dqualifs -lqualifs"
-FILE=$1
+FLAGS="-dframes"
+argc=`echo $@ | wc -w`
+argv=""
+enm=""
+for i in ${@/\ //n}
+do
+  let "j = $j + 1"
+  enm=$i
+  if (("$j" < "$argc"))  
+  then
+    argv=$argv" "$i  
+  fi
+done
+FILE=$enm
+UFLAGS=$argv
+
 
 rm -f $FILE.quals $FILE.annot
 $OCAML $QUALFLAGS $FILE 1> /dev/null 2> $FILE.quals
-$OCAML -dframes $FILE
+$OCAML $FLAGS $UFLAGS $FILE
 BASE=`basename $FILE .ml`
 DIR=`dirname $FILE`
 cat /tmp/liq.annot | ./fix-annot.py $FILE > $DIR/$BASE.annot
