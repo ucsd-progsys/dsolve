@@ -94,11 +94,13 @@ let normalize exp =
   let mk_dum_sequence e1 e2 = mk_dummy (mk_sequence e1 e2) in
   let mk_dum_ifthenelse e1 e2 e3 = mk_dummy (mk_ifthenelse e1 e2 e3) in*)
 
- let resolve_in_exp ls =
+ let resolve_in_exp_when f ls =
   let (lbl, lex, loc) = List.hd ls in
   match lex with
-           | Some lex -> (lex, List.tl ls)
-           | None -> (mk_ident_loc lbl loc, ls) in
+           | Some lex when f lex -> (lex, List.tl ls)
+           | _ -> (mk_ident_loc lbl loc, ls) in
+
+ let resolve_in_exp = resolve_in_exp_when (fun e -> true) in
  
   (*let fresh_ident () = mk_dum_ident (Longident.parse (fresh_name ())) in*)
   let mk_list_let r ls e2 = 
@@ -148,10 +150,9 @@ let normalize exp =
     in
     let proc_list es skel =
      let lss = List.map norm_in es in
-     let lbls = List.map (fun ls -> let (lbl, e, lo) = List.hd ls in 
-                                        match e with
-                                            Some e -> if is_const e then e else mk_ident_loc lbl lo
-                                          | None -> mk_ident_loc lbl lo) lss in
+     let (lbls, lss) = List.fold_right (fun ls (ess, lss) ->
+                                        let (e, ls) = resolve_in_exp_when is_const ls in
+                                          (e::ess, ls::lss)) lss ([], []) in
      let init = skel lbls in
       rw_expr (List.fold_left (wrap Nonrecursive) init (List.concat (List.rev lss)))
     in
@@ -175,18 +176,13 @@ let normalize exp =
         rw_expr (mk_function lbl elbl arg (norm_out e))
      | Pexp_let(r, [(pat, e1)], e2) ->
         let ls = norm_in e1 in
-        let (lbl, e_1, lo) = List.hd ls in
-        let init =
-          match e_1 with
-              Some e -> mk_let_gen r pat e (norm_out e2)
-            | None -> mk_let_gen r pat (mk_ident_loc lbl lo) (norm_out e2)
-        in
+        let (e_1, ls) = resolve_in_exp ls in
+        let init = mk_let_gen r pat e_1 (norm_out e2) in
           rw_expr (List.fold_left (wrap r) init (List.tl ls))
       (* this is generally broken, but OK for actual mutual recursion *)
      | Pexp_let(r, pes, e2) ->
         let (ins, outs) = norm_bind_list pes in        
-        let init = norm_out e2 in 
-        let init = mk_list_let r ins init in
+        let init = mk_list_let r ins (norm_out e2) in
           rw_expr (List.fold_left (wrap r) init outs)
      | Pexp_apply(e1, es) ->
         let f = norm_in e1 in
@@ -210,9 +206,8 @@ let normalize exp =
          (* toss out the first label, since we know that hte first expression
           * will be normalized, just use that as the conditional *)
         let b = norm_in e1 in
-        let (blbl, e_b, lo) = List.hd b in
-        let init = match e_b with Some e_b -> mk_ifthenelse e_b (norm_out e2) (norm_out e3)
-                    | None -> mk_ifthenelse (mk_ident_loc blbl lo) (norm_out e2) (norm_out e3) in
+        let (e_b, b) = resolve_in_exp b in 
+        let init = mk_ifthenelse e_b (norm_out e2) (norm_out e3) in
          rw_expr (List.fold_left (wrap Nonrecursive) init (List.tl b))
      | Pexp_tuple(es) ->
         proc_list es mk_tuple
@@ -236,11 +231,13 @@ let normalize exp =
           rw_expr (List.fold_left (wrap Nonrecursive) init (List.tl c))
      | Pexp_field(e, s) ->
         let ls = norm_in e in
-        let (lbl, _, lo) = List.hd ls in 
+        let (lbl, _, lo) = List.hd ls in
         let init = mk_field (mk_ident_loc lbl lo) s in
           rw_expr (List.fold_left (wrap Nonrecursive) init ls)
      | Pexp_record(es, None) ->
         let ee = List.map (fun (s, e) -> norm_in e) es in 
+        (*let (es, se) = List.fold_right (fun (s, e) (ess, lss) -> let (e', ls) = resolve_in_exp (norm_in e) in
+                                                                 ((s, e')::ess, ls::lss)) ee ([], []) in*)
         let se = List.map (fun e -> List.hd e) ee in
         let es' = List.map2 (fun (lbl, _, loc) (s, e) -> (s, mk_ident_loc lbl loc)) se es in
         let init = mk_record es' in
@@ -252,19 +249,18 @@ let normalize exp =
         let (lbl, _, lo) = List.hd ls in
         let init = mk_match (mk_ident_loc lbl lo) npel in
           rw_expr (List.fold_left (wrap Nonrecursive) init ls)
-     | e -> (*printf "@[Bad expr to norm_out:@\n%a@]" Qdebug.pprint_expression exp; flush stdout;*) assert false
+     | e -> printf "@[Bad expr to norm_out:@\n%a@]" Qdebug.pprint_expression exp; flush stdout; assert false
 
   and norm_in exp = 
     let rw_expr desc = {pexp_desc = desc; pexp_loc = exp.pexp_loc} in
     let proc_list es skel = 
       let this = fresh_name () in
       let lss = List.map norm_in es in
-      let lbls = List.map (fun ls -> let (lbl, e, lo) = List.hd ls in 
-                                        match e with
-                                            Some e -> if is_const e then e else mk_ident_loc lbl lo
-                                          | None -> mk_ident_loc lbl lo) lss in
-      let e_this = rw_expr (skel lbls) in
-        (this, Some e_this, dummy)::(List.concat (List.rev lss))
+      let (lbls, lss) = List.fold_right (fun ls (ess, lss) ->
+                                          let (e, ls) = resolve_in_exp_when is_const ls in
+                                            (e::ess, ls::lss)) lss ([], []) in
+      let e_this = Some (rw_expr (skel lbls)) in
+        (this, e_this, dummy)::(List.concat (List.rev lss))
     in
     let loc = exp.pexp_loc in
 
@@ -357,7 +353,7 @@ let normalize exp =
          let ls = norm_in e in
          let (lbl, _, lo) = List.hd ls in
           (fresh_name (), Some (rw_expr (mk_match (mk_ident_loc lbl lo) npel)), loc)::ls
-     | e -> (*printf "@[Bad expr to norm_in:@\n%a@]" Printast.top_phrase (wrap_printable exp);*) assert false
+     | e -> printf "@[Bad expr to norm_in:@\n%a@]" Printast.top_phrase (wrap_printable exp); assert false
   in
   norm_out exp
 
