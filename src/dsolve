@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 OCAML=./liquid.run
 QUALFLAGS="-no-anormal -dqualifs -lqualifs"
