@@ -11,30 +11,17 @@ fi
 
 
 
-#let "j = 0"
-#catt=""
 argv=""
-#frames=""
 enm=""
 for i in ${@/\ //n}
 do
   let "j = $j + 1"
-#  #catt="cat "$i".quals "$i 
   enm=$i
   if (("$j" < "$argc"))  
   then
-#    if [[ $i == "-dframes" ]]
-#    then
-#      frames="true"
-#    else
-      argv=$argv" "$i  
-#    fi
+    argv=$argv" "$i  
   fi
 done
-#if [[ $frames != "" ]]
-#then
-#  argv=$argv" -dframes "${i%\.ml}".annot "
-#fi
 
 #yah, ugly, ok
 catargs="" 

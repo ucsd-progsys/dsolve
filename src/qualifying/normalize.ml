@@ -78,6 +78,8 @@ let normalize exp =
   let mk_field e s = Pexp_field(e, s) in
   let mk_record es = Pexp_record(es, None) in
   let mk_assert e = Pexp_assert(e) in
+  let mk_match e pel = Pexp_match(e, pel) in
+  let mk_construct cstrdesc e b = Pexp_construct(cstrdesc, Some e, b) in
 
   let mk_dummy desc = {pexp_desc = desc; pexp_loc = Location.none} in
   let dummy = Location.none in
@@ -91,7 +93,13 @@ let normalize exp =
   let mk_dum_tuple es = mk_dummy (mk_tuple es) in
   let mk_dum_sequence e1 e2 = mk_dummy (mk_sequence e1 e2) in
   let mk_dum_ifthenelse e1 e2 e3 = mk_dummy (mk_ifthenelse e1 e2 e3) in*)
-  
+
+ let resolve_in_exp ls =
+  let (lbl, lex, loc) = List.hd ls in
+  match lex with
+           | Some lex -> (lex, List.tl ls)
+           | None -> (mk_ident_loc lbl loc, ls) in
+ 
   (*let fresh_ident () = mk_dum_ident (Longident.parse (fresh_name ())) in*)
   let mk_list_let r ls e2 = 
     let ls = List.map (fun (x, e, lo) -> 
@@ -150,9 +158,16 @@ let normalize exp =
 
     match exp.pexp_desc with
      | Pexp_constant(_) 
-     | Pexp_construct(_, None, false) ->
-        let a = fresh_name () in
-         rw_expr (mk_let_lbl Nonrecursive a exp (mk_dum_ident a))
+     | Pexp_construct(_, None, _) ->
+         (* no normalizing of simple constants and constructs for now *)
+         exp
+         (*let a = fresh_name () in
+         rw_expr (mk_let_lbl Nonrecursive a exp (mk_dum_ident a))*)
+     | Pexp_construct(cstrdesc, Some e, b) ->
+         let ls = norm_in e in
+         let (inex, ls) = resolve_in_exp ls in
+         let init = mk_construct cstrdesc inex b in
+          rw_expr (List.fold_left (wrap Nonrecursive) init ls)
      | Pexp_constraint(_, _, _)
      | Pexp_ident(_) ->
         exp
@@ -231,7 +246,13 @@ let normalize exp =
         let init = mk_record es' in
         let ee = List.concat (List.rev ee) in
           rw_expr (List.fold_left (wrap Nonrecursive) init ee)
-     | e -> printf "@[Bad expr to norm_out:@\n%a@]" Qdebug.pprint_expression exp; flush stdout; assert false
+     | Pexp_match(e, pel) ->
+        let npel = List.map (fun (p, e) -> (p, norm_out e)) pel in
+        let ls = norm_in e in
+        let (lbl, _, lo) = List.hd ls in
+        let init = mk_match (mk_ident_loc lbl lo) npel in
+          rw_expr (List.fold_left (wrap Nonrecursive) init ls)
+     | e -> (*printf "@[Bad expr to norm_out:@\n%a@]" Qdebug.pprint_expression exp; flush stdout;*) assert false
 
   and norm_in exp = 
     let rw_expr desc = {pexp_desc = desc; pexp_loc = exp.pexp_loc} in
@@ -252,9 +273,15 @@ let normalize exp =
      | Pexp_assertfalse ->
          [(fresh_name (), Some (norm_out exp), dummy)]
      | Pexp_constraint(_, _, _)
-     | Pexp_constant(_)      
-     | Pexp_construct(_, None, false) ->
-         [(fresh_name (), Some exp, dummy)]
+     | Pexp_constant(_) 
+     | Pexp_construct(_, None, _) ->
+         [(fresh_name (), Some exp, dummy)]      
+     | Pexp_construct(cstrdesc, Some e, b) ->
+         let ls = norm_in e in
+         let (inex, ls) = resolve_in_exp ls in
+         let this = fresh_name () in
+         let e_this = Some (rw_expr (mk_construct cstrdesc inex b)) in
+         (this, e_this, loc)::ls
      | Pexp_ident(id) ->
          (* ming: to preserve annotations over idents we actually want something
           * like (id, exp), but that will add another layer to all scopes and
@@ -279,8 +306,7 @@ let normalize exp =
         let (flbl, e_f, lo_f) = List.hd f in
         let es = List.map (fun (_, e) -> e) es in
         let fn = match e_f with Some e -> mk_dum_ident flbl
-                                | None -> mk_ident_loc flbl lo_f
-        in
+                                | None -> mk_ident_loc flbl lo_f in
         let ls = proc_list es (mk_apply fn) in
         let (this, e_this, lo_this) = List.hd ls in
           (* ming: hack for constant div *)
@@ -326,7 +352,12 @@ let normalize exp =
         let ls = norm_in e in 
         let (lbl, _, lo) = List.hd ls in
           (fresh_name (), Some (rw_expr (mk_field (mk_ident_loc lbl lo) s)), loc)::ls
-     | e -> printf "@[Bad expr to norm_in:@\n%a@]" Printast.top_phrase (wrap_printable exp); assert false
+     | Pexp_match(e, pel) ->
+         let npel = List.map (fun (p, e) -> (p, norm_out e)) pel in
+         let ls = norm_in e in
+         let (lbl, _, lo) = List.hd ls in
+          (fresh_name (), Some (rw_expr (mk_match (mk_ident_loc lbl lo) npel)), loc)::ls
+     | e -> (*printf "@[Bad expr to norm_in:@\n%a@]" Printast.top_phrase (wrap_printable exp);*) assert false
   in
   norm_out exp
 

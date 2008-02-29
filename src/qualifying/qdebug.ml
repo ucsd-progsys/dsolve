@@ -28,7 +28,7 @@ let rec pprint_expression ppf exp =
           let tagstr = print_id tag in
             begin match eopt with
               | None -> fprintf ppf "%s" tagstr
-              | Some e -> fprintf ppf "%s@ %a" tagstr pprint_expression exp
+              | Some e -> fprintf ppf "%s@ %a" tagstr pprint_expression e
             end
       | Pexp_ifthenelse (e1, e2, Some e3) ->
           fprintf ppf "@[if@ %a@ then@;<1 4>%a@;<1 0>@[else@;<1 4>%a@]@]"
@@ -56,6 +56,8 @@ let rec pprint_expression ppf exp =
           fprintf ppf "assert@ false"
       | Pexp_assert e ->
           fprintf ppf "assert@ %a" pprint_expression e
+      | Pexp_match (e, pel) ->
+          fprintf ppf "match@ %a@ with@;<1 2>%a" pprint_expression e pprint_cases pel  
       | _ -> assert false
   in fprintf ppf "@[%a@]" pprint_exp exp
 and pprint_rec ppf = function
@@ -73,6 +75,24 @@ and pprint_pattern ppf pat =
   | Ppat_var x -> fprintf ppf "%s" x
   | Ppat_tuple ts -> fprintf ppf "(%a)" pprint_pat_list ts
   | Ppat_constraint (p, _) -> pprint_pattern ppf p
+    (* Pat knows more about how this generalizes *)
+  | Ppat_construct (id, e, _) ->
+      let id = String.concat "" (Longident.flatten id) in
+      begin
+      match id with
+      | "::" -> 
+          begin
+          match e with 
+          | Some ({ppat_desc = Ppat_tuple el}) ->
+              let e1 = List.hd el in
+              let e2 = List.nth el 1 in 
+              fprintf ppf "%a::%a" pprint_pattern e1 pprint_pattern e2
+          | _ -> assert false          
+          end
+      | "[]" ->
+          fprintf ppf "[]"
+      | _ -> assert false
+      end
   | _ -> assert false
 and pprint_and ppf = function
   | [] -> fprintf ppf "@ "
@@ -80,6 +100,10 @@ and pprint_and ppf = function
 and pprint_binds ppf = function
   | (pat, e)::rem ->
     fprintf ppf "@[%a@ =@;<1 2>%a%a%a@]" pprint_pattern pat pprint_expression e pprint_and rem pprint_binds rem
+  | [] -> fprintf ppf ""
+and pprint_cases ppf = function
+  | (pat, e)::rem ->
+    fprintf ppf "@[| %a@ ->@;<1 2>%a@.%a@]" pprint_pattern pat pprint_expression e pprint_cases rem
   | [] -> fprintf ppf ""
 
 let rec pprint_structure ppf str = 
