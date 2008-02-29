@@ -166,7 +166,7 @@ let normalize exp =
          rw_expr (mk_let_lbl Nonrecursive a exp (mk_dum_ident a))*)
      | Pexp_construct(cstrdesc, Some e, b) ->
          let ls = norm_in e in
-         let (inex, ls) = resolve_in_exp ls in
+         let (inex, ls) = resolve_in_exp_when is_const ls in
          let init = mk_construct cstrdesc inex b in
           rw_expr (List.fold_left (wrap Nonrecursive) init ls)
      | Pexp_constraint(_, _, _)
@@ -236,8 +236,6 @@ let normalize exp =
           rw_expr (List.fold_left (wrap Nonrecursive) init ls)
      | Pexp_record(es, None) ->
         let ee = List.map (fun (s, e) -> norm_in e) es in 
-        (*let (es, se) = List.fold_right (fun (s, e) (ess, lss) -> let (e', ls) = resolve_in_exp (norm_in e) in
-                                                                 ((s, e')::ess, ls::lss)) ee ([], []) in*)
         let se = List.map (fun e -> List.hd e) ee in
         let es' = List.map2 (fun (lbl, _, loc) (s, e) -> (s, mk_ident_loc lbl loc)) se es in
         let init = mk_record es' in
@@ -274,7 +272,7 @@ let normalize exp =
          [(fresh_name (), Some exp, dummy)]      
      | Pexp_construct(cstrdesc, Some e, b) ->
          let ls = norm_in e in
-         let (inex, ls) = resolve_in_exp ls in
+         let (inex, ls) = resolve_in_exp_when is_const ls in
          let this = fresh_name () in
          let e_this = Some (rw_expr (mk_construct cstrdesc inex b)) in
          (this, e_this, loc)::ls
