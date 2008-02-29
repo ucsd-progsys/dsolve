@@ -21,7 +21,7 @@ type t =
     Fvar of Path.t
   | Fconstr of Path.t * t list * variance list * refinement
   | Farrow of pattern_desc option * t * t
-  | Ftuple of t list
+  | Ftuple of t list * refinement
   | Frecord of Path.t * (t * string * mutable_flag) list * refinement
   | Funknown
 
@@ -63,8 +63,8 @@ let rec pprint ppf = function
       fprintf ppf "@[%a:@ %a@ ->@;<1 2>%a@]" pprint_pattern pat pprint1 f pprint f'
   | Fconstr (path, l, _, r) ->
       fprintf ppf "@[{%a@ %s|@;<1 2>%a}@]" pprint_list l (Path.unique_name path) pprint_refinement r
-   | Ftuple ts ->
-      fprintf ppf "@[(%a)@]" pprint_list ts
+   | Ftuple (ts, r) ->
+      fprintf ppf "@[{(%a) |@;<1 2>%a}@]" pprint_list ts pprint_refinement r
    | Frecord (id, _, r) ->
        fprintf ppf "@[{%s |@;<1 2>%a}@] " (Path.name id) pprint_refinement r
   | Funknown ->
@@ -91,8 +91,8 @@ let instantiate fr ftemplate =
           Farrow (l, inst f1 f2, inst f1' f2')
       | (Fconstr (p, l, varis, r), Fconstr(p', l', _, _)) ->
           Fconstr(p, List.map2 inst l l', varis, r)
-      | (Ftuple t1s, Ftuple t2s) ->
-          Ftuple (List.map2 inst t1s t2s)
+      | (Ftuple (t1s, r), Ftuple (t2s, _)) ->
+          Ftuple (List.map2 inst t1s t2s, r)
       | (Frecord (p, f1s, r), Frecord (_, f2s, _)) ->
           let inst_rec (f1, name, m) (f2, _, _) = (inst f1 f2, name, m) in
             Frecord (p, List.map2 inst_rec f1s f2s, r)
@@ -143,7 +143,7 @@ let fresh_with_var_fun vars env ty fresh_ref_var =
                  (fresh_rec freshf field_typ, name, muta) in
                Frecord (p, List.map fresh_field fields, freshf ()))
       | Tarrow(_, t1, t2, _) -> Farrow (None, fresh_rec freshf t1, fresh_rec freshf t2)
-      | Ttuple ts -> Ftuple (List.map (fresh_rec freshf) ts)
+      | Ttuple ts -> Ftuple (List.map (fresh_rec freshf) ts, freshf ())
       | _ -> fprintf err_formatter "@[Warning:@ Freshing@ unsupported@ type@]@."; Funknown
   in fresh_rec fresh_ref_var (repr ty)
 
@@ -178,8 +178,8 @@ let rec label_like f f' =
     | (Funknown, Funknown) -> f
     | (Farrow (None, f1, f1'), Farrow(l, f2, f2')) ->
         Farrow (l, label_like f1 f2, label_like f1' f2')
-    | (Ftuple t1s, Ftuple t2s) ->
-        Ftuple (List.map2 label_like t1s t2s)
+    | (Ftuple (t1s, r), Ftuple (t2s, _)) ->
+        Ftuple (List.map2 label_like t1s t2s, r)
     | (Frecord (p1, f1s, r), Frecord (p2, f2s, _)) when Path.same p1 p2 ->
         let label_rec (f1, n, muta) (f2, _, _) = (label_like f1 f2, n, muta) in
           Frecord (p1, List.map2 label_rec f1s f2s, r)
@@ -194,7 +194,7 @@ let map_frame f frm =
     | Fvar _ as fr -> f fr
     | Fconstr (p, fs, cstrs, re) -> f (Fconstr (p, List.map map_rec fs, cstrs, re))
     | Farrow (x, f1, f2) -> f (Farrow (x, map_rec f1, map_rec f2))
-    | Ftuple fs -> f (Ftuple (List.map map_rec fs))
+    | Ftuple (fs, r) -> f (Ftuple (List.map map_rec fs, r))
     | Frecord(p, fs, re) ->
         let apply_rec (fieldf, n, m) = (f fieldf, n, m) in
           f (Frecord (p, List.map apply_rec fs, re))

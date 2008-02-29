@@ -20,7 +20,7 @@ type t =
     Fvar of Path.t
   | Fconstr of Path.t * t list * variance list * refinement
   | Farrow of pattern_desc option * t * t
-  | Ftuple of t list
+  | Ftuple of t list * refinement
   | Frecord of Path.t * (t * string * mutable_flag) list * refinement
   | Funknown
 

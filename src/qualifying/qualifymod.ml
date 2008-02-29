@@ -113,7 +113,9 @@ and constrain_constructed (env, guard, f) cstrdesc args e =
       let f = F.Fconstr (path, tyargframes, cstrs, cstrref) in
       let cstrargs = F.fresh_constructor e.exp_env cstrdesc f in
       let (argframes, argcstrs) = constrain_subexprs env guard args in
-        (f, [SubFrame(env, guard, F.Ftuple argframes, F.Ftuple cstrargs); WFFrame(env, f)], argcstrs)
+        (f,
+         WFFrame(env, f) :: (List.map2 (fun arg formal -> SubFrame(env, guard, arg, formal)) argframes cstrargs),
+         argcstrs)
   | _ -> assert false
 
 and constrain_record (env, guard, f) labeled_exprs =
@@ -243,7 +245,7 @@ and constrain_sequence (env, guard, _) e1 e2 =
 and constrain_tuple (env, guard, f) es =
   let (fs, subexp_cs) = constrain_subexprs env guard es in
   match f with
-    | F.Ftuple fresh_fs ->
+    | F.Ftuple (fresh_fs, _) ->
         let new_cs = List.fold_left2
           (fun cs rec_frame fresh_frame ->
             WFFrame (env, fresh_frame) :: SubFrame (env, guard, rec_frame, fresh_frame) :: cs)

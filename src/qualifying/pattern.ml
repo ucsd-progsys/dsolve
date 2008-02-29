@@ -7,7 +7,7 @@ let bind env pat frame =
     match (pat, frame) with
     | (Tpat_any, _) -> bindings
     | (Tpat_var x, f) -> (Path.Pident x, f) :: bindings
-    | (Tpat_tuple pats, Frame.Ftuple fs) ->
+    | (Tpat_tuple pats, Frame.Ftuple (fs, _)) ->
         List.fold_left2 bind_rec bindings (pattern_descs pats) fs
     | (Tpat_construct (cstrdesc, pats), f) ->
         List.fold_left2 bind_rec bindings (pattern_descs pats)

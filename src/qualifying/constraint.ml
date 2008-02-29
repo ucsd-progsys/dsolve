@@ -193,9 +193,9 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
   | (F.Fconstr (p1, f1s, variances, r1), F.Fconstr(p2, f2s, _, r2)) ->  (* 2 *)
       (C.flap3 (lequate_cs env g c) variances f1s f2s,
        [(Cstr c, SubRef(env,g,r1,r2,None))])
-  | (F.Ftuple f1s, F.Ftuple f2s) ->
+  | (F.Ftuple (f1s, r1), F.Ftuple (f2s, r2)) ->
       (C.flap2 (lequate_cs env g c F.Covariant) f1s f2s,
-       [])
+       [(Cstr c, SubRef(env,g,r1,r2,None))])
   | (F.Frecord (_, fld1s, r1), F.Frecord (_, fld2s, r2)) ->
       (C.flap2 
          (fun (f1',_,m) (f2',_,_) -> lequate_cs env g c (mutable_variance m) f1' f2')
@@ -216,8 +216,8 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
   | F.Farrow (l, f, f') ->
       let env' = match l with None -> env | Some p -> Pat.env_bind tenv env p f in
       ([make_wff env f; make_wff env' f'], [])
-  | F.Ftuple fs ->
-      (List.map (make_wff env) fs, [])
+  | F.Ftuple (fs, r) ->
+      (List.map (make_wff env) fs, [(Cstr c, WFRef (Le.add qual_test_var f env, r, None))])
   | F.Frecord (_, fs, r) ->
       (List.map (fun (f',_,_) -> make_wff env f') fs,
        [(Cstr c, WFRef (Le.add qual_test_var f env, r, None))])
