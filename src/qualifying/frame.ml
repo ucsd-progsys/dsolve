@@ -215,6 +215,7 @@ let refinement_apply_solution solution = function
 let map_apply_solution solution = function
   | Fconstr (path, fl, cstrs, r) -> Fconstr (path, fl, cstrs, refinement_apply_solution solution r)
   | Frecord (path, fs, r) -> Frecord (path, fs, refinement_apply_solution solution r)
+  | Ftuple (fs, r) -> Ftuple (fs, refinement_apply_solution solution r)
   | f -> f
 
 let apply_solution solution fr = map_frame (map_apply_solution solution) fr
