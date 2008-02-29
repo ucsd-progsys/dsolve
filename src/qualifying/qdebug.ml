@@ -91,7 +91,16 @@ and pprint_pattern ppf pat =
           end
       | "[]" ->
           fprintf ppf "[]"
-      | _ -> assert false
+      | cons ->
+          begin
+          match e with
+          | Some ({ppat_desc = Ppat_tuple el}) ->
+              fprintf ppf "(%a)" pprint_pat_list el
+          | None ->
+              fprintf ppf ""
+          | _ ->
+              assert false
+          end
       end
   | _ -> assert false
 and pprint_and ppf = function
@@ -103,7 +112,7 @@ and pprint_binds ppf = function
   | [] -> fprintf ppf ""
 and pprint_cases ppf = function
   | (pat, e)::rem ->
-    fprintf ppf "@[| %a@ ->@;<1 2>%a@.%a@]" pprint_pattern pat pprint_expression e pprint_cases rem
+    fprintf ppf "@[| %a@ ->@;<1 2>%a@\n%a@]" pprint_pattern pat pprint_expression e pprint_cases rem
   | [] -> fprintf ppf ""
 
 let rec pprint_structure ppf str = 
