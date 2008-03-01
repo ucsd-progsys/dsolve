@@ -1,8 +1,7 @@
 #!/bin/bash
 #not actually a regression test
-OCAML=./liquid.run
-FLAGS="-dframes -cacheq"
-QUALFLAGS="-no-simple-subs -no-anormal -dqualifs -lqualifs -collect 0"
+OCAML=./dsolve.py
+FLAGS=""
 POSFILE=postests
 NEGFILE=negtests
 #HANDQUALS_ONLY="yep"
@@ -18,24 +17,6 @@ rm -f $TMPDIR/*.lilog*
 #rm -f DML/*.quals
 #rm -f DMLex/*.quals
 #rm -f examples-liquid/*.quals
-
-echo Generating qualifiers where needed...
-
-if [[ $HANDQUALS_ONLY ]]
-then
-  echo "User specified hand quals only"
-else
-  for i in `cat $POSFILE $NEGFILE`
-  do
-#    cat $i.quals 1> /dev/null 2> /dev/null
-#    if [[ $? != 0 ]]
-#    then
-    rm -f $i.quals
-    $OCAML $QUALFLAGS $i 1> /dev/null 2> $i.quals
-#    fi
-  done
-fi
-echo done.
 
 echo RUNNING $POSFILE TESTS
 for i in `cat $POSFILE`
@@ -101,19 +82,4 @@ echo DONE
 
 exit 0
 
-#OUT_FILES=`ls $TMPDIR"/"*.lilog`
-
-#grovel through output files for stats below:
-
-#echo "Timing: "
-#for i in $OUT_FILES
-#do
-#   s=`grep -n "\#\#solve\#\#" $i | tail -n1 -` 
-#   d=`grep -n "\#\#endtime\#\#" $i | tail -n1 -`
-#   s=`expr "$s" : '\([0-9]*\)'`
-#   d=`expr "$d" : '\([0-9]*\)'`
-#   let "s = $d - $s"
-#   f=`head -n$d $i | tail -n$s -`
-#   tot=`
-#done
 
