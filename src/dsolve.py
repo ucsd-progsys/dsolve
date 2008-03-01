@@ -4,7 +4,8 @@ import sys
 import os
 import os.path
 
-gen   = "./liquid.opt -no-anormal -dqualifs -lqualifs"
+d_pats= "default_patterns"
+gen   = "./liquid.opt -no-anormal -lqualifs -dqualifs"
 solve = "./liquid.opt -dframes"
 flags = []
 tname = "/tmp/liq"
@@ -29,11 +30,12 @@ def logged_sys_call(s):
   os.system(s)
 
 def gen_quals(src,bare):
-  (fname,qname,hname) = (src+".ml", src + ".quals", src + ".hquals")
+  (fname,qname,hname) = (src+".ml", src+".quals", src+".hquals")
   if bare:
     os.system("touch %s" % (qname))
   else:
-    logged_sys_call("%s %s 1> /dev/null 2> %s" % (gen, fname, qname))
+    cat_files([hname,d_pats],qname)
+    logged_sys_call("%s %s %s 1> /dev/null 2> %s" % (gen, qname, fname, qname))
   cat_files([hname,qname],tname+".quals")
   cat_files([tname+".quals",fname],tname+".ml")
 
