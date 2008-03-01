@@ -13,8 +13,8 @@ module QS = Set.Make(struct
                        let compare = compare
                      end)
 
-let def_patf = ref "default_patterns"
-
+let patf = ref "default_patterns"
+            
 let expand_quals env qstrs =
   let expand_squal q =
     match q.pstr_desc with
@@ -35,7 +35,7 @@ let dump_default_qualifiers source =
   let _ = C.verbose_level := C.ol_dquals in
   let (str, env, fenv) = source in
   let _ = Qg.visit_str str in
-  let dqstrs = Pparse.file std_formatter !def_patf Parse.implementation ast_impl_magic_number in 
+  let dqstrs = Pparse.file std_formatter !patf Parse.implementation ast_impl_magic_number in 
   let dqstrs = expand_quals env dqstrs in
   let qs = List.fold_left (fun qs q -> QS.add q qs) QS.empty dqstrs in
     dump_qset qs; pp_print_flush err_formatter ()

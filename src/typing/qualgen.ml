@@ -48,12 +48,6 @@ let addid i =
 let findm ty = try TM.find ty !tymap with Not_found -> IS.empty
 
 let addm n (typ, id) = 
-(*  let _ = C.cprintf C.ol_always "@[%i@ %i@ %i@ %i@\n@]" 
-                                (C.map_cnt TM.fold !tymap)
-                                (C.set_cnt TS.elements !tyset)
-                                (C.set_cnt IS.elements !idset)
-                                (C.set_cnt CS.elements !intset)
-  in*)
   let id = Ident.name id in
   let tmp = try (String.sub id 0 5) = "__tmp" with Invalid_argument s -> false in
   let tmp = tmp && ck_clev n in

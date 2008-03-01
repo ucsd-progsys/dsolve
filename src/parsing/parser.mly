@@ -1530,47 +1530,6 @@ qual_lit_op_list:
 
 /* Predicates */
 
-predicate:
-    TRUE                                        { mkpred Ppred_true }
-  | LPAREN predicate RPAREN                     { $2 }
-  | pexpression LESS pexpression                { mkpred (Ppred_atom($1, Pred_lt, $3)) }
-  | pexpression GREATER pexpression             { mkpred (Ppred_atom($1, Pred_gt, $3)) }
-  | pexpression EQUAL pexpression               { mkpred (Ppred_atom($1, Pred_eq, $3)) }
-  | pexpression INFIXOP0 pexpression            {
-      let op =
-        if $2 = "<=" then Pred_le
-        else if $2 = "!=" then Pred_ne
-				else if $2 = ">=" then Pred_ge
-        else raise Parse_error
-      in mkpred (Ppred_atom($1, op, $3))
-    }
-  | MINUSDOT predicate                          { mkpred (Ppred_not $2) }
-  | predicate AND predicate                     { mkpred (Ppred_and($1, $3)) }
-  | predicate OR predicate                      { mkpred (Ppred_or($1, $3)) }
-
-pexpression:
-    INT                                         { mkpredexp (Ppredexp_int $1) }
-  | LIDENT                                      { mkpredexp (Ppredexp_var $1) }
-  | LPAREN pexpression RPAREN                   { $2 }
-  /* this is going to have to be fixed too... */
-  | LIDENT DOT LIDENT                           { mkpredexp (Ppredexp_field($3, $1)) }
-  /* Note the hack here to keep funapps applied to variables 
-     at this point the only funapps we want to allow are Array.length */
-	| val_longident pexpression {
-			let rec flatten = function
-				Longident.Lident s -> s
-				| Longident.Ldot (t, s) -> (flatten t) ^ "." ^ s
-				| Longident.Lapply (t, t') -> (flatten t) ^ "(" ^ (flatten t') ^ ")"
-			in
-      mkpredexp (Ppredexp_app (flatten $1, [$2])) }
-  | pexpression PLUS pexpression                { mkpredexp (Ppredexp_binop($1, Predexp_plus, $3)) }
-  | pexpression MINUS pexpression               { mkpredexp (Ppredexp_binop($1, Predexp_minus, $3)) }
-  | pexpression STAR pexpression                { mkpredexp (Ppredexp_binop($1, Predexp_times, $3)) }
-	| pexpression INFIXOP3 pexpression					  { 
-			match $2 with 
-					"/" -> mkpredexp(Ppredexp_binop($1, Predexp_div, $3)) 
-					| _ -> assert false }
-
 /* Constants */
 
 constant:
