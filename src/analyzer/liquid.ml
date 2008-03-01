@@ -102,7 +102,7 @@ let main () =
      "-dinstr", Arg.Set dump_instr, " (undocumented)";
      "-dconstrs", Arg.Set dump_constraints, "print out subframe constraints";
      "-dqexprs", Arg.Set dump_qexprs, "print out all subexpressions with their qualified types";
-     "-dqualifs", Arg.Set dump_qualifs, "print out simple qualifiers for all identifiers and integer literals";
+     "-dqualifs", Arg.String (fun s -> dump_qualifs := true; Qdump.patf := s), "<file> dump qualifiers for patterns in <file>";
      "-dqueries", Arg.Set dump_queries, "print out all theorem prover queries and their results";
      "-dframes", Arg.Set dump_frames, "place frames in an annotation file";
      "-lqueries", Arg.Set log_queries, "log queries to [prover].log";
@@ -134,7 +134,7 @@ let main () =
      "-verrs", Arg.Set verb_errors, "redacted"
   ] file_argument usage;
  let source = load_sourcefile std_formatter !filename in
- if !Clflags.dump_qualifs 
+ if !dump_qualifs 
  then 
   Qdump.dump_default_qualifiers source
  else
