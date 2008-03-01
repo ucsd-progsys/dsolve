@@ -4,57 +4,63 @@ import sys
 import os
 import os.path
 
-gen="./liquid.opt -no-anormal -dqualifs -lqualifs"
-solve="./liquid.opt"
+gen   = "./liquid.opt -no-anormal -dqualifs -lqualifs"
+solve = "./liquid.opt -dframes"
+flags = []
+tname = "/tmp/liq"
 
-flags = ["-dframes"]
+def cat_files(files,outfile):
+  os.system("rm -f %s" % outfile)
+  for f in files: os.system("cat %s 1>> %s 2> /dev/null" % (f,outfile))
 
-basename=sys.argv[len(sys.argv) - 1][:-3]
-fname = basename + ".ml"
-qname = basename + ".quals"
-aname = basename + ".annot"
+def read_lines(name):
+  f = open(name)
+  lines = f.readlines()
+  f.close()
+  return lines
 
-os.system("rm -f %s; rm -f %s" % (qname, aname))
+def write_line(name,line):
+  f = open(name,"w")
+  f.write(line)
+  f.close()
 
-if (sys.argv[1] != "--bare"):
-  os.system("%s %s 1> /dev/null 2> %s" % (gen, fname, qname))
-else:
-  os.system("touch %s" % (qname))
-  sys.argv.pop()
+def logged_sys_call(s):
+  print "exec: " + s
+  os.system(s)
 
-os.system("%s %s %s" % (solve, " ".join(flags + sys.argv[1:-1]), fname))
+def gen_quals(src,bare):
+  (fname,qname,hname) = (src+".ml", src + ".quals", src + ".hquals")
+  if bare:
+    os.system("touch %s" % (qname))
+  else:
+    logged_sys_call("%s %s 1> /dev/null 2> %s" % (gen, fname, qname))
+  cat_files([hname,qname],tname+".quals")
+  cat_files([tname+".quals",fname],tname+".ml")
 
-def fix_annotations():
-  qualfile = open(qname)
-  quallines = qualfile.readlines()
-  qualfile.close()
+def solve_quals(src,flags):
+  logged_sys_call("%s %s %s.ml" % (solve, " ".join(flags),src))
 
+def fix_annots(src,dst):
+  quallines  = read_lines(src+".quals")
   lineoffset = len(quallines)
   charoffset = len("".join(quallines))
-
-  annotfile = open("/tmp/liq.annot")
-  fixedannots = []
-
-  for line in annotfile.readlines():
+  outlines  = []
+  for line in read_lines(src+".annot"): 
       fields = line.split(" ")
-      if fields[0] == '"/tmp/liq.ml"':
-          for i in [0, 4]:
-              fields[i] = '"' + fname + '"'
+      if fields[0] == '"%s.ml"' % src:
+          for i in [0,4]: fields[i] = '"' + dst + ".ml" + '"'
+          for i in [1,5]: fields[i] = str(int(fields[i]) - lineoffset)
+          for j in [2,3,6]: fields[j] = str(int(fields[j]) - charoffset)
+          fields[7] = str(int(fields[7]) - charoffset) + "\n"
+      outlines.append(" ".join(fields))
+  write_line(dst + ".annot", "".join(outlines))
 
-          for i in [1, 5]:
-              fields[i] = str(int(fields[i]) - lineoffset)
-
-          for j in [2, 3, 6]:
-              fields[j] = str(int(fields[j]) - charoffset)
-
-          fields[7] = str(int(fields[7]) - charoffset)
-
-      fixedannots.append(" ".join(fields))
-
-  annotfile.close()
-  return "\n".join(fixedannots)
-
-fixedannots = fix_annotations()
-annotfile = open(aname, "w")
-annotfile.write(fixedannots)
-annotfile.close()
+# main
+bname = sys.argv[len(sys.argv) - 1][:-3]
+bare = (sys.argv[1] == "-bare")
+if bare: flags += sys.argv[2:-1]
+else: flags += sys.argv[1:-1]
+os.system("rm -f %s.quals; rm -f %s.annot" % (bname, bname))	
+gen_quals(bname,bare)
+solve_quals(tname,flags)
+fix_annots(tname,bname)

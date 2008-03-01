@@ -21,3 +21,8 @@ qualif A_rel_big1v(_V) : Array.length ~A { * * } Bigarray.Array2.dim1 _V
 qualif A_rel_big2v(_V) : Array.length ~A { * * } Bigarray.Array2.dim2 _V
 
 
+(* 
+qualif BITLENGTH(_V): _V.length <= (Array.length _V.bits) * 30 
+qualif DIVBY30(_V): 30 * _V <= ~A
+qualif LESSLEN(_V): ~A < _V.length
+*)

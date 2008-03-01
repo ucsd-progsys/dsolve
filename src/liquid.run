@@ -9,42 +9,19 @@ then
   TMPDIR=/tmp
 fi
 
-
-
-#let "j = 0"
-#catt=""
 argv=""
-#frames=""
 enm=""
 for i in ${@/\ //n}
 do
   let "j = $j + 1"
-#  #catt="cat "$i".quals "$i 
   enm=$i
   if (("$j" < "$argc"))  
   then
-#    if [[ $i == "-dframes" ]]
-#    then
-#      frames="true"
-#    else
-      argv=$argv" "$i  
-#    fi
+     argv=$argv" "$i  
   fi
 done
-#if [[ $frames != "" ]]
-#then
-#  argv=$argv" -dframes "${i%\.ml}".annot "
-#fi
 
-#yah, ugly, ok
 catargs="" 
-
-#cat $enm.types &> /dev/null
-
-#if [[ $? = 0 ]]
-#then
-#  catargs=$catargs" "$enm".types"
-#fi
 
 cat $enm.hquals &> /dev/null
 
@@ -67,7 +44,6 @@ then
   $tool $argv
   EXIT=$?
 else
-  #cat$catargs | nice -n19 rlwrap ./ocaml $argv
   cat $catargs > $TMPDIR/liq.ml
   $tool $argv $TMPDIR/liq.ml
   EXIT=$?
