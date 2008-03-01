@@ -24,7 +24,6 @@ let expand_quals env qstrs =
   in
   C.flap (expand_squal) qstrs 
 
-(* note _V hardcoded as valu :( *)
 let dump_qset qs =
   let n = ref 0 in
   let nx () = incr n; !n in
