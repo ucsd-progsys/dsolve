@@ -152,7 +152,9 @@ let gen_preds p =
 
 (* Translate a qualifier declaration *)
 let transl_pattern env {Parsetree.pqual_pat_desc = (valu, anno, pred)} =
-  let preds = (gen_preds (transl_patpred (List.fold_left (fa env) AM.empty anno) pred))
-  in
-  let _ = List.iter (fun p -> C.cprintf C.ol_dquals "@[%a@.@]" pprint p) preds
-  in preds
+  let preds = (gen_preds (transl_patpred (List.fold_left (fa env) AM.empty anno) pred)) in
+  preds
+
+let transl_pattern_valu env ({Parsetree.pqual_pat_desc = (valu, anno, pred)} as p) =
+  let preds = transl_pattern env p in
+    List.map (fun p -> (valu, p)) preds

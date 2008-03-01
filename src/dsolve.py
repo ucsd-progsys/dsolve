@@ -5,7 +5,7 @@ import os
 import os.path
 
 d_pats= "default_patterns"
-gen   = "./liquid.opt -no-anormal -lqualifs -dqualifs"
+gen   = "./liquid.opt -no-anormal -lqualifs -collect 4 -dqualifs"
 solve = "./liquid.opt -dframes"
 flags = []
 tname = "/tmp/liq"
@@ -27,20 +27,20 @@ def write_line(name,line):
 
 def logged_sys_call(s):
   print "exec: " + s
-  os.system(s)
+  return os.system(s)
 
 def gen_quals(src,bare):
-  (fname,qname,hname) = (src+".ml", src+".quals", src+".hquals")
+  (fname,qname,hname) = (src+".ml", src+".quals", src+".ml.hquals")
   if bare:
     os.system("touch %s" % (qname))
   else:
-    cat_files([hname,d_pats],qname)
-    logged_sys_call("%s %s %s 1> /dev/null 2> %s" % (gen, qname, fname, qname))
+    cat_files([hname,d_pats],tname+".scratch")
+    logged_sys_call("%s %s %s 1> /dev/null 2> %s" % (gen, tname+".scratch", fname, qname))
   cat_files([hname,qname],tname+".quals")
   cat_files([tname+".quals",fname],tname+".ml")
 
 def solve_quals(src,flags):
-  logged_sys_call("%s %s %s.ml" % (solve, " ".join(flags),src))
+  return logged_sys_call("%s %s %s.ml" % (solve, " ".join(flags),src))
 
 def fix_annots(src,dst):
   quallines  = read_lines(src+".quals")
@@ -57,12 +57,15 @@ def fix_annots(src,dst):
       outlines.append(" ".join(fields))
   write_line(dst + ".annot", "".join(outlines))
 
-# main
 bname = sys.argv[len(sys.argv) - 1][:-3]
 bare = (sys.argv[1] == "-bare")
 if bare: flags += sys.argv[2:-1]
 else: flags += sys.argv[1:-1]
 os.system("rm -f %s.quals; rm -f %s.annot" % (bname, bname))	
 gen_quals(bname,bare)
-solve_quals(tname,flags)
+succ = solve_quals(tname,flags)
 fix_annots(tname,bname)
+if succ == 0:
+  sys.exit()
+else:
+  BogusErrorr

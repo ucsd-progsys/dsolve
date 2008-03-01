@@ -65,7 +65,8 @@ let normalize exp =
   (* ming: we dummy out all the pattern locations because we don't use them.
    * this is technically destructive though, if we do implement pattern matching
    * it will have to be fixed. *)
-  let mk_let r x e1 e2 = Pexp_let(r, [({ppat_desc = Ppat_var x; ppat_loc = Location.none}, e1)], e2) in
+  let mk_let_lit r pes e2 = Pexp_let(r, pes, e2) in
+  let mk_let r x e1 e2 = mk_let_lit r [({ppat_desc = Ppat_var x; ppat_loc = Location.none}, e1)] e2 in
   let mk_let_lbl r x e1 e2 = mk_let r (li_flatten x) e1 e2 in
   let mk_apply e1 es = Pexp_apply(e1, (List.map (fun e -> ("", e)) es)) in
   let mk_ident id = Pexp_ident(id) in
@@ -86,53 +87,15 @@ let normalize exp =
   let mk_dum_ident id = mk_dummy (mk_ident id) in
   let mk_ident_loc id loc = {pexp_desc = mk_ident id; pexp_loc = loc} in
 
- let resolve_in_exp_when f ls =
-  let (lbl, lex, loc) = List.hd ls in
-  match lex with
-           | Some lex when f lex -> (lex, List.tl ls)
-           | _ -> (mk_ident_loc lbl loc, ls) in
+  let resolve_in_exp_when f ls =
+    let (lbl, lex, loc) = List.hd ls in
+    match lex with
+    | Some lex when f lex -> (lex, List.tl ls)
+    | _ -> (mk_ident_loc lbl loc, ls) in
 
  let resolve_in_exp = resolve_in_exp_when (fun e -> true) in
- 
-  let mk_list_let r ls e2 = 
-    let ls = List.map (fun (x, e, lo) -> 
-                         let e = match e with Some e -> e
-                           | None -> mk_ident_loc x lo
-                         in ({ppat_desc = Ppat_var (li_flatten x); ppat_loc = Location.none}, e)) ls in
-      Pexp_let(r, ls, e2) in
-
-    (* still broken for general patterns; and just in general *)
-  let rec norm_bind_list bs = 
-    let single_bind elt =
-      match elt with
-        ({ppat_desc = Ppat_var x}, e1) ->
-            let ls = norm_in e1 in
-            let (lbl, e_f, lo) = List.hd ls in
-              begin
-              match e_f with 
-                  Some e -> 
-                    ((Longident.parse x, e_f, lo), List.tl ls) 
-                | None ->
-                    ((Longident.parse x, Some (mk_ident_loc lbl lo), lo), List.tl ls)  
-              end
-        | ({ppat_desc = Ppat_any}, e1) -> 
-            let ls = norm_in e1 in
-            let (this, e_this, loc_this) = List.hd ls in
-            let this = 
-              match e_this with
-                  Some e -> (this, e_this, loc_this)
-                | None -> (this, Some (mk_ident_loc this loc_this), loc_this) 
-            in
-              (this, List.tl ls)
-        | ({ppat_desc = Ppat_tuple ps}, e1) ->
-
-        | _ -> assert false
-    in
-    let prs = (List.map single_bind bs) in
-    let k (q, r) (qs, rs) = (q::qs, r::rs) in
-    let (ins, outs) = List.fold_right k prs ([], [])  in
-      (ins, List.concat outs)
-  and norm_out exp =
+   
+ let rec norm_out exp =
     let rw_expr desc = {pexp_desc = desc; pexp_loc = exp.pexp_loc} in
     let wrap r b (lbl, a, _) = 
       match a with
@@ -163,11 +126,20 @@ let normalize exp =
         exp
      | Pexp_function(lbl, elbl, [(arg, e)]) ->
         rw_expr (mk_function lbl elbl arg (norm_out e))
-      (* this is generally broken, but OK for actual mutual recursion *)
-     | Pexp_let(r, pes, e2) ->
-        let (ins, outs) = norm_bind_list pes in        
-        let init = mk_list_let r ins (norm_out e2) in
-          rw_expr (List.fold_left (wrap r) init outs)
+     | Pexp_let(r, [(p, e1)], e2) ->
+        let ls = norm_in e1 in
+        let (e1, ls) = resolve_in_exp ls in
+        let init = mk_let_lit r [(p, e1)] (norm_out e2) in
+          rw_expr (List.fold_left (wrap r) init ls)
+     | Pexp_let(Recursive, pes, e2) ->
+        (* we can assume more or less that all recursive ands are 
+         * binds of mutually recursive functions, so we won't even try
+         * to norm_in them *)
+        let pes = List.map (fun (p, e) -> (p, norm_out e)) pes in
+          rw_expr (mk_let_lit Recursive pes (norm_out e2))
+     | Pexp_let(Nonrecursive, pes, e2) ->
+        (* we won't even try to touch nonrecursive ands *)
+        exp
      | Pexp_apply(e1, es) ->
         let f = norm_in e1 in
         let (flbl, _, lo) = List.hd f in 
@@ -342,8 +314,6 @@ let rec normalize_structure sstr =
         let _ = Common.cprintf Common.ol_normalized "@[%a@\n@]@." Qdebug.pprint_expression normal_exp in
         ({pstr_desc = (Pstr_eval(normal_exp)) ; pstr_loc = loc}) :: (normalize_structure srem)
     | {pstr_desc = (Pstr_value(recursive, pl)); pstr_loc = loc} :: srem -> 
-        (* assume with all accompanying losses of generality that no one is
-         * stupid enough to use and without rec *)
         let value = {pstr_desc = (Pstr_value(recursive, List.map (fun (p, exp) -> (p, normalize exp)) pl)); pstr_loc = loc} in
         let _ = Common.cprintf Common.ol_normalized "@[%a@\n@]@." Qdebug.pprint_structure value in
         value :: (normalize_structure srem)

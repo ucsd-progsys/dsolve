@@ -9,7 +9,7 @@ module P = Predicate
 module C = Common
 
 module QS = Set.Make(struct
-                       type t = P.t
+                       type t = string * P.t
                        let compare = compare
                      end)
 
@@ -19,7 +19,7 @@ let expand_quals env qstrs =
   let expand_squal q =
     match q.pstr_desc with
       Pstr_qualifier (name, pat) ->
-        Qd.transl_pattern env pat 
+        Qd.transl_pattern_valu env pat 
       | _ -> []
   in
   C.flap (expand_squal) qstrs 
@@ -28,7 +28,7 @@ let expand_quals env qstrs =
 let dump_qset qs =
   let n = ref 0 in
   let nx () = incr n; !n in
-    QS.iter (fun q -> eprintf "@[squalif@ Q%i(_V)@ :@ %a@.@]" (nx ()) P.pprint q) qs
+    QS.iter (fun (v, q) -> eprintf "@[squalif@ Q%i(%s)@ :@ %a@.@]" (nx ()) v P.pprint q) qs
 
 let dump_default_qualifiers source =
   let _ = pp_set_margin err_formatter 1230912  in

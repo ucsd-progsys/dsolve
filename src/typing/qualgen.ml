@@ -3,8 +3,8 @@ open Types
 open Asttypes
 
 
-let col_lev = ref 1 (* max number of lambdas to collect under *)
-let ck_clev l = (l <= !col_lev)
+let col_lev = ref 0 (* max number of lambdas to collect under *)
+let ck_clev l = l <= !col_lev
 
 let is_function e =
   match e.exp_desc with
@@ -49,11 +49,8 @@ let findm ty = try TM.find ty !tymap with Not_found -> IS.empty
 
 let addm n (typ, id) = 
   let id = Ident.name id in
-  let tmp = try (String.sub id 0 5) = "__tmp" with Invalid_argument s -> false in
-  let tmp = tmp && ck_clev n in
-  let _ = if tmp then () else addt typ in
-  let _ = if tmp then () else addid id in 
-    if tmp then () else tymap := TM.add typ (IS.add id (findm typ)) !tymap 
+  if ck_clev n then (addt typ; addid id; 
+                    tymap := TM.add typ (IS.add id (findm typ)) !tymap)
 
 let bound_idents n pat = 
   let rec bound_idents_rec pat =
