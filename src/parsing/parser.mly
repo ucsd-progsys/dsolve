@@ -1399,35 +1399,6 @@ label:
 ;
 
 
-/* Qualified types */
-
-/*qual_type_declaration:
-  qual_type
-    { { pqtyp_desc = $1 ; pqtyp_loc = symbol_rloc() } }
-
-qual_type:
-  LPAREN qual_type RPAREN
-    { $2 }
-  | LBRACE qual_type BAR predicate RBRACE
-    { Pqtyp_pred($2, $4) }
-  | LIDENT
-    { 
-       Pqtyp_ident($1) 
-    }
-  | qual_type LIDENT
-    { if (compare $2 "ref") = 0 then
-        Pqtyp_ref($1)
-      else
-        if (compare $2 "list") = 0 then
-          Pqtyp_list($1)
-        else syntax_error()
-    }
-  | qual_type MINUSGREATER qual_type
-    { Pqtyp_func($1, $3) }
-  | qual_type STAR qual_type
-    { Pqtyp_pair($1, $3) }*/
-
-
 /* Qualifiers */
 
 qualifier_pattern_declaration:
