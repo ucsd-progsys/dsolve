@@ -16,6 +16,10 @@ let rec map3 f xs ys zs = match (xs, ys, zs) with
   | (x :: xs, y :: ys, z :: zs) -> f x y z :: map3 f xs ys zs
   | _ -> assert false
 
+let rec mapi f i = function
+  | [] -> []
+  | x :: xs -> (f i x) :: (mapi f (i + 1) xs)
+
 let zip_partition xs bs =
   let (xbs,xbs') = List.partition snd (List.combine xs bs) in
   (List.map fst xbs, List.map fst xbs')

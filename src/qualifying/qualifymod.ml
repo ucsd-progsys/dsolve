@@ -249,8 +249,10 @@ and constrain_tuple (env, guard, f) es =
         let new_cs = List.fold_left2
           (fun cs rec_frame fresh_frame ->
             WFFrame (env, fresh_frame) :: SubFrame (env, guard, rec_frame, fresh_frame) :: cs)
-          [] fs fresh_fs
-        in (f, WFFrame (env, f) :: new_cs, subexp_cs)
+          [] fs fresh_fs in
+        let elem_qualifier n fexpr = B.proj_eq_qualifier n (expression_to_pexpr fexpr) in
+          (F.Ftuple (fresh_fs, ([], F.Qconst (C.mapi elem_qualifier 0 es))),
+           WFFrame (env, f) :: new_cs, subexp_cs)
     | _ -> assert false
 
 and constrain_assertfalse (_, _, f) = (f, [], [])

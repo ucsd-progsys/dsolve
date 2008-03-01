@@ -44,6 +44,8 @@ let transl_patpred_single p =
 	        Binop (transl_expr_rec e1, transl_op (List.hd ops), transl_expr_rec e2)
       | Ppredpatexp_field (f, e1) ->
           Field (f, transl_expr_rec e1)
+      | Ppredpatexp_proj (n, e1) ->
+          Proj (n, transl_expr_rec e1)
       | _ -> assert false
   in
   let rec transl_pred_rec pd =
@@ -101,6 +103,8 @@ let transl_patpred env (qgtymap, tyset, idset, intset) tymap p =
 	        PBinop (transl_expr_rec e1, transl_ops ops, transl_expr_rec e2)
       | Ppredpatexp_field (f, e1) ->
           PField (f, transl_expr_rec e1)
+      | Ppredpatexp_proj (n, e1) ->
+          PProj (n, transl_expr_rec e1)
   in
   let rec transl_pred_rec pd =
     match pd.ppredpat_desc with
@@ -149,6 +153,9 @@ let gen_preds p =
       | PField (f, e1) ->
           let e1s = gen_expr_rec e1 in
             List.map (fun e -> Field(f, e)) e1s
+      | PProj (n, e1) ->
+          let e1s = gen_expr_rec e1 in
+            List.map (fun e -> Proj(n, e)) e1s
   in    
   let rec gen_pred_rec pd =
     match pd with

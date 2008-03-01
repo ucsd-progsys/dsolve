@@ -59,6 +59,11 @@ let pred_is_well_typed env p =
               else Funknown
         | f -> Funknown
       end
+  | Predicate.Proj (n, t) ->
+      begin match get_expr_shape t with
+        | Ftuple (fs, _) -> (try List.nth fs n with Failure -> Funknown)
+        | _ -> Funknown
+      end
   and pred_shape_is_bool = function
   | Predicate.True -> true
   | Predicate.Not p -> pred_shape_is_bool p 
