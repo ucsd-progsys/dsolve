@@ -143,11 +143,11 @@ let normalize exp =
            let (lbl, _, lo) = List.hd ls in
            let lbl = mk_ident_loc lbl lo in
              (lbl, ls) in
-           let lbss = List.map mk_lbl pes in
-           let pes = List.map2 (fun (p, e) (lbl, ls) -> (p, lbl)) pes lbss in
-           let lss = List.map (fun (lbl, ls) -> ls) lbss in
-           let init = mk_let_lit Nonrecursive pes (norm_out e2) in 
-             rw_expr (List.fold_left (wrap Nonrecursive) init (List.concat (List.rev lss)))
+         let lbss = List.map mk_lbl pes in
+         let pes = List.map2 (fun (p, e) (lbl, ls) -> (p, lbl)) pes lbss in
+         let lss = List.map (fun (lbl, ls) -> ls) lbss in
+         let init = mk_let_lit Nonrecursive pes (norm_out e2) in 
+           rw_expr (List.fold_left (wrap Nonrecursive) init (List.concat (List.rev lss)))
      | Pexp_apply(e1, es) ->
         let f = norm_in e1 in
         let (flbl, _, lo) = List.hd f in 
