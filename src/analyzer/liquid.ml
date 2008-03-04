@@ -133,13 +133,13 @@ let main () =
      "-collect", Arg.Int (fun c -> Qualgen.col_lev := c), "[1] number of lambdas to collect identifiers under";
      "-verrs", Arg.Set verb_errors, "redacted"
   ] file_argument usage;
- let source = load_sourcefile std_formatter !filename in
- if !dump_qualifs 
- then 
-  Qdump.dump_default_qualifiers source
- else
-  try
-    analyze std_formatter !filename source
-  with x -> (report_error std_formatter x; exit 1)
+ try 
+  let source = load_sourcefile std_formatter !filename in
+  if !dump_qualifs 
+  then 
+    Qdump.dump_default_qualifiers source
+  else
+      analyze std_formatter !filename source
+ with x -> (report_error std_formatter x; exit 1)
 
 let _ = main (); exit 0
