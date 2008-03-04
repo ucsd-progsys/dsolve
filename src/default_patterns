@@ -22,6 +22,30 @@ qualif A_rel_big1v(_V)(A:'a array) : Array.length ~A { * * } Bigarray.Array2.dim
 qualif A_rel_big2v(_V)(A:'a array) : Array.length ~A { * * } Bigarray.Array2.dim2 _V
 
 
+(* examples:
+
+^ - integer literal wildcard
+* * - relational/operator wildcard
+
+metavariables and type annotations
+
+qualif A(v) : ~A + v = 5
+qualif C(v)(A:int, B:int) : ~A + v + ~B = 5
+
+sets of operators
+
+qualif A(v) : v [| +, - |] 5 > 0
+
+sets of relational operators
+
+qualif A(v): v { <, <= } 5
+
+to an operator wildcard is DELIM * * DELIM eg, [| * * |] for any operator
+
+-annotated types are matched to program types by attempting to unify, not structurally
+-pattern names are lost after expansion *)
+
+
 (* 
 qualif BITLENGTH(_V): _V.length <= (Array.length _V.bits) * 30 
 qualif DIVBY30(_V): 30 * _V <= ~A

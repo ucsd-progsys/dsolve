@@ -1427,7 +1427,7 @@ qual_rel:
     qual_lit_rel                            { [$1] }
   | LBRACE qual_rel_list RBRACE             { $2 }
   | LBRACE STAR STAR RBRACE                 
-    { [] (*[Pred_ne; Pred_le; Pred_ge]*) }
+    { [] }
   
 qual_lit_rel:
     INFIXOP0                
@@ -1482,7 +1482,7 @@ qual_op:
     qual_lit_op                                { [$1]  }
   | LBRACELESS qual_lit_op_list GREATERRBRACE  { $2 }
   | LBRACELESS STAR STAR GREATERRBRACE         
-    { [] (*[Predexp_plus; Predexp_minus; Predexp_times; Predexp_div]*) }
+    { [] }
 
 qual_lit_op:
     PLUS                                    { Predexp_plus }
@@ -1498,8 +1498,6 @@ qual_lit_op_list:
     qual_lit_op                             { [$1] }
   | qual_lit_op COMMA qual_lit_op_list      { $1::$3 }
  
-
-/* Predicates */
 
 /* Constants */
 
