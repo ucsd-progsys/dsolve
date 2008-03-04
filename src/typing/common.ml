@@ -90,6 +90,8 @@ let opt_iter f l =
 let add il i = il := i::!il
 let addl il i = il := List.rev_append i !il
 
+let same_type q p = (Types.TypeOps.equal q p)
+
 (****************************************************************)
 (************* Output levels ************************************)
 (****************************************************************)

@@ -7,7 +7,7 @@ module C = Common
 module CTy = 
 struct
   type t = Types.type_expr
-  let compare = compare
+  let compare = Types.TypeOps.compare
 end
 
 module TM = Map.Make(CTy)
@@ -34,6 +34,9 @@ let mk_intset il =
     
 let mk_idset pl =
   List.fold_left (fun ids (_, id) -> IS.add (Ident.name id) ids) IS.empty pl
+
+let mk_tyset pl =
+  List.fold_left (fun tys (ty, _) -> TS.add ty tys) TS.empty pl
 
 let mk_tymap pl =
   let bind tymap (t, id) =
@@ -122,5 +125,5 @@ let visit_sstr sstr =
      | [] -> ([], []) in
   
   let (pl, il) = visit_sstr_rec sstr in  
-  (mk_tymap pl, mk_idset pl, mk_intset il)  
+  (mk_tymap pl, mk_tyset pl, mk_idset pl, mk_intset il)  
 
