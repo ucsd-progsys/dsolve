@@ -4,16 +4,11 @@ open Predicate
 
 module C = Common
 module T = Types
-module QG = Qualgen
 module AM = Map.Make(String)
-module TM = QG.TM
-module TS = QG.TS
-module IS = QG.IS
-module CS = QG.CS
 
 let fa env m (id, ty) =
-  let s = if AM.mem id m then AM.find id m else TS.empty in
-  AM.add id (TS.add (Typetexp.transl_type_scheme env ty) s) m 
+  let s = if AM.mem id m then AM.find id m else Qualgen.TS.empty in
+  AM.add id (Qualgen.TS.add (Typetexp.transl_type_scheme env ty) s) m 
 
 let lst s k = s::k
 
@@ -61,8 +56,8 @@ let transl_patpred_single p =
 
              
 let transl_patpred (qgtymap, idset, intset) tymap p =
-  let all_consts = lazy (CS.elements intset) in
-  let all_ids = lazy (IS.elements idset) in
+  let all_consts = lazy (Qualgen.CS.elements intset) in
+  let all_ids = lazy (Qualgen.IS.elements idset) in
   let rec transl_expr_rec pe =
     match pe.ppredpatexp_desc with
       | Ppredpatexp_int (n) ->
@@ -74,10 +69,10 @@ let transl_patpred (qgtymap, idset, intset) tymap p =
       | Ppredpatexp_mvar (y) ->
           let inty = AM.mem y tymap in
           let mk_idents = List.map Path.mk_ident in
-          let lflun = List.fold_left IS.union IS.empty in
-          let found_ids = lazy (lflun (List.map (QG.findm qgtymap) (TS.elements (AM.find y tymap)))) in
+          let lflun = List.fold_left Qualgen.IS.union Qualgen.IS.empty in
+          let found_ids = lazy (lflun (List.map (Qualgen.findm qgtymap) (Qualgen.TS.elements (AM.find y tymap)))) in
             if inty then
-              PVar (mk_idents (IS.elements (Lazy.force found_ids)))
+              PVar (mk_idents (Qualgen.IS.elements (Lazy.force found_ids)))
             else 
               PVar (mk_idents (Lazy.force all_ids)) 
       | Ppredpatexp_funapp (f, es) ->

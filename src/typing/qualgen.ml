@@ -18,8 +18,6 @@ module CS = Set.Make(struct
                        let compare = compare
                      end)
 
-
-
 let col_lev = ref 0 (* max number of lambdas to collect under *)
 let ck_clev l = l <= !col_lev
 
