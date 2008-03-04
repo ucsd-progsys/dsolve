@@ -34,7 +34,8 @@ let transl_patpred_single p =
   let rec transl_expr_rec pe =
     match pe.ppredpatexp_desc with
       | Ppredpatexp_int (n) ->
-	        PInt (n)
+          let _ = if List.length n != 1 then assert false in
+	        PInt (List.hd n)
       | Ppredpatexp_var (y) -> (* flatten longidents for now -- need to look these up? *)
 	        Var (Path.mk_ident (conflat y))
       | Ppredpatexp_funapp (f, es) ->
@@ -81,7 +82,7 @@ let transl_patpred env (qgtymap, tyset, idset, intset) tymap p =
   let rec transl_expr_rec pe =
     match pe.ppredpatexp_desc with
       | Ppredpatexp_int (n) ->
-	        PPInt ([n])
+	        PPInt (n)
       | Ppredpatexp_any_int ->
           PPInt (Lazy.force all_consts)      
       | Ppredpatexp_var (y) -> (* flatten longidents for now -- need to look these up? *)

@@ -1464,11 +1464,17 @@ qual_term:
   | TILDE UIDENT /* var */
     { mkpredpatexp (Ppredpatexp_mvar($2)) } 
   | INT
-    { mkpredpatexp (Ppredpatexp_int($1)) }
+    { mkpredpatexp (Ppredpatexp_int([$1])) }
   | INFIXOP1  /* wild int @ */
     { mkpredpatexp (Ppredpatexp_any_int) }
+  | LBRACKET qual_intlist RBRACKET
+    { mkpredpatexp (Ppredpatexp_int($2)) }
   | qual_term DOT LIDENT                
     { mkpredpatexp (Ppredpatexp_field($3, $1)) }
+
+qual_intlist:
+    INT                                     { [$1] }
+  | INT COMMA qual_intlist                  { $1::$3 }
 
 qual_litident:
     UIDENT DOT qual_litident                { $1 ^ "." ^ $3 }
