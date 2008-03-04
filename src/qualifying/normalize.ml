@@ -5,9 +5,9 @@ open Format
 
 let wrap_printable exp = (Ptop_def([{pstr_desc = (Pstr_eval exp); pstr_loc = Location.none}])) 
     
-    (* ming: I think it's actually better to pass everything around as
-     * longidents for true generality, but applies of functors should never
-     * happen in our code so this assumption is OK *)
+(* ming: I think it's actually better to pass everything around as
+ * longidents for true generality, but applies of functors should never
+ * happen in our code so this assumption is OK *)
 let li_flatten li = String.concat "." (Longident.flatten li) 
 
 (* constant divisions and multiplications are wreaking havoc on us

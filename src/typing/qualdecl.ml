@@ -6,8 +6,10 @@ module C = Common
 module T = Types
 module QG = Qualgen
 module AM = Map.Make(String)
+module TM = QG.TM
 module TS = QG.TS
 module IS = QG.IS
+module CS = QG.CS
 
 let fa env m (id, ty) =
   let s = if AM.mem id m then AM.find id m else TS.empty in
@@ -58,19 +60,26 @@ let transl_patpred_single p =
   in transl_pred_rec p
 
              
-let transl_patpred tymap p =
+let transl_patpred (qgtymap, idset, intset) tymap p =
+  let all_consts = lazy (CS.elements intset) in
+  let all_ids = lazy (IS.elements idset) in
   let rec transl_expr_rec pe =
     match pe.ppredpatexp_desc with
       | Ppredpatexp_int (n) ->
 	        PPInt ([n])
       | Ppredpatexp_any_int ->
-          PPInt (QG.all_consts ())      
+          PPInt (Lazy.force all_consts)      
       | Ppredpatexp_var (y) -> (* flatten longidents for now -- need to look these up? *)
 	        PVar ([Path.mk_ident (conflat y)])
       | Ppredpatexp_mvar (y) ->
-          PVar (if AM.mem y tymap then 
-                List.map Path.mk_ident (IS.elements (List.fold_left IS.union IS.empty (List.map QG.findm (TS.elements (AM.find y tymap)))))
-                else List.map Path.mk_ident (QG.all_ids ()))
+          let inty = AM.mem y tymap in
+          let mk_idents = List.map Path.mk_ident in
+          let lflun = List.fold_left IS.union IS.empty in
+          let found_ids = lazy (lflun (List.map (QG.findm qgtymap) (TS.elements (AM.find y tymap)))) in
+            if inty then
+              PVar (mk_idents (IS.elements (Lazy.force found_ids)))
+            else 
+              PVar (mk_idents (Lazy.force all_ids)) 
       | Ppredpatexp_funapp (f, es) ->
 	        PFunApp (f, List.map transl_expr_rec es)
       | Ppredpatexp_binop (e1, ops, e2) ->
@@ -151,10 +160,10 @@ let gen_preds p =
   in gen_pred_rec p
 
 (* Translate a qualifier declaration *)
-let transl_pattern env {Parsetree.pqual_pat_desc = (valu, anno, pred)} =
-  let preds = (gen_preds (transl_patpred (List.fold_left (fa env) AM.empty anno) pred)) in
+let transl_pattern env prgids {Parsetree.pqual_pat_desc = (valu, anno, pred)} =
+  let preds = (gen_preds (transl_patpred prgids (List.fold_left (fa env) AM.empty anno) pred)) in
   preds
 
-let transl_pattern_valu env ({Parsetree.pqual_pat_desc = (valu, anno, pred)} as p) =
-  let preds = transl_pattern env p in
+let transl_pattern_valu env prgids ({Parsetree.pqual_pat_desc = (valu, anno, pred)} as p) =
+  let preds = transl_pattern env prgids p in
     List.map (fun p -> (valu, p)) preds
