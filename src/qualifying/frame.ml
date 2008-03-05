@@ -231,20 +231,28 @@ let refinement_conjuncts solution qual_var (subs, qualifiers) =
 let refinement_predicate solution qual_var refn =
   Predicate.big_and (refinement_conjuncts solution qual_var refn)
 
+let ref_var = function
+  | (_, Qvar (k, _)) -> Some k
+  | _ -> None
+
 let rec refinement_vars = function
-  | Fconstr (_, _, _, (_, Qvar (k, _))) -> [k]
-  | Frecord (_, fs, (_, Qvar (k, _))) ->
-      k :: List.fold_left (fun r (f, _, _) -> refinement_vars f @ r) [] fs
+  | Fconstr (_, _, _, r) -> C.maybe_cons (ref_var r) []
+  | Frecord (_, fs, r) ->
+      C.maybe_cons (ref_var r) (List.fold_left (fun r (f, _, _) -> refinement_vars f @ r) [] fs)
+  | Ftuple (fs, r) ->
+      C.maybe_cons (ref_var r) (List.fold_left (fun r f -> refinement_vars f @ r) [] fs)
   | _ -> []
 
 let apply_refinement r = function
   | Fconstr (p, fl, varis, _) -> Fconstr (p, fl, varis, r)
   | Frecord (p, fs, _) -> Frecord (p, fs, r)
+  | Ftuple (fs, _) -> Ftuple (fs, r)
   | f -> f
 
 (* pmr: sound for our uses but not very informative *)
 let rec conjuncts solution qual_var = function
   | Fconstr (_, _, _, r) -> refinement_conjuncts solution qual_var r
+  | Ftuple (_, r) -> refinement_conjuncts solution qual_var r
   | _ -> []
 
 let rec predicate solution qual_var = function
@@ -256,4 +264,9 @@ let rec predicate solution qual_var = function
         let pred = predicate solution qual_var f in
           Predicate.subst (Predicate.Field (name, Predicate.Var qual_var)) qual_var pred
       in Predicate.big_and (refinement_predicate solution qual_var r :: List.map make_subframe_pred fs)
+  | Ftuple (fs, r) ->
+      let make_subframe_pred f i =
+        let pred = predicate solution qual_var f in
+          Predicate.subst (Predicate.Proj (i, Predicate.Var qual_var)) qual_var pred
+      in Predicate.big_and (refinement_predicate solution qual_var r :: Misc.mapi make_subframe_pred fs)
   | _ -> Predicate.True

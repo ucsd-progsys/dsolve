@@ -2,6 +2,11 @@ open Typedtree
 
 let pattern_descs = List.map (fun p -> p.pat_desc)
 
+let is_deep = function
+  | Tpat_any
+  | Tpat_var _ -> false
+  | _ -> true
+
 let bind env pat frame =
   let rec bind_rec bindings pat frame =
     match (pat, frame) with
@@ -14,6 +19,39 @@ let bind env pat frame =
           (Frame.fresh_constructor env cstrdesc f)
     | _ -> assert false
   in bind_rec [] pat frame
+
+let rec auxfold f faux b aux p = match p with
+  | Tpat_any
+  | Tpat_var _ -> f b aux p
+  | Tpat_tuple pats ->
+      let auxs = faux aux p in
+      let b = List.fold_left2 (auxfold f faux) b auxs (pattern_descs pats) in f b aux p
+  | _ -> assert false
+
+let fold_faux aux = function
+  | Tpat_tuple pats -> List.map (fun _ -> None) pats
+  | _ -> []
+
+let rec fold f b p =
+  auxfold (fun b _ p -> f b p) fold_faux b None p
+
+let desugar_faux exp = function
+  | Tpat_tuple pats -> Misc.mapi (fun _ i -> Predicate.Proj(i, exp)) pats
+  | p -> []
+
+let desugar_fold b exp = function
+  | Tpat_var x -> (Path.Pident x, exp) :: b
+  | _ -> b
+
+let desugar dsp exp p =
+  auxfold desugar_fold desugar_faux dsp exp p
+
+let identity_fold b = function
+  | Tpat_var x -> let x = Path.Pident x in (x, Predicate.Var x) :: b
+  | _ -> b
+
+let identity_desugar dsp p =
+  fold identity_fold dsp p
 
 let env_bind tenv env pat frame = Lightenv.addn (bind tenv pat frame) env
 

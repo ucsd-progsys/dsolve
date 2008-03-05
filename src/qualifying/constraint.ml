@@ -137,14 +137,17 @@ let simplify_frame gm x f =
         F.Fconstr (a,b,c,(subs,F.Qconst[(v1,v2,p')])) 
     | F.Frecord (a,b,(subs,F.Qconst[(v1,v2,P.Iff (v3,p))])) when v3 = B.tag (P.Var v2) ->
         let p' = if pos then p else P.Not p in
-        F.Frecord (a,b,(subs,F.Qconst[(v1,v2,p')])) 
+        F.Frecord (a,b,(subs,F.Qconst[(v1,v2,p')]))
+    | F.Ftuple (fs,(subs,F.Qconst[(v1,v2,P.Iff (v3,p))])) when v3 = B.tag (P.Var v2) ->
+        let p' = if pos then p else P.Not p in
+        F.Ftuple (fs,(subs,F.Qconst[(v1,v2,p')]))
     | _ -> f
 
 let simplify_env env g =
   let gm = List.fold_left (fun m (x,b)  -> Le.add x b m) Le.empty g in
   Le.fold 
-    (fun x f env' -> 
-      match f with | F.Fconstr _ | F.Frecord _ -> 
+    (fun x f env' ->
+      match f with | F.Fconstr _ | F.Frecord _ | F.Ftuple _ ->
         Le.add x (simplify_frame gm x f) env' 
       | _ -> env')
     env Le.empty
