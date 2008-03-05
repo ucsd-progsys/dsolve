@@ -329,18 +329,12 @@ let constrain_structure initfenv initquals str =
         let quals = (Path.Pident name, Path.Pident valu, pred) :: quals in
           constrain_rec quals fenv cstrs srem
     | (Tstr_prequalifier (name, pat, env)) :: srem ->
-        let (valu, _, _) = pat.pqual_pat_desc in
-        let num = ref 0 in
-        let nm () = incr num; name ^ (string_of_int !num) in
-        let name () = Path.Pident (Ident.create (nm ())) in
-        let valu = Path.Pident (Ident.create valu) in
-        let quals = List.rev_append (List.map (fun p -> (name (), valu, p)) (Qualdecl.transl_pattern env pat)) quals in
-          constrain_rec quals fenv cstrs srem 
+        constrain_rec quals fenv cstrs srem
     | (Tstr_value (recflag, bindings))::srem ->
         let (fenv, cstrs') = constrain_bindings fenv [] recflag bindings
         in constrain_rec quals fenv (cstrs @ cstrs') srem
     | (Tstr_type(_))::srem ->
-        (*Printf.printf "Ignoring type decl";*) constrain_rec quals fenv cstrs srem
+        constrain_rec quals fenv cstrs srem
     | _ -> assert false
   in constrain_rec initquals initfenv [] str
 

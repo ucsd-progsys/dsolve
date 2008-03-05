@@ -4,14 +4,16 @@ open Predicate
 
 module C = Common
 module T = Types
-module QG = Qualgen
+module Ct = Ctype
 module AM = Map.Make(String)
-module TS = QG.TS
-module IS = QG.IS
+
+let findam id m = if AM.mem id m then AM.find id m else Qualgen.TS.empty 
 
 let fa env m (id, ty) =
-  let s = if AM.mem id m then AM.find id m else TS.empty in
-  AM.add id (TS.add (Typetexp.transl_type_scheme env ty) s) m 
+  let s = findam id m in
+  AM.add id (Qualgen.TS.add (Typetexp.transl_type_scheme env ty) s) m 
+
+let lflun = List.fold_left Qualgen.IS.union Qualgen.IS.empty 
 
 let lst s k = s::k
 
@@ -32,7 +34,8 @@ let transl_patpred_single p =
   let rec transl_expr_rec pe =
     match pe.ppredpatexp_desc with
       | Ppredpatexp_int (n) ->
-	        PInt (n)
+          let _ = if List.length n != 1 then assert false in
+	        PInt (List.hd n)
       | Ppredpatexp_var (y) -> (* flatten longidents for now -- need to look these up? *)
 	        Var (Path.mk_ident (conflat y))
       | Ppredpatexp_funapp (f, es) ->
@@ -57,20 +60,41 @@ let transl_patpred_single p =
           Or (transl_pred_rec p1, transl_pred_rec p2)
   in transl_pred_rec p
 
+(* unifying does something odd with state, we'll see how this works.. *)
+let unifies env a b = try (Ct.unify env a b; true) with Ct.Unify(_) -> false
+                                                      | Ct.Tags(_, _) -> false
+
+let get_ids_by_type env qtys ptys qtymap =
+  let qtys = Qualgen.TS.elements qtys in
+  let ty_eqs qt pt = C.same_type pt qt || unifies env qt pt in
+  let get_ids qt = 
+    let mat_ty = List.filter (fun pt -> ty_eqs qt pt) ptys in 
+    let tyset ty = Qualgen.findm qtymap ty in
+    let ids = List.map tyset mat_ty in
+      lflun ids in
+  lflun (List.map get_ids qtys)
              
-let transl_patpred tymap p =
+let transl_patpred env (qgtymap, tyset, idset, intset) tymap p =
+  let all_consts = lazy (Qualgen.CS.elements intset) in
+  let all_ids = lazy (Qualgen.IS.elements idset) in
+  let all_tys = lazy (Qualgen.TS.elements tyset) in
+
   let rec transl_expr_rec pe =
     match pe.ppredpatexp_desc with
       | Ppredpatexp_int (n) ->
-	        PPInt ([n])
+	        PPInt (n)
       | Ppredpatexp_any_int ->
-          PPInt (QG.all_consts ())      
+          PPInt (Lazy.force all_consts)      
       | Ppredpatexp_var (y) -> (* flatten longidents for now -- need to look these up? *)
 	        PVar ([Path.mk_ident (conflat y)])
       | Ppredpatexp_mvar (y) ->
-          PVar (if AM.mem y tymap then 
-                List.map Path.mk_ident (IS.elements (List.fold_left IS.union IS.empty (List.map QG.findm (TS.elements (AM.find y tymap)))))
-                else List.map Path.mk_ident (QG.all_ids ()))
+          let inty = AM.mem y tymap in
+          let mk_idents = List.map Path.mk_ident in
+          let found_ids = lazy (get_ids_by_type env (AM.find y tymap) (Lazy.force all_tys) qgtymap) in 
+            if inty then
+              PVar (mk_idents (Qualgen.IS.elements (Lazy.force found_ids)))
+            else 
+              PVar (mk_idents (Lazy.force all_ids)) 
       | Ppredpatexp_funapp (f, es) ->
 	        PFunApp (f, List.map transl_expr_rec es)
       | Ppredpatexp_binop (e1, ops, e2) ->
@@ -150,11 +174,48 @@ let gen_preds p =
             tflap2 (e1s, p1s) (fun c d -> Iff (c, d))
   in gen_pred_rec p
 
-(* Translate a qualifier declaration *)
-let transl_pattern env {Parsetree.pqual_pat_desc = (valu, anno, pred)} =
-  let preds = (gen_preds (transl_patpred (List.fold_left (fa env) AM.empty anno) pred)) in
-  preds
+let ck_consistent patpred pred =
+  let m = ref [] in
+  let addm a = m := a::!m in
+  let gtm (a, b) = 
+    try List.find (fun (c, _) -> a = c) !m 
+      with Not_found -> addm (a, b); (a,b) in
+  let ckm (a, b) = (fun (_, d) -> b = d) (gtm (a, b)) in
+  let rec ck_expr_rec pred pat =
+    match (pred.ppredpatexp_desc, pat) with
+      | (Ppredpatexp_var (_), Var(_))
+      | (Ppredpatexp_any_int, PInt (_)) 
+      | (Ppredpatexp_int (_), PInt (_)) ->
+	        true
+      | (Ppredpatexp_funapp (_, es), FunApp (_, el)) ->
+          List.for_all2 ck_expr_rec es el
+      | (Ppredpatexp_binop (e1, _, e2), Binop (e1', _, e2')) ->
+          ck_expr_rec e1 e1' && ck_expr_rec e2 e2'  
+      | (Ppredpatexp_field (_, e1), Field(_, e1')) ->
+          ck_expr_rec e1 e1'
+      | (Ppredpatexp_mvar (x), Var(y)) ->
+          ckm (x, Path.name y)
+      | _ -> assert false in
+  let rec ck_pred_rec pred pat =
+    match (pred.ppredpat_desc, pat) with
+      | (Ppredpat_true, True) -> 
+          true
+      | (Ppredpat_atom (e1, _, e2), Atom (ee1, _, ee2)) ->
+          ck_expr_rec e1 ee1 && ck_expr_rec e2 ee2
+      | (Ppredpat_not (p), Not (pp)) -> 
+          ck_pred_rec p pp
+      | (Ppredpat_or (p1, p2), Or (pp1, pp2))
+      | (Ppredpat_and (p1, p2), And (pp1, pp2)) -> 
+          ck_pred_rec p1 pp1 && ck_pred_rec p2 pp2 
+      | _ -> assert false in
+    ck_pred_rec patpred pred
+     
 
-let transl_pattern_valu env ({Parsetree.pqual_pat_desc = (valu, anno, pred)} as p) =
-  let preds = transl_pattern env p in
+(* Translate a qualifier declaration *)
+let transl_pattern env prgids {Parsetree.pqual_pat_desc = (valu, anno, pred)} =
+  let preds = (gen_preds (transl_patpred env prgids (List.fold_left (fa env) AM.empty anno) pred)) in
+    List.filter (fun p -> ck_consistent pred p) preds
+
+let transl_pattern_valu env prgids ({Parsetree.pqual_pat_desc = (valu, anno, pred)} as p) =
+  let preds = transl_pattern env prgids p in
     List.map (fun p -> (valu, p)) preds

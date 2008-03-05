@@ -3,8 +3,6 @@ open Format
 open Parsetree
 open Asttypes
 
-module Qg = Qualgen
-module Qd = Qualdecl
 module P = Predicate
 module C = Common
 
@@ -13,13 +11,14 @@ module QS = Set.Make(struct
                        let compare = compare
                      end)
 
-let patf = ref "default_patterns"
+let patf = ref ""
             
-let expand_quals env qstrs =
+let expand_quals env qstrs prgids =
   let expand_squal q =
     match q.pstr_desc with
       Pstr_qualifier (name, pat) ->
-        Qd.transl_pattern_valu env pat 
+        Qualdecl.transl_pattern_valu env prgids pat
+      (* Pstr_prequalifier *)
       | _ -> []
   in
   C.flap (expand_squal) qstrs 
@@ -30,11 +29,11 @@ let dump_qset qs =
     QS.iter (fun (v, q) -> eprintf "@[squalif@ Q%i(%s)@ :@ %a@.@]" (nx ()) v P.pprint q) qs
 
 let dump_default_qualifiers source =
-  let _ = pp_set_margin err_formatter 1230912  in
+  let _ = pp_set_margin err_formatter 1230912 in
   let _ = C.verbose_level := C.ol_dquals in
   let (str, env, fenv) = source in
-  let _ = Qg.visit_str str in
+  let prgids = Qualgen.visit_sstr str in
   let dqstrs = Pparse.file std_formatter !patf Parse.implementation ast_impl_magic_number in 
-  let dqstrs = expand_quals env dqstrs in
+  let dqstrs = expand_quals env dqstrs prgids in
   let qs = List.fold_left (fun qs q -> QS.add q qs) QS.empty dqstrs in
     dump_qset qs; pp_print_flush err_formatter ()

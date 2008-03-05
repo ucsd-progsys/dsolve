@@ -2,21 +2,12 @@ open Typedtree
 open Types
 open Asttypes
 
-
-let col_lev = ref 0 (* max number of lambdas to collect under *)
-let ck_clev l = l <= !col_lev
-
-let is_function e =
-  match e.exp_desc with
-    | Texp_function(_, _) -> true
-    | _ -> false 
-
 module C = Common
 
 module CTy = 
 struct
   type t = Types.type_expr
-  let compare = compare
+  let compare = Types.TypeOps.compare
 end
 
 module TM = Map.Make(CTy)
@@ -27,107 +18,112 @@ module CS = Set.Make(struct
                        let compare = compare
                      end)
 
-(* tymap: map from shapes to all idents of that shape *)
-(* idset: set of all idents *)
-(* intset: set of all int constants. ignored or set {0,1} if lquals set? *)
+let col_lev = ref 0 (* max number of lambdas to collect under *)
+let ck_clev l = l <= !col_lev
 
-let tymap = ref TM.empty   
-let tyset = ref TS.empty
-let idset = ref IS.empty
-let intset = ref (CS.add 0 (CS.add 1 CS.empty))
+let is_function e =
+  match e.exp_desc with
+    | Texp_function(_, _) -> true
+    | _ -> false 
 
-let addi n =
-  intset := CS.add n !intset 
+let findm tymap ty = try TM.find ty tymap with Not_found -> IS.empty
 
-let addt t =
-  tyset := TS.add t !tyset
+let mk_intset il = 
+  let init = (CS.add 0 (CS.add 1 CS.empty)) in
+  List.fold_left (fun is i -> CS.add i is) init il
+    
+let mk_idset pl =
+  List.fold_left (fun ids (_, id) -> IS.add (Ident.name id) ids) IS.empty pl
 
-let addid i =
-  idset := IS.add i !idset
+let mk_tyset pl =
+  List.fold_left (fun tys (ty, _) -> TS.add ty tys) TS.empty pl
 
-let findm ty = try TM.find ty !tymap with Not_found -> IS.empty
-
-let addm n (typ, id) = 
-  let id = Ident.name id in
-  if ck_clev n then (addt typ; addid id; 
-                    tymap := TM.add typ (IS.add id (findm typ)) !tymap)
+let mk_tymap pl =
+  let bind tymap (t, id) =
+    let id = Ident.name id in
+    TM.add t (IS.add id (findm tymap t)) tymap in 
+  List.fold_left bind TM.empty pl
 
 let bound_idents n pat = 
+  let pl = ref [] in
   let rec bound_idents_rec pat =
     let ptyp = pat.pat_type in
     match pat.pat_desc with 
-      Tpat_var id -> addm n (ptyp, id) 
-      | Tpat_alias(p, id) -> bound_idents_rec p; addm n (ptyp, id)
+      Tpat_var id -> pl := (ptyp, id)::!pl 
+      | Tpat_alias(p, id) -> pl := (ptyp, id)::!pl; bound_idents_rec p 
       | Tpat_or(p, _, _) -> bound_idents_rec p
-      | d -> Typedtree.iter_pattern_desc bound_idents_rec d 
-  in bound_idents_rec pat
+      | d -> Typedtree.iter_pattern_desc bound_idents_rec d in
+  if ck_clev n then (bound_idents_rec pat; !pl) else []
 
-let all_consts () = CS.elements !intset 
-let lookup_ids = findm 
-let all_ids () = IS.elements !idset
-let all_types () = TS.elements !tyset 
+let lq n p = if !Clflags.less_qualifs then [] else bound_idents n p
 
-let rec visit_binding n (pat, exp) = 
-  let rec ve n e =
-    match e.exp_desc with
-  | Texp_let (_, bl, e2) ->
-     List.iter (visit_binding n) bl; ve n e2  
-  | Texp_constant (Const_int (i)) ->
-     addi i
-  | Texp_function(pl, _) -> 
-     List.iter (fun (pat, e) -> bound_idents n pat; ve n e) pl
-  | Texp_apply (e, el) ->
-     ve n e; List.iter (function (Some(e), _) -> ve n e | _ -> ()) el
-  | Texp_match (e1, pel, _) ->
-     ve n e1; List.iter (fun (p, e) -> (if not(!Clflags.less_qualifs) then bound_idents n p); ve n e) pel 
-(*x Texp_try of expression * (pattern * expression) list *)
-  | Texp_array (el) ->
-      List.iter (ve n) el; addi (List.length el)
-  | Texp_tuple (el) 
-  | Texp_construct (_, el) ->
-     List.iter (ve n) el
-(*x Texp_variant of label * expression option*)
-  | Texp_record (el, None) ->
-     List.iter (fun (l, e) -> ve n e) el
-  | Texp_assert (e)
-  | Texp_field (e, _) ->
-     ve n e
-  | Texp_sequence (e1, e2)
-  | Texp_setfield (e1, _, e2) ->
-     ve n e1; ve n e2
-  | Texp_ifthenelse (e1, e2, e3) ->
-     ve n e1; ve n e2; (fun e3 -> match e3 with Some(e3) -> ve n e3 | _ -> ()) e3
-(*x Texp_while of expression * expression
-  x Texp_for of
-      Ident.t * expression * expression * direction_flag * expression
-  x Texp_when of expression * expression
-  x Texp_send of expression * meth
-  x Texp_new of Path.t * class_declaration
-  x Texp_instvar of Path.t * Path.t
-  x Texp_setinstvar of Path.t * Path.t * expression
-  x Texp_override of Path.t * (Path.t * expression) list
-  x Texp_letmodule of Ident.t * module_expr * expression 
-  x Texp_lazy of expression
-  x Texp_object of class_structure * class_signature * string list *)
-  | Texp_constant (_)
-  | Texp_assertfalse
-  | Texp_ident (_, _) ->
-      ()
-  | _ ->
-      assert false
-  in 
-    if is_function exp then (ve (n+1) exp)
-                       else ((if not(!Clflags.less_qualifs) then bound_idents n pat); ve n exp) 
+let rec visit_binding n (pat, expr) = 
+  if is_function expr then 
+    visit_expr (n+1) expr
+  else
+    let (pl, il) = visit_expr n expr in
+      (List.rev_append (lq n pat) pl, il)
 
-let rec visit_str sstr = 
-  match sstr with
-      Tstr_value (_, bl) :: srem ->
-       List.iter (visit_binding 0) bl; visit_str srem 
-    | _ :: srem ->
-       visit_str srem
-    | [] -> ()
+and visit_expr n exp =
+  let (pl, il) = (ref [], ref []) in
+  let addi = C.add il in
+  let addp = C.addl pl in
+  let vb b = 
+    let (ps, is) = (visit_binding n b) in
+    let _ = addp ps in
+     C.addl il is in 
+  let bi p = addp (bound_idents n p) in
+  let rec ve exp =
+    match exp.exp_desc with
+    | Texp_let (_, bl, e2) ->
+        List.iter vb bl; ve e2  
+    | Texp_constant (Const_int (i)) ->
+        addi i 
+    | Texp_function(pl, _) -> 
+        List.iter (fun (pat, e) -> bi pat; ve e) pl
+    | Texp_apply (e, el) ->
+        ve e; C.opt_iter ve (List.map (fun (e, _) -> e) el)
+    | Texp_match (e1, pel, _) ->
+        ve e1; List.iter (fun (p, e) -> addp (lq n p); ve e) pel 
+    | Texp_array (el) ->
+        let _ = addi (List.length el) in
+        List.iter (ve) el
+    | Texp_tuple (el) 
+    | Texp_construct (_, el) ->
+        List.iter (ve) el
+    | Texp_record (el, None) ->
+        List.iter (fun (l, e) -> ve e) el
+    | Texp_assert (e)
+    | Texp_field (e, _) ->
+        ve e
+    | Texp_sequence (e1, e2)
+    | Texp_setfield (e1, _, e2) ->
+        ve e1; ve e2
+    | Texp_ifthenelse (e1, e2, e3) ->
+        ve e1; ve e2; C.resi_opt ve e3
+    | Texp_constant (_)
+    | Texp_assertfalse
+    | Texp_ident (_, _) ->
+        () 
+    | Texp_variant (_, _) -> assert false
+    | Texp_try(_) -> assert false
+    | _ -> assert false in
+  ve exp; (!pl, !il) 
+  
+ 
+let visit_sstr sstr = 
+  let vb (y, o) b =
+    let (t, i) = visit_binding 0 b in
+      (List.rev_append t y, List.rev_append o i) in
 
-let iter_bindings defs = 
-  List.iter (visit_binding 0) defs
-
+  let rec visit_sstr_rec sstr =
+    match sstr with
+     Tstr_value (_, bl) :: srem ->
+       List.fold_left vb (visit_sstr_rec srem) bl 
+     | _ :: srem ->
+       visit_sstr_rec srem
+     | [] -> ([], []) in
+  
+  let (pl, il) = visit_sstr_rec sstr in  
+  (mk_tymap pl, mk_tyset pl, mk_idset pl, mk_intset il)  
 

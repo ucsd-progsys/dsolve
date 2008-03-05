@@ -177,7 +177,7 @@ and predpatexp =
     ppredpatexp_loc: Location.t }
 
 and predpatexp_desc =
-    Ppredpatexp_int of int
+    Ppredpatexp_int of int list
   | Ppredpatexp_any_int              
   | Ppredpatexp_var of Longident.t
   | Ppredpatexp_mvar of string

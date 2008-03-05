@@ -5,9 +5,9 @@ open Format
 
 let wrap_printable exp = (Ptop_def([{pstr_desc = (Pstr_eval exp); pstr_loc = Location.none}])) 
     
-    (* ming: I think it's actually better to pass everything around as
-     * longidents for true generality, but applies of functors should never
-     * happen in our code so this assumption is OK *)
+(* ming: I think it's actually better to pass everything around as
+ * longidents for true generality, but applies of functors should never
+ * happen in our code so this assumption is OK *)
 let li_flatten li = String.concat "." (Longident.flatten li) 
 
 (* constant divisions and multiplications are wreaking havoc on us
@@ -143,11 +143,11 @@ let normalize exp =
            let (lbl, _, lo) = List.hd ls in
            let lbl = mk_ident_loc lbl lo in
              (lbl, ls) in
-           let lbss = List.map mk_lbl pes in
-           let pes = List.map2 (fun (p, e) (lbl, ls) -> (p, lbl)) pes lbss in
-           let lss = List.map (fun (lbl, ls) -> ls) lbss in
-           let init = mk_let_lit Nonrecursive pes (norm_out e2) in 
-             rw_expr (List.fold_left (wrap Nonrecursive) init (List.concat (List.rev lss)))
+         let lbss = List.map mk_lbl pes in
+         let pes = List.map2 (fun (p, e) (lbl, ls) -> (p, lbl)) pes lbss in
+         let lss = List.map (fun (lbl, ls) -> ls) lbss in
+         let init = mk_let_lit Nonrecursive pes (norm_out e2) in 
+           rw_expr (List.fold_left (wrap Nonrecursive) init (List.concat (List.rev lss)))
      | Pexp_apply(e1, es) ->
         let f = norm_in e1 in
         let (flbl, _, lo) = List.hd f in 

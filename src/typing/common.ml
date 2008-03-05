@@ -76,6 +76,21 @@ let pprint_list sepstr pp =
   (fun ppf -> Oprint.print_list pp
      (fun ppf -> F.fprintf ppf "%s@;<1 2>" sepstr) ppf)
 
+let resl_opt f = function
+  | Some o -> f o
+  | None -> []
+
+let resi_opt f = function
+  | Some o -> f o
+  | None -> ()
+
+let opt_iter f l = 
+  List.iter (resi_opt f) l
+
+let add il i = il := i::!il
+let addl il i = il := List.rev_append i !il
+
+let same_type q p = (Types.TypeOps.equal q p)
 
 (****************************************************************)
 (************* Output levels ************************************)
