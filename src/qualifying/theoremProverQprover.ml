@@ -20,6 +20,7 @@ let nb_queries = ref 0
 let div_sym = "DIV"
 let mul_sym = "MUL"
 let fld_sym = "SELECT_"
+let proj_sym = "PROJ_"
 
 let rec convert p : QpAst.predicate = failwith "TBD: convert to QpAst.predicate"
    
@@ -31,6 +32,7 @@ let rec convertExp = function
   | P.Var s -> QA.Variable (Path.unique_name s) 
   | P.FunApp (f, e) -> QA.Application (f, List.map convertExp e)
   | P.Field (f, e) -> QA.Application (fld_sym^f, [convertExp e])
+  | P.Proj (n, e) -> QA.Application (proj_sym^(string_of_int n), [convertExp e])
   | P.Binop (e1,P.Plus,e2) -> QA.Sum [convertExp e1; convertExp e2] 
   | P.Binop (e1,P.Minus,e2) -> QA.Sum [convertExp e1; QA.Coeff (QA.Constant.Int (-1), convertExp e2)] 
   | P.Binop (e1,P.Div,e2) -> QA.Application (mul_sym, [convertExp e1; convertExp e2])

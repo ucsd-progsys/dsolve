@@ -20,6 +20,7 @@ type patpexpr =
   | PFunApp of Longident.t * patpexpr list 
   | PBinop of patpexpr * binop list * patpexpr
   | PField of string * patpexpr
+  | PProj of int * patpexpr
 
 type tpat =
     PTrue
@@ -35,6 +36,7 @@ type pexpr =
   | FunApp of string * pexpr list 
   | Binop of pexpr * binop * pexpr 
   | Field of string * pexpr     (* INVARIANT: disjoint fields in same module *)
+  | Proj of int * pexpr
 
 type t =  
     True

@@ -171,8 +171,11 @@ and print_out_type_1 ppf =
   | ty -> print_out_type_2 ppf ty
 and print_out_type_2 ppf =
   function
-    Otyp_tuple tyl ->
+  | Otyp_tuple (tyl, None) ->
       fprintf ppf "@[<0>%a@]" (print_typlist print_simple_out_type " *") tyl
+  | Otyp_tuple (tyl, Some (Oqual qs)) ->
+      fprintf ppf "@[<0>{%a |@;<1 2>%s}@]" (print_typlist print_simple_out_type " *") tyl
+        (String.concat " " qs)
   | ty -> print_simple_out_type ppf ty
 and print_simple_out_type ppf =
   function

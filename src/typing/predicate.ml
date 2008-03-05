@@ -23,6 +23,7 @@ type patpexpr =
   | PFunApp of Longident.t * patpexpr list 
   | PBinop of patpexpr * binop list * patpexpr
   | PField of string * patpexpr 
+  | PProj of int * patpexpr
 
 type tpat =
     PTrue
@@ -38,6 +39,7 @@ type pexpr =
   | FunApp of string * pexpr list  
   | Binop of pexpr * binop * pexpr
   | Field of string * pexpr
+  | Proj of int * pexpr
 
 type t =
     True
@@ -72,6 +74,8 @@ let rec pprint_pexpr ppf = function
       in fprintf ppf "@[(%a@ %s@ %a)@]" pprint_pexpr p opstr pprint_pexpr q
   | Field (f, pexp) ->
       fprintf ppf "@[%a.%s@]" pprint_pexpr pexp f
+  | Proj (n, pexp) ->
+      fprintf ppf "@[%a.%d@]" pprint_pexpr pexp n
 
 let rec pprint ppf = function
   | True ->
@@ -161,6 +165,8 @@ let rec pexp_map_vars f pexp =
         Binop (map_rec e1, op, map_rec e2)
     | Field (f, pexp) ->
         Field (f, map_rec pexp)
+    | Proj (n, pexp) ->
+        Proj (n, map_rec pexp)
     | e ->
         e
   in map_rec pexp
@@ -198,6 +204,8 @@ let vars p =
         let vars' = exp_vars_rec vars e1 in
           exp_vars_rec vars' e2
     | Field(f, e) ->
+        exp_vars_rec vars e
+    | Proj(_, e) ->
         exp_vars_rec vars e
   in
   let rec vars_rec vars = function

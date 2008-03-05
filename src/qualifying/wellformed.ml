@@ -9,7 +9,7 @@ let rec same_shape t1 t2 =
    Path.same p p'
   | (Farrow(_, i, o), Farrow(_, i', o')) ->
    (same_shape i i') && (same_shape o o')
-  | (Ftuple t1s, Ftuple t2s) ->
+  | (Ftuple (t1s, _), Ftuple (t2s, _)) ->
    List.for_all2 same_shape t1s t2s
   | (Frecord (p1, f1s, _), Frecord (p2, f2s, _)) when Path.same p1 p2 ->
       let shape_rec (f1, _, _) (f2, _, _) = same_shape f1 f2 in
@@ -58,6 +58,11 @@ let pred_is_well_typed env p =
                 (match (List.find is_referenced_field fs) with (f, _, _) -> f)
               else Funknown
         | f -> Funknown
+      end
+  | Predicate.Proj (n, t) ->
+      begin match get_expr_shape t with
+        | Ftuple (fs, _) -> (try List.nth fs n with Failure _ -> Funknown)
+        | _ -> Funknown
       end
   and pred_shape_is_bool = function
   | Predicate.True -> true
