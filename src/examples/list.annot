@@ -1,0 +1,80 @@
+"examples-liquid/list.ml" 4 43 52 "examples-liquid/list.ml" 4 43 54
+type(
+  {Var(a_356) list_9| ((__tag V) = 0)}
+)
+"examples-liquid/list.ml" 6 56 64 "examples-liquid/list.ml" 6 56 66
+type(
+  {Var(a_363) list_9| ((__tag V) = 0)}
+)
+"examples-liquid/list.ml" 8 68 76 "examples-liquid/list.ml" 8 68 82
+type(
+  {{int | (V >= 1) (V >= 0) (V != 0)} list_9| true}
+)
+"examples-liquid/list.ml" 8 68 76 "examples-liquid/list.ml" 8 68 82
+type(
+  {Var(a_367) list_9| ((__tag V) = 0)}
+)
+"examples-liquid/list.ml" 8 68 77 "examples-liquid/list.ml" 8 68 78
+type(
+  {int | (V = 1)}
+)
+"examples-liquid/list.ml" 8 68 80 "examples-liquid/list.ml" 8 68 81
+type(
+  {int | (V = 2)}
+)
+"examples-liquid/list.ml" 8 68 80 "examples-liquid/list.ml" 8 68 82
+type(
+  {{int | (V >= 1) (V >= 0) (V != 1) (V != 0)} list_9| ((__tag V) = 0)}
+)
+"examples-liquid/list.ml" 10 84 92 "examples-liquid/list.ml" 10 84 93
+type(
+  {{int | (V >= 1) (V >= 0) (V != 0)} list_9| true}
+)
+"examples-liquid/list.ml" 12 95 103 "examples-liquid/list.ml" 12 95 111
+type(
+  {{int | (V <= 1) (V <= 0) (V != 1) (V != 0)} list_9| true}
+)
+"examples-liquid/list.ml" 12 95 103 "examples-liquid/list.ml" 12 95 111
+type(
+  {Var(a_402) list_9| ((__tag V) = 0)}
+)
+"examples-liquid/list.ml" 12 95 104 "examples-liquid/list.ml" 12 95 106
+type(
+  {int | (V = (0 - 1))}
+)
+"examples-liquid/list.ml" 12 95 108 "examples-liquid/list.ml" 12 95 110
+type(
+  {int | (V = (0 - 2))}
+)
+"examples-liquid/list.ml" 12 95 108 "examples-liquid/list.ml" 12 95 111
+type(
+  {{int | (V <= 1) (V <= 0) (V != 1) (V != 0)} list_9| ((__tag V) = 0)}
+)
+"examples-liquid/list.ml" 14 113 121 "examples-liquid/list.ml" 14 113 122
+type(
+  {{int | (V <= 1) (V <= 0) (V != 1) (V != 0)} list_9| true}
+)
+"examples-liquid/list.ml" 16 124 132 "examples-liquid/list.ml" 16 124 139
+type(
+  {{int | (V != 1) (V != 0)} list_9| true}
+)
+"examples-liquid/list.ml" 16 124 132 "examples-liquid/list.ml" 16 124 139
+type(
+  {Var(a_437) list_9| ((__tag V) = 0)}
+)
+"examples-liquid/list.ml" 16 124 133 "examples-liquid/list.ml" 16 124 135
+type(
+  {int | (V = (0 - 1))}
+)
+"examples-liquid/list.ml" 16 124 137 "examples-liquid/list.ml" 16 124 138
+type(
+  {int | (V = 2)}
+)
+"examples-liquid/list.ml" 16 124 137 "examples-liquid/list.ml" 16 124 139
+type(
+  {{int | (V >= 1) (V >= 0) (V != 1) (V != 0)} list_9| ((__tag V) = 0)}
+)
+"examples-liquid/list.ml" 18 141 149 "examples-liquid/list.ml" 18 141 150
+type(
+  {{int | (V != 1) (V != 0)} list_9| true}
+)
