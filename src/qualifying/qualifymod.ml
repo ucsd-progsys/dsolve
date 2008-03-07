@@ -153,8 +153,16 @@ and constrain_if (env, guard, f) e1 e2 e3 =
     [WFFrame(env, f); SubFrame(env', guard2, f2, f); SubFrame(env', guard3, f3, f)],
     cstrs1 @ cstrs2 @ cstrs3)
 
+and bind tenv env guard pat frame pexpr =
+  let env = Pattern.env_bind tenv env pat.pat_desc frame in
+  let desugar_frame =
+    F.Fconstr(Predef.path_int, [], [],
+              ([],
+               F.Qconst [(Path.mk_ident "desugaring", Path.mk_ident "null", Pattern.desugar_bind pat.pat_desc pexpr)])) in
+    Le.add (Path.mk_ident "pattern") desugar_frame env
+
 and constrain_case (env, guard, f) matchf matche (pat, e) =
-  let env = Pattern.env_bind e.exp_env env pat.pat_desc matchf in
+  let env = bind e.exp_env env guard pat matchf matche in
   let (fe, subcs) = constrain e env guard in
     (SubFrame (env, guard, fe, f), subcs)
 
@@ -270,7 +278,7 @@ and constrain_assert (env, guard, _) e =
 
 and constrain_and_bind guard (env, cstrs) (pat, e) =
   let (f, cstrs') = constrain e env guard in
-  let env = Pattern.env_bind e.exp_env env pat.pat_desc f in
+  let env = bind e.exp_env env guard pat f (expression_to_pexpr e) in
     (env, cstrs @ cstrs')
 
 and constrain_bindings env guard recflag bindings =

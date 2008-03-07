@@ -39,6 +39,13 @@ let fold_faux aux = function
 let rec fold f b p =
   auxfold (fun b _ p -> f b p) fold_faux b None p
 
+let null_binding_fold b = function
+  | Tpat_var x -> (Path.Pident x, P.Var (Path.mk_ident "z")) :: b
+  | _ -> b
+
+let null_binding b pat =
+  fold null_binding_fold b pat
+
 let bind_pexpr pat pexp =
   let rec bind_rec subs (pat, pexp) =
     match pat with
@@ -47,8 +54,11 @@ let bind_pexpr pat pexp =
     | Tpat_tuple pats ->
       let pexps = Misc.mapi (fun pat i -> (pat.pat_desc, P.Proj(i, pexp))) pats in
         List.fold_left bind_rec subs pexps
-    | _ -> assert false
+    | _ -> null_binding_fold subs pat
   in bind_rec [] (pat, pexp)
+
+let desugar_bind pat pexp =
+  P.big_and (List.map (fun (x, exp) -> P.Atom(P.Var x, P.Eq, exp)) (bind_pexpr pat pexp))
 
 let rec same p1 p2 =
   match (p1, p2) with
