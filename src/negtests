@@ -6,3 +6,4 @@ examples-liquid/dotprod0-bad.ml
 examples-liquid/access-bad.ml
 DMLex/gauss-bad.ml
 DML/queen-bad.ml
+examples-liquid/reltuple-bad.ml

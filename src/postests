@@ -2,6 +2,7 @@ examples/ooo.ml
 examples/tree.ml
 examples/list.ml
 examples/fold.ml
+examples/reltuple.ml
 DML/quicksort_sane.ml
 DML/tower.ml
 DML/fft.ml
