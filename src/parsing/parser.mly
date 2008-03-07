@@ -375,6 +375,8 @@ The precedences must be listed from low to high.
 %type <Parsetree.structure> implementation
 %start interface                        /* for interface files */
 %type <Parsetree.signature> interface
+%start liq_interface
+%type <Parsetree.liq_sig> liq_interface /* for liquid interface files */
 %start toplevel_phrase                  /* for interactive use */
 %type <Parsetree.toplevel_phrase> toplevel_phrase
 %start use_file                         /* for the #use directive */
@@ -389,6 +391,9 @@ implementation:
 ;
 interface:
     signature EOF                        { List.rev $1 }
+;
+liq_interface:
+    liq_signature EOF                    {     
 ;
 toplevel_phrase:
     top_structure SEMISEMI               { Ptop_def $1 }
@@ -523,6 +528,14 @@ signature:
   | signature signature_item                    { $2 :: $1 }
   | signature signature_item SEMISEMI           { $2 :: $1 }
 ;
+liq_signature:
+    /* empty */                                 { [] }
+  | signature signature_item                    { $2 :: $1 }
+  | signature signature_item SEMISEMI           { $2 :: $1 }
+;
+liq_signature_item:
+    VAL val_ident_colon refined_core_type       { ... }
+;  
 signature_item:
     VAL val_ident_colon core_type
       { mksig(Psig_value($2, {pval_type = $3; pval_prim = []})) }
@@ -1398,6 +1411,96 @@ label:
     LIDENT                                      { $1 }
 ;
 
+/* Refined Core types */
+
+refined_core_type:
+    refined_core_type2
+      { $1 }
+;
+refined_core_type2:
+    refined_simple_core_type_or_tuple
+      { $1 }
+  | QUESTION LIDENT COLON refined_core_type2 MINUSGREATER refined_core_type2
+      { mktyp(Ptyp_arrow("?" ^ $2 ,
+               {ptyp_desc = Ptyp_constr(Lident "option", [$4]);
+                ptyp_loc = $4.ptyp_loc}, $6)) }
+  | OPTLABEL refined_core_type2 MINUSGREATER refined_core_type2
+      { mktyp(Ptyp_arrow("?" ^ $1 ,
+               {ptyp_desc = Ptyp_constr(Lident "option", [$2]);
+                ptyp_loc = $2.ptyp_loc}, $4)) }
+  | LIDENT COLON refined_core_type2 MINUSGREATER refined_core_type2
+      { mktyp(Ptyp_arrow($1, $3, $5)) }
+  | refined_core_type2 MINUSGREATER refined_core_type2
+      { mktyp(Ptyp_arrow("", $1, $3)) }
+;
+
+refined_simple_core_type:
+    refined_simple_core_type2  %prec below_SHARP
+      { $1 }
+  | LPAREN refined_core_type_comma_list RPAREN %prec below_SHARP
+      { match $2 with [sty] -> sty | _ -> raise Parse_error }
+;
+refined_simple_core_type2:
+    QUOTE ident
+      { mktyp(Ptyp_var $2) }
+  | UNDERSCORE
+      { mktyp(Ptyp_any) }
+  | type_longident
+      { mktyp(Ptyp_constr($1, [])) }
+  | refined_simple_core_type2 type_longident
+      { mktyp(Ptyp_constr($2, [$1])) }
+  | LPAREN refined_core_type_comma_list RPAREN type_longident
+      { mktyp(Ptyp_constr($4, List.rev $2)) }
+  | LBRACKET tag_field RBRACKET
+      { mktyp(Ptyp_variant([$2], true, None)) }
+  | LBRACKET BAR refined_row_field_list RBRACKET
+      { mktyp(Ptyp_variant(List.rev $3, true, None)) }
+  | LBRACKET refined_row_field BAR refined_row_field_list RBRACKET
+      { mktyp(Ptyp_variant($2 :: List.rev $4, true, None)) }
+  | LBRACKETGREATER opt_bar refined_row_field_list RBRACKET
+      { mktyp(Ptyp_variant(List.rev $3, false, None)) }
+  | LBRACKETGREATER RBRACKET
+      { mktyp(Ptyp_variant([], false, None)) }
+  | LBRACKETLESS opt_bar refined_row_field_list RBRACKET
+      { mktyp(Ptyp_variant(List.rev $3, true, Some [])) }
+  | LBRACKETLESS opt_bar refined_row_field_list GREATER name_tag_list RBRACKET
+      { mktyp(Ptyp_variant(List.rev $3, true, Some (List.rev $5))) }
+;
+refined_row_field_list:
+    refined_row_field                                   { [$1] }
+  | refined_row_field_list BAR refined_row_field                { $3 :: $1 }
+;
+refined_row_field:
+    refined_tag_field                                   { $1 }
+  | refined_simple_core_type2                           { Rinherit $1 }
+;
+refined_amper_type_list:
+    refined_core_type                                   { [$1] }
+  | refined_amper_type_list AMPERSAND refined_core_type         { $3 :: $1 }
+;
+refined_simple_core_type_or_tuple:
+    LBRACE refined_simple_core_type BAR predicate RBRACE 
+      { $1 }
+  | refined_simple_core_type STAR refined_core_type_list
+      { mktyp(Ptyp_tuple($1 :: List.rev $3)) }
+;
+refined_core_type_comma_list:
+    refined_core_type                                   { [$1] }
+  | refined_core_type_comma_list COMMA refined_core_type        { $3 :: $1 }
+;
+refined_core_type_list:
+    refined_simple_core_type                            { [$1] }
+  | refined_core_type_list STAR refined_simple_core_type        { $3 :: $1 }
+;
+refined_field:
+    label COLON refined_poly_type                       { mkfield(Pfield($1, $3)) }
+;
+refined_poly_type:
+    refined_core_type
+      { mktyp(Ptyp_poly([], $1)) }
+  | typevar_list DOT refined_core_type
+      { mktyp(Ptyp_poly(List.rev $1, $3)) }
+;
 
 /* Qualifiers */
 
@@ -1408,9 +1511,9 @@ qualifier_pattern_declaration:
     { (Pstr_qualifier($1, mkqpat($3, [], $6)))  }
 
 qual_ty_anno:
-    UIDENT COLON simple_core_type_or_tuple
+    UIDENT COLON core_type2 
     { [($1, $3)] } 
-  | UIDENT COLON simple_core_type_or_tuple COMMA qual_ty_anno
+  | UIDENT COLON core_type2 COMMA qual_ty_anno
     { ($1, $3)::$5 }
 
 qualifier_pattern:
