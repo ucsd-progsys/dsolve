@@ -1,8 +1,11 @@
-squalif GTA(x): a < x
+squalif TWO_BETTER_THAN_ONE(t): t.1 < t.2
 
-let test (a: int) b =
-  assert(a < b)
+let test pr =
+  match pr with
+    | (a, b) ->
+        assert(a < b)
 
-let p = (1, 2)
-let (c, d) = p
-let _ = test c d
+let x = 1
+let y = 2
+let p = (x, y)
+let _ = test p
