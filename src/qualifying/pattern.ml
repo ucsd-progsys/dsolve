@@ -1,5 +1,7 @@
 open Typedtree
 
+module P = Predicate
+
 let pattern_descs = List.map (fun p -> p.pat_desc)
 
 let is_deep = function
@@ -20,6 +22,8 @@ let bind env pat frame =
     | _ -> assert false
   in bind_rec [] pat frame
 
+let env_bind tenv env pat frame = Lightenv.addn (bind tenv pat frame) env
+
 let rec auxfold f faux b aux p = match p with
   | Tpat_any
   | Tpat_var _ -> f b aux p
@@ -35,33 +39,13 @@ let fold_faux aux = function
 let rec fold f b p =
   auxfold (fun b _ p -> f b p) fold_faux b None p
 
-let desugar_faux exp = function
-  | Tpat_tuple pats -> Misc.mapi (fun _ i -> Predicate.Proj(i, exp)) pats
-  | p -> []
-
-let desugar_fold b exp = function
-  | Tpat_var x -> (Path.Pident x, exp) :: b
-  | _ -> b
-
-let desugar dsp exp p =
-  auxfold desugar_fold desugar_faux dsp exp p
-
-let identity_fold b = function
-  | Tpat_var x -> let x = Path.Pident x in (x, Predicate.Var x) :: b
-  | _ -> b
-
-let identity_desugar dsp p =
-  fold identity_fold dsp p
-
-let env_bind tenv env pat frame = Lightenv.addn (bind tenv pat frame) env
-
 let bind_pexpr pat pexp =
   let rec bind_rec subs (pat, pexp) =
     match pat with
     | Tpat_any -> subs
     | Tpat_var x -> (Path.Pident x, pexp) :: subs
     | Tpat_tuple pats ->
-      let pexps = Misc.mapi (fun pat i -> (pat.pat_desc, Predicate.tuple_nth [pexp] i)) pats in
+      let pexps = Misc.mapi (fun pat i -> (pat.pat_desc, P.Proj(i, pexp))) pats in
         List.fold_left bind_rec subs pexps
     | _ -> assert false
   in bind_rec [] (pat, pexp)
