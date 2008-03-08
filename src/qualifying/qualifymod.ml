@@ -153,13 +153,16 @@ and constrain_if (env, guard, f) e1 e2 e3 =
     [WFFrame(env, f); SubFrame(env', guard2, f2, f); SubFrame(env', guard3, f3, f)],
     cstrs1 @ cstrs2 @ cstrs3)
 
-and bind tenv env guard pat frame pexpr =
-  let env = Pattern.env_bind tenv env pat.pat_desc frame in
+and desugar_binding env pat pexpr =
   let desugar_frame =
     F.Fconstr(Predef.path_int, [], [],
               ([],
                F.Qconst [(Path.mk_ident "desugaring", Path.mk_ident "null", Pattern.desugar_bind pat.pat_desc pexpr)])) in
     Le.add (Path.mk_ident "pattern") desugar_frame env
+
+and bind tenv env guard pat frame pexpr =
+  let env = Pattern.env_bind tenv env pat.pat_desc frame in
+    if Pattern.is_deep pat.pat_desc then desugar_binding env pat pexpr else env
 
 and constrain_case (env, guard, f) matchf matche (pat, e) =
   let env = bind e.exp_env env guard pat matchf matche in
