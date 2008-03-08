@@ -4,6 +4,13 @@ open Format
 
 
 let wrap_printable exp = (Ptop_def([{pstr_desc = (Pstr_eval exp); pstr_loc = Location.none}])) 
+let dummy = Location.none
+
+(* we can't avoid a global counter here: generate unique names *)
+let ncnt = ref 0 
+let fresh_name_s () = incr ncnt; "__atmp" ^ (string_of_int !ncnt) 
+let fresh_name () = Longident.parse (fresh_name_s ())
+ 
     
 (* ming: I think it's actually better to pass everything around as
  * longidents for true generality, but applies of functors should never
@@ -46,55 +53,50 @@ let is_const_div exp =
       
 let is_const_mult exp =
   match exp.pexp_desc with
-      Pexp_apply(e1, es) ->
-        let es = List.map (fun (_, e) -> e) es in
-        let mult = is_mult e1 in
-          if mult then is_const (List.nth es 1) || is_const (List.hd es)
-          else false
+    Pexp_apply(e1, es) ->
+      let es = List.map (fun (_, e) -> e) es in
+      let mult = is_mult e1 in
+        if mult then is_const (List.nth es 1) || is_const (List.hd es)
+        else false
     | _ -> false
 
-let next_name_cnt = ref 0 
+
+(* ming: we dummy out all the pattern locations because we don't use them.
+ * this is technically destructive though, if we do implement pattern matching
+ * it will have to be fixed. *)
+let mk_dum_varpat x = {ppat_desc = Ppat_var x; ppat_loc = dummy}
+
+let mk_let_lit r pes e2 = Pexp_let(r, pes, e2)
+let mk_let r x e1 e2 = mk_let_lit r [({ppat_desc = Ppat_var x; ppat_loc = dummy}, e1)] e2
+let mk_let_lbl r x e1 e2 = mk_let r (li_flatten x) e1 e2
+let mk_apply e1 es = Pexp_apply(e1, (List.map (fun e -> ("", e)) es))
+let mk_ident id = Pexp_ident(id)
+let mk_function lbl elbl arg_pat sube = Pexp_function(lbl, elbl, [(arg_pat, sube)])
+let mk_array es = Pexp_array(es) 
+let mk_tuple es = Pexp_tuple(es)
+let mk_sequence e1 e2 = Pexp_sequence(e1, e2)
+let mk_ifthenelse e1 e2 e3 = Pexp_ifthenelse(e1, e2, Some e3)
+let mk_field e s = Pexp_field(e, s)
+let mk_record es = Pexp_record(es, None)
+let mk_assert e = Pexp_assert(e)
+let mk_match e pel = Pexp_match(e, pel)
+let mk_construct cstrdesc e b = Pexp_construct(cstrdesc, Some e, b)
+
+let mk_dummy desc = {pexp_desc = desc; pexp_loc = dummy}
+
+let mk_dum_ident id = mk_dummy (mk_ident id)
+let mk_ident_loc id loc = {pexp_desc = mk_ident id; pexp_loc = loc}
+
+let resolve_in_exp_when f ls =
+  let (lbl, lex, loc) = List.hd ls in
+  match lex with
+    | Some lex when f lex -> (lex, List.tl ls)
+    | _ -> (mk_ident_loc lbl loc, ls) 
+
+let resolve_in_exp = resolve_in_exp_when (fun e -> true) 
+ 
 
 let normalize exp =
-  let fresh_name () =
-    let i = !next_name_cnt in
-    let _ = next_name_cnt := !next_name_cnt + 1 in
-      Longident.parse ("__tmp"^(string_of_int i))  
-  in
-
-  (* ming: we dummy out all the pattern locations because we don't use them.
-   * this is technically destructive though, if we do implement pattern matching
-   * it will have to be fixed. *)
-  let mk_let_lit r pes e2 = Pexp_let(r, pes, e2) in
-  let mk_let r x e1 e2 = mk_let_lit r [({ppat_desc = Ppat_var x; ppat_loc = Location.none}, e1)] e2 in
-  let mk_let_lbl r x e1 e2 = mk_let r (li_flatten x) e1 e2 in
-  let mk_apply e1 es = Pexp_apply(e1, (List.map (fun e -> ("", e)) es)) in
-  let mk_ident id = Pexp_ident(id) in
-  let mk_function lbl elbl arg_pat sube = Pexp_function(lbl, elbl, [(arg_pat, sube)]) in
-  let mk_array es = Pexp_array(es) in
-  let mk_tuple es = Pexp_tuple(es) in
-  let mk_sequence e1 e2 = Pexp_sequence(e1, e2) in
-  let mk_ifthenelse e1 e2 e3 = Pexp_ifthenelse(e1, e2, Some e3) in
-  let mk_field e s = Pexp_field(e, s) in
-  let mk_record es = Pexp_record(es, None) in
-  let mk_assert e = Pexp_assert(e) in
-  let mk_match e pel = Pexp_match(e, pel) in
-  let mk_construct cstrdesc e b = Pexp_construct(cstrdesc, Some e, b) in
-
-  let mk_dummy desc = {pexp_desc = desc; pexp_loc = Location.none} in
-  let dummy = Location.none in
-
-  let mk_dum_ident id = mk_dummy (mk_ident id) in
-  let mk_ident_loc id loc = {pexp_desc = mk_ident id; pexp_loc = loc} in
-
-  let resolve_in_exp_when f ls =
-    let (lbl, lex, loc) = List.hd ls in
-    match lex with
-    | Some lex when f lex -> (lex, List.tl ls)
-    | _ -> (mk_ident_loc lbl loc, ls) in
-
- let resolve_in_exp = resolve_in_exp_when (fun e -> true) in
-   
  let rec norm_out exp =
     let rw_expr desc = {pexp_desc = desc; pexp_loc = exp.pexp_loc} in
     let wrap r b (lbl, a, _) = 
@@ -126,11 +128,13 @@ let normalize exp =
         exp
      | Pexp_function(lbl, elbl, [(arg, e)]) ->
         rw_expr (mk_function lbl elbl arg (norm_out e))
-     | Pexp_let(r, [(p, e1)], e2) ->
+     (* stop leaving non-idents in let binds for pat. doesn't seem to solve
+      * his problem though.. *)
+     (*| Pexp_let(r, [(p, e1)], e2) ->
         let ls = norm_in e1 in
         let (e1, ls) = resolve_in_exp ls in
         let init = mk_let_lit r [(p, e1)] (norm_out e2) in
-          rw_expr (List.fold_left (wrap r) init ls)
+          rw_expr (List.fold_left (wrap r) init ls)*)
      | Pexp_let(Recursive, pes, e2) ->
         (* we can assume more or less that all recursive ands are 
          * binds of mutually recursive functions, so we won't even try
@@ -314,7 +318,7 @@ let normalize exp =
 
 
 let rec normalize_structure sstr =
-  let _ = if Common.ck_olev Common.ol_normalized then Format.set_margin 170 in
+ let _ = if Common.ck_olev Common.ol_normalized then Format.set_margin 170 in
   match sstr with
     [] -> []
     | {pstr_desc = (Pstr_eval exp); pstr_loc = loc} :: srem ->
@@ -322,8 +326,22 @@ let rec normalize_structure sstr =
         let _ = Common.cprintf Common.ol_normalized "@[%a@\n@]@." Qdebug.pprint_expression normal_exp in
         ({pstr_desc = (Pstr_eval(normal_exp)) ; pstr_loc = loc}) :: (normalize_structure srem)
     | {pstr_desc = (Pstr_value(recursive, pl)); pstr_loc = loc} :: srem -> 
-        let value = {pstr_desc = (Pstr_value(recursive, List.map (fun (p, exp) -> (p, normalize exp)) pl)); pstr_loc = loc} in
-        let _ = Common.cprintf Common.ol_normalized "@[%a@\n@]@." Qdebug.pprint_structure value in
-        value :: (normalize_structure srem)
+        let norm_bind (p, exp) (newbs, oldbs) = 
+         let nm = fresh_name_s () in
+         let id = mk_dum_ident (Longident.parse nm) in
+         let newb = (mk_dum_varpat nm, normalize exp) in
+         let oldb = (p, id) in
+           (newb::newbs, oldb::oldbs) in
+        let (newbs, oldbs) = List.fold_right norm_bind pl ([], []) in
+        let recf = recursive = Recursive in   
+          if recf then
+            let value = {pstr_desc = (Pstr_value(recursive, newbs @ oldbs)); pstr_loc = loc} in 
+            let _ = Common.cprintf Common.ol_normalized "@[%a@\n@]@." Qdebug.pprint_structure value in
+            value :: (normalize_structure srem)
+          else
+            let old_value = {pstr_desc = (Pstr_value(recursive, oldbs)); pstr_loc = loc} in
+            let new_value = {pstr_desc = (Pstr_value(recursive, newbs)); pstr_loc = loc} in
+            let _ = Common.cprintf Common.ol_normalized "@[%a@\n%a@\n@]@." Qdebug.pprint_structure new_value Qdebug.pprint_structure old_value in
+            new_value :: old_value :: (normalize_structure srem)
     | p :: srem -> 
         p :: (normalize_structure srem) 

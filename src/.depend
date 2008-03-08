@@ -328,13 +328,13 @@ qualifying/constraint.cmx: qualifying/wellformed.cmx \
     parsing/asttypes.cmi qualifying/constraint.cmi 
 qualifying/frame.cmo: typing/types.cmi typing/typedtree.cmi \
     qualifying/qualifier.cmi typing/predicate.cmi typing/predef.cmi \
-    typing/path.cmi typing/oprint.cmi typing/ident.cmi typing/env.cmi \
-    typing/common.cmo typing/btype.cmi parsing/asttypes.cmi \
+    typing/path.cmi typing/oprint.cmi utils/misc.cmi typing/ident.cmi \
+    typing/env.cmi typing/common.cmo typing/btype.cmi parsing/asttypes.cmi \
     qualifying/frame.cmi 
 qualifying/frame.cmx: typing/types.cmx typing/typedtree.cmx \
     qualifying/qualifier.cmx typing/predicate.cmx typing/predef.cmx \
-    typing/path.cmx typing/oprint.cmx typing/ident.cmx typing/env.cmx \
-    typing/common.cmx typing/btype.cmx parsing/asttypes.cmi \
+    typing/path.cmx typing/oprint.cmx utils/misc.cmx typing/ident.cmx \
+    typing/env.cmx typing/common.cmx typing/btype.cmx parsing/asttypes.cmi \
     qualifying/frame.cmi 
 qualifying/lightenv.cmo: typing/common.cmo 
 qualifying/lightenv.cmx: typing/common.cmx 

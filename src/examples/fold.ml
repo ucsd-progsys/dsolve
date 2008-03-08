@@ -1,14 +1,31 @@
-qual NNEG(x): 0 <= x;;
-qual N(x): x < 0;;
-qual P(x): 0 < x;;
+qualif POS(x): 0 <= x
+qualif NEG(x): x < 0
 
-? letrec fold = fun f -> fun l -> fun b ->
-  match l with
-      [] ->
-	b
-    | c::d ->
-	f c (fold f d b)
-in
-let add = fun x -> fun y -> x + y in
-let n = 1::2::[] in
-  fold add n 1;;
+let rec fold f b xs =
+  match xs with
+  | [] -> b
+  | x::xs' -> fold f (f b x) xs'
+
+let rec map f xs =
+  match xs with
+  | [] -> []
+  | x::xs' -> (f x)::(map f xs')
+
+let abs x =
+  if x > 0 then x else (0 - x)
+
+let ys = [1;2;3;-4;-12]
+
+let check_pos x = 
+  assert(0 <= x)
+
+let add x y =
+  let t = abs y in
+  x + t
+
+let m = map abs ys
+
+let _ = map check_pos m
+
+let f = fold add 0 ys
+let _ = assert(0 <= f)

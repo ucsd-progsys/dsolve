@@ -325,7 +325,7 @@ let rec tree_of_typexp sch ty =
           Otyp_arrow (lab, t1, tree_of_typexp sch ty2) in
         pr_arrow l ty1 ty2
     | Ttuple tyl ->
-        Otyp_tuple (tree_of_typlist sch tyl)
+        Otyp_tuple (tree_of_typlist sch tyl, None)
     | Tconstr(p, tyl, abbrev) ->
         Otyp_constr (tree_of_path p, tree_of_typlist sch tyl, None)
     | Tvariant row ->

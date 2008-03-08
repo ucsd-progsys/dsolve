@@ -257,3 +257,6 @@ let size_lit_refinement i =
 
 let field_eq_qualifier name pexp =
   let x = Path.mk_ident "x" in (Path.mk_ident "<field_eq>", x, Field (name, Var x) ==. pexp)
+
+let proj_eq_qualifier n pexp =
+  let x = Path.mk_ident "x" in (Path.mk_ident "<tuple_nth_eq>", x, Proj (n, Var x) ==. pexp)

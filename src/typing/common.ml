@@ -11,6 +11,10 @@ end
 
 module PathMap = Map.Make(ComparablePath)
 
+let maybe_cons m xs = match m with
+  | None -> xs
+  | Some x -> x :: xs
+
 let rec map3 f xs ys zs = match (xs, ys, zs) with
   | ([], [], []) -> []
   | (x :: xs, y :: ys, z :: zs) -> f x y z :: map3 f xs ys zs
