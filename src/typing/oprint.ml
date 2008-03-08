@@ -173,7 +173,7 @@ and print_out_type_2 ppf =
   function
   | Otyp_tuple (tyl, None) ->
       fprintf ppf "@[<0>%a@]" (print_typlist print_simple_out_type " *") tyl
-  | Otyp_tuple (tyl, Some (Oqual qs)) ->
+  | Otyp_tuple (tyl, Some qs) ->
       fprintf ppf "@[<0>{%a |@;<1 2>%s}@]" (print_typlist print_simple_out_type " *") tyl
         (String.concat " " qs)
   | ty -> print_simple_out_type ppf ty
@@ -183,9 +183,9 @@ and print_simple_out_type ppf =
       fprintf ppf "@[%a%s#%a@]" print_typargs tyl (if ng then "_" else "")
         print_ident id
   | Otyp_constr (id, tyl, None)
-  | Otyp_constr (id, tyl, Some (Oqual [])) ->
+  | Otyp_constr (id, tyl, Some []) ->
       fprintf ppf "@[%a%a@]" print_typargs tyl print_ident id
-  | Otyp_constr (id, tyl, Some (Oqual qs)) ->
+  | Otyp_constr (id, tyl, Some qs) ->
       fprintf ppf "@[{%a%a@ |@;<1 2>%s}@]" print_typargs tyl print_ident id
         (String.concat " " qs)
   | Otyp_object (fields, rest) ->

@@ -64,7 +64,7 @@ and out_variant =
   | Ovar_fields of (string * bool * out_type list) list
   | Ovar_name of out_ident * out_type list
 and out_qualifier =
-    Oqual of string list
+    string list
 
 type out_class_type =
   | Octy_constr of out_ident * out_type list
