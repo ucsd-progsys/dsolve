@@ -81,6 +81,13 @@ let empty_refinement = ([], Qconst [])
 
 let false_refinement = ([], Qconst [(Path.mk_ident "false", Path.mk_ident "V", Predicate.Not (Predicate.True))])
 
+let rec map f = function
+    | (Funknown | Fvar _) as fr -> f fr
+    | Fconstr (p, fs, cstrdesc, r) -> f (Fconstr (p, List.map (map f) fs, cstrdesc, r))
+    | Ftuple (fs, r) -> f (Ftuple (List.map (map f) fs, r))
+    | Farrow (x, f1, f2) -> f (Farrow (x, map f f1, map f f2))
+    | Frecord (p, fs, r) -> f (Frecord (p, List.map (fun (fr, n, m) -> (map f fr, n, m)) fs, r))
+
 (* Instantiate the tyvars in fr with the corresponding frames in ftemplate.
    If a variable occurs twice, it will only be instantiated with one frame; which
    one is undefined and unimportant. *)
@@ -191,36 +198,24 @@ let rec label_like f f' =
    and the same labels as [f]. *)
 let fresh_with_labels env ty f = label_like (fresh env ty) f
 
-let map_frame f frm =
-  let rec map_rec = function
-    | Fvar _ as fr -> f fr
-    | Fconstr (p, fs, cstrs, re) -> f (Fconstr (p, List.map map_rec fs, cstrs, re))
-    | Farrow (x, f1, f2) -> f (Farrow (x, map_rec f1, map_rec f2))
-    | Ftuple (fs, r) -> f (Ftuple (List.map map_rec fs, r))
-    | Frecord(p, fs, re) ->
-        let apply_rec (fieldf, n, m) = (f fieldf, n, m) in
-          f (Frecord (p, List.map apply_rec fs, re))
-    | Funknown -> f Funknown
-  in map_rec frm
-
-let map_apply_substitution sub = function
+let apply_substitution_map sub = function
   | Fconstr (p, fs, cstrs, (subs, qe)) -> Fconstr (p, fs, cstrs, (sub :: subs, qe))
   | Frecord (p, fs, (subs, qe)) -> Frecord (p, fs, (sub :: subs, qe))
   | f -> f
 
-let apply_substitution sub f = map_frame (map_apply_substitution sub) f
+let apply_substitution sub f = map (apply_substitution_map sub) f
 
 let refinement_apply_solution solution = function
   | (subs, Qvar (k, _)) -> (subs, Qconst (solution k))
   | r -> r
 
-let map_apply_solution solution = function
+let apply_solution_map solution = function
   | Fconstr (path, fl, cstrs, r) -> Fconstr (path, fl, cstrs, refinement_apply_solution solution r)
   | Frecord (path, fs, r) -> Frecord (path, fs, refinement_apply_solution solution r)
   | Ftuple (fs, r) -> Ftuple (fs, refinement_apply_solution solution r)
   | f -> f
 
-let apply_solution solution fr = map_frame (map_apply_solution solution) fr
+let apply_solution solution fr = map (apply_solution_map solution) fr
 
 let refinement_conjuncts solution qual_var (subs, qualifiers) =
   let quals = match qualifiers with
