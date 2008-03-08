@@ -36,7 +36,7 @@ def gen_quals(src,bare):
   else:
     cat_files([hname,d_pats],tname+".scratch")
     logged_sys_call("%s %s %s 1> /dev/null 2> %s" % (gen, tname+".scratch", fname, qname))
-  cat_files([hname,qname],tname+".quals")
+  cat_files([qname],tname+".quals")
   cat_files([tname+".quals",fname],tname+".ml")
 
 def solve_quals(src,flags):
@@ -64,8 +64,8 @@ else: flags += sys.argv[1:-1]
 os.system("rm -f %s.quals; rm -f %s.annot" % (bname, bname))	
 gen_quals(bname,bare)
 succ = solve_quals(tname,flags)
+fix_annots(tname,bname)
 if succ == 0:
-  fix_annots(tname,bname)
   sys.exit()
 else:
   BogusErrorr
