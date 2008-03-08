@@ -226,9 +226,6 @@ let vars p =
   in
     vars_rec [] p
 
-let tuple_nth pexp n =
-  FunApp ("__tuple_nth_" ^ (string_of_int n), pexp)
-
 let transl_op = function
   | Predexp_plus -> Plus
   | Predexp_minus -> Minus

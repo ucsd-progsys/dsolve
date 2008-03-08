@@ -70,8 +70,6 @@ val (!.): t -> t
 val (=>.): t -> t -> t
 val (<=>.): pexpr -> t -> t
 
-val tuple_nth: pexpr list -> int -> pexpr
-
 val subst: pexpr -> Path.t -> t -> t
 val apply_substs: (Path.t * pexpr) list -> t -> t
 val vars: t -> Path.t list
