@@ -1,57 +1,57 @@
-"examples-liquid/ooo.ml" 1 0 9 "examples-liquid/ooo.ml" 1 0 35
+"examples/ooo.ml" 1 0 9 "examples/ooo.ml" 1 0 35
 type(
   a: {int | (V <= 1) (V <= 0) (V >= 0) (V != 1)} ->
     b: {int | (V >= a) (V != a) (V <= 1) (V >= 1) (V >= 0) (V != 0)} ->
       {unit | true}
 )
-"examples-liquid/ooo.ml" 1 0 18 "examples-liquid/ooo.ml" 1 0 35
+"examples/ooo.ml" 1 0 18 "examples/ooo.ml" 1 0 35
 type(
   b: {int | (V >= a) (V != a) (V <= 1) (V >= 1) (V >= 0) (V != 0)} ->
     {unit | true}
 )
-"examples-liquid/ooo.ml" 1 0 22 "examples-liquid/ooo.ml" 1 0 35
+"examples/ooo.ml" 1 0 22 "examples/ooo.ml" 1 0 35
 type(
   {unit | true}
 )
-"examples-liquid/ooo.ml" 1 0 28 "examples-liquid/ooo.ml" 1 0 35
+"examples/ooo.ml" 1 0 28 "examples/ooo.ml" 1 0 35
 type(
   {bool | ((__tag V) <=> (a < b))}
 )
-"examples-liquid/ooo.ml" 1 0 29 "examples-liquid/ooo.ml" 1 0 30
+"examples/ooo.ml" 1 0 29 "examples/ooo.ml" 1 0 30
 type(
   {int | (V = a)}
 )
-"examples-liquid/ooo.ml" 1 0 31 "examples-liquid/ooo.ml" 1 0 32
+"examples/ooo.ml" 1 0 31 "examples/ooo.ml" 1 0 32
 type(
   x: {int | (V <= 1) (V >= 0) (V >= a) (V <= b)} ->
     x: {int | (V <= 1) (V >= 0) (V >= a) (V <= b)} ->
       {bool | ((__tag V) <=> (x < x))}
 )
-"examples-liquid/ooo.ml" 1 0 33 "examples-liquid/ooo.ml" 1 0 34
+"examples/ooo.ml" 1 0 33 "examples/ooo.ml" 1 0 34
 type(
   {int | (V = b)}
 )
-"examples-liquid/ooo.ml" 3 37 49 "examples-liquid/ooo.ml" 3 37 61
+"examples/ooo.ml" 3 37 49 "examples/ooo.ml" 3 37 61
 type(
   c: Var(a_582) -> d: Var(a_583) -> {(Var(a_582), Var(a_583)) | true}
 )
-"examples-liquid/ooo.ml" 3 37 51 "examples-liquid/ooo.ml" 3 37 61
+"examples/ooo.ml" 3 37 51 "examples/ooo.ml" 3 37 61
 type(
   d: Var(a_586) -> {(Var(a_585), Var(a_586)) | true}
 )
-"examples-liquid/ooo.ml" 3 37 55 "examples-liquid/ooo.ml" 3 37 61
+"examples/ooo.ml" 3 37 55 "examples/ooo.ml" 3 37 61
 type(
   {(Var(a_588), Var(a_589)) | (V.0 = c) (V.1 = d)}
 )
-"examples-liquid/ooo.ml" 3 37 56 "examples-liquid/ooo.ml" 3 37 57
+"examples/ooo.ml" 3 37 56 "examples/ooo.ml" 3 37 57
 type(
   Var(a_591)
 )
-"examples-liquid/ooo.ml" 3 37 59 "examples-liquid/ooo.ml" 3 37 60
+"examples/ooo.ml" 3 37 59 "examples/ooo.ml" 3 37 60
 type(
   Var(a_590)
 )
-"examples-liquid/ooo.ml" 5 63 76 "examples-liquid/ooo.ml" 5 63 83
+"examples/ooo.ml" 5 63 76 "examples/ooo.ml" 5 63 83
 type(
   c: {int | (V <= 1) (V <= 0) (V >= 0) (V != 1)} ->
     d: {int | (V >= c) (V != c) (V <= 1) (V >= 1) (V >= 0) (V != 0)} ->
@@ -59,34 +59,34 @@ type(
         {int | (V >= c) (V != c) (V <= 1) (V >= 1) (V >= 0) (V != 0)}) |
         true}
 )
-"examples-liquid/ooo.ml" 5 63 76 "examples-liquid/ooo.ml" 5 63 87
+"examples/ooo.ml" 5 63 76 "examples/ooo.ml" 5 63 87
 type(
   {({int | (V <= 1) (V <= 0) (V >= 0) (V != 1)},
     {int | (V <= 1) (V >= 1) (V >= 0) (V != 0)}) | true}
 )
-"examples-liquid/ooo.ml" 5 63 84 "examples-liquid/ooo.ml" 5 63 85
+"examples/ooo.ml" 5 63 84 "examples/ooo.ml" 5 63 85
 type(
   {int | (V = 0)}
 )
-"examples-liquid/ooo.ml" 5 63 86 "examples-liquid/ooo.ml" 5 63 87
+"examples/ooo.ml" 5 63 86 "examples/ooo.ml" 5 63 87
 type(
   {int | (V = 1)}
 )
-"examples-liquid/ooo.ml" 6 88 96 "examples-liquid/ooo.ml" 6 88 100
+"examples/ooo.ml" 6 88 96 "examples/ooo.ml" 6 88 100
 type(
   a: {int | (V <= 1) (V <= 0) (V >= 0) (V != 1)} ->
     b: {int | (V >= a) (V != a) (V <= 1) (V >= 1) (V >= 0) (V != 0)} ->
       {unit | true}
 )
-"examples-liquid/ooo.ml" 6 88 96 "examples-liquid/ooo.ml" 6 88 104
+"examples/ooo.ml" 6 88 96 "examples/ooo.ml" 6 88 104
 type(
   {unit | true}
 )
-"examples-liquid/ooo.ml" 6 88 101 "examples-liquid/ooo.ml" 6 88 102
+"examples/ooo.ml" 6 88 101 "examples/ooo.ml" 6 88 102
 type(
   {int | (V = __atmp4.0)}
 )
-"examples-liquid/ooo.ml" 6 88 103 "examples-liquid/ooo.ml" 6 88 104
+"examples/ooo.ml" 6 88 103 "examples/ooo.ml" 6 88 104
 type(
   {int | (V = __atmp4.1)}
 )

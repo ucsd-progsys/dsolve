@@ -1,23 +1,23 @@
-"examples-liquid/sum.ml" 3 25 37 "examples-liquid/sum.ml" 6 91 100
+"examples/sum.ml" 3 25 37 "examples/sum.ml" 6 91 100
 type(
   n: {int | (V <= 1) (V <= 0) (V >= 1) (V >= 0) (V != 1) (V != 0)} ->
     {int | (V = n) (V <= n) (V >= n) (V != n) (V <= 1) (V <= 0) (V >= 1)
     (V >= 0) (V != 1) (V != 0)}
 )
-"examples-liquid/sum.ml" 4 42 44 "examples-liquid/sum.ml" 6 91 100
+"examples/sum.ml" 4 42 44 "examples/sum.ml" 6 91 100
 type(
   {int | (V = n) (V <= n) (V >= n) (V != n) (V <= 1) (V <= 0) (V >= 1)
   (V >= 0) (V != 1) (V != 0)}
 )
-"examples-liquid/sum.ml" 4 42 47 "examples-liquid/sum.ml" 4 42 48
+"examples/sum.ml" 4 42 47 "examples/sum.ml" 4 42 48
 type(
   {int | (V = n)}
 )
-"examples-liquid/sum.ml" 4 42 47 "examples-liquid/sum.ml" 4 42 52
+"examples/sum.ml" 4 42 47 "examples/sum.ml" 4 42 52
 type(
   {bool | ((__tag V) <=> (n < 0))}
 )
-"examples-liquid/sum.ml" 4 42 49 "examples-liquid/sum.ml" 4 42 50
+"examples/sum.ml" 4 42 49 "examples/sum.ml" 4 42 50
 type(
   x:
   {int | (V = n) (V <= 1) (V <= 0) (V >= 1) (V >= 0) (V != 1) (V != 0)
@@ -26,57 +26,57 @@ type(
     {int | (V = n) (V <= 1) (V <= 0) (V >= 1) (V >= 0) (V != 1) (V != 0)
     (V <= n) (V >= n) (V != n)} -> {bool | ((__tag V) <=> (x < x))}
 )
-"examples-liquid/sum.ml" 4 42 51 "examples-liquid/sum.ml" 4 42 52
+"examples/sum.ml" 4 42 51 "examples/sum.ml" 4 42 52
 type(
   {int | (V = 0)}
 )
-"examples-liquid/sum.ml" 4 42 58 "examples-liquid/sum.ml" 4 42 59
+"examples/sum.ml" 4 42 58 "examples/sum.ml" 4 42 59
 type(
   {int | (V = 0)}
 )
-"examples-liquid/sum.ml" 5 66 70 "examples-liquid/sum.ml" 6 91 100
+"examples/sum.ml" 5 66 70 "examples/sum.ml" 6 91 100
 type(
   {int | (V = n) (V <= n) (V >= n) (V != n) (V <= 1) (V <= 0) (V >= 1)
   (V >= 0) (V != 1) (V != 0)}
 )
-"examples-liquid/sum.ml" 5 66 78 "examples-liquid/sum.ml" 5 66 81
+"examples/sum.ml" 5 66 78 "examples/sum.ml" 5 66 81
 type(
   {int | (V <= 1) (V <= 0) (V >= 1) (V >= 0) (V != 1) (V != 0)} ->
     {int | (V <= 1) (V <= 0) (V >= 1) (V >= 0) (V != 1) (V != 0)}
 )
-"examples-liquid/sum.ml" 5 66 78 "examples-liquid/sum.ml" 5 66 87
+"examples/sum.ml" 5 66 78 "examples/sum.ml" 5 66 87
 type(
   {int | (V <= 1) (V <= 0) (V >= 1) (V >= 0) (V != 1) (V != 0)}
 )
-"examples-liquid/sum.ml" 5 66 82 "examples-liquid/sum.ml" 5 66 87
+"examples/sum.ml" 5 66 82 "examples/sum.ml" 5 66 87
 type(
   {int | (V = (n - 1))}
 )
-"examples-liquid/sum.ml" 5 66 83 "examples-liquid/sum.ml" 5 66 84
+"examples/sum.ml" 5 66 83 "examples/sum.ml" 5 66 84
 type(
   {int | (V = n)}
 )
-"examples-liquid/sum.ml" 5 66 84 "examples-liquid/sum.ml" 5 66 85
+"examples/sum.ml" 5 66 84 "examples/sum.ml" 5 66 85
 type(
   x: {int | true} -> x: {int | true} -> {int | (V = (x - x))}
 )
-"examples-liquid/sum.ml" 5 66 85 "examples-liquid/sum.ml" 5 66 86
+"examples/sum.ml" 5 66 85 "examples/sum.ml" 5 66 86
 type(
   {int | (V = 1)}
 )
-"examples-liquid/sum.ml" 6 91 95 "examples-liquid/sum.ml" 6 91 96
+"examples/sum.ml" 6 91 95 "examples/sum.ml" 6 91 96
 type(
   {int | (V = n)}
 )
-"examples-liquid/sum.ml" 6 91 95 "examples-liquid/sum.ml" 6 91 100
+"examples/sum.ml" 6 91 95 "examples/sum.ml" 6 91 100
 type(
   {int | (V = (n + t))}
 )
-"examples-liquid/sum.ml" 6 91 97 "examples-liquid/sum.ml" 6 91 98
+"examples/sum.ml" 6 91 97 "examples/sum.ml" 6 91 98
 type(
   x: {int | true} -> x: {int | true} -> {int | (V = (x + x))}
 )
-"examples-liquid/sum.ml" 6 91 99 "examples-liquid/sum.ml" 6 91 100
+"examples/sum.ml" 6 91 99 "examples/sum.ml" 6 91 100
 type(
   {int | (V = t)}
 )
