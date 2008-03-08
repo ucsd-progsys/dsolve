@@ -68,7 +68,7 @@ let rec pprint ppf = function
   | Ftuple (ts, r) ->
       fprintf ppf "@[{(%a) |@;<1 2>%a}@]" pprint_list ts pprint_refinement r
   | Frecord (id, _, r) ->
-      fprintf ppf "@[{%s |@;<1 2>%a}@] " (Path.name id) pprint_refinement r
+       fprintf ppf "@[{%s |@;<1 2>%a}@] " (Path.name id) pprint_refinement r
   | Funknown ->
       fprintf ppf "[unknown]"
  and pprint1 ppf = function

@@ -1,8 +1,10 @@
+examples/reltuple.ml
+DMLex/simplex.ml
+DML/quicksort_sane.ml
 examples/ooo.ml
 examples/tree.ml
 examples/list.ml
 examples/fold.ml
-DML/quicksort_sane.ml
 DML/tower.ml
 DML/fft.ml
 examples/sum.ml
@@ -15,7 +17,6 @@ DMLex/bs2.ml
 DML/insertsort.ml
 DML/queen.ml
 DMLex/gauss.ml
-DMLex/simplex.ml
 examples/unbounded.ml
 examples/vecswap.ml
 examples/arraymax.ml
