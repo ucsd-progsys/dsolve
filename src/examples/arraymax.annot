@@ -1,0 +1,395 @@
+"examples-liquid/arraymax.ml" 1 0 8 "examples-liquid/arraymax.ml" 2 14 38
+type(
+  x: Var(a_950) -> y: Var(a_950) -> Var(a_950)
+)
+"examples-liquid/arraymax.ml" 1 0 10 "examples-liquid/arraymax.ml" 2 14 38
+type(
+  y: Var(a_951) -> Var(a_951)
+)
+"examples-liquid/arraymax.ml" 2 14 16 "examples-liquid/arraymax.ml" 2 14 38
+type(
+  Var(a_952)
+)
+"examples-liquid/arraymax.ml" 2 14 19 "examples-liquid/arraymax.ml" 2 14 20
+type(
+  Var(a_956)
+)
+"examples-liquid/arraymax.ml" 2 14 19 "examples-liquid/arraymax.ml" 2 14 24
+type(
+  {bool | ((__tag V) <=> (x > y))}
+)
+"examples-liquid/arraymax.ml" 2 14 21 "examples-liquid/arraymax.ml" 2 14 22
+type(
+  x: Var(a_955) -> x: Var(a_955) -> {bool | ((__tag V) <=> (x > x))}
+)
+"examples-liquid/arraymax.ml" 2 14 23 "examples-liquid/arraymax.ml" 2 14 24
+type(
+  Var(a_957)
+)
+"examples-liquid/arraymax.ml" 2 14 30 "examples-liquid/arraymax.ml" 2 14 31
+type(
+  Var(a_959)
+)
+"examples-liquid/arraymax.ml" 2 14 37 "examples-liquid/arraymax.ml" 2 14 38
+type(
+  Var(a_960)
+)
+"examples-liquid/arraymax.ml" 4 40 52 "examples-liquid/arraymax.ml" 7 104 115
+type(
+  k: {int | (V <= 1) (V <= 0) (V >= 1) (V >= 0) (V != 1) (V != 0)} ->
+    {int | (V = k) (V <= k) (V >= k) (V != k) (V <= 1) (V <= 0) (V >= 1)
+    (V >= 0) (V != 1) (V != 0)}
+)
+"examples-liquid/arraymax.ml" 5 56 58 "examples-liquid/arraymax.ml" 7 104 115
+type(
+  {int | (V = k) (V <= k) (V >= k) (V != k) (V <= 1) (V <= 0) (V >= 1)
+  (V >= 0) (V != 1) (V != 0)}
+)
+"examples-liquid/arraymax.ml" 5 56 61 "examples-liquid/arraymax.ml" 5 56 62
+type(
+  {int | (V = k)}
+)
+"examples-liquid/arraymax.ml" 5 56 61 "examples-liquid/arraymax.ml" 5 56 66
+type(
+  {bool | ((__tag V) <=> (k < 0))}
+)
+"examples-liquid/arraymax.ml" 5 56 63 "examples-liquid/arraymax.ml" 5 56 64
+type(
+  x:
+  {int | (V = k) (V <= 1) (V <= 0) (V >= 1) (V >= 0) (V != 1) (V != 0)
+  (V <= k) (V >= k) (V != k)} ->
+    x:
+    {int | (V = k) (V <= 1) (V <= 0) (V >= 1) (V >= 0) (V != 1) (V != 0)
+    (V <= k) (V >= k) (V != k)} -> {bool | ((__tag V) <=> (x < x))}
+)
+"examples-liquid/arraymax.ml" 5 56 65 "examples-liquid/arraymax.ml" 5 56 66
+type(
+  {int | (V = 0)}
+)
+"examples-liquid/arraymax.ml" 5 56 72 "examples-liquid/arraymax.ml" 5 56 73
+type(
+  {int | (V = 0)}
+)
+"examples-liquid/arraymax.ml" 6 79 83 "examples-liquid/arraymax.ml" 7 104 115
+type(
+  {int | (V = k) (V <= k) (V >= k) (V != k) (V <= 1) (V <= 0) (V >= 1)
+  (V >= 0) (V != 1) (V != 0)}
+)
+"examples-liquid/arraymax.ml" 6 79 91 "examples-liquid/arraymax.ml" 6 79 94
+type(
+  {int | (V <= 1) (V <= 0) (V >= 1) (V >= 0) (V != 1) (V != 0)} ->
+    {int | (V <= 1) (V <= 0) (V >= 1) (V >= 0) (V != 1) (V != 0)}
+)
+"examples-liquid/arraymax.ml" 6 79 91 "examples-liquid/arraymax.ml" 6 79 100
+type(
+  {int | (V <= 1) (V <= 0) (V >= 1) (V >= 0) (V != 1) (V != 0)}
+)
+"examples-liquid/arraymax.ml" 6 79 95 "examples-liquid/arraymax.ml" 6 79 100
+type(
+  {int | (V = (k - 1))}
+)
+"examples-liquid/arraymax.ml" 6 79 96 "examples-liquid/arraymax.ml" 6 79 97
+type(
+  {int | (V = k)}
+)
+"examples-liquid/arraymax.ml" 6 79 97 "examples-liquid/arraymax.ml" 6 79 98
+type(
+  x: {int | true} -> x: {int | true} -> {int | (V = (x - x))}
+)
+"examples-liquid/arraymax.ml" 6 79 98 "examples-liquid/arraymax.ml" 6 79 99
+type(
+  {int | (V = 1)}
+)
+"examples-liquid/arraymax.ml" 7 104 110 "examples-liquid/arraymax.ml" 7 104 111
+type(
+  {int | (V = s)}
+)
+"examples-liquid/arraymax.ml" 7 104 110 "examples-liquid/arraymax.ml" 7 104 115
+type(
+  {int | (V = (s + k))}
+)
+"examples-liquid/arraymax.ml" 7 104 112 "examples-liquid/arraymax.ml" 7 104 113
+type(
+  x: {int | true} -> x: {int | true} -> {int | (V = (x + x))}
+)
+"examples-liquid/arraymax.ml" 7 104 114 "examples-liquid/arraymax.ml" 7 104 115
+type(
+  {int | (V = k)}
+)
+"examples-liquid/arraymax.ml" 9 117 127 "examples-liquid/arraymax.ml" 12 203 215
+type(
+  n: {int | (V >= 0)} ->
+    b: Var(a_1073) ->
+      f: ({int | (V <= n) (V != n) (V >= 0)} -> Var(a_1073) -> Var(a_1073))
+      -> Var(a_1073)
+)
+"examples-liquid/arraymax.ml" 9 117 129 "examples-liquid/arraymax.ml" 12 203 215
+type(
+  b: Var(a_1076) ->
+    f: ({int | (V <= n) (V != n) (V >= 0)} -> Var(a_1076) -> Var(a_1076)) ->
+      Var(a_1076)
+)
+"examples-liquid/arraymax.ml" 9 117 131 "examples-liquid/arraymax.ml" 12 203 215
+type(
+  f: ({int | (V <= n) (V >= 0) (V != n)} -> Var(a_1078) -> Var(a_1078)) ->
+    Var(a_1078)
+)
+"examples-liquid/arraymax.ml" 10 135 137 "examples-liquid/arraymax.ml" 12 203 215
+type(
+  Var(a_1171)
+)
+"examples-liquid/arraymax.ml" 10 135 150 "examples-liquid/arraymax.ml" 11 156 199
+type(
+  i: {int | (V <= n) (V >= 0)} -> c: Var(a_1127) -> Var(a_1127)
+)
+"examples-liquid/arraymax.ml" 10 135 152 "examples-liquid/arraymax.ml" 11 156 199
+type(
+  c: Var(a_1129) -> Var(a_1129)
+)
+"examples-liquid/arraymax.ml" 11 156 160 "examples-liquid/arraymax.ml" 11 156 199
+type(
+  Var(a_1130)
+)
+"examples-liquid/arraymax.ml" 11 156 163 "examples-liquid/arraymax.ml" 11 156 164
+type(
+  {int | (V = i)}
+)
+"examples-liquid/arraymax.ml" 11 156 163 "examples-liquid/arraymax.ml" 11 156 168
+type(
+  {bool | ((__tag V) <=> (i < n))}
+)
+"examples-liquid/arraymax.ml" 11 156 165 "examples-liquid/arraymax.ml" 11 156 166
+type(
+  x: {int | (V >= 0) (V <= n) (V >= i)} ->
+    x: {int | (V >= 0) (V <= n) (V >= i)} -> {bool | ((__tag V) <=> (x < x))}
+)
+"examples-liquid/arraymax.ml" 11 156 167 "examples-liquid/arraymax.ml" 11 156 168
+type(
+  {int | (V = n)}
+)
+"examples-liquid/arraymax.ml" 11 156 174 "examples-liquid/arraymax.ml" 11 156 178
+type(
+  i: {int | (V <= n) (V >= 0)} -> c: Var(a_1164) -> Var(a_1164)
+)
+"examples-liquid/arraymax.ml" 11 156 174 "examples-liquid/arraymax.ml" 11 156 192
+type(
+  Var(a_1154)
+)
+"examples-liquid/arraymax.ml" 11 156 179 "examples-liquid/arraymax.ml" 11 156 184
+type(
+  {int | (V = (i + 1))}
+)
+"examples-liquid/arraymax.ml" 11 156 180 "examples-liquid/arraymax.ml" 11 156 181
+type(
+  {int | (V = i)}
+)
+"examples-liquid/arraymax.ml" 11 156 181 "examples-liquid/arraymax.ml" 11 156 182
+type(
+  x: {int | true} -> x: {int | true} -> {int | (V = (x + x))}
+)
+"examples-liquid/arraymax.ml" 11 156 182 "examples-liquid/arraymax.ml" 11 156 183
+type(
+  {int | (V = 1)}
+)
+"examples-liquid/arraymax.ml" 11 156 185 "examples-liquid/arraymax.ml" 11 156 192
+type(
+  Var(a_1156)
+)
+"examples-liquid/arraymax.ml" 11 156 186 "examples-liquid/arraymax.ml" 11 156 187
+type(
+  {int | (V <= n) (V >= 0) (V != n)} -> Var(a_1156) -> Var(a_1156)
+)
+"examples-liquid/arraymax.ml" 11 156 188 "examples-liquid/arraymax.ml" 11 156 189
+type(
+  {int | (V = i)}
+)
+"examples-liquid/arraymax.ml" 11 156 190 "examples-liquid/arraymax.ml" 11 156 191
+type(
+  Var(a_1161)
+)
+"examples-liquid/arraymax.ml" 11 156 198 "examples-liquid/arraymax.ml" 11 156 199
+type(
+  Var(a_1170)
+)
+"examples-liquid/arraymax.ml" 12 203 207 "examples-liquid/arraymax.ml" 12 203 211
+type(
+  i: {int | (V <= n) (V >= 0)} -> c: Var(a_1176) -> Var(a_1176)
+)
+"examples-liquid/arraymax.ml" 12 203 207 "examples-liquid/arraymax.ml" 12 203 215
+type(
+  Var(a_1171)
+)
+"examples-liquid/arraymax.ml" 12 203 212 "examples-liquid/arraymax.ml" 12 203 213
+type(
+  {int | (V = 0)}
+)
+"examples-liquid/arraymax.ml" 12 203 214 "examples-liquid/arraymax.ml" 12 203 215
+type(
+  Var(a_1181)
+)
+"examples-liquid/arraymax.ml" 14 217 230 "examples-liquid/arraymax.ml" 16 274 305
+type(
+  a:
+  {{int | (V <= 1) (V <= 0) (V >= 0) (V != 1)} array_8|
+    ((Array.length V) >= 0)}
+  -> {int | (V <= (Array.length a)) (V <= 1) (V <= 0) (V >= 0) (V != 1)}
+)
+"examples-liquid/arraymax.ml" 15 234 236 "examples-liquid/arraymax.ml" 16 274 305
+type(
+  {int | (V <= (Array.length a)) (V <= 1) (V <= 0) (V >= 0) (V != 1)}
+)
+"examples-liquid/arraymax.ml" 15 234 243 "examples-liquid/arraymax.ml" 15 234 270
+type(
+  l: {int | (V >= 0) (V <= (Array.length a)) (V != (Array.length a))} ->
+    m:
+    {int | (V <= (Array.length a)) (V <= 1) (V <= 0) (V >= 0) (V != 1)
+    (V != (Array.length a)) (V <= l)} ->
+      {int | (V <= (Array.length a)) (V != (Array.length a)) (V = m) 
+      (V <= m) (V <= l) (V >= m) (V <= 1) (V <= 0) (V >= 0) (V != 1)}
+)
+"examples-liquid/arraymax.ml" 15 234 245 "examples-liquid/arraymax.ml" 15 234 270
+type(
+  m:
+  {int | (V <= (Array.length a)) (V != (Array.length a)) (V <= l) (V <= 1)
+  (V <= 0) (V >= 0) (V != 1)} ->
+    {int | (V <= (Array.length a)) (V != (Array.length a)) (V = m) (V <= m)
+    (V <= l) (V >= m) (V <= 1) (V <= 0) (V >= 0) (V != 1)}
+)
+"examples-liquid/arraymax.ml" 15 234 249 "examples-liquid/arraymax.ml" 15 234 252
+type(
+  x:
+  {int | (V <= 1) (V <= 0) (V >= 0) (V != 1) (V <= (Array.length a))
+  (V != (Array.length a)) (V = m) (V <= l) (V <= m) (V >= m)} ->
+    y:
+    {int | (V <= 1) (V <= 0) (V >= 0) (V != 1) (V <= (Array.length a))
+    (V != (Array.length a)) (V = m) (V <= l) (V <= m) (V >= m)} ->
+      {int | (V <= 1) (V <= 0) (V >= 0) (V != 1) (V <= (Array.length a))
+      (V != (Array.length a)) (V = m) (V <= l) (V <= m) (V >= m)}
+)
+"examples-liquid/arraymax.ml" 15 234 249 "examples-liquid/arraymax.ml" 15 234 270
+type(
+  {int | (V <= (Array.length a)) (V != (Array.length a)) (V = m) (V <= m)
+  (V <= l) (V >= m) (V <= 1) (V <= 0) (V >= 0) (V != 1)}
+)
+"examples-liquid/arraymax.ml" 15 234 253 "examples-liquid/arraymax.ml" 15 234 268
+type(
+  {int | (V <= 1) (V <= 0) (V >= 0) (V != 1)}
+)
+"examples-liquid/arraymax.ml" 15 234 254 "examples-liquid/arraymax.ml" 15 234 263
+type(
+  x: {{int | (V <= 1) (V <= 0) (V >= 0) (V != 1)} array_8| true} ->
+    x: {int | (V < (Array.length x)) (V >= 0)} ->
+      {int | (V <= 1) (V <= 0) (V >= 0) (V != 1)}
+)
+"examples-liquid/arraymax.ml" 15 234 264 "examples-liquid/arraymax.ml" 15 234 265
+type(
+  {{int | (V <= 1) (V <= 0) (V >= 0) (V != 1)} array_8|
+    ((Array.length V) >= 0)}
+)
+"examples-liquid/arraymax.ml" 15 234 266 "examples-liquid/arraymax.ml" 15 234 267
+type(
+  {int | (V = l)}
+)
+"examples-liquid/arraymax.ml" 15 234 269 "examples-liquid/arraymax.ml" 15 234 270
+type(
+  {int | (V = m)}
+)
+"examples-liquid/arraymax.ml" 16 274 278 "examples-liquid/arraymax.ml" 16 274 283
+type(
+  n: {int | (V >= 0)} ->
+    b:
+    {int | (V <= (Array.length a)) (V <= n) (V <= 1) (V <= 0) (V >= 0)
+    (V != 1)} ->
+      f:
+      ({int | (V <= n) (V != n) (V >= 0)} ->
+         {int | (V <= (Array.length a)) (V <= n) (V <= 1) (V <= 0) (V >= 0)
+         (V != 1)} ->
+           {int | (V <= (Array.length a)) (V <= n) (V <= 1) (V <= 0) 
+           (V >= 0) (V != 1)})
+      ->
+        {int | (V <= (Array.length a)) (V <= n) (V <= 1) (V <= 0) (V >= 0)
+        (V != 1)}
+)
+"examples-liquid/arraymax.ml" 16 274 278 "examples-liquid/arraymax.ml" 16 274 305
+type(
+  {int | (V <= (Array.length a)) (V <= 1) (V <= 0) (V >= 0) (V != 1)}
+)
+"examples-liquid/arraymax.ml" 16 274 284 "examples-liquid/arraymax.ml" 16 274 300
+type(
+  {int | (V = (Array.length a)) (V >= 0)}
+)
+"examples-liquid/arraymax.ml" 16 274 285 "examples-liquid/arraymax.ml" 16 274 297
+type(
+  x: {{int | (V <= 1) (V <= 0) (V >= 0) (V != 1)} array_8| true} ->
+    {int | (V = (Array.length x)) (V >= 0)}
+)
+"examples-liquid/arraymax.ml" 16 274 298 "examples-liquid/arraymax.ml" 16 274 299
+type(
+  {{int | (V <= 1) (V <= 0) (V >= 0) (V != 1)} array_8|
+    ((Array.length V) >= 0)}
+)
+"examples-liquid/arraymax.ml" 16 274 301 "examples-liquid/arraymax.ml" 16 274 302
+type(
+  {int | (V = 0)}
+)
+"examples-liquid/arraymax.ml" 16 274 303 "examples-liquid/arraymax.ml" 16 274 305
+type(
+  l: {int | (V >= 0) (V <= (Array.length a)) (V != (Array.length a))} ->
+    m:
+    {int | (V <= (Array.length a)) (V <= 1) (V <= 0) (V >= 0) (V != 1)
+    (V != (Array.length a)) (V <= l)} ->
+      {int | (V <= (Array.length a)) (V != (Array.length a)) (V = m) 
+      (V <= m) (V <= l) (V >= m) (V <= 1) (V <= 0) (V >= 0) (V != 1)}
+)
+"examples-liquid/arraymax.ml" 18 307 321 "examples-liquid/arraymax.ml" 20 370 386
+type(
+  a: Var(a_1255) -> {int | (V <= 1) (V <= 0) (V >= 0) (V != 1)}
+)
+"examples-liquid/arraymax.ml" 19 325 327 "examples-liquid/arraymax.ml" 20 370 386
+type(
+  {int | (V <= 1) (V <= 0) (V >= 0) (V != 1)}
+)
+"examples-liquid/arraymax.ml" 19 325 337 "examples-liquid/arraymax.ml" 19 325 347
+type(
+  x: {int | (0 <= V)} ->
+    x: {int | (V <= 1) (V <= 0) (V >= 0) (V != 1)} ->
+      {{int | (V <= 1) (V <= 0) (V >= 0) (V != 1)} array_8|
+        (x = (Array.length V))}
+)
+"examples-liquid/arraymax.ml" 19 325 337 "examples-liquid/arraymax.ml" 19 325 366
+type(
+  {{int | (V <= 1) (V <= 0) (V >= 0) (V != 1)} array_8|
+    (__atmp22 = (Array.length V))}
+)
+"examples-liquid/arraymax.ml" 19 325 348 "examples-liquid/arraymax.ml" 19 325 363
+type(
+  {int | ((0 <= V) and  (V < 40))}
+)
+"examples-liquid/arraymax.ml" 19 325 349 "examples-liquid/arraymax.ml" 19 325 359
+type(
+  x: {int | (0 < V)} -> {int | ((0 <= V) and  (V < x))}
+)
+"examples-liquid/arraymax.ml" 19 325 360 "examples-liquid/arraymax.ml" 19 325 362
+type(
+  {int | (V = 40)}
+)
+"examples-liquid/arraymax.ml" 19 325 365 "examples-liquid/arraymax.ml" 19 325 366
+type(
+  {int | (V = 0)}
+)
+"examples-liquid/arraymax.ml" 20 370 374 "examples-liquid/arraymax.ml" 20 370 382
+type(
+  a:
+  {{int | (V <= 1) (V <= 0) (V >= 0) (V != 1)} array_8|
+    ((Array.length V) >= 0)}
+  -> {int | (V <= (Array.length a)) (V <= 1) (V <= 0) (V >= 0) (V != 1)}
+)
+"examples-liquid/arraymax.ml" 20 370 374 "examples-liquid/arraymax.ml" 20 370 386
+type(
+  {int | (V <= (Array.length vec)) (V <= 1) (V <= 0) (V >= 0) (V != 1)}
+)
+"examples-liquid/arraymax.ml" 20 370 383 "examples-liquid/arraymax.ml" 20 370 386
+type(
+  {{int | (V <= 1) (V <= 0) (V >= 0) (V != 1)} array_8|
+    (__atmp22 = (Array.length V))}
+)

@@ -1,0 +1,329 @@
+"examples-liquid/minibot.ml" 3 30 41 "examples-liquid/minibot.ml" 3 30 53
+type(
+  x: Var(a_584) -> Var(a_584)
+)
+"examples-liquid/minibot.ml" 3 30 51 "examples-liquid/minibot.ml" 3 30 52
+type(
+  Var(a_585)
+)
+"examples-liquid/minibot.ml" 5 56 68 "examples-liquid/minibot.ml" 8 156 174
+type(
+  l: {int | (V >= 0)} -> b: {int | (V >= 0)} -> {pr | (V.p1 <= V.p2)} 
+)
+"examples-liquid/minibot.ml" 5 56 70 "examples-liquid/minibot.ml" 8 156 174
+type(
+  b: {int | (V >= 0)} -> {pr | (V.p1 <= V.p2)} 
+)
+"examples-liquid/minibot.ml" 6 74 76 "examples-liquid/minibot.ml" 8 156 174
+type(
+  {pr | (V.p1 <= V.p2)} 
+)
+"examples-liquid/minibot.ml" 6 74 79 "examples-liquid/minibot.ml" 6 74 80
+type(
+  {int | (V = l)}
+)
+"examples-liquid/minibot.ml" 6 74 79 "examples-liquid/minibot.ml" 6 74 84
+type(
+  {bool | ((__tag V) <=> (l < b))}
+)
+"examples-liquid/minibot.ml" 6 74 81 "examples-liquid/minibot.ml" 6 74 82
+type(
+  x: {int | (V >= 0)} ->
+    x: {int | (V >= 0)} -> {bool | ((__tag V) <=> (x < x))}
+)
+"examples-liquid/minibot.ml" 6 74 83 "examples-liquid/minibot.ml" 6 74 84
+type(
+  {int | (V = b)}
+)
+"examples-liquid/minibot.ml" 6 74 90 "examples-liquid/minibot.ml" 6 74 106
+type(
+  {pr | (V.p1 = b) (V.p2 = b)} 
+)
+"examples-liquid/minibot.ml" 6 74 96 "examples-liquid/minibot.ml" 6 74 97
+type(
+  {int | (V = b)}
+)
+"examples-liquid/minibot.ml" 6 74 104 "examples-liquid/minibot.ml" 6 74 105
+type(
+  {int | (V = b)}
+)
+"examples-liquid/minibot.ml" 7 107 114 "examples-liquid/minibot.ml" 8 156 174
+type(
+  {pr | (V.p1 <= V.p2)} 
+)
+"examples-liquid/minibot.ml" 7 107 117 "examples-liquid/minibot.ml" 7 107 127
+type(
+  x: {int | (0 < V)} -> {int | ((0 <= V) and  (V < x))}
+)
+"examples-liquid/minibot.ml" 7 107 117 "examples-liquid/minibot.ml" 7 107 129
+type(
+  {int | ((0 <= V) and  (V < 2))}
+)
+"examples-liquid/minibot.ml" 7 107 117 "examples-liquid/minibot.ml" 7 107 133
+type(
+  {bool | ((__tag V) <=> (__atmp5 = 0))}
+)
+"examples-liquid/minibot.ml" 7 107 128 "examples-liquid/minibot.ml" 7 107 129
+type(
+  {int | (V = 2)}
+)
+"examples-liquid/minibot.ml" 7 107 130 "examples-liquid/minibot.ml" 7 107 131
+type(
+  x: {int | (V <= (l + 1)) (V <= 1) (V >= 0)} ->
+    x: {int | (V <= (l + 1)) (V <= 1) (V >= 0)} ->
+      {bool | ((__tag V) <=> (x = x))}
+)
+"examples-liquid/minibot.ml" 7 107 132 "examples-liquid/minibot.ml" 7 107 133
+type(
+  {int | (V = 0)}
+)
+"examples-liquid/minibot.ml" 7 107 139 "examples-liquid/minibot.ml" 7 107 155
+type(
+  {pr | (V.p1 = b) (V.p2 = b)} 
+)
+"examples-liquid/minibot.ml" 7 107 145 "examples-liquid/minibot.ml" 7 107 146
+type(
+  {int | (V = b)}
+)
+"examples-liquid/minibot.ml" 7 107 153 "examples-liquid/minibot.ml" 7 107 154
+type(
+  {int | (V = b)}
+)
+"examples-liquid/minibot.ml" 8 156 163 "examples-liquid/minibot.ml" 8 156 166
+type(
+  {int | (V >= 0)} -> {int | (V >= 0)} -> {pr | (V.p1 <= V.p2)} 
+)
+"examples-liquid/minibot.ml" 8 156 163 "examples-liquid/minibot.ml" 8 156 174
+type(
+  {pr | (V.p1 <= V.p2)} 
+)
+"examples-liquid/minibot.ml" 8 156 167 "examples-liquid/minibot.ml" 8 156 168
+type(
+  {int | (V = l)}
+)
+"examples-liquid/minibot.ml" 8 156 169 "examples-liquid/minibot.ml" 8 156 174
+type(
+  {int | (V = (b + 1))}
+)
+"examples-liquid/minibot.ml" 8 156 170 "examples-liquid/minibot.ml" 8 156 171
+type(
+  {int | (V = b)}
+)
+"examples-liquid/minibot.ml" 8 156 171 "examples-liquid/minibot.ml" 8 156 172
+type(
+  x: {int | true} -> x: {int | true} -> {int | (V = (x + x))}
+)
+"examples-liquid/minibot.ml" 8 156 172 "examples-liquid/minibot.ml" 8 156 173
+type(
+  {int | (V = 1)}
+)
+"examples-liquid/minibot.ml" 10 176 189 "examples-liquid/minibot.ml" 12 218 234
+type(
+  l: {int | (V >= 0)} ->
+    b: {int | (V >= 0)} -> {int | (V >= 1) (V >= 0) (V != 0)}
+)
+"examples-liquid/minibot.ml" 10 176 191 "examples-liquid/minibot.ml" 12 218 234
+type(
+  b: {int | (V >= 0)} -> {int | (V >= 1) (V >= 0) (V != 0)}
+)
+"examples-liquid/minibot.ml" 11 195 197 "examples-liquid/minibot.ml" 12 218 234
+type(
+  {int | (V >= 0) (V >= 1) (V != 0)}
+)
+"examples-liquid/minibot.ml" 11 195 200 "examples-liquid/minibot.ml" 11 195 201
+type(
+  {int | (V = l)}
+)
+"examples-liquid/minibot.ml" 11 195 200 "examples-liquid/minibot.ml" 11 195 205
+type(
+  {bool | ((__tag V) <=> (l < b))}
+)
+"examples-liquid/minibot.ml" 11 195 202 "examples-liquid/minibot.ml" 11 195 203
+type(
+  x: {int | (V >= 0)} ->
+    x: {int | (V >= 0)} -> {bool | ((__tag V) <=> (x < x))}
+)
+"examples-liquid/minibot.ml" 11 195 204 "examples-liquid/minibot.ml" 11 195 205
+type(
+  {int | (V = b)}
+)
+"examples-liquid/minibot.ml" 11 195 211 "examples-liquid/minibot.ml" 11 195 212
+type(
+  {int | (V = b)}
+)
+"examples-liquid/minibot.ml" 12 218 222 "examples-liquid/minibot.ml" 12 218 226
+type(
+  {int | (V >= 0)} -> {int | (V >= 0)} -> {int | (V >= 1) (V >= 0) (V != 0)}
+)
+"examples-liquid/minibot.ml" 12 218 222 "examples-liquid/minibot.ml" 12 218 234
+type(
+  {int | (V >= 1) (V >= 0) (V != 0)}
+)
+"examples-liquid/minibot.ml" 12 218 227 "examples-liquid/minibot.ml" 12 218 228
+type(
+  {int | (V = l)}
+)
+"examples-liquid/minibot.ml" 12 218 229 "examples-liquid/minibot.ml" 12 218 234
+type(
+  {int | (V = (b + 1))}
+)
+"examples-liquid/minibot.ml" 12 218 230 "examples-liquid/minibot.ml" 12 218 231
+type(
+  {int | (V = b)}
+)
+"examples-liquid/minibot.ml" 12 218 231 "examples-liquid/minibot.ml" 12 218 232
+type(
+  x: {int | true} -> x: {int | true} -> {int | (V = (x + x))}
+)
+"examples-liquid/minibot.ml" 12 218 232 "examples-liquid/minibot.ml" 12 218 233
+type(
+  {int | (V = 1)}
+)
+"examples-liquid/minibot.ml" 15 250 252 "examples-liquid/minibot.ml" 24 446 452
+type(
+  {unit | true}
+)
+"examples-liquid/minibot.ml" 15 250 260 "examples-liquid/minibot.ml" 15 250 270
+type(
+  x: {int | (0 < V)} -> {int | ((0 <= V) and  (V < x))}
+)
+"examples-liquid/minibot.ml" 15 250 260 "examples-liquid/minibot.ml" 15 250 273
+type(
+  {int | ((0 <= V) and  (V < 40))}
+)
+"examples-liquid/minibot.ml" 15 250 271 "examples-liquid/minibot.ml" 15 250 273
+type(
+  {int | (V = 40)}
+)
+"examples-liquid/minibot.ml" 16 277 279 "examples-liquid/minibot.ml" 24 446 452
+type(
+  {unit | true}
+)
+"examples-liquid/minibot.ml" 16 277 288 "examples-liquid/minibot.ml" 16 277 291
+type(
+  {int | (V >= 0)} -> {int | (V >= 0)} -> {pr | (V.p1 <= V.p2)} 
+)
+"examples-liquid/minibot.ml" 16 277 288 "examples-liquid/minibot.ml" 16 277 295
+type(
+  {pr | (V.p1 <= V.p2)} 
+)
+"examples-liquid/minibot.ml" 16 277 292 "examples-liquid/minibot.ml" 16 277 293
+type(
+  {int | (V = l)}
+)
+"examples-liquid/minibot.ml" 16 277 294 "examples-liquid/minibot.ml" 16 277 295
+type(
+  {int | (V = 0)}
+)
+"examples-liquid/minibot.ml" 17 299 301 "examples-liquid/minibot.ml" 24 446 452
+type(
+  {unit | true}
+)
+"examples-liquid/minibot.ml" 17 299 309 "examples-liquid/minibot.ml" 17 299 313
+type(
+  x: {pr | (V.p1 <= V.p2)}  -> {pr | (V.p1 <= V.p2)} 
+)
+"examples-liquid/minibot.ml" 17 299 309 "examples-liquid/minibot.ml" 17 299 316
+type(
+  {pr | (V.p1 <= V.p2)} 
+)
+"examples-liquid/minibot.ml" 17 299 314 "examples-liquid/minibot.ml" 17 299 316
+type(
+  {pr | (V = pp)} 
+)
+"examples-liquid/minibot.ml" 18 320 322 "examples-liquid/minibot.ml" 24 446 452
+type(
+  {unit | true}
+)
+"examples-liquid/minibot.ml" 18 320 331 "examples-liquid/minibot.ml" 18 320 333
+type(
+  {pr | (V = pp)} 
+)
+"examples-liquid/minibot.ml" 18 320 331 "examples-liquid/minibot.ml" 18 320 336
+type(
+  {int | (V = __atmp20)}
+)
+"examples-liquid/minibot.ml" 19 340 342 "examples-liquid/minibot.ml" 24 446 452
+type(
+  {unit | true}
+)
+"examples-liquid/minibot.ml" 19 340 351 "examples-liquid/minibot.ml" 19 340 353
+type(
+  {pr | (V = pp)} 
+)
+"examples-liquid/minibot.ml" 19 340 351 "examples-liquid/minibot.ml" 19 340 356
+type(
+  {int | (V = __atmp21)}
+)
+"examples-liquid/minibot.ml" 20 360 362 "examples-liquid/minibot.ml" 24 446 452
+type(
+  {unit | true}
+)
+"examples-liquid/minibot.ml" 20 360 370 "examples-liquid/minibot.ml" 20 360 374
+type(
+  x: {int | (V >= 0)} -> {int | (V >= 0)}
+)
+"examples-liquid/minibot.ml" 20 360 370 "examples-liquid/minibot.ml" 20 360 377
+type(
+  {int | (V >= 0)}
+)
+"examples-liquid/minibot.ml" 20 360 375 "examples-liquid/minibot.ml" 20 360 377
+type(
+  {int | (V = pa)}
+)
+"examples-liquid/minibot.ml" 21 381 383 "examples-liquid/minibot.ml" 24 446 452
+type(
+  {unit | true}
+)
+"examples-liquid/minibot.ml" 21 381 391 "examples-liquid/minibot.ml" 21 381 395
+type(
+  x: {int | (V >= 0)} -> {int | (V >= 0)}
+)
+"examples-liquid/minibot.ml" 21 381 391 "examples-liquid/minibot.ml" 21 381 398
+type(
+  {int | (V >= 0)}
+)
+"examples-liquid/minibot.ml" 21 381 396 "examples-liquid/minibot.ml" 21 381 398
+type(
+  {int | (V = pb)}
+)
+"examples-liquid/minibot.ml" 22 402 404 "examples-liquid/minibot.ml" 24 446 452
+type(
+  {unit | true}
+)
+"examples-liquid/minibot.ml" 22 402 413 "examples-liquid/minibot.ml" 22 402 417
+type(
+  {int | (V >= 0)} -> {int | (V >= 0)} -> {int | (V >= 1) (V >= 0) (V != 0)}
+)
+"examples-liquid/minibot.ml" 22 402 413 "examples-liquid/minibot.ml" 22 402 421
+type(
+  {int | (V >= 1) (V >= 0) (V != 0)}
+)
+"examples-liquid/minibot.ml" 22 402 418 "examples-liquid/minibot.ml" 22 402 419
+type(
+  {int | (V = l)}
+)
+"examples-liquid/minibot.ml" 22 402 420 "examples-liquid/minibot.ml" 22 402 421
+type(
+  {int | (V = 0)}
+)
+"examples-liquid/minibot.ml" 23 425 427 "examples-liquid/minibot.ml" 24 446 452
+type(
+  {unit | true}
+)
+"examples-liquid/minibot.ml" 23 425 435 "examples-liquid/minibot.ml" 23 425 439
+type(
+  x: {int | (V >= 1) (V >= 0) (V != 0)} -> {int | (V >= 1) (V >= 0) (V != 0)}
+)
+"examples-liquid/minibot.ml" 23 425 435 "examples-liquid/minibot.ml" 23 425 442
+type(
+  {int | (V >= 1) (V >= 0) (V != 0)}
+)
+"examples-liquid/minibot.ml" 23 425 440 "examples-liquid/minibot.ml" 23 425 442
+type(
+  {int | (V = pb)}
+)
+"examples-liquid/minibot.ml" 24 446 450 "examples-liquid/minibot.ml" 24 446 452
+type(
+  {unit | ((__tag V) = 0)}
+)

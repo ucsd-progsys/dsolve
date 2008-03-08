@@ -33,10 +33,12 @@ let pprint_sub ppf (path, pexp) =
 let pprint_subs ppf subs =
   Oprint.print_list pprint_sub (fun ppf -> fprintf ppf ";@ ") ppf subs
 
+let unique_name = (* Path.name *) Path.unique_name 
+
 let pprint_refinement ppf refi =
   match refi with
     | (_, Qvar (id, _) ) ->
-      fprintf ppf "%s" (Path.unique_name id)
+      fprintf ppf "%s" (unique_name id)
     | (subs, Qconst []) ->
       fprintf ppf "true"
     | (subs, Qconst quals) ->
@@ -54,7 +56,7 @@ let rec pprint_pattern ppf = function
 
 let rec pprint ppf = function
   | Fvar a ->
-      fprintf ppf "Var(%s)" (Path.unique_name a)
+      fprintf ppf "Var(%s)" (unique_name a)
   | Fconstr (path, [], _, r) ->
       fprintf ppf "@[{%s@ |@;<1 2>%a}@]" (Path.name path) pprint_refinement r
   | Farrow (None, f, f') ->
@@ -62,10 +64,10 @@ let rec pprint ppf = function
   | Farrow (Some pat, f, f') ->
       fprintf ppf "@[%a:@ %a@ ->@;<1 2>%a@]" pprint_pattern pat pprint1 f pprint f'
   | Fconstr (path, l, _, r) ->
-      fprintf ppf "@[{%a@ %s|@;<1 2>%a}@]" pprint_list l (Path.unique_name path) pprint_refinement r
-   | Ftuple (ts, r) ->
+      fprintf ppf "@[{%a@ %s|@;<1 2>%a}@]" pprint_list l (unique_name path) pprint_refinement r
+  | Ftuple (ts, r) ->
       fprintf ppf "@[{(%a) |@;<1 2>%a}@]" pprint_list ts pprint_refinement r
-   | Frecord (id, _, r) ->
+  | Frecord (id, _, r) ->
        fprintf ppf "@[{%s |@;<1 2>%a}@] " (Path.name id) pprint_refinement r
   | Funknown ->
       fprintf ppf "[unknown]"

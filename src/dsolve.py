@@ -68,4 +68,4 @@ fix_annots(tname,bname)
 if succ == 0:
   sys.exit()
 else:
-  BogusErrorr
+  BogusError
