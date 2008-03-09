@@ -1,9 +1,6 @@
 #!/usr/bin/python
 
-import sys
-import os
-import os.path
-import common
+import sys, os, os.path, common
 
 d_pats= "default_patterns"
 gen   = "./liquid.opt -no-anormal -lqualifs -collect 4 -dqualifs"
