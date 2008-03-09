@@ -6,7 +6,7 @@ let compare = compare
 
 let pprint ppf (_, _, pred) = Predicate.pprint ppf pred
 
-let apply x (_, y, p) = Predicate.subst (Predicate.Var x) y p
+let apply x (_, y, p) = Predicate.subst x y p
 
 exception Refinement_not_closed
 

@@ -130,11 +130,11 @@ let normalize exp =
         rw_expr (mk_function lbl elbl arg (norm_out e))
      (* stop leaving non-idents in let binds for pat. doesn't seem to solve
       * his problem though.. *)
-     (*| Pexp_let(r, [(p, e1)], e2) ->
+     | Pexp_let(r, [(p, e1)], e2) ->
         let ls = norm_in e1 in
         let (e1, ls) = resolve_in_exp ls in
         let init = mk_let_lit r [(p, e1)] (norm_out e2) in
-          rw_expr (List.fold_left (wrap r) init ls)*)
+          rw_expr (List.fold_left (wrap r) init ls)
      | Pexp_let(Recursive, pes, e2) ->
         (* we can assume more or less that all recursive ands are 
          * binds of mutually recursive functions, so we won't even try
@@ -326,7 +326,7 @@ let rec normalize_structure sstr =
         let _ = Common.cprintf Common.ol_normalized "@[%a@\n@]@." Qdebug.pprint_expression normal_exp in
         ({pstr_desc = (Pstr_eval(normal_exp)) ; pstr_loc = loc}) :: (normalize_structure srem)
     | {pstr_desc = (Pstr_value(recursive, pl)); pstr_loc = loc} :: srem -> 
-        let norm_bind (p, exp) (newbs, oldbs) = 
+        (*let norm_bind (p, exp) (newbs, oldbs) = 
          let nm = fresh_name_s () in
          let id = mk_dum_ident (Longident.parse nm) in
          let newb = (mk_dum_varpat nm, normalize exp) in
@@ -342,6 +342,10 @@ let rec normalize_structure sstr =
             let old_value = {pstr_desc = (Pstr_value(recursive, oldbs)); pstr_loc = loc} in
             let new_value = {pstr_desc = (Pstr_value(recursive, newbs)); pstr_loc = loc} in
             let _ = Common.cprintf Common.ol_normalized "@[%a@\n%a@\n@]@." Qdebug.pprint_structure new_value Qdebug.pprint_structure old_value in
-            new_value :: old_value :: (normalize_structure srem)
+            new_value :: old_value :: (normalize_structure srem)*)
+        let pl = List.map (fun (p, e) -> (p, normalize e)) pl in
+        let value = {pstr_desc = (Pstr_value(recursive, pl)); pstr_loc = loc} in
+        let _ = Common.cprintf Common.ol_normalized "@[%a@\n@]@." Qdebug.pprint_structure value in
+          value :: (normalize_structure srem) 
     | p :: srem -> 
         p :: (normalize_structure srem) 

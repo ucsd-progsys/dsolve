@@ -89,8 +89,8 @@ let pred_is_well_typed env p =
   | Predicate.Iff (px, q) -> same_shape (get_expr_shape px) uInt && pred_shape_is_bool q
   in pred_shape_is_bool p
 
-let refinement_well_formed env solution r qual_var =
-  let pred = refinement_predicate solution qual_var r in
+let refinement_well_formed env solution r qual_expr =
+  let pred = refinement_predicate solution qual_expr r in
   let var_bound v = Lightenv.mem v env in
   let well_scoped = List.for_all var_bound (Predicate.vars pred) in
     well_scoped && pred_is_well_typed env pred

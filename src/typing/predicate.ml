@@ -3,6 +3,8 @@ open Asttypes
 open Types
 open Format
 
+module C = Common
+
 type binop =
     Plus
   | Minus
@@ -194,37 +196,25 @@ let apply_substs subs pred =
 let rec instantiate_named_vars subs pred =
   map_vars (fun y -> Var (List.assoc (Path.ident_name_crash y) subs)) pred
 
-let vars p =
-  let rec exp_vars_rec vars = function
-      PInt _ -> vars
-    | Var x -> x::vars
-    | FunApp(_, e) ->
-        List.fold_left (exp_vars_rec) vars e
-    | Binop(e1, _, e2) ->
-        let vars' = exp_vars_rec vars e1 in
-          exp_vars_rec vars' e2
-    | Field(f, e) ->
-        exp_vars_rec vars e
-    | Proj(_, e) ->
-        exp_vars_rec vars e
-  in
-  let rec vars_rec vars = function
-      True ->
-        vars
-    | Atom(e1, _, e2) ->
-        let vars' = exp_vars_rec vars e1 in
-          exp_vars_rec vars' e2
-    | Iff (px, q) ->
-      let vars' = exp_vars_rec vars px in
-        vars_rec vars' q
-    | Not p ->
-        vars_rec vars p
-    | And(p1, p2)
-    | Or(p1, p2) ->
-        let vars' = vars_rec vars p1 in
-          vars_rec vars' p2
-  in
-    vars_rec [] p
+let exp_vars_unexp = function
+  | PInt _ -> ([], [])
+  | Var x -> ([], [x])
+  | Binop (e1, _, e2) -> ([e1; e2], [])
+  | FunApp (_, es) -> (es, [])
+  | Field (_, e) | Proj (_, e) -> ([e], [])
+
+let exp_vars e =
+  C.expand exp_vars_unexp [e] []
+
+let var_unexp = function
+  | True -> ([], [])
+  | Atom (e1, _, e2) -> ([], exp_vars e1 @ exp_vars e2)
+  | Iff (e, q) -> ([q], exp_vars e)
+  | Not p -> ([p], [])
+  | And (p, q) | Or (p, q) -> ([p; q], [])
+
+let vars e =
+  C.expand var_unexp [e] []
 
 let transl_op = function
   | Predexp_plus -> Plus

@@ -42,7 +42,7 @@ let pprint_refinement ppf refi =
     | (subs, Qconst []) ->
       fprintf ppf "true"
     | (subs, Qconst quals) ->
-      let preds = List.map (Qualifier.apply (Path.mk_ident "V")) quals in
+      let preds = List.map (Qualifier.apply (Predicate.Var (Path.mk_ident "V"))) quals in
       let preds = List.map (Predicate.apply_substs subs) preds in
         Oprint.print_list Predicate.pprint (fun ppf -> fprintf ppf "@ ") ppf preds
 
@@ -80,6 +80,13 @@ let rec pprint ppf = function
 let empty_refinement = ([], Qconst [])
 
 let false_refinement = ([], Qconst [(Path.mk_ident "false", Path.mk_ident "V", Predicate.Not (Predicate.True))])
+
+let rec map f = function
+    | (Funknown | Fvar _) as fr -> f fr
+    | Fconstr (p, fs, cstrdesc, r) -> f (Fconstr (p, List.map (map f) fs, cstrdesc, r))
+    | Ftuple (fs, r) -> f (Ftuple (List.map (map f) fs, r))
+    | Farrow (x, f1, f2) -> f (Farrow (x, map f f1, map f f2))
+    | Frecord (p, fs, r) -> f (Frecord (p, List.map (fun (fr, n, m) -> (map f fr, n, m)) fs, r))
 
 (* Instantiate the tyvars in fr with the corresponding frames in ftemplate.
    If a variable occurs twice, it will only be instantiated with one frame; which
@@ -146,7 +153,7 @@ let fresh_with_var_fun vars env ty fresh_ref_var =
                Frecord (p, List.map fresh_field fields, freshf ()))
       | Tarrow(_, t1, t2, _) -> Farrow (None, fresh_rec freshf t1, fresh_rec freshf t2)
       | Ttuple ts -> Ftuple (List.map (fresh_rec freshf) ts, freshf ())
-      | _ -> fprintf err_formatter "@[Warning:@ Freshing@ unsupported@ type@]@."; Funknown
+      | _ -> fprintf err_formatter "@[Warning: Freshing unsupported type]@."; Funknown
   in fresh_rec fresh_ref_var (repr ty)
 
 (* Create a fresh frame with the same shape as the given type
@@ -175,9 +182,7 @@ let fresh_constructor env cstrdesc = function
    must be completely unlabeled (as frames are after creation by fresh). *)
 let rec label_like f f' =
   match (f, f') with
-    | (Fvar _, Fvar _)
-    | (Fconstr _, Fconstr _)
-    | (Funknown, Funknown) -> f
+    | (Fvar _, Fvar _) | (Fconstr _, Fconstr _) | (Funknown, Funknown) -> f
     | (Farrow (None, f1, f1'), Farrow(l, f2, f2')) ->
         Farrow (l, label_like f1 f2, label_like f1' f2')
     | (Ftuple (t1s, r), Ftuple (t2s, _)) ->
@@ -191,47 +196,32 @@ let rec label_like f f' =
    and the same labels as [f]. *)
 let fresh_with_labels env ty f = label_like (fresh env ty) f
 
-let map_frame f frm =
-  let rec map_rec = function
-    | Fvar _ as fr -> f fr
-    | Fconstr (p, fs, cstrs, re) -> f (Fconstr (p, List.map map_rec fs, cstrs, re))
-    | Farrow (x, f1, f2) -> f (Farrow (x, map_rec f1, map_rec f2))
-    | Ftuple (fs, r) -> f (Ftuple (List.map map_rec fs, r))
-    | Frecord(p, fs, re) ->
-        let apply_rec (fieldf, n, m) = (f fieldf, n, m) in
-          f (Frecord (p, List.map apply_rec fs, re))
-    | Funknown -> f Funknown
-  in map_rec frm
-
-let map_apply_substitution sub = function
+let apply_substitution_map sub = function
   | Fconstr (p, fs, cstrs, (subs, qe)) -> Fconstr (p, fs, cstrs, (sub :: subs, qe))
   | Frecord (p, fs, (subs, qe)) -> Frecord (p, fs, (sub :: subs, qe))
   | f -> f
 
-let apply_substitution sub f = map_frame (map_apply_substitution sub) f
+let apply_substitution sub f = map (apply_substitution_map sub) f
 
 let refinement_apply_solution solution = function
   | (subs, Qvar (k, _)) -> (subs, Qconst (solution k))
   | r -> r
 
-let map_apply_solution solution = function
+let apply_solution_map solution = function
   | Fconstr (path, fl, cstrs, r) -> Fconstr (path, fl, cstrs, refinement_apply_solution solution r)
   | Frecord (path, fs, r) -> Frecord (path, fs, refinement_apply_solution solution r)
   | Ftuple (fs, r) -> Ftuple (fs, refinement_apply_solution solution r)
   | f -> f
 
-let apply_solution solution fr = map_frame (map_apply_solution solution) fr
+let apply_solution solution fr = map (apply_solution_map solution) fr
 
-let refinement_conjuncts solution qual_var (subs, qualifiers) =
+let refinement_conjuncts solution qual_expr (subs, qualifiers) =
   let quals = match qualifiers with
     | Qvar (k, _) -> (try solution k with Not_found -> assert false)
     | Qconst qs -> qs
   in
-  let unsubst = List.map (Qualifier.apply qual_var) quals in
+  let unsubst = List.map (Qualifier.apply qual_expr) quals in
     List.map (Predicate.apply_substs subs) unsubst
-
-let refinement_predicate solution qual_var refn =
-  Predicate.big_and (refinement_conjuncts solution qual_var refn)
 
 let ref_var = function
   | (_, Qvar (k, _)) -> Some k
@@ -251,24 +241,23 @@ let apply_refinement r = function
   | Ftuple (fs, _) -> Ftuple (fs, r)
   | f -> f
 
-(* pmr: sound for our uses but not very informative *)
-let rec conjuncts solution qual_var = function
-  | Fconstr (_, _, _, r) -> refinement_conjuncts solution qual_var r
-  | Ftuple (_, r) -> refinement_conjuncts solution qual_var r
-  | _ -> []
+let refinement_predicate solution qual_var refn =
+  Predicate.big_and (refinement_conjuncts solution qual_var refn)
 
-let rec predicate solution qual_var = function
-    Fconstr(_, _, _, r) ->
-      refinement_predicate solution qual_var r
-      (* pmr: need to embed on constructed types, much like below *)
+let rec conjunct_fold cs solution qual_expr = function
+  | Fconstr(_, _, _, r) -> refinement_conjuncts solution qual_expr r @ cs
   | Frecord (p, fs, r) ->
-      let make_subframe_pred (f, name, _) =
-        let pred = predicate solution qual_var f in
-          Predicate.subst (Predicate.Field (name, Predicate.Var qual_var)) qual_var pred
-      in Predicate.big_and (refinement_predicate solution qual_var r :: List.map make_subframe_pred fs)
+      let subframe_fold b (f, name, _) =
+        conjunct_fold b solution (Predicate.Field (name, qual_expr)) f
+      in refinement_conjuncts solution qual_expr r @ List.fold_left subframe_fold cs fs
   | Ftuple (fs, r) ->
-      let make_subframe_pred f i =
-        let pred = predicate solution qual_var f in
-          Predicate.subst (Predicate.Proj (i, Predicate.Var qual_var)) qual_var pred
-      in Predicate.big_and (refinement_predicate solution qual_var r :: Misc.mapi make_subframe_pred fs)
-  | _ -> Predicate.True
+      let subframe_fold i b f =
+        conjunct_fold b solution (Predicate.Proj (i, qual_expr)) f
+      in refinement_conjuncts solution qual_expr r @ C.fold_lefti subframe_fold cs fs
+  | _ -> cs
+
+let rec conjuncts solution qual_expr fr =
+  conjunct_fold [] solution qual_expr fr
+
+let predicate solution qual_expr f =
+  Predicate.big_and (conjuncts solution qual_expr f)

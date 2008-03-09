@@ -40,12 +40,12 @@ val apply_substitution: substitution -> t -> t
 val label_like: t -> t -> t
 val apply_solution: (Path.t -> Qualifier.t list) -> t -> t
 val refinement_conjuncts:
-  (Path.t -> Qualifier.t list) -> Path.t -> refinement -> Predicate.t list
+  (Path.t -> Qualifier.t list) -> Predicate.pexpr -> refinement -> Predicate.t list
 val refinement_predicate:
-  (Path.t -> Qualifier.t list) -> Path.t -> refinement -> Predicate.t
+  (Path.t -> Qualifier.t list) -> Predicate.pexpr -> refinement -> Predicate.t
 val refinement_vars: t -> Path.t list
 val apply_refinement: refinement -> t -> t
 val predicate:
-  (Path.t -> Qualifier.t list) -> Path.t -> t -> Predicate.t
+  (Path.t -> Qualifier.t list) -> Predicate.pexpr -> t -> Predicate.t
 val conjuncts:
-  (Path.t -> Qualifier.t list) -> Path.t -> t -> Predicate.t list
+  (Path.t -> Qualifier.t list) -> Predicate.pexpr -> t -> Predicate.t list

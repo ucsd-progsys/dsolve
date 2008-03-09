@@ -15,6 +15,13 @@ let maybe_cons m xs = match m with
   | None -> xs
   | Some x -> x :: xs
 
+let rec _fli f n b = function
+  | [] -> b
+  | x :: xs -> _fli f (n + 1) (f n b x) xs
+
+let fold_lefti f b lst =
+  _fli f 0 b lst
+
 let rec map3 f xs ys zs = match (xs, ys, zs) with
   | ([], [], []) -> []
   | (x :: xs, y :: ys, z :: zs) -> f x y z :: map3 f xs ys zs

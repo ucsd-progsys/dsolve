@@ -54,6 +54,7 @@ let fresh_fc_id =
 (* Unique variable to qualify when testing sat, applicability of qualifiers...
  * this is passed into the solver *)
 let qual_test_var = Path.mk_ident "AA"
+let qual_test_expr = P.Var qual_test_var
 
 let is_simple_constraint = function 
   SubRef (_, _, ([],F.Qvar _), ([], F.Qvar _), _) -> true | _ -> false
@@ -93,7 +94,7 @@ let guard_predicate () g =
       g)
 
 let environment_predicate sm env =
-  P.big_and (Le.maplist (F.predicate sm) env)
+  P.big_and (Le.maplist (fun v -> F.predicate sm (P.Var v)) env)
 
 let pprint_local_binding ppf = function
   | (Path.Pident _ as k, v) -> fprintf ppf "@[%s@;=>@;<1 2>%a@],@;<1 2>" (Path.unique_name k) F.pprint v
@@ -379,7 +380,7 @@ let close_over_env env s ps =
             if Path.same x qual_test_var then Some y else 
               if Path.same y qual_test_var then Some x else None in
           (match tvar with None -> close_rec (p :: clo) ps | Some t ->
-            let ps' = F.conjuncts s qual_test_var (Le.find t env) in
+            let ps' = F.conjuncts s qual_test_expr (Le.find t env) in
             close_rec (p :: clo) (ps'@ps))
       | p::ps -> close_rec (p :: clo) ps in
   close_rec [] ps 
@@ -408,7 +409,7 @@ let implies_match env sm r1 =
     Bstats.time "close_over_env" 
       (fun () ->
         List.fold_left (fun pm p -> PM.add p true pm) PM.empty 
-        ((close_over_env env sm) (F.refinement_conjuncts sm qual_test_var r1))) () in
+        ((close_over_env env sm) (F.refinement_conjuncts sm qual_test_expr r1))) () in
   fun (_,p) -> 
     let rv = (not !Cf.no_simple_subs) && PM.mem p lhsm in
     let _ = if rv then incr stat_matches in rv
@@ -417,13 +418,13 @@ let implies_tp env g sm r1 =
   let lhs = 
     let gp = Bstats.time "make guardp" (guard_predicate ()) g in
     let envp = Bstats.time "make envp" (environment_predicate sm) env in
-    let r1p = Bstats.time "make r1p" (F.refinement_predicate sm qual_test_var) r1 in
+    let r1p = Bstats.time "make r1p" (F.refinement_predicate sm qual_test_expr) r1 in
     P.big_and [envp;gp;r1p] in
   let ch = Bstats.time "TP implies" TP.implies lhs in
   fun (_,p) -> Bstats.time "ch" ch p 
 
 let qual_wf sm env subs q =
-  refinement_well_formed env sm (subs,F.Qconst [q]) qual_test_var 
+  refinement_well_formed env sm (subs,F.Qconst [q]) qual_test_expr 
 
 let refine sri s c =
   let _ = incr stat_refines in
@@ -437,7 +438,7 @@ let refine sri s c =
       let _ = incr stat_sub_refines in
       let qp2s = 
         List.map 
-          (fun q -> (q,F.refinement_predicate sm qual_test_var (sub2s,F.Qconst[q]))) 
+          (fun q -> (q,F.refinement_predicate sm qual_test_expr (sub2s,F.Qconst[q]))) 
           (sm k2) in
       let (qp2s1,qp2s') = Bstats.time "match check" (List.partition (implies_match env sm r1)) qp2s in
       let tpc = Bstats.time "implies_tp" (implies_tp env g sm) r1 in
@@ -466,11 +467,11 @@ let sat s = function
   | SubRef (env, g, r1, r2, _) ->
       let gp = Bstats.time "make guardp" (guard_predicate ()) g in
       let envp = environment_predicate (solution_map s) env in
-      let p1 = F.refinement_predicate (solution_map s) qual_test_var r1 in
-      let p2 = F.refinement_predicate (solution_map s) qual_test_var r2 in
+      let p1 = F.refinement_predicate (solution_map s) qual_test_expr r1 in
+      let p2 = F.refinement_predicate (solution_map s) qual_test_expr r2 in
       let rv = TP.implies (P.big_and [envp; gp; p1]) p2 in TP.finish ();rv
   | WFRef (env,((subs,F.Qvar k) as r), _) as c -> 
-      let rv = refinement_well_formed env (solution_map s) r qual_test_var in
+      let rv = refinement_well_formed env (solution_map s) r qual_test_expr in
       C.asserts (Printf.sprintf "ERROR: wf is unsat! (%d)" (get_ref_id c)) rv;
       rv 
   | _ -> true
