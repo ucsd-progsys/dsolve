@@ -50,7 +50,7 @@ let bind_pexpr pat pexp =
   in bind_rec [] (pat, pexp)
 
 let desugar_bind pat pexp =
-  P.big_and (List.map (fun (x, exp) -> P.Atom(P.Var x, P.Eq, exp)) (bind_pexpr pat pexp))
+  P.big_and (List.map (fun (x, exp) -> P.equals(P.Var x, exp)) (bind_pexpr pat pexp))
 
 let rec same p1 p2 =
   match (p1, p2) with
