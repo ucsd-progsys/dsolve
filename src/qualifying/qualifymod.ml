@@ -178,18 +178,8 @@ and constrain_match ((env, guard, f) as environment) e pexps partial =
 and constrain_function (env, guard, f) t pat e' =
   match f with
     | (F.Farrow (_, f, unlabelled_f')) ->
-      let _ =
-        match (t.desc, pat.pat_desc) with
-            (* pmr: needs to be generalized to match other patterns *)
-          | (Tarrow(_, t_in, t_out, _), Tpat_var x) ->
-              ()
-          | _ -> ()
-      in
       let env' = Pattern.env_bind e'.exp_env env pat.pat_desc f in
       let (f'', cstrs) = constrain e' env' guard in
-        (* Since the underlying type system doesn't have dependent
-           types, fresh can't give us the proper labels for the RHS.
-           Instead, we have to label it after the fact. *)
       let f' = F.label_like unlabelled_f' f'' in
       let f = F.Farrow (Some pat.pat_desc, f, f') in
         (f, [WFFrame (env, f); SubFrame (env', guard, f'', f')], cstrs)
@@ -214,15 +204,11 @@ and apply_once env guard (f, cstrs, subexp_cstrs) e = match (f, e) with
     let (f2, e2_cstrs) = constrain e2 env guard in
     let f'' = match l with
       | Some pat ->
-        (* We _must_ apply a substitution over the whole pattern or
-           else we risk capturing stuff in the environment (e.g,
-           apply (a, b) -> v > a in the context where a is defined).
-           This risks severe unsoundness. *)
         List.fold_right F.apply_substitution (Pattern.bind_pexpr pat (expression_to_pexpr e2)) f'
           (* pmr: The soundness of this next line is suspect,
              must investigate (i.e., what if there's a var that might
              somehow be substituted that isn't because of this?  How
-             does it interact w/ the None label rules for subtyping? *)
+             does it interact w/ the None label rules for subtyping?) *)
       | _ -> f'
     in (f'', SubFrame (env, guard, f2, f) :: cstrs, e2_cstrs @ subexp_cstrs)
   | _ -> assert false
@@ -267,7 +253,8 @@ and constrain_tuple (env, guard, f) es =
            WFFrame (env, f) :: new_cs, subexp_cs)
     | _ -> assert false
 
-and constrain_assertfalse (_, _, f) = (f, [], [])
+and constrain_assertfalse (_, _, f) =
+  (f, [], [])
 
 and constrain_assert (env, guard, _) e =
   let (f, cstrs) = constrain e env guard in
@@ -284,57 +271,35 @@ and constrain_and_bind guard (env, cstrs) (pat, e) =
   let env = bind e.exp_env env guard pat f (expression_to_pexpr e) in
     (env, cstrs @ cstrs')
 
+and bind_all bindings fs tenv env guard =
+  List.fold_right2 (fun (p, e, px) f env -> bind tenv env guard p f px) bindings fs env
+
 and constrain_bindings env guard recflag bindings =
   match recflag with
-  | Default
-  | Nonrecursive -> List.fold_left (constrain_and_bind guard) (env, []) bindings
+  | Default | Nonrecursive -> List.fold_left (constrain_and_bind guard) (env, []) bindings
   | Recursive ->
-    (* This is horrendous, but about the best we can do
-       without using destructive updates.  We need to label
-       the function we're binding (if any) in the environment where we
-       also constrain the function.  Unfortunately, we don't
-       have that label until after we constrain it!  So we do
-       a first pass just to get the labels, then do a second
-       with the proper labels added. *)
-    let (vars, exprs) = List.split bindings in
+    let tenv = (snd (List.hd bindings)).exp_env in
+    let (_, exprs) = List.split bindings in
+    let bindings = List.map (fun (p, e) -> (p, e, expression_to_pexpr e)) bindings in
 
-    (* Determine the labels we need to have on our bound frames first *)
-    let no_label_frame e = F.fresh e.exp_env e.exp_type in
-    let unlabeled_frames = List.map no_label_frame exprs in
-    let binding_var = function
-    | {pat_desc = Tpat_var f} -> Path.Pident f
-    | _ -> assert false
-    in
-    let vars = List.map binding_var vars in
-    let unlabeled_env = Le.addn (List.combine vars unlabeled_frames) env in
-    let labeling_constraints = List.map (fun e -> constrain e unlabeled_env guard) exprs in
-    let (label_frames, _) = List.split labeling_constraints in
-    (* pmr: I'm not assuming that constrain always gives us a fresh frame here, otherwise we could
-     use label_frames directly *)
+    (* We need to figure out all the frames' labels before we can properly bind them. *)
+    let unlabeled_frames = List.map (fun e -> F.fresh e.exp_env e.exp_type) exprs in
+    let unlabeled_env = bind_all bindings unlabeled_frames tenv env guard in
+    let (label_frames, _) = constrain_subexprs unlabeled_env guard exprs in
     let binding_frames = List.map2 F.label_like unlabeled_frames label_frames in
             
-    (* Redo constraints now that we know what the right labels are --- note that unlabeled_frames are all
-     still essentially fresh, since we're discarding any constraints on them *)
-    let bound_env = Le.addn (List.combine vars binding_frames) env in
-    let found_frame_list e b = 
-        subexpr_folder bound_env guard e b in
-                  
-    let (found_frames, subexp_cstrs) = List.fold_right found_frame_list exprs ([], []) in
-    (* Ensure that the types we discovered for each binding are no more general than the types implied by
-     their uses *)
-    (* pmr: This is going to take some work to resolve; for now, default on the locations because we don't
-       have anything that'll butt up against it. *)
-    let tenv = (snd (List.hd bindings)).exp_env in
+    (* Redo constraints now that we know what the right labels are *)
+    let bound_env = bind_all bindings binding_frames tenv env guard in
+    let (found_frames, subexp_cstrs) = constrain_subexprs bound_env guard exprs in
+
     let make_cstr fc = {lc_cstr = fc; lc_tenv = tenv; lc_orig = Loc Location.none; lc_id = fresh_fc_id ()} in
     let build_found_frame_cstr_list cs found_frame binding_frame =
       make_cstr (WFFrame (bound_env, binding_frame)) ::
       make_cstr (SubFrame (bound_env, guard, found_frame, binding_frame)) :: cs
     in (bound_env, (List.fold_left2 build_found_frame_cstr_list [] found_frames binding_frames) @ subexp_cstrs)
 
-and subexpr_folder subenv guard e (fframes, cs) =
-  let (frame, new_cs) = constrain e subenv guard in (frame :: fframes, new_cs @ cs)
-
-and constrain_subexprs subenv guard exprs = List.fold_right (subexpr_folder subenv guard) exprs ([], [])
+and constrain_subexprs env guard es =
+  List.fold_right (fun e (fs, cs) -> let (f, cs') = constrain e env guard in (f :: fs, cs' @ cs)) es ([], [])
 
 let constrain_structure initfenv initquals str =
   let rec constrain_rec quals fenv cstrs = function
@@ -351,7 +316,7 @@ let constrain_structure initfenv initquals str =
         let (fenv, cstrs') = constrain_bindings fenv [] recflag bindings
         in constrain_rec quals fenv (cstrs @ cstrs') srem
     | (Tstr_type(_))::srem ->
-        (*Printf.printf "Ignoring type decl";*) constrain_rec quals fenv cstrs srem
+        constrain_rec quals fenv cstrs srem
     | _ -> assert false
   in constrain_rec initquals initfenv [] str
 
