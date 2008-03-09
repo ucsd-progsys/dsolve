@@ -51,7 +51,4 @@ os.system("rm -f %s.quals; rm -f %s.annot" % (bname, bname))
 gen_quals(bname,bare)
 succ = solve_quals(tname,flags)
 fix_annots(tname,bname)
-if succ == 0:
-  sys.exit()
-else:
-  BogusError
+sys.exit(succ != 0)
