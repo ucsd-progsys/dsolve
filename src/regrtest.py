@@ -11,8 +11,7 @@ testfiles = [("postests", 0), ("negtests", 256)]
 def runtest(file, expected_status):
   start = time.time()
   status = common.logged_sys_call("%s %s > /dev/null 2>&1" % (dsolve, file))
-  end = time.time()
-  print "%f seconds" % (end - start)
+  print "%f seconds" % (time.time() - start)
 
   if status == expected_status:
     print "\033[1;32mSUCCESS!\033[1;37m\n"
@@ -22,7 +21,7 @@ def runtest(file, expected_status):
     return (file, False)
 
 def runtests(file, expected_status):
-  print "Running %s" % file
+  print "Running tests from %s" % file
   return [runtest(test.rstrip(), expected_status) for test in common.read_lines(file)]
 
 results = [runtests(file, expected_status) for (file, expected_status) in testfiles]
