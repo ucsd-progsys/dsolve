@@ -1,4 +1,4 @@
-squalif ITV(x): x.1 <= x.2
+squalif ITV(x): x.0 <= x.1
 
 let p = (1,2)
 

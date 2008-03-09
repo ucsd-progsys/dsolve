@@ -1472,7 +1472,7 @@ qual_term:
   | qual_term DOT LIDENT                
     { mkpredpatexp (Ppredpatexp_field($3, $1)) }
   | qual_term DOT INT
-    { mkpredpatexp (Ppredpatexp_proj($3 - 1, $1)) }
+    { mkpredpatexp (Ppredpatexp_proj($3, $1)) }
 
 qual_intlist:
     INT                                     { [$1] }
