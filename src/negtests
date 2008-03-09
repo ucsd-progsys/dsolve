@@ -7,3 +7,5 @@ examples/access-bad.ml
 DMLex/gauss-bad.ml
 DML/queen-bad.ml
 examples/reltuple-bad.ml
+examples/tup2c.ml
+examples/tup2d.ml

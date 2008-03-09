@@ -1,3 +1,6 @@
+examples/tup1.ml
+examples/tup2a.ml
+examples/tup2b.ml
 examples/reltuple.ml
 DMLex/simplex.ml
 DML/quicksort_sane.ml
