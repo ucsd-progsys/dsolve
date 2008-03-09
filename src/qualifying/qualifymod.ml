@@ -90,7 +90,6 @@ let rec constrain e env guard =
       | (Texp_assertfalse, _) -> constrain_assertfalse environment
       | (Texp_assert e, _) -> constrain_assert environment e
       | (_, t) ->
-        (* As it turns out, giving up and returning true here is actually _very_ unsound!  We won't check subexpressions! *)
         fprintf err_formatter "@[Warning: Don't know how to constrain expression,
         structure:@ %a@ location:@ %a@]@.@." Printtyp.raw_type_expr t Location.print e.exp_loc; flush stderr;
         assert false
@@ -153,16 +152,13 @@ and constrain_if (env, guard, f) e1 e2 e3 =
     [WFFrame(env, f); SubFrame(env', guard2, f2, f); SubFrame(env', guard3, f3, f)],
     cstrs1 @ cstrs2 @ cstrs3)
 
-and desugar_binding env pat pexpr =
-  let desugar_frame =
-    F.Fconstr(Predef.path_int, [], [],
-              ([],
-               F.Qconst [(Path.mk_ident "desugaring", Path.mk_ident "null", Pattern.desugar_bind pat.pat_desc pexpr)])) in
-    Le.add (Path.mk_ident "pattern") desugar_frame env
-
 and bind tenv env guard pat frame pexpr =
   let env = Pattern.env_bind tenv env pat.pat_desc frame in
-    if Pattern.is_deep pat.pat_desc then desugar_binding env pat pexpr else env
+    if Pattern.is_deep pat.pat_desc then
+      Le.add (Path.mk_ident "pattern")
+        (B.mk_int [(Path.mk_ident "", Path.mk_ident "", Pattern.desugar_bind pat.pat_desc pexpr)])
+        env
+    else env
 
 and constrain_case (env, guard, f) matchf matche (pat, e) =
   let env = bind e.exp_env env guard pat matchf matche in
