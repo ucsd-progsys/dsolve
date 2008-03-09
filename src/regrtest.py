@@ -3,11 +3,10 @@
 import common
 import sys
 import time
+import itertools as it
 
 dsolve  = "./dsolve.py"
-posfile = "postests"
-negfile = "negtests"
-tmpdir  = "/tmp"
+testfiles = [("postests", 0), ("negtests", 256)]
 
 def runtest(file, expected_status):
   start = time.time()
@@ -26,12 +25,11 @@ def runtests(file, expected_status):
   print "Running %s" % file
   return [runtest(test.rstrip(), expected_status) for test in common.read_lines(file)]
 
-(posresults, negresults) = (runtests(posfile, 0), runtests(negfile, 256))
-allresults = posresults + negresults
-failedtests = [result[0] for result in allresults if result[1] == False]
-if len(failedtests) == 0:
+results = [runtests(file, expected_status) for (file, expected_status) in testfiles]
+failed = [result[0] for result in it.chain(*results) if result[1] == False]
+if len(failed) == 0:
   print "\n\033[1;32mPassed all tests! :D\033[1;37m"
   sys.exit(0)
 else:
-  print "\n\033[1;31mFailed %d tests:\033[1;37m %s" % (len(failedtests), ", ".join(failedtests))
+  print "\n\033[1;31mFailed %d tests:\033[1;37m %s" % (len(failed), ", ".join(failed))
   sys.exit(1)
