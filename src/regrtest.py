@@ -28,7 +28,6 @@ results = [runtests(file, expected_status) for (file, expected_status) in testfi
 failed = [result[0] for result in it.chain(*results) if result[1] == False]
 if len(failed) == 0:
   print "\n\033[1;32mPassed all tests! :D\033[1;37m"
-  sys.exit(0)
 else:
   print "\n\033[1;31mFailed %d tests:\033[1;37m %s" % (len(failed), ", ".join(failed))
-  sys.exit(1)
+sys.exit(len(failed) != 0)
