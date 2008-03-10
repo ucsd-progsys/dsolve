@@ -50,8 +50,7 @@ to an operator wildcard is DELIM * * DELIM eg, [| * * |] for any operator
 -pattern names are lost after expansion *)
 
 
-(* 
+(* examples/bitv.ml *) 
 qualif BITLENGTH(_V): _V.length <= (Array.length _V.bits) * 30 
 qualif DIVBY30(_V): 30 * _V <= ~A
 qualif LESSLEN(_V): ~A < _V.length
-*)

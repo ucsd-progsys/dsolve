@@ -28,11 +28,11 @@ let _ =
     else ()
   in loop 1
 
-(*let keep_lowest_bits a j = a land low_mask.(j)
+let keep_lowest_bits a j = a land low_mask.(j)
 
 let high_mask = Array.init (30 + 1) (fun j -> low_mask.(j) lsl (30-j))
 
-let keep_highest_bits a j = a land high_mask.(j)*)
+let keep_highest_bits a j = a land high_mask.(j)
 
 (*s Creating and normalizing a bit vector is easy: it is just a matter of
     taking care of the invariant. Copy is immediate. *)
@@ -125,8 +125,7 @@ let _ =
   let _ = init s (fun i -> true) in
   let _ = set v (Random.int s) true in
     get v (Random.int s);;
-(*
-(*
+
 (*s Handling bits by packets is the key for efficiency of functions
     [append], [concat], [sub] and [blit]. 
     We start by a very general function [blit_bits a i m v n] which blits 
@@ -135,7 +134,7 @@ let _ =
     [n..n+m-1] are respectively valid subparts of [a] and [v]. 
     It is optimized when the bits fit the lowest boundary of an integer 
     (case [j == 0]). *)
-(*
+
 let blit_bits a i m v n =
   let (i',j) = pos n in
   if j == 0 then
@@ -155,8 +154,7 @@ let blit_bits a i m v n =
       Array.set v i'
 	(((keep_lowest_bits (a lsr i) m) lsl j) lor
 	 ((Array.get v i') land (low_mask.(j) lor high_mask.(-d))))
-in
-*)
+
 (*s When blitting a subpart of a bit vector into another bit vector, there
     are two possible cases: (1) all the bits are contained in a single integer
     of the first bit vector, and a single call to [blit_bits] is the
@@ -164,6 +162,7 @@ in
     the source array, and then we do a loop of [blit_int], with two calls
     to [blit_bits] for the two bounds. *)
 
+(*
 let unsafe_blit v1 ofs1 v2 ofs2 len =
   let (bi,bj) = pos ofs1 in
   let _ = Array.get v1 bi in () (*
@@ -180,7 +179,6 @@ let unsafe_blit v1 ofs1 v2 ofs2 len =
       loop (n + 30) (i+1)
     in loop (ofs2 + 30 - bj) (bi + 1)
   end*) () *)
-in
 
 let blit v1 v2 ofs1 ofs2 len =
   if len < 0 || ofs1 < 0 || ofs1 + len > v1.length
@@ -190,7 +188,6 @@ let blit v1 v2 ofs1 ofs2 len =
   else
     let _ = (fun n -> n + 0) ofs1 in
       unsafe_blit v1.bits ofs1 v2.bits ofs2 len
-in
 
 let test = create 30 true in
 let test2 = create 30 true in
@@ -608,7 +605,6 @@ let of_int64_us i = match Sys.word_size with
 		      (Int64.to_int hi) land 1 |] }
   | _ -> assert false
 let to_int64_us v = failwith "todo"
-
 let of_int64_s i = failwith "todo"
 let to_int64_s v = failwith "todo"
 
@@ -625,10 +621,6 @@ let select_to f32 f64 = match Sys.word_size with
   | _ -> assert false
 let to_nativeint_s = select_to to_int32_s to_int64_s
 let to_nativeint_us = select_to to_int32_us to_int64_us
-
-
-*)
-
 *)
 *)
 *)
