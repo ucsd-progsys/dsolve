@@ -326,23 +326,6 @@ let rec normalize_structure sstr =
         let _ = Common.cprintf Common.ol_normalized "@[%a@\n@]@." Qdebug.pprint_expression normal_exp in
         ({pstr_desc = (Pstr_eval(normal_exp)) ; pstr_loc = loc}) :: (normalize_structure srem)
     | {pstr_desc = (Pstr_value(recursive, pl)); pstr_loc = loc} :: srem -> 
-        (*let norm_bind (p, exp) (newbs, oldbs) = 
-         let nm = fresh_name_s () in
-         let id = mk_dum_ident (Longident.parse nm) in
-         let newb = (mk_dum_varpat nm, normalize exp) in
-         let oldb = (p, id) in
-           (newb::newbs, oldb::oldbs) in
-        let (newbs, oldbs) = List.fold_right norm_bind pl ([], []) in
-        let recf = recursive = Recursive in   
-          if recf then
-            let value = {pstr_desc = (Pstr_value(recursive, newbs @ oldbs)); pstr_loc = loc} in 
-            let _ = Common.cprintf Common.ol_normalized "@[%a@\n@]@." Qdebug.pprint_structure value in
-            value :: (normalize_structure srem)
-          else
-            let old_value = {pstr_desc = (Pstr_value(recursive, oldbs)); pstr_loc = loc} in
-            let new_value = {pstr_desc = (Pstr_value(recursive, newbs)); pstr_loc = loc} in
-            let _ = Common.cprintf Common.ol_normalized "@[%a@\n%a@\n@]@." Qdebug.pprint_structure new_value Qdebug.pprint_structure old_value in
-            new_value :: old_value :: (normalize_structure srem)*)
         let pl = List.map (fun (p, e) -> (p, normalize e)) pl in
         let value = {pstr_desc = (Pstr_value(recursive, pl)); pstr_loc = loc} in
         let _ = Common.cprintf Common.ol_normalized "@[%a@\n@]@." Qdebug.pprint_structure value in
