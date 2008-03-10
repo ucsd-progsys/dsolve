@@ -57,6 +57,23 @@ let load_sourcefile ppf sourcefile =
   let (str, _, env) = type_implementation env str in
     (str, env, fenv)
 
+let load_qualfile ppf qualfile =
+  let qs = Pparse.file ppf qualfile Parse.qualifiers ast_impl_magic_number in
+    List.map Qualmod.type_qualifier qs
+
+let process_sourcefile fname =
+  try
+   let (str, env, fenv) as source = load_sourcefile std_formatter !filename in
+   if !dump_qualifs
+   then
+     Qdump.dump_default_qualifiers source
+   else
+     let qname = (Misc.chop_extension_if_any fname) ^ ".quals" in
+     let quals = load_qualfile std_formatter qname in
+     let source = (List.rev_append quals str, env, fenv) in
+     analyze std_formatter !filename source
+  with x -> (report_error std_formatter x; exit 1)
+
 let main () =
   Arg.parse [
      "-I", Arg.String(fun dir ->
@@ -133,13 +150,6 @@ let main () =
      "-collect", Arg.Int (fun c -> Qualgen.col_lev := c), "[1] number of lambdas to collect identifiers under";
      "-verrs", Arg.Set verb_errors, "redacted"
   ] file_argument usage;
- try 
-  let source = load_sourcefile std_formatter !filename in
-  if !dump_qualifs 
-  then 
-    Qdump.dump_default_qualifiers source
-  else
-      analyze std_formatter !filename source
- with x -> (report_error std_formatter x; exit 1)
+  process_sourcefile !filename
 
 let _ = main (); exit 0

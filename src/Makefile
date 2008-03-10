@@ -34,7 +34,7 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/common.cmo typing/predicate.cmo \
   typing/typedecl.cmo typing/typeclass.cmo \
 	typing/qualgen.cmo typing/qualdecl.cmo \
-  typing/typemod.cmo 
+  typing/typemod.cmo typing/qualmod.cmo
 
 QUALIFYING=qualifying/lightenv.cmo \
   qualifying/qualifier.cmo qualifying/frame.cmo qualifying/builtins.cmo \

@@ -62,3 +62,5 @@ let implementation = wrap Parser.implementation
 and interface = wrap Parser.interface
 and toplevel_phrase = wrap Parser.toplevel_phrase
 and use_file = wrap Parser.use_file
+and qualifiers = wrap Parser.qualifiers
+and qualifier_patterns = wrap Parser.qualifier_patterns

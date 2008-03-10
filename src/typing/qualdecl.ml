@@ -223,6 +223,8 @@ let transl_pattern env prgids {Parsetree.pqual_pat_desc = (valu, anno, pred)} =
   let preds = (gen_preds (transl_patpred env prgids (List.fold_left (fa env) AM.empty anno) pred)) in
     List.filter (fun p -> ck_consistent pred p) preds
 
-let transl_pattern_valu env prgids ({Parsetree.pqual_pat_desc = (valu, anno, pred)} as p) =
+let transl_pattern_valu env prgids name ({Parsetree.pqual_pat_desc = (valu, anno, pred)} as p) =
+  let num = ref 0 in
+  let fresh name = incr num; name ^ (string_of_int !num) in
   let preds = transl_pattern env prgids p in
-    List.map (fun p -> (valu, p)) preds
+    List.map (fun p -> (fresh name, valu, p)) preds

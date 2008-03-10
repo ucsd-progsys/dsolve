@@ -580,10 +580,6 @@ and structure_item i ppf x =
   | Pstr_type (l) ->
       line i ppf "Pstr_type\n";
       list i string_x_type_declaration ppf l;
-  | Pstr_qualifier_single (p, q)
-  | Pstr_qualifier (p, q) ->
-      line i ppf "Pstr_qualifier\n"
-        (* pmr: todo *)
   | Pstr_exception (s, ed) ->
       line i ppf "Pstr_exception \"%s\"\n" s;
       exception_declaration i ppf ed;
