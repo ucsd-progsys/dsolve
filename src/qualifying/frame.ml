@@ -50,9 +50,17 @@ let rec pprint_pattern ppf = function
   | Tpat_any -> fprintf ppf "_"
   | Tpat_var x -> fprintf ppf "%s" (Ident.name x)
   | Tpat_tuple pats ->
-    let pats = List.map (fun p -> p.pat_desc) pats in
-      fprintf ppf "(%a)" (Oprint.print_list pprint_pattern (fun pff -> fprintf ppf ", ")) pats
+      fprintf ppf "(%a)" pprint_pattern_list pats
+  | Tpat_construct (cstrdesc, pats) ->
+      begin match (repr cstrdesc.cstr_res).desc with
+        | Tconstr (p, _, _) -> fprintf ppf "%s(%a)" (Path.name p) pprint_pattern_list pats
+        | _ -> assert false
+      end
   | _ -> assert false
+
+and pprint_pattern_list ppf pats =
+  Oprint.print_list pprint_pattern (fun ppf -> fprintf ppf ", ") ppf (List.map (fun p -> p.pat_desc) pats)
+
 
 let rec pprint ppf = function
   | Fvar a ->
