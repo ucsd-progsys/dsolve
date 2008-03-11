@@ -1,5 +1,3 @@
-squalif ITV(x): x.1 <= x.2
-
 let mmin (x:int) y = 
   if x <= y then x else y
 
