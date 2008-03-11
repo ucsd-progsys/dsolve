@@ -1,5 +1,3 @@
-squalif ITV(x): x.0 <= x.1
-
 let p = (1,2)
 
 let _ = (fun x -> x) p
