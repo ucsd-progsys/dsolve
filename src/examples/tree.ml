@@ -1,5 +1,5 @@
-qualif POS(x): 0 <= x
-qualif NEG(x): x < 0
+squalif POS(x): 0 <= x
+squalif NEG(x): x < 0
 
 type 'a tree = | Empty
                | Node of 'a tree * 'a * 'a tree

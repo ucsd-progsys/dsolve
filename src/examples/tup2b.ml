@@ -1,4 +1,4 @@
-squalif ITV(v):         v.1 <= v.2
+squalif ITV(v): v.1 <= v.2
 
 let mmin (x:int) y = 
   if x <= y then x else y

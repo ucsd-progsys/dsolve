@@ -16,7 +16,7 @@ let rec mklist n =
     let xs = mklist (n-1) in
     p::xs
 
-let g (p: int*int) (p':int*int) = 
+let lub (p: int*int) (p':int*int) = 
   let (x,y) = p in
   let (x',y') = p' in
   let x'' = mmin x x' in
@@ -27,6 +27,6 @@ let g (p: int*int) (p':int*int) =
 let _ = 
   let ys = mklist 100 in
   let b = (0,0) in
-  let (x,y) = List.fold_left g b ys in
+  let (x,y) = List.fold_left lub b ys in
   assert (x <= y) 
 

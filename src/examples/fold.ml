@@ -1,5 +1,5 @@
-qualif POS(x): 0 <= x
-qualif NEG(x): x < 0
+squalif POS(x): 0 <= x
+squalif NEG(x): x < 0
 
 let rec fold f b xs =
   match xs with
