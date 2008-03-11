@@ -8,7 +8,7 @@ testfiles = [("postests", 0), ("negtests", 256)]
 
 def runtest(file, expected_status):
   start = time.time()
-  status = common.logged_sys_call("%s %s &> /dev/null" % (dsolve, file))
+  status = common.logged_sys_call("%s %s 1> /dev/null 2> /dev/null" % (dsolve, file))
   print "%f seconds" % (time.time() - start)
 
   ok = (status == expected_status)
