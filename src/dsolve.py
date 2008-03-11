@@ -13,7 +13,7 @@ def cat_files(files,outfile):
   for f in files: os.system("cat %s 1>> %s 2> /dev/null" % (f,outfile))
 
 def gen_quals(src,bare):
-  (fname,qname,hname) = (src+".ml", src+".quals", src+".ml.hquals")
+  (fname,qname,hname) = (src+".ml", src+".quals", src+".hquals")
   if bare:
     os.system("cp -f %s %s" % (hname, tname))
   else:

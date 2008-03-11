@@ -26,5 +26,5 @@ let _ =
   let ys' = List.map f ys in
   let b = (0,0) in
   let (x,y) = List.fold_left g b ys' in
-  assert (x <= y) (* shockingly, this is safe!)
+  assert (x <= y) (* shockingly, this is safe!*)
 
