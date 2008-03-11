@@ -6,7 +6,7 @@ d_pats= "default_patterns"
 gen   = "./liquid.opt -no-anormal -lqualifs -collect 4 -dqualifs"
 solve = "./liquid.opt -dframes"
 flags = []
-tname = "/tmp/dsolvescratch"
+tname = "/tmp/dsolve.scratch"
 
 def cat_files(files,outfile):
   os.system("rm -f %s" % outfile)
@@ -15,10 +15,10 @@ def cat_files(files,outfile):
 def gen_quals(src,bare):
   (fname,qname,hname) = (src+".ml", src+".quals", src+".ml.hquals")
   if bare:
-    os.system("touch %s" % (qname))
+    os.system("cp -f %s %s" % (hname, tname))
   else:
     cat_files([hname,d_pats],tname)
-    common.logged_sys_call("%s %s %s 1> /dev/null 2> %s" % (gen, tname, fname, qname))
+  common.logged_sys_call("%s %s %s 1> /dev/null 2> %s" % (gen, tname, fname, qname))
 
 def solve_quals(src,flags):
   return common.logged_sys_call("%s %s %s.ml" % (solve, " ".join(flags),src))
