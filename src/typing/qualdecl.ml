@@ -202,6 +202,8 @@ let ck_consistent patpred pred =
           ck_expr_rec e1 e1'
       | (Ppredpatexp_mvar (x), Var(y)) ->
           ckm (x, Path.name y)
+      | (Ppredpatexp_proj (_, e), Proj (_, e')) ->
+          ck_expr_rec e e'
       | _ -> assert false in
   let rec ck_pred_rec pred pat =
     match (pred.ppredpat_desc, pat) with

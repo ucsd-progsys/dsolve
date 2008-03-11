@@ -381,6 +381,11 @@ The precedences must be listed from low to high.
 %type <Parsetree.toplevel_phrase> toplevel_phrase
 %start use_file                         /* for the #use directive */
 %type <Parsetree.toplevel_phrase list> use_file
+%start qualifiers                       /* for runtime qualifier files */
+%type <Parsetree.qualifier_declaration list> qualifiers
+%start qualifier_patterns               /* for pattern qualifier files */
+%type <Parsetree.qualifier_declaration list> qualifier_patterns
+
 
 %%
 
@@ -393,7 +398,7 @@ interface:
     signature EOF                        { List.rev $1 }
 ;
 liq_interface:
-    liq_signature EOF                    {     
+    liq_signature EOF                    { List.rev $1 }
 ;
 toplevel_phrase:
     top_structure SEMISEMI               { Ptop_def $1 }
@@ -463,12 +468,6 @@ structure_item:
       { mkstr(Pstr_primitive($2, {pval_type = $3; pval_prim = $5})) }
   | TYPE type_declarations
       { mkstr(Pstr_type(List.rev $2)) }
-  | QUALIF qualifier_pattern_declaration
-      { mkstr($2) }
-  | SINGLE_QUALIF qualifier_pattern_declaration
-      { mkstr(match $2 with
-         Pstr_qualifier(a, b) -> Pstr_qualifier_single(a, b) 
-        | _ -> assert false) }
   | EXCEPTION UIDENT constructor_arguments
       { mkstr(Pstr_exception($2, $3)) }
   | EXCEPTION UIDENT EQUAL constr_longident
@@ -530,12 +529,12 @@ signature:
 ;
 liq_signature:
     /* empty */                                 { [] }
-  | signature signature_item                    { $2 :: $1 }
-  | signature signature_item SEMISEMI           { $2 :: $1 }
+  | liq_signature liq_signature_item            { $2 :: $1 }
+  | liq_signature liq_signature_item SEMISEMI   { $2 :: $1 }
 ;
 liq_signature_item:
     VAL val_ident_colon refined_core_type       { ... }
-;  
+;
 signature_item:
     VAL val_ident_colon core_type
       { mksig(Psig_value($2, {pval_type = $3; pval_prim = []})) }
@@ -1439,6 +1438,7 @@ refined_simple_core_type:
 /*  | LPAREN refined_core_type_comma_list RPAREN %prec below_SHARP
       { match $2 with [sty] -> sty | _ -> raise Parse_error } */
 ;
+
 refined_simple_core_type2:
     QUOTE ident
       { mktyp(Ptyp_var $2) }
@@ -1465,7 +1465,7 @@ refined_simple_core_type2:
   | LBRACKETLESS opt_bar refined_row_field_list GREATER name_tag_list RBRACKET
       { mktyp(Ptyp_variant(List.rev $3, true, Some (List.rev $5))) }
   | LBRACE refined_simple_core_type2 BAR predicate RBRACE 
-      { 
+      {   }
 ;
 refined_row_field_list:
     refined_row_field                                   { [$1] }
@@ -1507,16 +1507,28 @@ refined_poly_type:
 
 /* Qualifiers */
 
+qualifier_patterns:
+    /* empty */ 
+      { [] }
+  | QUALIF qualifier_pattern_declaration qualifier_patterns
+      { $2::$3 }
+
+qualifiers:
+    /* empty */
+      { [] }
+  | SINGLE_QUALIF qualifier_pattern_declaration qualifiers
+      { $2::$3 }
+
 qualifier_pattern_declaration:
     UIDENT LPAREN LIDENT RPAREN LPAREN qual_ty_anno RPAREN COLON qualifier_pattern  
-    { (Pstr_qualifier($1, mkqpat($3, $6, $9))) }
+    { ($1, mkqpat($3, $6, $9)) }
   | UIDENT LPAREN LIDENT RPAREN COLON qualifier_pattern
-    { (Pstr_qualifier($1, mkqpat($3, [], $6)))  }
+    { ($1, mkqpat($3, [], $6))  }
 
 qual_ty_anno:
-    UIDENT COLON core_type2 
+    UIDENT COLON simple_core_type_or_tuple
     { [($1, $3)] } 
-  | UIDENT COLON core_type2 COMMA qual_ty_anno
+  | UIDENT COLON simple_core_type_or_tuple COMMA qual_ty_anno
     { ($1, $3)::$5 }
 
 qualifier_pattern:
@@ -1527,7 +1539,6 @@ qualifier_pattern:
   | LPAREN qualifier_pattern RPAREN         { $2 }
   | qual_expr qual_rel qual_expr            
       { mkpredpat (Ppredpat_atom($1, $2, $3)) }
-  
 
 qual_rel:
     qual_lit_rel                            { [$1] }
@@ -1578,7 +1589,7 @@ qual_term:
   | qual_term DOT LIDENT                
     { mkpredpatexp (Ppredpatexp_field($3, $1)) }
   | qual_term DOT INT
-    { mkpredpatexp (Ppredpatexp_proj($3 - 1, $1)) }
+    { mkpredpatexp (Ppredpatexp_proj($3, $1)) }
 
 qual_intlist:
     INT                                     { [$1] }
@@ -1612,6 +1623,11 @@ qual_lit_op_list:
     qual_lit_op                             { [$1] }
   | qual_lit_op COMMA qual_lit_op_list      { $1::$3 }
  
+/* Predicates */
+
+predicate:
+    qualifier_pattern
+      { (* fancy stuff *) }
 
 /* Constants */
 

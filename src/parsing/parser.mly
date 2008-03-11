@@ -1399,17 +1399,25 @@ label:
 
 /* Qualifiers */
 
-qualifier_patterns:
+qualifier_pattern_list:
     /* empty */ 
       { [] }
-  | QUALIF qualifier_pattern_declaration qualifier_patterns
+  | QUALIF qualifier_pattern_declaration qualifier_pattern_list
+      { $2::$3 }
+
+qualifier_list:
+    /* empty */
+      { [] }
+  | SINGLE_QUALIF qualifier_pattern_declaration qualifier_list
       { $2::$3 }
 
 qualifiers:
-    /* empty */
-      { [] }
-  | SINGLE_QUALIF qualifier_pattern_declaration qualifiers
-      { $2::$3 }
+    qualifier_list EOF
+      { $1 }
+
+qualifier_patterns:
+    qualifier_pattern_list EOF
+      { $1 }
 
 qualifier_pattern_declaration:
     UIDENT LPAREN LIDENT RPAREN LPAREN qual_ty_anno RPAREN COLON qualifier_pattern  
