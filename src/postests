@@ -30,5 +30,4 @@ DMLex/matmult.ml
 examples/quicksort.ml
 examples/bitv.ml
 examples/assert_fun.ml
-examples/fold.ml
 examples/baseinst.ml
