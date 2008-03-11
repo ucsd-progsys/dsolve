@@ -375,8 +375,6 @@ The precedences must be listed from low to high.
 %type <Parsetree.structure> implementation
 %start interface                        /* for interface files */
 %type <Parsetree.signature> interface
-%start liq_interface
-%type <Parsetree.liq_sig> liq_interface /* for liquid interface files */
 %start toplevel_phrase                  /* for interactive use */
 %type <Parsetree.toplevel_phrase> toplevel_phrase
 %start use_file                         /* for the #use directive */
@@ -395,9 +393,6 @@ implementation:
 ;
 interface:
     signature EOF                        { List.rev $1 }
-;
-liq_interface:
-    liq_signature EOF                    { List.rev $1 }
 ;
 toplevel_phrase:
     top_structure SEMISEMI               { Ptop_def $1 }
@@ -525,14 +520,6 @@ signature:
     /* empty */                                 { [] }
   | signature signature_item                    { $2 :: $1 }
   | signature signature_item SEMISEMI           { $2 :: $1 }
-;
-liq_signature:
-    /* empty */                                 { [] }
-  | liq_signature liq_signature_item            { $2 :: $1 }
-  | liq_signature liq_signature_item SEMISEMI   { $2 :: $1 }
-;
-liq_signature_item:
-    VAL val_ident_colon refined_core_type       { ... }
 ;
 signature_item:
     VAL val_ident_colon core_type
@@ -1303,9 +1290,9 @@ core_type2:
                {ptyp_desc = Ptyp_constr(Lident "option", [$2]);
                 ptyp_loc = $2.ptyp_loc}, $4)) }
   | LIDENT COLON core_type2 MINUSGREATER core_type2
-      { mktyp(Ptyp_arrow($1, $3, $5)) } 
+      { mktyp(Ptyp_arrow($1, $3, $5)) }
   | core_type2 MINUSGREATER core_type2
-      { mktyp(Ptyp_arrow("", $1, $3)) } 
+      { mktyp(Ptyp_arrow("", $1, $3)) }
 ;
 
 simple_core_type:
@@ -1372,9 +1359,9 @@ opt_ampersand:
     AMPERSAND                                   { true }
   | /* empty */                                 { false }
 ;
-amper_type_list: 
+amper_type_list:
     core_type                                   { [$1] }
-  | amper_type_list AMPERSAND core_type         { $3 :: $1 } 
+  | amper_type_list AMPERSAND core_type         { $3 :: $1 }
 ;
 opt_present:
     LBRACKETGREATER name_tag_list RBRACKET      { List.rev $2 }
@@ -1409,118 +1396,6 @@ label:
     LIDENT                                      { $1 }
 ;
 
-/* Refined Core types */
-
-refined_core_type: {}
-
-/*refined_core_type:
-    refined_simple_core_type_or_tuple
-      { $1 }
-  | QUESTION LIDENT COLON refined_core_type MINUSGREATER refined_core_type
-      { mktyp(Ptyp_arrow("?" ^ $2 ,
-               {ptyp_desc = Ptyp_constr(Lident "option", [$4]);
-                ptyp_loc = $4.ptyp_loc}, $6)) }
-  | OPTLABEL refined_core_type MINUSGREATER refined_core_type
-      { mktyp(Ptyp_arrow("?" ^ $1 ,
-               {ptyp_desc = Ptyp_constr(Lident "option", [$2]);
-                ptyp_loc = $2.ptyp_loc}, $4)) }
-  | LIDENT COLON refined_core_type MINUSGREATER refined_core_type
-      { mktyp(Ptyp_arrow($1, $3, $5)) } 
-  | refined_core_type MINUSGREATER refined_core_type
-      { mktyp(Ptyp_arrow("", $1, $3)) }
-;
-
-refined_simple_core_type:
-      refined_simple_core_type2  %prec below_SHARP
-      { $1 }
-    | LPAREN refined_core_type_comma_list RPAREN %prec below_SHARP
-      { match $2 with [sty] -> sty | _ -> raise Parse_error } 
-;
-
-refined_simple_core_type2:
-    refined_simple_core_type3
-      { $1 (true) }
-  | LBRACE refined_simple_core_type3 BAR predicate RBRACE
-      { $2 $4 }
-;
-
-refined_simple_core_type3:
-    QUOTE ident
-      { mktyp(Ptyp_var $2) }
-  | UNDERSCORE
-      { mktyp(Ptyp_any) }
-  | type_longident
-      { mktyp(Ptyp_constr($1, [])) }
-  | refined_simple_core_type2 type_longident
-      { mktyp(Ptyp_constr($2, [$1])) }
-  | LPAREN refined_core_type_comma_list RPAREN type_longident
-      { mktyp(Ptyp_constr($4, List.rev $2)) }
-  | LBRACKET tag_field RBRACKET
-      { mktyp(Ptyp_variant([$2], true, None)) }
-  | LBRACKET BAR refined_row_field_list RBRACKET
-      { mktyp(Ptyp_variant(List.rev $3, true, None)) }
-  | LBRACKET refined_row_field BAR refined_row_field_list RBRACKET
-      { mktyp(Ptyp_variant($2 :: List.rev $4, true, None)) }
-  | LBRACKETGREATER opt_bar refined_row_field_list RBRACKET
-      { mktyp(Ptyp_variant(List.rev $3, false, None)) }
-  | LBRACKETGREATER RBRACKET
-      { mktyp(Ptyp_variant([], false, None)) }
-  | LBRACKETLESS opt_bar refined_row_field_list RBRACKET
-      { mktyp(Ptyp_variant(List.rev $3, true, Some [])) }
-  | LBRACKETLESS opt_bar refined_row_field_list GREATER name_tag_list RBRACKET
-      { mktyp(Ptyp_variant(List.rev $3, true, Some (List.rev $5))) }
-;
-
-refined_row_field_list:
-    refined_row_field                                   { [$1] }
-  | refined_row_field_list BAR refined_row_field                { $3 :: $1 }
-;
-
-refined_row_field:
-    refined_tag_field                                           { $1 }
-  | refined_simple_core_type2                           { Rinherit $1 }
-;
-
-refined_tag_field:
-    name_tag OF opt_ampersand refined_amper_type_list
-      { Rtag ($1, $3, List.rev $4) }
-  | name_tag
-      { Rtag ($1, true, []) }
-;
-
-refined_amper_type_list:
-    refined_core_type                                   { [$1] }
-  | refined_amper_type_list AMPERSAND refined_core_type         { $3 :: $1 }
-;
-
-refined_simple_core_type_or_tuple:
-    refined_simple_core_type  
-      { $1 (true) }
-  | refined_simple_core_tuple
-      { $1 }
-;
-
-refined_simple_core_tuple:
-    LBRACE refined_simple_core_tuple2 BAR predicate RBRACE
-      {    }
-  | refined_simple_core_tuple2
-      {    }
-;
-
-refined_simple_core_tuple2:
-    refined_simple_core_type STAR refined_core_type_list
-      {    }
-;
-
-refined_core_type_comma_list:
-    refined_core_type                                   { [$1] }
-  | refined_core_type_comma_list COMMA refined_core_type        { $3 :: $1 }
-;
-
-refined_core_type_list:
-    refined_simple_core_type                            { [$1] }
-  | refined_core_type_list STAR refined_simple_core_type        { $3 :: $1 }
-;*/
 
 /* Qualifiers */
 
@@ -1551,10 +1426,10 @@ qualifier_pattern_declaration:
     { ($1, mkqpat($3, [], $6))  }
 
 qual_ty_anno:
-    UIDENT type_kind
-    { [($1, $2)] } 
-  | UIDENT type_kind COMMA qual_ty_anno
-    { ($1, $2)::$4 }
+    UIDENT COLON simple_core_type_or_tuple
+    { [($1, $3)] } 
+  | UIDENT COLON simple_core_type_or_tuple COMMA qual_ty_anno
+    { ($1, $3)::$5 }
 
 qualifier_pattern:
     TRUE                                    { mkpredpat Ppredpat_true }                    
@@ -1595,7 +1470,7 @@ qual_expr:
   | qual_expr_1                             { $1 }
 
 qual_expr_1: 
-    qual_litident qual_term_list 
+  | qual_litident qual_term_list 
     { mkpredpatexp (Ppredpatexp_funapp(Longident.parse $1, $2)) } 
   | qual_term                               { $1 }
 
@@ -1648,11 +1523,6 @@ qual_lit_op_list:
     qual_lit_op                             { [$1] }
   | qual_lit_op COMMA qual_lit_op_list      { $1::$3 }
  
-/* Predicates */
-
-predicate:
-    qualifier_pattern
-      { $1 (* use qualdecl routine to verify *) }
 
 /* Constants */
 
