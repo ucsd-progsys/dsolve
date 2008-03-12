@@ -23,11 +23,17 @@ def gen_quals(src,bare):
 def solve_quals(src,flags):
   return common.logged_sys_call("%s %s %s.ml" % (solve, " ".join(flags),src))
 
-bname = sys.argv[len(sys.argv) - 1][:-3]
-bare = (sys.argv[1] == "-bare")
-if bare: flags += sys.argv[2:-1]
-else: flags += sys.argv[1:-1]
-os.system("rm -f %s.quals; rm -f %s.annot" % (bname, bname))	
-gen_quals(bname,bare)
-succ = solve_quals(bname,flags)
-sys.exit(succ != 0)
+def run(file,bare,flags):
+  bname = file[:-3]
+  os.system("rm -f %s.quals; rm -f %s.annot" % (bname, bname))
+  gen_quals(bname,bare)
+  return solve_quals(bname,flags)
+
+def main():
+  bare = (sys.argv[1] == "-bare")
+  if bare: flags = sys.argv[2:-1]
+  else: flags = sys.argv[1:-1]
+  sys.exit(run(sys.argv[len(sys.argv) - 1],bare,flags))
+
+if __name__ == "__main__":
+  main()
