@@ -381,11 +381,10 @@ The precedences must be listed from low to high.
 %type <Parsetree.toplevel_phrase> toplevel_phrase
 %start use_file                         /* for the #use directive */
 %type <Parsetree.toplevel_phrase list> use_file
-%start qualifiers                       /* for runtime qualifier files */
+%start qualifiers                       /* runtime qualifier files */
 %type <Parsetree.qualifier_declaration list> qualifiers
-%start qualifier_patterns               /* for pattern qualifier files */
+%start qualifier_patterns               /* pattern qualifier files */
 %type <Parsetree.qualifier_declaration list> qualifier_patterns
-
 
 %%
 
@@ -1304,9 +1303,9 @@ core_type2:
                {ptyp_desc = Ptyp_constr(Lident "option", [$2]);
                 ptyp_loc = $2.ptyp_loc}, $4)) }
   | LIDENT COLON core_type2 MINUSGREATER core_type2
-      { mktyp(Ptyp_arrow($1, $3, $5)) }
+      { mktyp(Ptyp_arrow($1, $3, $5)) } 
   | core_type2 MINUSGREATER core_type2
-      { mktyp(Ptyp_arrow("", $1, $3)) }
+      { mktyp(Ptyp_arrow("", $1, $3)) } 
 ;
 
 simple_core_type:
@@ -1373,9 +1372,9 @@ opt_ampersand:
     AMPERSAND                                   { true }
   | /* empty */                                 { false }
 ;
-amper_type_list:
+amper_type_list: 
     core_type                                   { [$1] }
-  | amper_type_list AMPERSAND core_type         { $3 :: $1 }
+  | amper_type_list AMPERSAND core_type         { $3 :: $1 } 
 ;
 opt_present:
     LBRACKETGREATER name_tag_list RBRACKET      { List.rev $2 }
@@ -1412,7 +1411,9 @@ label:
 
 /* Refined Core types */
 
-refined_core_type:
+refined_core_type: {}
+
+/*refined_core_type:
     refined_simple_core_type_or_tuple
       { $1 }
   | QUESTION LIDENT COLON refined_core_type MINUSGREATER refined_core_type
@@ -1424,7 +1425,7 @@ refined_core_type:
                {ptyp_desc = Ptyp_constr(Lident "option", [$2]);
                 ptyp_loc = $2.ptyp_loc}, $4)) }
   | LIDENT COLON refined_core_type MINUSGREATER refined_core_type
-      { mktyp(Ptyp_arrow($1, $3, $5)) }
+      { mktyp(Ptyp_arrow($1, $3, $5)) } 
   | refined_core_type MINUSGREATER refined_core_type
       { mktyp(Ptyp_arrow("", $1, $3)) }
 ;
@@ -1432,14 +1433,18 @@ refined_core_type:
 refined_simple_core_type:
       refined_simple_core_type2  %prec below_SHARP
       { $1 }
-    | LPAREN refined_simple_core_type RPAREN
-      { $1 }
-    /* what the hell is this? */
-/*  | LPAREN refined_core_type_comma_list RPAREN %prec below_SHARP
-      { match $2 with [sty] -> sty | _ -> raise Parse_error } */
+    | LPAREN refined_core_type_comma_list RPAREN %prec below_SHARP
+      { match $2 with [sty] -> sty | _ -> raise Parse_error } 
 ;
 
 refined_simple_core_type2:
+    refined_simple_core_type3
+      { $1 (true) }
+  | LBRACE refined_simple_core_type3 BAR predicate RBRACE
+      { $2 $4 }
+;
+
+refined_simple_core_type3:
     QUOTE ident
       { mktyp(Ptyp_var $2) }
   | UNDERSCORE
@@ -1464,60 +1469,80 @@ refined_simple_core_type2:
       { mktyp(Ptyp_variant(List.rev $3, true, Some [])) }
   | LBRACKETLESS opt_bar refined_row_field_list GREATER name_tag_list RBRACKET
       { mktyp(Ptyp_variant(List.rev $3, true, Some (List.rev $5))) }
-  | LBRACE refined_simple_core_type2 BAR predicate RBRACE 
-      {   }
 ;
+
 refined_row_field_list:
     refined_row_field                                   { [$1] }
   | refined_row_field_list BAR refined_row_field                { $3 :: $1 }
 ;
+
 refined_row_field:
-    refined_tag_field                                   { $1 }
+    refined_tag_field                                           { $1 }
   | refined_simple_core_type2                           { Rinherit $1 }
 ;
+
+refined_tag_field:
+    name_tag OF opt_ampersand refined_amper_type_list
+      { Rtag ($1, $3, List.rev $4) }
+  | name_tag
+      { Rtag ($1, true, []) }
+;
+
 refined_amper_type_list:
     refined_core_type                                   { [$1] }
   | refined_amper_type_list AMPERSAND refined_core_type         { $3 :: $1 }
 ;
+
 refined_simple_core_type_or_tuple:
-    LBRACE refined_simple_core_type STAR refined_core_type_list BAR predicate RBRACE
-      { mktyp(Ptyp_tuple($1 :: List.rev $3)) }
-  | refined_simple_core_type  
+    refined_simple_core_type  
       { $1 (true) }
-  | refined_simple_core_type STAR refined_core_type_list
-      { stuff }
+  | refined_simple_core_tuple
+      { $1 }
 ;
+
+refined_simple_core_tuple:
+    LBRACE refined_simple_core_tuple2 BAR predicate RBRACE
+      {    }
+  | refined_simple_core_tuple2
+      {    }
+;
+
+refined_simple_core_tuple2:
+    refined_simple_core_type STAR refined_core_type_list
+      {    }
+;
+
 refined_core_type_comma_list:
     refined_core_type                                   { [$1] }
   | refined_core_type_comma_list COMMA refined_core_type        { $3 :: $1 }
 ;
+
 refined_core_type_list:
     refined_simple_core_type                            { [$1] }
   | refined_core_type_list STAR refined_simple_core_type        { $3 :: $1 }
-;
-refined_field:
-    label COLON refined_poly_type                       { mkfield(Pfield($1, $3)) }
-;
-refined_poly_type:
-    refined_core_type
-      { mktyp(Ptyp_poly([], $1)) }
-  | typevar_list DOT refined_core_type
-      { mktyp(Ptyp_poly(List.rev $1, $3)) }
-;
+;*/
 
 /* Qualifiers */
 
-qualifier_patterns:
+qualifier_pattern_list:
     /* empty */ 
       { [] }
-  | QUALIF qualifier_pattern_declaration qualifier_patterns
+  | QUALIF qualifier_pattern_declaration qualifier_pattern_list
+      { $2::$3 }
+
+qualifier_list:
+    /* empty */
+      { [] }
+  | SINGLE_QUALIF qualifier_pattern_declaration qualifier_list
       { $2::$3 }
 
 qualifiers:
-    /* empty */
-      { [] }
-  | SINGLE_QUALIF qualifier_pattern_declaration qualifiers
-      { $2::$3 }
+    qualifier_list EOF
+      { $1 }
+
+qualifier_patterns:
+    qualifier_pattern_list EOF
+      { $1 }
 
 qualifier_pattern_declaration:
     UIDENT LPAREN LIDENT RPAREN LPAREN qual_ty_anno RPAREN COLON qualifier_pattern  
@@ -1526,10 +1551,10 @@ qualifier_pattern_declaration:
     { ($1, mkqpat($3, [], $6))  }
 
 qual_ty_anno:
-    UIDENT COLON simple_core_type_or_tuple
-    { [($1, $3)] } 
-  | UIDENT COLON simple_core_type_or_tuple COMMA qual_ty_anno
-    { ($1, $3)::$5 }
+    UIDENT type_kind
+    { [($1, $2)] } 
+  | UIDENT type_kind COMMA qual_ty_anno
+    { ($1, $2)::$4 }
 
 qualifier_pattern:
     TRUE                                    { mkpredpat Ppredpat_true }                    
@@ -1570,7 +1595,7 @@ qual_expr:
   | qual_expr_1                             { $1 }
 
 qual_expr_1: 
-  | qual_litident qual_term_list 
+    qual_litident qual_term_list 
     { mkpredpatexp (Ppredpatexp_funapp(Longident.parse $1, $2)) } 
   | qual_term                               { $1 }
 
@@ -1627,7 +1652,7 @@ qual_lit_op_list:
 
 predicate:
     qualifier_pattern
-      { (* fancy stuff *) }
+      { $1 (* use qualdecl routine to verify *) }
 
 /* Constants */
 
