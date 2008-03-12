@@ -280,6 +280,8 @@ let bigarray_set arr arg newval =
 %token PRIVATE
 %token QUALIF
 %token SINGLE_QUALIF
+%token LVAL
+%token PREDICATE
 %token QUESTION
 %token QUESTIONQUESTION
 %token QUOTE
@@ -331,6 +333,7 @@ conflicts.
 The precedences must be listed from low to high.
 */
 
+%nonassoc bot
 %nonassoc IN
 %nonassoc below_SEMI
 %nonassoc SEMI                          /* below EQUAL ({lbl=...; lbl=...}) */
@@ -361,12 +364,14 @@ The precedences must be listed from low to high.
 %nonassoc prec_constr_appl              /* above AS BAR COLONCOLON COMMA */
 %nonassoc below_SHARP
 %nonassoc SHARP                         /* simple_expr/toplevel_directive */
+%nonassoc above_SHARP
 %nonassoc below_DOT
 %nonassoc DOT
 /* Finally, the first tokens of simple_expr are above everything else. */
 %nonassoc BACKQUOTE BEGIN CHAR FALSE FLOAT INT INT32 INT64
           LBRACE LBRACELESS LBRACKET LBRACKETBAR LIDENT LPAREN
           NEW NATIVEINT PREFIXOP STRING TRUE UIDENT
+%nonassoc top
 
 
 /* Entry points */
@@ -383,6 +388,8 @@ The precedences must be listed from low to high.
 %type <Parsetree.qualifier_declaration list> qualifiers
 %start qualifier_patterns               /* pattern qualifier files */
 %type <Parsetree.qualifier_declaration list> qualifier_patterns
+%start liquid_interface                 /* for mlq refined interface files */
+%type <Parsetree.penv> liquid_interface
 
 %%
 
@@ -417,9 +424,13 @@ use_file_tail:
   | structure_item use_file_tail                { Ptop_def[$1] :: $2 }
   | toplevel_directive use_file_tail            { $1 :: $2 }
 ;
+liquid_interface:
+    liquid_signature EOF                        { ([], $1) }
+  | predicate_alias_list liquid_signature EOF   { ($1, $2) }
+  | EOF                                         { ([], []) }
+;
 
 /* Module expressions */
-
 module_expr:
     mod_longident
       { mkmod(Pmod_ident $1) }
@@ -1470,7 +1481,7 @@ qual_expr:
   | qual_expr_1                             { $1 }
 
 qual_expr_1: 
-  | qual_litident qual_term_list 
+    qual_litident qual_term_list 
     { mkpredpatexp (Ppredpatexp_funapp(Longident.parse $1, $2)) } 
   | qual_term                               { $1 }
 
@@ -1522,7 +1533,87 @@ qual_lit_op:
 qual_lit_op_list:
     qual_lit_op                             { [$1] }
   | qual_lit_op COMMA qual_lit_op_list      { $1::$3 }
+
+/* Liquid signatures */
+
+liquid_signature:
+    liquid_val_decl liquid_signature        { $1 :: $2 }
+  | liquid_val_decl                         { $1 }
+
+liquid_val_decl:
+    LVAL LIDENT COLON liquid_type           { ($2, $4) }
+
+/* Liquid types */
+
+liquid_type:
+    liquid_type_list
+      {  }
+  | LBRACE liquid_type1 STAR liquid_type_list BAR predicate RBRACE
+      {  }
+  | LBRACE liquid_type1 STAR liquid_type_list BAR UIDENT RBRACE 
+      {  }
+
+liquid_type_list:
+    liquid_type1 STAR liquid_type_list 
+      {  }
+  | liquid_type1 
+      {  }
  
+liquid_type1:
+    LPAREN liquid_type_comma_list RPAREN 
+      { match $2 with [stn] -> stn | _ -> raise Parse_error }
+  | LBRACE liquid_type2 BAR predicate RBRACE 
+      { rw_pred($2, $4) }
+  | LBRACE liquid_type2 BAR UIDENT RBRACE
+      { rw_pred_pvar($2, $4) }
+  | liquid_type MINUSGREATER liquid_type
+      { PFArrow($1, $3) }
+  | liquid_type2
+      { $1 }
+
+liquid_type2:
+    BACKQUOTE LIDENT                                     /* tyvar */
+      { PFvar($2) }
+  | type_longident                                       /* base_type */
+      { PFconstr($1, []) }
+  | liquid_type type_longident                           /* simple constructed */
+      { PFconstr($2, [$1]) }
+  | LPAREN liquid_type_comma_list RPAREN type_longident  /* multi-param constructed */
+      { PFconstr($4, $2) }
+  | liquid_record
+      { PFrecord($1) }
+
+liquid_type_comma_list:
+    liquid_type
+      { $1 }
+  | liquid_type COMMA liquid_type_comma_list
+      { $1 :: $3 }
+  
+liquid_record:
+    LBRACE liquid_field_list RBRACE 
+      { $2 }
+
+liquid_field:
+    LIDENT COLON liquid_type
+      { ($1, $3) }
+
+liquid_field_list:
+    liquid_field SEMI liquid_field_list
+      { $1 :: $3 }
+  | liquid_field
+      { $1 }
+
+/* Predicates */
+
+predicate:
+    qualifier_pattern                       { $1 } 
+
+predicate_alias:
+    PREDICATE UIDENT EQUAL predicate        { ($2, $4) }
+
+predicate_alias_list:
+    predicate_alias predicate_alias_list    { $1 :: $2 }
+  | predicate_alias                         { $1 }
 
 /* Constants */
 
