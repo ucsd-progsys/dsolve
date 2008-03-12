@@ -1534,60 +1534,79 @@ qual_lit_op_list:
 /* Liquid signatures */
 
 liquid_signature:
-    liquid_val_decl liquid_signature  { $1 :: $2 }
-  | liquid_val_decl                   {  }
+    liquid_val_decl liquid_signature        { $1 :: $2 }
+  | liquid_val_decl                         { $1 }
 
 liquid_val_decl:
-    LVAL LIDENT COLON liquid_type           {  }
+    LVAL LIDENT COLON liquid_type           { ($2, $4) }
 
 /* Liquid types */
 
 liquid_type:
+    liquid_type1
+      {  }
+  | liquid_type1 STAR liquid_type
+      {  }
+  | liquid_type MINUSGREATER liquid_type
+      {  }
+  | LBRACE liquid_type1 STAR liquid_type BAR predicate RBRACE
+      {  }
+  | LBRACE liquid_type1 STAR liquid_type BAR UIDENT RBRACE
+      {  }
+  | LPAREN liquid_type_comma_list RPAREN %prec below_SHARP
+      { match $2 with [stn] -> stn | _ -> raise Parse_error }
+ 
+liquid_type1:
     LBRACE liquid_type2 BAR predicate RBRACE 
       {  }
   | LBRACE liquid_type2 BAR UIDENT RBRACE
       {  }
   | liquid_type2
       {  }
-  | liquid_type STAR liquid_type
-      {  }
 
 liquid_type2:
-  | LPAREN liquid_type RPAREN
-      {  }
-  | BACKQUOTE LIDENT  /* tyvar */
-      {  }
-  | LIDENT    /* base_type */               
-      { $1 }
-  | liquid_type LIDENT  /* simple constructed */                 
-      { Fconstr($2, [$1]) }
+    BACKQUOTE LIDENT                                     /* tyvar */
+      { PFvar($2) }
+  | type_longident                                       /* base_type */
+      { PFconstr($1, []) }
+  | liquid_type type_longident                           /* simple constructed */
+      { PFconstr($2, [$1]) }
+  | LPAREN liquid_type_comma_list RPAREN type_longident  /* multi-param constructed */
+      { PFconstr($4, $2) }
   | liquid_record
-      {  }
+      { PFrecord($1) }
+
+liquid_type_comma_list:
+    liquid_type
+      { $1 }
+  | liquid_type COMMA liquid_type_comma_list
+      { $1 :: $3 }
   
 liquid_record:
     LBRACE liquid_field_list RBRACE 
-      {  }
+      { $2 }
 
 liquid_field:
     LIDENT COLON liquid_type
-      {  }
+      { ($1, $3) }
 
 liquid_field_list:
     liquid_field SEMI liquid_field_list
-      {  }
+      { $1 :: $3 }
   | liquid_field
-      {  }
+      { $1 }
 
 /* Predicates */
 
 predicate:
-    qualifier_pattern                       { (* clean up using qualdecl *) $1 } 
+    qualifier_pattern                       { $1 } 
+
 predicate_alias:
-    PREDICATE UIDENT EQUAL predicate            { ($2, $4) }
+    PREDICATE UIDENT EQUAL predicate        { ($2, $4) }
 
 predicate_alias_list:
-    predicate_alias predicate_alias_list    { }
-  | predicate_alias                         { }
+    predicate_alias predicate_alias_list    { $1 :: $2 }
+  | predicate_alias                         { $1 }
 
 /* Constants */
 

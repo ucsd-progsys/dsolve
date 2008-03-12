@@ -139,28 +139,6 @@ and exception_declaration = core_type list
 
 (* Predicate_Declarations *)
 
-and pexpression =
-    { ppredexp_desc: predexp_desc;
-      ppredexp_loc: Location.t }
-
-and predexp_desc =
-    Ppredexp_int of int
-  | Ppredexp_var of string
-  | Ppredexp_app of string * pexpression list
-  | Ppredexp_binop of pexpression * predexp_op * pexpression
-  | Ppredexp_field of string * string
-
-and predicate_declaration =
-    { ppred_desc: pred_desc;
-      ppred_loc: Location.t }
-
-and pred_desc =
-    Ppred_true
-  | Ppred_atom of pexpression * pred_rel * pexpression
-  | Ppred_not of predicate_declaration
-  | Ppred_and of predicate_declaration * predicate_declaration
-  | Ppred_or of predicate_declaration * predicate_declaration
-
 and predicate_pattern =
     { ppredpat_desc: predpat_desc;
       ppredpat_loc: Location.t }
