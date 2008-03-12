@@ -47,6 +47,9 @@ qualif A(v): v = [0,1,2]
 to an operator wildcard is DELIM * * DELIM eg, [| * * |] for any operator
 
 -annotated types are matched to program types by attempting to unify, not structurally
--pattern names are lost after expansion *)
+-pattern names are lost after expansion 
+
+unhandled types: the type grammar can't handle ADTs or records. but, you can define these as user types in the program source and then reference the type name in the pattern*)
+
 
 

@@ -128,13 +128,6 @@ let normalize exp =
         exp
      | Pexp_function(lbl, elbl, [(arg, e)]) ->
         rw_expr (mk_function lbl elbl arg (norm_out e))
-     (* stop leaving non-idents in let binds for pat. doesn't seem to solve
-      * his problem though.. *)
-     | Pexp_let(r, [(p, e1)], e2) ->
-        let ls = norm_in e1 in
-        let (e1, ls) = resolve_in_exp ls in
-        let init = mk_let_lit r [(p, e1)] (norm_out e2) in
-          rw_expr (List.fold_left (wrap r) init ls)
      | Pexp_let(Recursive, pes, e2) ->
         (* we can assume more or less that all recursive ands are 
          * binds of mutually recursive functions, so we won't even try
