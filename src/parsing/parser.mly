@@ -333,6 +333,7 @@ conflicts.
 The precedences must be listed from low to high.
 */
 
+%nonassoc bot
 %nonassoc IN
 %nonassoc below_SEMI
 %nonassoc SEMI                          /* below EQUAL ({lbl=...; lbl=...}) */
@@ -363,12 +364,14 @@ The precedences must be listed from low to high.
 %nonassoc prec_constr_appl              /* above AS BAR COLONCOLON COMMA */
 %nonassoc below_SHARP
 %nonassoc SHARP                         /* simple_expr/toplevel_directive */
+%nonassoc above_SHARP
 %nonassoc below_DOT
 %nonassoc DOT
 /* Finally, the first tokens of simple_expr are above everything else. */
 %nonassoc BACKQUOTE BEGIN CHAR FALSE FLOAT INT INT32 INT64
           LBRACE LBRACELESS LBRACKET LBRACKETBAR LIDENT LPAREN
           NEW NATIVEINT PREFIXOP STRING TRUE UIDENT
+%nonassoc top
 
 
 /* Entry points */
@@ -1543,26 +1546,30 @@ liquid_val_decl:
 /* Liquid types */
 
 liquid_type:
-    liquid_type1
+    liquid_type_list
       {  }
-  | liquid_type1 STAR liquid_type
+  | LBRACE liquid_type1 STAR liquid_type_list BAR predicate RBRACE
       {  }
-  | liquid_type MINUSGREATER liquid_type
+  | LBRACE liquid_type1 STAR liquid_type_list BAR UIDENT RBRACE 
       {  }
-  | LBRACE liquid_type1 STAR liquid_type BAR predicate RBRACE
+
+liquid_type_list:
+    liquid_type1 STAR liquid_type_list 
       {  }
-  | LBRACE liquid_type1 STAR liquid_type BAR UIDENT RBRACE
+  | liquid_type1 
       {  }
-  | LPAREN liquid_type_comma_list RPAREN %prec below_SHARP
-      { match $2 with [stn] -> stn | _ -> raise Parse_error }
  
 liquid_type1:
-    LBRACE liquid_type2 BAR predicate RBRACE 
-      {  }
+    LPAREN liquid_type_comma_list RPAREN 
+      { match $2 with [stn] -> stn | _ -> raise Parse_error }
+  | LBRACE liquid_type2 BAR predicate RBRACE 
+      { rw_pred($2, $4) }
   | LBRACE liquid_type2 BAR UIDENT RBRACE
-      {  }
+      { rw_pred_pvar($2, $4) }
+  | liquid_type MINUSGREATER liquid_type
+      { PFArrow($1, $3) }
   | liquid_type2
-      {  }
+      { $1 }
 
 liquid_type2:
     BACKQUOTE LIDENT                                     /* tyvar */
