@@ -139,6 +139,9 @@ and exception_declaration = core_type list
 
 (* Predicate_Declarations *)
 
+and predicate_alias_declaration = string * predicate_pattern
+and predicate_alias = string
+
 and predicate_pattern =
     { ppredpat_desc: predpat_desc;
       ppredpat_loc: Location.t }
@@ -163,6 +166,23 @@ and predpatexp_desc =
   | Ppredpatexp_binop of predpatexp * predexp_op list * predpatexp
   | Ppredpatexp_field of string * predpatexp
   | Ppredpatexp_proj of int * predpatexp
+
+(* Signature structure *)
+
+and penv = (string * predicate_pattern) list * (string * litframe) list  
+
+(* Parsed frames *)
+
+and litframe =
+    PFvar of string * refinement
+  | PFconstr of Longident.t * litframe list * refinement
+  | PFarrow of litframe * litframe
+  | PFtuple of litframe list * refinement
+  | PFrecord of (litframe * string * mutable_flag) list * refinement
+
+and refinement =
+  | RLiteral of predicate_pattern
+  | RVar of string
 
 (* Qualifier declarations *)
 

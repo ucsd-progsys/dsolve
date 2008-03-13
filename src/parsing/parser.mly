@@ -28,10 +28,6 @@ let mkpredpat d =
   { ppredpat_desc = d; ppredpat_loc = symbol_rloc() }
 let mkpredpatexp d =
   { ppredpatexp_desc = d; ppredpatexp_loc = symbol_rloc() }
-let mkpred d =
-  { ppred_desc = d; ppred_loc = symbol_rloc() }
-let mkpredexp d =
-  { ppredexp_desc = d; ppredexp_loc = symbol_rloc() }
 let mkpat d =
   { ppat_desc = d; ppat_loc = symbol_rloc() }
 let mkexp d =
@@ -192,6 +188,38 @@ let bigarray_set arr arg newval =
                        ["", arr;
                         "", ghexp(Pexp_array coords);
                         "", newval]))
+
+(* Convenience for liquid interfaces *)
+
+let rw_frame f nr =
+    match f with
+      PFvar(s, r) -> PFvar(s, nr)
+    | PFconstr(s, f, r) -> PFconstr(s, f, nr)
+    | PFarrow(a, b) -> assert false
+    | PFtuple(a, r) -> PFtuple(a, nr)
+    | PFrecord(a, r) -> PFrecord(a, nr)
+
+let rw_frame_var f r =
+    let r = RVar(r) in
+    rw_frame f r
+
+let rw_frame_lit f r =
+    let r = RLiteral r in
+    rw_frame f r
+
+let ptrue = RLiteral( {ppredpat_desc = Ppredpat_true; 
+                       ppredpat_loc = Location.none} )
+
+let mkconstr a b r = PFconstr (a, b, r)
+let mkvar a r = PFvar (a, r)
+let mkarrow a b = PFarrow (a, b)
+let mktuple a r = PFtuple (a, r)
+let mkrecord a r = PFrecord (a, r)
+let mktrue_constr a b = mkconstr a b ptrue
+let mktrue_var a = mkvar a ptrue
+let mktrue_tuple a = mktuple a ptrue
+let mktrue_record a = mkrecord a ptrue
+
 %}
 
 /* Tokens */
@@ -1537,7 +1565,7 @@ qual_lit_op_list:
 
 liquid_signature:
     liquid_val_decl liquid_signature        { $1 :: $2 }
-  | liquid_val_decl                         { $1 }
+  | liquid_val_decl                         { [$1] }
 
 liquid_val_decl:
     LVAL LIDENT COLON liquid_type           { ($2, $4) }
@@ -1552,40 +1580,40 @@ liquid_type_list: /* this must be before liquid_type to resolve reduce/reduces *
 
 liquid_type:                             
     liquid_type_list
-      { match $1 with [st] -> st | _ -> PFtuple($1) }
+      { match $1 with [st] -> st | _ -> mktrue_tuple $1  }
   | LBRACE liquid_type1 STAR liquid_type_list BAR predicate RBRACE
-      { let pls = PFtuple($2::$4) in rw_pred (pls, $6) }
+      { mktuple ($2::$4) (RLiteral($6)) }
   | LBRACE liquid_type1 STAR liquid_type_list BAR UIDENT RBRACE 
-      { let pls = PFtuple($2::$4) in rw_pred (pls, $6) }
+      { mktuple ($2::$4) (RVar($6)) }
 
 
 liquid_type1:
     LPAREN liquid_type_comma_list RPAREN  %prec below_IDENT
       { match $2 with [stn] -> stn | _ -> raise Parse_error }
   | LBRACE liquid_type2 BAR predicate RBRACE 
-      { rw_pred ($2, $4) }
+      { rw_frame_lit $2 $4 }
   | LBRACE liquid_type2 BAR UIDENT RBRACE
-      { rw_pred_pvar ($2, $4) }
+      { rw_frame_var $2 $4 }
   | liquid_type MINUSGREATER liquid_type
-      { PFArrow($1, $3) }
+      { mkarrow $1 $3 }
   | liquid_type2
       { $1 }
 
 liquid_type2:
     BACKQUOTE LIDENT                                     /* tyvar */
-      { PFvar($2) }
+      { mktrue_var $2 }
   | type_longident                                       /* base_type */
-      { PFconstr($1, []) }
+      { mktrue_constr $1 [] }
   | liquid_type type_longident                           /* simple constructed */
-      { PFconstr($2, [$1]) }
+      { mktrue_constr $2 [$1] }
   | LPAREN liquid_type_comma_list RPAREN type_longident  /* multi-param constructed */
-      { PFconstr($4, $2) }
+      { mktrue_constr $4 $2 }
   | liquid_record
-      { PFrecord($1) }
+      { mktrue_record $1 }
 
 liquid_type_comma_list:
     liquid_type
-      { $1 }
+      { [$1] }
   | liquid_type COMMA liquid_type_comma_list
       { $1 :: $3 }
   
@@ -1594,14 +1622,16 @@ liquid_record:
       { $2 }
 
 liquid_field:
-    LIDENT COLON liquid_type
-      { ($1, $3) }
+    MUTABLE LIDENT COLON liquid_type
+      { ($4, $2, Mutable) }
+  | LIDENT COLON liquid_type
+      { ($3, $1, Immutable) }
 
 liquid_field_list:
     liquid_field SEMI liquid_field_list
       { $1 :: $3 }
   | liquid_field
-      { $1 }
+      { [$1] }
 
 /* Predicates */
 
@@ -1613,7 +1643,7 @@ predicate_alias:
 
 predicate_alias_list:
     predicate_alias predicate_alias_list    { $1 :: $2 }
-  | predicate_alias                         { $1 }
+  | predicate_alias                         { [$1] }
 
 /* Constants */
 

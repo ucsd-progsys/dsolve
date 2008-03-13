@@ -77,4 +77,3 @@ val vars: t -> Path.t list
 val instantiate_named_vars: (string * Path.t) list -> t -> t
 val transl_op: Asttypes.predexp_op -> binop                                                             
 val transl_rel: Asttypes.pred_rel -> binrel
-val transl_predicate: Parsetree.predicate_declaration -> t

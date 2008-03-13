@@ -230,26 +230,4 @@ let transl_rel = function
   | Pred_lt -> Lt
   | Pred_le -> Le
  
-let rec transl_predicate p =
-  let rec transl_pexpression pexp =
-    match pexp.ppredexp_desc with
-      | Ppredexp_int n ->
-	  PInt n
-      | Ppredexp_var y ->
-	  Var (Path.mk_ident y)
-      | Ppredexp_app (f, e) ->
-	  FunApp (f, List.map transl_pexpression e)
-      | Ppredexp_binop (e1, op, e2) ->
-	  Binop (transl_pexpression e1, transl_op op, transl_pexpression e2)
-      | Ppredexp_field (f, r) ->
-          Field (f, Var (Path.mk_ident r))
-  in
-  let rec transl_pred_rec pred =
-    match pred.ppred_desc with
-      | Ppred_true -> True
-      | Ppred_atom (e1, rel, e2) ->
-	  Atom (transl_pexpression e1, transl_rel rel, transl_pexpression e2)
-      | Ppred_not p -> Not (transl_pred_rec p)
-      | Ppred_and (p1, p2) -> And (transl_pred_rec p1, transl_pred_rec p2)
-      | Ppred_or (p1, p2) -> Or (transl_pred_rec p1, transl_pred_rec p2)
-  in transl_pred_rec p
+
