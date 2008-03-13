@@ -1,4 +1,6 @@
 squalif ITV(v): v.1 <= v.2
+squalif LEQ(v)(A:int): v <= A
+squalif GEQ(v)(A:int): A <= v
 
 let mmin (x:int) y = 
   if x <= y then x else y
