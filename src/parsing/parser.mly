@@ -333,7 +333,6 @@ conflicts.
 The precedences must be listed from low to high.
 */
 
-%nonassoc bot
 %nonassoc IN
 %nonassoc below_SEMI
 %nonassoc SEMI                          /* below EQUAL ({lbl=...; lbl=...}) */
@@ -357,6 +356,7 @@ The precedences must be listed from low to high.
 %right    INFIXOP1                      /* expr (e OP e OP e) */
 %right    COLONCOLON                    /* expr (e :: e :: e) */
 %left     INFIXOP2 PLUS MINUS MINUSDOT  /* expr (e OP e OP e) */
+%nonassoc below_STAR
 %left     INFIXOP3 STAR                 /* expr (e OP e OP e) */
 %right    INFIXOP4                      /* expr (e OP e OP e) */
 %nonassoc prec_unary_minus              /* unary - */
@@ -364,14 +364,13 @@ The precedences must be listed from low to high.
 %nonassoc prec_constr_appl              /* above AS BAR COLONCOLON COMMA */
 %nonassoc below_SHARP
 %nonassoc SHARP                         /* simple_expr/toplevel_directive */
-%nonassoc above_SHARP
 %nonassoc below_DOT
 %nonassoc DOT
+%nonassoc below_IDENT
 /* Finally, the first tokens of simple_expr are above everything else. */
 %nonassoc BACKQUOTE BEGIN CHAR FALSE FLOAT INT INT32 INT64
           LBRACE LBRACELESS LBRACKET LBRACKETBAR LIDENT LPAREN
           NEW NATIVEINT PREFIXOP STRING TRUE UIDENT
-%nonassoc top
 
 
 /* Entry points */
@@ -1545,27 +1544,28 @@ liquid_val_decl:
 
 /* Liquid types */
 
-liquid_type:
-    liquid_type_list
-      {  }
-  | LBRACE liquid_type1 STAR liquid_type_list BAR predicate RBRACE
-      {  }
-  | LBRACE liquid_type1 STAR liquid_type_list BAR UIDENT RBRACE 
-      {  }
+liquid_type_list: /* this must be before liquid_type to resolve reduce/reduces */
+    liquid_type1 STAR liquid_type_list
+      { $1 :: $3 }
+  | liquid_type1                        %prec below_STAR
+      { [$1] }
 
-liquid_type_list:
-    liquid_type1 STAR liquid_type_list 
-      {  }
-  | liquid_type1 
-      {  }
- 
+liquid_type:                             
+    liquid_type_list
+      { match $1 with [st] -> st | _ -> PFtuple($1) }
+  | LBRACE liquid_type1 STAR liquid_type_list BAR predicate RBRACE
+      { let pls = PFtuple($2::$4) in rw_pred (pls, $6) }
+  | LBRACE liquid_type1 STAR liquid_type_list BAR UIDENT RBRACE 
+      { let pls = PFtuple($2::$4) in rw_pred (pls, $6) }
+
+
 liquid_type1:
-    LPAREN liquid_type_comma_list RPAREN 
+    LPAREN liquid_type_comma_list RPAREN  %prec below_IDENT
       { match $2 with [stn] -> stn | _ -> raise Parse_error }
   | LBRACE liquid_type2 BAR predicate RBRACE 
-      { rw_pred($2, $4) }
+      { rw_pred ($2, $4) }
   | LBRACE liquid_type2 BAR UIDENT RBRACE
-      { rw_pred_pvar($2, $4) }
+      { rw_pred_pvar ($2, $4) }
   | liquid_type MINUSGREATER liquid_type
       { PFArrow($1, $3) }
   | liquid_type2
