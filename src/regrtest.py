@@ -4,11 +4,11 @@ import common, sys, time
 import itertools as it
 import dsolve
 
-testfiles = [("postests", 0), ("negtests", 256)]
+testfiles = [("postests", 0), ("negtests", 1)]
 
 def runtest(file, expected_status):
   start = time.time()
-  status = dsolve.run(file, False, [])
+  status = dsolve.solve_quals(file, False, True, [])
   if status == 2: sys.exit(2)
   print "%f seconds" % (time.time() - start)
 

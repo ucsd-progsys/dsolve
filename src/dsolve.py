@@ -3,10 +3,11 @@
 import sys, os, os.path, common
 
 d_pats= "default_patterns"
-gen   = "./liquid.opt -no-anormal -lqualifs -collect 4 -dqualifs"
-solve = "./liquid.opt -dframes"
+gen   = "./liquid.opt -no-anormal -lqualifs -collect 4 -dqualifs".split()
+solve = "./liquid.opt -dframes".split()
 flags = []
 tname = "/tmp/dsolve.scratch"
+null  = open("/dev/null", "w")
 
 def cat_files(files,outfile):
   os.system("rm -f %s" % outfile)
@@ -18,22 +19,23 @@ def gen_quals(src,bare):
     os.system("cp -f %s %s" % (hname, tname))
   else:
     cat_files([hname,d_pats],tname)
-  common.logged_sys_call("%s %s %s 1> /dev/null 2> %s" % (gen, tname, fname, qname))
+  qfile = open(qname, "w")
+  common.logged_sys_call(gen + [tname, fname], null, qfile)
+  qfile.close()
 
-def solve_quals(src,flags):
-  return common.logged_sys_call("%s %s %s.ml" % (solve, " ".join(flags),src))
-
-def run(file,bare,flags):
+def solve_quals(file,bare,quiet,flags):
   bname = file[:-3]
   os.system("rm -f %s.quals; rm -f %s.annot" % (bname, bname))
   gen_quals(bname,bare)
-  return solve_quals(bname,flags)
+  if quiet: out = null
+  else: out = None
+  return common.logged_sys_call(solve + flags + [("%s.ml" % bname)], out)
 
 def main():
   bare = (sys.argv[1] == "-bare")
   if bare: flags = sys.argv[2:-1]
   else: flags = sys.argv[1:-1]
-  sys.exit(run(sys.argv[len(sys.argv) - 1],bare,flags))
+  sys.exit(solve_quals(sys.argv[len(sys.argv) - 1],bare,False,flags))
 
 if __name__ == "__main__":
   main()
