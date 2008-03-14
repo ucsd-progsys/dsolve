@@ -1579,7 +1579,7 @@ liquid_type_list: /* this must be before liquid_type to resolve reduce/reduces *
       { [$1] }
 
 liquid_type:                             
-    liquid_type_list
+    liquid_type_list 
       { match $1 with [st] -> st | _ -> mktrue_tuple $1  }
   | LBRACE liquid_type1 STAR liquid_type_list BAR predicate RBRACE
       { mktuple ($2::$4) (RLiteral($6)) }
@@ -1588,9 +1588,7 @@ liquid_type:
 
 
 liquid_type1:
-    LPAREN liquid_type_comma_list RPAREN  %prec below_IDENT
-      { match $2 with [stn] -> stn | _ -> raise Parse_error }
-  | LBRACE liquid_type2 BAR predicate RBRACE 
+    LBRACE liquid_type2 BAR predicate RBRACE 
       { rw_frame_lit $2 $4 }
   | LBRACE liquid_type2 BAR UIDENT RBRACE
       { rw_frame_var $2 $4 }
@@ -1600,8 +1598,10 @@ liquid_type1:
       { $1 }
 
 liquid_type2:
-    BACKQUOTE LIDENT                                     /* tyvar */
+    QUOTE LIDENT                                          /* tyvar */
       { mktrue_var $2 }
+  | LPAREN liquid_type_comma_list RPAREN %prec below_IDENT 
+      { match $2 with [stn] -> stn | _ -> raise Parse_error } 
   | type_longident                                       /* base_type */
       { mktrue_constr $1 [] }
   | liquid_type type_longident                           /* simple constructed */

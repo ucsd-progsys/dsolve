@@ -61,6 +61,10 @@ let load_qualfile ppf qualfile =
   let qs = Pparse.file ppf qualfile Parse.qualifiers ast_impl_magic_number in
     List.map Qualmod.type_qualifier qs
 
+let load_mlqfile ppf ifacefile =
+  let (preds, vals) = Pparse.file ppf ifacefile Parse.liquid_interface ast_impl_magic_number in
+    (preds, vals)
+
 let process_sourcefile fname =
   try
    let (str, env, fenv) as source = load_sourcefile std_formatter !filename in
@@ -68,8 +72,12 @@ let process_sourcefile fname =
    then
      Qdump.dump_default_qualifiers source
    else
-     let qname = (Misc.chop_extension_if_any fname) ^ ".quals" in
+     let bname = Misc.chop_extension_if_any fname in
+     let qname = bname ^ ".quals" in
+     let iname = bname ^ ".mlq" in
      let quals = load_qualfile std_formatter qname in
+     let ifenv = load_mlqfile std_formatter iname in
+     let _ = ifenv in
      let source = (List.rev_append quals str, env, fenv) in
      analyze std_formatter !filename source
   with x -> (report_error std_formatter x; exit 1)
