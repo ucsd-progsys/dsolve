@@ -62,7 +62,7 @@ let load_qualfile ppf qualfile =
     List.map Qualmod.type_qualifier qs
 
 let load_mlqfile ppf ifacefile =
-  let (preds, vals) = Pparse.file ppf ifacefile Parse.liquid_interface ast_impl_magic_number in
+  let (preds, vals) = if Sys.file_exists ifacefile then Pparse.file ppf ifacefile Parse.liquid_interface ast_impl_magic_number else ([], []) in
     (preds, vals)
 
 let process_sourcefile fname =

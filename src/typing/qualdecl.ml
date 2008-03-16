@@ -36,7 +36,7 @@ let transl_patpred_single p =
       | Ppredpatexp_int (n) ->
           let _ = if List.length n != 1 then assert false in
 	        PInt (List.hd n)
-      | Ppredpatexp_var (y) -> (* flatten longidents for now -- need to look these up? *)
+      | Ppredpatexp_var (y) -> (* need to look these up? *)
 	        Var (Path.mk_ident (conflat y))
       | Ppredpatexp_funapp (f, es) ->
 	        FunApp (conflat f, List.map transl_expr_rec es)

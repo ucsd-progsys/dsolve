@@ -50,6 +50,8 @@ parsing/parser.cmo: parsing/syntaxerr.cmi parsing/parsetree.cmi \
 parsing/parser.cmx: parsing/syntaxerr.cmx parsing/parsetree.cmi \
     parsing/longident.cmx parsing/location.cmx utils/clflags.cmx \
     parsing/asttypes.cmi parsing/parser.cmi 
+parsing/parsetreewrapper.cmo: parsing/parsetree.cmi 
+parsing/parsetreewrapper.cmx: parsing/parsetree.cmi 
 parsing/printast.cmo: parsing/parsetree.cmi parsing/longident.cmi \
     parsing/location.cmi parsing/asttypes.cmi parsing/printast.cmi 
 parsing/printast.cmx: parsing/parsetree.cmi parsing/longident.cmx \
@@ -76,8 +78,8 @@ typing/parmatch.cmi: typing/types.cmi typing/typedtree.cmi \
     parsing/location.cmi typing/env.cmi 
 typing/path.cmi: typing/ident.cmi 
 typing/predef.cmi: typing/types.cmi typing/path.cmi typing/ident.cmi 
-typing/predicate.cmi: typing/path.cmi parsing/parsetree.cmi \
-    parsing/longident.cmi parsing/asttypes.cmi 
+typing/predicate.cmi: typing/path.cmi parsing/longident.cmi \
+    parsing/asttypes.cmi 
 typing/printtyp.cmi: typing/types.cmi typing/path.cmi typing/outcometree.cmi \
     parsing/longident.cmi typing/ident.cmi 
 typing/stypes.cmi: typing/typedtree.cmi parsing/location.cmi 
@@ -329,16 +331,16 @@ qualifying/constraint.cmx: qualifying/wellformed.cmx \
     utils/heap.cmx qualifying/frame.cmx typing/env.cmx typing/common.cmx \
     utils/clflags.cmx qualifying/builtins.cmx utils/bstats.cmx \
     parsing/asttypes.cmi qualifying/constraint.cmi 
-qualifying/frame.cmo: typing/types.cmi typing/typedtree.cmi \
-    qualifying/qualifier.cmi typing/predicate.cmi typing/predef.cmi \
-    typing/path.cmi typing/oprint.cmi typing/ident.cmi typing/env.cmi \
-    typing/common.cmo typing/btype.cmi parsing/asttypes.cmi \
-    qualifying/frame.cmi 
-qualifying/frame.cmx: typing/types.cmx typing/typedtree.cmx \
-    qualifying/qualifier.cmx typing/predicate.cmx typing/predef.cmx \
-    typing/path.cmx typing/oprint.cmx typing/ident.cmx typing/env.cmx \
-    typing/common.cmx typing/btype.cmx parsing/asttypes.cmi \
-    qualifying/frame.cmi 
+qualifying/frame.cmo: typing/typetexp.cmi typing/types.cmi \
+    typing/typedtree.cmi qualifying/qualifier.cmi typing/qualdecl.cmo \
+    typing/predicate.cmi typing/predef.cmi typing/path.cmi typing/oprint.cmi \
+    parsing/location.cmi typing/ident.cmi typing/env.cmi typing/common.cmo \
+    typing/btype.cmi parsing/asttypes.cmi qualifying/frame.cmi 
+qualifying/frame.cmx: typing/typetexp.cmx typing/types.cmx \
+    typing/typedtree.cmx qualifying/qualifier.cmx typing/qualdecl.cmx \
+    typing/predicate.cmx typing/predef.cmx typing/path.cmx typing/oprint.cmx \
+    parsing/location.cmx typing/ident.cmx typing/env.cmx typing/common.cmx \
+    typing/btype.cmx parsing/asttypes.cmi qualifying/frame.cmi 
 qualifying/lightenv.cmo: typing/common.cmo 
 qualifying/lightenv.cmx: typing/common.cmx 
 qualifying/message.cmo: qualifying/message.cmi 

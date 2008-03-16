@@ -203,12 +203,12 @@ let rw_frame_var f r =
     let r = RVar(r) in
     rw_frame f r
 
-let rw_frame_lit f r =
-    let r = RLiteral r in
+let rw_frame_lit f v p =
+    let r = RLiteral (v, p) in
     rw_frame f r
 
-let ptrue = RLiteral( {ppredpat_desc = Ppredpat_true; 
-                       ppredpat_loc = Location.none} )
+let ptrue = RLiteral( "", {ppredpat_desc = Ppredpat_true; 
+                          ppredpat_loc = Location.none} )
 
 let mkconstr a b r = PFconstr (a, b, r)
 let mkvar a r = PFvar (a, r)
@@ -1581,15 +1581,15 @@ liquid_type_list: /* this must be before liquid_type to resolve reduce/reduces *
 liquid_type:                             
     liquid_type_list 
       { match $1 with [st] -> st | _ -> mktrue_tuple $1  }
-  | LBRACE liquid_type1 STAR liquid_type_list BAR predicate RBRACE
-      { mktuple ($2::$4) (RLiteral($6)) }
+  | LBRACE liquid_type1 STAR liquid_type_list BAR LPAREN UIDENT RPAREN predicate RBRACE
+      { mktuple ($2::$4) (RLiteral($7, $9)) }
   | LBRACE liquid_type1 STAR liquid_type_list BAR UIDENT RBRACE 
       { mktuple ($2::$4) (RVar($6)) }
 
 
 liquid_type1:
-    LBRACE liquid_type2 BAR predicate RBRACE 
-      { rw_frame_lit $2 $4 }
+    LBRACE liquid_type2 BAR LPAREN UIDENT RPAREN predicate RBRACE 
+      { rw_frame_lit $2  $5 $7  }
   | LBRACE liquid_type2 BAR UIDENT RBRACE
       { rw_frame_var $2 $4 }
   | liquid_type MINUSGREATER liquid_type
@@ -1639,7 +1639,7 @@ predicate:
     qualifier_pattern                       { $1 } 
 
 predicate_alias:
-    PREDICATE UIDENT EQUAL predicate        { ($2, $4) }
+    PREDICATE UIDENT EQUAL LPAREN UIDENT RPAREN predicate        { ($2, ($5, $7)) }
 
 predicate_alias_list:
     predicate_alias predicate_alias_list    { $1 :: $2 }

@@ -1,3 +1,4 @@
+open Parsetree (* must be opened before typedtree *)
 open Types
 open Typedtree
 open Btype
@@ -6,6 +7,7 @@ open Asttypes
 
 module C = Common
 module PM = C.PathMap
+module T = Typetexp
 
 type substitution = Path.t * Predicate.pexpr
 
@@ -85,6 +87,52 @@ let rec pprint ppf = function
    | _ as f -> pprint ppf f
  and pprint_list ppf = Oprint.print_list pprint (fun ppf -> fprintf ppf ",@;<1 2>") ppf
 
+let translate_variance = function
+  | (true, true, true) -> Invariant
+  | (true, false, false) -> Covariant
+  | (false, true, false) -> Contravariant
+  | _ -> assert false
+
+let transl_pref plist p = 
+  let dummy () = Path.mk_ident "" in
+  let fp s = 
+    let b = try List.find (fun (nm, _) -> nm = s) plist with
+      Not_found -> failwith (Printf.sprintf "%s not found in mlq\n" s) in
+    (fun (_, p) -> p) b in
+  let (v, p) =
+    match p with
+    | RLiteral (v, p) -> (v, p)
+    | RVar s -> fp s in
+  ([], Qconst([(dummy (), Path.mk_ident v, Qualdecl.transl_patpred_single p)]))
+
+let rec transl_pframe env plist pf = 
+  let vars = ref [] in
+  let getvar a = try List.find (fun b -> Path.name b = a) !vars 
+                   with Not_found -> let a = Path.mk_ident a in
+                   let _ = vars := a::!vars in
+                     a in
+  let transl_pref = transl_pref plist in
+  let rec transl_pframe_rec pf =
+    match pf with
+    | PFvar (a, r) -> Fvar (getvar a)
+    | PFconstr (l, fs, r) -> transl_constr l fs r
+    | PFarrow (a, b) -> Farrow (None, transl_pframe_rec a, transl_pframe_rec b)
+    | PFtuple (fs, r) -> Ftuple (List.map transl_pframe_rec fs, transl_pref r)
+    | PFrecord (fs, r) -> transl_record fs r 
+  and transl_constr l fs r =
+    let (path, decl) = try Env.lookup_type l env with
+      Not_found -> raise (T.Error(Location.none, T.Unbound_type_constructor l)) in
+    let _ = if List.length fs != decl.type_arity then
+      raise (T.Error(Location.none, T.Type_arity_mismatch(l, decl.type_arity, List.length fs))) in
+    let vs = List.map translate_variance decl.type_variance in
+    let fs = List.map transl_pframe_rec fs in
+    Fconstr(path, fs, vs, transl_pref r)
+  and transl_record fs r =
+    let fs = List.map (fun (f, s, m) -> (transl_pframe_rec f, s, m)) fs in
+    let path = Path.mk_ident "_anon_record" in
+    Frecord(path, fs, transl_pref r) in
+  transl_pframe_rec pf
+
 let empty_refinement = ([], Qconst [])
 
 let false_refinement = ([], Qconst [(Path.mk_ident "false", Path.mk_ident "V", Predicate.Not (Predicate.True))])
@@ -123,12 +171,6 @@ let instantiate fr ftemplate =
 let fresh_refinementvar open_assn () = ([], Qvar (Path.mk_ident "k", open_assn))
 
 let fresh_fvar () = Fvar (Path.mk_ident "a")
-
-let translate_variance = function
-  | (true, true, true) -> Invariant
-  | (true, false, false) -> Covariant
-  | (false, true, false) -> Contravariant
-  | _ -> assert false
 
 (* 1. Tedium ahead:
    OCaml stores information about record types in two places:

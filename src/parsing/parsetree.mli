@@ -169,7 +169,7 @@ and predpatexp_desc =
 
 (* Signature structure *)
 
-and penv = (string * predicate_pattern) list * (string * litframe) list  
+and penv = (string * (string * predicate_pattern)) list * (string * litframe) list  
 
 (* Parsed frames *)
 
@@ -181,7 +181,7 @@ and litframe =
   | PFrecord of (litframe * string * mutable_flag) list * refinement
 
 and refinement =
-  | RLiteral of predicate_pattern
+  | RLiteral of string * predicate_pattern
   | RVar of string
 
 (* Qualifier declarations *)
