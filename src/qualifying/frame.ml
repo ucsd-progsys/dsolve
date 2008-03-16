@@ -105,7 +105,7 @@ let transl_pref plist p =
     | RVar s -> fp s in
   ([], Qconst([(dummy (), Path.mk_ident v, Qualdecl.transl_patpred_single p)]))
 
-let rec transl_pframe env plist pf = 
+let rec translate_pframe env plist pf = 
   let vars = ref [] in
   let getvar a = try List.find (fun b -> Path.name b = a) !vars 
                    with Not_found -> let a = Path.mk_ident a in

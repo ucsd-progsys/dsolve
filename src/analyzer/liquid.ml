@@ -3,6 +3,8 @@ open Format
 open Liqerrors
 open Misc
 
+module F = Frame
+
 let usage = "Usage: liquid <options> [source-file]\noptions are:"
 
 let filename = ref ""
@@ -61,9 +63,17 @@ let load_qualfile ppf qualfile =
   let qs = Pparse.file ppf qualfile Parse.qualifiers ast_impl_magic_number in
     List.map Qualmod.type_qualifier qs
 
-let load_mlqfile ppf ifacefile =
+let load_mlqfile ppf env ifacefile =
   let (preds, vals) = if Sys.file_exists ifacefile then Pparse.file ppf ifacefile Parse.liquid_interface ast_impl_magic_number else ([], []) in
-    (preds, vals)
+    List.map (fun (s, pf) -> (s, F.translate_pframe env preds pf)) vals 
+
+let load_mlq_in_env env fenv ifenv =
+  let load_frame fenv (s, pf) =
+    try
+      let (p, _) = Env.lookup_value (Longident.parse s) env in
+        Lightenv.add p pf fenv 
+    with Not_found -> failwith (Printf.sprintf "mlq: lval %s does not correspond to program value" s) in
+  List.fold_left load_frame fenv ifenv
 
 let process_sourcefile fname =
   try
@@ -76,8 +86,8 @@ let process_sourcefile fname =
      let qname = bname ^ ".quals" in
      let iname = bname ^ ".mlq" in
      let quals = load_qualfile std_formatter qname in
-     let ifenv = load_mlqfile std_formatter iname in
-     let _ = ifenv in
+     let ifenv = load_mlqfile std_formatter env iname in
+     let fenv = load_mlq_in_env env fenv ifenv in
      let source = (List.rev_append quals str, env, fenv) in
      analyze std_formatter !filename source
   with x -> (report_error std_formatter x; exit 1)

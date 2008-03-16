@@ -1581,14 +1581,14 @@ liquid_type_list: /* this must be before liquid_type to resolve reduce/reduces *
 liquid_type:                             
     liquid_type_list 
       { match $1 with [st] -> st | _ -> mktrue_tuple $1  }
-  | LBRACE liquid_type1 STAR liquid_type_list BAR LPAREN UIDENT RPAREN predicate RBRACE
+  | LBRACE liquid_type1 STAR liquid_type_list BAR LPAREN LIDENT RPAREN predicate RBRACE
       { mktuple ($2::$4) (RLiteral($7, $9)) }
   | LBRACE liquid_type1 STAR liquid_type_list BAR UIDENT RBRACE 
       { mktuple ($2::$4) (RVar($6)) }
 
 
 liquid_type1:
-    LBRACE liquid_type2 BAR LPAREN UIDENT RPAREN predicate RBRACE 
+    LBRACE liquid_type2 BAR LPAREN LIDENT RPAREN predicate RBRACE 
       { rw_frame_lit $2  $5 $7  }
   | LBRACE liquid_type2 BAR UIDENT RBRACE
       { rw_frame_var $2 $4 }
@@ -1639,7 +1639,7 @@ predicate:
     qualifier_pattern                       { $1 } 
 
 predicate_alias:
-    PREDICATE UIDENT EQUAL LPAREN UIDENT RPAREN predicate        { ($2, ($5, $7)) }
+    PREDICATE UIDENT EQUAL LPAREN LIDENT RPAREN predicate        { ($2, ($5, $7)) }
 
 predicate_alias_list:
     predicate_alias predicate_alias_list    { $1 :: $2 }

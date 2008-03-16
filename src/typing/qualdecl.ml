@@ -46,7 +46,7 @@ let transl_patpred_single p =
           Field (f, transl_expr_rec e1)
       | Ppredpatexp_proj (n, e1) ->
           Proj (n, transl_expr_rec e1)
-      | _ -> assert false
+      | _ -> failwith "Wildcard used in single qualifier or predicate"
   in
   let rec transl_pred_rec pd =
     match pd.ppredpat_desc with
