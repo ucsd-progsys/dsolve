@@ -37,7 +37,9 @@ def main():
   bare = (sys.argv[1] == "-bare")
   if bare: flags = sys.argv[2:-1]
   else: flags = sys.argv[1:-1]
-  sys.exit(solve_quals(sys.argv[len(sys.argv) - 1],bare,False,flags))
+  fn = sys.argv[len(sys.argv) - 1]
+  gen_quals(fn, bare)
+  sys.exit(solve_quals(fn,bare,False,flags))
 
 if __name__ == "__main__":
   main()

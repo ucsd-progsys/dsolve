@@ -363,8 +363,19 @@ let post_solve () =
     (Printf.printf "##time##\n"; Bstats.print stdout "\nTime to solve constraints:\n";
     Printf.printf "##endtime##\n"; (*TheoremProver.dump_simple_stats ()*))
 
-let qualify_implementation sourcefile fenv qs str =
-  let (qs, _, cs) = constrain_structure fenv qs str in
+let qualify_implementation sourcefile fenv ifenv qs str =
+  let (qs, fenv, cs) = constrain_structure fenv qs str in
+  let mfm p f = 
+    if Le.mem p fenv 
+    then
+      Some (SubFrame (fenv, [], Le.find p fenv, f)) 
+    else
+      None in
+  let lbl_cstr c =
+    { lc_cstr = c; lc_tenv = Env.empty; lc_orig = Loc (Location.none); lc_id = fresh_fc_id () } in
+  let cs' = Le.maplistfilter mfm ifenv in
+  let cs' = List.map lbl_cstr cs' in
+  let cs = cs' @ cs in
   let _ = pre_solve () in
   let inst_qs = Bstats.time "instantiating quals" (instantiate_in_environments cs) qs in
   let (s,cs) = Bstats.time "solving" (solve inst_qs) cs in

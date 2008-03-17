@@ -44,8 +44,8 @@ let type_implementation initial_env ast =
     Typecore.force_delayed_checks ();
     str
 
-let analyze ppf sourcefile (str, env, fenv) =
-  Qualifymod.qualify_implementation sourcefile fenv [] str
+let analyze ppf sourcefile (str, env, fenv, ifenv) =
+  Qualifymod.qualify_implementation sourcefile fenv ifenv [] str
 
 open Clflags
 
@@ -87,8 +87,8 @@ let process_sourcefile fname =
      let iname = bname ^ ".mlq" in
      let quals = load_qualfile std_formatter qname in
      let ifenv = load_mlqfile std_formatter env iname in
-     let fenv = load_mlq_in_env env fenv ifenv in
-     let source = (List.rev_append quals str, env, fenv) in
+     let ifenv = load_mlq_in_env env Lightenv.empty ifenv in
+     let source = (List.rev_append quals str, env, fenv, ifenv) in
      analyze std_formatter !filename source
   with x -> (report_error std_formatter x; exit 1)
 
