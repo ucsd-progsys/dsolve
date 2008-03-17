@@ -29,7 +29,10 @@ let rec fold f b p = match p with
       let b = List.fold_left (fold f) b (pattern_descs pats) in f b p
   | _ -> assert false
 
-let env_bind tenv env pat frame = Lightenv.addn (bind tenv pat frame) env
+(* ming: temp support for type annotations patched in here. ignore binding if
+ * already bound in env *)
+let env_bind tenv env pat frame = 
+  Lightenv.addn (List.filter (fun (p, _) -> not(Lightenv.mem p env)) (bind tenv pat frame)) env
 
 let null_binding_fold b = function
   | Tpat_var x -> (Path.Pident x, P.Var (Path.mk_ident "z")) :: b
