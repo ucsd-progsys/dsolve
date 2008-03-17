@@ -35,11 +35,12 @@ simple ADTs (meaning 'a list) will also work, but disjoint unions/variants/etc. 
 
 ERROR MESSAGES:
 
--liquid interface files which contain idents not found in the program will fail with an explicit error. Files which contain types which don't unify with the program shapes will fail with a cryptic error about types not being supported in instantiation:
+-liquid interface files which contain idents not found in the program will fail with an explicit error. Files which contain types which don't unify with the program shapes will fail with a cryptic error* about types not being supported in instantiation:
 
 Unsupported types for instantiation: {({bool | true}, {int | true}) | true}
   {int | k_1191}
 Fatal error: exception Assert_failure("qualifying/frame.ml", 168, 5)
+*other cryptic errors may apply
 
 For reasons I don't understand yet, this doesn't always happen, eg if the shape is only different by a differint type constructor name.
 
