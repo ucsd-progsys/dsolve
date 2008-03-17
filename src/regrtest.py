@@ -7,6 +7,10 @@ import dsolve
 testfiles = [("postests", 0), ("negtests", 1)]
 
 def runtest(file, expected_status):
+  status = dsolve.gen_quals(file, False)
+  if status != 0: 
+    print "Qualgen failed on %s" % file
+    sys.exit(2)
   start = time.time()
   status = dsolve.solve_quals(file, False, True, [])
   if status == 2: sys.exit(2)

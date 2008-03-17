@@ -14,19 +14,21 @@ def cat_files(files,outfile):
   for f in files: os.system("cat %s 1>> %s 2> /dev/null" % (f,outfile))
 
 def gen_quals(src,bare):
-  (fname,qname,hname) = (src+".ml", src+".quals", src+".hquals")
+  bname = src[:-3]
+  (fname,qname,hname) = (bname+".ml", bname+".quals", bname+".hquals")
+  os.system("rm -f %s" % qname)
   if bare:
     os.system("cp -f %s %s" % (hname, tname))
   else:
     cat_files([hname,d_pats],tname)
   qfile = open(qname, "w")
-  common.logged_sys_call(gen + [tname, fname], null, qfile)
+  succ = common.logged_sys_call(gen + [tname, fname], null, qfile)
   qfile.close()
+  return succ
 
 def solve_quals(file,bare,quiet,flags):
   bname = file[:-3]
-  os.system("rm -f %s.quals; rm -f %s.annot" % (bname, bname))
-  gen_quals(bname,bare)
+  os.system("rm -f %s.annot" % bname)
   if quiet: out = null
   else: out = None
   return common.logged_sys_call(solve + flags + [("%s.ml" % bname)], out)
