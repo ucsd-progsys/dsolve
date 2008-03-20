@@ -1581,15 +1581,15 @@ liquid_type_list: /* this must be before liquid_type to resolve reduce/reduces *
 liquid_type:                             
     liquid_type_list 
       { match $1 with [st] -> st | _ -> mktrue_tuple $1  }
-  | LBRACE liquid_type1 STAR liquid_type_list BAR LPAREN LIDENT RPAREN predicate RBRACE
-      { mktuple ($2::$4) (RLiteral($7, $9)) }
+  | LBRACE LIDENT COLON liquid_type1 STAR liquid_type_list BAR predicate RBRACE
+      { mktuple ($4::$6) (RLiteral($2, $8)) }
   | LBRACE liquid_type1 STAR liquid_type_list BAR UIDENT RBRACE 
       { mktuple ($2::$4) (RVar($6)) }
 
 
 liquid_type1:
-    LBRACE liquid_type2 BAR LPAREN LIDENT RPAREN predicate RBRACE 
-      { rw_frame_lit $2  $5 $7  }
+    LBRACE LIDENT COLON liquid_type2 BAR predicate RBRACE 
+      { rw_frame_lit $4 $2 $6  }
   | LBRACE liquid_type2 BAR UIDENT RBRACE
       { rw_frame_var $2 $4 }
   | liquid_type MINUSGREATER liquid_type
