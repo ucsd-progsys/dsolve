@@ -51,6 +51,8 @@ LIQUID=driver/pparse.cmo analyzer/qdump.cmo analyzer/liqerrors.cmo analyzer/liqu
 
 LIQOBJS=$(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(LIQUID)
 
+default: liquid.opt
+
 liquid: $(LIQOBJS)
 	$(CAMLC) $(LINKFLAGS) -custom -o liquid str.cma unix.cma nums.cma oyices.cma graph.cma libqp.cma $(LIQOBJS)
 
