@@ -93,7 +93,7 @@ let translate_variance = function
   | (false, true, false) -> Contravariant
   | _ -> assert false
 
-let transl_pref plist p = 
+let transl_pref plist env p = 
   let dummy () = Path.mk_ident "" in
   let fp s = 
     let b = try List.find (fun (nm, _) -> nm = s) plist with
@@ -103,15 +103,16 @@ let transl_pref plist p =
     match p with
     | RLiteral (v, p) -> (v, p)
     | RVar s -> fp s in
-  ([], Qconst([(dummy (), Path.mk_ident v, Qualdecl.transl_patpred_single p)]))
+  let valu = Path.mk_ident v  in
+  ([], Qconst([(dummy (), valu, Qualdecl.transl_patpred_single false valu env p)]))
 
-let rec translate_pframe env plist pf = 
+let rec translate_pframe env plist pf =
   let vars = ref [] in
-  let getvar a = try List.find (fun b -> Path.name b = a) !vars 
+  let getvar a = try List.find (fun b -> Path.name b = a) !vars
                    with Not_found -> let a = Path.mk_ident a in
                    let _ = vars := a::!vars in
                      a in
-  let transl_pref = transl_pref plist in
+  let transl_pref = transl_pref plist env in
   let rec transl_pframe_rec pf =
     match pf with
     | PFvar (a, r) -> Fvar (getvar a)

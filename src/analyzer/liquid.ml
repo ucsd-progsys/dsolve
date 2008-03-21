@@ -45,7 +45,7 @@ let type_implementation initial_env ast =
     str
 
 let analyze ppf sourcefile (str, env, fenv, ifenv) =
-  Qualifymod.qualify_implementation sourcefile fenv ifenv [] str
+  Qualifymod.qualify_implementation sourcefile fenv ifenv env [] str
 
 open Clflags
 

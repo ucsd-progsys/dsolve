@@ -30,14 +30,23 @@ let transl_rels rels =
       [] -> rel_star 
     | _ -> List.map transl_rel rels
 
-let transl_patpred_single p =
+let transl_patpred_single simple valu env p =
+  let penv = ref [(Path.name valu, valu)] in
+  let ap p pid = penv := (p, pid)::!penv; pid in
+  let fep p = fst (Env.lookup_value p env) in
+  let fp p' = 
+    let p = conflat p' in
+      try snd (List.find (fun (p', pid) -> p = p') !penv) with 
+        Not_found -> try let ep = fep p' in ap p ep with
+          Not_found -> let pid = Path.mk_ident p in 
+            ap p pid in
   let rec transl_expr_rec pe =
     match pe.ppredpatexp_desc with
       | Ppredpatexp_int (n) ->
           let _ = if List.length n != 1 then assert false in
 	        PInt (List.hd n)
-      | Ppredpatexp_var (y) -> (* need to look these up? *)
-	        Var (Path.mk_ident (conflat y))
+      | Ppredpatexp_var (y) ->
+	        Var (if simple then Path.mk_ident (conflat y) else fp y)
       | Ppredpatexp_funapp (f, es) ->
 	        FunApp (conflat f, List.map transl_expr_rec es)
       | Ppredpatexp_binop (e1, ops, e2) ->
