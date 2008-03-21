@@ -20,7 +20,7 @@ def gen_quals(src,bare,col):
     os.system("cp -f %s %s" % (hname, tname))
   else:
     cat_files([hname,d_pats],tname)
-  gen   = ("./liquid.opt -no-anormal -lqualifs -collect %d -dqualifs" % col).split() 
+  gen   = ("./liquid.opt -no-anormal -collect %d -dqualifs" % col).split()
   qfile = open(qname, "w")
   succ = common.logged_sys_call(gen + [tname, fname], null, qfile)
   qfile.close()
