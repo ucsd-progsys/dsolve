@@ -6,13 +6,15 @@ import dsolve
 
 testfiles = [("postests", 0), ("negtests", 1)]
 
-def runtest(file, expected_status):
-  status = dsolve.gen_quals(file, False)
+def runtest(filep, expected_status):
+  file = filep[0]
+  collect = int(filep[1])
+  status = dsolve.gen_quals(file, False, collect)
   if status != 0: 
     print "Qualgen failed on %s" % file
     sys.exit(2)
   start = time.time()
-  status = dsolve.solve_quals(file, False, True, [])
+  status = dsolve.solve_quals(file, False, True, [" -v 0 "])
   if status == 2: sys.exit(2)
   print "%f seconds" % (time.time() - start)
 
@@ -25,7 +27,7 @@ def runtest(file, expected_status):
 
 def runtests(file, expected_status):
   print "Running tests from %s" % file
-  return [runtest(test.rstrip(), expected_status) for test in common.read_lines(file)]
+  return [runtest(test.rstrip().split(), expected_status) for test in common.read_lines(file)]
 
 results   = [runtests(file, expected_status) for (file, expected_status) in testfiles]
 failed    = [result[0] for result in it.chain(*results) if result[1] == False]

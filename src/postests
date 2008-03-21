@@ -1,33 +1,33 @@
-examples/tup1.ml
-examples/tup2a.ml
-examples/tup2b.ml
-examples/reltuple.ml
-DMLex/simplex.ml
-DML/quicksort_sane.ml
-examples/ooo.ml
-examples/tree.ml
-examples/list.ml
-examples/fold.ml
-DML/tower.ml
-DML/fft.ml
-examples/sum.ml
-examples/dotprod0.ml
-DML/bsearch.ml
-DML/dotprod.ml
-DML/dotprod2.ml
-DMLex/bcopy.ml
-DMLex/bs2.ml
-DML/insertsort.ml
-DML/queen.ml
-DMLex/gauss.ml
-examples/unbounded.ml
-examples/vecswap.ml
-examples/arraymax.ml
-examples/minibot.ml
-DMLex/heapsort.ml
-examples/encrypt_cfb8.ml
-DMLex/matmult.ml
-examples/quicksort.ml
-examples/bitv.ml
-examples/assert_fun.ml
-examples/baseinst.ml
+examples/tup1.ml            0
+examples/tup2a.ml           0
+examples/tup2b.ml           1
+examples/reltuple.ml        0
+DMLex/simplex.ml            1
+DML/quicksort_sane.ml       3
+examples/ooo.ml             0
+examples/tree.ml            0
+examples/list.ml            0
+examples/fold.ml            0
+DML/tower.ml                2
+DML/fft.ml                  4
+examples/sum.ml             0
+examples/dotprod0.ml        1
+DML/bsearch.ml              1
+DML/dotprod.ml              1
+DML/dotprod2.ml             1
+DMLex/bcopy.ml              0
+DMLex/bs2.ml                1
+DML/insertsort.ml           1
+DML/queen.ml                1
+DMLex/gauss.ml              1
+examples/unbounded.ml       1
+examples/vecswap.ml         1
+examples/arraymax.ml        1
+examples/minibot.ml         0
+DMLex/heapsort.ml           0
+examples/encrypt_cfb8.ml    0
+DMLex/matmult.ml            1
+examples/quicksort.ml       1
+examples/bitv.ml            10
+examples/assert_fun.ml      0
+examples/baseinst.ml        0

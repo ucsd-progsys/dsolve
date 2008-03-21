@@ -14,19 +14,19 @@ the (v) is the bound variable.
 
 *** Val to liquid type bindings:
 
-lval program_ident : { int | (v) v > 0 }
+lval program_ident : {v: int | v > 0 }
 
 the type on the right hand side of the colon can take on several forms:
 
 int == {int | true}
 
-{int array | (v) Array.length v > 0} == {{int | true} array | (v) Array.length v > 0)
+{v: int array | Array.length v > 0} == {v: {int | true} array | Array.length v > 0)
 
-{int | P} == {int | (v) v > 0} ** NOTE: predicate aliases can't be nested
+{int | P} == {v: int | v > 0} ** NOTE: predicate aliases can't be nested
 
 records:
 
-{{ lbl : int } | (v) v.lbl = 0} == {{ lbl : {int | true} | (v) v.lbl = 0}
+{v: { lbl : int } | v.lbl = 0} == {v: { lbl : {int | true} | v.lbl = 0}
 
 tuples work similarly, as do type vars (which can be refined, but whose refinements won't carry through).
 
