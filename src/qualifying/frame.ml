@@ -93,46 +93,25 @@ let translate_variance = function
   | (false, true, false) -> Contravariant
   | _ -> assert false
 
-let transl_pref plist env p = 
-  let dummy () = Path.mk_ident "" in
-  let fp s = 
-    let b = try List.find (fun (nm, _) -> nm = s) plist with
-      Not_found -> failwith (Printf.sprintf "%s not found in mlq\n" s) in
-    (fun (_, p) -> p) b in
-  let (v, p) =
-    match p with
-    | RLiteral (v, p) -> (v, p)
-    | RVar s -> fp s in
-  let valu = Path.mk_ident v  in
-  ([], Qconst([(dummy (), valu, Qualdecl.transl_patpred_single false valu env p)]))
-
-let rec translate_pframe env plist pf =
+let rec same_shape map_vars t1 t2 =
   let vars = ref [] in
-  let getvar a = try List.find (fun b -> Path.name b = a) !vars
-                   with Not_found -> let a = Path.mk_ident a in
-                   let _ = vars := a::!vars in
-                     a in
-  let transl_pref = transl_pref plist env in
-  let rec transl_pframe_rec pf =
-    match pf with
-    | PFvar (a, r) -> Fvar (getvar a)
-    | PFconstr (l, fs, r) -> transl_constr l fs r
-    | PFarrow (a, b) -> Farrow (None, transl_pframe_rec a, transl_pframe_rec b)
-    | PFtuple (fs, r) -> Ftuple (List.map transl_pframe_rec fs, transl_pref r)
-    | PFrecord (fs, r) -> transl_record fs r 
-  and transl_constr l fs r =
-    let (path, decl) = try Env.lookup_type l env with
-      Not_found -> raise (T.Error(Location.none, T.Unbound_type_constructor l)) in
-    let _ = if List.length fs != decl.type_arity then
-      raise (T.Error(Location.none, T.Type_arity_mismatch(l, decl.type_arity, List.length fs))) in
-    let vs = List.map translate_variance decl.type_variance in
-    let fs = List.map transl_pframe_rec fs in
-    Fconstr(path, fs, vs, transl_pref r)
-  and transl_record fs r =
-    let fs = List.map (fun (f, s, m) -> (transl_pframe_rec f, s, m)) fs in
-    let path = Path.mk_ident "_anon_record" in
-    Frecord(path, fs, transl_pref r) in
-  transl_pframe_rec pf
+  let ismapped p q = try fst (List.find (fun (p', q) -> Path.same p p') !vars) = q with
+      Not_found -> vars := (p, q) :: !vars; true in
+  match (t1, t2) with
+  (Fconstr(p, l, _, _), Fconstr(p', l', _, _)) ->
+   (Path.same p p') && (List.for_all (fun f -> f) (List.map2 (same_shape map_vars) l l')) 
+  | (Fvar p, Fvar p') ->
+   if map_vars then ismapped p p' else Path.same p p'
+  | (Farrow(_, i, o), Farrow(_, i', o')) ->
+   ((same_shape map_vars) i i') && ((same_shape map_vars) o o')
+  | (Ftuple (t1s, _), Ftuple (t2s, _)) ->
+   List.for_all2 (same_shape map_vars) t1s t2s
+  | (Frecord (p1, f1s, _), Frecord (p2, f2s, _)) when Path.same p1 p2 ->
+      let shape_rec (f1, _, _) (f2, _, _) = (same_shape map_vars) f1 f2 in
+        List.for_all2 shape_rec f1s f2s
+  | (Funknown, Funknown) -> true
+  | t -> false
+
 
 let empty_refinement = ([], Qconst [])
 
@@ -170,6 +149,7 @@ let instantiate fr ftemplate =
   in inst fr ftemplate
 
 let fresh_refinementvar open_assn () = ([], Qvar (Path.mk_ident "k", open_assn))
+let fresh_true () = ([], Qconst ([(C.dummy (), Path.mk_ident "true", Predicate.True)]))
 
 let fresh_fvar () = Fvar (Path.mk_ident "a")
 
@@ -179,6 +159,20 @@ let fresh_fvar () = Fvar (Path.mk_ident "a")
      type: what its fields are and which variables are the type parameters.
     - The type list of the Tconstr contains the actual instantiations of
      the tyvars in this instantiation of the record. *)
+let fresh_constr freshf constrf p ty_decl f g tyl fresh =
+  match ty_decl.type_kind with
+  | Type_abstract | Type_variant _ ->
+    if Path.same p Predef.path_unit then 
+      Fconstr(p, [], [], ([], Qconst [])) 
+    else
+      Fconstr(p, f tyl, List.map translate_variance ty_decl.type_variance, constrf ())
+  | Type_record (fields, _, _) -> (* 1 *)
+    let param_map = List.combine ty_decl.type_params tyl in
+    let fresh_field (name, muta, typ) =
+      let field_typ = try g (List.assoc typ param_map) with 
+          Not_found -> fresh freshf typ in
+        (field_typ, name, muta) in
+          Frecord (p, List.map fresh_field fields, constrf ())
 
 (* Create a fresh frame with the same shape as the type of [exp] using
    [fresh_ref_var] to create new refinement variables. *)
@@ -192,16 +186,17 @@ let fresh_with_var_fun vars env ty fresh_ref_var =
             vars := (t, fv) :: !vars; fv)
       | Tconstr(p, tyl, _) ->
           let ty_decl = Env.find_type p env in
-          (match ty_decl.type_kind with
+            fresh_constr freshf freshf p ty_decl (List.map (fresh_rec freshf)) (fresh_rec freshf) tyl fresh_rec
+          (*(match ty_decl.type_kind with
            | Type_abstract | Type_variant _ ->
-               if Path.same p Predef.path_unit || Path.name p = "garbage" then Fconstr (p, [], [], ([], Qconst [])) else
+               if Path.same p Predef.path_unit then Fconstr (p, [], [], ([], Qconst [])) else
                  Fconstr(p, List.map (fresh_rec freshf) tyl, List.map translate_variance ty_decl.type_variance, freshf())
            | Type_record (fields, _, _) -> (* 1 *)
                let param_map = List.combine ty_decl.type_params tyl in
                let fresh_field (name, muta, typ) =
                  let field_typ = try List.assoc typ param_map with Not_found -> typ in
                  (fresh_rec freshf field_typ, name, muta) in
-               Frecord (p, List.map fresh_field fields, freshf ()))
+               Frecord (p, List.map fresh_field fields, freshf ()))*)
       | Tarrow(_, t1, t2, _) -> Farrow (None, fresh_rec freshf t1, fresh_rec freshf t2)
       | Ttuple ts -> Ftuple (List.map (fresh_rec freshf) ts, freshf ())
       | _ -> fprintf err_formatter "@[Warning: Freshing unsupported type]@."; Funknown
@@ -213,6 +208,7 @@ let fresh_with_var_fun vars env ty fresh_ref_var =
    You probably want to consider using fresh_with_labels instead of this
    for subtype constraints. *)
 let fresh env ty = fresh_with_var_fun (ref []) env ty (fresh_refinementvar Top)
+let transl_ty env ty = fresh_with_var_fun (ref []) env ty fresh_true
 
 (* Create a fresh frame with the same shape as the given type [ty].
    No refinement variables are created - all refinements are initialized
@@ -227,6 +223,62 @@ let fresh_constructor env cstrdesc = function
       let argmap = ref (List.combine (List.map repr tyargs) fl) in
         List.map (fun t -> fresh_with_var_fun argmap env t (fresh_refinementvar Top)) cstrdesc.cstr_args
   | _ -> assert false
+
+let transl_pref plist env p = 
+  let fp s = 
+    let b = try List.find (fun (nm, _) -> nm = s) plist with
+      Not_found -> failwith (Printf.sprintf "%s not found in mlq\n" s) in
+    (fun (_, p) -> p) b in
+  let (v, p) =
+    match p with
+    | RLiteral (v, p) -> (v, p)
+    | RVar s -> fp s in
+  let valu = Path.mk_ident v  in
+  ([], Qconst([(C.dummy (), valu, Qualdecl.transl_patpred_single false valu env p)]))
+
+let rec translate_pframe env plist pf =
+  let vars = ref [] in
+  let getvar a = try List.find (fun b -> Path.name b = a) !vars
+                   with Not_found -> let a = Path.mk_ident a in
+                   let _ = vars := a::!vars in
+                     a in
+  let transl_pref = transl_pref plist env in
+  let rec transl_pframe_rec pf =
+    match pf with
+    | PFvar (a, r) -> Fvar (getvar a)
+    | PFconstr (l, fs, r) -> transl_constr l fs r
+    | PFarrow (a, b) -> Farrow (None, transl_pframe_rec a, transl_pframe_rec b)
+    | PFtuple (fs, r) -> Ftuple (List.map transl_pframe_rec fs, transl_pref r)
+    | PFrecord (fs, r) -> transl_record fs r 
+  and transl_constr l fs r =
+    let (path, decl) = try Env.lookup_type l env with
+      Not_found -> raise (T.Error(Location.none, T.Unbound_type_constructor l)) in
+    let _ = if List.length fs != decl.type_arity then
+      raise (T.Error(Location.none, T.Type_arity_mismatch(l, decl.type_arity, List.length fs))) in
+    (*let vs = List.map translate_variance decl.type_variance in*)
+    let fs = List.map transl_pframe_rec fs in
+    let fresh freshf ty = fresh_with_var_fun (ref []) env ty freshf in
+    let id = (fun f -> f) in
+      fresh_constr fresh_true (fun () -> transl_pref r) path decl id id fs fresh
+      (*match decl.type_kind with
+      | Type_abstract | Type_variant _ ->
+        if Path.same path Predef.path_unit then 
+          Fconstr(path, [], [], ([], Qconst [])) 
+        else
+        Fconstr(path, fs, vs, transl_pref r)
+      | Type_record (fields, _, _) ->
+          let param_map = List.combine decl.type_params fs in
+          let transl_field (name, muta, typ) =
+            let typ = transl_ty typ in
+            let field_typ = try List.find (fun (p, f) -> typ) param_map with
+                Not_found -> typ in
+              (fresh_rec freshf field typ, name, muta) in
+            Frecord (path, List.map transl_field fields, transl_pref r) in*)
+  and transl_record fs r =
+    let fs = List.map (fun (f, s, m) -> (transl_pframe_rec f, s, m)) fs in
+    let path = Path.mk_ident "_anon_record" in
+    Frecord(path, fs, transl_pref r) in
+  transl_pframe_rec pf
 
 (* Label all the function formals in [f] with their corresponding labels in
    [f'].  Obviously, they are expected to be of the same shape; also, [f]
