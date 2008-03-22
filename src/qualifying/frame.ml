@@ -159,6 +159,7 @@ let fresh_fvar () = Fvar (Path.mk_ident "a")
      type: what its fields are and which variables are the type parameters.
     - The type list of the Tconstr contains the actual instantiations of
      the tyvars in this instantiation of the record. *)
+
 let fresh_constr freshf constrf p ty_decl f g tyl fresh =
   match ty_decl.type_kind with
   | Type_abstract | Type_variant _ ->
