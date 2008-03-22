@@ -170,9 +170,9 @@ let fresh_constr freshf constrf p ty_decl f g tyl fresh =
     let param_map = List.combine ty_decl.type_params tyl in
     let fresh_field (name, muta, typ) =
       let field_typ = try g (List.assoc typ param_map) with 
-          Not_found -> fresh freshf typ in
+        Not_found -> fresh freshf typ in
         (field_typ, name, muta) in
-          Frecord (p, List.map fresh_field fields, constrf ())
+    Frecord (p, List.map fresh_field fields, constrf ())
 
 (* Create a fresh frame with the same shape as the type of [exp] using
    [fresh_ref_var] to create new refinement variables. *)
@@ -248,7 +248,8 @@ let rec translate_pframe env plist pf =
     let fs = List.map transl_pframe_rec fs in
     let fresh freshf ty = fresh_with_var_fun (ref []) env ty freshf in
     let id = (fun f -> f) in
-      fresh_constr fresh_true (fun () -> transl_pref r) path decl id id fs fresh
+    let refinement () = transl_pref r in
+      fresh_constr fresh_true refinement path decl id id fs fresh
   and transl_record fs r =
     let fs = List.map (fun (f, s, m) -> (transl_pframe_rec f, s, m)) fs in
     let path = Path.mk_ident "_anon_record" in
