@@ -68,7 +68,7 @@ let rec pprint ppf = function
   | Fvar a ->
       fprintf ppf "Var(%s)" (unique_name a)
   | Fconstr (path, [], _, r) ->
-      fprintf ppf "@[{%s@ |@;<1 2>%a}@]" (Path.name path) pprint_refinement r
+      fprintf ppf "@[{%s@ |@;<1 2>%a}@]" (C.path_name () path) pprint_refinement r
   | Farrow (None, f, f') ->
       fprintf ppf "@[%a@ ->@;<1 2>%a@]" pprint1 f pprint f'
   | Farrow (Some pat, f, f') ->
@@ -78,7 +78,7 @@ let rec pprint ppf = function
   | Ftuple (ts, r) ->
       fprintf ppf "@[{(%a) |@;<1 2>%a}@]" pprint_list ts pprint_refinement r
   | Frecord (id, _, r) ->
-       fprintf ppf "@[{%s |@;<1 2>%a}@] " (Path.name id) pprint_refinement r
+       fprintf ppf "@[{%s |@;<1 2>%a}@] " (C.path_name () id) pprint_refinement r
   | Funknown ->
       fprintf ppf "[unknown]"
  and pprint1 ppf = function
