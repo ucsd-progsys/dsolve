@@ -27,13 +27,13 @@ let _ =
       low_mask.(i) <- low_mask.(i-1) lor bit_j.(i - 1)
     else ()
   in loop 1
-
+(*
 let keep_lowest_bits a j = a land low_mask.(j)
 
 let high_mask = Array.init (30 + 1) (fun j -> low_mask.(j) lsl (30-j))
 
 let keep_highest_bits a j = a land high_mask.(j)
-
+*)
 (*s Creating and normalizing a bit vector is easy: it is just a matter of
     taking care of the invariant. Copy is immediate. *)
 
@@ -48,7 +48,7 @@ let create n b =
         b.(s) <- b.(s) land low_mask.(r);
         { length = n; bits = b }
     end
-(*
+
 let normalize v =
   let r = v.length mod 30 in
   if r > 0 then
@@ -56,8 +56,10 @@ let normalize v =
     let s = Array.length b in
     b.(s-1) <- b.(s-1) land low_mask.(r)
   else ()
-*)
+
 let copy v = { length = v.length; bits = Array.copy v.bits }
+
+(*
 
 let pos n =
   let i = n / 30 in
@@ -621,6 +623,7 @@ let select_to f32 f64 = match Sys.word_size with
   | _ -> assert false
 let to_nativeint_s = select_to to_int32_s to_int64_s
 let to_nativeint_us = select_to to_int32_us to_int64_us
+*)
 *)
 *)
 *)

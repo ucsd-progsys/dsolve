@@ -1,0 +1,4 @@
+pred INVAR = (v) ((0 <= v.length) and (v.length <= (Array.length v.bits) * 30)) and (0 < Array.length v.bits)
+
+lval create: {v: int | 0 <= v} -> bool -> t
+lval normalize: {t | INVAR} -> unit
