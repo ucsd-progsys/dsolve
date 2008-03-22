@@ -187,16 +187,6 @@ let fresh_with_var_fun vars env ty fresh_ref_var =
       | Tconstr(p, tyl, _) ->
           let ty_decl = Env.find_type p env in
             fresh_constr freshf freshf p ty_decl (List.map (fresh_rec freshf)) (fresh_rec freshf) tyl fresh_rec
-          (*(match ty_decl.type_kind with
-           | Type_abstract | Type_variant _ ->
-               if Path.same p Predef.path_unit then Fconstr (p, [], [], ([], Qconst [])) else
-                 Fconstr(p, List.map (fresh_rec freshf) tyl, List.map translate_variance ty_decl.type_variance, freshf())
-           | Type_record (fields, _, _) -> (* 1 *)
-               let param_map = List.combine ty_decl.type_params tyl in
-               let fresh_field (name, muta, typ) =
-                 let field_typ = try List.assoc typ param_map with Not_found -> typ in
-                 (fresh_rec freshf field_typ, name, muta) in
-               Frecord (p, List.map fresh_field fields, freshf ()))*)
       | Tarrow(_, t1, t2, _) -> Farrow (None, fresh_rec freshf t1, fresh_rec freshf t2)
       | Ttuple ts -> Ftuple (List.map (fresh_rec freshf) ts, freshf ())
       | _ -> fprintf err_formatter "@[Warning: Freshing unsupported type]@."; Funknown
@@ -255,25 +245,10 @@ let rec translate_pframe env plist pf =
       Not_found -> raise (T.Error(Location.none, T.Unbound_type_constructor l)) in
     let _ = if List.length fs != decl.type_arity then
       raise (T.Error(Location.none, T.Type_arity_mismatch(l, decl.type_arity, List.length fs))) in
-    (*let vs = List.map translate_variance decl.type_variance in*)
     let fs = List.map transl_pframe_rec fs in
     let fresh freshf ty = fresh_with_var_fun (ref []) env ty freshf in
     let id = (fun f -> f) in
       fresh_constr fresh_true (fun () -> transl_pref r) path decl id id fs fresh
-      (*match decl.type_kind with
-      | Type_abstract | Type_variant _ ->
-        if Path.same path Predef.path_unit then 
-          Fconstr(path, [], [], ([], Qconst [])) 
-        else
-        Fconstr(path, fs, vs, transl_pref r)
-      | Type_record (fields, _, _) ->
-          let param_map = List.combine decl.type_params fs in
-          let transl_field (name, muta, typ) =
-            let typ = transl_ty typ in
-            let field_typ = try List.find (fun (p, f) -> typ) param_map with
-                Not_found -> typ in
-              (fresh_rec freshf field typ, name, muta) in
-            Frecord (path, List.map transl_field fields, transl_pref r) in*)
   and transl_record fs r =
     let fs = List.map (fun (f, s, m) -> (transl_pframe_rec f, s, m)) fs in
     let path = Path.mk_ident "_anon_record" in
