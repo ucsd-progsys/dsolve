@@ -59,8 +59,6 @@ let normalize v =
 
 let copy v = { length = v.length; bits = Array.copy v.bits }
 
-(*
-
 let pos n =
   let i = n / 30 in
   let j = n mod 30 in
@@ -75,10 +73,10 @@ let pos n =
     and} with [bit_not_j] to unset it. *)
 (*
 let unsafe_get v n =
-  let (i,j) = pos n in 
-  ((Array.get v.bits i) land (Array.get bit_j j)) > 0
-in
-*)
+  let (i,j) = pos n in
+    ((Array.get v.bits i) land (Array.get bit_j j)) > 0
+
+
 let unsafe_set v n b =
   let (i,j) = pos n in
   if b then
@@ -120,13 +118,6 @@ let init n f =
     else ()
   in loop 0;
     v
-
-let _ =
-  let s = Random.int 100 + 1 in
-  let v = copy (create s true) in
-  let _ = init s (fun i -> true) in
-  let _ = set v (Random.int s) true in
-    get v (Random.int s);;
 
 (*s Handling bits by packets is the key for efficiency of functions
     [append], [concat], [sub] and [blit]. 
