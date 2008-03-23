@@ -24,10 +24,8 @@ exception Refinement_not_closed
    the unique paths of the same name in the given environment.  It raises
    Refinement_not_closed if a variable in the qualifier is not found in the
    environment. *)
-let instantiate env (path, valu, pred) =
+let instantiate varmap (path, valu, pred) =
   (* Don't instantiate the bound variable *)
-  let names_to_paths =
-     (Path.name valu, valu) ::
-       (Lightenv.maplistfilter (fun path _ -> let name = Path.ident_name path in match name with Some name -> Some (name, path) | None -> None) env) in
-    try Some (path, valu, Bstats.time "instantiating" (Predicate.instantiate_named_vars names_to_paths) pred)
+  let varmap = (Path.name valu, valu) :: varmap in
+    try Some (path, valu, Bstats.time "instantiating" (Predicate.instantiate_named_vars varmap) pred)
     with Not_found -> None

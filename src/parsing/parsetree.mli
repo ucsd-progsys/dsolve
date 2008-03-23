@@ -176,7 +176,7 @@ and penv = (string * (string * predicate_pattern)) list * (string * litframe) li
 and litframe =
     PFvar of string * refinement
   | PFconstr of Longident.t * litframe list * refinement
-  | PFarrow of litframe * litframe
+  | PFarrow of string option * litframe * litframe
   | PFtuple of litframe list * refinement
   | PFrecord of (litframe * string * mutable_flag) list * refinement
 

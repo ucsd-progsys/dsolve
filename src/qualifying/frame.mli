@@ -38,6 +38,9 @@ val fresh_unconstrained: Env.t -> type_expr -> t
 val fresh_with_labels: Env.t -> type_expr -> t -> t
 val fresh_constructor: Env.t -> constructor_description -> t -> t list
 val instantiate: t -> t -> t
+val instantiate_qualifiers: (string * Path.t) list -> t -> t
+val bind: Env.t -> pattern_desc -> t -> (Path.t * t) list
+val env_bind: Env.t -> t Lightenv.t -> pattern_desc -> t -> t Lightenv.t
 val apply_substitution: substitution -> t -> t
 val label_like: t -> t -> t
 val apply_solution: (Path.t -> Qualifier.t list) -> t -> t

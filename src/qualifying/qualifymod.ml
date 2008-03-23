@@ -153,7 +153,7 @@ and constrain_if (env, guard, f) e1 e2 e3 =
     cstrs1 @ cstrs2 @ cstrs3)
 
 and bind tenv env guard pat frame pexpr =
-  let env = Pattern.env_bind tenv env pat.pat_desc frame in
+  let env = F.env_bind tenv env pat.pat_desc frame in
     if Pattern.is_deep pat.pat_desc then
       Le.add (Path.mk_ident "pattern")
         (B.mk_int [(Path.mk_ident "", Path.mk_ident "", Pattern.desugar_bind pat.pat_desc pexpr)])
@@ -174,7 +174,7 @@ and constrain_match ((env, guard, f) as environment) e pexps partial =
 and constrain_function (env, guard, f) t pat e' =
   match f with
     | (F.Farrow (_, f, unlabelled_f')) ->
-      let env' = Pattern.env_bind e'.exp_env env pat.pat_desc f in
+      let env' = F.env_bind e'.exp_env env pat.pat_desc f in
       let (f'', cstrs) = constrain e' env' guard in
       let f' = F.label_like unlabelled_f' f'' in
       let f = F.Farrow (Some pat.pat_desc, f, f') in
@@ -319,14 +319,15 @@ module QualifierSet = Set.Make(Qualifier)
 (* Make copies of all the qualifiers where the free identifiers are replaced
    by the appropriate bound identifiers from the environment. *)
 let instantiate_in_environments cs qs =
-  let envs = List.map (fun c -> match c.lc_cstr with SubFrame (e,_,_,_) | WFFrame (e,_) -> e) cs in
+  let domains = List.map (fun c -> match c.lc_cstr with SubFrame (e,_,_,_) | WFFrame (e,_) -> Lightenv.domain e) cs in
   let instantiate_qual qualset q =
-    let instantiate_in_env qset env =
-      let inv = Qualifier.instantiate env q in
+    let instantiate_in_env qset d =
+      let varmap = Common.map_partial (fun path -> match Path.ident_name path with Some name -> Some (name, path) | None -> None) d in
+      let inv = Qualifier.instantiate varmap q in
         match inv with
             Some inv -> QualifierSet.add inv qset
           | None -> qset
-    in List.fold_left instantiate_in_env qualset envs
+    in List.fold_left instantiate_in_env qualset domains
   in QualifierSet.elements (List.fold_left instantiate_qual QualifierSet.empty qs)
 
 let make_frame_error s cstr =
@@ -367,9 +368,10 @@ let lbl_dummy_cstr env c =
   { lc_cstr = c; lc_tenv = env; lc_orig = Loc (Location.none); lc_id = fresh_fc_id () }
 
 let mfm fenv p f = 
-  if Le.mem p fenv 
+  if Le.mem p fenv
   then
-    Some (SubFrame (fenv, [], Le.find p fenv, f)) 
+    let f' = Le.find p fenv in
+    Some (SubFrame (fenv, [], f', F.label_like f f'))
   else
     None 
  

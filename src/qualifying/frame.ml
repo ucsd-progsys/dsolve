@@ -124,6 +124,14 @@ let rec map f = function
     | Farrow (x, f1, f2) -> f (Farrow (x, map f f1, map f f2))
     | Frecord (p, fs, r) -> f (Frecord (p, List.map (fun (fr, n, m) -> (map f fr, n, m)) fs, r))
 
+let rec map_refinements_map f = function
+  | Fconstr (p, fs, cstrdesc, r) -> Fconstr (p, fs, cstrdesc, f r)
+  | Ftuple (fs, r) -> Ftuple (fs, f r)
+  | Frecord (p, fs, r) -> Frecord (p, fs, f r)
+  | f -> f
+
+let map_refinements f fr = map (map_refinements_map f) fr
+
 (* Instantiate the tyvars in fr with the corresponding frames in ftemplate.
    If a variable occurs twice, it will only be instantiated with one frame; which
    one is undefined and unimportant. *)
@@ -147,6 +155,14 @@ let instantiate fr ftemplate =
 	    pprint f1 pprint f2;
 	    assert false
   in inst fr ftemplate
+
+let instantiate_qualifiers_map vars = function
+  | (subs, Qconst qs) ->
+      (subs, Qconst (List.map (fun q -> match Qualifier.instantiate vars q with Some q -> q | None -> q) qs))
+  | r -> r
+
+let instantiate_qualifiers vars fr =
+  map_refinements (instantiate_qualifiers_map vars) fr
 
 let fresh_refinementvar open_assn () = ([], Qvar (Path.mk_ident "k", open_assn))
 let fresh_true () = ([], Qconst ([(C.dummy (), Path.mk_ident "true", Predicate.True)]))
@@ -238,7 +254,14 @@ let rec translate_pframe env plist pf =
     match pf with
     | PFvar (a, r) -> Fvar (getvar a)
     | PFconstr (l, fs, r) -> transl_constr l fs r
-    | PFarrow (a, b) -> Farrow (None, transl_pframe_rec a, transl_pframe_rec b)
+    | PFarrow (v, a, b) ->
+        let pat = match v with
+            Some id ->
+              let id = Ident.create id in
+              if List.mem (Path.Pident id) !vars then failwith "Redefined variable";
+                vars := Path.Pident id :: !vars; Some (Tpat_var id)
+          | None -> None
+        in Farrow (pat, transl_pframe_rec a, transl_pframe_rec b)
     | PFtuple (fs, r) -> Ftuple (List.map transl_pframe_rec fs, transl_pref r)
     | PFrecord (fs, r) -> transl_record fs r 
   and transl_constr l fs r =
@@ -257,20 +280,37 @@ let rec translate_pframe env plist pf =
     Frecord(path, fs, transl_pref r) in
   transl_pframe_rec pf
 
-(* Label all the function formals in [f] with their corresponding labels in
-   [f'].  Obviously, they are expected to be of the same shape; also, [f]
-   must be completely unlabeled (as frames are after creation by fresh). *)
-let rec label_like f f' =
-  match (f, f') with
-    | (Fvar _, Fvar _) | (Fconstr _, Fconstr _) | (Funknown, Funknown) -> f
-    | (Farrow (None, f1, f1'), Farrow(l, f2, f2')) ->
-        Farrow (l, label_like f1 f2, label_like f1' f2')
-    | (Ftuple (t1s, r), Ftuple (t2s, _)) ->
-        Ftuple (List.map2 label_like t1s t2s, r)
-    | (Frecord (p1, f1s, r), Frecord (p2, f2s, _)) when Path.same p1 p2 ->
-        let label_rec (f1, n, muta) (f2, _, _) = (label_like f1 f2, n, muta) in
-          Frecord (p1, List.map2 label_rec f1s f2s, r)
+let bind env pat frame =
+  let _bind = function
+    | (Tpat_any, _) -> ([], [])
+    | (Tpat_var x, f) -> ([], [(Path.Pident x, f)])
+    | (Tpat_tuple pats, Ftuple (fs, _)) ->
+        (List.combine (Pattern.pattern_descs pats) fs, [])
+    | (Tpat_construct (cstrdesc, pats), f) ->
+        (List.combine (Pattern.pattern_descs pats) (fresh_constructor env cstrdesc f), [])
     | _ -> assert false
+  in C.expand _bind [(pat, frame)] []
+
+let env_bind tenv env pat frame =
+  Lightenv.addn (bind tenv pat frame) env
+
+(* Label all the function formals in [f] with their corresponding labels in
+   [f'] and changing constant qualifiers appropriately.
+   [f] and [f'] are expected to be of the same shape; also, [f]
+   must be completely unlabeled (as frames are after creation by fresh). *)
+let rec label_like f f' = match (f, f') with
+  | (Fvar _, Fvar _) | (Funknown, Funknown) | (Fconstr _, Fconstr _) -> f
+  | (Farrow (None, f1, f1'), Farrow (l, f2, f2')) ->
+      Farrow (l, label_like f1 f2, label_like f1' f2')
+  | (Farrow (Some p1, f1, f1'), Farrow (Some p2, f2, f2')) ->
+      let vars = List.map (fun (x, y) -> (Ident.name x, Path.Pident y)) (Pattern.bind_vars p1 p2) in
+        Farrow (Some p2, label_like f1 f2, label_like (instantiate_qualifiers vars f1') f2')
+  | (Ftuple (t1s, r), Ftuple (t2s, _)) ->
+      Ftuple (List.map2 label_like t1s t2s, r)
+  | (Frecord (p1, f1s, r), Frecord (p2, f2s, _)) when Path.same p1 p2 ->
+      let label_rec (f1, n, muta) (f2, _, _) = (label_like f1 f2, n, muta) in
+        Frecord (p1, List.map2 label_rec f1s f2s, r)
+  | _ -> assert false
 
 (* Create a fresh frame with the same shape as [exp]'s type and [f],
    and the same labels as [f]. *)

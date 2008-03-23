@@ -195,7 +195,7 @@ let rw_frame f nr =
     match f with
       PFvar(s, r) -> PFvar(s, nr)
     | PFconstr(s, f, r) -> PFconstr(s, f, nr)
-    | PFarrow(a, b) -> assert false
+    | PFarrow _ -> assert false
     | PFtuple(a, r) -> PFtuple(a, nr)
     | PFrecord(a, r) -> PFrecord(a, nr)
 
@@ -212,7 +212,7 @@ let ptrue = RLiteral( "", {ppredpat_desc = Ppredpat_true;
 
 let mkconstr a b r = PFconstr (a, b, r)
 let mkvar a r = PFvar (a, r)
-let mkarrow a b = PFarrow (a, b)
+let mkarrow v a b = PFarrow (v, a, b)
 let mktuple a r = PFtuple (a, r)
 let mkrecord a r = PFrecord (a, r)
 let mktrue_constr a b = mkconstr a b ptrue
@@ -1593,7 +1593,9 @@ liquid_type1:
   | LBRACE liquid_type2 BAR UIDENT RBRACE
       { rw_frame_var $2 $4 }
   | liquid_type MINUSGREATER liquid_type
-      { mkarrow $1 $3 }
+      { mkarrow None $1 $3 }
+  | LIDENT COLON liquid_type MINUSGREATER liquid_type
+      { mkarrow (Some $1) $3 $5 }
   | liquid_type2
       { $1 }
 
