@@ -71,11 +71,10 @@ let pos n =
     mask operation is non-zero, and assigning it is done with a
     bitwiwe operation: an {\em or} with [bit_j] to set it, and an {\em
     and} with [bit_not_j] to unset it. *)
-(*
+
 let unsafe_get v n =
   let (i,j) = pos n in
     ((Array.get v.bits i) land (Array.get bit_j j)) > 0
-
 
 let unsafe_set v n b =
   let (i,j) = pos n in
@@ -116,9 +115,8 @@ let init n f =
       loop (i + 1)
     end
     else ()
-  in loop 0;
-    v
-
+  in loop 0; v
+(*
 (*s Handling bits by packets is the key for efficiency of functions
     [append], [concat], [sub] and [blit]. 
     We start by a very general function [blit_bits a i m v n] which blits 
@@ -181,11 +179,6 @@ let blit v1 v2 ofs1 ofs2 len =
   else
     let _ = (fun n -> n + 0) ofs1 in
       unsafe_blit v1.bits ofs1 v2.bits ofs2 len
-
-let test = create 30 true in
-let test2 = create 30 true in
-  blit test test2 (Random.int 30 + 1) 30 0;
-  ();;
 
 (*
 (*

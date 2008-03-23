@@ -2,4 +2,8 @@ pred INVAR = (v) ((0 <= v.length) and (v.length <= (Array.length v.bits) * 30)) 
 
 lval create: {v: int | 0 < v} -> bool -> {t | INVAR}
 lval normalize: {t | INVAR} -> unit
-
+lval unsafe_get: c: {t | INVAR} -> {v: int | v < c.length and 0 <= v} -> int
+lval unsafe_set: c: {t | INVAR} -> {v: int | v < c.length and 0 <= v} -> bool -> int
+lval get: {t | INVAR} -> int -> bool
+lval set: {t | INVAR} -> int -> bool -> unit
+lval init: {v: int | 0 < v} -> (int -> bool) -> t
