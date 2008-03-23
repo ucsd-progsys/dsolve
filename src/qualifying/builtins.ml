@@ -114,7 +114,8 @@ let _frames = [
           fun y -> uInt ==>
           fun z -> rInt "mod" z
             (((Var x >=. PInt 0) &&. (Var y >=. PInt 0))
-             =>. big_and [PInt 0 <=. Var z; Var z <. Var y;])));
+             =>. big_and [PInt 0 <=. Var z; Var z <. Var y;] &&.
+             ((PInt 0 <. Var z) =>. (PInt 0 <. Var x)))));
 
   (["&&"; "Pervasives"],
    defun (fun x -> uBool ===>

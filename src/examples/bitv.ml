@@ -89,7 +89,7 @@ let unsafe_set v n b =
 
 let get v n =
   if n < 0 || n >= v.length then
-    assert false
+    (* assert *) false
   else
     let (i,j) = pos n in
       ((Array.get v.bits i) land (Array.get bit_j j)) > 0
@@ -140,7 +140,7 @@ let blit_bits a i m v n =
       Array.set v (i' + 1)
 	((keep_lowest_bits (a lsr (i + 30 - j)) d) lor
 	 (keep_highest_bits (Array.get v (i' + 1)) (30 - d)))
-    end else 
+    end else
       Array.set v i'
 	(((keep_lowest_bits (a lsr i) m) lsl j) lor
 	 ((Array.get v i') land (low_mask.(j) lor high_mask.(-d))))
@@ -152,7 +152,6 @@ let blit_bits a i m v n =
     the source array, and then we do a loop of [blit_int], with two calls
     to [blit_bits] for the two bounds. *)
 
-(*
 let unsafe_blit v1 ofs1 v2 ofs2 len =
   let (bi,bj) = pos ofs1 in
   let _ = Array.get v1 bi in () (*
@@ -178,9 +177,6 @@ let blit v1 v2 ofs1 ofs2 len =
   else
     let _ = (fun n -> n + 0) ofs1 in
       unsafe_blit v1.bits ofs1 v2.bits ofs2 len
-
-(*
-(*
 
 (*s [blit_int] implements [blit_bits] in the particular case when
     [i=0] and [m=30] i.e. when we blit all the bits of [a]. *)
@@ -278,22 +274,26 @@ let fill v ofs len b =
   if ofs < 0 or len < 0 or ofs + len > v.length then invalid_arg "Bitv.fill";
   if b then blit_ones v.bits ofs len else blit_zeros v.bits ofs len
 
+          *)
 (*s All the iterators are implemented as for traditional arrays, using
     [unsafe_get]. For [iter] and [map], we do not precompute [(f
     true)] and [(f false)] since [f] is likely to have
     side-effects. *)
 
 let iter f v =
-  for i = 0 to v.length - 1 do f (unsafe_get v i) done
+  let k = v.length in
+  let rec loop i =
+    if i >= k then () else begin f (unsafe_get v i); loop (i + 1) end
+  in loop 0
 
 let map f v =
   let l = v.length in
   let r = create l false in
-  for i = 0 to l - 1 do
-    unsafe_set r i (f (unsafe_get v i))
-  done;
-  r
+  let rec loop i =
+    if i >= l then () else begin unsafe_set r i (f (unsafe_get v i)) end
+  in loop 0; r
 
+(*
 let iteri f v =
   for i = 0 to v.length - 1 do f i (unsafe_get v i) done
 
@@ -606,7 +606,4 @@ let select_to f32 f64 = match Sys.word_size with
   | _ -> assert false
 let to_nativeint_s = select_to to_int32_s to_int64_s
 let to_nativeint_us = select_to to_int32_us to_int64_us
-*)
-*)
-*)
-*)
+          *)
