@@ -7,3 +7,4 @@ lval unsafe_set: c: {t | INVAR} -> {v: int | v < c.length and 0 <= v} -> bool ->
 lval get: {t | INVAR} -> int -> bool
 lval set: {t | INVAR} -> int -> bool -> unit
 lval init: {v: int | 0 < v} -> (int -> bool) -> t
+lval blit_bits: int -> i: int -> {v: int | ((0 <= v) and (i < v - 1)) and (v <= 30)}  -> c: int array -> {v: int | v < (Array.length c) and 0 <= v} -> unit

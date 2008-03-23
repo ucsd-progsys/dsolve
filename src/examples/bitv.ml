@@ -27,13 +27,13 @@ let _ =
       low_mask.(i) <- low_mask.(i-1) lor bit_j.(i - 1)
     else ()
   in loop 1
-(*
+
 let keep_lowest_bits a j = a land low_mask.(j)
 
 let high_mask = Array.init (30 + 1) (fun j -> low_mask.(j) lsl (30-j))
 
 let keep_highest_bits a j = a land high_mask.(j)
-*)
+
 (*s Creating and normalizing a bit vector is easy: it is just a matter of
     taking care of the invariant. Copy is immediate. *)
 
@@ -116,7 +116,7 @@ let init n f =
     end
     else ()
   in loop 0; v
-(*
+
 (*s Handling bits by packets is the key for efficiency of functions
     [append], [concat], [sub] and [blit]. 
     We start by a very general function [blit_bits a i m v n] which blits 
@@ -125,14 +125,13 @@ let init n f =
     [n..n+m-1] are respectively valid subparts of [a] and [v]. 
     It is optimized when the bits fit the lowest boundary of an integer 
     (case [j == 0]). *)
-
 let blit_bits a i m v n =
   let (i',j) = pos n in
   if j == 0 then
     Array.set v i'
       ((keep_lowest_bits (a lsr i) m) lor
        (keep_highest_bits (Array.get v i') (30 - m)))
-  else 
+  else () (*
     let d = m + j - 30 in
     if d > 0 then begin
       Array.set v i'
