@@ -444,18 +444,16 @@ let all_ones v =
       ((Array.unsafe_get b i) == max_int) && test (succ i)
   in
   test 0
-*)
+
 (*s Conversions to and from strings. *)
 
 let to_string v = 
   let n = v.length in
   let s = String.make n '0' in
-  let rec loop i =
-    if i < n then begin if unsafe_get v i then s.[i] <- '1'; loop (i + 1) end else ()
-  in loop 0;
+  for i = 0 to n - 1 do
+    if unsafe_get v i then s.[i] <- '1'
+  done;
   s
-
-(*
 
 let print fmt v = Format.pp_print_string fmt (to_string v)
 
