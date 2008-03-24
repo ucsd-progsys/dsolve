@@ -346,7 +346,6 @@ let iteri_true f v =
      end else ())
     v.bits
 
-(*
 (*s Bitwise operations. It is straigthforward, since bitwise operations
     can be realized by the corresponding bitwise operations over integers.
     However, one has to take care of normalizing the result of [bwnot]
@@ -354,51 +353,49 @@ let iteri_true f v =
 
 let bw_and v1 v2 = 
   let l = v1.length in
-  if l <> v2.length then invalid_arg "Bitv.bw_and";
-  let b1 = v1.bits 
-  and b2 = v2.bits in
-  let n = Array.length b1 in
-  let a = Array.make n 0 in
-  for i = 0 to n - 1 do
-    a.(i) <- b1.(i) land b2.(i)
-  done;
-  { length = l; bits = a }
-  
+    if l == v2.length then
+      let b1 = v1.bits
+      and b2 = v2.bits in
+      let n = Array.length b1 in
+      let a = Array.make n 0 in
+      let rec loop i =
+        if i < n then begin a.(i) <- b1.(i) land b2.(i); loop (i + 1) end else ()
+      in loop 0; { length = l; bits = a }
+    else assert false
+
 let bw_or v1 v2 = 
   let l = v1.length in
-  if l <> v2.length then invalid_arg "Bitv.bw_or";
-  let b1 = v1.bits 
-  and b2 = v2.bits in
-  let n = Array.length b1 in
-  let a = Array.make n 0 in
-  for i = 0 to n - 1 do
-    a.(i) <- b1.(i) lor b2.(i)
-  done;
-  { length = l; bits = a }
-  
+    if l == v2.length then
+      let b1 = v1.bits
+      and b2 = v2.bits in
+      let n = Array.length b1 in
+      let a = Array.make n 0 in
+      let rec loop i =
+        if i < n then begin a.(i) <- b1.(i) lor b2.(i); loop (i + 1) end else ()
+      in loop 0; { length = l; bits = a }
+    else assert false
+
 let bw_xor v1 v2 = 
   let l = v1.length in
-  if l <> v2.length then invalid_arg "Bitv.bw_xor";
-  let b1 = v1.bits 
-  and b2 = v2.bits in
-  let n = Array.length b1 in
-  let a = Array.make n 0 in
-  for i = 0 to n - 1 do
-    a.(i) <- b1.(i) lxor b2.(i)
-  done;
-  { length = l; bits = a }
-  
-let bw_not v = 
+    if l == v2.length then
+      let b1 = v1.bits
+      and b2 = v2.bits in
+      let n = Array.length b1 in
+      let a = Array.make n 0 in
+      let rec loop i =
+        if i < n then begin a.(i) <- b1.(i) lxor b2.(i); loop (i + 1) end else ()
+      in loop 0; { length = l; bits = a }
+    else assert false
+
+let bw_not v =
   let b = v.bits in
   let n = Array.length b in
   let a = Array.make n 0 in
-  for i = 0 to n - 1 do
-    a.(i) <- max_int land (lnot b.(i))
-  done;
-  let r = { length = v.length; bits = a } in
-  normalize r;
-  r
+  let rec loop i =
+    if i < n then begin a.(i) <- max_int land (lnot b.(i)); loop (i + 1) end else ()
+  in loop 0; let r = { length = v.length; bits = a } in normalize r; r
 
+(*
 (*s Shift operations. It is easy to reuse [unsafe_blit], although it is 
     probably slightly less efficient than a ad-hoc piece of code. *)
 

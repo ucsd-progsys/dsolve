@@ -19,3 +19,5 @@ lval fold_left: ('a -> bool -> 'a) -> 'a -> {t | INVAR} -> 'a
 lval fold_right: (bool -> 'a -> 'a) -> {t | INVAR} -> 'a -> 'a
 lval foldi_left: ('a -> int -> bool -> 'a) -> 'a -> {t | INVAR} -> 'a
 lval foldi_right: (int -> bool -> 'a -> 'a) -> {t | INVAR} -> 'a -> 'a
+
+lval bw_not: {t | INVAR} -> t
