@@ -293,56 +293,60 @@ let map f v =
     if i >= l then () else begin unsafe_set r i (f (unsafe_get v i)) end
   in loop 0; r
 
-(*
 let iteri f v =
-  for i = 0 to v.length - 1 do f i (unsafe_get v i) done
+  let k = v.length in
+  let rec loop i =
+    if i >= k then () else begin f i (unsafe_get v i); loop (i + 1) end
+  in loop 0
 
 let mapi f v =
   let l = v.length in
   let r = create l false in
-  for i = 0 to l - 1 do
-    unsafe_set r i (f i (unsafe_get v i))
-  done;
-  r
+  let rec loop i =
+    if i >= l then () else begin unsafe_set r i (f i (unsafe_get v i)); loop (i + 1) end
+  in loop 0; r
 
 let fold_left f x v =
   let r = ref x in
-  for i = 0 to v.length - 1 do
-    r := f !r (unsafe_get v i)
-  done;
-  !r
+  let k = v.length in
+  let rec loop i =
+    if i >= k then !r else begin r := f !r (unsafe_get v i); loop (i + 1) end
+  in loop 0
 
 let fold_right f v x =
   let r = ref x in
-  for i = v.length - 1 downto 0 do
-    r := f (unsafe_get v i) !r
-  done;
-  !r
+  let rec loop i =
+    if i < 0 then !r else begin r := f (unsafe_get v i) !r; loop (i - 1) end
+  in loop (v.length - 1)
 
 let foldi_left f x v =
   let r = ref x in
-  for i = 0 to v.length - 1 do
-    r := f !r i (unsafe_get v i)
-  done;
-  !r
+  let k = v.length in
+  let rec loop i =
+    if i >= k then !r else begin r := f !r i (unsafe_get v i); loop (i + 1) end
+  in loop 0
 
 let foldi_right f v x =
   let r = ref x in
-  for i = v.length - 1 downto 0 do
-    r := f i (unsafe_get v i) !r
-  done;
-  !r
+  let rec loop i =
+    if i < 0 then !r else begin r := f i (unsafe_get v i) !r; loop (i - 1) end
+  in loop (v.length - 1)
 
 let iteri_true f v =
   Array.iteri 
     (fun i n -> if n != 0 then begin
        let i_30 = i * 30 in
-       for j = 0 to 30 - 1 do
-	 if n land (Array.unsafe_get bit_j j) > 0 then f (i_30 + j)
-       done
-     end) 
+       let rec loop j =
+         if j < 30 then begin
+	   if n land (Array.unsafe_get bit_j j) > 0 then f (i_30 + j) else ();
+           loop (j + 1)
+         end
+         else ()
+       in loop 0
+     end else ())
     v.bits
 
+(*
 (*s Bitwise operations. It is straigthforward, since bitwise operations
     can be realized by the corresponding bitwise operations over integers.
     However, one has to take care of normalizing the result of [bwnot]

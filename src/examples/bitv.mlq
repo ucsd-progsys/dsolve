@@ -12,3 +12,10 @@ lval blit_bits: int -> i: int -> {v: int | ((0 <= v) and (i < v - 1)) and (v <= 
 (* pmr: what's with this alpha? =( *)
 lval iter: (bool -> 'a) -> {t | INVAR} -> unit
 lval map: (bool -> bool) -> {t | INVAR} -> t
+lval iteri: (int -> bool -> 'a) -> {t | INVAR} -> unit
+lval mapi: (int -> bool -> bool) -> {t | INVAR} -> t
+
+lval fold_left: ('a -> bool -> 'a) -> 'a -> {t | INVAR} -> 'a
+lval fold_right: (bool -> 'a -> 'a) -> {t | INVAR} -> 'a -> 'a
+lval foldi_left: ('a -> int -> bool -> 'a) -> 'a -> {t | INVAR} -> 'a
+lval foldi_right: (int -> bool -> 'a -> 'a) -> {t | INVAR} -> 'a -> 'a
