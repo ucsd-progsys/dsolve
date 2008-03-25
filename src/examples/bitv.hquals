@@ -6,48 +6,7 @@ qualif NNLEN(v): 0 <= v.length
 
 qualif SOMEBITS(v): 0 < (Array.length v.bits)
 
-qualif MI(v): i < v - 1
-qualif MI30(v): i + v < 30
-
 qualif LIMN(n): (n + m) < (30 * (Array.length v))
-
-qualif DMINUS(c): d = 0 - d
 
 qualif DIV30(i): i = (n / 30)
 qualif MOD30(j): j = n - (30 * (n / 30))
-
-
-(*
-qualif CLEN(n): n + 1 <= (Array.length v) * 30
-qualif CLEN(n): n <= (Array.length v) * 30
-
-qualif LENTWO(a): (Array.length a) > 1
-
-qualif CLEN(n): n + 1 <= Array.length v
-qualif CLEN(n): n + 2 <= Array.length v
-qualif PLEASE(i): i + 1 < Array.length v
-
-qualif DIV30(v): (30 * v) + 1 <= n
-qualif DIV30(v): (30 * v) + 2 <= n
-
-qualif MOD(v): (v = 0) or (30 * ((n / 30) + 0)) + 1 <= n
-
-qualif EQDIV(v): 30 * v = n
-qualif EQDIV(v): 30 * v < n
-qualif TIMES(v): v = (n / 30) + 0
-qualif LEN(i): (30 * i) + 1 <= n
-qualif LEN(i): (30 * i) + 1 <= (Array.length v) - 1
-qualif LEN(i): (30 * i) <= n - 1
-qualif NE0(v): v != 0
-qualif PLUS1(v): v = (i' + 1)
-qualif LENI(i): 30 * i < (30 * ((Array.length v) - 1))
-
-qualif MINUSLEN(i): i < ((Array.length v) - 1)
-qualif HEYGUYZ(v)(A:'a array): v { * * } (30*Array.length ~A)
-
-qualif JESUSJUSTWORK(j)(A:int, B: 'a array): j + ~B < 30*(Array.length v) 
-qualif InIM(v): v+i < 30 
-qualif MOD2(v): v = n - 30 * (n/30)
-qualif Jq(v): v = n - 30 * i'
-
-*)

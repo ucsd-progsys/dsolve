@@ -10,7 +10,7 @@ lval init: {v: int | 0 < v} -> (int -> bool) -> t
 
 lval blit_bits: int ->
   i: int ->
-  m: {v: int | (((0 <= v) and v <= 30) and i + v < 30)} ->
+  m: {v: int | ((0 <= v) and v <= 30)} ->
   c: int array ->
   {n: int | (0 <= n) and ((n + m) < (30 * (Array.length c)))} ->
   unit
