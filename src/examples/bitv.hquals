@@ -30,3 +30,10 @@ qualif PLUS1(v): v = (i' + 1)
 qualif LENI(i): 30 * i < (30 * ((Array.length v) - 1))
 
 qualif MINUSLEN(i): i < ((Array.length v) - 1)
+qualif HEYGUYZ(v)(A:'a array): v { * * } (30*Array.length ~A)
+
+qualif JESUSJUSTWORK(j)(A:int, B: 'a array): j + ~B < 30*(Array.length v) 
+qualif InIM(v): v+i < 30 
+qualif MOD2(v): v = n - 30 * (n/30)
+qualif Jq(v): v = n - 30 * i'
+

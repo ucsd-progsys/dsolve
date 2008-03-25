@@ -141,6 +141,8 @@ let ( *-) p q = Binop (p, Times, q)
 
 let (/-) p q = Binop (p, Div, q)
 
+let (--) p q = Binop (p, Minus, q)         
+
 let implies(p, q) = (!. p) ||. q
 
 let (=>.) p q = implies (p, q)

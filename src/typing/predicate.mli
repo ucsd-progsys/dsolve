@@ -72,6 +72,7 @@ val (<=>.): pexpr -> t -> t
 val (+-): pexpr -> pexpr -> pexpr
 val ( *-): pexpr -> pexpr -> pexpr
 val ( /-): pexpr -> pexpr -> pexpr
+val (--): pexpr -> pexpr -> pexpr
 
 val subst: pexpr -> Path.t -> t -> t
 val apply_substs: (Path.t * pexpr) list -> t -> t
