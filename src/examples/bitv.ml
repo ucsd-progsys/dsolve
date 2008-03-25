@@ -151,7 +151,6 @@ let blit_bits a i m v n =
 	(((keep_lowest_bits (a lsr i) m) lsl j) lor
 	 ((Array.get v i') land (low_mask.(j) lor high_mask.(0 - d))))
 (*
-(*
 (*s When blitting a subpart of a bit vector into another bit vector, there
     are two possible cases: (1) all the bits are contained in a single integer
     of the first bit vector, and a single call to [blit_bits] is the
@@ -184,26 +183,26 @@ let blit v1 v2 ofs1 ofs2 len =
   else
     let _ = (fun n -> n + 0) ofs1 in
       unsafe_blit v1.bits ofs1 v2.bits ofs2 len
+*)
 
 (*s [blit_int] implements [blit_bits] in the particular case when
     [i=0] and [m=30] i.e. when we blit all the bits of [a]. *)
-
 let blit_int a v n =
   let (i,j) = pos n in
+  let _ = (fun (x: int) -> x) n in
   if j == 0 then
     Array.unsafe_set v i a
   else begin
     Array.unsafe_set v i 
-      ( (keep_lowest_bits (Array.unsafe_get v i) j) lor
+      ( (keep_lowest_bits (Array.get v i) j) lor
        ((keep_lowest_bits a (30 - j)) lsl j));
     Array.unsafe_set v (succ i)
-      ((keep_highest_bits (Array.unsafe_get v (succ i)) (30 - j)) lor
+      ((keep_highest_bits (Array.get v (succ i)) (30 - j)) lor
        (a lsr (30 - j)))
   end
-
 (*s Extracting the subvector [ofs..ofs+len-1] of [v] is just creating a
     new vector of length [len] and blitting the subvector of [v] inside. *)
-
+(*(*
 let sub v ofs len =
   if ofs < 0 or len < 0 or ofs + len > v.length then invalid_arg "Bitv.sub";
   let r = create len false in
