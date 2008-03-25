@@ -61,6 +61,7 @@ let copy v = { length = v.length; bits = Array.copy v.bits }
 
 let pos n =
   let i = n / 30 in
+  let _ = (fun (k: int) -> k) i in
   let j = n mod 30 in
   if j < 0 then (i - 1, j + 30) else (i,j)
 
@@ -127,24 +128,27 @@ let init n f =
     (case [j == 0]). *)
 let blit_bits a i m v n =
   let (i',j) = pos n in
-  if j == 0 then
+  if j = 0 then
     Array.set v i'
       ((keep_lowest_bits (a lsr i) m) lor
        (keep_highest_bits (Array.get v i') (30 - m)))
-  else () (*
+  else
     let d = m + j - 30 in
+    let _ = (fun (w: int) -> w) j in
+    let _ = (fun (k: int) -> k) i' in
     if d > 0 then begin
       Array.set v i'
 	(((keep_lowest_bits (a lsr i) (30 - j)) lsl j) lor
 	 (keep_lowest_bits (Array.get v i') j));
-      Array.set v (i' + 1)
+      let thankyou = (fun (m: int) -> m) (i' + 1) in
+      Array.set v thankyou
 	((keep_lowest_bits (a lsr (i + 30 - j)) d) lor
-	 (keep_highest_bits (Array.get v (i' + 1)) (30 - d)))
-    end else
+	 (keep_highest_bits (Array.get v thankyou) (30 - d)))
+    end else () (*
       Array.set v i'
 	(((keep_lowest_bits (a lsr i) m) lsl j) lor
 	 ((Array.get v i') land (low_mask.(j) lor high_mask.(-d))))
-
+(*
 (*s When blitting a subpart of a bit vector into another bit vector, there
     are two possible cases: (1) all the bits are contained in a single integer
     of the first bit vector, and a single call to [blit_bits] is the
@@ -607,4 +611,5 @@ let select_to f32 f64 = match Sys.word_size with
   | _ -> assert false
 let to_nativeint_s = select_to to_int32_s to_int64_s
 let to_nativeint_us = select_to to_int32_us to_int64_us
+          *)
           *)

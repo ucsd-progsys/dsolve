@@ -135,6 +135,12 @@ let (!.) p = Not p
 
 let (<=>.) p q = Iff (p, q)
 
+let (+-) p q = Binop (p, Plus, q)
+
+let ( *-) p q = Binop (p, Times, q)
+
+let (/-) p q = Binop (p, Div, q)
+
 let implies(p, q) = (!. p) ||. q
 
 let (=>.) p q = implies (p, q)

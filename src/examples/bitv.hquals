@@ -3,4 +3,30 @@ qualif DIVBY30(x): 30 * x <= n
 qualif LESSLEN(n): n < v.length
 
 qualif NNLEN(v): 0 <= v.length
+
 qualif SOMEBITS(v): 0 < (Array.length v.bits)
+qualif CLEN(n): n + 1 <= (Array.length v) * 30
+qualif CLEN(n): n <= (Array.length v) * 30
+
+qualif LENTWO(a): (Array.length a) > 1
+
+qualif CLEN(n): n + 1 <= Array.length v
+qualif CLEN(n): n + 2 <= Array.length v
+qualif PLEASE(i): i + 1 < Array.length v
+
+qualif DIV30(v): (30 * v) + 1 <= n
+qualif DIV30(v): (30 * v) + 2 <= n
+
+qualif MOD(v): (v = 0) or (30 * ((n / 30) + 0)) + 1 <= n
+
+qualif EQDIV(v): 30 * v = n
+qualif EQDIV(v): 30 * v < n
+qualif TIMES(v): v = (n / 30) + 0
+qualif LEN(i): (30 * i) + 1 <= n
+qualif LEN(i): (30 * i) + 1 <= (Array.length v) - 1
+qualif LEN(i): (30 * i) <= n - 1
+qualif NE0(v): v != 0
+qualif PLUS1(v): v = (i' + 1)
+qualif LENI(i): 30 * i < (30 * ((Array.length v) - 1))
+
+qualif MINUSLEN(i): i < ((Array.length v) - 1)
