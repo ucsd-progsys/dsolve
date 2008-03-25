@@ -143,6 +143,10 @@ let _frames = [
 
   (["succ"; "Pervasives"], defun (fun x -> uInt ==> fun y -> rInt "succ" y ((Var y) ==. ((Var x) +- PInt 1))));
 
+  (["pred"; "Pervasives"], defun (fun x -> uInt ==> fun y -> rInt "pred" y ((Var y) ==. ((Var x) -- PInt 1))));
+
+
+
   poly_rel_frame ["="; "Pervasives"] "=" Eq;
   poly_rel_frame ["!="; "Pervasives"] "!=" Ne;
   poly_rel_frame ["<>"; "Pervasives"] "<>" Ne;

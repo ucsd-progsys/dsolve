@@ -1,3 +1,9 @@
+let ffor s d body = 
+    let rec loop i =
+        let i' = i + 1 in 
+        if i <= d then (body i; loop i') else () 
+    in loop s
+
 type t = { length : int; bits : int array }
 
 let length v = v.length
@@ -187,6 +193,7 @@ let blit v1 v2 ofs1 ofs2 len =
 
 (*s [blit_int] implements [blit_bits] in the particular case when
     [i=0] and [m=30] i.e. when we blit all the bits of [a]. *)
+(* assume n + 30 is in bounds *)
 let blit_int a v n =
   let (i,j) = pos n in
   let _ = (fun (x: int) -> x) n in
@@ -241,12 +248,12 @@ let concat vl =
        pos := !pos + n)
     vl;
   res
-
+   *)*)
 (*s Filling is a particular case of blitting with a source made of all
     ones or all zeros. Thus we instanciate [unsafe_blit], with 0 and
     [max_int]. *)
 
-let blit_zeros v ofs len =
+(*let blit_zeros v ofs len =
   let (bi,bj) = pos ofs in
   let (ei,ej) = pos (ofs + len - 1) in
   if bi == ei then
@@ -254,13 +261,12 @@ let blit_zeros v ofs len =
   else begin
     blit_bits 0 bj (30 - bj) v ofs;
     let n = ref (ofs + 30 - bj) in
-    for i = succ bi to pred ei do
-      blit_int 0 v !n;
-      n := !n + 30
-    done;
-    blit_bits 0 0 (succ ej) v !n
-  end
-
+    begin
+      ffor (succ bi) (ei - 1) (fun i -> blit_int 0 v !n; n := !n + 30); 
+      blit_bits 0 0 (succ ej) v !n
+    end
+  end*)
+(*(*
 let blit_ones v ofs len =
   let (bi,bj) = pos ofs in
   let (ei,ej) = pos (ofs + len - 1) in

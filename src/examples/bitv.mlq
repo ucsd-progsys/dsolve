@@ -20,6 +20,12 @@ lval blit_int: int ->
   {n: int | 0 <= n and (n + 30) < (30 * (Array.length c))} ->
   unit
 
+(*lval blit_zeros: 
+  c: int array ->
+  ofs: int ->
+  {len: int | len >= ofs and len < Array.length c} ->
+  unit*)
+
 (*
 (* pmr: what's with this alpha? =( *)
 lval iter: (bool -> 'a) -> {t | INVAR} -> unit
