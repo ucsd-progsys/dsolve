@@ -126,7 +126,6 @@ let init n f =
     [n..n+m-1] are respectively valid subparts of [a] and [v]. 
     It is optimized when the bits fit the lowest boundary of an integer 
     (case [j == 0]). *)
-(*  ps, i am a silly frenchman and write code that makes no sense, oui! *)
 let blit_bits a i m v n =
   let (i',j) = pos n in
   let _ = (fun (x: int) -> x) n in
@@ -140,8 +139,6 @@ let blit_bits a i m v n =
        (keep_highest_bits (Array.get v i') (30 - m)))
   else
     let d = m + j - 30 in
-    let _ = (fun (w: int) -> w) j in
-    let _ = (fun (k: int) -> k) i' in
     if d > 0 then begin
       Array.set v i'
 	(((keep_lowest_bits (a lsr i) (30 - j)) lsl j) lor

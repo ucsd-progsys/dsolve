@@ -294,23 +294,28 @@ let bind env pat frame =
 let env_bind tenv env pat frame =
   Lightenv.addn (bind tenv pat frame) env
 
+(* pmr: this function got some pre-PLDI uglies that need to be ironed out -
+   we need a partial instantiation method for qualifiers instead of accumulating these
+   vars *)
 (* Label all the function formals in [f] with their corresponding labels in
    [f'] and changing constant qualifiers appropriately.
    [f] and [f'] are expected to be of the same shape; also, [f]
    must be completely unlabeled (as frames are after creation by fresh). *)
-let rec label_like f f' = match (f, f') with
-  | (Fvar _, Fvar _) | (Funknown, Funknown) | (Fconstr _, Fconstr _) -> f
-  | (Farrow (None, f1, f1'), Farrow (l, f2, f2')) ->
-      Farrow (l, label_like f1 f2, label_like f1' f2')
-  | (Farrow (Some p1, f1, f1'), Farrow (Some p2, f2, f2')) ->
-      let vars = List.map (fun (x, y) -> (Ident.name x, Path.Pident y)) (Pattern.bind_vars p1 p2) in
-        Farrow (Some p2, label_like f1 f2, label_like (instantiate_qualifiers vars f1') f2')
-  | (Ftuple (t1s, r), Ftuple (t2s, _)) ->
-      Ftuple (List.map2 label_like t1s t2s, r)
-  | (Frecord (p1, f1s, r), Frecord (p2, f2s, _)) when Path.same p1 p2 ->
-      let label_rec (f1, n, muta) (f2, _, _) = (label_like f1 f2, n, muta) in
-        Frecord (p1, List.map2 label_rec f1s f2s, r)
-  | _ -> assert false
+let label_like f f' =
+  let rec label vars f f' = match (f, f') with
+    | (Fvar _, Fvar _) | (Funknown, Funknown) | (Fconstr _, Fconstr _) -> instantiate_qualifiers vars f
+    | (Farrow (None, f1, f1'), Farrow (l, f2, f2')) ->
+        Farrow (l, label vars f1 f2, label vars f1' f2')
+    | (Farrow (Some p1, f1, f1'), Farrow (Some p2, f2, f2')) ->
+        let vars' = List.map (fun (x, y) -> (Ident.name x, Path.Pident y)) (Pattern.bind_vars p1 p2) @ vars in
+          Farrow (Some p2, label vars f1 f2, label vars' f1' f2')
+    | (Ftuple (t1s, r), Ftuple (t2s, _)) ->
+        Ftuple (List.map2 (label vars) t1s t2s, r)
+    | (Frecord (p1, f1s, r), Frecord (p2, f2s, _)) when Path.same p1 p2 ->
+        let label_rec (f1, n, muta) (f2, _, _) = (label vars f1 f2, n, muta) in
+          Frecord (p1, List.map2 label_rec f1s f2s, r)
+    | _ -> assert false
+  in label [] f f'
 
 (* Create a fresh frame with the same shape as [exp]'s type and [f],
    and the same labels as [f]. *)

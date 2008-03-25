@@ -5,6 +5,14 @@ qualif LESSLEN(n): n < v.length
 qualif NNLEN(v): 0 <= v.length
 
 qualif SOMEBITS(v): 0 < (Array.length v.bits)
+
+qualif MI(v): i < v - 1
+qualif MI30(v): i + v < 30
+
+qualif LIMN(n): (n + m) < (30 * (Array.length v))
+
+
+(*
 qualif CLEN(n): n + 1 <= (Array.length v) * 30
 qualif CLEN(n): n <= (Array.length v) * 30
 
@@ -37,3 +45,4 @@ qualif InIM(v): v+i < 30
 qualif MOD2(v): v = n - 30 * (n/30)
 qualif Jq(v): v = n - 30 * i'
 
+*)

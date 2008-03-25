@@ -8,7 +8,12 @@ lval get: {t | INVAR} -> int -> bool
 lval set: {t | INVAR} -> int -> bool -> unit
 lval init: {v: int | 0 < v} -> (int -> bool) -> t
 
-lval blit_bits: int -> i: {v: int | (v >= 0)} -> m: {v: int | (((0 <= v and i < v - 1) and v <= 30) and i + v < 30)} -> c: int array -> {v: int | (0 <= v) and (v + i < (30*Array.length c))} -> unit
+lval blit_bits: int ->
+  i: {v: int | (v >= 0)} ->
+  m: {v: int | (((0 <= v and i < v - 1) and v <= 30) and i + v < 30)} ->
+  c: int array ->
+  {n: int | (n + m) < (30 * (Array.length c))} ->
+  unit
 (*
 (* pmr: what's with this alpha? =( *)
 lval iter: (bool -> 'a) -> {t | INVAR} -> unit

@@ -50,8 +50,6 @@ parsing/parser.cmo: parsing/syntaxerr.cmi parsing/parsetree.cmi \
 parsing/parser.cmx: parsing/syntaxerr.cmx parsing/parsetree.cmi \
     parsing/longident.cmx parsing/location.cmx utils/clflags.cmx \
     parsing/asttypes.cmi parsing/parser.cmi 
-parsing/parsetreewrapper.cmo: parsing/parsetree.cmi 
-parsing/parsetreewrapper.cmx: parsing/parsetree.cmi 
 parsing/printast.cmo: parsing/parsetree.cmi parsing/longident.cmi \
     parsing/location.cmi parsing/asttypes.cmi parsing/printast.cmi 
 parsing/printast.cmx: parsing/parsetree.cmi parsing/longident.cmx \
@@ -440,14 +438,14 @@ driver/errors.cmx: utils/warnings.cmx typing/typetexp.cmx typing/typemod.cmx \
     parsing/syntaxerr.cmx driver/pparse.cmx parsing/location.cmx \
     parsing/lexer.cmx typing/includemod.cmx typing/env.cmx typing/ctype.cmx \
     driver/errors.cmi 
-driver/main_args.cmo: driver/main_args.cmi 
-driver/main_args.cmx: driver/main_args.cmi 
 driver/main.cmo: utils/warnings.cmi utils/misc.cmi driver/main_args.cmi \
     driver/errors.cmi utils/config.cmi driver/compile.cmi utils/clflags.cmi \
     driver/main.cmi 
 driver/main.cmx: utils/warnings.cmx utils/misc.cmx driver/main_args.cmx \
     driver/errors.cmx utils/config.cmx driver/compile.cmx utils/clflags.cmx \
     driver/main.cmi 
+driver/main_args.cmo: driver/main_args.cmi 
+driver/main_args.cmx: driver/main_args.cmi 
 driver/optcompile.cmo: utils/warnings.cmi typing/unused_var.cmi \
     typing/typemod.cmi typing/typedtree.cmi typing/printtyp.cmi \
     parsing/printast.cmi driver/pparse.cmi parsing/parse.cmi utils/misc.cmi \
