@@ -11,7 +11,7 @@ qualif MI30(v): i + v < 30
 
 qualif LIMN(n): (n + m) < (30 * (Array.length v))
 
-qualif IPLUS(j): j = i' + 1
+qualif DMINUS(c): d = 0 - d
 
 qualif DIV30(i): i = (n / 30)
 qualif MOD30(j): j = n - (30 * (n / 30))
