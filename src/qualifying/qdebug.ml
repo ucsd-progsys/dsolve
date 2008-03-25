@@ -22,6 +22,10 @@ let rec pprint_expression ppf exp =
           fprintf ppf "%d" n
       | Pexp_constant (Const_float f) ->
           fprintf ppf "%s" f
+      | Pexp_constant (Const_char c) ->
+          fprintf ppf "%c" c
+      | Pexp_constant (Const_string s) ->
+          fprintf ppf "%s" s
       | Pexp_ident id ->
           fprintf ppf "%s" (print_id id)
       | Pexp_construct (tag, eopt, _) ->
