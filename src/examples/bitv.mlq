@@ -43,8 +43,6 @@ lval unsafe_blit: v1: {v1: int array | 0 <= (Array.length v1)} ->
   len: {len: int | ((ofs1 + len < 30 * (Array.length v1)) and (ofs2 + len < 30 * (Array.length v2))) and (0 <= len)} ->
   unit
 
-lval blit: {t | INVAR} -> {t | INVAR} -> int -> int -> int -> unit
-
 (*
 (* pmr: what's with this alpha? =( *)
 lval iter: (bool -> 'a) -> {t | INVAR} -> unit
