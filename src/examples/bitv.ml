@@ -174,7 +174,6 @@ let blit_int a v n =
        (a lsr (30 - j)))
   end
 
-(*
 (*s When blitting a subpart of a bit vector into another bit vector, there
     are two possible cases: (1) all the bits are contained in a single integer
     of the first bit vector, and a single call to [blit_bits] is the
@@ -187,30 +186,33 @@ let unsafe_blit v1 ofs1 v2 ofs2 len =
   let (ei,ej) = pos (ofs1 + len - 1) in
   if bi = ei then
     blit_bits (Array.get v1 bi) bj len v2 ofs2
-  else ()
-(*    blit_bits (Array.get v1 bi) bj (30 - bj) v2 ofs2
-
+  else begin
+    if (30 - bj) < len then  (* ANNOT *)
+      blit_bits (Array.get v1 bi) bj (30 - bj) v2 ofs2
+    else ();
     let rec loop n i =
-      if i <= ei - 1 then ()
-        (*blit_int (Array.get v1 i) v2 n*)
-      else (); (*blit_bits (Array.get v1 ei) 0 (ej + 1) v2 n *)
-      loop (n + 30) (i+1)
+      if i <= ei - 1 then
+        if n + 30 <= Array.length v2 then (* ANNOT *)
+          blit_int (Array.get v1 i) v2 n
+        else ()
+      else begin
+        if n + (ej + 1) <= Array.length v2 && 0 <= ei then (* ANNOT *)
+          blit_bits (Array.get v1 ei) 0 (ej + 1) v2 n
+        else ();
+        loop (n + 30) (i+1)
+      end
     in loop (ofs2 + 30 - bj) (bi + 1)
-  end*)
-
-
-(*
+  end
 
 let blit v1 v2 ofs1 ofs2 len =
-  if len < 0 || ofs1 < 0 || ofs1 + len > v1.length
-             || ofs2 < 0 || ofs2 + len > v2.length
+  if len < 0 || ofs1 < 0 || ofs1 + len > v1.length || ofs1 >= v1.length
+             || ofs2 < 0 || ofs2 + len > v2.length || ofs2 >= v2.length
   then
-    assert false
+    (* assert false *) ()
   else
-    let _ = (fun n -> n + 0) ofs1 in
-      unsafe_blit v1.bits ofs1 v2.bits ofs2 len
-*)
+    unsafe_blit v1.bits ofs1 v2.bits ofs2 len
 
+(*
 (*s Extracting the subvector [ofs..ofs+len-1] of [v] is just creating a
     new vector of length [len] and blitting the subvector of [v] inside. *)
 (*(*
