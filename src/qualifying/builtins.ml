@@ -31,6 +31,8 @@ let mk_tyvar () = Frame.Fvar(Path.mk_ident "'a")
 let mk_int qs = Fconstr(Predef.path_int, [], [], ([], Qconst qs))
 
 let uFloat = Fconstr(Predef.path_float, [], [], ([], Qconst []))
+let uChar = Fconstr(Predef.path_char, [], [], ([], Qconst []))
+let uString = Fconstr(Predef.path_string, [], [], ([], Qconst []))
 
 let mk_bool qs = Fconstr(Predef.path_bool, [], [], ([], Qconst qs))
 let uBool = mk_bool []
