@@ -1,7 +1,7 @@
 let ffor s d body = 
     let rec loop i =
         let i' = i + 1 in 
-        if i <= d then (body i; loop i') else () 
+        if i < d then (body i; loop i') else () 
     in loop s
 
 type t = { length : int; bits : int array }
@@ -211,7 +211,6 @@ let blit v1 v2 ofs1 ofs2 len =
     (* assert false *) ()
   else
     unsafe_blit v1.bits ofs1 v2.bits ofs2 len
-
 (*
 (*s Extracting the subvector [ofs..ofs+len-1] of [v] is just creating a
     new vector of length [len] and blitting the subvector of [v] inside. *)
@@ -254,7 +253,7 @@ let concat vl =
        pos := !pos + n)
     vl;
   res
-   *)*)
+   *)*)*)
 (*s Filling is a particular case of blitting with a source made of all
     ones or all zeros. Thus we instanciate [unsafe_blit], with 0 and
     [max_int]. *)
@@ -265,15 +264,17 @@ let blit_zeros v ofs len =
   let _ = (fun (x:int) -> x) bi in
   let _ = (fun (x:int) -> x) ei in
   if bi = ei then
-    blit_bits 0 bj len v ofs else () (*
+    blit_bits 0 bj len v ofs 
   else begin
-    blit_bits 0 bj (30 - bj) v ofs;
+    if (30 - bj) < len then  (* ANNOT *)
+      blit_bits 0 bj (30 - bj) v ofs 
+    else (); 
     let n = ref (ofs + 30 - bj) in
     begin
-      ffor (succ bi) (pred ei) (fun i -> blit_int 0 v !n; n := !n + 30); 
-      blit_bits 0 0 (succ ej) v !n
+      ffor (succ bi) (pred ei) (fun i -> (*blit_int 0 v !n;*) n := !n + 30); 
+      (*blit_bits 0 0 (succ ej) v !n*) ()
     end
-  end*)
+  end (*
 (*(*
 let blit_ones v ofs len =
   let (bi,bj) = pos ofs in
@@ -471,7 +472,7 @@ let to_string v =
   let _ = (fun (x:t) -> x) v in
   let _ = (fun (x:int) -> x) n in
   let s = String.make n '0' in
-    ffor 0 (n-1) (fun i -> if unsafe_get v i then () else ()); s
+    ffor 0 (n) (fun i -> if unsafe_get v i then s.[i] <- '1' else ()); s
 
 let print fmt v = Format.pp_print_string fmt (to_string v)
 (*
