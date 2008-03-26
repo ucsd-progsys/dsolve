@@ -12,10 +12,9 @@ lval blit_bits: int ->
   i: int ->
   m: {v: int | ((0 <= v) and v <= 30)} ->
   c: int array ->
-  {n: int | (0 <= n) and ((n + m) < (30 * (Array.length c)))} ->
+  {n: int | ((0 <= n) and (((n + m) - 1 < (30 * (Array.length c))))) and (n < (30 * (Array.length c)))} ->
   unit
-
-
+(*
 lval blit_int: int ->
   c: int array ->
   {n: int | 0 <= n and (n + 30) < (30 * (Array.length c))} ->
@@ -36,14 +35,13 @@ lval blit_zeros:
   {len: int | len + ofs < 30*Array.length c and 0 <= len} ->
   unit
 
-(*
 lval unsafe_blit: v1: {v1: int array | 0 <= (Array.length v1)} ->
   ofs1: {ofs1: int | (0 <= ofs1) and (ofs1 < 30 * (Array.length v1))} ->
   v2: {v2: int array | 0 <= (Array.length v2)} ->
   ofs2: {ofs2: int | (0 <= ofs2) and (ofs2 < 30 * (Array.length v2))} ->
   len: {len: int | ((ofs1 + len < 30 * (Array.length v1)) and (ofs2 + len < 30 * (Array.length v2))) and (0 <= len)} ->
   unit
-*)
+
 (*
 (* pmr: what's with this alpha? =( *)
 lval iter: (bool -> 'a) -> {t | INVAR} -> unit
@@ -73,3 +71,4 @@ lval to_int_s: {t | INVAR} -> int
 (*lval first_set: v: {t | INVAR} -> {n: int | (0 <= n) and (n = v.length)} -> int *)
 
 lval gray_iter: ({t | INVAR} -> 'a) -> {n: int | 0 <= n} -> unit
+*)

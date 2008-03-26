@@ -156,7 +156,7 @@ let blit_bits a i m v n =
       Array.set v i'
 	(((keep_lowest_bits (a lsr i) m) lsl j) lor
 	 ((Array.get v i') land (low_mask.(j) lor high_mask.(0 - d))))
-
+(*
 (*s When blitting a subpart of a bit vector into another bit vector, there
     are two possible cases: (1) all the bits are contained in a single integer
     of the first bit vector, and a single call to [blit_bits] is the
@@ -164,17 +164,14 @@ let blit_bits a i m v n =
     the source array, and then we do a loop of [blit_int], with two calls
     to [blit_bits] for the two bounds. *)
 
-(* pmr: busted ATM
-
-
 let unsafe_blit v1 ofs1 v2 ofs2 len =
   let (bi,bj) = pos ofs1 in
   let (ei,ej) = pos (ofs1 + len - 1) in
   if bi = ei then
     blit_bits (Array.get v1 bi) bj len v2 ofs2
-  else
-    blit_bits (Array.get v1 bi) bj (30 - bj) v2 ofs2
-(*
+  else ()
+(*    blit_bits (Array.get v1 bi) bj (30 - bj) v2 ofs2
+
     let rec loop n i =
       if i <= ei - 1 then ()
         (*blit_int (Array.get v1 i) v2 n*)
@@ -182,7 +179,7 @@ let unsafe_blit v1 ofs1 v2 ofs2 len =
       loop (n + 30) (i+1)
     in loop (ofs2 + 30 - bj) (bi + 1)
   end*)
-*)
+
 
 (*
 
@@ -636,4 +633,5 @@ let select_to f32 f64 = match Sys.word_size with
 let to_nativeint_s = select_to to_int32_s to_int64_s
 let to_nativeint_us = select_to to_int32_us to_int64_us
 
+*)
 *)

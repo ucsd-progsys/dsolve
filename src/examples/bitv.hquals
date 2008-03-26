@@ -10,7 +10,8 @@ qualif NNLEN(v): 0 <= v.length
 
 qualif SOMEBITS(v): 0 < (Array.length v.bits)
 
-qualif LIMN(n)(A: int): (n + ~A) < (30 * (Array.length v))
+qualif LIMN(n)(A: int): (n + ~A) - 1 < (30 * (Array.length v))
+qualif NVALID(n): n < (30 * (Array.length v))
 qualif LIWN(n): (n + 30) < (30 * (Array.length v))
 
 qualif DIV30(i): i = (n / 30)
