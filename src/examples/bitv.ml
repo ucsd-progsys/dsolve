@@ -103,7 +103,7 @@ let get v n =
 
 let set v n b =
   if n < 0 || n >= v.length then
-    assert false
+    () (* assert false *)
   else
     let (i,j) = pos n in
       if b then
@@ -485,30 +485,34 @@ let of_string s =
       if c <> '0' then invalid_arg "Bitv.of_string"
   done;
   v
+*)
 
 (*s Iteration on all bit vectors of length [n] using a Gray code. *)
 
 let first_set v n = 
   let rec lookup i = 
-    if i = n then raise Not_found ;
-    if unsafe_get v i then i else lookup (i + 1)
+    if i = n then (* assert false *) 0 else
+      (if unsafe_get v i then i else lookup (i + 1))
   in 
   lookup 0
 
 let gray_iter f n = 
   let bv = create n false in 
   let rec iter () =
-    f bv; 
-    unsafe_set bv 0 (not (unsafe_get bv 0));
-    f bv; 
-    let pos = succ (first_set bv n) in
-    if pos < n then begin
-      unsafe_set bv pos (not (unsafe_get bv pos));
-      iter ()
-    end
+    f bv;
+    if 0 < n then begin (* ANNOT *)
+      unsafe_set bv 0 (not (unsafe_get bv 0));
+      f bv;
+      let pos = succ (first_set bv n) in
+        if pos < n then begin
+          unsafe_set bv pos (not (unsafe_get bv pos));
+          iter ()
+        end else ()
+    end else ()
   in
-  if n > 0 then iter ()
+  if n > 0 then iter () else ()
 
+(*
 (*s Coercions to/from lists of integers *)
 
 let of_list l =
@@ -527,7 +531,7 @@ let of_list_with_length l len =
   let b = create len false in
   let add_element i =
     if i < 0 || i >= len then
-      assert false
+      (* assert false *) ()
     else
       let _ = (fun (s: int) -> s) i in
       unsafe_set b i true
@@ -550,7 +554,7 @@ let of_int_us i =
 
 let to_int_us v = 
   if v.length < 30 then
-    assert false
+    (* assert false *) 0
   else
     v.bits.(0)
 
@@ -559,7 +563,7 @@ let of_int_s i =
 
 let to_int_s v = 
   if v.length < succ 30 then
-    assert false
+    (* assert false *) 0
   else
     v.bits.(0) lor (v.bits.(1) lsl 30)
 

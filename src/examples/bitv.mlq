@@ -61,3 +61,6 @@ lval to_int_us: {t | INVAR} -> int
 lval of_int_s: int -> {t | INVAR}
 lval to_int_s: {t | INVAR} -> int
 
+(*lval first_set: v: {t | INVAR} -> {n: int | (0 <= n) and (n = v.length)} -> int *)
+
+lval gray_iter: ({t | INVAR} -> 'a) -> {n: int | 0 <= n} -> unit
