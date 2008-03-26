@@ -74,7 +74,7 @@ let keyword_table =
     "qualif", QUALIF;
     "squalif", SINGLE_QUALIF;
     "lval", LVAL;
-    "pred", PREDICATE;
+    "predicate", PREDICATE;
     "rec", REC;
     "sig", SIG;
     "struct", STRUCT;
