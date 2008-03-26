@@ -463,7 +463,7 @@ let all_ones v =
     else
       ((Array.unsafe_get b i) == max_int) && test (succ i)
   in test 0
-
+*)
 (*s Conversions to and from strings. *)
 
 let to_string v = 
@@ -474,7 +474,7 @@ let to_string v =
     ffor 0 (n-1) (fun i -> if unsafe_get v i then () else ()); s
 
 let print fmt v = Format.pp_print_string fmt (to_string v)
-
+(*
 (*let of_string s =
   let n = String.length s in
   let v = create n false in

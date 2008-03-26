@@ -29,7 +29,6 @@ lval unsafe_blit: v1: {v1: int array | 0 <= (Array.length v1)} ->
 
 lval blit: {t | INVAR} -> {t | INVAR} -> int -> int -> int -> unit
 
-(*
 lval to_string: 
   {t | INVAR } ->
   string
@@ -38,7 +37,7 @@ lval print:
   Format.formatter ->
   {t | INVAR} ->
   unit
-
+(*
 lval blit_zeros:
   c: {v: int array | Array.length v >= 0} ->
   ofs: {ofs: int | 0 <= ofs} ->
