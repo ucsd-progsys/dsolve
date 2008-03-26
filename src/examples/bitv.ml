@@ -265,16 +265,20 @@ let blit_zeros v ofs len =
   let _ = (fun (x:int) -> x) ei in
   if bi = ei then
     blit_bits 0 bj len v ofs 
-  else begin
-    if (30 - bj) < len then  (* ANNOT *)
-      blit_bits 0 bj (30 - bj) v ofs 
-    else (); 
-    let n = ref (ofs + 30 - bj) in
+  else if (30 - bj) < len then  (* ANNOT *)
     begin
-      ffor (succ bi) (pred ei) (fun i -> (*blit_int 0 v !n;*) n := !n + 30); 
-      (*blit_bits 0 0 (succ ej) v !n*) ()
-    end
-  end (*
+      blit_bits 0 bj (30 - bj) v ofs; 
+      (let n = ofs + 30 - bj in
+      let _ = (fun (x:int) -> x) n in 
+      let _ = (fun (x:int) -> x) ei in 
+      let rec loop i n =
+        if i < pred ei then loop (i+1) (n+30) else () in loop (succ bi) n
+      (*begin
+        ffor (succ bi) (pred ei) (fun i -> (*blit_int 0 v !n;*) n := !n + 30); 
+        let _ = (fun (x:int) -> x) !n in  
+        (*blit_bits 0 0 (succ ej) v !n*) ()
+      end*)) 
+    end else ()(*
 (*(*
 let blit_ones v ofs len =
   let (bi,bj) = pos ofs in
