@@ -30,11 +30,11 @@ lval print:
   {t | INVAR} ->
   unit
 
-(*lval blit_zeros: 
+lval blit_zeros:
   c: {v: int array | Array.length v >= 0} ->
-  ofs: int ->
+  ofs: {ofs: int | 0 <= ofs} ->
   {len: int | len + ofs < 30*Array.length c and 0 <= len} ->
-  unit*)
+  unit
 
 (*
 lval unsafe_blit: v1: {v1: int array | 0 <= (Array.length v1)} ->
