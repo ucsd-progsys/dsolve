@@ -99,6 +99,8 @@ and constrain_constant path = function
   | Const_int n ->
       (B.mk_int [B.equality_qualifier (P.PInt n)], [], [])
   | Const_float _ -> (B.uFloat, [], [])
+  | Const_char _ -> (B.uChar, [], [])
+  | Const_string _ -> (B.uString, [], [])
   | _ -> assert false
 
 and constrain_constructed (env, guard, f) cstrdesc args e =
