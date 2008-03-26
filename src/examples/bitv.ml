@@ -220,6 +220,7 @@ let sub v ofs len =
   let r = create len false in
   unsafe_blit v.bits ofs r.bits 0 len;
   r
+*) *) *)
 
 (*s The concatenation of two bit vectors [v1] and [v2] is obtained by 
     creating a vector for the result and blitting inside the two vectors.
@@ -232,11 +233,15 @@ let append v1 v2 =
   let b1 = v1.bits in
   let b2 = v2.bits in
   let b = r.bits in
-  for i = 0 to Array.length b1 - 1 do 
-    Array.unsafe_set b i (Array.unsafe_get b1 i) 
-  done;  
-  unsafe_blit b2 0 b l1 l2;
-  r
+    ffor 0 (Array.length b1 - 1)
+      (fun i ->
+         Array.unsafe_set b i (Array.unsafe_get b1 i)
+      );
+    if l2 > 0 then (* ANNOT?  or bugfix? *)
+      unsafe_blit b2 0 b l1 l2 else ();
+    r
+
+(*
 
 (*s The concatenation of a list of bit vectors is obtained by iterating
     [unsafe_blit]. *)
@@ -253,7 +258,7 @@ let concat vl =
        pos := !pos + n)
     vl;
   res
-   *)*)*)
+*)
 (*s Filling is a particular case of blitting with a source made of all
     ones or all zeros. Thus we instanciate [unsafe_blit], with 0 and
     [max_int]. *)
