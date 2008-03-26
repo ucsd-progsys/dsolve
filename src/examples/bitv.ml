@@ -157,45 +157,6 @@ let blit_bits a i m v n =
 	(((keep_lowest_bits (a lsr i) m) lsl j) lor
 	 ((Array.get v i') land (low_mask.(j) lor high_mask.(0 - d))))
 
-(*s When blitting a subpart of a bit vector into another bit vector, there
-    are two possible cases: (1) all the bits are contained in a single integer
-    of the first bit vector, and a single call to [blit_bits] is the
-    only thing to do, or (2) the source bits overlap on several integers of
-    the source array, and then we do a loop of [blit_int], with two calls
-    to [blit_bits] for the two bounds. *)
-
-(* pmr: busted ATM
-
-
-let unsafe_blit v1 ofs1 v2 ofs2 len =
-  let (bi,bj) = pos ofs1 in
-  let (ei,ej) = pos (ofs1 + len - 1) in
-  if bi = ei then
-    blit_bits (Array.get v1 bi) bj len v2 ofs2
-  else
-    blit_bits (Array.get v1 bi) bj (30 - bj) v2 ofs2
-(*
-    let rec loop n i =
-      if i <= ei - 1 then ()
-        (*blit_int (Array.get v1 i) v2 n*)
-      else (); (*blit_bits (Array.get v1 ei) 0 (ej + 1) v2 n *)
-      loop (n + 30) (i+1)
-    in loop (ofs2 + 30 - bj) (bi + 1)
-  end*)
-*)
-
-(*
-
-let blit v1 v2 ofs1 ofs2 len =
-  if len < 0 || ofs1 < 0 || ofs1 + len > v1.length
-             || ofs2 < 0 || ofs2 + len > v2.length
-  then
-    assert false
-  else
-    let _ = (fun n -> n + 0) ofs1 in
-      unsafe_blit v1.bits ofs1 v2.bits ofs2 len
-*)
-
 (*s [blit_int] implements [blit_bits] in the particular case when
     [i=0] and [m=30] i.e. when we blit all the bits of [a]. *)
 (* assume n + 30 is in bounds *)
@@ -212,6 +173,47 @@ let blit_int a v n =
       ((keep_highest_bits (Array.get v (succ i)) (30 - j)) lor
        (a lsr (30 - j)))
   end
+
+(*s When blitting a subpart of a bit vector into another bit vector, there
+    are two possible cases: (1) all the bits are contained in a single integer
+    of the first bit vector, and a single call to [blit_bits] is the
+    only thing to do, or (2) the source bits overlap on several integers of
+    the source array, and then we do a loop of [blit_int], with two calls
+    to [blit_bits] for the two bounds. *)
+
+let unsafe_blit v1 ofs1 v2 ofs2 len =
+  let (bi,bj) = pos ofs1 in
+  let (ei,ej) = pos (ofs1 + len - 1) in
+  if bi = ei then
+    blit_bits (Array.get v1 bi) bj len v2 ofs2
+  else
+    if (30 - bj) < len then begin  (* ANNOT *)
+      blit_bits (Array.get v1 bi) bj (30 - bj) v2 ofs2;
+      let rec loop n i =
+          if i <= ei - 1 then begin
+            if n + 30 < Array.length v2 then  (* ANNOT *)
+              blit_int (Array.get v1 i) v2 n
+            else ();
+            loop (n + 30) (i+1);
+          end else
+            if n + (ej + 1) < Array.length v2 then (* ANNOT *)
+              blit_bits (Array.get v1 ei) 0 (ej + 1) v2 n
+            else ()
+      in loop (ofs2 + 30 - bj) (bi + 1)
+    end else ()
+
+(*
+
+let blit v1 v2 ofs1 ofs2 len =
+  if len < 0 || ofs1 < 0 || ofs1 + len > v1.length
+             || ofs2 < 0 || ofs2 + len > v2.length
+  then
+    assert false
+  else
+    let _ = (fun n -> n + 0) ofs1 in
+      unsafe_blit v1.bits ofs1 v2.bits ofs2 len
+*)
+
 (*s Extracting the subvector [ofs..ofs+len-1] of [v] is just creating a
     new vector of length [len] and blitting the subvector of [v] inside. *)
 (*(*
