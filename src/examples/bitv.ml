@@ -461,16 +461,16 @@ let all_ones v =
       ((Array.unsafe_get b i) == max_int) && test (succ i)
   in test 0
 
-(* (*
+(*
 (*s Conversions to and from strings. *)
 
 let to_string v = 
   let n = v.length in
   let s = String.make n '0' in
-  for i = 0 to n - 1 do
-    if unsafe_get v i then s.[i] <- '1'
-  done;
-  s
+  let rec loop i =
+    if i < n then if unsafe_get v i then s.[i] <- '1' else ()
+  in loop 0; s
+
 
 let print fmt v = Format.pp_print_string fmt (to_string v)
 
@@ -509,7 +509,6 @@ let gray_iter f n =
   in
   if n > 0 then iter ()
 
-
 (*s Coercions to/from lists of integers *)
 
 let of_list l =
@@ -520,18 +519,22 @@ let of_list l =
     if i < 0 then invalid_arg "Bitv.of_list";
     unsafe_set b i true 
   in
-  List.iter add_element l;
-  b
+  List.iter add_element l; b
+
+*)
 
 let of_list_with_length l len =
   let b = create len false in
   let add_element i =
-    if i < 0 || i >= len then invalid_arg "Bitv.of_list_with_length";
-    unsafe_set b i true
+    if i < 0 || i >= len then
+      assert false
+    else
+      let _ = (fun (s: int) -> s) i in
+      unsafe_set b i true
   in
-  List.iter add_element l;
-  b
+  List.iter add_element l; b
 
+(*
 let to_list b =
   let n = length b in
   let rec make i acc = 
@@ -624,6 +627,5 @@ let select_to f32 f64 = match Sys.word_size with
   | _ -> assert false
 let to_nativeint_s = select_to to_int32_s to_int64_s
 let to_nativeint_us = select_to to_int32_us to_int64_us
-          *)
 
 *)
