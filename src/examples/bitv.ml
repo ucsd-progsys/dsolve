@@ -158,6 +158,9 @@ let blit_bits a i m v n =
     the source array, and then we do a loop of [blit_int], with two calls
     to [blit_bits] for the two bounds. *)
 
+(* pmr: busted ATM
+
+
 let unsafe_blit v1 ofs1 v2 ofs2 len =
   let (bi,bj) = pos ofs1 in
   let (ei,ej) = pos (ofs1 + len - 1) in
@@ -173,6 +176,7 @@ let unsafe_blit v1 ofs1 v2 ofs2 len =
       loop (n + 30) (i+1)
     in loop (ofs2 + 30 - bj) (bi + 1)
   end*)
+*)
 
 (*
 
@@ -429,16 +433,16 @@ and shiftr v d =
     if d < n then unsafe_blit v.bits d r.bits 0 (n - d);
     r
   end
+*) *)
 
 (*s Testing for all zeros and all ones. *)
 
 let all_zeros v = 
   let b = v.bits in
   let n = Array.length b in
-  let rec test i = 
-    (i == n) || ((Array.unsafe_get b i == 0) && test (succ i)) 
-  in
-  test 0
+  let rec test i =
+    if i == n then true else ((Array.unsafe_get b i == 0) && test (succ i))
+  in test 0
 
 let all_ones v = 
   let b = v.bits in
@@ -449,9 +453,9 @@ let all_ones v =
       (Array.unsafe_get b i) == (if m == 0 then max_int else low_mask.(m))
     else
       ((Array.unsafe_get b i) == max_int) && test (succ i)
-  in
-  test 0
+  in test 0
 
+(* (*
 (*s Conversions to and from strings. *)
 
 let to_string v = 
