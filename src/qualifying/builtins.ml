@@ -10,8 +10,11 @@ let rec mk_longid = function
   | [id] -> Lident id
   | id :: idrem -> Ldot (mk_longid idrem, id)
 
-let qsize rel x y z = (Path.mk_ident ("SIZE_" ^ (pprint_rel rel)), y,
-                       Atom(Var z, rel, FunApp("Array.length", [Var x])))
+let qsize funm rel x y z = (Path.mk_ident ("SIZE_" ^ (pprint_rel rel)), y,
+                       Atom(Var z, rel, FunApp(funm, [Var x])))
+
+let qsize_arr = qsize "Array.length" 
+let qsize_str = qsize "String.make" 
 
 let qdim rel dim x y z =
   let dimstr = string_of_int dim in
@@ -32,7 +35,11 @@ let mk_int qs = Fconstr(Predef.path_int, [], [], ([], Qconst qs))
 
 let uFloat = Fconstr(Predef.path_float, [], [], ([], Qconst []))
 let uChar = Fconstr(Predef.path_char, [], [], ([], Qconst []))
-let uString = Fconstr(Predef.path_string, [], [], ([], Qconst []))
+
+let mk_string qs = Fconstr(Predef.path_string, [], [], ([], Qconst qs))
+
+let uString = mk_string []
+let rString name v p = mk_string [(Path.mk_ident name, v, p)]
 
 let mk_bool qs = Fconstr(Predef.path_bool, [], [], ([], Qconst qs))
 let uBool = mk_bool []
@@ -160,37 +167,49 @@ let _frames = [
   (["length"; "Array"],
    defun (forall (fun a ->
           fun x -> mk_array a [] ==>
-          fun y -> mk_int [qsize Eq x y y; qint Ge 0 y])));
+          fun y -> mk_int [qsize_arr Eq x y y; qint Ge 0 y])));
 
   (["set"; "Array"],
    defun (forall (fun a ->
           fun x -> mk_array a [] ===>
-          fun y -> mk_int [qsize Lt x y y; qint Ge 0 y] ===>
+          fun y -> mk_int [qsize_arr Lt x y y; qint Ge 0 y] ===>
           fun _ -> a ==>
           fun _ -> uUnit)));
 
   (["get"; "Array"],
    defun (forall (fun a ->
           fun x -> mk_array a [] ===>
-          fun y -> mk_int [qsize Lt x y y; qint Ge 0 y] ==>
+          fun y -> mk_int [qsize_arr Lt x y y; qint Ge 0 y] ==>
           fun _ -> a)));
 
   (["make"; "Array"],
    defun (forall (fun a ->
           fun x -> rInt "NonNegSize" x (PInt 0 <=. Var x) ===>
           fun y -> a ==>
-          fun z -> mk_array a [qsize Eq z z x])));
+          fun z -> mk_array a [qsize_arr Eq z z x])));
 
   (["init"; "Array"],
    defun (forall (fun a ->
           fun x -> rInt "NonNegSize" x (PInt 0 <=. Var x) ===>
           fun i -> (defun (fun y -> rInt "Bounded" y ((PInt 0 <=. Var y) &&. (Var y <. Var x)) ==> fun _ -> a)) ==>
-          fun z -> mk_array a [qsize Eq z z x])));
+          fun z -> mk_array a [qsize_arr Eq z z x])));
 
   (["copy"; "Array"],
    defun (forall (fun a ->
           fun arr -> mk_array a [] ==>
           fun c -> rArray a "SameSize" c (FunApp("Array.length", [Var c]) ==. FunApp("Array.length", [Var arr])))));
+
+  (["make"; "String"],
+   defun (forall (fun a ->
+          fun x -> rInt "NonNegSize" x (PInt 0 <=. Var x) ===>
+          fun c -> uChar ==>
+          fun s -> mk_string [qsize_str Eq s s x])));
+
+  (["get"; "String"],
+   defun (forall (fun a ->
+          fun x -> uString ===>
+          fun y -> mk_int [qsize_str Lt x y y; qint Ge 0 y] ==>
+          fun z -> uChar)));
 
   (["int"; "Random"], defun (fun x -> rInt "PosMax" x (PInt 0 <. Var x) ==>
                              fun y -> rInt "RandBounds" y ((PInt 0 <=. Var y) &&. (Var y <. Var x))));
