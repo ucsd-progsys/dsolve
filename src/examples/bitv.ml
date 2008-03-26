@@ -163,16 +163,16 @@ let unsafe_blit v1 ofs1 v2 ofs2 len =
   let (ei,ej) = pos (ofs1 + len - 1) in
   if bi = ei then
     blit_bits (Array.get v1 bi) bj len v2 ofs2
-  else () (*
-  else (*begin
-    (); (*blit_bits (Array.get v1 bi) bj (30 - bj) v2 ofs2;*)
+  else
+    blit_bits (Array.get v1 bi) bj (30 - bj) v2 ofs2
+(*
     let rec loop n i =
       if i <= ei - 1 then ()
         (*blit_int (Array.get v1 i) v2 n*)
       else (); (*blit_bits (Array.get v1 ei) 0 (ej + 1) v2 n *)
       loop (n + 30) (i+1)
     in loop (ofs2 + 30 - bj) (bi + 1)
-  end*) () *)
+  end*)
 
 (*
 
