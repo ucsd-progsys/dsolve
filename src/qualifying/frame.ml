@@ -314,7 +314,7 @@ let label_like f f' =
     | (Frecord (p1, f1s, r), Frecord (p2, f2s, _)) when Path.same p1 p2 ->
         let label_rec (f1, n, muta) (f2, _, _) = (label vars f1 f2, n, muta) in
           Frecord (p1, List.map2 label_rec f1s f2s, r)
-    | _ -> assert false
+    | _ -> printf "Can't label %a like %a" pprint f pprint f'; assert false
   in label [] f f'
 
 (* Create a fresh frame with the same shape as [exp]'s type and [f],

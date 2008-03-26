@@ -156,7 +156,7 @@ let blit_bits a i m v n =
       Array.set v i'
 	(((keep_lowest_bits (a lsr i) m) lsl j) lor
 	 ((Array.get v i') land (low_mask.(j) lor high_mask.(0 - d))))
-(*
+
 (*s When blitting a subpart of a bit vector into another bit vector, there
     are two possible cases: (1) all the bits are contained in a single integer
     of the first bit vector, and a single call to [blit_bits] is the
@@ -166,13 +166,11 @@ let blit_bits a i m v n =
 
 let unsafe_blit v1 ofs1 v2 ofs2 len =
   let (bi,bj) = pos ofs1 in
-  let _ = Array.get v1 bi in () (*
   let (ei,ej) = pos (ofs1 + len - 1) in
   if bi = ei then
-    let _ = Array.get v1 bi in ()
-    (*blit_bits (Array.get v1 bi) bj len v2 ofs2*)
-  else (*begin
-    (); (*blit_bits (Array.get v1 bi) bj (30 - bj) v2 ofs2;*)
+    blit_bits (Array.get v1 bi) bj len v2 ofs2
+  else begin
+    blit_bits (Array.get v1 bi) bj (30 - bj) v2 ofs2 end(*(*(*;*)
     let rec loop n i =
       if i <= ei - 1 then ()
         (*blit_int (Array.get v1 i) v2 n*)
@@ -180,6 +178,8 @@ let unsafe_blit v1 ofs1 v2 ofs2 len =
       loop (n + 30) (i+1)
     in loop (ofs2 + 30 - bj) (bi + 1)
   end*) () *)
+
+(*
 
 let blit v1 v2 ofs1 ofs2 len =
   if len < 0 || ofs1 < 0 || ofs1 + len > v1.length

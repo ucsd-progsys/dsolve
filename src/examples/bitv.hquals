@@ -11,3 +11,10 @@ qualif LIWN(n): (n + 30) < (30 * (Array.length v))
 
 qualif DIV30(i): i = (n / 30)
 qualif MOD30(j): j = n - (30 * (n / 30))
+
+qualif LTV1LEN(o): o < 30 * (Array.length v1)
+qualif LTV2LEN(o): o < 30 * (Array.length v2)
+
+qualif LENV1(l): ofs1 + l < 30 * (Array.length v1)
+qualif LENV2(l): ofs2 + l < 30 * (Array.length v2)
+
