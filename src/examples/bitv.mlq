@@ -21,6 +21,15 @@ lval blit_int: int ->
   {n: int | 0 <= n and (n + 30) < (30 * (Array.length c))} ->
   unit
 
+lval to_string: 
+  {t | INVAR } ->
+  string
+
+lval print:
+  Format.formatter ->
+  {t | INVAR} ->
+  unit
+
 (*lval blit_zeros: 
   c: int array ->
   ofs: int ->

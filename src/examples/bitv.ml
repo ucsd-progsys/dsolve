@@ -267,7 +267,7 @@ let concat vl =
     blit_bits 0 bj (30 - bj) v ofs;
     let n = ref (ofs + 30 - bj) in
     begin
-      ffor (succ bi) (ei - 1) (fun i -> blit_int 0 v !n; n := !n + 30); 
+      ffor (succ bi) (pred ei) (fun i -> blit_int 0 v !n; n := !n + 30); 
       blit_bits 0 0 (succ ej) v !n
     end
   end*)
@@ -465,14 +465,14 @@ let all_ones v =
 
 let to_string v = 
   let n = v.length in
+  let _ = (fun (x:t) -> x) v in
+  let _ = (fun (x:int) -> x) n in
   let s = String.make n '0' in
-  let rec loop i =
-    if i < n then if unsafe_get v i then s.[i] <- '1' else () else ()
-  in loop 0; s
+    ffor 0 (n-1) (fun i -> if unsafe_get v i then () else ()); s
 
 let print fmt v = Format.pp_print_string fmt (to_string v)
-(*
-let of_string s =
+
+(*let of_string s =
   let n = String.length s in
   let v = create n false in
   for i = 0 to n - 1 do
@@ -482,8 +482,7 @@ let of_string s =
     else 
       if c <> '0' then invalid_arg "Bitv.of_string"
   done;
-  v
-*)
+  v*)
 
 (*s Iteration on all bit vectors of length [n] using a Gray code. *)
 
