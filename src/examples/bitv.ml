@@ -279,7 +279,7 @@ let blit_zeros v ofs len =
       ffor (succ bi) (pred ei) (fun i -> (*blit_int 0 v !n;*) n := !n + 30); 
       (*blit_bits 0 0 (succ ej) v !n*) ()
     end
-  end (*
+  end
 (*(*
 let blit_ones v ofs len =
   let (bi,bj) = pos ofs in
@@ -421,7 +421,7 @@ let bw_not v =
     if i < n then begin a.(i) <- max_int land (lnot b.(i)); loop (i + 1) end else ()
   in loop 0; let r = { length = v.length; bits = a } in normalize r; r
 
-(*
+*)
 (*s Shift operations. It is easy to reuse [unsafe_blit], although it is 
     probably slightly less efficient than a ad-hoc piece of code. *)
 
@@ -433,10 +433,10 @@ let rec shiftl v d =
   else begin
     let n = v.length in
     let r = create n false in
-    if d < n then unsafe_blit v.bits 0 r.bits d (n - d);
+    if d < n then unsafe_blit v.bits 0 r.bits d (n - d) else ();
     r
   end
-  
+
 and shiftr v d =
   if d == 0 then 
     copy v
@@ -445,11 +445,11 @@ and shiftr v d =
   else begin
     let n = v.length in
     let r = create n false in
-    if d < n then unsafe_blit v.bits d r.bits 0 (n - d);
+    if d < n then unsafe_blit v.bits d r.bits 0 (n - d) else ();
     r
   end
-*) *)
 
+(*
 (*s Testing for all zeros and all ones. *)
 
 let all_zeros v = 
