@@ -548,21 +548,22 @@ let to_list b =
 let of_int_us i = 
   { length = 30; bits = [| i land max_int |] }
 
-(*
-
 let to_int_us v = 
-  if v.length < 30 then invalid_arg "Bitv.to_int_us"; 
-  v.bits.(0)
-*)
+  if v.length < 30 then
+    assert false
+  else
+    v.bits.(0)
 
 let of_int_s i = 
   { length = succ 30; bits = [| i land max_int; (i lsr 30) land 1 |] }
 
-(*
 let to_int_s v = 
-  if v.length < succ 30 then invalid_arg "Bitv.to_int_s"; 
-  v.bits.(0) lor (v.bits.(1) lsl 30)
+  if v.length < succ 30 then
+    assert false
+  else
+    v.bits.(0) lor (v.bits.(1) lsl 30)
 
+(*
 (* [Int32] *)
 let of_int32_us i = match Sys.word_size with
   | 32 -> { length = 31; 

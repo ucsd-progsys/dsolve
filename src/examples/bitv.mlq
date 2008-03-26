@@ -57,4 +57,7 @@ lval of_list_with_length: int list -> {v: int | 0 <= v} -> {t | INVAR}
 lval to_list: {t | INVAR} -> bool list
 
 lval of_int_us: int -> {t | INVAR}
+lval to_int_us: {t | INVAR} -> int
 lval of_int_s: int -> {t | INVAR}
+lval to_int_s: {t | INVAR} -> int
+
