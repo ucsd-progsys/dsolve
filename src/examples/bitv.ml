@@ -466,10 +466,12 @@ let all_ones v =
 let to_string v = 
   let n = v.length in
   let s = String.make n '0' in
-  ffor 0 (n-1) (fun i -> if unsafe_get v i then s.[i] <- '1' else ()); s
+  let rec loop i =
+    if i < n then if unsafe_get v i then s.[i] <- '1' else () else ()
+  in loop 0; s
 
 let print fmt v = Format.pp_print_string fmt (to_string v)
-(*(*
+(*
 let of_string s =
   let n = String.length s in
   let v = create n false in
@@ -505,7 +507,6 @@ let gray_iter f n =
   in
   if n > 0 then iter ()
 
-
 (*s Coercions to/from lists of integers *)
 
 let of_list l =
@@ -516,17 +517,20 @@ let of_list l =
     if i < 0 then invalid_arg "Bitv.of_list";
     unsafe_set b i true 
   in
-  List.iter add_element l;
-  b
+  List.iter add_element l; b
+
+*)
 
 let of_list_with_length l len =
   let b = create len false in
   let add_element i =
-    if i < 0 || i >= len then invalid_arg "Bitv.of_list_with_length";
-    unsafe_set b i true
+    if i < 0 || i >= len then
+      assert false
+    else
+      let _ = (fun (s: int) -> s) i in
+      unsafe_set b i true
   in
-  List.iter add_element l;
-  b
+  List.iter add_element l; b
 
 let to_list b =
   let n = length b in
@@ -536,18 +540,23 @@ let to_list b =
   in
   make (pred n) []
 
-
 (*s To/from integers. *)
 
 (* [int] *)
 let of_int_us i = 
   { length = 30; bits = [| i land max_int |] }
+
+(*
+
 let to_int_us v = 
   if v.length < 30 then invalid_arg "Bitv.to_int_us"; 
   v.bits.(0)
+*)
 
 let of_int_s i = 
   { length = succ 30; bits = [| i land max_int; (i lsr 30) land 1 |] }
+
+(*
 let to_int_s v = 
   if v.length < succ 30 then invalid_arg "Bitv.to_int_s"; 
   v.bits.(0) lor (v.bits.(1) lsl 30)
@@ -620,6 +629,5 @@ let select_to f32 f64 = match Sys.word_size with
   | _ -> assert false
 let to_nativeint_s = select_to to_int32_s to_int64_s
 let to_nativeint_us = select_to to_int32_us to_int64_us
-          *)
 
 *)
