@@ -134,11 +134,6 @@ let init n f =
     (case [j == 0]). *)
 let blit_bits a i m v n =
   let (i',j) = pos n in
-  let _ = (fun (x: int) -> x) n in
-  let _ = (fun (x: int) -> x) i in
-  let _ = (fun (x: int) -> x) i' in
-  let _ = (fun (x: int) -> x) m in
-  let _ = (fun (x: int) -> x) j in
   if j = 0 then
     Array.set v i'
       ((keep_lowest_bits (a lsr i) m) lor
@@ -202,17 +197,13 @@ let unsafe_blit v1 ofs1 v2 ofs2 len =
       in loop (ofs2 + 30 - bj) (bi + 1)
     end else ()
 
-(*
-
 let blit v1 v2 ofs1 ofs2 len =
-  if len < 0 || ofs1 < 0 || ofs1 + len > v1.length
-             || ofs2 < 0 || ofs2 + len > v2.length
+  if len < 0 || ofs1 < 0 || ofs1 + len >= v1.length
+             || ofs2 < 0 || ofs2 + len >= v2.length
   then
-    assert false
+    () (* assert false *)
   else
-    let _ = (fun n -> n + 0) ofs1 in
-      unsafe_blit v1.bits ofs1 v2.bits ofs2 len
-*)
+    unsafe_blit v1.bits ofs1 v2.bits ofs2 len
 
 (*s Extracting the subvector [ofs..ofs+len-1] of [v] is just creating a
     new vector of length [len] and blitting the subvector of [v] inside. *)
