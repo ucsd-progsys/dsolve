@@ -18,4 +18,4 @@ qualif LTV2LEN(o): o < 30 * (Array.length v2)
 qualif LENV1(l): ofs1 + l < 30 * (Array.length v1)
 qualif LENV2(l): ofs2 + l < 30 * (Array.length v2)
 
-qualif BLEN(i): i < (b.length)
+qualif VLEN(i): i = (v.length)

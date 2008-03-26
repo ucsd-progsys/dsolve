@@ -54,3 +54,7 @@ lval all_zeros: {t | INVAR} -> bool
 lval all_ones: {t | INVAR} -> bool
 
 lval of_list_with_length: int list -> {v: int | 0 <= v} -> {t | INVAR}
+lval to_list: {t | INVAR} -> bool list
+
+lval of_int_us: int -> {t | INVAR}
+lval of_int_s: int -> {t | INVAR}
