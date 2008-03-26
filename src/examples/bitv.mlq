@@ -31,9 +31,9 @@ lval print:
   unit
 
 (*lval blit_zeros: 
-  c: int array ->
+  c: {v: int array | Array.length v >= 0} ->
   ofs: int ->
-  {len: int | len >= ofs and len < Array.length c} ->
+  {len: int | len + ofs < 30*Array.length c and 0 <= len} ->
   unit*)
 
 (*

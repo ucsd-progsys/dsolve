@@ -1503,7 +1503,7 @@ qual_rel_list:
   | qual_lit_rel COMMA qual_rel_list        { $1::$3 }
 
 qual_expr:
-    qual_expr_1 qual_op qual_expr           
+    qual_expr qual_op qual_expr_1           
     { mkpredpatexp (Ppredpatexp_binop($1, $2, $3)) }
   | qual_expr_1                             { $1 }
 

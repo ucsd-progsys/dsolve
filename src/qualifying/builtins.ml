@@ -157,6 +157,7 @@ let _frames = [
 
 
   poly_rel_frame ["="; "Pervasives"] "=" Eq;
+  poly_rel_frame ["=="; "Pervasives"] "==" Eq;
   poly_rel_frame ["!="; "Pervasives"] "!=" Ne;
   poly_rel_frame ["<>"; "Pervasives"] "<>" Ne;
   poly_rel_frame ["<"; "Pervasives"] "<" Lt;

@@ -258,11 +258,13 @@ let concat vl =
     ones or all zeros. Thus we instanciate [unsafe_blit], with 0 and
     [max_int]. *)
 
-(*let blit_zeros v ofs len =
+let blit_zeros v ofs len =
   let (bi,bj) = pos ofs in
   let (ei,ej) = pos (ofs + len - 1) in
-  if bi == ei then
-    blit_bits 0 bj len v ofs
+  let _ = (fun (x:int) -> x) bi in
+  let _ = (fun (x:int) -> x) ei in
+  if bi = ei then
+    blit_bits 0 bj len v ofs else () (*
   else begin
     blit_bits 0 bj (30 - bj) v ofs;
     let n = ref (ofs + 30 - bj) in
