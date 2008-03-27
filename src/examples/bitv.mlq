@@ -1,5 +1,4 @@
 predicate INVAR = (v) ((0 <= v.length) and (v.length <= (Array.length v.bits) * 30)) and (0 <= Array.length v.bits)
-
 lval create: {v: int | 0 < v} -> bool -> {t | INVAR}
 lval normalize: {t | INVAR} -> unit
 lval unsafe_get: c: {t | INVAR} -> {v: int | v < c.length and 0 <= v} -> int
@@ -7,85 +6,58 @@ lval unsafe_set: c: {t | INVAR} -> {v: int | v < c.length and 0 <= v} -> bool ->
 lval get: {t | INVAR} -> int -> bool
 lval set: {t | INVAR} -> int -> bool -> unit
 lval init: {v: int | 0 < v} -> (int -> bool) -> t
-
 lval blit_bits: int ->
   i: int ->
   m: {v: int | ((0 <= v) and v <= 30)} ->
   c: int array ->
   {n: int | ((0 <= n) and (((n + m) - 1 < (30 * (Array.length c))))) and (n < (30 * (Array.length c)))} ->
   unit
-
 lval blit_int: int ->
   c: int array ->
   {n: int | 0 <= n and (n + 30) <= (30 * (Array.length c))} ->
   unit
-
 lval unsafe_blit: v1: {v1: int array | 0 <= (Array.length v1)} ->
   ofs1: {ofs1: int | (0 <= ofs1) and (ofs1 < 30 * (Array.length v1))} ->
   v2: {v2: int array | 0 <= (Array.length v2)} ->
   ofs2: {ofs2: int | (0 <= ofs2) and (ofs2 < 30 * (Array.length v2))} ->
   len: {len: int | ((ofs1 + len <= 30 * (Array.length v1)) and (ofs2 + len <= 30 * (Array.length v2))) and (0 <= len)} ->
   unit
-
 lval blit: {t | INVAR} -> {t | INVAR} -> int -> int -> int -> unit
-
-lval to_string: 
-  {t | INVAR } ->
-  string
-
-lval print:
-  Format.formatter ->
-  {t | INVAR} ->
-  unit
-
+lval to_string: {t | INVAR } -> string
+lval print: Format.formatter -> {t | INVAR} -> unit
 lval blit_zeros:
   c: {v: int array | Array.length v >= 0} ->
   ofs: {ofs: int | 0 <= ofs} ->
   {len: int | (len + ofs - 1 < 30*Array.length c and 0 <= len) and ofs < 30*Array.length c} ->
   unit
-
 lval blit_ones:
   c: {v: int array | Array.length v >= 0} ->
   ofs: {ofs: int | 0 <= ofs} ->
   {len: int | (len + ofs - 1 < 30*Array.length c and 0 <= len) and ofs < 30*Array.length c} ->
   unit
-
 lval fill: {t | INVAR} -> int -> int -> bool -> unit
-
 lval append: {t | INVAR} -> {t | INVAR} -> {t | INVAR}
-
 lval shiftl: {t | INVAR} -> int -> {t | INVAR}
 lval shiftr: {t | INVAR} -> int -> {t | INVAR}
-
 lval sub: v: {t | INVAR} -> int -> int -> {t | INVAR}
 lval concat: {t | INVAR} list -> t
-
 (* pmr: what's with this alpha? =( *)
 lval iter: (bool -> 'a) -> {t | INVAR} -> unit
 lval map: (bool -> bool) -> {t | INVAR} -> t
 lval iteri: (int -> bool -> 'a) -> {t | INVAR} -> unit
 lval mapi: (int -> bool -> bool) -> {t | INVAR} -> t
-
 lval fold_left: ('a -> bool -> 'a) -> 'a -> {t | INVAR} -> 'a
 lval fold_right: (bool -> 'a -> 'a) -> {t | INVAR} -> 'a -> 'a
 lval foldi_left: ('a -> int -> bool -> 'a) -> 'a -> {t | INVAR} -> 'a
 lval foldi_right: (int -> bool -> 'a -> 'a) -> {t | INVAR} -> 'a -> 'a
-
 lval bw_not: {t | INVAR} -> t
-
-
-
 lval all_zeros: {t | INVAR} -> bool
 lval all_ones: {t | INVAR} -> bool
-
 lval of_list_with_length: int list -> {v: int | 0 <= v} -> {t | INVAR}
 lval to_list: {t | INVAR} -> bool list
-
 lval of_int_us: int -> {t | INVAR}
 lval to_int_us: {t | INVAR} -> int
 lval of_int_s: int -> {t | INVAR}
 lval to_int_s: {t | INVAR} -> int
-
 lval first_set: v: {t | INVAR} -> {n: int | (0 <= n) and (n = v.length)} -> int
-
 lval gray_iter: ({t | INVAR} -> 'a) -> {n: int | 0 <= n} -> unit
