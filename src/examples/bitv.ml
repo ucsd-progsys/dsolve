@@ -209,16 +209,17 @@ let blit v1 v2 ofs1 ofs2 len =
     (* assert false *) ()
   else
     unsafe_blit v1.bits ofs1 v2.bits ofs2 len
-(*
+
 (*s Extracting the subvector [ofs..ofs+len-1] of [v] is just creating a
     new vector of length [len] and blitting the subvector of [v] inside. *)
-(*(*
+
 let sub v ofs len =
-  if ofs < 0 or len < 0 or ofs + len > v.length then invalid_arg "Bitv.sub";
+  if ofs < 0 || len <= 0 (* ANNOT or fix? *) || ofs + len > v.length || ofs >= v.length then (* invalid_arg "Bitv.sub"; *) v
+  else begin
   let r = create len false in
   unsafe_blit v.bits ofs r.bits 0 len;
   r
-*) *) *)
+  end
 
 (*s The concatenation of two bit vectors [v1] and [v2] is obtained by 
     creating a vector for the result and blitting inside the two vectors.

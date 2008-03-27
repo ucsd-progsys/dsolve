@@ -49,6 +49,8 @@ lval append: {t | INVAR} -> {t | INVAR} -> {t | INVAR}
 lval shiftl: {t | INVAR} -> int -> {t | INVAR}
 lval shiftr: {t | INVAR} -> int -> {t | INVAR}
 
+lval sub: v: {t | INVAR} -> int -> int -> {t | INVAR}
+
 (*
 (*
 (* pmr: what's with this alpha? =( *)
