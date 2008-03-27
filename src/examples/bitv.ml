@@ -293,7 +293,7 @@ let fill v ofs len b =
   if ofs < 0 || len < 0 || ofs + len > v.length then () else (*invalid_arg "Bitv.fill";*)
   if b then blit_ones v.bits ofs len else blit_zeros v.bits ofs len
 
-                                            (*
+
 (*s All the iterators are implemented as for traditional arrays, using
     [unsafe_get]. For [iter] and [map], we do not precompute [(f
     true)] and [(f false)] since [f] is likely to have
@@ -414,7 +414,6 @@ let bw_not v =
     if i < n then begin a.(i) <- max_int land (lnot b.(i)); loop (i + 1) end else ()
   in loop 0; let r = { length = v.length; bits = a } in normalize r; r
 
-*)
 (*s Shift operations. It is easy to reuse [unsafe_blit], although it is 
     probably slightly less efficient than a ad-hoc piece of code. *)
 
@@ -442,7 +441,6 @@ and shiftr v d =
     r
   end
 
-(*
 (*s Testing for all zeros and all ones. *)
 
 let all_zeros v = 
@@ -462,7 +460,7 @@ let all_ones v =
     else
       ((Array.unsafe_get b i) == max_int) && test (succ i)
   in test 0
-*)
+
 (*s Conversions to and from strings. *)
 
 let to_string v = 
@@ -484,8 +482,6 @@ let of_string s =
              if c <> '0' then (* invalid arg *) () else ()
       ); v
 
-
-(*
 (*s Iteration on all bit vectors of length [n] using a Gray code. *)
 
 let first_set v n = 
@@ -511,7 +507,6 @@ let gray_iter f n =
   in
   if n > 0 then iter () else ()
 
-*)
 (*s Coercions to/from lists of integers *)
 
 let of_list l =
@@ -529,8 +524,6 @@ let of_list l =
         else ()
       in
         List.iter add_element l; b
-
-(*
 
 let of_list_with_length l len =
   let b = create len false in
@@ -642,5 +635,4 @@ let select_to f32 f64 = match Sys.word_size with
 let to_nativeint_s = select_to to_int32_s to_int64_s
 let to_nativeint_us = select_to to_int32_us to_int64_us
 
-*)
 *)
