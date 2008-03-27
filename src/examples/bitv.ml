@@ -472,7 +472,6 @@ let to_string v =
 
 let print fmt v = Format.pp_print_string fmt (to_string v)
 
-(* Works but throws yices (? or us?) for a loop, literally
 let of_string s =
   let n = String.length s in
   let v = create n false in
@@ -484,7 +483,7 @@ let of_string s =
            else
              if c <> '0' then (* invalid arg *) () else ()
       ); v
-*)
+
 
 (*
 (*s Iteration on all bit vectors of length [n] using a Gray code. *)
