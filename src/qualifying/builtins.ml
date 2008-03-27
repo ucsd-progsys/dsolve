@@ -14,7 +14,7 @@ let qsize funm rel x y z = (Path.mk_ident ("SIZE_" ^ (pprint_rel rel)), y,
                        Atom(Var z, rel, FunApp(funm, [Var x])))
 
 let qsize_arr = qsize "Array.length" 
-let qsize_str = qsize "String.make" 
+let qsize_str = qsize "String.length"
 
 let qdim rel dim x y z =
   let dimstr = string_of_int dim in
@@ -206,6 +206,10 @@ let _frames = [
           fun x -> rInt "NonNegSize" x (PInt 0 <=. Var x) ===>
           fun c -> uChar ==>
           fun s -> mk_string [qsize_str Eq s s x])));
+
+  (["length"; "String"],
+   defun (fun x -> mk_string [] ==>
+          fun y -> mk_int [qsize_str Eq x y y; qint Ge 0 y]));
 
   (["get"; "String"],
    defun (forall (fun a ->

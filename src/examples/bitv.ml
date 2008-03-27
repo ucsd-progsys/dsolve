@@ -480,19 +480,22 @@ let to_string v =
     ffor 0 (n-1) (fun i -> if unsafe_get v i then s.[i] <- '1' else ()); s
 
 let print fmt v = Format.pp_print_string fmt (to_string v)
-(*
-(*let of_string s =
+
+(* Works but throws yices (? or us?) for a loop, literally
+let of_string s =
   let n = String.length s in
   let v = create n false in
-  for i = 0 to n - 1 do
-    let c = String.unsafe_get s i in
-    if c = '1' then 
-      unsafe_set v i true
-    else 
-      if c <> '0' then invalid_arg "Bitv.of_string"
-  done;
-  v*)
+    ffor 0 (n - 1)
+      (fun i ->
+         let c = String.get s i in
+           if c = '1' then
+             unsafe_set v i true
+           else
+             if c <> '0' then (* invalid arg *) () else ()
+      ); v
+*)
 
+(*
 (*s Iteration on all bit vectors of length [n] using a Gray code. *)
 
 let first_set v n = 
