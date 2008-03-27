@@ -234,8 +234,6 @@ let append v1 v2 =
       unsafe_blit b2 0 b l1 l2 else ();
     r
 
-(*
-
 (*s The concatenation of a list of bit vectors is obtained by iterating
     [unsafe_blit]. *)
 
@@ -247,11 +245,14 @@ let concat vl =
   List.iter
     (fun v ->
        let n = v.length in
-       unsafe_blit v.bits 0 b !pos n;
+       let p = !pos in
+         if n > 0 && p < size && p + n < size then (* ANNOT *)
+           unsafe_blit v.bits 0 b p n
+         else ();
        pos := !pos + n)
     vl;
   res
-*)
+
 (*s Filling is a particular case of blitting with a source made of all
     ones or all zeros. Thus we instanciate [unsafe_blit], with 0 and
     [max_int]. *)

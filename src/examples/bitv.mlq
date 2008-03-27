@@ -58,6 +58,7 @@ lval shiftl: {t | INVAR} -> int -> {t | INVAR}
 lval shiftr: {t | INVAR} -> int -> {t | INVAR}
 
 lval sub: v: {t | INVAR} -> int -> int -> {t | INVAR}
+lval concat: {t | INVAR} list -> t
 
 (*
 (*
