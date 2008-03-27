@@ -149,8 +149,6 @@ let _frames = [
 
   (["&&"; "Pervasives"], and_frame ());
 
-  (["and"; "Pervasives"], and_frame ());
-
   (["||"; "Pervasives"], or_frame ());
 
   (["or"; "Pervasives"], or_frame ());

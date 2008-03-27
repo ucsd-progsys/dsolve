@@ -9,7 +9,8 @@ testfiles = [("postests", 0), ("negtests", 1)]
 def runtest(filep, expected_status):
   file = filep[0]
   collect = int(filep[1])
-  status = dsolve.gen_quals(file, False, collect)
+  lqualifs = common.str_to_bool(filep[2])
+  status = dsolve.gen_quals(file, False, lqualifs, collect)
   if status != 0: 
     print "Qualgen failed on %s" % file
     sys.exit(2)

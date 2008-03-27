@@ -1,11 +1,11 @@
-DMLex/bcopy2.ml                     10
-DMLex/matmult-bad.ml                10
-DMLex/bcopy-bad.ml                  10
-DML/bsearch-bad.ml                  10
-examples/dotprod0-bad.ml            10
-examples/access-bad.ml              10
-DMLex/gauss-bad.ml                  10
-DML/queen-bad.ml                    10
-examples/reltuple-bad.ml            10
-examples/tup2c.ml                   10
-examples/tup2d.ml                   10
+DMLex/bcopy2.ml                     10    False
+DMLex/matmult-bad.ml                10    False
+DMLex/bcopy-bad.ml                  10    False
+DML/bsearch-bad.ml                  10    False
+examples/dotprod0-bad.ml            10    False
+examples/access-bad.ml              10    False
+DMLex/gauss-bad.ml                  10    False
+DML/queen-bad.ml                    10    False
+examples/reltuple-bad.ml            10    False
+examples/tup2c.ml                   10    False
+examples/tup2d.ml                   10    False
