@@ -511,20 +511,26 @@ let gray_iter f n =
   in
   if n > 0 then iter () else ()
 
-(*
+*)
 (*s Coercions to/from lists of integers *)
 
 let of_list l =
   let n = List.fold_left max 0 l in
-  let b = create (succ n) false in
-  let add_element i = 
-    (* negative numbers are invalid *)
-    if i < 0 then invalid_arg "Bitv.of_list";
-    unsafe_set b i true 
-  in
-  List.iter add_element l; b
+    if n < 0 then (* ANNOT, though properly polymorphic max would fix this *)
+      create 0 false
+    else
+      let b = create (succ n) false in
+      let add_element i =
+        (* negative numbers are invalid *)
+        if i >= 0 then
+          if i < n then (* ANNOT *)
+            unsafe_set b i true
+          else ()
+        else ()
+      in
+        List.iter add_element l; b
 
-*)
+(*
 
 let of_list_with_length l len =
   let b = create len false in
