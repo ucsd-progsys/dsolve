@@ -274,7 +274,6 @@ let blit_zeros v ofs len =
     begin
       blit_bits 0 bj (30 - bj) v ofs; 
       (let n = ofs + 30 - bj in
-      (*let _ = (fun (x:int) -> x) n in *)
       let _ = (fun (x:int) -> x) ei in 
        let n = 
         let rec loop i n =
