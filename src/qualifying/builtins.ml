@@ -91,9 +91,18 @@ let op_frame path qname op =
                 fun y -> uInt ==>
                 fun z -> rInt qname z (Var z ==. Binop (Var x, op, Var y))))
 
+
 let tag_function = "__tag"
 
 let tag x = FunApp(tag_function, [x])
+
+let or_frame () =
+   defun (fun x -> uBool ===>
+          fun y -> uBool ==>
+          fun z -> rBool "||" z
+            (((tag (Var z) ==. PInt 1) &&. ((tag (Var x) ==. PInt 1) ||. (tag (Var y) ==. PInt 1))) ||.
+             ((tag (Var z) ==. PInt 0) &&. (tag (Var x) ==. PInt 0) &&. (tag (Var y) ==. PInt 0))))
+
 
 let qbool_rel qname rel (x, y, z) = rBool qname z (tag (Var z) <=>. Atom (Var x, rel, Var y))
 
@@ -139,12 +148,9 @@ let _frames = [
           fun y -> uBool ==>
           fun z -> rBool "&&" z (tag (Var z) <=>. ((tag (Var x) ==. PInt 1) &&. (tag (Var y) ==.  PInt 1)))));
 
-  (["||"; "Pervasives"],
-   defun (fun x -> uBool ===>
-          fun y -> uBool ==>
-          fun z -> rBool "||" z
-            (((tag (Var z) ==. PInt 1) &&. ((tag (Var x) ==. PInt 1) ||. (tag (Var y) ==. PInt 1))) ||.
-             ((tag (Var z) ==. PInt 0) &&. (tag (Var x) ==. PInt 0) &&. (tag (Var y) ==. PInt 0)))));
+  (["||"; "Pervasives"], or_frame ());
+
+  (["or"; "Pervasives"], or_frame ());
 
   (["not"; "Pervasives"],
    defun (fun x -> uBool ==> fun y -> rBool "NOT" y (tag (Var y) <=>. (tag (Var x) ==. PInt 0))));

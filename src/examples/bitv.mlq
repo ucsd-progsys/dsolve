@@ -44,6 +44,14 @@ lval blit_zeros:
   {len: int | (len + ofs - 1 < 30*Array.length c and 0 <= len) and ofs < 30*Array.length c} ->
   unit
 
+lval blit_ones:
+  c: {v: int array | Array.length v >= 0} ->
+  ofs: {ofs: int | 0 <= ofs} ->
+  {len: int | (len + ofs - 1 < 30*Array.length c and 0 <= len) and ofs < 30*Array.length c} ->
+  unit
+
+lval fill: {t | INVAR} -> int -> int -> bool -> unit
+
 lval append: {t | INVAR} -> {t | INVAR} -> {t | INVAR}
 
 lval shiftl: {t | INVAR} -> int -> {t | INVAR}

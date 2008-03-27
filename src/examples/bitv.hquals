@@ -34,3 +34,4 @@ qualif INEQI(n): n = i * 30
 qualif INLTI(n): n <= i * 30
 
 qualif INVAR(i): 30 * (i - bi) = n - (ofs2 - bj)
+

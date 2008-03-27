@@ -134,11 +134,6 @@ let init n f =
     (case [j == 0]). *)
 let blit_bits a i m v n =
   let (i',j) = pos n in
-  let _ = (fun (x: int) -> x) n in
-  let _ = (fun (x: int) -> x) i in
-  let _ = (fun (x: int) -> x) i' in
-  let _ = (fun (x: int) -> x) m in
-  let _ = (fun (x: int) -> x) j in
   if j = 0 then
     Array.set v i'
       ((keep_lowest_bits (a lsr i) m) lor
@@ -162,7 +157,6 @@ let blit_bits a i m v n =
 (* assume n + 30 is in bounds *)
 let blit_int a v n =
   let (i,j) = pos n in
-  let _ = (fun (x: int) -> x) n in
   if j == 0 then
     Array.unsafe_set v i a
   else begin
@@ -265,15 +259,12 @@ let concat vl =
 let blit_zeros v ofs len =
   let (bi,bj) = pos ofs in
   let (ei,ej) = pos (ofs + len - 1) in
-  let _ = (fun (x:int) -> x) bi in
-  let _ = (fun (x:int) -> x) ei in
   if bi = ei then
     blit_bits 0 bj len v ofs 
   else if (30 - bj) < len then  (* ANNOT *)
     begin
       blit_bits 0 bj (30 - bj) v ofs; 
       let n = ofs + 30 - bj in
-      let _ = (fun (x:int) -> x) ei in 
        let n = 
         let rec loop i n =
           if i <= pred ei then (blit_int 0 v n; loop (i+1) (n+30)) else n in
@@ -281,27 +272,27 @@ let blit_zeros v ofs len =
        blit_bits 0 0 (succ ej) v n
    end else ()
 
-(*(*
 let blit_ones v ofs len =
   let (bi,bj) = pos ofs in
   let (ei,ej) = pos (ofs + len - 1) in
   if bi == ei then
     blit_bits max_int bj len v ofs
-  else begin
+  else if (30 - bj) < len then (* ANNOT *) 
+    begin
     blit_bits max_int bj (30 - bj) v ofs;
-    let n = ref (ofs + 30 - bj) in
-    for i = succ bi to pred ei do
-      blit_int max_int v !n;
-      n := !n + 30
-    done;
-    blit_bits max_int 0 (succ ej) v !n
-  end
+    let n = ofs + 30 - bj in
+    let n =
+      let rec loop i n =
+        if i <= pred ei then (blit_int max_int v n; loop (i+1) (n+30)) else n in
+      loop (succ bi) n in
+    blit_bits max_int 0 (succ ej) v n
+  end else ()
 
 let fill v ofs len b =
-  if ofs < 0 or len < 0 or ofs + len > v.length then invalid_arg "Bitv.fill";
+  if ofs < 0 || len < 0 || ofs + len > v.length then () else (*invalid_arg "Bitv.fill";*)
   if b then blit_ones v.bits ofs len else blit_zeros v.bits ofs len
 
-          *)
+                                            (*
 (*s All the iterators are implemented as for traditional arrays, using
     [unsafe_get]. For [iter] and [map], we do not precompute [(f
     true)] and [(f false)] since [f] is likely to have
@@ -475,8 +466,6 @@ let all_ones v =
 
 let to_string v = 
   let n = v.length in
-  let _ = (fun (x:t) -> x) v in
-  let _ = (fun (x:int) -> x) n in
   let s = String.make n '0' in
     ffor 0 (n-1) (fun i -> if unsafe_get v i then s.[i] <- '1' else ()); s
 
