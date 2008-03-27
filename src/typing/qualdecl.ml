@@ -46,6 +46,7 @@ let transl_patpred_single simple valu env p =
           let _ = if List.length n != 1 then assert false in
 	        PInt (List.hd n)
       | Ppredpatexp_var (y) ->
+          let y = match y with [sty] -> sty | _ -> failwith "Var ident set used in single qualifier or predicate" in
 	        Var (if simple then Path.mk_ident (conflat y) else fp y)
       | Ppredpatexp_funapp (f, es) ->
 	        FunApp (conflat f, List.map transl_expr_rec es)
@@ -96,8 +97,8 @@ let transl_patpred env (qgtymap, tyset, idset, intset) tymap p =
 	        PPInt (n)
       | Ppredpatexp_any_int ->
           PPInt (Lazy.force all_consts)      
-      | Ppredpatexp_var (y) -> (* flatten longidents for now -- need to look these up? *)
-	        PVar ([Path.mk_ident (conflat y)])
+      | Ppredpatexp_var (y) -> 
+	        PVar (List.map (fun y -> Path.mk_ident (conflat y)) y)
       | Ppredpatexp_mvar (y) ->
           let inty = AM.mem y tymap in
           let mk_idents = List.map Path.mk_ident in

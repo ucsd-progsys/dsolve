@@ -32,6 +32,14 @@ metavariables and type annotations
 qualif A(v) : ~A + v = 5
 qualif C(v)(A:int, B:int) : ~A + v + ~B = 5
 
+sets of integer literals
+
+qualif A(v): v = [0,1,2]
+
+sets of idents
+
+qualif A(v) : v = [a, b, c]
+
 sets of operators
 
 qualif A(v) : v [| +, - |] 5 > 0
@@ -39,10 +47,6 @@ qualif A(v) : v [| +, - |] 5 > 0
 sets of relational operators
 
 qualif A(v): v { <, <= } 5
-
-sets of integer literals
-
-qualif A(v): v = [0,1,2]
 
 to an operator wildcard is DELIM * * DELIM eg, [| * * |] for any operator
 

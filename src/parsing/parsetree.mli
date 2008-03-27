@@ -160,7 +160,7 @@ and predpatexp =
 and predpatexp_desc =
     Ppredpatexp_int of int list
   | Ppredpatexp_any_int              
-  | Ppredpatexp_var of Longident.t
+  | Ppredpatexp_var of Longident.t list
   | Ppredpatexp_mvar of string
   | Ppredpatexp_funapp of Longident.t * predpatexp list
   | Ppredpatexp_binop of predpatexp * predexp_op list * predpatexp

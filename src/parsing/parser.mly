@@ -1515,7 +1515,9 @@ qual_expr_1:
 qual_term:
     LPAREN qual_expr RPAREN                 { $2 }
   | qual_litident /* literal */
-    { mkpredpatexp (Ppredpatexp_var(Longident.parse $1)) } 
+    { mkpredpatexp (Ppredpatexp_var([Longident.parse $1])) } 
+  | LBRACKET qual_litident_list RBRACKET
+    { mkpredpatexp (Ppredpatexp_var($2)) }
   | TILDE UIDENT /* var */
     { mkpredpatexp (Ppredpatexp_mvar($2)) } 
   | INT
@@ -1536,6 +1538,10 @@ qual_intlist:
 qual_litident:
     UIDENT DOT qual_litident                { $1 ^ "." ^ $3 }
   | LIDENT                                  { $1 }
+
+qual_litident_list:
+    qual_litident COMMA qual_litident_list  { (Longident.parse $1) :: $3 }
+  | qual_litident                           { [(Longident.parse $1)] }
 
 qual_term_list:
     qual_term                               { [$1] }

@@ -2,10 +2,6 @@ qualif BITLENGTH(v): v.length <= (Array.length v.bits) * 30
 qualif DIVBY30(x): 30 * x <= n
 qualif LESSLEN(n): n < v.length
 
-(*qualif LENLL(v): v { * * } v.length
-qualif LLLEN(v)(A:int): v.length { * * } ~A
-qualif DIVBY30(n)(A:int): n = ~A/30
-qualif DIVBYOMG(n): n = (ofs + len - 1) / 30*)
 qualif NNLEN(v): 0 <= v.length
 
 qualif SOMEBITS(v): 0 < (Array.length v.bits)
