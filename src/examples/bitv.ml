@@ -192,9 +192,7 @@ let unsafe_blit v1 ofs1 v2 ofs2 len =
     else ();
     let rec loop n i =
       if i <= ei - 1 then
-        if n + 30 <= Array.length v2 then (* ANNOT *)
-          blit_int (Array.get v1 i) v2 n
-        else ()
+        blit_int (Array.get v1 i) v2 n
       else begin
         if n + (ej + 1) <= Array.length v2 && 0 <= ei then (* ANNOT *)
           blit_bits (Array.get v1 ei) 0 (ej + 1) v2 n
