@@ -103,6 +103,10 @@ let or_frame () =
             (((tag (Var z) ==. PInt 1) &&. ((tag (Var x) ==. PInt 1) ||. (tag (Var y) ==. PInt 1))) ||.
              ((tag (Var z) ==. PInt 0) &&. (tag (Var x) ==. PInt 0) &&. (tag (Var y) ==. PInt 0))))
 
+let and_frame () =
+   defun (fun x -> uBool ===>
+          fun y -> uBool ==>
+          fun z -> rBool "&&" z (tag (Var z) <=>. ((tag (Var x) ==. PInt 1) &&. (tag (Var y) ==.  PInt 1))))
 
 let qbool_rel qname rel (x, y, z) = rBool qname z (tag (Var z) <=>. Atom (Var x, rel, Var y))
 
@@ -143,10 +147,9 @@ let _frames = [
             rInt "/" z
               ((Var z ==. Var x /- Var y) &&. (Var z ==. (Var x /- Var y) +- PInt 0))));
 
-  (["&&"; "Pervasives"],
-   defun (fun x -> uBool ===>
-          fun y -> uBool ==>
-          fun z -> rBool "&&" z (tag (Var z) <=>. ((tag (Var x) ==. PInt 1) &&. (tag (Var y) ==.  PInt 1)))));
+  (["&&"; "Pervasives"], and_frame ());
+
+  (["and"; "Pervasives"], and_frame ());
 
   (["||"; "Pervasives"], or_frame ());
 
