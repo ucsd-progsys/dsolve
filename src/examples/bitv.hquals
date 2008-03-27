@@ -27,5 +27,8 @@ qualif VLEN(i): i = (v.length)
 qualif BVLEN(n): n < (bv.length)
 qualif BVLEN(i): i < (bv.length)
 
-qualif RLTEI(n): n <= 30 * ei
+qualif RLTEI(n): n < 30 * ei
+qualif REQEI(n): n = 30 * ei
 qualif INLNI(n): n >= i * 30 and n < (i+1)*30
+qualif INEQI(n): n = i * 30
+qualif INLTI(n): n <= i * 30

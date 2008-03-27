@@ -1,7 +1,7 @@
 let ffor s d body = 
     let rec loop i =
         let i' = i + 1 in 
-        if i < d then (body i; loop i') else () 
+        if i <= d then (body i; loop i') else () 
     in loop s
 
 type t = { length : int; bits : int array }
@@ -220,6 +220,7 @@ let sub v ofs len =
   let r = create len false in
   unsafe_blit v.bits ofs r.bits 0 len;
   r
+*) *) *)
 
 (*s The concatenation of two bit vectors [v1] and [v2] is obtained by 
     creating a vector for the result and blitting inside the two vectors.
@@ -232,11 +233,15 @@ let append v1 v2 =
   let b1 = v1.bits in
   let b2 = v2.bits in
   let b = r.bits in
-  for i = 0 to Array.length b1 - 1 do 
-    Array.unsafe_set b i (Array.unsafe_get b1 i) 
-  done;  
-  unsafe_blit b2 0 b l1 l2;
-  r
+    ffor 0 (Array.length b1 - 1)
+      (fun i ->
+         Array.unsafe_set b i (Array.unsafe_get b1 i)
+      );
+    if l2 > 0 then (* ANNOT?  or bugfix? *)
+      unsafe_blit b2 0 b l1 l2 else ();
+    r
+
+(*
 
 (*s The concatenation of a list of bit vectors is obtained by iterating
     [unsafe_blit]. *)
@@ -253,7 +258,7 @@ let concat vl =
        pos := !pos + n)
     vl;
   res
-   *)*)*)
+*)
 (*s Filling is a particular case of blitting with a source made of all
     ones or all zeros. Thus we instanciate [unsafe_blit], with 0 and
     [max_int]. *)
@@ -269,16 +274,22 @@ let blit_zeros v ofs len =
     begin
       blit_bits 0 bj (30 - bj) v ofs; 
       (let n = ofs + 30 - bj in
-      let _ = (fun (x:int) -> x) n in 
+      (*let _ = (fun (x:int) -> x) n in *)
       let _ = (fun (x:int) -> x) ei in 
-      let rec loop i n =
-        if i < pred ei then loop (i+1) (n+30) else () in loop (succ bi) n
+       let n = 
+        let rec loop i n =
+          if i <= pred ei then (blit_int 0 v n; loop (i+1) (n+30)) else 
+          if i = ei then n else
+          n in loop (succ bi) n in
+       let _ = (fun (x:int) -> x) n in
+       blit_bits 0 0 (succ ej) v n
       (*begin
         ffor (succ bi) (pred ei) (fun i -> (*blit_int 0 v !n;*) n := !n + 30); 
         let _ = (fun (x:int) -> x) !n in  
         (*blit_bits 0 0 (succ ej) v !n*) ()
       end*)) 
-    end else ()(*
+    end else ()
+
 (*(*
 let blit_ones v ofs len =
   let (bi,bj) = pos ofs in
@@ -420,7 +431,7 @@ let bw_not v =
     if i < n then begin a.(i) <- max_int land (lnot b.(i)); loop (i + 1) end else ()
   in loop 0; let r = { length = v.length; bits = a } in normalize r; r
 
-(*
+*)
 (*s Shift operations. It is easy to reuse [unsafe_blit], although it is 
     probably slightly less efficient than a ad-hoc piece of code. *)
 
@@ -432,10 +443,10 @@ let rec shiftl v d =
   else begin
     let n = v.length in
     let r = create n false in
-    if d < n then unsafe_blit v.bits 0 r.bits d (n - d);
+    if d < n then unsafe_blit v.bits 0 r.bits d (n - d) else ();
     r
   end
-  
+
 and shiftr v d =
   if d == 0 then 
     copy v
@@ -444,11 +455,11 @@ and shiftr v d =
   else begin
     let n = v.length in
     let r = create n false in
-    if d < n then unsafe_blit v.bits d r.bits 0 (n - d);
+    if d < n then unsafe_blit v.bits d r.bits 0 (n - d) else ();
     r
   end
-*) *)
 
+(*
 (*s Testing for all zeros and all ones. *)
 
 let all_zeros v = 
@@ -476,7 +487,7 @@ let to_string v =
   let _ = (fun (x:t) -> x) v in
   let _ = (fun (x:int) -> x) n in
   let s = String.make n '0' in
-    ffor 0 (n) (fun i -> if unsafe_get v i then s.[i] <- '1' else ()); s
+    ffor 0 (n-1) (fun i -> if unsafe_get v i then s.[i] <- '1' else ()); s
 
 let print fmt v = Format.pp_print_string fmt (to_string v)
 (*

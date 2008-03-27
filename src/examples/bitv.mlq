@@ -44,6 +44,11 @@ lval blit_zeros:
   {len: int | (len + ofs - 1 < 30*Array.length c and 0 <= len) and ofs < 30*Array.length c} ->
   unit
 
+lval append: {t | INVAR} -> {t | INVAR} -> {t | INVAR}
+
+lval shiftl: {t | INVAR} -> int -> {t | INVAR}
+lval shiftr: {t | INVAR} -> int -> {t | INVAR}
+
 (*
 (*
 (* pmr: what's with this alpha? =( *)
