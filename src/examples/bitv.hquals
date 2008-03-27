@@ -1,10 +1,8 @@
 qualif BITLENGTH(v): v.length <= (Array.length v.bits) * 30
 qualif DIVBY30(x): 30 * x <= n
-qualif LESSLEN(n): n < v.length
+qualif LESSLEN(n): n < ([v, bv].length)
 
 qualif NNLEN(v): 0 <= v.length
-
-qualif SOMEBITS(v): 0 < (Array.length v.bits)
 
 qualif LIMN(n)(A: int): (n + ~A) - 1 < (30 * (Array.length v))
 qualif NVALID(n): n < (30 * (Array.length v))
@@ -15,12 +13,9 @@ qualif MOD30(j): j = n - (30 * (n / 30))
 
 qualif LTV1LEN(o): o < 30 * (Array.length [v1, v2])
 
-qualif LENV1(l): ofs1 + l <= 30 * (Array.length v1)
-qualif LENV2(l): ofs2 + l <= 30 * (Array.length v2)
+qualif LENV1(l): [ofs1, ofs2] + l <= 30 * (Array.length [v1, v2])
 
 qualif VLEN(i): i = (v.length)
-qualif BVLEN(n): n < (bv.length)
-qualif BVLEN(i): i < (bv.length)
 
 qualif INEQI(n): n = i * 30
 
