@@ -26,6 +26,6 @@ exception Refinement_not_closed
    environment. *)
 let instantiate varmap (path, valu, pred) =
   (* Don't instantiate the bound variable *)
-  let varmap = (Path.name valu, valu) :: varmap in
-    try Some (path, valu, Bstats.time "instantiating" (Predicate.instantiate_named_vars varmap) pred)
+  let varmap = (Path.ident_name_crash valu, valu) :: varmap in
+    try Some (path, valu, Predicate.instantiate_named_vars varmap pred)
     with Not_found -> None
