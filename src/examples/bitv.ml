@@ -208,7 +208,7 @@ let blit v1 v2 ofs1 ofs2 len =
     new vector of length [len] and blitting the subvector of [v] inside. *)
 
 let sub v ofs len =
-  if ofs < 0 || len <= 0 (* ANNOT or fix? *) || ofs + len > v.length || ofs >= v.length then (* invalid_arg "Bitv.sub"; *) v
+  if ofs < 0 || len <= 0 || ofs + len > v.length || ofs >= v.length then (* invalid_arg "Bitv.sub"; *) v
   else begin
   let r = create len false in
   unsafe_blit v.bits ofs r.bits 0 len;
@@ -230,7 +230,7 @@ let append v1 v2 =
       (fun i ->
          Array.unsafe_set b i (Array.unsafe_get b1 i)
       );
-    if l2 > 0 then (* ANNOT?  or bugfix? *)
+    if l2 > 0 then
       unsafe_blit b2 0 b l1 l2 else ();
     r
 
