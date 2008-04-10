@@ -1,6 +1,7 @@
 open Typedtree
 
 module P = Predicate
+module C = Common
 
 let is_deep = function
   | Tpat_any
@@ -9,18 +10,15 @@ let is_deep = function
 
 let pattern_descs = List.map (fun p -> p.pat_desc)
 
-let bind env pat frame =
-  let rec bind_rec bindings pat frame =
-    match (pat, frame) with
-    | (Tpat_any, _) -> bindings
-    | (Tpat_var x, f) -> (Path.Pident x, f) :: bindings
-    | (Tpat_tuple pats, Frame.Ftuple (fs, _)) ->
-        List.fold_left2 bind_rec bindings (pattern_descs pats) fs
-    | (Tpat_construct (cstrdesc, pats), f) ->
-        List.fold_left2 bind_rec bindings (pattern_descs pats)
-          (Frame.fresh_constructor env cstrdesc f)
-    | _ -> assert false
-  in bind_rec [] pat frame
+let _bind_vars = function
+  | (Tpat_any, _) -> ([], [])
+  | (Tpat_var x, Tpat_var y) -> ([], [(x, y)])
+  | (Tpat_tuple p1s, Tpat_tuple p2s)
+  | (Tpat_construct (_, p1s), Tpat_construct (_, p2s)) ->
+      (List.combine (pattern_descs p1s) (pattern_descs p2s), [])
+  | _ -> assert false
+
+let bind_vars p1 p2 = C.expand _bind_vars [(p1, p2)] []
 
 let rec fold f b p = match p with
   | Tpat_any
@@ -28,8 +26,6 @@ let rec fold f b p = match p with
   | Tpat_tuple pats ->
       let b = List.fold_left (fold f) b (pattern_descs pats) in f b p
   | _ -> assert false
-
-let env_bind tenv env pat frame = Lightenv.addn (bind tenv pat frame) env
 
 let null_binding_fold b = function
   | Tpat_var x -> (Path.Pident x, P.Var (Path.mk_ident "z")) :: b

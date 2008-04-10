@@ -69,6 +69,10 @@ val (||.): t -> t -> t
 val (!.): t -> t
 val (=>.): t -> t -> t
 val (<=>.): pexpr -> t -> t
+val (+-): pexpr -> pexpr -> pexpr
+val ( *-): pexpr -> pexpr -> pexpr
+val ( /-): pexpr -> pexpr -> pexpr
+val (--): pexpr -> pexpr -> pexpr
 
 val subst: pexpr -> Path.t -> t -> t
 val apply_substs: (Path.t * pexpr) list -> t -> t
@@ -77,4 +81,3 @@ val vars: t -> Path.t list
 val instantiate_named_vars: (string * Path.t) list -> t -> t
 val transl_op: Asttypes.predexp_op -> binop                                                             
 val transl_rel: Asttypes.pred_rel -> binrel
-val transl_predicate: Parsetree.predicate_declaration -> t

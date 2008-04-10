@@ -22,6 +22,10 @@ let rec pprint_expression ppf exp =
           fprintf ppf "%d" n
       | Pexp_constant (Const_float f) ->
           fprintf ppf "%s" f
+      | Pexp_constant (Const_char c) ->
+          fprintf ppf "%c" c
+      | Pexp_constant (Const_string s) ->
+          fprintf ppf "%s" s
       | Pexp_ident id ->
           fprintf ppf "%s" (print_id id)
       | Pexp_construct (tag, eopt, _) ->
@@ -58,6 +62,22 @@ let rec pprint_expression ppf exp =
           fprintf ppf "assert@ %a" pprint_expression e
       | Pexp_match (e, pel) ->
           fprintf ppf "match@ %a@ with@;<1 2>%a" pprint_expression e pprint_cases pel  
+      | Pexp_try _ -> fprintf ppf "Pexp_try"
+      | Pexp_variant _ -> fprintf ppf "Pexp_variant"
+      | Pexp_setfield _ -> fprintf ppf "Pexp_setfield"
+      | Pexp_when _ -> fprintf ppf "Pexp_when"
+      | Pexp_send _ -> fprintf ppf "Pexp_send"
+      | Pexp_lazy _ -> fprintf ppf "Pexp_lazy"
+      | Pexp_poly _ -> fprintf ppf "Pexp_poly"
+      | Pexp_object _ -> fprintf ppf "Pexp_object"                   
+      | Pexp_while _ -> fprintf ppf "Pexp_while"
+      | Pexp_for _ -> fprintf ppf "Pexp_for"
+      | Pexp_new _ -> fprintf ppf "Pexp_new"
+      | Pexp_setinstvar _ -> fprintf ppf "Pexp_setinstvar"
+      | Pexp_letmodule _ -> fprintf ppf "Pexp_letmodule"
+      | Pexp_record _ -> fprintf ppf "Pexp_record Some"
+      | Pexp_function _ -> fprintf ppf "Pexp_function multi-arg"
+      | Pexp_ifthenelse _ -> fprintf ppf "Pexp_ifthenelse no else"
       | _ -> assert false
   in fprintf ppf "@[%a@]" pprint_exp exp
 and pprint_rec ppf = function
@@ -75,6 +95,7 @@ and pprint_pattern ppf pat =
   | Ppat_var x -> fprintf ppf "%s" x
   | Ppat_tuple ts -> fprintf ppf "(%a)" pprint_pat_list ts
   | Ppat_constraint (p, _) -> pprint_pattern ppf p
+  | Ppat_constant (Const_int n) -> fprintf ppf "%d" n
     (* Pat knows more about how this generalizes *)
   | Ppat_construct (id, e, _) ->
       let id = String.concat "" (Longident.flatten id) in

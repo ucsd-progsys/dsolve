@@ -86,8 +86,8 @@ module YicesProver : PROVER =
       match e with 
         Predicate.PInt i -> Y.yices_mk_num me.c i 
       | Predicate.Var s -> yicesVar me (Path.unique_name s) me.t
-      | Predicate.FunApp (f,e) -> (* i'm not implementing multiple arg funapps in the prover yet because it's so crufty *)
-          let (fn, e') = (yicesVar me f me.f, yicesExp me (List.hd e)) in Y.yices_mk_app me.c fn [|e'|]
+      | Predicate.FunApp (f,e) -> 
+          let (fn, e') = (yicesVar me f me.f, List.map (yicesExp me) e) in Y.yices_mk_app me.c fn (Array.of_list e')
       | Predicate.Binop (e1,op,e2) ->
           let es' = Array.map (yicesExp me) [|e1;e2|] in
           (match op with 

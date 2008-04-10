@@ -30,14 +30,24 @@ let transl_rels rels =
       [] -> rel_star 
     | _ -> List.map transl_rel rels
 
-let transl_patpred_single p =
+let transl_patpred_single simple valu env p =
+  let penv = ref [(Path.name valu, valu)] in
+  let ap p pid = penv := (p, pid)::!penv; pid in
+  let fep p = fst (Env.lookup_value p env) in
+  let fp p' = 
+    let p = conflat p' in
+      try snd (List.find (fun (p', pid) -> p = p') !penv) with 
+        Not_found -> try let ep = fep p' in ap p ep with
+          Not_found -> let pid = Path.mk_ident p in 
+            ap p pid in
   let rec transl_expr_rec pe =
     match pe.ppredpatexp_desc with
       | Ppredpatexp_int (n) ->
           let _ = if List.length n != 1 then assert false in
 	        PInt (List.hd n)
-      | Ppredpatexp_var (y) -> (* flatten longidents for now -- need to look these up? *)
-	        Var (Path.mk_ident (conflat y))
+      | Ppredpatexp_var (y) ->
+          let y = match y with [sty] -> sty | _ -> failwith "Var ident set used in single qualifier or predicate" in
+	        Var (if simple then Path.mk_ident (conflat y) else fp y)
       | Ppredpatexp_funapp (f, es) ->
 	        FunApp (conflat f, List.map transl_expr_rec es)
       | Ppredpatexp_binop (e1, ops, e2) ->
@@ -46,7 +56,7 @@ let transl_patpred_single p =
           Field (f, transl_expr_rec e1)
       | Ppredpatexp_proj (n, e1) ->
           Proj (n, transl_expr_rec e1)
-      | _ -> assert false
+      | _ -> failwith "Wildcard used in single qualifier or predicate"
   in
   let rec transl_pred_rec pd =
     match pd.ppredpat_desc with
@@ -87,8 +97,8 @@ let transl_patpred env (qgtymap, tyset, idset, intset) tymap p =
 	        PPInt (n)
       | Ppredpatexp_any_int ->
           PPInt (Lazy.force all_consts)      
-      | Ppredpatexp_var (y) -> (* flatten longidents for now -- need to look these up? *)
-	        PVar ([Path.mk_ident (conflat y)])
+      | Ppredpatexp_var (y) -> 
+	        PVar (List.map (fun y -> Path.mk_ident (conflat y)) y)
       | Ppredpatexp_mvar (y) ->
           let inty = AM.mem y tymap in
           let mk_idents = List.map Path.mk_ident in
@@ -202,6 +212,8 @@ let ck_consistent patpred pred =
           ck_expr_rec e1 e1'
       | (Ppredpatexp_mvar (x), Var(y)) ->
           ckm (x, Path.name y)
+      | (Ppredpatexp_proj (_, e), Proj (_, e')) ->
+          ck_expr_rec e e'
       | _ -> assert false in
   let rec ck_pred_rec pred pat =
     match (pred.ppredpat_desc, pat) with

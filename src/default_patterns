@@ -32,6 +32,14 @@ metavariables and type annotations
 qualif A(v) : ~A + v = 5
 qualif C(v)(A:int, B:int) : ~A + v + ~B = 5
 
+sets of integer literals
+
+qualif A(v): v = [0,1,2]
+
+sets of idents
+
+qualif A(v) : v = [a, b, c]
+
 sets of operators
 
 qualif A(v) : v [| +, - |] 5 > 0
@@ -40,17 +48,12 @@ sets of relational operators
 
 qualif A(v): v { <, <= } 5
 
-sets of integer literals
-
-qualif A(v): v = [0,1,2]
-
 to an operator wildcard is DELIM * * DELIM eg, [| * * |] for any operator
 
 -annotated types are matched to program types by attempting to unify, not structurally
--pattern names are lost after expansion *)
+-pattern names are lost after expansion 
+
+unhandled types: the type grammar can't handle ADTs or records. but, you can define these as user types in the program source and then reference the type name in the pattern*)
 
 
-(* examples/bitv.ml *) 
-qualif BITLENGTH(_V): _V.length <= (Array.length _V.bits) * 30 
-qualif DIVBY30(_V): 30 * _V <= ~A
-qualif LESSLEN(_V): ~A < _V.length
+

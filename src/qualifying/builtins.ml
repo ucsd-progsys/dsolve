@@ -10,8 +10,11 @@ let rec mk_longid = function
   | [id] -> Lident id
   | id :: idrem -> Ldot (mk_longid idrem, id)
 
-let qsize rel x y z = (Path.mk_ident ("SIZE_" ^ (pprint_rel rel)), y,
-                       Atom(Var z, rel, FunApp("Array.length", [Var x])))
+let qsize funm rel x y z = (Path.mk_ident ("SIZE_" ^ (pprint_rel rel)), y,
+                       Atom(Var z, rel, FunApp(funm, [Var x])))
+
+let qsize_arr = qsize "Array.length" 
+let qsize_str = qsize "String.length"
 
 let qdim rel dim x y z =
   let dimstr = string_of_int dim in
@@ -31,6 +34,12 @@ let mk_tyvar () = Frame.Fvar(Path.mk_ident "'a")
 let mk_int qs = Fconstr(Predef.path_int, [], [], ([], Qconst qs))
 
 let uFloat = Fconstr(Predef.path_float, [], [], ([], Qconst []))
+let uChar = Fconstr(Predef.path_char, [], [], ([], Qconst []))
+
+let mk_string qs = Fconstr(Predef.path_string, [], [], ([], Qconst qs))
+
+let uString = mk_string []
+let rString name v p = mk_string [(Path.mk_ident name, v, p)]
 
 let mk_bool qs = Fconstr(Predef.path_bool, [], [], ([], Qconst qs))
 let uBool = mk_bool []
@@ -82,9 +91,22 @@ let op_frame path qname op =
                 fun y -> uInt ==>
                 fun z -> rInt qname z (Var z ==. Binop (Var x, op, Var y))))
 
+
 let tag_function = "__tag"
 
 let tag x = FunApp(tag_function, [x])
+
+let or_frame () =
+   defun (fun x -> uBool ===>
+          fun y -> uBool ==>
+          fun z -> rBool "||" z
+            (((tag (Var z) ==. PInt 1) &&. ((tag (Var x) ==. PInt 1) ||. (tag (Var y) ==. PInt 1))) ||.
+             ((tag (Var z) ==. PInt 0) &&. (tag (Var x) ==. PInt 0) &&. (tag (Var y) ==. PInt 0))))
+
+let and_frame () =
+   defun (fun x -> uBool ===>
+          fun y -> uBool ==>
+          fun z -> rBool "&&" z (tag (Var z) <=>. ((tag (Var x) ==. PInt 1) &&. (tag (Var y) ==.  PInt 1))))
 
 let qbool_rel qname rel (x, y, z) = rBool qname z (tag (Var z) <=>. Atom (Var x, rel, Var y))
 
@@ -112,28 +134,38 @@ let _frames = [
   (["mod"; "Pervasives"],
    defun (fun x -> uInt ===>
           fun y -> uInt ==>
-          fun z -> rInt "mod" z
-            (((Var x >=. PInt 0) &&. (Var y >=. PInt 0))
-             =>. big_and [PInt 0 <=. Var z; Var z <. Var y;])));
+          fun z -> (rInt "mod" z
+            (((((Var x >=. PInt 0) =>. (PInt 0 <=. Var z)) &&.
+            ((Var y <. PInt 0) ||. (Var y >. PInt 0))) &&.
+            ((Var y >. PInt 0) =>. (Var z <. Var y))) &&.
+            (Var z ==. (Var x -- (Var y *- (Var x /- Var y))))))));
 
-  (["&&"; "Pervasives"],
-   defun (fun x -> uBool ===>
-          fun y -> uBool ==>
-          fun z -> rBool "&&" z (tag (Var z) <=>. ((tag (Var x) ==. PInt 1) &&. (tag (Var y) ==.  PInt 1)))));
+  (["/"; "Pervasives"],
+   defun (fun x -> uInt ===>
+          fun y -> uInt ==>
+          fun z ->
+            rInt "/" z
+              ((Var z ==. Var x /- Var y) &&. (Var z ==. (Var x /- Var y) +- PInt 0))));
 
-  (["||"; "Pervasives"],
-   defun (fun x -> uBool ===>
-          fun y -> uBool ==>
-          fun z -> rBool "||" z
-            (((tag (Var z) ==. PInt 1) &&. ((tag (Var x) ==. PInt 1) ||. (tag (Var y) ==. PInt 1))) ||.
-             ((tag (Var z) ==. PInt 0) &&. (tag (Var x) ==. PInt 0) &&. (tag (Var y) ==. PInt 0)))));
+  (["&&"; "Pervasives"], and_frame ());
+
+  (["||"; "Pervasives"], or_frame ());
+
+  (["or"; "Pervasives"], or_frame ());
 
   (["not"; "Pervasives"],
    defun (fun x -> uBool ==> fun y -> rBool "NOT" y (tag (Var y) <=>. (tag (Var x) ==. PInt 0))));
 
   (["ignore"; "Pervasives"], defun (forall (fun a -> fun x -> a ==> fun y -> uUnit)));
 
+  (["succ"; "Pervasives"], defun (fun x -> uInt ==> fun y -> rInt "succ" y ((Var y) ==. ((Var x) +- PInt 1))));
+
+  (["pred"; "Pervasives"], defun (fun x -> uInt ==> fun y -> rInt "pred" y ((Var y) ==. ((Var x) -- PInt 1))));
+
+
+
   poly_rel_frame ["="; "Pervasives"] "=" Eq;
+  poly_rel_frame ["=="; "Pervasives"] "==" Eq;
   poly_rel_frame ["!="; "Pervasives"] "!=" Ne;
   poly_rel_frame ["<>"; "Pervasives"] "<>" Ne;
   poly_rel_frame ["<"; "Pervasives"] "<" Lt;
@@ -144,37 +176,53 @@ let _frames = [
   (["length"; "Array"],
    defun (forall (fun a ->
           fun x -> mk_array a [] ==>
-          fun y -> mk_int [qsize Eq x y y; qint Ge 0 y])));
+          fun y -> mk_int [qsize_arr Eq x y y; qint Ge 0 y])));
 
   (["set"; "Array"],
    defun (forall (fun a ->
           fun x -> mk_array a [] ===>
-          fun y -> mk_int [qsize Lt x y y; qint Ge 0 y] ===>
+          fun y -> mk_int [qsize_arr Lt x y y; qint Ge 0 y] ===>
           fun _ -> a ==>
           fun _ -> uUnit)));
 
   (["get"; "Array"],
    defun (forall (fun a ->
           fun x -> mk_array a [] ===>
-          fun y -> mk_int [qsize Lt x y y; qint Ge 0 y] ==>
+          fun y -> mk_int [qsize_arr Lt x y y; qint Ge 0 y] ==>
           fun _ -> a)));
 
   (["make"; "Array"],
    defun (forall (fun a ->
           fun x -> rInt "NonNegSize" x (PInt 0 <=. Var x) ===>
           fun y -> a ==>
-          fun z -> mk_array a [qsize Eq z z x])));
+          fun z -> mk_array a [qsize_arr Eq z z x])));
 
   (["init"; "Array"],
    defun (forall (fun a ->
           fun x -> rInt "NonNegSize" x (PInt 0 <=. Var x) ===>
           fun i -> (defun (fun y -> rInt "Bounded" y ((PInt 0 <=. Var y) &&. (Var y <. Var x)) ==> fun _ -> a)) ==>
-          fun z -> mk_array a [qsize Eq z z x])));
+          fun z -> mk_array a [qsize_arr Eq z z x])));
 
   (["copy"; "Array"],
    defun (forall (fun a ->
           fun arr -> mk_array a [] ==>
           fun c -> rArray a "SameSize" c (FunApp("Array.length", [Var c]) ==. FunApp("Array.length", [Var arr])))));
+
+  (["make"; "String"],
+   defun (forall (fun a ->
+          fun x -> rInt "NonNegSize" x (PInt 0 <=. Var x) ===>
+          fun c -> uChar ==>
+          fun s -> mk_string [qsize_str Eq s s x])));
+
+  (["length"; "String"],
+   defun (fun x -> mk_string [] ==>
+          fun y -> mk_int [qsize_str Eq x y y; qint Ge 0 y]));
+
+  (["get"; "String"],
+   defun (forall (fun a ->
+          fun x -> uString ===>
+          fun y -> mk_int [qsize_str Lt x y y; qint Ge 0 y] ==>
+          fun z -> uChar)));
 
   (["int"; "Random"], defun (fun x -> rInt "PosMax" x (PInt 0 <. Var x) ==>
                              fun y -> rInt "RandBounds" y ((PInt 0 <=. Var y) &&. (Var y <. Var x))));

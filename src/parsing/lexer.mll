@@ -73,6 +73,8 @@ let keyword_table =
     "private", PRIVATE;
     "qualif", QUALIF;
     "squalif", SINGLE_QUALIF;
+    "lval", LVAL;
+    "predicate", PREDICATE;
     "rec", REC;
     "sig", SIG;
     "struct", STRUCT;

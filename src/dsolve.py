@@ -3,31 +3,47 @@
 import sys, os, os.path, common
 
 d_pats= "default_patterns"
-gen   = "./liquid.opt -no-anormal -lqualifs -collect 4 -dqualifs"
-solve = "./liquid.opt -dframes"
+solve = "./liquid.opt -dframes".split()
 flags = []
-tname = "/tmp/dsolvescratch"
+tname = "/tmp/dsolve.scratch"
+null  = open("/dev/null", "w")
 
 def cat_files(files,outfile):
   os.system("rm -f %s" % outfile)
   for f in files: os.system("cat %s 1>> %s 2> /dev/null" % (f,outfile))
 
-def gen_quals(src,bare):
-  (fname,qname,hname) = (src+".ml", src+".quals", src+".ml.hquals")
+def gen_quals(src,bare,lq, col):
+  bname = src[:-3]
+  (fname,qname,hname) = (bname+".ml", bname+".quals", bname+".hquals")
+  os.system("rm -f %s" % qname)
   if bare:
-    os.system("touch %s" % (qname))
+    os.system("cp -f %s %s" % (hname, tname))
   else:
     cat_files([hname,d_pats],tname)
-    common.logged_sys_call("%s %s %s 1> /dev/null 2> %s" % (gen, tname, fname, qname))
+  if lq:
+    lq = "-lqualifs"
+  else:
+    lq = ""
+  gen   = ("./liquid.opt %s -no-anormal -collect %d -dqualifs" % (lq, col)).split()
+  qfile = open(qname, "w")
+  succ = common.logged_sys_call(gen + [tname, fname], null, qfile)
+  qfile.close()
+  return succ
 
-def solve_quals(src,flags):
-  return common.logged_sys_call("%s %s %s.ml" % (solve, " ".join(flags),src))
+def solve_quals(file,bare,quiet,flags):
+  bname = file[:-3]
+  os.system("rm -f %s.annot" % bname)
+  if quiet: out = null
+  else: out = None
+  return common.logged_sys_call(solve + flags + [("%s.ml" % bname)], out)
 
-bname = sys.argv[len(sys.argv) - 1][:-3]
-bare = (sys.argv[1] == "-bare")
-if bare: flags += sys.argv[2:-1]
-else: flags += sys.argv[1:-1]
-os.system("rm -f %s.quals; rm -f %s.annot" % (bname, bname))	
-gen_quals(bname,bare)
-succ = solve_quals(bname,flags)
-sys.exit(succ != 0)
+def main():
+  bare = (sys.argv[1] == "-bare")
+  if bare: flags = sys.argv[2:-1]
+  else: flags = sys.argv[1:-1]
+  fn = sys.argv[len(sys.argv) - 1]
+  gen_quals(fn, bare, False, 4)
+  sys.exit(solve_quals(fn,bare,False,flags))
+
+if __name__ == "__main__":
+  main()

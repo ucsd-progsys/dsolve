@@ -37,30 +37,30 @@ let rec fixdiv p =
       | P.Not p -> pred_isdiv p in
   let calc_cm e1 e2 =
     pull_divisor e1 * pull_divisor e2 in
-    if pred_isdiv p then
-      match p with
-          P.Atom(e, r, e') -> 
-            let m = calc_cm e e' in
-            let e'' = P.Binop(e', P.Minus, P.PInt(1)) in
-            let bound (e, r, e', e'') = 
-              P.And(P.Atom(apply_mult m e, P.Gt, apply_mult m e''),
-                    P.Atom(apply_mult m e, P.Le, apply_mult m e')) in
-              (match (e, r, e') with
-                   (P.Var v, P.Eq, e') ->
-                     bound (e, r, e', e'')
-                 | (P.PInt v, P.Eq, e') ->
-                     bound (e, r, e', e'')
-                 | _ -> p) 
-        | P.And(p1, p2) -> 
-            let p1 = if pred_isdiv p1 then fixdiv p1 else p1 in
-            let p2 = if pred_isdiv p2 then fixdiv p2 else p2 in
-              P.And(p1, p2)      
-        | P.Or(p1, p2) ->
-            let p1 = if pred_isdiv p1 then fixdiv p1 else p1 in
-            let p2 = if pred_isdiv p2 then fixdiv p2 else p2 in
-              P.Or(p1, p2) 
-        | P.Not p1 -> P.Not(fixdiv p1) 
-        | p -> p
+  if pred_isdiv p then
+     match p with
+       P.Atom(e, r, e') -> 
+         let m = calc_cm e e' in
+         let e'' = P.Binop(e', P.Minus, P.PInt(1)) in
+         let bound (e, r, e', e'') = 
+           P.And(P.Atom(apply_mult m e, P.Gt, apply_mult m e''),
+                 P.Atom(apply_mult m e, P.Le, apply_mult m e')) in
+           (match (e, r, e') with
+                (P.Var v, P.Eq, e') ->
+                  bound (e, r, e', e'')
+              | (P.PInt v, P.Eq, e') ->
+                  bound (e, r, e', e'')
+              | _ -> p) 
+     | P.And(p1, p2) -> 
+         let p1 = if pred_isdiv p1 then fixdiv p1 else p1 in
+         let p2 = if pred_isdiv p2 then fixdiv p2 else p2 in
+           P.And(p1, p2)      
+     | P.Or(p1, p2) ->
+         let p1 = if pred_isdiv p1 then fixdiv p1 else p1 in
+         let p2 = if pred_isdiv p2 then fixdiv p2 else p2 in
+           P.Or(p1, p2) 
+     | P.Not p1 -> P.Not(fixdiv p1) 
+     | p -> p
     else p
 
 (********************************************************************************)

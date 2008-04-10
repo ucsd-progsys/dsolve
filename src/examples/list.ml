@@ -1,6 +1,3 @@
-qualif POS(x): 0 < x
-qualif NEG(x): x < 0
-
 let em = []
 
 let _ = em

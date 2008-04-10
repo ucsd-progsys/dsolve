@@ -1,6 +1,6 @@
-squalif ITV(v): v.1 <= v.2
-squalif LEQ(v)(A:int): v <= A
-squalif GEQ(v)(A:int): A <= v
+(* squalif ITV(v): v.1 <= v.2
+   squalif LEQ(v)(A:int): v <= A
+   squalif GEQ(v)(A:int): A <= v *)
 
 let mmin (x:int) y = 
   if x <= y then x else y
@@ -26,7 +26,6 @@ let g (p: int*int) (p':int*int) =
   let x'' = mmin x x' in
   let y'' = mmax y y' in
   (x'',y'')
-
 
 let _ = 
   let ys = mklist 100 in

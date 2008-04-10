@@ -139,27 +139,8 @@ and exception_declaration = core_type list
 
 (* Predicate_Declarations *)
 
-and pexpression =
-    { ppredexp_desc: predexp_desc;
-      ppredexp_loc: Location.t }
-
-and predexp_desc =
-    Ppredexp_int of int
-  | Ppredexp_var of string
-  | Ppredexp_app of string * pexpression list
-  | Ppredexp_binop of pexpression * predexp_op * pexpression
-  | Ppredexp_field of string * string
-
-and predicate_declaration =
-    { ppred_desc: pred_desc;
-      ppred_loc: Location.t }
-
-and pred_desc =
-    Ppred_true
-  | Ppred_atom of pexpression * pred_rel * pexpression
-  | Ppred_not of predicate_declaration
-  | Ppred_and of predicate_declaration * predicate_declaration
-  | Ppred_or of predicate_declaration * predicate_declaration
+and predicate_alias_declaration = string * predicate_pattern
+and predicate_alias = string
 
 and predicate_pattern =
     { ppredpat_desc: predpat_desc;
@@ -179,12 +160,29 @@ and predpatexp =
 and predpatexp_desc =
     Ppredpatexp_int of int list
   | Ppredpatexp_any_int              
-  | Ppredpatexp_var of Longident.t
+  | Ppredpatexp_var of Longident.t list
   | Ppredpatexp_mvar of string
   | Ppredpatexp_funapp of Longident.t * predpatexp list
   | Ppredpatexp_binop of predpatexp * predexp_op list * predpatexp
   | Ppredpatexp_field of string * predpatexp
   | Ppredpatexp_proj of int * predpatexp
+
+(* Signature structure *)
+
+and penv = (string * (string * predicate_pattern)) list * (string * litframe) list  
+
+(* Parsed frames *)
+
+and litframe =
+    PFvar of string * refinement
+  | PFconstr of Longident.t * litframe list * refinement
+  | PFarrow of string option * litframe * litframe
+  | PFtuple of litframe list * refinement
+  | PFrecord of (litframe * string * mutable_flag) list * refinement
+
+and refinement =
+  | RLiteral of string * predicate_pattern
+  | RVar of string
 
 (* Qualifier declarations *)
 

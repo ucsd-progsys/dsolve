@@ -28,10 +28,6 @@ let mkpredpat d =
   { ppredpat_desc = d; ppredpat_loc = symbol_rloc() }
 let mkpredpatexp d =
   { ppredpatexp_desc = d; ppredpatexp_loc = symbol_rloc() }
-let mkpred d =
-  { ppred_desc = d; ppred_loc = symbol_rloc() }
-let mkpredexp d =
-  { ppredexp_desc = d; ppredexp_loc = symbol_rloc() }
 let mkpat d =
   { ppat_desc = d; ppat_loc = symbol_rloc() }
 let mkexp d =
@@ -192,6 +188,38 @@ let bigarray_set arr arg newval =
                        ["", arr;
                         "", ghexp(Pexp_array coords);
                         "", newval]))
+
+(* Convenience for liquid interfaces *)
+
+let rw_frame f nr =
+    match f with
+      PFvar(s, r) -> PFvar(s, nr)
+    | PFconstr(s, f, r) -> PFconstr(s, f, nr)
+    | PFarrow _ -> assert false
+    | PFtuple(a, r) -> PFtuple(a, nr)
+    | PFrecord(a, r) -> PFrecord(a, nr)
+
+let rw_frame_var f r =
+    let r = RVar(r) in
+    rw_frame f r
+
+let rw_frame_lit f v p =
+    let r = RLiteral (v, p) in
+    rw_frame f r
+
+let ptrue = RLiteral( "", {ppredpat_desc = Ppredpat_true; 
+                          ppredpat_loc = Location.none} )
+
+let mkconstr a b r = PFconstr (a, b, r)
+let mkvar a r = PFvar (a, r)
+let mkarrow v a b = PFarrow (v, a, b)
+let mktuple a r = PFtuple (a, r)
+let mkrecord a r = PFrecord (a, r)
+let mktrue_constr a b = mkconstr a b ptrue
+let mktrue_var a = mkvar a ptrue
+let mktrue_tuple a = mktuple a ptrue
+let mktrue_record a = mkrecord a ptrue
+
 %}
 
 /* Tokens */
@@ -280,6 +308,8 @@ let bigarray_set arr arg newval =
 %token PRIVATE
 %token QUALIF
 %token SINGLE_QUALIF
+%token LVAL
+%token PREDICATE
 %token QUESTION
 %token QUESTIONQUESTION
 %token QUOTE
@@ -354,6 +384,7 @@ The precedences must be listed from low to high.
 %right    INFIXOP1                      /* expr (e OP e OP e) */
 %right    COLONCOLON                    /* expr (e :: e :: e) */
 %left     INFIXOP2 PLUS MINUS MINUSDOT  /* expr (e OP e OP e) */
+%nonassoc below_STAR
 %left     INFIXOP3 STAR                 /* expr (e OP e OP e) */
 %right    INFIXOP4                      /* expr (e OP e OP e) */
 %nonassoc prec_unary_minus              /* unary - */
@@ -363,6 +394,7 @@ The precedences must be listed from low to high.
 %nonassoc SHARP                         /* simple_expr/toplevel_directive */
 %nonassoc below_DOT
 %nonassoc DOT
+%nonassoc below_IDENT
 /* Finally, the first tokens of simple_expr are above everything else. */
 %nonassoc BACKQUOTE BEGIN CHAR FALSE FLOAT INT INT32 INT64
           LBRACE LBRACELESS LBRACKET LBRACKETBAR LIDENT LPAREN
@@ -383,6 +415,8 @@ The precedences must be listed from low to high.
 %type <Parsetree.qualifier_declaration list> qualifiers
 %start qualifier_patterns               /* pattern qualifier files */
 %type <Parsetree.qualifier_declaration list> qualifier_patterns
+%start liquid_interface                 /* for mlq refined interface files */
+%type <Parsetree.penv> liquid_interface
 
 %%
 
@@ -417,9 +451,13 @@ use_file_tail:
   | structure_item use_file_tail                { Ptop_def[$1] :: $2 }
   | toplevel_directive use_file_tail            { $1 :: $2 }
 ;
+liquid_interface:
+    liquid_signature EOF                        { ([], $1) }
+  | predicate_alias_list liquid_signature EOF   { ($1, $2) }
+  | EOF                                         { ([], []) }
+;
 
 /* Module expressions */
-
 module_expr:
     mod_longident
       { mkmod(Pmod_ident $1) }
@@ -1399,17 +1437,25 @@ label:
 
 /* Qualifiers */
 
-qualifier_patterns:
+qualifier_pattern_list:
     /* empty */ 
       { [] }
-  | QUALIF qualifier_pattern_declaration qualifier_patterns
+  | QUALIF qualifier_pattern_declaration qualifier_pattern_list
+      { $2::$3 }
+
+qualifier_list:
+    /* empty */
+      { [] }
+  | SINGLE_QUALIF qualifier_pattern_declaration qualifier_list
       { $2::$3 }
 
 qualifiers:
-    /* empty */
-      { [] }
-  | SINGLE_QUALIF qualifier_pattern_declaration qualifiers
-      { $2::$3 }
+    qualifier_list EOF
+      { $1 }
+
+qualifier_patterns:
+    qualifier_pattern_list EOF
+      { $1 }
 
 qualifier_pattern_declaration:
     UIDENT LPAREN LIDENT RPAREN LPAREN qual_ty_anno RPAREN COLON qualifier_pattern  
@@ -1457,19 +1503,21 @@ qual_rel_list:
   | qual_lit_rel COMMA qual_rel_list        { $1::$3 }
 
 qual_expr:
-    qual_expr_1 qual_op qual_expr           
+    qual_expr qual_op qual_expr_1           
     { mkpredpatexp (Ppredpatexp_binop($1, $2, $3)) }
   | qual_expr_1                             { $1 }
 
 qual_expr_1: 
-  | qual_litident qual_term_list 
+    qual_litident qual_term_list 
     { mkpredpatexp (Ppredpatexp_funapp(Longident.parse $1, $2)) } 
   | qual_term                               { $1 }
 
 qual_term:
     LPAREN qual_expr RPAREN                 { $2 }
   | qual_litident /* literal */
-    { mkpredpatexp (Ppredpatexp_var(Longident.parse $1)) } 
+    { mkpredpatexp (Ppredpatexp_var([Longident.parse $1])) } 
+  | LBRACKET qual_litident_list RBRACKET
+    { mkpredpatexp (Ppredpatexp_var($2)) }
   | TILDE UIDENT /* var */
     { mkpredpatexp (Ppredpatexp_mvar($2)) } 
   | INT
@@ -1490,6 +1538,10 @@ qual_intlist:
 qual_litident:
     UIDENT DOT qual_litident                { $1 ^ "." ^ $3 }
   | LIDENT                                  { $1 }
+
+qual_litident_list:
+    qual_litident COMMA qual_litident_list  { (Longident.parse $1) :: $3 }
+  | qual_litident                           { [(Longident.parse $1)] }
 
 qual_term_list:
     qual_term                               { [$1] }
@@ -1514,7 +1566,92 @@ qual_lit_op:
 qual_lit_op_list:
     qual_lit_op                             { [$1] }
   | qual_lit_op COMMA qual_lit_op_list      { $1::$3 }
- 
+
+/* Liquid signatures */
+
+liquid_signature:
+    liquid_val_decl liquid_signature        { $1 :: $2 }
+  | liquid_val_decl                         { [$1] }
+
+liquid_val_decl:
+    LVAL LIDENT COLON liquid_type           { ($2, $4) }
+
+/* Liquid types */
+
+liquid_type_list: /* this must be before liquid_type to resolve reduce/reduces */
+    liquid_type1 STAR liquid_type_list
+      { $1 :: $3 }
+  | liquid_type1                        %prec below_STAR
+      { [$1] }
+
+liquid_type:                             
+    liquid_type_list 
+      { match $1 with [st] -> st | _ -> mktrue_tuple $1  }
+  | LBRACE LIDENT COLON liquid_type1 STAR liquid_type_list BAR predicate RBRACE
+      { mktuple ($4::$6) (RLiteral($2, $8)) }
+  | LBRACE liquid_type1 STAR liquid_type_list BAR UIDENT RBRACE 
+      { mktuple ($2::$4) (RVar($6)) }
+
+
+liquid_type1:
+    LBRACE LIDENT COLON liquid_type2 BAR predicate RBRACE 
+      { rw_frame_lit $4 $2 $6  }
+  | LBRACE liquid_type2 BAR UIDENT RBRACE
+      { rw_frame_var $2 $4 }
+  | liquid_type MINUSGREATER liquid_type
+      { mkarrow None $1 $3 }
+  | LIDENT COLON liquid_type MINUSGREATER liquid_type
+      { mkarrow (Some $1) $3 $5 }
+  | liquid_type2
+      { $1 }
+
+liquid_type2:
+    QUOTE LIDENT                                          /* tyvar */
+      { mktrue_var $2 }
+  | LPAREN liquid_type_comma_list RPAREN %prec below_IDENT 
+      { match $2 with [stn] -> stn | _ -> raise Parse_error } 
+  | type_longident                                       /* base_type */
+      { mktrue_constr $1 [] }
+  | liquid_type type_longident                           /* simple constructed */
+      { mktrue_constr $2 [$1] }
+  | LPAREN liquid_type_comma_list RPAREN type_longident  /* multi-param constructed */
+      { mktrue_constr $4 $2 }
+  | liquid_record
+      { mktrue_record $1 }
+
+liquid_type_comma_list:
+    liquid_type
+      { [$1] }
+  | liquid_type COMMA liquid_type_comma_list
+      { $1 :: $3 }
+  
+liquid_record:
+    LBRACE liquid_field_list RBRACE 
+      { $2 }
+
+liquid_field:
+    MUTABLE LIDENT COLON liquid_type
+      { ($4, $2, Mutable) }
+  | LIDENT COLON liquid_type
+      { ($3, $1, Immutable) }
+
+liquid_field_list:
+    liquid_field SEMI liquid_field_list
+      { $1 :: $3 }
+  | liquid_field
+      { [$1] }
+
+/* Predicates */
+
+predicate:
+    qualifier_pattern                       { $1 } 
+
+predicate_alias:
+    PREDICATE UIDENT EQUAL LPAREN LIDENT RPAREN predicate        { ($2, ($5, $7)) }
+
+predicate_alias_list:
+    predicate_alias predicate_alias_list    { $1 :: $2 }
+  | predicate_alias                         { [$1] }
 
 /* Constants */
 

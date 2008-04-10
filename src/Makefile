@@ -19,7 +19,7 @@ UTILS=utils/misc.cmo utils/config.cmo \
 
 PARSING=parsing/linenum.cmo parsing/location.cmo parsing/longident.cmo \
   parsing/syntaxerr.cmo parsing/parser.cmo \
-  parsing/lexer.cmo parsing/parse.cmo parsing/printast.cmo
+  parsing/lexer.cmo parsing/parse.cmo parsing/printast.cmo \
 
 TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/primitive.cmo typing/types.cmo \
@@ -37,8 +37,8 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/typemod.cmo typing/qualmod.cmo
 
 QUALIFYING=qualifying/lightenv.cmo \
-  qualifying/qualifier.cmo qualifying/frame.cmo qualifying/builtins.cmo \
-  qualifying/wellformed.cmo qualifying/message.cmo qualifying/pattern.cmo \
+  qualifying/qualifier.cmo qualifying/pattern.cmo qualifying/frame.cmo \
+  qualifying/builtins.cmo qualifying/wellformed.cmo qualifying/message.cmo  \
   qualifying/theoremProverSimplify.cmo \
   qualifying/theoremProverYices.cmo \
   qualifying/theoremProverQprover.cmo \
@@ -50,6 +50,8 @@ QUALIFYING=qualifying/lightenv.cmo \
 LIQUID=driver/pparse.cmo analyzer/qdump.cmo analyzer/liqerrors.cmo analyzer/liquid.cmo
 
 LIQOBJS=$(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(LIQUID)
+
+default: liquid.opt
 
 liquid: $(LIQOBJS)
 	$(CAMLC) $(LINKFLAGS) -custom -o liquid str.cma unix.cma nums.cma oyices.cma graph.cma libqp.cma $(LIQOBJS)

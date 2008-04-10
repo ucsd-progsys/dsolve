@@ -180,8 +180,8 @@ let lequate_cs env g c variance f1 f2 = match variance with
 
 let match_and_extend tenv env (l1,f1) (l2,f2) =
   match (l1,l2) with
-  | (Some p, None) | (None, Some p) -> Pat.env_bind tenv env p f2
-  | (Some p1, Some p2) when Pat.same p1 p2 -> Pat.env_bind tenv env p1 f2
+  | (Some p, None) | (None, Some p) -> F.env_bind tenv env p f2
+  | (Some p1, Some p2) when Pat.same p1 p2 -> F.env_bind tenv env p1 f2
   | _  -> env (* 1 *)
  
 let mutable_variance = function Asttypes.Mutable -> F.Invariant | _ -> F.Covariant
@@ -218,7 +218,7 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
       (List.map (make_wff env) l,
        [(Cstr c, WFRef (Le.add qual_test_var f env, r, None))])
   | F.Farrow (l, f, f') ->
-      let env' = match l with None -> env | Some p -> Pat.env_bind tenv env p f in
+      let env' = match l with None -> env | Some p -> F.env_bind tenv env p f in
       ([make_wff env f; make_wff env' f'], [])
   | F.Ftuple (fs, r) ->
       (List.map (make_wff env) fs, [(Cstr c, WFRef (Le.add qual_test_var f env, r, None))])

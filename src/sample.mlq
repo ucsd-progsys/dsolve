@@ -1,0 +1,51 @@
+LIQUID INTERFACE FILES README
+
+USAGE: a .mlq file should be placed in the same directory as the source file. If not found, the typechecker will obviously not use it, and will do so silently.
+
+SYNTAX:
+
+a .mlq is two lists: first, a list of predicate aliases, and second a list of val, type pairs.
+
+*** Predicate aliases:
+
+pred P = (v) v > 0
+
+the (v) is the bound variable.
+
+*** Val to liquid type bindings:
+
+lval program_ident : {v: int | v > 0 }
+
+the type on the right hand side of the colon can take on several forms:
+
+int == {int | true}
+
+{v: int array | Array.length v > 0} == {v: {int | true} array | Array.length v > 0)
+
+{int | P} == {v: int | v > 0} ** NOTE: predicate aliases can't be nested
+
+records:
+
+{v: { lbl : int } | v.lbl = 0} == {v: { lbl : {int | true} | v.lbl = 0}
+
+tuples work similarly, as do type vars (which can be refined, but whose refinements won't carry through).
+
+simple ADTs (meaning 'a list) will also work, but disjoint unions/variants/etc. will NOT work.
+
+
+ERROR MESSAGES:
+
+-liquid interface files which contain idents not found in the program will fail with an explicit error. Files which contain types which don't unify with the program shapes will fail with a cryptic error* about types not being supported in instantiation:
+
+Unsupported types for instantiation: {({bool | true}, {int | true}) | true}
+  {int | k_1191}
+Fatal error: exception Assert_failure("qualifying/frame.ml", 168, 5)
+*other cryptic errors may apply
+
+For reasons I don't understand yet, this doesn't always happen, eg if the shape is only different by a differint type constructor name.
+
+-if your type annotation leads to the program not typechecking, the error message will have an inexplicable location:
+
+File "DML/bsearch.mlq", line 1, characters 0-1:
+{int | (V = __atmp30)} is not a subtype of {int | (v >= 0)}
+
