@@ -74,7 +74,7 @@ let rec pprint ppf = function
   | Farrow (Some pat, f, f') ->
       fprintf ppf "@[%a:@ %a@ ->@;<1 2>%a@]" pprint_pattern pat pprint1 f pprint f'
   | Fconstr (path, l, _, r) ->
-      fprintf ppf "@[{%a@ %s|@;<1 2>%a}@]" pprint_list l (unique_name path) pprint_refinement r
+      fprintf ppf "@[{%a@ %s|@;<1 2>%a}@]" pprint_list l (C.path_name () path) pprint_refinement r
   | Ftuple (ts, r) ->
       fprintf ppf "@[{(%a) |@;<1 2>%a}@]" pprint_list ts pprint_refinement r
   | Frecord (id, _, r) ->
