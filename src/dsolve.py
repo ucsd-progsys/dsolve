@@ -42,7 +42,10 @@ def main():
   if bare: flags = sys.argv[2:-1]
   else: flags = sys.argv[1:-1]
   fn = sys.argv[len(sys.argv) - 1]
-  gen_quals(fn, bare, False, 4)
+  gen_succ = gen_quals(fn, bare, False, 4)
+  if (gen_succ != 0):
+    print "Qualifier generation failed"
+    sys.exit(gen_succ)
   sys.exit(solve_quals(fn,bare,False,flags))
 
 if __name__ == "__main__":
