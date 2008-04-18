@@ -1,4 +1,9 @@
-squalif ITV(x): x.1 <= x.2
+(* squalif ITV(x): x.1 <= x.2 *)
+
+
+let zz = (1,2)
+
+let _ = (fun x -> x) zz
 
 let mmin (x:int) y = 
   if x <= y then x else y
