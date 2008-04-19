@@ -86,7 +86,7 @@ let get_ids_by_type env qtys ptys qtymap =
       lflun ids in
   lflun (List.map get_ids qtys)
              
-let transl_patpred env (qgtymap, tyset, idset, intset) tymap p =
+let transl_patpred env (v, nv) (qgtymap, tyset, idset, intset) tymap p =
   let all_consts = lazy (Qualgen.CS.elements intset) in
   let all_ids = lazy (Qualgen.IS.elements idset) in
   let all_tys = lazy (Qualgen.TS.elements tyset) in
@@ -98,7 +98,11 @@ let transl_patpred env (qgtymap, tyset, idset, intset) tymap p =
       | Ppredpatexp_any_int ->
           PPInt (Lazy.force all_consts)      
       | Ppredpatexp_var (y) -> 
-	        PVar (List.map (fun y -> Path.mk_ident (conflat y)) y)
+          let flat_or_nv y =
+            let y = conflat y in
+            let y = if y = v then nv else y in
+            Path.mk_ident y in
+	        PVar (List.map flat_or_nv y)
       | Ppredpatexp_mvar (y) ->
           let inty = AM.mem y tymap in
           let mk_idents = List.map Path.mk_ident in
@@ -231,12 +235,14 @@ let ck_consistent patpred pred =
      
 
 (* Translate a qualifier declaration *)
-let transl_pattern env prgids {Parsetree.pqual_pat_desc = (valu, anno, pred)} =
-  let preds = (gen_preds (transl_patpred env prgids (List.fold_left (fa env) AM.empty anno) pred)) in
+let transl_pattern env prgids {Parsetree.pqual_pat_desc = (v, anno, pred)} nv =
+  let preds = (gen_preds (transl_patpred env (v, nv) prgids (List.fold_left (fa env) AM.empty anno) pred)) in
     List.filter (fun p -> ck_consistent pred p) preds
 
+
 let transl_pattern_valu env prgids name ({Parsetree.pqual_pat_desc = (valu, anno, pred)} as p) =
+  let normal_valu = "_V" in
   let num = ref 0 in
   let fresh name = incr num; name ^ (string_of_int !num) in
-  let preds = transl_pattern env prgids p in
+  let preds = transl_pattern env prgids p normal_valu in
     List.map (fun p -> (fresh name, valu, p)) preds
