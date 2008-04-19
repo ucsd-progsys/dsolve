@@ -245,4 +245,4 @@ let transl_pattern_valu env prgids name ({Parsetree.pqual_pat_desc = (valu, anno
   let num = ref 0 in
   let fresh name = incr num; name ^ (string_of_int !num) in
   let preds = transl_pattern env prgids p normal_valu in
-    List.map (fun p -> (fresh name, valu, p)) preds
+    List.map (fun p -> (fresh name, normal_valu, p)) preds
