@@ -63,29 +63,36 @@ let rec pprint_pattern ppf = function
 and pprint_pattern_list ppf pats =
   Oprint.print_list pprint_pattern (fun ppf -> fprintf ppf ", ") ppf (List.map (fun p -> p.pat_desc) pats)
 
+let refinement_is_empty = function
+  | (_, Qconst []) -> true
+  | _ -> false
+
+let wrap_refined ppf pp = function
+  | (_, Qconst []) -> pp ppf
+  | r -> fprintf ppf "@[{"; pp ppf; fprintf ppf " |@;<1 2>%a}" pprint_refinement r
 
 let rec pprint ppf = function
   | Fvar a ->
       fprintf ppf "Var(%s)" (unique_name a)
   | Fconstr (path, [], _, r) ->
-      fprintf ppf "@[{%s@ |@;<1 2>%a}@]" (C.path_name () path) pprint_refinement r
+      wrap_refined ppf (fun ppf -> fprintf ppf "%s" (C.path_name () path)) r
   | Farrow (None, f, f') ->
       fprintf ppf "@[%a@ ->@;<1 2>%a@]" pprint1 f pprint f'
   | Farrow (Some pat, f, f') ->
       fprintf ppf "@[%a:@ %a@ ->@;<1 2>%a@]" pprint_pattern pat pprint1 f pprint f'
   | Fconstr (path, l, _, r) ->
-      fprintf ppf "@[{%a@ %s|@;<1 2>%a}@]" pprint_list l (C.path_name () path) pprint_refinement r
+      wrap_refined ppf (fun ppf -> fprintf ppf "%a@ %s" (pprint_list ",") l (C.path_name () path)) r
   | Ftuple (ts, r) ->
-      fprintf ppf "@[{(%a) |@;<1 2>%a}@]" pprint_list ts pprint_refinement r
+      wrap_refined ppf (fun ppf -> fprintf ppf "(%a)" (pprint_list "*") ts) r
   | Frecord (id, _, r) ->
-       fprintf ppf "@[{%s |@;<1 2>%a}@] " (C.path_name () id) pprint_refinement r
+      wrap_refined ppf (fun ppf -> fprintf ppf "%s" (C.path_name () id)) r
   | Funknown ->
       fprintf ppf "[unknown]"
  and pprint1 ppf = function
    | (Farrow _) as f ->
        fprintf ppf "@[(%a)@]" pprint f
    | _ as f -> pprint ppf f
- and pprint_list ppf = Oprint.print_list pprint (fun ppf -> fprintf ppf ",@;<1 2>") ppf
+ and pprint_list sep ppf = Oprint.print_list pprint (fun ppf -> fprintf ppf "@;<1 2>%s@;<1 2>" sep) ppf
 
 let translate_variance = function
   | (true, true, true) -> Invariant
