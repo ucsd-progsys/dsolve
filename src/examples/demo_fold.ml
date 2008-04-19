@@ -8,23 +8,30 @@
 
 (*********************************************************************)
 
-let foo x = x - 1
-
-let _ = (fun z -> z) foo
-
-
 let rec generate m f b = 
   if m <= 0 then [] else (b::(generate m f (f b)))
 
 let demo1 m = 
   let xs = generate m (fun x -> x + 1) 0 in
-  let x = List.fold_left (+) 0 xs in
+  let x  = List.fold_left (+) 0 xs in
   assert (x >= 0)
 
 let demo2 m = 
   let xs = generate m (fun x -> 2 * x) (-1) in
-  let x = List.fold_left (+) 0 xs in
+  let x  = List.fold_left (+) 0 xs in
   assert (x <= 0)
+
+let demo3 m = 
+  let xs  = generate m (fun x -> x + 1) 0 in
+  let xs' = List.map (fun x -> -x) xs in 
+  let x   = List.fold_left (+) 0 xs in
+  assert (x <= 0)
+
+let demo4 m = 
+  let xs = generate m (fun x -> 2 * x) (-1) in
+  let xs'= List.map (fun x -> -x) xs in 
+  let x  = List.fold_left (+) 0 xs in
+  assert (x >= 0)
 
 (*********************************************************************)
 
@@ -41,8 +48,8 @@ let lub (p: int*int) (p':int*int) =
   let y'' = mmax y y' in
   (x'',y'')
 
-let demo3 m = 
-  let xs = generate m (fun (a,b) -> (2*a - 10, 3*b + 20)) (1,1) in
+let demo5 m = 
+  let xs = generate m (fun p -> let (a,b) = p in (2*a - 10, 3*b + 20)) (1,1) in
   let (x,y) = List.fold_left lub (1,1) xs in
   assert (x <= y)
 
@@ -63,7 +70,7 @@ let rec mklist n =
     let xs = mklist (n-1) in
     p::xs
 
-let demo4 m =  
+let demo6 m =  
   let ys = mklist m in
   let b = read_pair_wf () in
   let (x,y) = List.fold_left lub b ys in
