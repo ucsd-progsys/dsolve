@@ -22,10 +22,11 @@ let rec build f b d =
     let (t2,b2) = build f b1 (d-1) in
     ((Node (t1,t2)), b2)
 
-let demo1 d k = 
-  let (t,_) = build ((+) 1) k d in
-  let x = fold (+) 0 t in
-  assert (x >= k)
+let demo1 d k =
+  if k < 0 then () else
+    let (t,_) = build ((+) 1) (k+1) d in
+    let x = fold (+) k t in
+    assert (x >= k)
 
 let mmin (x:int) y = 
   if x <= y then x else y
@@ -41,8 +42,9 @@ let lub (p: int*int) (p':int*int) =
   (x'',y'')
 
 let demo2 d k = 
-  let (t,_) = build ((+) 1) k d in
-  let t1    = map (fun x -> (x,2*x + 1)) t in
-  let (x,y) = fold lub (k,k) t1 in
-  assert (x <= y);
-  assert (k <= x)
+  if k < 0 then () else 
+    let (t,_) = build ((+) 1) k d in
+    let t1    = map (fun x -> (x,2*x + 1)) t in
+    let (x,y) = fold lub (k,k) t1 in
+    assert (x <= y);
+    assert (k <= x)
