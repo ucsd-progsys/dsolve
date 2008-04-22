@@ -174,7 +174,7 @@ struct
    let iter_edges_e = G.iter_edges_e
    let graph_attributes g = []
    let default_vertex_attributes g = [`Shape `Box]
-   let vertex_name (i,s) = Printf.sprintf "(%d,%s)" i s 
+   let vertex_name (i,s) = Printf.sprintf "V_%d_%s" i s 
    let vertex_attributes v = [`Label (vertex_name v)]
    let default_edge_attributes g = []
    let edge_attributes e = []
