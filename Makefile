@@ -1,6 +1,6 @@
 include config/Makefile
 
-QPHOME=../external/qp/
+QPHOME=external/qp/
 CAMLC=ocamlc
 CAMLOPT=ocamlopt
 CAMLYACC=ocamlyacc
@@ -9,8 +9,8 @@ CAMLLEX=ocamllex
 CAMLDEP=ocamldep
 DEPFLAGS=$(INCLUDES)
 COMPFLAGS=$(FLAGS) -dtypes -warn-error A $(INCLUDES)
-LINKFLAGS=$(FLAGS) -cclib -loyices -cclib -lgmp -cclib -lyices -I ../external/yices/lib/ -I ../external/ocamlgraph/ -I $(QPHOME)
-INCLUDES=-I ../external/yices/lib/ -I ../external/ocamlgraph/ -I $(QPHOME) \
+LINKFLAGS=$(FLAGS) -cclib -loyices -cclib -lgmp -cclib -lyices -I external/yices/lib/ -I external/ocamlgraph/ -I $(QPHOME)
+INCLUDES=-I external/yices/lib/ -I external/ocamlgraph/ -I $(QPHOME) \
          -I utils -I parsing -I typing -I qualifying -I analyzer
 
 UTILS=utils/misc.cmo utils/config.cmo \
@@ -142,10 +142,10 @@ beforedepend:: parsing/linenum.ml
 	$(CAMLOPT) $(COMPFLAGS) -c $<
 
 yiceslib:
-	cd ../external/yices/include/build; $(MAKE) -f ../Makefile;
+	cd external/yices/include/build; $(MAKE) -f ../Makefile;
 
 graphlib:
-	cd ../external/ocamlgraph; ./configure; $(MAKE);
+	cd external/ocamlgraph; ./configure; $(MAKE);
 
 qplib:
 	cd $(QPHOME); $(MAKE) qp.opt; $(MAKE) all

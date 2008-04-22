@@ -400,12 +400,10 @@ qualifying/theoremProver.cmo: qualifying/theoremProverYices.cmo \
 qualifying/theoremProver.cmx: qualifying/theoremProverYices.cmx \
     qualifying/theoremProverQprover.cmx typing/predicate.cmx \
     typing/common.cmx utils/clflags.cmx utils/bstats.cmx 
-qualifying/theoremProverQprover.cmo: ../external/qp/qpDag.cmi \
-    ../external/qp/qpAst.cmi ../external/qp/qProver.cmi typing/predicate.cmi \
-    typing/path.cmi typing/common.cmo utils/clflags.cmi 
-qualifying/theoremProverQprover.cmx: ../external/qp/qpDag.cmx \
-    ../external/qp/qpAst.cmx ../external/qp/qProver.cmx typing/predicate.cmx \
-    typing/path.cmx typing/common.cmx utils/clflags.cmx 
+qualifying/theoremProverQprover.cmo: typing/predicate.cmi typing/path.cmi \
+    typing/common.cmo utils/clflags.cmi 
+qualifying/theoremProverQprover.cmx: typing/predicate.cmx typing/path.cmx \
+    typing/common.cmx utils/clflags.cmx 
 qualifying/theoremProverSimplify.cmo: typing/predicate.cmi typing/path.cmi \
     utils/misc.cmi qualifying/message.cmi utils/clflags.cmi 
 qualifying/theoremProverSimplify.cmx: typing/predicate.cmx typing/path.cmx \
