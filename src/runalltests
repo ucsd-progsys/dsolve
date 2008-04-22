@@ -1,9 +1,0 @@
-#!/bin/bash
-
-testout=/tmp/testout
-
-./regrtest &> $testout
-echo "file size counts: " >> $testout
-./counter >> $testout
-echo "stat dump: " >> $testout
-cat /tmp/*.min >> $testout
