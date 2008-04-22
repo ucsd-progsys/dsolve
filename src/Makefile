@@ -11,7 +11,7 @@ DEPFLAGS=$(INCLUDES)
 COMPFLAGS=$(FLAGS) -dtypes -warn-error A $(INCLUDES)
 LINKFLAGS=$(FLAGS) -cclib -loyices -cclib -lgmp -cclib -lyices -I ../external/yices/lib/ -I ../external/ocamlgraph/ -I $(QPHOME)
 INCLUDES=-I ../external/yices/lib/ -I ../external/ocamlgraph/ -I $(QPHOME) \
-         -I utils -I parsing -I typing -I qualifying -I driver -I analyzer
+         -I utils -I parsing -I typing -I qualifying -I analyzer
 
 UTILS=utils/misc.cmo utils/config.cmo \
   utils/clflags.cmo utils/terminfo.cmo utils/ccomp.cmo utils/warnings.cmo \
@@ -20,6 +20,7 @@ UTILS=utils/misc.cmo utils/config.cmo \
 PARSING=parsing/linenum.cmo parsing/location.cmo parsing/longident.cmo \
   parsing/syntaxerr.cmo parsing/parser.cmo \
   parsing/lexer.cmo parsing/parse.cmo parsing/printast.cmo \
+  parsing/pparse.cmo
 
 TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/primitive.cmo typing/types.cmo \
@@ -33,7 +34,7 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/typetexp.cmo typing/stypes.cmo typing/typecore.cmo \
   typing/common.cmo typing/predicate.cmo \
   typing/typedecl.cmo typing/typeclass.cmo \
-	typing/qualgen.cmo typing/qualdecl.cmo \
+  typing/qualgen.cmo typing/qualdecl.cmo \
   typing/typemod.cmo typing/qualmod.cmo
 
 QUALIFYING=qualifying/lightenv.cmo \
@@ -47,7 +48,7 @@ QUALIFYING=qualifying/lightenv.cmo \
   qualifying/printqual.cmo qualifying/qualifymod.cmo \
   qualifying/qdebug.cmo qualifying/normalize.cmo
 
-LIQUID=driver/pparse.cmo analyzer/qdump.cmo analyzer/liqerrors.cmo analyzer/liquid.cmo
+LIQUID=analyzer/qdump.cmo analyzer/liqerrors.cmo analyzer/liquid.cmo
 
 LIQOBJS=$(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(LIQUID)
 
