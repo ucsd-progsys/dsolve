@@ -61,12 +61,12 @@ liquid.opt: $(LIQOBJS:.cmo=.cmx)
 	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt str.cmxa unix.cmxa nums.cmxa oyices.cmxa graph.cmxa libqp.cmxa $(LIQOBJS:.cmo=.cmx)
 
 depend: beforedepend
-	(for d in utils parsing typing qualifying driver analyzer; \
+	(for d in utils parsing typing qualifying analyzer; \
 	 do $(CAMLDEP) $(DEPFLAGS) $$d/*.mli $$d/*.ml; \
 	 done) > .depend
 
 clean: partialclean
-	(for d in utils parsing typing qualifying driver analyzer; \
+	(for d in utils parsing typing qualifying analyzer; \
 	 do rm -f $$d/*.cm* $$d/*.o; \
 	 done);
 	rm -f liquid liquid.opt
