@@ -150,7 +150,7 @@ yiceslib:
 	cd external/yices/include/build; $(MAKE) -f ../Makefile;
 
 graphlib:
-	cd external/ocamlgraph; ./configure; $(MAKE);
+	cd external/ocamlgraph; ./configure; $(MAKE) all;
 
 qplib:
 	cd $(QPHOME); $(MAKE) qp.opt; $(MAKE) all
