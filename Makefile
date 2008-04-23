@@ -11,7 +11,7 @@ DEPFLAGS=$(INCLUDES)
 COMPFLAGS=$(FLAGS) -dtypes -warn-error A $(INCLUDES)
 LINKFLAGS=$(FLAGS) -cclib -loyices -cclib -lgmp -cclib -lyices -I external/yices/lib/ -I external/ocamlgraph/ -I $(QPHOME)
 INCLUDES=-I external/yices/lib/ -I external/ocamlgraph/ -I $(QPHOME) \
-         -I utils -I parsing -I typing -I qualifying -I analyzer
+         -I utils -I parsing -I typing -I liquid
 
 UTILS=utils/misc.cmo utils/config.cmo \
   utils/clflags.cmo utils/terminfo.cmo utils/ccomp.cmo utils/warnings.cmo \
@@ -37,43 +37,42 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/qualgen.cmo typing/qualdecl.cmo \
   typing/typemod.cmo typing/qualmod.cmo
 
-QUALIFYING=qualifying/lightenv.cmo \
-  qualifying/qualifier.cmo qualifying/pattern.cmo qualifying/frame.cmo \
-  qualifying/builtins.cmo qualifying/wellformed.cmo qualifying/message.cmo  \
-  qualifying/theoremProverSimplify.cmo \
-  qualifying/theoremProverYices.cmo \
-  qualifying/theoremProverQprover.cmo \
-  qualifying/theoremProver.cmo \
-  qualifying/constraint.cmo  \
-  qualifying/printqual.cmo qualifying/qualifymod.cmo \
-  qualifying/qdebug.cmo qualifying/normalize.cmo
+LIQUID=liquid/lightenv.cmo \
+  liquid/qualifier.cmo liquid/pattern.cmo liquid/frame.cmo \
+  liquid/builtins.cmo liquid/wellformed.cmo liquid/message.cmo  \
+  liquid/theoremProverSimplify.cmo \
+  liquid/theoremProverYices.cmo \
+  liquid/theoremProverQprover.cmo \
+  liquid/theoremProver.cmo \
+  liquid/constraint.cmo  \
+  liquid/printqual.cmo liquid/qualifymod.cmo \
+  liquid/qdebug.cmo liquid/normalize.cmo \
+  liquid/qdump.cmo liquid/liqerrors.cmo liquid/liquid.cmo
 
-LIQUID=analyzer/qdump.cmo analyzer/liqerrors.cmo analyzer/liquid.cmo
-
-LIQOBJS=$(UTILS) $(PARSING) $(TYPING) $(QUALIFYING) $(LIQUID)
+LIQOBJS=$(UTILS) $(PARSING) $(TYPING) $(LIQUID)
 
 default: liquid.opt
 
-liquid: $(LIQOBJS)
-	$(CAMLC) $(LINKFLAGS) -custom -o liquid str.cma unix.cma nums.cma oyices.cma graph.cma libqp.cma $(LIQOBJS)
+liquid.byte: $(LIQOBJS)
+	$(CAMLC) $(LINKFLAGS) -custom -o liquid.byte str.cma unix.cma nums.cma oyices.cma graph.cma libqp.cma $(LIQOBJS)
 
 liquid.opt: $(LIQOBJS:.cmo=.cmx)
 	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt str.cmxa unix.cmxa nums.cmxa oyices.cmxa graph.cmxa libqp.cmxa $(LIQOBJS:.cmo=.cmx)
 
 depend: beforedepend
-	(for d in utils parsing typing qualifying analyzer; \
+	(for d in utils parsing typing liquid; \
 	 do $(CAMLDEP) $(DEPFLAGS) $$d/*.mli $$d/*.ml; \
 	 done) > .depend
 
 clean: partialclean
-	(for d in utils parsing typing qualifying analyzer; \
+	(for d in utils parsing typing liquid; \
 	 do rm -f $$d/*.cm* $$d/*.o; \
 	 done);
-	rm -f liquid liquid.opt
+	rm -f liquid.byte liquid.opt
 
 distclean: clean
-	(for d in ./ utils parsing typing qualifying analyzer; \
-	 do rm -f $$d/*.annot $$d/*~; \
+	(for d in ./ utils parsing typing tests liquid; \
+	 do rm -f $$d/*.annot $$d/*~ $$d/*.quals $$d/*.pyc $$d/*.dot; \
 	 done);
 
 utils/config.ml: utils/config.mlp config/Makefile
@@ -157,6 +156,6 @@ qplib:
 
 libs: yiceslib graphlib qplib
 
-world: liquid liquid.opt
+world: liquid.byte liquid.opt
 
 include .depend
