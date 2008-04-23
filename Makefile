@@ -71,6 +71,11 @@ clean: partialclean
 	 done);
 	rm -f liquid liquid.opt
 
+distclean: clean
+	(for d in ./ utils parsing typing qualifying analyzer; \
+	 do rm -f $$d/*.annot $$d/*~; \
+	 done);
+
 utils/config.ml: utils/config.mlp config/Makefile
 	@rm -f utils/config.ml
 	sed -e 's|%%LIBDIR%%|$(LIBDIR)|' \
