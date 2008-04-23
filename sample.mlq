@@ -14,7 +14,7 @@ the (v) is the bound variable.
 
 *** Val to liquid type bindings:
 
-lval program_ident : {v: int | v > 0 }
+val program_ident : {v: int | v > 0 }
 
 the type on the right hand side of the colon can take on several forms:
 

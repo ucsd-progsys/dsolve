@@ -28,6 +28,6 @@ tests/heapsort.ml        0   True
 tests/encrypt_cfb8.ml    0   True
 tests/matmult.ml         1   True
 tests/quicksort.ml       1   True
-tests/bitv.ml            10  False
+tests/bitv.ml            4   False
 tests/assert_fun.ml      0   True
 tests/baseinst.ml        0   True

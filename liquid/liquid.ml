@@ -166,7 +166,7 @@ let main () =
                \032    13     +Dump constraint graph\n\
                \032    64     +Drowning in output";
      "-collect", Arg.Int (fun c -> Qualgen.col_lev := c), "[1] number of lambdas to collect identifiers under";
-     "-verrs", Arg.Set verb_errors, "redacted"
+     "-use_builtins", Arg.String (fun s -> builtins_file := Some s), "[None] location of extra builtins"
   ] file_argument usage;
   process_sourcefile !filename
 

@@ -1574,7 +1574,7 @@ liquid_signature:
   | liquid_val_decl                         { [$1] }
 
 liquid_val_decl:
-    LVAL LIDENT COLON liquid_type           { ($2, $4) }
+    VAL LIDENT COLON liquid_type           { ($2, $4) }
 
 /* Liquid types */
 
