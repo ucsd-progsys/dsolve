@@ -146,7 +146,7 @@ beforedepend:: parsing/linenum.ml
 	$(CAMLOPT) $(COMPFLAGS) -c $<
 
 yiceslib:
-	cd external/yices/include/build; $(MAKE) -f ../Makefile;
+	mkdir -p external/yices/include/build; cd external/yices/include/build; $(MAKE) -f ../Makefile;
 
 graphlib:
 	cd external/ocamlgraph; ./configure; $(MAKE) all;
