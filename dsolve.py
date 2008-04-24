@@ -38,9 +38,18 @@ def solve_quals(file,bare,quiet,flags):
   return common.logged_sys_call(solve + flags + [("%s.ml" % bname)], out)
 
 def main():
+  argc = len(sys.argv)
+  if argc == 1:
+    print ("Usage: %s [flags] [sourcefile]" % sys.argv[0])
+    sys.exit(0)
+  if sys.argv[1] == "-help":
+    os.system("./liquid.opt -help")
+    sys.exit(0)
   bare = (sys.argv[1] == "-bare")
-  if bare: flags = sys.argv[2:-1]
-  else: flags = sys.argv[1:-1]
+  if bare:
+    flags = sys.argv[2:-1]
+  else:
+    flags = sys.argv[1:-1]
   fn = sys.argv[len(sys.argv) - 1]
   gen_succ = gen_quals(fn, bare, False, 4)
   if (gen_succ != 0):

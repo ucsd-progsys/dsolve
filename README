@@ -32,32 +32,32 @@ Will produce an annotation file foo.annot
 Sometimes the types have predicates like "(= V (+ __tmp0 1))".  This is due to
 A-normalization.  To get around this, you can run without A-normalization:
 
-./dsolve -no-anormal [ML source file]
+  ./dsolve.py -no-anormal [ML source file]
 
-Many programs will not typecheck without A-normalization, and so it is on
+Many programs will not typecheck without A-normalization, so it is on
 by default.
 
 For more options, run:
 
-./dsolve -help
+  ./dsolve.py -help
 
 Defining Qualifiers
 ===================
 
-When dsolve is invoked on a file foo.ml, it reads uses the qualifiers
+When dsolve is invoked on a file path_to/foo.ml, it reads uses the qualifiers
 specified in the file:
 
-./default_patterns
+  ./default_patterns
 
 as well as the qualifiers specified in the file
 
-./foo.hquals
+  path_to/foo.hquals
 
 if the latter exists.
 
 Qualifiers look like this:
 
-qualif CapitalizedName(x): x <= 10
+  qualif CapitalizedName(x): x <= 10
 
 [TODO]
 Here are further examples of the qualifier syntax:
@@ -96,7 +96,7 @@ to an operator wildcard is DELIM * * DELIM eg, [| * * |] for any operator
 unhandled types: the type grammar can't handle ADTs or records. 
 However, you can define these as user types in the program source 
 and then reference the type name in the pattern *)
-[END TODO]
+[END TODO note still TODO]
 
 Defining Liquid Interfaces 
 ==========================
@@ -118,7 +118,7 @@ the (v) is the bound variable.
 
 *** Val to liquid type bindings:
 
-lval program_ident : {v: int | v > 0 }
+val program_ident : {v: int | v > 0 }
 
 the type on the right hand side of the colon can take on several forms:
 
