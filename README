@@ -1,0 +1,24 @@
+Compiling
+=========
+
+dsolve requires OCaml 3.10+.
+
+To compile dsolve:
+
+1. Download yices from http://yices.csl.sri.com/download.shtml
+   (NOTE: Be sure to download the version with GMP dynamically linked!)
+
+2. Untar yices with:
+
+     tar zxvf [path to yices tar] --strip-components=1 -C external/yices
+
+3. Run ./configure && make libs && make
+
+Usage
+=====
+
+To typecheck your program with dsolve, simply run:
+
+  ./dsolve.py [ML source file]
+
+Example programs are included in tests/.

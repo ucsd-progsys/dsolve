@@ -16,7 +16,7 @@
 # $Id: configure,v 1.244.4.2 2007/05/03 12:49:56 xleroy Exp $
 
 configure_options="$*"
-prefix=/usr/local
+prefix=`dirname \`dirname \\\`which ocamlc\\\`\``
 bindir=''
 libdir=''
 mandir=''
