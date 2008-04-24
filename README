@@ -14,20 +14,21 @@ To compile dsolve:
 
 3. Run ./configure && make libs && make
 
+
 Running dsolve
 ==============
 
-To typecheck your program with dsolve, simply run:
+To typecheck your program with dsolve, run
 
   ./dsolve.py [ML source file]
 
 Example programs are included in tests/.
 The inferred types are output in a .annot file.
-For example:
+For example,
 
   ./dsolve.py foo.ml
 
-Will produce an annotation file foo.annot
+will produce the annotation file foo.annot
 
 Sometimes the types have predicates like "(= V (+ __tmp0 1))".  This is due to
 A-normalization.  To get around this, you can run without A-normalization:
@@ -41,118 +42,144 @@ For more options, run:
 
   ./dsolve.py -help
 
+
 Defining Qualifiers
 ===================
 
-When dsolve is invoked on a file path_to/foo.ml, it reads uses the qualifiers
-specified in the file:
+Qualifiers are specified as patterns which match program identifiers,
+literals, types, and operators.
+
+When dsolve is invoked on a file path_to/foo.ml, it uses the
+qualifiers specified in the file
 
   ./default_patterns
 
-as well as the qualifiers specified in the file
+dsolve also uses the qualifiers specified in the file
 
   path_to/foo.hquals
 
-if the latter exists.
+if it exists.  Example hquals files can be found in examples/.
 
-Qualifiers look like this:
+Syntax
+------
 
-  qualif CapitalizedName(x): x <= 10
+Qualifiers can include the following constructs:
 
-[TODO]
-Here are further examples of the qualifier syntax:
+* Integer Literals, Identifiers, and Operators *
+qualif IsXPlus3(v): v >= x + 3
 
-^ - integer literal wildcard
-* * - relational/operator wildcard
-
-metavariables and type annotations
-
-qualif A(v) : ~A + v = 5
-qualif C(v)(A:int, B:int) : ~A + v + ~B = 5
-
-sets of integer literals
-
+* Sets of Integer Literals *
 qualif A(v): v = [0,1,2]
 
-sets of idents
-
+* Sets of Identifiers *
 qualif A(v) : v = [a, b, c]
 
-sets of operators
+* ^ - Integer Literal Wildcard *
+qualif PlusSomething(v): a = b + ^
 
+* Sets of Arithmetic Operators *
 qualif A(v) : v [| +, - |] 5 > 0
 
-sets of relational operators
-
+* Sets of Relational Operators *
 qualif A(v): v { <, <= } 5
 
-to an operator wildcard is DELIM * * DELIM eg, [| * * |] for any operator
+* (* *) - Operator Wildcard *
+qualif A(v): v { * * } 5
+qualif A(v) : v [| * * |] 5 > 0
 
-- annotated types are matched to program types 
-  by attempting to unify, not structurally
+* Metavariables With Optional Type Annotations *
+qualif A(v) : ~A + v = ^
+qualif C(v)(A:int, B:int^) : ~A + v + ~B = ^
 
-- pattern names are lost after expansion 
+  Annotated types are matched to program types by unification.
 
-unhandled types: the type grammar can't handle ADTs or records. 
-However, you can define these as user types in the program source 
-and then reference the type name in the pattern *)
-[END TODO note still TODO]
+  The type grammar can't handle ADTs or records.  However, you can
+  define these as user types in the program source and then reference
+  the type name in the pattern.
+
 
 Defining Liquid Interfaces 
 ==========================
 
-USAGE: a .mlq file should be placed in the same directory 
-as the source file. If not found, the typechecker will 
-not use it, and will do so silently.
+When running
 
-SYNTAX:
+  ./dsolve.py path_to/foo.ml
 
-a .mlq is two lists: first, a list of predicate aliases, 
-and second a list of val, type pairs.
+dsolve will attempt to use the interface file
 
-*** Predicate aliases:
+  path_to/foo.mlq
+
+if it exists.
+
+This Liquid interface file can be used to specify the Liquid types of
+program values.  Example Liquid interfaces can be found in examples/.
+
+
+Syntax
+------
+
+A Liquid interface consists of two lists, the first specifying
+predicate abbreviations to be used in type definitions, the second
+mapping values to Liquid types.
+
+
+* Predicate Aliases *
+
+First, there is a list of predicate aliases, used as abbreviations in
+type specifications.  Example:
 
 pred P = (v) v > 0
 
-the (v) is the bound variable.
+Note: predicate aliases cannot reference other predicate aliases.
 
-*** Val to liquid type bindings:
+
+* Value to Liquid Type Mappings *
+
+Second, there is a list of value, type pairs.  Examples:
 
 val program_ident : {v: int | v > 0 }
 
-the type on the right hand side of the colon can take on several forms:
+The type on the right hand side of the colon can take on several forms:
 
 int == {int | true}
 
 {v: int array | Array.length v > 0} == {v: {int | true} array | Array.length v > 0)
 
-{int | P} == {v: int | v > 0} ** NOTE: predicate aliases can't be nested
+{int | P} == {v: int | v > 0}
 
-records:
+
+Records are specified as follows:
 
 {v: { lbl : int } | v.lbl = 0} == {v: { lbl : {int | true} | v.lbl = 0}
 
-tuples work similarly, as do type vars, which can be refined, 
-but whose refinements won't carry through.
+Tuples work similarly.
 
-Simple ADTs (meaning 'a list) will also work, but disjoint 
+
+Type variables cannot be refined.
+
+Simple ADTs (meaning 'a list) will also work, but disjoint
 unions/variants/etc. will NOT work.
 
-ERROR MESSAGES:
 
--liquid interface files which contain idents not found in 
-the program will fail with an explicit error. Files which 
-contain types which don't unify with the program shapes 
-will fail with a cryptic error* about types not being 
-supported in instantiation:
+Error Messages
+--------------
 
-Unsupported types for instantiation: {({bool | true}, {int | true}) | true}
-  {int | k_1191}
-Fatal error: exception Assert_failure("qualifying/frame.ml", 168, 5)
-*other cryptic errors may apply
+Liquid interface files which contain identifiers not found in the
+program will fail with an explicit error.
+
+If the Liquid interface file and the ML typechecker disagree about the
+ML type of an identifier, dsolve will fail with a somewhat cryptic
+error*.  For example, if the Liquid interface specifies a (bool, int)
+value but the actual type of the value is int, the error produced is
+
+  Unsupported types for instantiation: {({bool | true}, {int | true}) | true}
+    {int | k_1191}
+  Fatal error: exception Assert_failure("qualifying/frame.ml", 168, 5)
+
+* Other cryptic errors may also apply.
 
 If your type annotation causes the program to not typecheck, 
-the error message will have an inexplicable location:
+the error message will have an inexplicable location.  Example:
 
-File "DML/bsearch.mlq", line 1, characters 0-1:
-{int | (V = __atmp30)} is not a subtype of {int | (v >= 0)}
+  File "DML/bsearch.mlq", line 1, characters 0-1:
+  {int | (V = __atmp30)} is not a subtype of {int | (v >= 0)}
