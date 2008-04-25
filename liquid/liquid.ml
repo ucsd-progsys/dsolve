@@ -49,16 +49,6 @@ let analyze ppf sourcefile (str, env, fenv, ifenv) =
 
 open Clflags
 
-let load_sourcefile ppf sourcefile =
-  init_path ();
-  let env = initial_env () in
-  let fenv = initial_fenv env in
-  let str = Pparse.file ppf sourcefile Parse.implementation ast_impl_magic_number in 
-  let str = if !Clflags.no_anormal then str else Normalize.normalize_structure str in
-  let str = print_if ppf Clflags.dump_parsetree Printast.implementation str in
-  let (str, _, env) = type_implementation env str in
-    (str, env, fenv)
-
 let load_qualfile ppf qualfile =
   let qs = Pparse.file ppf qualfile Parse.qualifiers ast_impl_magic_number in
     List.map Qualmod.type_qualifier qs
@@ -70,10 +60,34 @@ let load_mlqfile ppf env ifacefile =
 let load_mlq_in_env env fenv ifenv =
   let load_frame fenv (s, pf) =
     try
-      let (p, _) = Env.lookup_value (Longident.parse s) env in
+      let p = fst (Env.lookup_value (Longident.parse s) env) in
         Lightenv.add p pf fenv 
-    with Not_found -> failwith (Printf.sprintf "mlq: lval %s does not correspond to program value" s) in
+    with Not_found -> failwith (Printf.sprintf "mlq: val %s does not correspond to program value" s) in
   List.fold_left load_frame fenv ifenv
+
+let load_builtins ppf env fenv =
+  let b = match !builtins_file with 
+          | Some c -> if not(Sys.file_exists c) then failwith (sprintf "builtins: file %s does not exist" c) else c
+          | None -> "" in
+  let fenv = 
+    try
+      let kvl = load_mlqfile ppf env b in
+      let f = (fun (k, v) -> (fst (Env.lookup_value (Longident.parse k) env), F.label_like v v)) in
+      let kvl = List.map f kvl in
+      Lightenv.addn kvl fenv
+    with Not_found -> failwith (Printf.sprintf "builtins: val %s does not correspond to library value" b) in
+  (env, fenv)
+    
+let load_sourcefile ppf sourcefile =
+  init_path ();
+  let env = initial_env () in
+  let fenv = initial_fenv env in
+  let (env, fenv) = load_builtins std_formatter env fenv in 
+  let str = Pparse.file ppf sourcefile Parse.implementation ast_impl_magic_number in 
+  let str = if !Clflags.no_anormal then str else Normalize.normalize_structure str in
+  let str = print_if ppf Clflags.dump_parsetree Printast.implementation str in
+  let (str, _, env) = type_implementation env str in
+    (str, env, fenv)
 
 let process_sourcefile fname =
   try
@@ -83,8 +97,7 @@ let process_sourcefile fname =
      Qdump.dump_default_qualifiers source
    else
      let bname = Misc.chop_extension_if_any fname in
-     let qname = bname ^ ".quals" in
-     let iname = bname ^ ".mlq" in
+     let (qname, iname) = (bname ^ ".quals", bname ^ ".mlq") in
      let quals = load_qualfile std_formatter qname in
      let ifenv = load_mlqfile std_formatter env iname in
      let ifenv = load_mlq_in_env env Lightenv.empty ifenv in
@@ -166,7 +179,7 @@ let main () =
                \032    13     +Dump constraint graph\n\
                \032    64     +Drowning in output";
      "-collect", Arg.Int (fun c -> Qualgen.col_lev := c), "[1] number of lambdas to collect identifiers under";
-     "-use_builtins", Arg.String (fun s -> builtins_file := Some s), "[None] location of extra builtins"
+     "-use-builtins", Arg.String (fun s -> builtins_file := Some s), "[None] location of extra builtins"
   ] file_argument usage;
   process_sourcefile !filename
 

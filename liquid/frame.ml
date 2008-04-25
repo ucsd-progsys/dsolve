@@ -94,6 +94,9 @@ let rec pprint ppf = function
    | _ as f -> pprint ppf f
  and pprint_list sep ppf = Oprint.print_list pprint (fun ppf -> fprintf ppf "@;<1 2>%s@;<1 2>" sep) ppf
 
+let rec pprint_fenv ppf fenv =
+  Lightenv.maplist (fun k v -> printf "@[%s:@ %a@]@." (Path.unique_name k) pprint v) fenv
+
 let translate_variance = function
   | (true, true, true) -> Invariant
   | (true, false, false) -> Covariant
