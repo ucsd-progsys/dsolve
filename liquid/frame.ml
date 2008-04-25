@@ -105,7 +105,7 @@ let translate_variance = function
 
 let rec same_shape map_vars t1 t2 =
   let vars = ref [] in
-  let ismapped p q = try fst (List.find (fun (p', q) -> Path.same p p') !vars) = q with
+  let ismapped p q = try snd (List.find (fun (p', q) -> Path.same p p') !vars) = q with
       Not_found -> vars := (p, q) :: !vars; true in
   match (t1, t2) with
   (Fconstr(p, l, _, _), Fconstr(p', l', _, _)) ->
@@ -120,7 +120,7 @@ let rec same_shape map_vars t1 t2 =
       let shape_rec (f1, _, _) (f2, _, _) = (same_shape map_vars) f1 f2 in
         List.for_all2 shape_rec f1s f2s
   | (Funknown, Funknown) -> true
-  | t -> false
+  | t -> false 
 
 
 let empty_refinement = ([], Qconst [])

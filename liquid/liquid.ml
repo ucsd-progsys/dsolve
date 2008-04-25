@@ -2,6 +2,8 @@ open Config
 open Format
 open Liqerrors
 open Misc
+open Types
+open Clflags
 
 module F = Frame
 
@@ -47,8 +49,6 @@ let type_implementation initial_env ast =
 let analyze ppf sourcefile (str, env, fenv, ifenv) =
   Qualifymod.qualify_implementation sourcefile fenv ifenv env [] str
 
-open Clflags
-
 let load_qualfile ppf qualfile =
   let qs = Pparse.file ppf qualfile Parse.qualifiers ast_impl_magic_number in
     List.map Qualmod.type_qualifier qs
@@ -57,22 +57,30 @@ let load_mlqfile ppf env ifacefile =
   let (preds, vals) = if Sys.file_exists ifacefile then Pparse.file ppf ifacefile Parse.liquid_interface ast_impl_magic_number else ([], []) in
     List.map (fun (s, pf) -> (s, F.translate_pframe env preds pf)) vals 
 
+let lookup_path s env =
+  fst (Env.lookup_value (Longident.parse s) env)
+
 let load_mlq_in_env env fenv ifenv =
   let load_frame fenv (s, pf) =
     try
-      let p = fst (Env.lookup_value (Longident.parse s) env) in
+      let p = lookup_path s env in
+      (*let ff = Frame.fresh_without_vars env ((Env.find_value p env).val_type)
+       * in*)
+      let _ = if String.contains s '.' then failwith (Printf.sprintf "mlq: val %s has invalid name" s) in    
+      (*let _ = if not(F.same_shape true ff pf) then
+                failwith (sprintf "mlq: val %s has shape which differs from usage" s) in*)
         Lightenv.add p pf fenv 
     with Not_found -> failwith (Printf.sprintf "mlq: val %s does not correspond to program value" s) in
   List.fold_left load_frame fenv ifenv
 
 let load_builtins ppf env fenv =
   let b = match !builtins_file with 
-          | Some c -> if not(Sys.file_exists c) then failwith (sprintf "builtins: file %s does not exist" c) else c
+          | Some b -> if not(Sys.file_exists b) then failwith (sprintf "builtins: file %s does not exist" b) else b
           | None -> "" in
   let fenv = 
     try
       let kvl = load_mlqfile ppf env b in
-      let f = (fun (k, v) -> (fst (Env.lookup_value (Longident.parse k) env), F.label_like v v)) in
+      let f = (fun (k, v) -> (lookup_path k env, F.label_like v v)) in
       let kvl = List.map f kvl in
       Lightenv.addn kvl fenv
     with Not_found -> failwith (Printf.sprintf "builtins: val %s does not correspond to library value" b) in
