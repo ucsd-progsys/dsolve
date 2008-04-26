@@ -27,6 +27,7 @@ type t =
 and variance = Covariant | Contravariant | Invariant
 
 val pprint: formatter -> t -> unit
+val pprint_fenv: formatter -> t Lightenv.t -> unit list
 val pprint_sub: formatter -> substitution -> unit
 val pprint_refinement: formatter -> refinement -> unit
 val translate_variance: (bool * bool * bool) -> variance
