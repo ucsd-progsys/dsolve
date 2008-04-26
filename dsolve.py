@@ -26,7 +26,7 @@ def gen_quals(src,bare,lq, col):
     lq = ""
   gen   = ("./liquid.opt %s -no-anormal -collect %d -dqualifs" % (lq, col)).split()
   qfile = open(qname, "w")
-  succ = common.logged_sys_call(gen + [tname, fname], sys.stdout, qfile)
+  succ = common.logged_sys_call(gen + [tname, fname])
   qfile.close()
   return succ
 
