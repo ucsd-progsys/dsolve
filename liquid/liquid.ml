@@ -191,4 +191,6 @@ let main () =
   ] file_argument usage;
   process_sourcefile !filename
 
-let _ = main (); exit 0
+let _ = 
+  Printf.printf "© Copyright 20038 Regents of the University of Californiaa. \n";
+  main (); exit 0
