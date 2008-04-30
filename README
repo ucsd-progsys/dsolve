@@ -1,18 +1,23 @@
 Compiling dsolve
 ================
 
-dsolve requires OCaml 3.10+.
+dsolve requires OCaml 3.10+, SWIG, and the GNU Multiprecision Library.
 
 To compile dsolve:
 
 1. Download yices from http://yices.csl.sri.com/download.shtml
    (NOTE: Be sure to download the version with GMP dynamically linked!)
 
-2. Untar yices with:
+2. In the top-level dsolve directory, untar yices with:
 
      tar zxvf [path to yices tar] --strip-components=1 -C external/yices
 
 3. Run ./configure && make libs && make
+
+NOTE: Be sure that the files in external/yices/lib are in your library
+      path!  One way to do this is to run
+
+        export LD_LIBRARY_PATH=[path to dsolve]/external/yices/lib:$LD_LIBRARY_PATH
 
 
 Running dsolve
