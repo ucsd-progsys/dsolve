@@ -191,4 +191,6 @@ let main () =
   ] file_argument usage;
   process_sourcefile !filename
 
-let _ = main (); exit 0
+let _ = 
+  Printf.printf "dsolve 0.1: © Copyright 2008 Regents of the University of California \n";
+  main (); exit 0
