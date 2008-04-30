@@ -19,6 +19,10 @@ NOTE: Be sure that the files in external/yices/lib are in your library
 
         export LD_LIBRARY_PATH=[path to dsolve]/external/yices/lib:$LD_LIBRARY_PATH
 
+4. (Optional) Run the regression test suite via
+
+     make tests
+
 
 Running dsolve
 ==============

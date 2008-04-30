@@ -59,6 +59,10 @@ liquid.byte: $(LIQOBJS)
 liquid.opt: $(LIQOBJS:.cmo=.cmx)
 	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt str.cmxa unix.cmxa nums.cmxa oyices.cmxa graph.cmxa libqp.cmxa $(LIQOBJS:.cmo=.cmx)
 
+.PHONY: tests
+tests:
+	./regrtest.py
+
 depend: beforedepend
 	(for d in utils parsing typing liquid; \
 	 do $(CAMLDEP) $(DEPFLAGS) $$d/*.mli $$d/*.ml; \
