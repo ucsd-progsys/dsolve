@@ -72,17 +72,28 @@ let uInt = mk_int []
 let rInt name v p = mk_int [(Path.mk_ident name, v, p)]
 let rArray b name v p = mk_array b [(Path.mk_ident name, v, p)]
 
-let defun f =
-  let (x, y) = (Path.mk_ident "x", Path.mk_ident "y") in
+let char = ref 0
+
+let reset_idents () =
+  char := Char.code 'a' - 1
+
+let fresh_ident () =
+  incr char; String.make 1 (Char.chr (!char))
+
+let def f =
+  let (x, y) = (Path.mk_ident (fresh_ident ()), Path.mk_ident (fresh_ident ())) in
   let (f, fy) = f x in
   let xid = match x with
   | Path.Pident id -> id
   | _ -> assert false
   in Farrow (Some (Tpat_var xid), f, fy y)
 
+let defun f =
+  reset_idents (); def f
+
 let (==>) x y = (x, y)
 
-let (===>) x y = x ==> fun _ -> defun y
+let (===>) x y = x ==> fun _ -> def y
 
 let forall f = f (Frame.Fvar(Path.mk_ident "'a"))
 

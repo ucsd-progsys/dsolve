@@ -82,9 +82,9 @@ let mk_assert e = Pexp_assert(e)
 let mk_match e pel = Pexp_match(e, pel)
 let mk_construct cstrdesc e b = Pexp_construct(cstrdesc, Some e, b)
 
-let mk_dummy desc = {pexp_desc = desc; pexp_loc = dummy}
+let mk_dummy desc loc = {pexp_desc = desc; pexp_loc = loc}
 
-let mk_dum_ident id = mk_dummy (mk_ident id)
+let mk_dum_ident id loc = mk_dummy (mk_ident id) loc
 let mk_ident_loc id loc = {pexp_desc = mk_ident id; pexp_loc = loc}
 
 let resolve_in_exp_when f ls =
@@ -101,7 +101,7 @@ let normalize exp =
     let rw_expr desc = {pexp_desc = desc; pexp_loc = exp.pexp_loc} in
     let wrap r b (lbl, a, _) = 
       match a with
-          Some a -> mk_let_lbl r lbl a (mk_dummy b)
+          Some a -> mk_let_lbl r lbl a (mk_dummy b exp.pexp_loc)
           | None -> b
     in
     let proc_list es skel =
@@ -228,7 +228,7 @@ let normalize exp =
      | Pexp_constraint(_, _, _)
      | Pexp_constant(_) 
      | Pexp_construct(_, None, _) ->
-         [(fresh_name (), Some exp, dummy)]      
+         [(fresh_name (), Some exp, dummy)]
      | Pexp_construct(cstrdesc, Some e, b) ->
          let ls = norm_in e in
          let (inex, ls) = resolve_in_exp ls in
@@ -257,7 +257,7 @@ let normalize exp =
         let f = norm_in e1 in
         let (flbl, e_f, lo_f) = List.hd f in
         let es = List.map (fun (_, e) -> e) es in
-        let fn = match e_f with Some e -> mk_dum_ident flbl
+        let fn = match e_f with Some e -> mk_dum_ident flbl loc
                                 | None -> mk_ident_loc flbl lo_f in
         let ls = proc_list es (mk_apply fn) in
         let (this, e_this, lo_this) = List.hd ls in

@@ -90,7 +90,6 @@ let load_sourcefile ppf sourcefile =
   init_path ();
   let env = initial_env () in
   let fenv = initial_fenv env in
-  let (env, fenv) = load_builtins std_formatter env fenv in 
   let str = Pparse.file ppf sourcefile Parse.implementation ast_impl_magic_number in 
   let str = if !Clflags.no_anormal then str else Normalize.normalize_structure str in
   let str = print_if ppf Clflags.dump_parsetree Printast.implementation str in
@@ -98,15 +97,16 @@ let load_sourcefile ppf sourcefile =
     (str, env, fenv)
 
 let process_sourcefile fname =
+  let bname = Misc.chop_extension_if_any fname in
+  let (qname, iname) = (bname ^ ".quals", bname ^ ".mlq") in
   try
    let (str, env, fenv) as source = load_sourcefile std_formatter !filename in
    if !dump_qualifs
    then
-     Qdump.dump_default_qualifiers source
+     Qdump.dump_default_qualifiers source qname
    else
-     let bname = Misc.chop_extension_if_any fname in
-     let (qname, iname) = (bname ^ ".quals", bname ^ ".mlq") in
-     let quals = load_qualfile std_formatter qname in
+    let quals = load_qualfile std_formatter qname in
+     let (env, fenv) = load_builtins std_formatter env fenv in 
      let ifenv = load_mlqfile std_formatter env iname in
      let ifenv = load_mlq_in_env env Lightenv.empty ifenv in
      let source = (List.rev_append quals str, env, fenv, ifenv) in
