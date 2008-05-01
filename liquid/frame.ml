@@ -37,10 +37,10 @@ type substitution = Path.t * Predicate.pexpr
 type open_assignment = Top | Bottom
 
 type qualifier_expr =
-    Qvar of (Path.t * open_assignment)  (* Qualifier variable *)
-  | Qconst of Qualifier.t list          (* Constant qualifier set *)
+    Qvar of (Path.t * open_assignment)
+  | Qconst of Qualifier.t
 
-type refinement = substitution list * qualifier_expr
+type refinement = substitution list * qualifier_expr list
 
 type t =
     Fvar of Path.t
@@ -60,16 +60,14 @@ let pprint_subs ppf subs =
 
 let unique_name = (* Path.name *) Path.unique_name 
 
-let pprint_refinement ppf refi =
-  match refi with
-    | (_, Qvar (id, _) ) ->
-      fprintf ppf "%s" (unique_name id)
-    | (subs, Qconst []) ->
-      fprintf ppf "true"
-    | (subs, Qconst quals) ->
-      let preds = List.map (Qualifier.apply (Predicate.Var (Path.mk_ident "V"))) quals in
-      let preds = List.map (Predicate.apply_substs subs) preds in
-        Oprint.print_list Predicate.pprint (fun ppf -> fprintf ppf "@ ") ppf preds
+let pprint_qexpr subs ppf = function
+  | Qvar (id, _) -> fprintf ppf "%s" (unique_name id)
+  | Qconst q ->
+      Predicate.pprint ppf
+        (Predicate.apply_substs subs (Qualifier.apply (Predicate.Var (Path.mk_ident "V")) q))
+
+let pprint_refinement ppf (subs, qexprs) =
+  Oprint.print_list (pprint_qexpr subs) (fun ppf -> fprintf ppf " ") ppf qexprs
 
 let rec pprint_pattern ppf = function
   | Tpat_any -> fprintf ppf "_"
@@ -86,12 +84,11 @@ let rec pprint_pattern ppf = function
 and pprint_pattern_list ppf pats =
   Oprint.print_list pprint_pattern (fun ppf -> fprintf ppf ", ") ppf (List.map (fun p -> p.pat_desc) pats)
 
-let refinement_is_empty = function
-  | (_, Qconst []) -> true
-  | _ -> false
+let refinement_is_empty (_, qexprs) =
+  qexprs = []
 
 let wrap_refined ppf pp = function
-  | (_, Qconst []) -> pp ppf
+  | (_, []) -> pp ppf
   | r -> fprintf ppf "@[{"; pp ppf; fprintf ppf " |@;<1 2>%a}@]" pprint_refinement r
 
 let rec pprint ppf = function
@@ -145,10 +142,9 @@ let rec same_shape map_vars t1 t2 =
   | (Funknown, Funknown) -> true
   | t -> false 
 
+let empty_refinement = ([], [])
 
-let empty_refinement = ([], Qconst [])
-
-let false_refinement = ([], Qconst [(Path.mk_ident "false", Path.mk_ident "V", Predicate.Not (Predicate.True))])
+let false_refinement = ([], [Qconst (Path.mk_ident "false", Path.mk_ident "V", Predicate.Not (Predicate.True))])
 
 let rec map f = function
     | (Funknown | Fvar _) as fr -> f fr
@@ -189,16 +185,19 @@ let instantiate fr ftemplate =
 	    assert false
   in inst fr ftemplate
 
-let instantiate_qualifiers_map vars = function
-  | (subs, Qconst qs) ->
-      (subs, Qconst (List.map (fun q -> match Qualifier.instantiate vars q with Some q -> q | None -> q) qs))
-  | r -> r
+let instantiate_qexpr vars = function
+  | Qconst q -> Qconst (match Qualifier.instantiate vars q with Some q -> q | None -> q)
+  | qe -> qe
+
+let instantiate_qualifiers_map vars (subs, qexprs) =
+  (subs, List.map (instantiate_qexpr vars) qexprs)
 
 let instantiate_qualifiers vars fr =
   map_refinements (instantiate_qualifiers_map vars) fr
 
-let fresh_refinementvar open_assn () = ([], Qvar (Path.mk_ident "k", open_assn))
-let fresh_true () = ([], Qconst ([(C.dummy (), Path.mk_ident "true", Predicate.True)]))
+let fresh_refinementvar open_assn () = ([], [Qvar (Path.mk_ident "k", open_assn)])
+(* pmr: this looks suspect - ming? *)
+let fresh_true () = ([], [Qconst (C.dummy (), Path.mk_ident "true", Predicate.True)])
 
 let fresh_fvar () = Fvar (Path.mk_ident "a")
 
@@ -213,7 +212,7 @@ let fresh_constr freshf constrf p ty_decl f g tyl fresh =
   match ty_decl.type_kind with
   | Type_abstract | Type_variant _ ->
     if Path.same p Predef.path_unit then 
-      Fconstr(p, [], [], ([], Qconst [])) 
+      Fconstr(p, [], [], ([], []))
     else
       Fconstr(p, f tyl, List.map translate_variance ty_decl.type_variance, constrf ())
   | Type_record (fields, _, _) -> (* 1 *)
@@ -274,7 +273,7 @@ let transl_pref plist env p =
     | RLiteral (v, p) -> (v, p)
     | RVar s -> fp s in
   let valu = Path.mk_ident v  in
-  ([], Qconst([(C.dummy (), valu, Qualdecl.transl_patpred_single false valu env p)]))
+  ([], [Qconst((C.dummy (), valu, Qualdecl.transl_patpred_single false valu env p))])
 
 let rec translate_pframe env plist pf =
   let vars = ref [] in
@@ -327,9 +326,6 @@ let bind env pat frame =
 let env_bind tenv env pat frame =
   Lightenv.addn (bind tenv pat frame) env
 
-(* pmr: this function got some pre-PLDI uglies that need to be ironed out -
-   we need a partial instantiation method for qualifiers instead of accumulating these
-   vars *)
 (* Label all the function formals in [f] with their corresponding labels in
    [f'] and changing constant qualifiers appropriately.
    [f] and [f'] are expected to be of the same shape; also, [f]
@@ -361,9 +357,15 @@ let apply_substitution_map sub = function
 
 let apply_substitution sub f = map (apply_substitution_map sub) f
 
-let refinement_apply_solution solution = function
-  | (subs, Qvar (k, _)) -> (subs, Qconst (solution k))
-  | r -> r
+let qexpr_qualifiers solution = function
+  | Qvar (k, _) -> solution k
+  | Qconst q -> [q]
+
+let qexpr_apply_solution solution qexpr =
+    List.map (fun q -> Qconst q) (qexpr_qualifiers solution qexpr)
+
+let refinement_apply_solution solution (subs, qexprs) =
+  (subs, C.flap (qexpr_apply_solution solution) qexprs)
 
 let apply_solution_map solution = function
   | Fconstr (path, fl, cstrs, r) -> Fconstr (path, fl, cstrs, refinement_apply_solution solution r)
@@ -371,26 +373,24 @@ let apply_solution_map solution = function
   | Ftuple (fs, r) -> Ftuple (fs, refinement_apply_solution solution r)
   | f -> f
 
-let apply_solution solution fr = map (apply_solution_map solution) fr
+let apply_solution solution fr =
+  map (apply_solution_map solution) fr
 
-let refinement_conjuncts solution qual_expr (subs, qualifiers) =
-  let quals = match qualifiers with
-    | Qvar (k, _) -> (try solution k with Not_found -> assert false)
-    | Qconst qs -> qs
-  in
+let refinement_conjuncts solution qual_expr (subs, qexprs) =
+  let quals = C.flap (qexpr_qualifiers solution) qexprs in
   let unsubst = List.map (Qualifier.apply qual_expr) quals in
     List.map (Predicate.apply_substs subs) unsubst
 
-let ref_var = function
-  | (_, Qvar (k, _)) -> Some k
-  | _ -> None
+let qexpr_var_fold vs = function
+  | Qvar (k, _) -> k :: vs
+  | _ -> vs
 
 let rec refinement_vars = function
-  | Fconstr (_, _, _, r) -> C.maybe_cons (ref_var r) []
-  | Frecord (_, fs, r) ->
-      C.maybe_cons (ref_var r) (List.fold_left (fun r (f, _, _) -> refinement_vars f @ r) [] fs)
-  | Ftuple (fs, r) ->
-      C.maybe_cons (ref_var r) (List.fold_left (fun r f -> refinement_vars f @ r) [] fs)
+  | Fconstr (_, _, _, (_, qexprs)) -> List.fold_left qexpr_var_fold [] qexprs
+  | Ftuple (fs, (_, qexprs)) ->
+      List.fold_left qexpr_var_fold (C.flap refinement_vars fs) qexprs
+  | Frecord (_, fs, (_, qexprs)) ->
+      List.fold_left qexpr_var_fold (C.flap (fun (f, _, _) -> refinement_vars f) fs) qexprs
   | _ -> []
 
 let apply_refinement r = function

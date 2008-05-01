@@ -31,10 +31,10 @@ type substitution = Path.t * Predicate.pexpr
 type open_assignment = Top | Bottom
 
 type qualifier_expr =
-    Qvar of (Path.t * open_assignment)  (* Qualifier variable *)
-  | Qconst of Qualifier.t list          (* Constant qualifier set *)
+    Qvar of (Path.t * open_assignment)
+  | Qconst of Qualifier.t
 
-type refinement = substitution list * qualifier_expr
+type refinement = substitution list * qualifier_expr list
 
 val empty_refinement: refinement
 val false_refinement: refinement
@@ -72,6 +72,7 @@ val refinement_conjuncts:
   (Path.t -> Qualifier.t list) -> Predicate.pexpr -> refinement -> Predicate.t list
 val refinement_predicate:
   (Path.t -> Qualifier.t list) -> Predicate.pexpr -> refinement -> Predicate.t
+val qexpr_var_fold: Path.t list -> qualifier_expr -> Path.t list
 val refinement_vars: t -> Path.t list
 val apply_refinement: refinement -> t -> t
 val predicate:

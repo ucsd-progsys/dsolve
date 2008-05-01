@@ -54,21 +54,24 @@ let qrel rel x y =
 
 let mk_tyvar () = Frame.Fvar(Path.mk_ident "'a")
 
-let mk_int qs = Fconstr(Predef.path_int, [], [], ([], Qconst qs))
+let qconsts qs =
+  List.map (fun q -> Qconst q) qs
 
-let uFloat = Fconstr(Predef.path_float, [], [], ([], Qconst []))
-let uChar = Fconstr(Predef.path_char, [], [], ([], Qconst []))
+let mk_int qs = Fconstr(Predef.path_int, [], [], ([], qconsts qs))
 
-let mk_string qs = Fconstr(Predef.path_string, [], [], ([], Qconst qs))
+let uFloat = Fconstr(Predef.path_float, [], [], ([], []))
+let uChar = Fconstr(Predef.path_char, [], [], ([], []))
+
+let mk_string qs = Fconstr(Predef.path_string, [], [], ([], qconsts qs))
 
 let uString = mk_string []
 let rString name v p = mk_string [(Path.mk_ident name, v, p)]
 
-let mk_bool qs = Fconstr(Predef.path_bool, [], [], ([], Qconst qs))
+let mk_bool qs = Fconstr(Predef.path_bool, [], [], ([], qconsts qs))
 let uBool = mk_bool []
 let rBool name v p = mk_bool [(Path.mk_ident name, v, p)]
 
-let mk_array f qs = Fconstr(Predef.path_array, [f], [Invariant], ([], Qconst qs))
+let mk_array f qs = Fconstr(Predef.path_array, [f], [Invariant], ([], qconsts qs))
 
 let find_constructed_type id env =
   let path =
@@ -78,9 +81,9 @@ let find_constructed_type id env =
   let decl = Env.find_type path env in (path, List.map translate_variance decl.type_variance)
 
 let mk_named id fs qs env =
-  let (path, varis) = find_constructed_type id env in Fconstr(path, fs, varis, ([], Qconst qs))
+  let (path, varis) = find_constructed_type id env in Fconstr(path, fs, varis, ([], qconsts qs))
 
-let mk_ref f env = Frecord (fst (find_constructed_type ["ref"; "Pervasives"] env), [(f, "contents", Mutable)], ([], Qconst []))
+let mk_ref f env = Frecord (fst (find_constructed_type ["ref"; "Pervasives"] env), [(f, "contents", Mutable)], ([], []))
 
 let mk_bigarray_kind a b qs env = mk_named ["kind"; "Bigarray"] [a; b] qs env
 
@@ -88,7 +91,7 @@ let mk_bigarray_layout a qs env = mk_named ["layout"; "Bigarray"] [a] qs env
 
 let mk_bigarray_type a b c qs env = mk_named ["t"; "Array2"; "Bigarray"] [a; b; c] qs env
 
-let mk_unit () = Fconstr(Predef.path_unit, [], [], ([], Qconst []))
+let mk_unit () = Fconstr(Predef.path_unit, [], [], ([], []))
 let uUnit = mk_unit ()
 
 let uInt = mk_int []
@@ -322,18 +325,18 @@ let equality_qualifier exp =
     Predicate.pprint Format.str_formatter pred;
     let expstr = Format.flush_str_formatter () in (Path.mk_ident expstr, x, pred)
 
-let equality_refinement exp = ([], Qconst [equality_qualifier exp])
+let equality_refinement exp = ([], [Qconst (equality_qualifier exp)])
 
 let tag_refinement t =
   let x = Path.mk_ident "V" in
     let pred = tag (Var x) ==. PInt t in
     Predicate.pprint Format.str_formatter pred;
     let expstr = Format.flush_str_formatter () in
-      ([], Qconst [(Path.mk_ident expstr, x, pred)])
+      ([], [Qconst (Path.mk_ident expstr, x, pred)])
 
 let size_lit_refinement i =
   let x = Path.mk_ident "x" in
-    ([], Qconst [(Path.mk_ident "<size_lit_eq>",
+    ([], [Qconst (Path.mk_ident "<size_lit_eq>",
                   x,
                   FunApp("Array.length", [Var x]) ==. PInt i)])
 

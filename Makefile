@@ -45,7 +45,7 @@ LIQUID=liquid/lightenv.cmo \
   liquid/theoremProverQprover.cmo \
   liquid/theoremProver.cmo \
   liquid/constraint.cmo  \
-  liquid/printqual.cmo liquid/qualifymod.cmo \
+  liquid/qualifymod.cmo \
   liquid/qdebug.cmo liquid/normalize.cmo \
   liquid/qdump.cmo liquid/liqerrors.cmo liquid/liquid.cmo
 
