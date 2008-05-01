@@ -10,7 +10,7 @@ To compile dsolve:
 
 2. In the top-level dsolve directory, untar yices with:
 
-     tar zxvf [path to yices tar] --strip-components=1 -C external/yices
+     tar zxvf [path to yices tar] --strip-components 1 -C external/yices
 
 3. Run ./configure && make libs && make
 
