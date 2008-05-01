@@ -192,5 +192,5 @@ let main () =
   process_sourcefile !filename
 
 let _ = 
-  Printf.printf "dsolve 0.1: © Copyright 2008 RThe Regents of the University of California, All rights reserved \n";
+  Printf.printf "dsolve 0.1: © Copyright 2008 The Regents of the University of California, All rights reserved \n";
   main (); exit 0
