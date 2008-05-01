@@ -78,7 +78,7 @@ distclean: clean
 	(for d in ./ utils parsing typing tests liquid; \
 	 do rm -f $$d/*.annot $$d/*~ $$d/*.quals $$d/*.pyc $$d/*.dot; \
 	 done);
-	rm -rf external/yices/lib external/yices/bin external/yices/include/*.h
+	rm -rf .git external/yices/lib external/yices/bin external/yices/include/*.h
 
 utils/config.ml: utils/config.mlp config/Makefile
 	@rm -f utils/config.ml
