@@ -45,10 +45,10 @@ C_CPP_INCLUDES = -I $(QPHOME)/include $(OCAML_C_CPP_INC)
 OCAML_INCLUDES =# -I $(YICESHOME)/lib/ 
 #OCAML_INCLUDES = -I $(FOCIHOME)/vampyre/include
 
-C_CPP_LD_FLAGS = -L $(QPHOME)/lib 
+C_CPP_LD_FLAGS = #-L $(QPHOME)/lib 
 C_CPP_LD_LIBS  = -lnums -lstr -lunix -lutil 
 
-OCAML_LD_FLAGS = -I $(QPHOME)/lib 
+OCAML_LD_FLAGS = # -I $(QPHOME)/lib 
 
 OCAML_LD_LIBS  = nums str unix 
 MODULES        = $(OCAML_EXE_OBJ) 
