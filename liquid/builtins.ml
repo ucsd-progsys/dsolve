@@ -52,7 +52,7 @@ let qrel rel x y =
      x,
      Atom(Var x, rel, Var y))
 
-let mk_tyvar () = Frame.Fvar(Path.mk_ident "'a")
+let mk_tyvar () = Frame.Fvar(Path.mk_ident "a", ([], ([], [])))
 
 let mk_int qs = Fconstr(Predef.path_int, [], [], ([], (qs, [])))
 
@@ -118,7 +118,7 @@ let (==>) x y = (x, y)
 
 let (===>) x y = x ==> fun _ -> def y
 
-let forall f = f (Frame.Fvar(Path.mk_ident "'a"))
+let forall f = f (Frame.Fvar(Path.mk_ident "a", ([], ([], []))))
 
 let op_frame path qname op =
   (path, defun (fun x -> uInt ===>
