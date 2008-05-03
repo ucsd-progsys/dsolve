@@ -92,7 +92,7 @@ let refinement_is_empty = function
 
 let wrap_refined ppf pp = function
   | (_, Qconst []) -> pp ppf
-  | r -> fprintf ppf "@[{"; pp ppf; fprintf ppf " |@;<1 2>%a}" pprint_refinement r
+  | r -> fprintf ppf "@[{"; pp ppf; fprintf ppf " |@;<1 2>%a}@]" pprint_refinement r
 
 let rec pprint ppf = function
   | Fvar a ->

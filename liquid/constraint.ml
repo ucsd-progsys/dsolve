@@ -120,7 +120,7 @@ let environment_predicate sm env =
   P.big_and (Le.maplist (fun v -> F.predicate sm (P.Var v)) env)
 
 let pprint_local_binding ppf = function
-  | (Path.Pident _ as k, v) -> fprintf ppf "@[%s@;=>@;<1 2>%a@],@;<1 2>" (Path.unique_name k) F.pprint v
+  | (Path.Pident _ as k, v) -> fprintf ppf "@[%s@;=>@;<1 2>%a@],@;<1 0>" (Path.unique_name k) F.pprint v
   | _ -> ()
 
 let pprint_env_pred so ppf env =
