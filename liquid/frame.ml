@@ -149,12 +149,14 @@ let rec map f = function
     | Frecord (p, fs, r) -> f (Frecord (p, List.map (fun (fr, n, m) -> (map f fr, n, m)) fs, r))
 
 let rec map_refinements_map f = function
+  | Fvar (p, r) -> Fvar (p, f r)
   | Fconstr (p, fs, cstrdesc, r) -> Fconstr (p, fs, cstrdesc, f r)
   | Ftuple (fs, r) -> Ftuple (fs, f r)
   | Frecord (p, fs, r) -> Frecord (p, fs, f r)
   | f -> f
 
-let map_refinements f fr = map (map_refinements_map f) fr
+let map_refinements f fr =
+  map (map_refinements_map f) fr
 
 (* Instantiate the tyvars in fr with the corresponding frames in ftemplate.
    If a variable occurs twice, it will only be instantiated with one frame; which
@@ -163,7 +165,7 @@ let instantiate fr ftemplate =
   let vars = ref [] in
   let rec inst f ft =
     match (f, ft) with
-      | (Fvar _, _) -> (try List.assq f !vars with Not_found -> vars := (f, ft) :: !vars; ft)
+      | (Fvar _, _) -> (try List.assoc f !vars with Not_found -> vars := (f, ft) :: !vars; ft)
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
           Farrow (l, inst f1 f2, inst f1' f2')
       | (Fconstr (p, l, varis, r), Fconstr(p', l', _, _)) ->
@@ -191,7 +193,7 @@ let fresh_refinementvar open_assn () = ([], ([], [(Path.mk_ident "k", open_assn)
 (* pmr: this looks suspect - ming? *)
 let fresh_true () = ([], ([(C.dummy (), Path.mk_ident "true", Predicate.True)], []))
 
-let fresh_fvar () = Fvar (Path.mk_ident "a", ([], ([], [])))
+let fresh_fvar () = Fvar (Path.mk_ident "a", empty_refinement)
 
 (* 1. Tedium ahead:
    OCaml stores information about record types in two places:
@@ -276,7 +278,7 @@ let rec translate_pframe env plist pf =
   let transl_pref = transl_pref plist env in
   let rec transl_pframe_rec pf =
     match pf with
-    | PFvar (a, r) -> Fvar (getvar a, ([], ([], [])))
+    | PFvar (a, r) -> Fvar (getvar a, empty_refinement)
     | PFconstr (l, fs, r) -> transl_constr l fs r
     | PFarrow (v, a, b) ->
         let pat = match v with

@@ -238,7 +238,9 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       let env' = match_and_extend tenv env (l1,f1) (l2,f2) in
       ((lequate_cs env g c F.Covariant f2 f1) @ (lequate_cs env' g c F.Covariant f1' f2'),
        [])
-  | (F.Fvar _, F.Fvar _) | (F.Funknown, F.Funknown) ->
+  | (F.Fvar (_, r1), F.Fvar (_, r2)) ->
+      ([], split_sub_ref c env g r1 r2)
+  | (F.Funknown, F.Funknown) ->
       ([],[]) 
   | (F.Fconstr (p1, f1s, variances, r1), F.Fconstr(p2, f2s, _, r2)) ->  (* 2 *)
       (C.flap3 (lequate_cs env g c) variances f1s f2s, split_sub_ref c env g r1 r2)
