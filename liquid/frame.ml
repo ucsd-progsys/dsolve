@@ -118,7 +118,7 @@ let translate_variance = function
   | (false, true, false) -> Contravariant
   | _ -> assert false
 
-let rec same_shape map_vars t1 t2 =
+let rec same_shape t1 t2 =
   let vars = ref [] in
   let ismapped p q = try snd (List.find (fun (p', q) -> Path.same p p') !vars) = q with
       Not_found -> vars := (p, q) :: !vars; true in
@@ -126,7 +126,7 @@ let rec same_shape map_vars t1 t2 =
   (Fconstr(p, l, _, _), Fconstr(p', l', _, _)) ->
    (Path.same p p') && (List.for_all (fun f -> f) (List.map2 (same_shape map_vars) l l')) 
   | (Fvar (p, _), Fvar (p', _)) ->
-   if map_vars then ismapped p p' else Path.same p p'
+      ismapped p p'
   | (Farrow(_, i, o), Farrow(_, i', o')) ->
    ((same_shape map_vars) i i') && ((same_shape map_vars) o o')
   | (Ftuple (t1s, _), Ftuple (t2s, _)) ->
@@ -158,6 +158,25 @@ let rec map_refinements_map f = function
 let map_refinements f fr =
   map (map_refinements_map f) fr
 
+let apply_refinement r = function
+  | Fvar (p, _) -> Fvar (p, r)
+  | Fconstr (p, fl, varis, _) -> Fconstr (p, fl, varis, r)
+  | Frecord (p, fs, _) -> Frecord (p, fs, r)
+  | Ftuple (fs, _) -> Ftuple (fs, r)
+  | f -> f
+
+let get_refinement = function
+  | Fvar (_, r) | Fconstr (_, _, _, r)
+  | Frecord (_, _, r) | Ftuple (_, r) ->
+      Some r
+  | _ -> None
+
+let append_refinement (_, (qconsts, qvars)) f =
+  match get_refinement f with
+    | Some (subs, (qconsts', qvars')) ->
+        apply_refinement (subs, (qconsts' @ qconsts, qvars' @ qvars)) f
+    | None -> f
+
 (* Instantiate the tyvars in fr with the corresponding frames in ftemplate.
    If a variable occurs twice, it will only be instantiated with one frame; which
    one is undefined and unimportant. *)
@@ -165,7 +184,10 @@ let instantiate fr ftemplate =
   let vars = ref [] in
   let rec inst f ft =
     match (f, ft) with
-      | (Fvar _, _) -> (try List.assoc f !vars with Not_found -> vars := (f, ft) :: !vars; ft)
+      | (Fvar (p, r), _) ->
+          let instf =
+            try List.assoc p !vars with Not_found -> vars := (p, ft) :: !vars; ft
+          in append_refinement r instf
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
           Farrow (l, inst f1 f2, inst f1' f2')
       | (Fconstr (p, l, varis, r), Fconstr(p', l', _, _)) ->
@@ -224,9 +246,11 @@ let fresh_with_var_fun vars env ty fresh_ref_var =
     let t = repr t in
     match t.desc with
         Tvar ->
-          (try List.assq t !vars with Not_found ->
-            let fv = fresh_fvar () in 
-            vars := (t, fv) :: !vars; fv)
+          let fvar =
+            try List.assq t !vars with Not_found ->
+              let fv = fresh_fvar () in
+                vars := (t, fv) :: !vars; fv
+          in apply_refinement (freshf ()) fvar
       | Tconstr(p, tyl, _) ->
           let ty_decl = Env.find_type p env in
             fresh_constr freshf freshf p ty_decl (List.map (fresh_rec freshf)) (fresh_rec freshf) tyl fresh_rec
@@ -372,13 +396,6 @@ let rec refinement_vars = function
   | Frecord (_, fs, r) ->
       (C.flap (fun (f, _, _) -> refinement_vars f) fs) @ ref_vars r
   | _ -> []
-
-let apply_refinement r = function
-  | Fvar (p, _) -> Fvar (p, r)
-  | Fconstr (p, fl, varis, _) -> Fconstr (p, fl, varis, r)
-  | Frecord (p, fs, _) -> Frecord (p, fs, r)
-  | Ftuple (fs, _) -> Ftuple (fs, r)
-  | f -> f
 
 let refinement_predicate solution qual_var refn =
   Predicate.big_and (refinement_conjuncts solution qual_var refn)

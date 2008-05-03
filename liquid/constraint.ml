@@ -96,7 +96,7 @@ let is_wfref_constraint = function
 
 let solution_map s k = 
   C.do_catch 
-    (Printf.sprintf "ERROR: solution_map couldn't find: %s" (Path.name k))
+    (Printf.sprintf "ERROR: solution_map couldn't find: %s" (C.path_name () k))
     (Sol.find s) k  
 
 let ref_of_simple = function
@@ -188,7 +188,7 @@ let simplify_env env g =
   let gm = List.fold_left (fun m (x,b)  -> Le.add x b m) Le.empty g in
   Le.fold 
     (fun x f env' ->
-      match f with | F.Fconstr _ | F.Frecord _ | F.Ftuple _ ->
+      match f with | F.Fvar _ | F.Fconstr _ | F.Frecord _ | F.Ftuple _ ->
         Le.add x (simplify_frame gm x f) env' 
       | _ -> env')
     env Le.empty
@@ -275,7 +275,9 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
       (List.map (make_wff env) fs, split_wf_ref f c env r)
   | F.Frecord (_, fs, r) ->
       (List.map (fun (f',_,_) -> make_wff env f') fs, split_wf_ref f c env r)
-  | F.Fvar _ | F.Funknown ->
+  | F.Fvar (_, r) ->
+      ([], split_wf_ref f c env r)
+  | F.Funknown ->
       ([],[]) 
 
 let split cs =

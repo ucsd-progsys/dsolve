@@ -24,8 +24,6 @@
 open Builtins
 open Frame
 
-let same_shape = same_shape false
-
 let find_or_fail var env = try Lightenv.find var env with Not_found -> assert false
 
 let constr_app_shape paths out_shape in_shapes = 
@@ -81,20 +79,9 @@ let pred_is_well_typed env p =
   | Predicate.Atom (p1, rel, p2) -> 
       let p1_shp = get_expr_shape p1 in
       let p2_shp = get_expr_shape p2 in
-        begin match rel with
-        | Predicate.Ne
-        | Predicate.Eq ->
-         ((same_shape p1_shp p2_shp) && not(same_shape p1_shp Funknown))
-         || ((same_shape p1_shp uBool) && (same_shape p2_shp uInt))
-         || ((same_shape p1_shp uInt) && (same_shape p2_shp uBool))
-        | Predicate.Gt
-        | Predicate.Ge
-        | Predicate.Lt
-        | Predicate.Le ->
-        (same_shape p1_shp p2_shp) && (same_shape p1_shp uInt || 
-                                       (function Fvar _ -> true | _ -> false) p1_shp ||
-                                       same_shape p1_shp uFloat) 
-        end
+        ((same_shape p1_shp p2_shp) && not(same_shape p1_shp Funknown))
+        || ((same_shape p1_shp uBool) && (same_shape p2_shp uInt))
+        || ((same_shape p1_shp uInt) && (same_shape p2_shp uBool))
   | Predicate.Iff (px, q) -> same_shape (get_expr_shape px) uInt && pred_shape_is_bool q
   in pred_shape_is_bool p
 
