@@ -274,8 +274,8 @@ and constrain_tuple (env, guard, f) es =
            WFFrame (env, f) :: new_cs, subexp_cs)
     | _ -> assert false
 
-and constrain_assertfalse (_, _, f) =
-  (f, [], [])
+and constrain_assertfalse (env, _, f) =
+  (f, [WFFrame (env, f)], [])
 
 and constrain_assert (env, guard, _) e =
   let (f, cstrs) = constrain e env guard in
