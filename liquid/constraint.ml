@@ -173,9 +173,9 @@ let simplify_frame gm x f =
   if not (Le.mem x gm) then f else
     let pos = Le.find x gm in
     match f with 
-    | F.Fconstr (a,b,c,(subs,([(v1,v2,P.Iff (v3,p))],[]))) when v3 = B.tag (P.Var v2) ->
+    | F.Fconstr (a,b,(subs,([(v1,v2,P.Iff (v3,p))],[]))) when v3 = B.tag (P.Var v2) ->
         let p' = if pos then p else P.Not p in
-        F.Fconstr (a,b,c,(subs,([(v1,v2,p')],[])))
+        F.Fconstr (a,b,(subs,([(v1,v2,p')],[])))
     | F.Frecord (a,b,(subs,([(v1,v2,P.Iff (v3,p))],[]))) when v3 = B.tag (P.Var v2) ->
         let p' = if pos then p else P.Not p in
         F.Frecord (a,b,(subs,([(v1,v2,p')],[])))
@@ -188,7 +188,7 @@ let simplify_env env g =
   let gm = List.fold_left (fun m (x,b)  -> Le.add x b m) Le.empty g in
   Le.fold 
     (fun x f env' ->
-      match f with | F.Fvar _ | F.Fconstr _ | F.Frecord _ | F.Ftuple _ ->
+      match f with | F.Fvar _ | F.Fconstr _ | F.Fabstract _ | F.Frecord _ | F.Ftuple _ ->
         Le.add x (simplify_frame gm x f) env' 
       | _ -> env')
     env Le.empty
@@ -232,6 +232,9 @@ let make_simple_sub c env g r1 subs qe =
 let split_sub_ref c env g r1 (subs, qe2) =
   sref_map (make_simple_sub c env g r1 subs) qe2
 
+let split_sub_params c env g ps1 ps2 =
+  C.flap2 (fun (f, v) (f', _) -> lequate_cs env g c v f f') ps1 ps2
+
 let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubFrame (env,g,f1,f2); lc_tenv = tenv} as c ->
   match (f1, f2) with
   | (F.Farrow (l1, f1, f1'), F.Farrow (l2, f2, f2')) -> 
@@ -242,8 +245,11 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       ([], split_sub_ref c env g r1 r2)
   | (F.Funknown, F.Funknown) ->
       ([],[]) 
-  | (F.Fconstr (p1, f1s, variances, r1), F.Fconstr(p2, f2s, _, r2)) ->  (* 2 *)
-      (C.flap3 (lequate_cs env g c) variances f1s f2s, split_sub_ref c env g r1 r2)
+  | (F.Fconstr(_, cs1, r1), F.Fconstr(_, cs2, r2)) ->  (* 2 *)
+      (split_sub_params c env g (F.constrs_params cs1) (F.constrs_params cs2),
+       split_sub_ref c env g r1 r2)
+  | (F.Fabstract(_, ps1, r1), F.Fabstract(_, ps2, r2)) ->
+      (split_sub_params c env g ps1 ps2, split_sub_ref c env g r1 r2)
   | (F.Ftuple (f1s, r1), F.Ftuple (f2s, r2)) ->
       (C.flap2 (lequate_cs env g c F.Covariant) f1s f2s, split_sub_ref c env g r1 r2)
   | (F.Frecord (_, fld1s, r1), F.Frecord (_, fld2s, r2)) ->
@@ -266,8 +272,10 @@ let split_wf_ref f c env (subs, qe) =
 let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFrame (env,f); lc_tenv = tenv} as c ->
   let make_wff env f = {lc_cstr = WFFrame (env, f); lc_tenv = tenv; lc_orig = Cstr c; lc_id = None} in
   match f with
-  | F.Fconstr (_, l, _, r) ->
-      (List.map (make_wff env) l, split_wf_ref f c env r)
+  | F.Fconstr (_, cs, r) ->
+      (List.map (make_wff env) (F.params_frames (F.constrs_params cs)), split_wf_ref f c env r)
+  | F.Fabstract (_, ps, r) ->
+      (List.map (make_wff env) (F.params_frames ps), split_wf_ref f c env r)
   | F.Farrow (l, f, f') ->
       let env' = match l with None -> env | Some p -> F.env_bind tenv env p f in
       ([make_wff env f; make_wff env' f'], [])

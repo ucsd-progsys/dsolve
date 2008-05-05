@@ -29,7 +29,7 @@ let find_or_fail var env = try Lightenv.find var env with Not_found -> assert fa
 let constr_app_shape paths out_shape in_shapes = 
   let f i o = 
     match o with
-      Fconstr(a, _, _, _) ->
+      Fconstr(a, _, _) ->
         Path.same i a 
       | _ -> false
   in if (List.length paths = List.length in_shapes) && 

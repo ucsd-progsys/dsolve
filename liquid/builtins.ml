@@ -54,21 +54,24 @@ let qrel rel x y =
 
 let mk_tyvar () = Frame.Fvar(Path.mk_ident "a", ([], ([], [])))
 
-let mk_int qs = Fconstr(Predef.path_int, [], [], ([], (qs, [])))
+let mk_abstract path qs =
+  Fabstract(path, [], ([], (qs, [])))
 
-let uFloat = Fconstr(Predef.path_float, [], [], ([], ([], [])))
-let uChar = Fconstr(Predef.path_char, [], [], ([], ([], [])))
+let mk_int qs = mk_abstract Predef.path_int qs
 
-let mk_string qs = Fconstr(Predef.path_string, [], [], ([], (qs, [])))
+let uFloat = mk_abstract Predef.path_float []
+let uChar = mk_abstract Predef.path_char []
+
+let mk_string qs = mk_abstract Predef.path_string qs
 
 let uString = mk_string []
 let rString name v p = mk_string [(Path.mk_ident name, v, p)]
 
-let mk_bool qs = Fconstr(Predef.path_bool, [], [], ([], (qs, [])))
+let mk_bool qs = Fconstr(Predef.path_bool, [(Cstr_constant 0, []); (Cstr_constant 1, [])], ([], (qs, [])))
 let uBool = mk_bool []
 let rBool name v p = mk_bool [(Path.mk_ident name, v, p)]
 
-let mk_array f qs = Fconstr(Predef.path_array, [f], [Invariant], ([], (qs, [])))
+let mk_array f qs = Fabstract(Predef.path_array, [(f, Invariant)], ([], (qs, [])))
 
 let find_constructed_type id env =
   let path =
@@ -78,7 +81,7 @@ let find_constructed_type id env =
   let decl = Env.find_type path env in (path, List.map translate_variance decl.type_variance)
 
 let mk_named id fs qs env =
-  let (path, varis) = find_constructed_type id env in Fconstr(path, fs, varis, ([], (qs, [])))
+  let (path, varis) = find_constructed_type id env in Fabstract(path, List.combine fs varis, ([], (qs, [])))
 
 let mk_ref f env = Frecord (fst (find_constructed_type ["ref"; "Pervasives"] env), [(f, "contents", Mutable)], ([], ([], [])))
 
@@ -88,8 +91,7 @@ let mk_bigarray_layout a qs env = mk_named ["layout"; "Bigarray"] [a] qs env
 
 let mk_bigarray_type a b c qs env = mk_named ["t"; "Array2"; "Bigarray"] [a; b; c] qs env
 
-let mk_unit () = Fconstr(Predef.path_unit, [], [], ([], ([], [])))
-let uUnit = mk_unit ()
+let uUnit = Fconstr(Predef.path_unit, [(Cstr_constant 0, [])], ([], ([], [])))
 
 let uInt = mk_int []
 let rInt name v p = mk_int [(Path.mk_ident name, v, p)]
@@ -195,8 +197,6 @@ let _frames = [
   (["succ"; "Pervasives"], defun (fun x -> uInt ==> fun y -> rInt "succ" y ((Var y) ==. ((Var x) +- PInt 1))));
 
   (["pred"; "Pervasives"], defun (fun x -> uInt ==> fun y -> rInt "pred" y ((Var y) ==. ((Var x) -- PInt 1))));
-
-
 
   poly_rel_frame ["="; "Pervasives"] "=" Eq;
   poly_rel_frame ["=="; "Pervasives"] "==" Eq;

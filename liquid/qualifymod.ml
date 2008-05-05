@@ -130,18 +130,19 @@ and constrain_constant path = function
 
 and constrain_constructed (env, guard, f) cstrdesc args e =
   match f with
-  | F.Fconstr (path, tyargframes, cstrs, _) ->
+  | F.Fconstr (path, cstrs, _) ->
       let tag = cstrdesc.cstr_tag in
       let cstrref = match tag with
         | Cstr_constant n | Cstr_block n -> B.tag_refinement n
         | Cstr_exception _ -> assert false
       in
-      let f = F.Fconstr (path, tyargframes, cstrs, cstrref) in
-      let cstrargs = F.fresh_constructor e.exp_env cstrdesc f in
-      let (argframes, argcstrs) = constrain_subexprs env guard args in
+      let f = F.Fconstr (path, cstrs, cstrref) in
+      let _ = printf "%a %d@.@." F.pprint f (List.length cstrs) in
+      let cstrargs = F.params_frames (List.assoc tag cstrs) in
+      let (argframes, argcs) = constrain_subexprs env guard args in
         (f,
          WFFrame(env, f) :: (List.map2 (fun arg formal -> SubFrame(env, guard, arg, formal)) argframes cstrargs),
-         argcstrs)
+         argcs)
   | _ -> assert false
 
 and constrain_record (env, guard, f) labeled_exprs =
@@ -250,14 +251,15 @@ and constrain_let (env, guard, f) recflag bindings body =
         (f, [WFFrame (env, f); SubFrame (env', guard, body_frame, f)], cstrs1 @ cstrs2)
 
 and constrain_array (env, guard, f) elements =
-  let (f, fs) =
+  let (f, fa) =
     (match f with
-      | F.Fconstr(p, l, varis, _) -> (F.Fconstr(p, l, varis, B.size_lit_refinement(List.length elements)), l)
+      | F.Fabstract(p, ([(fa, _)] as ps), _) ->
+          (F.Fabstract(p, ps, B.size_lit_refinement(List.length elements)), fa)
       | _ -> assert false) in
   let list_rec (fs, c) e = (fun (f, cs) -> (f::fs, cs @ c)) (constrain e env guard) in
   let (fs', sub_cs) = List.fold_left list_rec ([], []) elements in
   let mksub b a = SubFrame(env, guard, a, b) in
-    (f, WFFrame(env, f) :: List.map (mksub (List.hd fs)) fs', sub_cs)
+    (f, WFFrame(env, f) :: List.map (mksub fa) fs', sub_cs)
 
 and constrain_sequence (env, guard, _) e1 e2 =
   let (_, cs1) = constrain e1 env guard in
@@ -287,7 +289,7 @@ and constrain_assert (env, guard, _) e =
     (Path.mk_ident "assertion",
      Path.mk_ident "null",
      P.equals (B.tag(P.Var guardvar), P.int_true))
-  in (B.mk_unit (), [SubFrame (env, guard, B.mk_int [], B.mk_int [assert_qualifier])], cstrs)
+  in (B.uUnit, [SubFrame (env, guard, B.mk_int [], B.mk_int [assert_qualifier])], cstrs)
 
 and constrain_and_bind guard (env, cstrs) (pat, e) =
   let (f, cstrs') = constrain e env guard in
