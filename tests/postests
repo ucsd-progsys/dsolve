@@ -1,4 +1,4 @@
-tests/polymax.ml         0   True
+tests/polymax.ml         1   True
 tests/tup1.ml            0   True
 tests/tup2a.ml           0   True
 tests/tup2b.ml           1   True

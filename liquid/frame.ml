@@ -124,15 +124,15 @@ let rec same_shape t1 t2 =
       Not_found -> vars := (p, q) :: !vars; true in
   match (t1, t2) with
   (Fconstr(p, l, _, _), Fconstr(p', l', _, _)) ->
-   (Path.same p p') && (List.for_all (fun f -> f) (List.map2 (same_shape map_vars) l l')) 
+    (Path.same p p') && (List.for_all (fun f -> f) (List.map2 same_shape l l')) 
   | (Fvar (p, _), Fvar (p', _)) ->
       ismapped p p'
   | (Farrow(_, i, o), Farrow(_, i', o')) ->
-   ((same_shape map_vars) i i') && ((same_shape map_vars) o o')
+      same_shape i i' && same_shape o o'
   | (Ftuple (t1s, _), Ftuple (t2s, _)) ->
-   List.for_all2 (same_shape map_vars) t1s t2s
+      List.for_all2 same_shape t1s t2s
   | (Frecord (p1, f1s, _), Frecord (p2, f2s, _)) when Path.same p1 p2 ->
-      let shape_rec (f1, _, _) (f2, _, _) = (same_shape map_vars) f1 f2 in
+      let shape_rec (f1, _, _) (f2, _, _) = same_shape f1 f2 in
         List.for_all2 shape_rec f1s f2s
   | (Funknown, Funknown) -> true
   | t -> false 
