@@ -164,7 +164,8 @@ let rec refinement_fold f l = function
   | Fvar (_, r) ->
       f r l
   | Fconstr (_, fs, _, r) ->
-      f r (List.fold_left (refinement_fold f) l fs)
+      printf "WARNING: using buggy refinement_fold";
+      f r l
   | Ftuple (fs, r) ->
       f r (List.fold_left (refinement_fold f) l fs)
   | Frecord (_, fs, r) ->

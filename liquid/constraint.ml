@@ -209,7 +209,7 @@ let lequate_cs env g c variance f1 f2 = match variance with
 let match_and_extend tenv env (l1,f1) (l2,f2) =
   match (l1,l2) with
   | (Some p, None) | (None, Some p) -> F.env_bind tenv env p f2
-  | (Some p1, Some p2) -> F.env_bind tenv (F.env_bind tenv env p1 f2) p2 f2
+  | (Some p1, Some p2) when Pat.same p1 p2 -> F.env_bind tenv env p1 f2
   | _  -> env (* 1 *)
  
 let mutable_variance = function Asttypes.Mutable -> F.Invariant | _ -> F.Covariant
@@ -438,7 +438,7 @@ let qual_implied s lhs lhsm rhs_subs q =
       let _ = if rv then incr stat_valid_imp_queries in
       rv 
 *)
-let implies_match env sm r1 = 
+let implies_match env sm r1 =
   let lhsm =
     Bstats.time "close_over_env" 
       (fun () ->
