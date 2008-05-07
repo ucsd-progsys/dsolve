@@ -62,15 +62,9 @@ and origin =
   | Assert of Location.t 
   | Cstr of labeled_constraint
 
-type qexpr =
-  | Qconst of Qualifier.t
-  | Qvar of F.qvar
-
-type simple_refinement = F.substitution list * qexpr
-
 type refinement_constraint =
-  | SubRef of F.t Le.t * guard_t * F.refinement * simple_refinement * (subref_id option)
-  | WFRef of F.t Le.t * simple_refinement * (subref_id option)
+  | SubRef of F.t Le.t * guard_t * F.refinement * F.simple_refinement * (subref_id option)
+  | WFRef of F.t Le.t * F.simple_refinement * (subref_id option)
 
 (**************************************************************)
 (********************** Misc. Constants ***********************)
@@ -86,7 +80,9 @@ let qual_test_var = Path.mk_ident "AA"
 let qual_test_expr = P.Var qual_test_var
 
 let is_simple_constraint = function 
-  SubRef (_, _, ([], ([], _)), ([], Qvar _), _) -> true | _ -> false
+  | SubRef (_, _, r1, ([], F.Qvar _), _) ->
+      List.for_all (function ([], ([], _)) -> true | _ -> false) r1
+  | _ -> false
 
 let is_subref_constraint = function 
   SubRef _ -> true | _ -> false
@@ -99,16 +95,8 @@ let solution_map s k =
     (Printf.sprintf "ERROR: solution_map couldn't find: %s" (C.path_name () k))
     (Sol.find s) k  
 
-let ref_of_simple = function
-  | (subs, Qconst q) -> (subs, ([q], []))
-  | (subs, Qvar v) -> (subs, ([], [v]))
-
-let split_ref (qconsts, qvars) =
-  (List.map (fun q -> Qconst q) qconsts, List.map (fun k -> Qvar k) qvars)
-
-let sref_map f qe =
-  let (qconsts, qvars) = split_ref qe in
-    List.map f (qvars @ qconsts)
+let sref_map f r =
+  let (qconsts, qvars) = F.ref_to_simples r in List.map f (qconsts @ qvars)
 
 (**************************************************************)
 (**************************** Stats ***************************)
@@ -159,10 +147,10 @@ let pprint_ref so ppf = function
   | SubRef (env,g,r1,sr2,io) ->
       fprintf ppf "@[%a@ Env:@ @[%a@];@;<1 2>Guard:@ %a@;<1 0>|-@;<1 2>%a@;<1 2><:@;<1 2>%a@]"
       pprint_io io (pprint_env_pred so) env P.pprint (guard_predicate () g) 
-      F.pprint_refinement r1 F.pprint_refinement (ref_of_simple sr2)
+      F.pprint_refinement r1 F.pprint_refinement (F.ref_of_simple sr2)
   | WFRef (env,sr,io) ->
       fprintf ppf "@[%a@ Env:@ @[%a@];@;<1 2>|-@;<1 2>%a@;<1 2>@]"
-      pprint_io io (pprint_env_pred so) env F.pprint_refinement (ref_of_simple sr)
+      pprint_io io (pprint_env_pred so) env F.pprint_refinement (F.ref_of_simple sr)
 
 
 (**************************************************************)
@@ -173,15 +161,15 @@ let simplify_frame gm x f =
   if not (Le.mem x gm) then f else
     let pos = Le.find x gm in
     match f with 
-    | F.Fconstr (a,b,c,(subs,([(v1,v2,P.Iff (v3,p))],[]))) when v3 = B.tag (P.Var v2) ->
+    | F.Fconstr (a,b,c,[(subs,([(v1,v2,P.Iff (v3,p))],[]))]) when v3 = B.tag (P.Var v2) ->
         let p' = if pos then p else P.Not p in
-        F.Fconstr (a,b,c,(subs,([(v1,v2,p')],[])))
-    | F.Frecord (a,b,(subs,([(v1,v2,P.Iff (v3,p))],[]))) when v3 = B.tag (P.Var v2) ->
+        F.Fconstr (a,b,c,[(subs,([(v1,v2,p')],[]))])
+    | F.Frecord (a,b,[(subs,([(v1,v2,P.Iff (v3,p))],[]))]) when v3 = B.tag (P.Var v2) ->
         let p' = if pos then p else P.Not p in
-        F.Frecord (a,b,(subs,([(v1,v2,p')],[])))
-    | F.Ftuple (fs,(subs,([(v1,v2,P.Iff (v3,p))],[]))) when v3 = B.tag (P.Var v2) ->
+        F.Frecord (a,b,[(subs,([(v1,v2,p')],[]))])
+    | F.Ftuple (fs,[(subs,([(v1,v2,P.Iff (v3,p))],[]))]) when v3 = B.tag (P.Var v2) ->
         let p' = if pos then p else P.Not p in
-        F.Ftuple (fs,(subs,([(v1,v2,p')], [])))
+        F.Ftuple (fs,[(subs,([(v1,v2,p')], []))])
     | _ -> f
 
 let simplify_env env g =
@@ -221,20 +209,17 @@ let lequate_cs env g c variance f1 f2 = match variance with
 let match_and_extend tenv env (l1,f1) (l2,f2) =
   match (l1,l2) with
   | (Some p, None) | (None, Some p) -> F.env_bind tenv env p f2
-  | (Some p1, Some p2) when Pat.same p1 p2 -> F.env_bind tenv env p1 f2
+  | (Some p1, Some p2) -> F.env_bind tenv (F.env_bind tenv env p1 f2) p2 f2
   | _  -> env (* 1 *)
  
 let mutable_variance = function Asttypes.Mutable -> F.Invariant | _ -> F.Covariant
 
-let make_simple_sub c env g r1 subs qe =
-  (Cstr c, SubRef(env, g, r1, (subs, qe), None))
-
-let split_sub_ref c env g r1 (subs, qe2) =
-  sref_map (make_simple_sub c env g r1 subs) qe2
+let split_sub_ref c env g r1 r2 =
+  sref_map (fun sr -> (Cstr c, SubRef(env, g, r1, sr, None))) r2
 
 let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubFrame (env,g,f1,f2); lc_tenv = tenv} as c ->
   match (f1, f2) with
-  | (F.Farrow (l1, f1, f1'), F.Farrow (l2, f2, f2')) -> 
+  | (F.Farrow (l1, f1, f1'), F.Farrow (l2, f2, f2')) ->
       let env' = match_and_extend tenv env (l1,f1) (l2,f2) in
       ((lequate_cs env g c F.Covariant f2 f1) @ (lequate_cs env' g c F.Covariant f1' f2'),
        [])
@@ -257,11 +242,8 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       (printf "@[Can't@ split:@ %a@ <:@ %a@]" F.pprint f1 F.pprint f2; 
        assert false)
 
-let make_simple_wf f c env subs qe =
-  (Cstr c, WFRef(Le.add qual_test_var f env, (subs, qe), None))
-
-let split_wf_ref f c env (subs, qe) =
-  sref_map (make_simple_wf f c env subs) qe
+let split_wf_ref f c env r =
+  sref_map (fun sr -> (Cstr c, WFRef(Le.add qual_test_var f env, sr, None))) r
 
 let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFrame (env,f); lc_tenv = tenv} as c ->
   let make_wff env f = {lc_cstr = WFFrame (env, f); lc_tenv = tenv; lc_orig = Cstr c; lc_id = None} in
@@ -319,11 +301,11 @@ let get_ref_rank sri c =
 let get_ref_constraint sri i = 
   C.do_catch "ERROR: get_constraint" (SIM.find i) sri.cnst
 
-let lhs_ks = function WFRef _ -> assert false | SubRef (env,_,(_,(_, qvars)),_,_) ->
-  List.map fst (Le.fold (fun _ f l -> F.refinement_vars f @ l) env qvars)
+let lhs_ks = function WFRef _ -> assert false | SubRef (env,_,r,_,_) ->
+  List.map fst (Le.fold (fun _ f l -> F.qvars f @ l) env (F.refinement_qvars r))
 
 let rhs_k = function
-  | SubRef (_,_,_,(_, Qvar (k, _)),_) -> Some k
+  | SubRef (_,_,_,(_, F.Qvar (k, _)),_) -> Some k
   | _ -> None
 
 let make_rank_map om cm =
@@ -431,6 +413,7 @@ let close_over_env env s ps =
             if Path.same x qual_test_var then Some y else 
               if Path.same y qual_test_var then Some x else None in
           (match tvar with None -> close_rec (p :: clo) ps | Some t ->
+             let _ = printf "LOOKING FOR %a@.@." P.pprint p in
             let ps' = F.conjuncts s qual_test_expr (Le.find t env) in
             close_rec (p :: clo) (ps'@ps))
       | p::ps -> close_rec (p :: clo) ps in
@@ -475,21 +458,21 @@ let implies_tp env g sm r1 =
   fun (_,p) -> Bstats.time "ch" ch p 
 
 let qual_wf sm env subs q =
-  refinement_well_formed env sm (subs, ([q], [])) qual_test_expr
+  refinement_well_formed env sm (F.mk_refinement subs [q] []) qual_test_expr
 
 let refine sri s c =
   let _ = incr stat_refines in
   let sm = solution_map s in 
   match c with
-  | SubRef (_, _, ([], ([], [(k1, _)])), ([], Qvar (k2, _)), _)
-    when not (!Cf.no_simple || !Cf.verify_simple) -> 
+  | SubRef (_, _, [([], ([], [(k1, _)]))], ([], F.Qvar (k2, _)), _)
+    when not (!Cf.no_simple || !Cf.verify_simple) ->
       let _ = incr stat_simple_refines in
       Bstats.time "refine_simple" (refine_simple s k1) k2
-  | SubRef (env,g,r1, (sub2s, Qvar (k2, _)), _)  ->
+  | SubRef (env,g,r1, (sub2s, F.Qvar (k2, _)), _)  ->
       let _ = incr stat_sub_refines in
       let qp2s = 
         List.map 
-          (fun q -> (q,F.refinement_predicate sm qual_test_expr (sub2s,([q], []))))
+          (fun q -> (q,F.refinement_predicate sm qual_test_expr (F.mk_refinement sub2s [q] [])))
           (sm k2) in
       let (qp2s1,qp2s') = Bstats.time "match check" (List.partition (implies_match env sm r1)) qp2s in
       let tpc = Bstats.time "implies_tp" (implies_tp env g sm) r1 in
@@ -501,7 +484,7 @@ let refine sri s c =
       let _ = stat_imp_queries := !stat_imp_queries + (List.length qp2s) in
       let _ = stat_valid_imp_queries := !stat_valid_imp_queries + (List.length q2s'') in
       (List.length qp2s  <> List.length q2s'')
-  | WFRef (env, (subs, Qvar (k, _)), _) ->
+  | WFRef (env, (subs, F.Qvar (k, _)), _) ->
       let _ = incr stat_wf_refines in
       let qs  = solution_map s k in
       let qs' = List.filter (qual_wf sm env subs) qs in
@@ -519,10 +502,10 @@ let sat s = function
       let gp = Bstats.time "make guardp" (guard_predicate ()) g in
       let envp = environment_predicate (solution_map s) env in
       let p1 = F.refinement_predicate (solution_map s) qual_test_expr r1 in
-      let p2 = F.refinement_predicate (solution_map s) qual_test_expr (ref_of_simple sr2) in
+      let p2 = F.refinement_predicate (solution_map s) qual_test_expr (F.ref_of_simple sr2) in
       let rv = TP.implies (P.big_and [envp; gp; p1]) p2 in TP.finish ();rv
-  | WFRef (env,(subs, Qvar k), _) as c ->
-      let rv = refinement_well_formed env (solution_map s) (subs, ([], [k])) qual_test_expr in
+  | WFRef (env,(subs, F.Qvar k), _) as c ->
+      let rv = refinement_well_formed env (solution_map s) (F.mk_refinement subs [] [k]) qual_test_expr in
       C.asserts (Printf.sprintf "ERROR: wf is unsat! (%d)" (get_ref_id c)) rv;
       rv 
   | _ -> true
@@ -545,14 +528,13 @@ let unsat_constraints sri s =
 let make_initial_solution sri qs =
   let s = Sol.create 17 in
   let addrv = function
-  | (Qconst _,_) -> ()
-  | (Qvar (k, F.Top),false) -> if not (Sol.mem s k) then Sol.replace s k []
-  | (Qvar (k, _),_) -> Sol.replace s k qs in
+  | (F.Qconst _, _) -> ()
+  | (F.Qvar (k, F.Top),false) -> if not (Sol.mem s k) then Sol.replace s k []
+  | (F.Qvar (k, _),_) -> Sol.replace s k qs in
   SIM.iter 
     (fun _ c -> match c with 
-    | SubRef (_, _, (_, qes1), (_, qe2), _) ->
-        let (_, qvars1) = split_ref qes1 in
-          List.iter (fun qe -> addrv (qe,false)) qvars1; addrv (qe2,true)
+    | SubRef (_, _, r1, (_, qe2), _) ->
+        List.iter (fun qv -> addrv (F.Qvar qv,false)) (F.refinement_qvars r1); addrv (qe2,true)
     | WFRef (_, (_, qe), _) -> addrv (qe,false)) sri.cnst;
   s
 

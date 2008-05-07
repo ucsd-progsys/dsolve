@@ -52,23 +52,26 @@ let qrel rel x y =
      x,
      Atom(Var x, rel, Var y))
 
-let mk_tyvar () = Frame.Fvar(Path.mk_ident "a", ([], ([], [])))
+let mk_tyvar () = Frame.Fvar(Path.mk_ident "a", empty_refinement)
 
-let mk_int qs = Fconstr(Predef.path_int, [], [], ([], (qs, [])))
+let const_ref qs =
+  mk_refinement [] qs []
 
-let uFloat = Fconstr(Predef.path_float, [], [], ([], ([], [])))
-let uChar = Fconstr(Predef.path_char, [], [], ([], ([], [])))
+let mk_int qs = Fconstr(Predef.path_int, [], [], const_ref qs)
 
-let mk_string qs = Fconstr(Predef.path_string, [], [], ([], (qs, [])))
+let uFloat = Fconstr(Predef.path_float, [], [], empty_refinement)
+let uChar = Fconstr(Predef.path_char, [], [], empty_refinement)
+
+let mk_string qs = Fconstr(Predef.path_string, [], [], const_ref qs)
 
 let uString = mk_string []
 let rString name v p = mk_string [(Path.mk_ident name, v, p)]
 
-let mk_bool qs = Fconstr(Predef.path_bool, [], [], ([], (qs, [])))
+let mk_bool qs = Fconstr(Predef.path_bool, [], [], const_ref qs)
 let uBool = mk_bool []
 let rBool name v p = mk_bool [(Path.mk_ident name, v, p)]
 
-let mk_array f qs = Fconstr(Predef.path_array, [f], [Invariant], ([], (qs, [])))
+let mk_array f qs = Fconstr(Predef.path_array, [f], [Invariant], const_ref qs)
 
 let find_constructed_type id env =
   let path =
@@ -78,9 +81,9 @@ let find_constructed_type id env =
   let decl = Env.find_type path env in (path, List.map translate_variance decl.type_variance)
 
 let mk_named id fs qs env =
-  let (path, varis) = find_constructed_type id env in Fconstr(path, fs, varis, ([], (qs, [])))
+  let (path, varis) = find_constructed_type id env in Fconstr(path, fs, varis, const_ref qs)
 
-let mk_ref f env = Frecord (fst (find_constructed_type ["ref"; "Pervasives"] env), [(f, "contents", Mutable)], ([], ([], [])))
+let mk_ref f env = Frecord(fst (find_constructed_type ["ref"; "Pervasives"] env), [(f, "contents", Mutable)], empty_refinement)
 
 let mk_bigarray_kind a b qs env = mk_named ["kind"; "Bigarray"] [a; b] qs env
 
@@ -88,7 +91,7 @@ let mk_bigarray_layout a qs env = mk_named ["layout"; "Bigarray"] [a] qs env
 
 let mk_bigarray_type a b c qs env = mk_named ["t"; "Array2"; "Bigarray"] [a; b; c] qs env
 
-let mk_unit () = Fconstr(Predef.path_unit, [], [], ([], ([], [])))
+let mk_unit () = Fconstr(Predef.path_unit, [], [], empty_refinement)
 let uUnit = mk_unit ()
 
 let uInt = mk_int []
@@ -118,7 +121,7 @@ let (==>) x y = (x, y)
 
 let (===>) x y = x ==> fun _ -> def y
 
-let forall f = f (Frame.Fvar(Path.mk_ident "a", ([], ([], []))))
+let forall f = f (Frame.Fvar(Path.mk_ident "a", empty_refinement))
 
 let op_frame path qname op =
   (path, defun (fun x -> uInt ===>
@@ -260,6 +263,8 @@ let _frames = [
 
   (["int"; "Random"], defun (fun x -> rInt "PosMax" x (PInt 0 <. Var x) ==>
                              fun y -> rInt "RandBounds" y ((PInt 0 <=. Var y) &&. (Var y <. Var x))));
+
+  (["max_int"; "Pervasives"], uInt);
 ]
 
 let bigarray_dim_frame dim env =
@@ -322,20 +327,22 @@ let equality_qualifier exp =
     Predicate.pprint Format.str_formatter pred;
     let expstr = Format.flush_str_formatter () in (Path.mk_ident expstr, x, pred)
 
-let equality_refinement exp = ([], ([equality_qualifier exp], []))
+let equality_refinement exp =
+  const_ref [equality_qualifier exp]
 
 let tag_refinement t =
   let x = Path.mk_ident "V" in
     let pred = tag (Var x) ==. PInt t in
     Predicate.pprint Format.str_formatter pred;
     let expstr = Format.flush_str_formatter () in
-      ([], ([(Path.mk_ident expstr, x, pred)], []))
+      const_ref [(Path.mk_ident expstr, x, pred)]
 
 let size_lit_refinement i =
   let x = Path.mk_ident "x" in
-    ([], ([(Path.mk_ident "<size_lit_eq>",
-            x,
-            FunApp("Array.length", [Var x]) ==. PInt i)], []))
+    const_ref
+      [(Path.mk_ident "<size_lit_eq>",
+        x,
+        FunApp("Array.length", [Var x]) ==. PInt i)]
 
 let field_eq_qualifier name pexp =
   let x = Path.mk_ident "x" in (Path.mk_ident "<field_eq>", x, Field (name, Var x) ==. pexp)

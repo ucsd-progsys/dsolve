@@ -31,7 +31,14 @@ type substitution = Path.t * Predicate.pexpr
 type open_assignment = Top | Bottom
 
 type qvar = Path.t * open_assignment
-type refinement = substitution list * (Qualifier.t list * qvar list)
+type refexpr = substitution list * (Qualifier.t list * qvar list)
+type refinement = refexpr list
+
+type qexpr =
+  | Qconst of Qualifier.t
+  | Qvar of qvar
+
+type simple_refinement = substitution list * qexpr
 
 val empty_refinement: refinement
 val false_refinement: refinement
@@ -50,6 +57,7 @@ val pprint: formatter -> t -> unit
 val pprint_fenv: formatter -> t Lightenv.t -> unit list
 val pprint_sub: formatter -> substitution -> unit
 val pprint_refinement: formatter -> refinement -> unit
+val mk_refinement: substitution list -> Qualifier.t list -> qvar list -> refinement
 val translate_variance: (bool * bool * bool) -> variance
 val same_shape: t -> t -> bool
 val translate_pframe: Env.t -> (string * (string * Parsetree.predicate_pattern)) list -> Parsetree.litframe -> t
@@ -69,8 +77,11 @@ val refinement_conjuncts:
   (Path.t -> Qualifier.t list) -> Predicate.pexpr -> refinement -> Predicate.t list
 val refinement_predicate:
   (Path.t -> Qualifier.t list) -> Predicate.pexpr -> refinement -> Predicate.t
-val refinement_vars: t -> qvar list
 val apply_refinement: refinement -> t -> t
+val qvars: t -> qvar list
+val refinement_qvars: refinement -> qvar list
+val ref_to_simples: refinement -> (simple_refinement list * simple_refinement list)
+val ref_of_simple: simple_refinement -> refinement
 val predicate:
   (Path.t -> Qualifier.t list) -> Predicate.pexpr -> t -> Predicate.t
 val conjuncts:
