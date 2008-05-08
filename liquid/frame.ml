@@ -299,7 +299,6 @@ let same_shape t1 t2 =
    one is undefined and unimportant. *)
 let instantiate fr ftemplate =
   let vars = ref [] in
-  let _ = printf "Instantiating %a against %a@.@." pprint fr pprint ftemplate in
   let rec inst f ft =
     match (f, ft) with
       | (Fvar (p, r), _) ->
