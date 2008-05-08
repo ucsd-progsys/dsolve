@@ -7,6 +7,5 @@ let wrapmin x y =
   V(min x y)
 
 let unwrapmin u v =
-  let m = wrapmin u v in
-  match m with
+  match wrapmin u v with
     | V c -> assert (c > u)

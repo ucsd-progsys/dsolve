@@ -83,13 +83,12 @@ let label_constraint exp fc =
   let org = match exp.exp_desc with Texp_assert _ -> Assert exp.exp_loc | _ -> Loc exp.exp_loc in
     {lc_cstr = fc; lc_tenv = exp.exp_env; lc_orig = org; lc_id = fresh_fc_id()}
 
-let is_poly_instantiation = function
+let is_poly_construction = function
   | (Texp_construct _, _)
-  | (Texp_ident _, _)
   | (Texp_assertfalse, _) -> true
   | _ -> false
 
-let expr_fresh desc_and_ty = if is_poly_instantiation desc_and_ty then Frame.fresh_unconstrained else Frame.fresh
+let expr_fresh desc_and_ty = if is_poly_construction desc_and_ty then Frame.fresh_unconstrained else Frame.fresh
 
 let rec constrain e env guard =
   let desc_ty = (e.exp_desc, repr e.exp_type) in
