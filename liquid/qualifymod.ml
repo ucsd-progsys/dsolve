@@ -38,6 +38,10 @@ module B = Builtins
 module Le = Lightenv
 module F = Frame
 
+(******************************************************************************)
+(******************************* Error reporting ******************************)
+(******************************************************************************)
+
 type error =
   | NotSubtype of F.t * F.t
   | IllFormed of F.t
@@ -46,13 +50,35 @@ type error =
 exception Error of Location.t * error
 exception Errors of (Location.t * error) list
 
-let expression_to_pexpr e =
-  match e.exp_desc with
-    | Texp_constant (Const_int n) -> P.PInt n
-    | Texp_ident (id, _) -> P.Var id
-    | _ -> P.Var (Path.mk_ident "dummy")
+let make_frame_error s cstr =
+  let rec error_rec cstr =
+    match cstr.lc_orig with
+      | Loc loc ->
+        begin match cstr.lc_cstr with
+          | SubFrame (_, _, f1, f2) ->
+            (loc, NotSubtype (F.apply_solution s f1,  F.apply_solution s f2))
+          | WFFrame (_,f) -> (loc, IllFormed (F.apply_solution s f))
+        end
+      | Assert loc -> (loc, AssertMayFail)
+      | Cstr cstr -> error_rec cstr
+  in error_rec cstr
 
-let under_lambda = ref 0
+let report_error ppf  = function
+  | AssertMayFail ->
+    fprintf ppf "@[Assertion may fail@]"
+  | NotSubtype (f1, f2) ->
+    fprintf ppf "@[@[%a@]@;<1 2>is not a subtype of@;<1 2>@[%a@]" F.pprint f1 F.pprint f2
+  | IllFormed f ->
+    fprintf ppf "@[Type %a is ill-formed" F.pprint f
+
+let rec report_errors ppf = function
+  | (l, e) :: es ->
+    fprintf ppf "@[%a%a@\n@\n@]" Location.print l report_error e; report_errors ppf es
+  | [] -> ()
+
+(******************************************************************************)
+(****************************** .annot generation *****************************)
+(******************************************************************************)
 
 module FrameLog = Map.Make(struct type t = Location.t
                                   let compare = compare end)
@@ -79,6 +105,10 @@ let dump_frames sourcefile fmap =
     let pp = formatter_of_out_channel (open_out filename) in
       FrameLog.iter (dump_frame pp) fmap
 
+(******************************************************************************)
+(**************************** Constraint generation ***************************)
+(******************************************************************************)
+
 let label_constraint exp fc =
   let org = match exp.exp_desc with Texp_assert _ -> Assert exp.exp_loc | _ -> Loc exp.exp_loc in
     {lc_cstr = fc; lc_tenv = exp.exp_env; lc_orig = org; lc_id = fresh_fc_id()}
@@ -86,6 +116,12 @@ let label_constraint exp fc =
 let is_poly_construction = function
   | (Texp_construct _, _) | (Texp_assertfalse, _) -> true
   | _ -> false
+
+let expression_to_pexpr e =
+  match e.exp_desc with
+    | Texp_constant (Const_int n) -> P.PInt n
+    | Texp_ident (id, _) -> P.Var id
+    | _ -> P.Var (Path.mk_ident "dummy")
 
 let expr_fresh desc_and_ty =
   if is_poly_construction desc_and_ty then Frame.fresh_unconstrained else Frame.fresh
@@ -340,6 +376,10 @@ let constrain_structure initfenv initquals str =
     | _ -> assert false
   in constrain_rec initquals initfenv [] str
 
+(******************************************************************************)
+(***************************** Qualifying modules *****************************)
+(******************************************************************************)
+
 module QualifierSet = Set.Make(Qualifier)
 
 (* Make copies of all the qualifiers where the free identifiers are replaced
@@ -355,32 +395,6 @@ let instantiate_in_environments cs qs =
           | None -> qset
     in List.fold_left instantiate_in_env qualset domains
   in QualifierSet.elements (List.fold_left instantiate_qual QualifierSet.empty qs)
-
-let make_frame_error s cstr =
-  let rec error_rec cstr =
-    match cstr.lc_orig with
-      | Loc loc ->
-        begin match cstr.lc_cstr with
-          | SubFrame (_, _, f1, f2) ->
-            (loc, NotSubtype (F.apply_solution s f1,  F.apply_solution s f2))
-          | WFFrame (_,f) -> (loc, IllFormed (F.apply_solution s f))
-        end
-      | Assert loc -> (loc, AssertMayFail)
-      | Cstr cstr -> error_rec cstr
-  in error_rec cstr
-
-let report_error ppf  = function
-  | AssertMayFail ->
-    fprintf ppf "@[Assertion may fail@]"
-  | NotSubtype (f1, f2) ->
-    fprintf ppf "@[@[%a@]@;<1 2>is not a subtype of@;<1 2>@[%a@]" F.pprint f1 F.pprint f2
-  | IllFormed f ->
-    fprintf ppf "@[Type %a is ill-formed" F.pprint f
-
-let rec report_errors ppf = function
-  | (l, e) :: es ->
-    fprintf ppf "@[%a%a@\n@\n@]" Location.print l report_error e; report_errors ppf es
-  | [] -> ()
 
 let pre_solve () = 
   C.cprintf C.ol_solve_master "@[##solve##@\n@]"; Bstats.reset ()
