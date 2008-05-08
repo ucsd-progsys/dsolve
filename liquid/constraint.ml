@@ -190,9 +190,6 @@ let simplify_fc c =
       {c with lc_cstr = SubFrame(env', g, a, b)}
 
 (* Notes:
-  * 1. If the labels disagree, we don't resolve. Instead, we 
-  * proceed with the best information we have, probably losing 
-  * chances to assert qualifiers along the way. 
   * 2. pmr: because we were only filtering through invariant types 
   * anyway, we might as well just use invariants until we start 
   * getting problems from it --- for now, it's too much trouble 
@@ -207,10 +204,12 @@ let lequate_cs env g c variance f1 f2 = match variance with
   | F.Contravariant -> [make_lc c (SubFrame(env,g,f2,f1))]
 
 let match_and_extend tenv env (l1,f1) (l2,f2) =
-  match (l1,l2) with
-  | (Some p, None) | (None, Some p) -> F.env_bind tenv env p f2
-  | (Some p1, Some p2) when Pat.same p1 p2 -> F.env_bind tenv env p1 f2
-  | _  -> env (* 1 *)
+  match (l1, l2) with
+  | (Some p, None) | (None, Some p) -> (F.env_bind tenv env p f2, f1, f2)
+  | (Some p1, Some p2) when Pat.same p1 p2 -> (F.env_bind tenv env p1 f2, f1, f2)
+  | (Some p1, Some p2) ->
+      (F.env_bind tenv env p1 f2, f1, List.fold_right F.apply_substitution (Pat.substitution p2 p1) f2)
+  | (None, None) -> (env, f1, f2)
  
 let mutable_variance = function Asttypes.Mutable -> F.Invariant | _ -> F.Covariant
 
@@ -220,7 +219,7 @@ let split_sub_ref c env g r1 r2 =
 let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubFrame (env,g,f1,f2); lc_tenv = tenv} as c ->
   match (f1, f2) with
   | (F.Farrow (l1, f1, f1'), F.Farrow (l2, f2, f2')) ->
-      let env' = match_and_extend tenv env (l1,f1) (l2,f2) in
+      let (env', f1, f2) = match_and_extend tenv env (l1,f1) (l2,f2) in
       ((lequate_cs env g c F.Covariant f2 f1) @ (lequate_cs env' g c F.Covariant f1' f2'),
        [])
   | (F.Fvar (_, r1), F.Fvar (_, r2)) ->
@@ -413,7 +412,6 @@ let close_over_env env s ps =
             if Path.same x qual_test_var then Some y else 
               if Path.same y qual_test_var then Some x else None in
           (match tvar with None -> close_rec (p :: clo) ps | Some t ->
-             let _ = printf "LOOKING FOR %a@.@." P.pprint p in
             let ps' = F.conjuncts s qual_test_expr (Le.find t env) in
             close_rec (p :: clo) (ps'@ps))
       | p::ps -> close_rec (p :: clo) ps in
