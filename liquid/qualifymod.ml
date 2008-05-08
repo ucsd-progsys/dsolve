@@ -153,7 +153,7 @@ and constrain_record (env, guard, f) labeled_exprs =
   match f with
     | F.Frecord (p, recframes, _) ->
       let field_qualifier (_, name, _) fexpr = B.field_eq_qualifier name (expression_to_pexpr fexpr) in
-        (F.Frecord (p, recframes, ([], (List.map2 field_qualifier recframes sorted_exprs, []))),
+        (F.Frecord (p, recframes, [([], (List.map2 field_qualifier recframes sorted_exprs, []))]),
          WFFrame (env, f) :: List.fold_left2 subframe_field [] subframes recframes,
          subexp_cs)
     | _ -> assert false
@@ -274,7 +274,7 @@ and constrain_tuple (env, guard, f) es =
             WFFrame (env, fresh_frame) :: SubFrame (env, guard, rec_frame, fresh_frame) :: cs)
           [] fs fresh_fs in
         let elem_qualifier fexpr n = B.proj_eq_qualifier n (expression_to_pexpr fexpr) in
-          (F.Ftuple (fresh_fs, ([], (Misc.mapi elem_qualifier es, []))),
+          (F.Ftuple(fresh_fs, [([], (Misc.mapi elem_qualifier es, []))]),
            WFFrame (env, f) :: new_cs, subexp_cs)
     | _ -> assert false
 

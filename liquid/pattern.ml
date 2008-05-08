@@ -43,6 +43,10 @@ let _bind_vars = function
 
 let bind_vars p1 p2 = C.expand _bind_vars [(p1, p2)] []
 
+let substitution p1 p2 =
+  let vars = bind_vars p1 p2 in
+    List.map (fun (x, y) -> (Path.Pident x, Predicate.Var (Path.Pident y))) vars
+
 let rec fold f b p = match p with
   | Tpat_any
   | Tpat_var _ -> f b p
