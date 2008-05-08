@@ -194,8 +194,7 @@ let map_refexprs f fr =
   map_refinements (fun r -> List.map f r) fr
 
 let rec refinement_fold f l = function
-  | Fvar (_, r) ->
-      f r l
+  | Fvar (_, r) -> f r l
   | Fconstr (_, cs, r) ->
       f r (List.fold_left (refinement_fold f) l (constrs_param_frames cs))
   | Fabstract (_, ps, r) ->
@@ -213,9 +212,11 @@ let rec refinement_fold f l = function
 let mk_refinement subs qconsts qvars =
   [(subs, (qconsts, qvars))]
 
-let empty_refinement = mk_refinement [] [] []
+let empty_refinement =
+  mk_refinement [] [] []
 
-let false_refinement = [([], ([(Path.mk_ident "false", Path.mk_ident "V", Predicate.Not (Predicate.True))], []))]
+let false_refinement =
+  mk_refinement [] [(Path.mk_ident "false", Path.mk_ident "V", Predicate.Not (Predicate.True))] []
 
 let apply_refinement r = function
   | Fvar (p, _) -> Fvar (p, r)
@@ -371,8 +372,9 @@ let translate_variance = function
 let fresh_refinementvar open_assn () =
   mk_refinement [] [] [(Path.mk_ident "k", open_assn)]
 
-(* pmr: this looks suspect - ming? *)
-let fresh_true () = [([], ([(C.dummy (), Path.mk_ident "true", Predicate.True)], []))]
+(* pmr: this looks suspect - ming? isn't this just empty_refinement? *)
+let fresh_true () =
+  mk_refinement [] [(C.dummy (), Path.mk_ident "true", Predicate.True)] []
 
 let fresh_fvar () = Fvar(Path.mk_ident "a", empty_refinement)
 
@@ -425,8 +427,6 @@ let fresh_with_var_fun vars env ty fresh_ref_var =
                     (field_typ, name, muta) in
                   Frecord (p, List.map fresh_field fields, freshf())
           end
-(*          
-            fresh_constr env freshf freshf p ty_decl (List.map (fresh_rec freshf)) (fresh_rec freshf) fresh_rec *)
       | Tarrow(_, t1, t2, _) -> Farrow (None, fresh_rec freshf t1, fresh_rec freshf t2)
       | Ttuple ts -> Ftuple (List.map (fresh_rec freshf) ts, freshf ())
       | _ -> fprintf err_formatter "@[Warning: Freshing unsupported type]@."; Funknown
@@ -437,18 +437,22 @@ let fresh_with_var_fun vars env ty fresh_ref_var =
 
    You probably want to consider using fresh_with_labels instead of this
    for subtype constraints. *)
-let fresh env ty = fresh_with_var_fun (ref []) env ty (fresh_refinementvar Top)
+let fresh env ty =
+  fresh_with_var_fun (ref []) env ty (fresh_refinementvar Top)
 
 (* Create a fresh frame with the same shape as [exp]'s type and [f],
    and the same labels as [f]. *)
-let fresh_with_labels env ty f = label_like (fresh env ty) f
+let fresh_with_labels env ty f =
+  label_like (fresh env ty) f
 
 (* Create a fresh frame with the same shape as the given type [ty].
    No refinement variables are created - all refinements are initialized
    to true. *)
-let fresh_without_vars env ty = fresh_with_var_fun (ref []) env ty (fun _ -> empty_refinement)
+let fresh_without_vars env ty =
+  fresh_with_var_fun (ref []) env ty (fun _ -> empty_refinement)
 
-let fresh_unconstrained env ty = fresh_with_var_fun (ref []) env ty (fresh_refinementvar Bottom)
+let fresh_unconstrained env ty =
+  fresh_with_var_fun (ref []) env ty (fresh_refinementvar Bottom)
 
 (**************************************************************)
 (********************* mlq translation ************************) 

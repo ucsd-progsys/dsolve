@@ -84,11 +84,11 @@ let label_constraint exp fc =
     {lc_cstr = fc; lc_tenv = exp.exp_env; lc_orig = org; lc_id = fresh_fc_id()}
 
 let is_poly_construction = function
-  | (Texp_construct _, _)
-  | (Texp_assertfalse, _) -> true
+  | (Texp_construct _, _) | (Texp_assertfalse, _) -> true
   | _ -> false
 
-let expr_fresh desc_and_ty = if is_poly_construction desc_and_ty then Frame.fresh_unconstrained else Frame.fresh
+let expr_fresh desc_and_ty =
+  if is_poly_construction desc_and_ty then Frame.fresh_unconstrained else Frame.fresh
 
 let rec constrain e env guard =
   let desc_ty = (e.exp_desc, repr e.exp_type) in
@@ -120,8 +120,7 @@ let rec constrain e env guard =
   in log_frame e.exp_loc f; (f, (List.map (label_constraint e) cstrs) @ rec_cstrs)
 
 and constrain_constant path = function
-  | Const_int n ->
-      (B.mk_int [B.equality_qualifier (P.PInt n)], [], [])
+  | Const_int n -> (B.mk_int [B.equality_qualifier (P.PInt n)], [], [])
   | Const_float _ -> (B.uFloat, [], [])
   | Const_char _ -> (B.uChar, [], [])
   | Const_string _ -> (B.uString, [], [])
@@ -136,7 +135,6 @@ and constrain_constructed (env, guard, f) cstrdesc args e =
         | Cstr_exception _ -> assert false
       in
       let f = F.Fconstr (path, cstrs, cstrref) in
-      let _ = printf "%a %d@.@." F.pprint f (List.length cstrs) in
       let cstrargs = F.params_frames (List.assoc tag cstrs) in
       let (argframes, argcs) = constrain_subexprs env guard args in
         (f,
