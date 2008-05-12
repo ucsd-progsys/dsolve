@@ -26,10 +26,10 @@ open Frame
 
 let find_or_fail var env = try Lightenv.find var env with Not_found -> assert false
 
-let constr_app_shape paths out_shape in_shapes = 
+let abstract_app_shape paths out_shape in_shapes =
   let f i o = 
     match o with
-      Fconstr(a, _, _) ->
+      Fabstract(a, _, _) ->
         Path.same i a 
       | _ -> false
   in if (List.length paths = List.length in_shapes) && 
@@ -40,9 +40,9 @@ let constr_app_shape paths out_shape in_shapes =
    we'll suspend this and force it when we know it's safe *)
 let fun_app_shapes = lazy(
   let array2_path = Builtins.ext_find_type_path "array2" in
-    [("Array.length", constr_app_shape [Predef.path_array] uInt);
-     ("Bigarray.Array2.dim1", constr_app_shape [array2_path] uInt);
-     ("Bigarray.Array2.dim2", constr_app_shape [array2_path] uInt);
+    [("Array.length", abstract_app_shape [Predef.path_array] uInt);
+     ("Bigarray.Array2.dim1", abstract_app_shape [array2_path] uInt);
+     ("Bigarray.Array2.dim2", abstract_app_shape [array2_path] uInt);
      (Builtins.tag_function, (function [Fconstr _] -> uInt | _ -> Funknown))]
 )
 

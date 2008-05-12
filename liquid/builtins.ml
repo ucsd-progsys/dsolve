@@ -62,7 +62,7 @@ let mk_abstract path qs =
 
 let mk_int qs = Fabstract(Predef.path_int, [], const_ref qs)
 
-let uFloat = Fconstr(Predef.path_float, [], empty_refinement)
+let uFloat = Fabstract(Predef.path_float, [], empty_refinement)
 let uChar = Fconstr(Predef.path_char, [], empty_refinement)
 
 let mk_string qs = Fconstr(Predef.path_string, [], const_ref qs)
