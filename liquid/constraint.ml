@@ -205,11 +205,10 @@ let lequate_cs env g c variance f1 f2 = match variance with
 
 let match_and_extend tenv env (l1,f1) (l2,f2) =
   match (l1, l2) with
-  | (Some p, None) | (None, Some p) -> (F.env_bind tenv env p f2, f1, f2)
-  | (Some p1, Some p2) when Pat.same p1 p2 -> (F.env_bind tenv env p1 f2, f1, f2)
-  | (Some p1, Some p2) ->
-      (F.env_bind tenv env p1 f2, f1, List.fold_right F.apply_substitution (Pat.substitution p2 p1) f2)
-  | (None, None) -> (env, f1, f2)
+  | (Some p, None) | (None, Some p) -> (F.env_bind tenv env p f2, [])
+  | (Some p1, Some p2) when Pat.same p1 p2 -> (F.env_bind tenv env p1 f2, [])
+  | (Some p1, Some p2) -> (F.env_bind tenv env p1 f2, Pat.substitution p2 p1)
+  | (None, None) -> (env, [])
  
 let mutable_variance = function Asttypes.Mutable -> F.Invariant | _ -> F.Covariant
 
@@ -222,7 +221,8 @@ let split_sub_params c env g ps1 ps2 =
 let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubFrame (env,g,f1,f2); lc_tenv = tenv} as c ->
   match (f1, f2) with
   | (F.Farrow (l1, f1, f1'), F.Farrow (l2, f2, f2')) ->
-      let (env', f1, f2) = match_and_extend tenv env (l1,f1) (l2,f2) in
+      let (env', subs) = match_and_extend tenv env (l1,f1) (l2,f2) in
+      let f2' = List.fold_right F.apply_substitution subs f2' in
       ((lequate_cs env g c F.Covariant f2 f1) @ (lequate_cs env' g c F.Covariant f1' f2'),
        [])
   | (F.Fvar (_, r1), F.Fvar (_, r2)) ->
