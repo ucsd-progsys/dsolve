@@ -113,33 +113,31 @@ let label_constraint exp fc =
   let org = match exp.exp_desc with Texp_assert _ -> Assert exp.exp_loc | _ -> Loc exp.exp_loc in
     {lc_cstr = fc; lc_tenv = exp.exp_env; lc_orig = org; lc_id = fresh_fc_id()}
 
-let is_poly_construction = function
-  | (Texp_construct _, _) | (Texp_assertfalse, _) -> true
-  | _ -> false
-
 let expression_to_pexpr e =
   match e.exp_desc with
     | Texp_constant (Const_int n) -> P.PInt n
     | Texp_ident (id, _) -> P.Var id
     | _ -> P.Var (Path.mk_ident "dummy")
 
-let expr_fresh desc_and_ty =
-  if is_poly_construction desc_and_ty then Frame.fresh_unconstrained else Frame.fresh
+let expr_fresh = function
+  | Texp_construct _ | Texp_assertfalse -> Frame.fresh_unconstrained
+  | _ -> Frame.fresh
 
 let rec constrain e env guard =
-  let desc_ty = (e.exp_desc, repr e.exp_type) in
-  let environment = (env, guard, expr_fresh desc_ty e.exp_env e.exp_type) in
+  let freshf = expr_fresh e.exp_desc e.exp_env e.exp_type in
+  let desc_ty = (e.exp_desc, freshf) in
+  let environment = (env, guard, freshf) in
   let (f, cstrs, rec_cstrs) =
     match desc_ty with
-      | (Texp_constant const_typ, {desc = Tconstr(path, [], _)}) -> constrain_constant path const_typ
-      | (Texp_construct (cstrdesc, args), {desc = Tconstr(_, _, _)}) -> constrain_constructed environment cstrdesc args e
-      | (Texp_record (labeled_exprs, None), {desc = (Tconstr _)}) -> constrain_record environment labeled_exprs
+      | (Texp_constant const_typ, F.Fabstract(path, [], _)) -> constrain_constant path const_typ
+      | (Texp_construct (cstrdesc, args), F.Fconstr _) -> constrain_constructed environment cstrdesc args e
+      | (Texp_record (labeled_exprs, None), F.Frecord _) -> constrain_record environment labeled_exprs
       | (Texp_field (expr, label_desc), _) -> constrain_field environment expr label_desc
       | (Texp_ifthenelse (e1, e2, Some e3), _) -> constrain_if environment e1 e2 e3
       | (Texp_match (e, pexps, partial), _) -> constrain_match environment e pexps partial
       | (Texp_function ([(pat, e')], _), t) -> constrain_function environment t pat e'
-      | (Texp_ident (id, _), {desc = Tconstr (_, [], _)})
-      | (Texp_ident (id, _), {desc = Tvar}) ->
+      | (Texp_ident (id, _), F.Fabstract(_, [], _))
+      | (Texp_ident (id, _), F.Fvar _) ->
           constrain_base_identifier environment id e
       | (Texp_ident (id, _), _) -> constrain_identifier environment id e.exp_env
       | (Texp_apply (e1, exps), _) -> constrain_application environment e1 exps
@@ -149,9 +147,9 @@ let rec constrain e env guard =
       | (Texp_tuple es, _) -> constrain_tuple environment es
       | (Texp_assertfalse, _) -> constrain_assertfalse environment
       | (Texp_assert e, _) -> constrain_assert environment e
-      | (_, t) ->
+      | (_, f) ->
         fprintf err_formatter "@[Warning: Don't know how to constrain expression,
-        structure:@ %a@ location:@ %a@]@.@." Printtyp.raw_type_expr t Location.print e.exp_loc; flush stderr;
+        structure:@ %a@ location:@ %a@]@.@." F.pprint f Location.print e.exp_loc; flush stderr;
         assert false
   in log_frame e.exp_loc f; (f, (List.map (label_constraint e) cstrs) @ rec_cstrs)
 
