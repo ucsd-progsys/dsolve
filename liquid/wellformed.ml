@@ -60,16 +60,12 @@ let pred_is_well_typed env p =
   | Predicate.Field (name, r) ->
       begin match get_expr_shape r with
         | Frecord (_, fs, _) ->
-            let is_referenced_field (_, name2, _) = String.compare name name2 = 0 in
+            (* pmr: maybe we need to switch to ids for this *)
+            let is_referenced_field (name2, _, _) = String.compare (Ident.name name) (Ident.name name2) = 0 in
               if List.exists is_referenced_field fs then
-                (match (List.find is_referenced_field fs) with (f, _, _) -> f)
+                (match (List.find is_referenced_field fs) with (_, f, _) -> f)
               else Funknown
         | f -> Funknown
-      end
-  | Predicate.Proj (n, t) ->
-      begin match get_expr_shape t with
-        | Ftuple (fs, _) -> (try List.nth fs n with Failure _ -> Funknown)
-        | _ -> Funknown
       end
   and pred_shape_is_bool = function
   | Predicate.True -> true

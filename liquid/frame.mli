@@ -48,15 +48,18 @@ type t =
   | Fconstr of Path.t * constr list * refinement
   | Fabstract of Path.t * param list * refinement
   | Farrow of pattern_desc option * t * t
-  | Ftuple of t list * refinement
-  | Frecord of Path.t * (t * string * mutable_flag) list * refinement
+  | Frecord of Path.t * param list * refinement
   | Funknown
 
-and param = t * variance
+and param = Ident.t * t * variance
 
 and constr = constructor_tag * param list
 
 and variance = Covariant | Contravariant | Invariant
+
+val path_tuple: Path.t
+
+val tuple_of_frames: t list -> refinement -> t
 
 val pprint: formatter -> t -> unit
 val pprint_fenv: formatter -> t Lightenv.t -> unit list

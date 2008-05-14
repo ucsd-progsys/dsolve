@@ -1,3 +1,4 @@
+tests/relrec.ml          1   True
 tests/constrs.ml         0   True
 tests/polyconstr.ml      0   True
 tests/crasher.ml         1   True

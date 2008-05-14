@@ -105,10 +105,7 @@ module YicesProver : PROVER =
       | Predicate.Field (f, e) ->
           (* pmr: this crucially depends on not having two fields with the same name in the
              same module *)
-          let (fn, e') = (yicesVar me (Printf.sprintf "SELECT_%s" f) me.f, yicesExp me e) in
-            Y.yices_mk_app me.c fn [|e'|]
-      | Predicate.Proj (n, e) ->
-          let (fn, e') = (yicesVar me (Printf.sprintf "PROJ_%d" n) me.f, yicesExp me e) in
+          let (fn, e') = (yicesVar me (Printf.sprintf "SELECT_%s" (Ident.unique_name f)) me.f, yicesExp me e) in
             Y.yices_mk_app me.c fn [|e'|]
 
     let rec yicesPred me p = 

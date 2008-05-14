@@ -165,7 +165,6 @@ and predpatexp_desc =
   | Ppredpatexp_funapp of Longident.t * predpatexp list
   | Ppredpatexp_binop of predpatexp * predexp_op list * predpatexp
   | Ppredpatexp_field of string * predpatexp
-  | Ppredpatexp_proj of int * predpatexp
 
 (* Signature structure *)
 

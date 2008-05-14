@@ -182,10 +182,10 @@ and constrain_record (env, guard, f) labeled_exprs =
   let compare_labels ({lbl_pos = n}, _) ({lbl_pos = m}, _) = compare n m in
   let (_, sorted_exprs) = List.split (List.sort compare_labels labeled_exprs) in
   let (subframes, subexp_cs) = constrain_subexprs env guard sorted_exprs in
-  let subframe_field cs_rest fsub (fsup, _, _) = SubFrame (env, guard, fsub, fsup) :: cs_rest in
+  let subframe_field cs_rest fsub (_, fsup, _) = SubFrame (env, guard, fsub, fsup) :: cs_rest in
   match f with
     | F.Frecord (p, recframes, _) ->
-      let field_qualifier (_, name, _) fexpr = B.field_eq_qualifier name (expression_to_pexpr fexpr) in
+      let field_qualifier (name, _, _) fexpr = B.field_eq_qualifier name (expression_to_pexpr fexpr) in
         (F.Frecord (p, recframes, [([], (List.map2 field_qualifier recframes sorted_exprs, []))]),
          WFFrame (env, f) :: List.fold_left2 subframe_field [] subframes recframes,
          subexp_cs)
@@ -193,8 +193,8 @@ and constrain_record (env, guard, f) labeled_exprs =
 
 and constrain_field (env, guard, _) expr label_desc =
   let (recframe, cstrs) = constrain expr env guard in
-  let (fieldframe, fieldname) = match recframe with
-    | F.Frecord (_, fs, _) -> (match List.nth fs label_desc.lbl_pos with (fr, name, _) -> (fr, name))
+  let (fieldname, fieldframe) = match recframe with
+    | F.Frecord (_, fs, _) -> (match List.nth fs label_desc.lbl_pos with (i, f, _) -> (i, f))
     | _ -> assert false
   in
   let pexpr = P.Field (fieldname, expression_to_pexpr expr) in
@@ -286,7 +286,7 @@ and constrain_let (env, guard, f) recflag bindings body =
 and constrain_array (env, guard, f) elements =
   let (f, fa) =
     (match f with
-      | F.Fabstract(p, ([(fa, _)] as ps), _) ->
+      | F.Fabstract(p, ([(_, fa, _)] as ps), _) ->
           (F.Fabstract(p, ps, B.size_lit_refinement(List.length elements)), fa)
       | _ -> assert false) in
   let list_rec (fs, c) e = (fun (f, cs) -> (f::fs, cs @ c)) (constrain e env guard) in
@@ -298,18 +298,13 @@ and constrain_sequence (env, guard, _) e1 e2 =
   let (_, cs1) = constrain e1 env guard in
   let (f, cs2) = constrain e2 env guard in (f, [], cs1 @ cs2)
 
-and constrain_tuple (env, guard, f) es =
+and elem_qualifier fexpr n =
+  B.proj_eq_qualifier n (expression_to_pexpr fexpr)
+
+and constrain_tuple (env, guard, _) es =
   let (fs, subexp_cs) = constrain_subexprs env guard es in
-  match f with
-    | F.Ftuple (fresh_fs, _) ->
-        let new_cs = List.fold_left2
-          (fun cs rec_frame fresh_frame ->
-            WFFrame (env, fresh_frame) :: SubFrame (env, guard, rec_frame, fresh_frame) :: cs)
-          [] fs fresh_fs in
-        let elem_qualifier fexpr n = B.proj_eq_qualifier n (expression_to_pexpr fexpr) in
-          (F.Ftuple(fresh_fs, [([], (Misc.mapi elem_qualifier es, []))]),
-           WFFrame (env, f) :: new_cs, subexp_cs)
-    | _ -> assert false
+  let f = F.tuple_of_frames fs (F.mk_refinement [] (Misc.mapi elem_qualifier es) []) in
+    (f, [WFFrame(env, f)], subexp_cs)
 
 and constrain_assertfalse (env, _, f) =
   (f, [WFFrame (env, f)], [])
@@ -380,22 +375,6 @@ let constrain_structure initfenv initquals str =
 (***************************** Qualifying modules *****************************)
 (******************************************************************************)
 
-module QualifierSet = Set.Make(Qualifier)
-
-(* Make copies of all the qualifiers where the free identifiers are replaced
-   by the appropriate bound identifiers from the environment. *)
-let instantiate_in_environments cs qs =
-  let domains = List.map (fun c -> match c.lc_cstr with SubFrame (e,_,_,_) | WFFrame (e,_) -> Lightenv.domain e) cs in
-  let instantiate_qual qualset q =
-    let instantiate_in_env qset d =
-      let varmap = Common.map_partial (fun path -> match Path.ident_name path with Some name -> Some (name, path) | None -> None) d in
-      let inv = Qualifier.instantiate varmap q in
-        match inv with
-            Some inv -> QualifierSet.add inv qset
-          | None -> qset
-    in List.fold_left instantiate_in_env qualset domains
-  in QualifierSet.elements (List.fold_left instantiate_qual QualifierSet.empty qs)
-
 let pre_solve () = 
   C.cprintf C.ol_solve_master "@[##solve##@\n@]"; Bstats.reset ()
 
@@ -419,8 +398,7 @@ let qualify_implementation sourcefile fenv ifenv env qs str =
   let (qs, fenv, cs) = constrain_structure fenv qs str in
   let cs = (List.map (lbl_dummy_cstr env) (Le.maplistfilter (mfm fenv) ifenv)) @ cs in
   let _ = pre_solve () in
-  let inst_qs = Bstats.time "instantiating quals" (instantiate_in_environments cs) qs in
-  let (s,cs) = Bstats.time "solving" (solve inst_qs) cs in
+  let (s,cs) = Bstats.time "solving" (solve qs) cs in
   let _ = post_solve () in
   let _ = dump_frames sourcefile (framemap_apply_solution s !flog) in
   match cs with [] -> () | _ ->

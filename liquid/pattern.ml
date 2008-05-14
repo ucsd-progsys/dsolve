@@ -67,7 +67,7 @@ let bind_pexpr pat pexp =
     | Tpat_any -> subs
     | Tpat_var x -> (Path.Pident x, pexp) :: subs
     | Tpat_tuple pats ->
-      let pexps = Misc.mapi (fun pat i -> (pat.pat_desc, P.Proj(i, pexp))) pats in
+      let pexps = Misc.mapi (fun pat i -> (pat.pat_desc, P.Field(C.tuple_elem_id i, pexp))) pats in
         List.fold_left bind_rec subs pexps
     | _ -> null_binding_fold subs pat
   in bind_rec [] (pat, pexp)
