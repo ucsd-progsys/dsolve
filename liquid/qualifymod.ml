@@ -179,15 +179,12 @@ and constrain_constructed (env, guard, f) cstrdesc args e =
 and constrain_record (env, guard, f) labeled_exprs =
   let compare_labels ({lbl_pos = n}, _) ({lbl_pos = m}, _) = compare n m in
   let (_, sorted_exprs) = List.split (List.sort compare_labels labeled_exprs) in
-  let (subframes, subexp_cs) = constrain_subexprs env guard sorted_exprs in
-  let subframe_field cs_rest fsub (_, fsup, _) = SubFrame (env, guard, fsub, fsup) :: cs_rest in
-  match f with
-    | F.Frecord (p, recframes, _) ->
-      let field_qualifier (name, _, _) fexpr = B.field_eq_qualifier name (expression_to_pexpr fexpr) in
-        (F.Frecord (p, recframes, [([], (List.map2 field_qualifier recframes sorted_exprs, []))]),
-         WFFrame (env, f) :: List.fold_left2 subframe_field [] subframes recframes,
-         subexp_cs)
-    | _ -> assert false
+  let (p, ps) = match f with F.Frecord(p, ps, _) -> (p, ps) | _ -> assert false in
+  let (fs, subexp_cs) = constrain_subexprs env guard sorted_exprs in
+  let to_field (id, _, v) f = (id, f, v) in
+  let field_qualifier (id, _, _) fexpr = B.field_eq_qualifier id (expression_to_pexpr fexpr) in
+  let f = F.Frecord(p, List.map2 to_field ps fs, F.mk_refinement [] (List.map2 field_qualifier ps sorted_exprs) []) in
+    (f, [WFFrame (env, f)], subexp_cs)
 
 and constrain_field (env, guard, _) expr label_desc =
   let (recframe, cstrs) = constrain expr env guard in
