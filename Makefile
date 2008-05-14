@@ -46,7 +46,7 @@ LIQUID=liquid/lightenv.cmo \
   liquid/theoremProver.cmo \
   liquid/constraint.cmo  \
   liquid/qualifymod.cmo \
-  liquid/qdebug.cmo liquid/normalize.cmo \
+  liquid/qdebug.cmo liquid/normalize.cmo liquid/measure.cmo \
   liquid/qdump.cmo liquid/liqerrors.cmo liquid/liquid.cmo
 
 LIQOBJS=$(UTILS) $(PARSING) $(TYPING) $(LIQUID)
