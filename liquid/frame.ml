@@ -372,11 +372,17 @@ let fresh_true () =
 
 let fresh_fvar () = Fvar(Path.mk_ident "a", empty_refinement)
 
+let canonicalize t = match t.desc with
+  | Tconstr _ ->
+      let t = {(repr t) with id = 0} in Btype.iter_type_expr (fun t -> t.id <- 0) t; t
+  | _ -> repr t
+
 let fresh_constr fresh env p tyl =
   let params  = List.map (fresh []) tyl in
   let ty_decl = Env.find_type p env in
   (* Used in the sum type case - the type constructors contain uninstantiated
-     types, which we need to map to the instantiated type parameters. *)
+     types, which we need to map to the instantiated type parameters. This is rather
+     easier than unification, which requires a type environment and more logic. *)
   let pm      = List.combine ty_decl.type_params params in
   let varis   = List.map translate_variance ty_decl.type_variance in
     match ty_decl.type_kind with
@@ -393,7 +399,7 @@ let fresh_constr fresh env p tyl =
             let args = cstr.cstr_args in
             let ids  = Misc.mapi (fun _ i -> C.tuple_elem_id i) args in
             let fs   = List.map (fresh pm) args in
-            let vs   = List.map (fun t -> try List.assoc (repr t) param_vars with Not_found -> Covariant) args in
+            let vs   = List.map (fun t -> try List.assoc (canonicalize t) param_vars with Not_found -> Covariant) args in
               (cstr.cstr_tag, C.combine3 ids fs vs)
           in Fconstr (p, List.map fresh_cstr cds, empty_refinement)
 
@@ -401,19 +407,16 @@ let fresh_rec fresh env t = match t.desc with
   | Tvar                 -> fresh_fvar ()
   | Tarrow(_, t1, t2, _) -> Farrow (None, fresh [] t1, fresh [] t2)
   | Ttuple ts            -> tuple_of_frames (List.map (fresh []) ts) empty_refinement
-  | Tconstr(p, tyl, _)   -> fresh_constr fresh env p (List.map repr tyl)
+  | Tconstr(p, tyl, _)   -> fresh_constr fresh env p (List.map canonicalize tyl)
   | _                    -> fprintf err_formatter "@[Warning: Freshing unsupported type]@."; Funknown
-
-(* a: this may be overzealous substitution - we want to be sure, for example, that
-   freshing (t, t) doesn't yield two ts with the same refinement *)
 
 (* Create a fresh frame with the same shape as the type of [exp] using
    [fresh_ref_var] to create new refinement variables. *)
 let fresh_with_var_fun env freshf t =
   let tbl = Hashtbl.create 17 in
   let rec fm pmap t =
-    let t = repr t in
-      List.iter (fun (t, f) -> Hashtbl.replace tbl (repr t) f) pmap;
+    let t = canonicalize t in
+      List.iter (fun (t, f) -> Hashtbl.replace tbl (canonicalize t) f) pmap;
       let f =
         if Hashtbl.mem tbl t then
           Hashtbl.find tbl t
@@ -421,10 +424,8 @@ let fresh_with_var_fun env freshf t =
           Hashtbl.replace tbl t (fresh_fvar ());
           let res = fresh_rec fm env t in Hashtbl.replace tbl t res; res
         end
-      in
-        List.iter (fun (t, _) -> Hashtbl.remove tbl (repr t)) pmap;
-        map_refinements (fun _ -> freshf ()) f (* a *)
-  in fm [] t
+      in List.iter (fun (t, _) -> Hashtbl.remove tbl (canonicalize t)) pmap; f
+  in map_refinements (fun _ -> freshf ()) (fm [] t)
 
 (* Create a fresh frame with the same shape as the given type
    [ty]. Uses type environment [env] to find type declarations.
