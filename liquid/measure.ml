@@ -10,8 +10,8 @@ type m = (constructor_tag * Path.t option list * mdef list) list
 type t = m Le.t
 
 let builtins = [
-  ("Some", ([], [("H", P.PInt(1))])); 
-  ("None", ([], [("H", P.PInt(0))]));
+  ("Some", ([], [("h", P.PInt(1))])); 
+  ("None", ([], [("h", P.PInt(0))]));
 ]
 
 let (empty: t) = Le.empty
