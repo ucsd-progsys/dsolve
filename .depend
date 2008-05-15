@@ -372,6 +372,12 @@ liquid/liquid.cmx: utils/warnings.cmx typing/types.cmx typing/typemod.cmx \
     parsing/longident.cmx liquid/liqerrors.cmx liquid/lightenv.cmx \
     typing/ident.cmx liquid/frame.cmx typing/env.cmx utils/config.cmx \
     typing/common.cmx utils/clflags.cmx liquid/builtins.cmx 
+liquid/measure.cmo: typing/types.cmi typing/predicate.cmi typing/path.cmi \
+    parsing/longident.cmi liquid/lightenv.cmo liquid/frame.cmi typing/env.cmi \
+    liquid/constraint.cmi 
+liquid/measure.cmx: typing/types.cmx typing/predicate.cmx typing/path.cmx \
+    parsing/longident.cmx liquid/lightenv.cmx liquid/frame.cmx typing/env.cmx \
+    liquid/constraint.cmx 
 liquid/message.cmo: liquid/message.cmi 
 liquid/message.cmx: liquid/message.cmi 
 liquid/normalize.cmo: liquid/qdebug.cmi parsing/printast.cmi \
@@ -401,15 +407,15 @@ liquid/qualifier.cmo: typing/predicate.cmi typing/path.cmi \
 liquid/qualifier.cmx: typing/predicate.cmx typing/path.cmx \
     liquid/qualifier.cmi 
 liquid/qualifymod.cmo: typing/types.cmi typing/typedtree.cmi \
-    typing/stypes.cmi typing/printtyp.cmi typing/predicate.cmi \
-    liquid/pattern.cmi typing/path.cmi parsing/parsetree.cmi utils/misc.cmi \
+    typing/stypes.cmi typing/predicate.cmi liquid/pattern.cmi typing/path.cmi \
+    parsing/parsetree.cmi utils/misc.cmi liquid/measure.cmo \
     parsing/longident.cmi parsing/location.cmi liquid/lightenv.cmo \
     liquid/frame.cmi typing/env.cmi liquid/constraint.cmi typing/common.cmo \
     utils/clflags.cmi liquid/builtins.cmo typing/btype.cmi utils/bstats.cmi \
     parsing/asttypes.cmi liquid/qualifymod.cmi 
 liquid/qualifymod.cmx: typing/types.cmx typing/typedtree.cmx \
-    typing/stypes.cmx typing/printtyp.cmx typing/predicate.cmx \
-    liquid/pattern.cmx typing/path.cmx parsing/parsetree.cmi utils/misc.cmx \
+    typing/stypes.cmx typing/predicate.cmx liquid/pattern.cmx typing/path.cmx \
+    parsing/parsetree.cmi utils/misc.cmx liquid/measure.cmx \
     parsing/longident.cmx parsing/location.cmx liquid/lightenv.cmx \
     liquid/frame.cmx typing/env.cmx liquid/constraint.cmx typing/common.cmx \
     utils/clflags.cmx liquid/builtins.cmx typing/btype.cmx utils/bstats.cmx \

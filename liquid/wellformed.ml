@@ -38,7 +38,7 @@ let abstract_app_shape paths out_shape in_shapes =
 
 (* ext_find_type_path isn't initialized until sometime late in ocaml startup, so
    we'll suspend this and force it when we know it's safe *)
-let fun_app_shapes = lazy(
+let builtin_fun_app_shapes = lazy(
   let array2_path = Builtins.ext_find_type_path "array2" in
     [("Array.length", abstract_app_shape [Predef.path_array] uInt);
      ("Bigarray.Array2.dim1", abstract_app_shape [array2_path] uInt);
@@ -46,16 +46,42 @@ let fun_app_shapes = lazy(
      (Builtins.tag_function, (function [Fconstr _] -> uInt | _ -> Funknown))]
 )
 
-let rec app_to_shape funf =
-  match funf with Farrow(f1, f2) ->
-    let 
-    F.same_shape f1 && 
+let rec app_to_fun funf =
+  match funf with 
+    Farrow(_, f1, f2) ->
+      let func f = function
+        p :: ps -> 
+          same_shape f p && app_to_fun f2 ps
+      | [] ->
+          false in
+      func f1
+   | _ ->  
+      (function [] -> true | _ -> false)
+
+let get_by_name n env =
+  let s n' v = n = Path.name n' in
+  let cs = Lightenv.filterlist s env in
+    match cs with 
+      (c, _) :: [] ->  c
+    | (c, _) :: cs -> failwith (Printf.sprintf "too many definitions of %s" n)
+    | [] -> raise Not_found
+
+let get_app_shape s env =
+  let unk x = Funknown in
+  try
+    List.assoc s (Lazy.force builtin_fun_app_shapes)
+  with Not_found -> 
+    try
+      app_to_fun (get_by_name s env) 
+    with Not_found -> 
+        unk
 
 let pred_is_well_typed env p =
   let rec get_expr_shape = function
   | Predicate.PInt _ -> uInt
   | Predicate.Var x -> find_or_fail x env
-  | Predicate.FunApp (s, p') -> (List.assoc s (Lazy.force fun_app_shapes)) (List.map get_expr_shape p')
+  | Predicate.FunApp (s, p') -> 
+      (get_app_shape s env) (List.map get_expr_shape p')
   | Predicate.Binop (p1, op, p2) ->
       let p1_shp = get_expr_shape p1 in
       let p1_int = same_shape p1_shp uInt in
