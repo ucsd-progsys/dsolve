@@ -175,7 +175,7 @@ and constrain_constructed (env, guard, f) cstrdesc args e =
                      Not_found -> None in
       let cstrref =
         match mref with
-            Some r -> r @ cstrref
+            Some r -> cstrref @ r
           | None -> cstrref in
       let f = F.Fconstr (path, cstrs, cstrref) in
       let cstrargs = F.params_frames (List.assoc tag cstrs) in

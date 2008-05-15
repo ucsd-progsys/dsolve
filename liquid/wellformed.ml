@@ -46,6 +46,11 @@ let fun_app_shapes = lazy(
      (Builtins.tag_function, (function [Fconstr _] -> uInt | _ -> Funknown))]
 )
 
+let rec app_to_shape funf =
+  match funf with Farrow(f1, f2) ->
+    let 
+    F.same_shape f1 && 
+
 let pred_is_well_typed env p =
   let rec get_expr_shape = function
   | Predicate.PInt _ -> uInt
