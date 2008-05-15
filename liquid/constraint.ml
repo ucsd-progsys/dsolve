@@ -27,6 +27,7 @@ module F = Frame
 module Le = Lightenv
 module Pat = Pattern
 module P = Predicate
+module TT = Typedtree
 module TP = TheoremProver
 module B = Builtins
 
@@ -167,16 +168,13 @@ let simplify_frame gm x f =
     | F.Frecord (a,b,[(subs,([(v1,v2,P.Iff (v3,p))],[]))]) when v3 = B.tag (P.Var v2) ->
         let p' = if pos then p else P.Not p in
         F.Frecord (a,b,[(subs,([(v1,v2,p')],[]))])
-    | F.Ftuple (fs,[(subs,([(v1,v2,P.Iff (v3,p))],[]))]) when v3 = B.tag (P.Var v2) ->
-        let p' = if pos then p else P.Not p in
-        F.Ftuple (fs,[(subs,([(v1,v2,p')], []))])
     | _ -> f
 
 let simplify_env env g =
   let gm = List.fold_left (fun m (x,b)  -> Le.add x b m) Le.empty g in
   Le.fold 
     (fun x f env' ->
-      match f with | F.Fvar _ | F.Fconstr _ | F.Fabstract _ | F.Frecord _ | F.Ftuple _ ->
+      match f with | F.Fvar _ | F.Fconstr _ | F.Fabstract _ | F.Frecord _ ->
         Le.add x (simplify_frame gm x f) env' 
       | _ -> env')
     env Le.empty
@@ -203,44 +201,52 @@ let lequate_cs env g c variance f1 f2 = match variance with
   | F.Covariant -> [make_lc c (SubFrame(env,g,f1,f2))]
   | F.Contravariant -> [make_lc c (SubFrame(env,g,f2,f1))]
 
-let match_and_extend tenv env (l1,f1) (l2,f2) =
-  match (l1, l2) with
-  | (Some p, None) | (None, Some p) -> (F.env_bind tenv env p f2, [])
-  | (Some p1, Some p2) when Pat.same p1 p2 -> (F.env_bind tenv env p1 f2, [])
-  | (Some p1, Some p2) -> (F.env_bind tenv env p1 f2, Pat.substitution p2 p1)
-  | (None, None) -> (env, [])
- 
-let mutable_variance = function Asttypes.Mutable -> F.Invariant | _ -> F.Covariant
+let subst_to lfrom lto = match (lfrom, lto) with
+  | (pfrom, pto) when not (Pat.same pfrom pto) -> Pat.substitution pfrom pto
+  | _ -> []
 
 let split_sub_ref c env g r1 r2 =
   sref_map (fun sr -> (Cstr c, SubRef(env, g, r1, sr, None))) r2
 
-let split_sub_params c env g ps1 ps2 =
-  C.flap2 (fun (f, v) (f', _) -> lequate_cs env g c v f f') ps1 ps2
+let params_apply_substitutions subs ps =
+  List.map (fun (i, f, v) -> (i, List.fold_right F.apply_substitution subs f, v)) ps
+
+let rec split_sub_params c tenv env g ps1 ps2 = match (ps1, ps2) with
+  | ((i, f, v)::ps1, (i', f', _)::ps2) ->
+      let (pi, pi') = (TT.Tpat_var i, TT.Tpat_var i') in
+      let (env', subs) = begin match v with
+        | F.Covariant | F.Invariant -> (F.env_bind tenv env pi f, subst_to pi' pi)
+        | F.Contravariant           -> (F.env_bind tenv env pi' f', subst_to pi pi')
+      end
+      in lequate_cs env g c v f f' @
+           split_sub_params c tenv env' g ps1 (params_apply_substitutions subs ps2)
+
+  | ([], []) -> []
+  | _ -> assert false
+
+let resolve_extend_env tenv env f l1 l2 = match (l1, l2) with
+  | (Some p, _) | (_, Some p) -> F.env_bind tenv env p f
+  | _ -> env
 
 let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubFrame (env,g,f1,f2); lc_tenv = tenv} as c ->
   match (f1, f2) with
   | (F.Farrow (l1, f1, f1'), F.Farrow (l2, f2, f2')) ->
-      let (env', subs) = match_and_extend tenv env (l1,f1) (l2,f2) in
-      let f2' = List.fold_right F.apply_substitution subs f2' in
-      ((lequate_cs env g c F.Covariant f2 f1) @ (lequate_cs env' g c F.Covariant f1' f2'),
-       [])
+      let subs = match (l1, l2) with (Some p1, Some p2) when not (Pat.same p1 p2) -> subst_to p2 p1 | _ -> [] in
+      let env' = resolve_extend_env tenv env f2 l1 l2 in
+      let f1' = List.fold_right F.apply_substitution subs f1' in
+      ((lequate_cs env g c F.Covariant f2 f1) @ (lequate_cs env' g c F.Covariant f1' f2'), [])
   | (F.Fvar (_, r1), F.Fvar (_, r2)) ->
       ([], split_sub_ref c env g r1 r2)
   | (F.Funknown, F.Funknown) ->
       ([],[]) 
   | (F.Fconstr(_, cs1, r1), F.Fconstr(_, cs2, r2)) ->  (* 2 *)
-      (split_sub_params c env g (F.constrs_params cs1) (F.constrs_params cs2),
+      (split_sub_params c tenv env g (F.constrs_params cs1) (F.constrs_params cs2),
        split_sub_ref c env g r1 r2)
   | (F.Fabstract(_, ps1, r1), F.Fabstract(_, ps2, r2)) ->
-      (split_sub_params c env g ps1 ps2, split_sub_ref c env g r1 r2)
-  | (F.Ftuple (f1s, r1), F.Ftuple (f2s, r2)) ->
-      (C.flap2 (lequate_cs env g c F.Covariant) f1s f2s, split_sub_ref c env g r1 r2)
-  | (F.Frecord (_, fld1s, r1), F.Frecord (_, fld2s, r2)) ->
-      (C.flap2 
-         (fun (f1',_,m) (f2',_,_) -> lequate_cs env g c (mutable_variance m) f1' f2')
-         fld1s fld2s, 
-       if List.exists (fun (_, _,m) -> m = Asttypes.Mutable) fld1s
+      (split_sub_params c tenv env g ps1 ps2, split_sub_ref c env g r1 r2)
+  | (F.Frecord (_, p1s, r1), F.Frecord (_, p2s, r2)) ->
+      (split_sub_params c tenv env g p1s p2s,
+       if List.exists (fun (_, _, v) -> v = F.Invariant) p1s
        then split_sub_ref c env g r1 r2 @ split_sub_ref c env g r2 r1
        else split_sub_ref c env g r1 r2)
   | (_,_) -> 
@@ -250,20 +256,25 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
 let split_wf_ref f c env r =
   sref_map (fun sr -> (Cstr c, WFRef(Le.add qual_test_var f env, sr, None))) r
 
+let make_wff c tenv env f =
+  {lc_cstr = WFFrame (env, f); lc_tenv = tenv; lc_orig = Cstr c; lc_id = None}
+
+let rec split_wf_params c tenv env ps =
+  let wf_param (wfs, env) (i, f, _) =
+    (make_wff c tenv env f :: wfs, Le.add (Path.Pident i) f env)
+  in fst (List.fold_left wf_param ([], env) ps)
+
 let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFrame (env,f); lc_tenv = tenv} as c ->
-  let make_wff env f = {lc_cstr = WFFrame (env, f); lc_tenv = tenv; lc_orig = Cstr c; lc_id = None} in
   match f with
   | F.Fconstr (_, cs, r) ->
-      (List.map (make_wff env) (F.params_frames (F.constrs_params cs)), split_wf_ref f c env r)
+      (split_wf_params c tenv env (F.constrs_params cs), split_wf_ref f c env r)
   | F.Fabstract (_, ps, r) ->
-      (List.map (make_wff env) (F.params_frames ps), split_wf_ref f c env r)
+      (split_wf_params c tenv env ps, split_wf_ref f c env r)
   | F.Farrow (l, f, f') ->
       let env' = match l with None -> env | Some p -> F.env_bind tenv env p f in
-      ([make_wff env f; make_wff env' f'], [])
-  | F.Ftuple (fs, r) ->
-      (List.map (make_wff env) fs, split_wf_ref f c env r)
-  | F.Frecord (_, fs, r) ->
-      (List.map (fun (f',_,_) -> make_wff env f') fs, split_wf_ref f c env r)
+        ([make_wff c tenv env f; make_wff c tenv env' f'], [])
+  | F.Frecord (_, ps, r) ->
+      (split_wf_params c tenv env ps, split_wf_ref f c env r)
   | F.Fvar (_, r) ->
       ([], split_wf_ref f c env r)
   | F.Funknown ->
@@ -522,6 +533,31 @@ let unsat_constraints sri s =
     (get_ref_constraints sri)
 
 (**************************************************************)
+(******************** Qualifier Instantiation *****************)
+(**************************************************************)
+
+module QualifierSet = Set.Make(Qualifier)
+
+let instantiate_in_env q qset d =
+  let varmap = C.map_partial (fun path -> match Path.ident_name path with Some name -> Some (name, path) | None -> None) d in
+  let inv = Qualifier.instantiate varmap q in
+    match inv with
+        Some inv -> QualifierSet.add inv qset
+      | None -> qset
+
+let instantiate_qual ds qualset q =
+  List.fold_left (instantiate_in_env q) qualset ds
+
+let constraint_env_domain (_, c) =
+  Le.domain (match c with | SubRef (e, _, _, _, _) -> e | WFRef (e, _, _) -> e)
+
+(* Make copies of all the qualifiers where the free identifiers are replaced
+   by the appropriate bound identifiers from the environment. *)
+let instantiate_in_environments cs qs =
+  QualifierSet.elements
+    (List.fold_left (instantiate_qual (List.map constraint_env_domain cs)) QualifierSet.empty qs)
+
+(**************************************************************)
 (************************ Initial Solution ********************)
 (**************************************************************)
 
@@ -609,7 +645,9 @@ let solve_wf sri s =
 
 let solve qs cs = 
   let cs = if !Cf.simpguard then List.map simplify_fc cs else cs in
-  let sri = make_ref_index (split cs) in
+  let cs = split cs in
+  let qs = Bstats.time "instantiating quals" (instantiate_in_environments cs) qs in
+  let sri = make_ref_index cs in
   let s = make_initial_solution sri qs in
   let _ = dump_solving qs sri s 0  in 
   let _ = Bstats.time "solving wfs" (solve_wf sri) s in

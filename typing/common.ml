@@ -63,6 +63,9 @@ let flap2 f xs ys =
 let flap3 f xs ys zs =
   List.flatten (map3 f xs ys zs)
 
+let combine3 xs ys zs =
+  map3 (fun x y z -> (x, y, z)) xs ys zs
+
 let rec expand f xs ys =
   match xs with
   | [] -> ys
@@ -128,6 +131,9 @@ let same_type q p = (Types.TypeOps.equal q p)
 
 let dummy () = Path.mk_ident ""
 
+let tuple_elem_id i =
+  Ident.create ("e" ^ string_of_int i)
+
 (****************************************************************)
 (************* Output levels ************************************)
 (****************************************************************)
@@ -160,6 +166,8 @@ let fcprintf ppf l = if ck_olev l then F.fprintf ppf else nprintf
 let icprintf printer l ppf = if ck_olev l then printer ppf else printer null_formatter
 
 let cprintln l s = if ck_olev l then Printf.ksprintf (F.printf "@[%s@\n@]") s else nprintf
+
+let ident_name = if ck_olev ol_unique_names then Ident.unique_name else Ident.name
 
 let path_name () = if ck_olev ol_unique_names then Path.unique_name else Path.name
 

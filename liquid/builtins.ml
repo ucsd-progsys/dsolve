@@ -74,7 +74,8 @@ let mk_bool qs = Fconstr(Predef.path_bool, [(Cstr_constant 0, []); (Cstr_constan
 let uBool = mk_bool []
 let rBool name v p = mk_bool [(Path.mk_ident name, v, p)]
 
-let mk_array f qs = Fabstract(Predef.path_array, [(f, Invariant)], const_ref qs)
+let array_contents_id = Ident.create "contents"
+let mk_array f qs = Fabstract(Predef.path_array, [(array_contents_id, f, Invariant)], const_ref qs)
 
 let find_constructed_type id env =
   let path =
@@ -84,9 +85,13 @@ let find_constructed_type id env =
   let decl = Env.find_type path env in (path, List.map translate_variance decl.type_variance)
 
 let mk_named id fs qs env =
-  let (path, varis) = find_constructed_type id env in Fabstract(path, List.combine fs varis, const_ref qs)
+  let (path, varis) = find_constructed_type id env in
+  let fresh_names = Misc.mapi (fun _ i -> Common.tuple_elem_id i) varis in
+    Fabstract(path, Common.combine3 fresh_names fs varis, const_ref qs)
 
-let mk_ref f env = Frecord(fst (find_constructed_type ["ref"; "Pervasives"] env), [(f, "contents", Mutable)], empty_refinement)
+let ref_contents_id = Ident.create "contents"
+let mk_ref f env =
+  Frecord(fst (find_constructed_type ["ref"; "Pervasives"] env), [(ref_contents_id, f, Invariant)], empty_refinement)
 
 let mk_bigarray_kind a b qs env = mk_named ["kind"; "Bigarray"] [a; b] qs env
 
@@ -348,4 +353,4 @@ let field_eq_qualifier name pexp =
   let x = Path.mk_ident "x" in (Path.mk_ident "<field_eq>", x, Field (name, Var x) ==. pexp)
 
 let proj_eq_qualifier n pexp =
-  let x = Path.mk_ident "x" in (Path.mk_ident "<tuple_nth_eq>", x, Proj (n, Var x) ==. pexp)
+  let x = Path.mk_ident "x" in (Path.mk_ident "<tuple_nth_eq>", x, Field (Common.tuple_elem_id n, Var x) ==. pexp)

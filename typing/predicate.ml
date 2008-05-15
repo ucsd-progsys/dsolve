@@ -48,7 +48,6 @@ type patpexpr =
   | PFunApp of Longident.t * patpexpr list 
   | PBinop of patpexpr * binop list * patpexpr
   | PField of string * patpexpr 
-  | PProj of int * patpexpr
 
 type tpat =
     PTrue
@@ -63,8 +62,7 @@ type pexpr =
   | Var of Path.t
   | FunApp of string * pexpr list  
   | Binop of pexpr * binop * pexpr
-  | Field of string * pexpr
-  | Proj of int * pexpr
+  | Field of Ident.t * pexpr
 
 type t =
     True
@@ -98,9 +96,7 @@ let rec pprint_pexpr ppf = function
 				| Div -> "/"
       in fprintf ppf "@[(%a@ %s@ %a)@]" pprint_pexpr p opstr pprint_pexpr q
   | Field (f, pexp) ->
-      fprintf ppf "@[%a.%s@]" pprint_pexpr pexp f
-  | Proj (n, pexp) ->
-      fprintf ppf "@[%a.%d@]" pprint_pexpr pexp n
+      fprintf ppf "@[%a.%s@]" pprint_pexpr pexp (Common.ident_name f)
 
 let rec pprint ppf = function
   | True ->
@@ -198,8 +194,6 @@ let rec pexp_map_vars f pexp =
         Binop (map_rec e1, op, map_rec e2)
     | Field (f, pexp) ->
         Field (f, map_rec pexp)
-    | Proj (n, pexp) ->
-        Proj (n, map_rec pexp)
     | e ->
         e
   in map_rec pexp
@@ -232,7 +226,7 @@ let exp_vars_unexp = function
   | Var x -> ([], [x])
   | Binop (e1, _, e2) -> ([e1; e2], [])
   | FunApp (_, es) -> (es, [])
-  | Field (_, e) | Proj (_, e) -> ([e], [])
+  | Field (_, e) -> ([e], [])
 
 let exp_vars e =
   C.expand exp_vars_unexp [e] []
