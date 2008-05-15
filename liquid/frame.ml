@@ -372,13 +372,6 @@ let fresh_true () =
 
 let fresh_fvar () = Fvar(Path.mk_ident "a", empty_refinement)
 
-(* 1. Tedium ahead:
-   OCaml stores information about record types in two places:
-    - The type declaration stores everything that's set in stone about the
-     type: what its fields are and which variables are the type parameters.
-    - The type list of the Tconstr contains the actual instantiations of
-     the tyvars in this instantiation of the record. *)
-
 let fresh_constr fresh env p tyl =
   let params  = List.map (fresh []) tyl in
   let ty_decl = Env.find_type p env in
@@ -389,6 +382,10 @@ let fresh_constr fresh env p tyl =
     match ty_decl.type_kind with
       | Type_abstract ->
           Fabstract (p, C.combine3 (Misc.mapi (fun _ i -> C.tuple_elem_id i) tyl) params varis, empty_refinement)
+      | Type_record (fields, _, _) -> (* 1 *)
+          let fresh_field (name, muta, t) =
+            (Ident.create name, fresh pm t, mutable_variance muta)
+          in Frecord (p, List.map fresh_field fields, empty_refinement)
       | Type_variant _ ->
           let param_vars = List.combine tyl varis in
           let (_, cds)   = List.split (Env.constructors_of_type p (Env.find_type p env)) in
@@ -399,14 +396,6 @@ let fresh_constr fresh env p tyl =
             let vs   = List.map (fun t -> try List.assoc (repr t) param_vars with Not_found -> Covariant) args in
               (cstr.cstr_tag, C.combine3 ids fs vs)
           in Fconstr (p, List.map fresh_cstr cds, empty_refinement)
-      | Type_record (fields, _, _) -> (* 1 *)
-          (* pmr: this param_map business is probably deprecated *)
-          let param_map = List.combine ty_decl.type_params tyl in
-          let fresh_field (name, muta, typ) =
-            let field_typ = try fresh [] (List.assoc typ param_map) with
-                Not_found -> fresh [] typ in
-              (Ident.create name, field_typ, mutable_variance muta) in
-            Frecord (p, List.map fresh_field fields, empty_refinement)
 
 let fresh_rec fresh env t = match t.desc with
   | Tvar                 -> fresh_fvar ()
