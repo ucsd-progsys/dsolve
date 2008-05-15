@@ -372,12 +372,20 @@ let fresh_true () =
 
 let fresh_fvar () = Fvar(Path.mk_ident "a", empty_refinement)
 
-let canonicalize t = match t.desc with
-  | Tconstr _ ->
-      let t = {(repr t) with id = 0} in Btype.iter_type_expr (fun t -> t.id <- 0) t; t
-  | _ -> repr t
+let rec canonicalize t =
+  let t = repr t in
+    begin match t.desc with
+      | Tconstr _ -> t.id <- 0; t.level <- 0
+      | _         -> ()
+    end; Btype.iter_type_expr (fun t -> ignore (canonicalize t)) t; t
 
-let fresh_constr fresh env p tyl =
+let close_arg res arg =
+  if res.desc = arg.desc then link_type arg res
+
+let close_constructor res args =
+  List.iter (fun a -> Btype.iter_type_expr (close_arg res) a; close_arg res a) args
+
+let fresh_constr fresh env p t tyl =
   let params  = List.map (fresh []) tyl in
   let ty_decl = Env.find_type p env in
   (* Used in the sum type case - the type constructors contain uninstantiated
@@ -396,9 +404,11 @@ let fresh_constr fresh env p tyl =
           let param_vars = List.combine tyl varis in
           let (_, cds)   = List.split (Env.constructors_of_type p (Env.find_type p env)) in
           let fresh_cstr cstr =
-            let args = cstr.cstr_args in
+            let (args, res) = Ctype.instance_constructor cstr in
+            let _ = close_constructor res args; Ctype.unify Env.initial res t in
+            let (res, args) = (canonicalize res, List.map canonicalize args) in
             let ids  = Misc.mapi (fun _ i -> C.tuple_elem_id i) args in
-            let fs   = List.map (fresh pm) args in
+            let fs   = List.map (fresh []) args in
             let vs   = List.map (fun t -> try List.assoc (canonicalize t) param_vars with Not_found -> Covariant) args in
               (cstr.cstr_tag, C.combine3 ids fs vs)
           in Fconstr (p, List.map fresh_cstr cds, empty_refinement)
@@ -407,7 +417,7 @@ let fresh_rec fresh env t = match t.desc with
   | Tvar                 -> fresh_fvar ()
   | Tarrow(_, t1, t2, _) -> Farrow (None, fresh [] t1, fresh [] t2)
   | Ttuple ts            -> tuple_of_frames (List.map (fresh []) ts) empty_refinement
-  | Tconstr(p, tyl, _)   -> fresh_constr fresh env p (List.map canonicalize tyl)
+  | Tconstr(p, tyl, _)   -> fresh_constr fresh env p t (List.map canonicalize tyl)
   | _                    -> fprintf err_formatter "@[Warning: Freshing unsupported type]@."; Funknown
 
 (* Create a fresh frame with the same shape as the type of [exp] using
