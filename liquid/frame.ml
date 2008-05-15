@@ -379,54 +379,63 @@ let fresh_fvar () = Fvar(Path.mk_ident "a", empty_refinement)
     - The type list of the Tconstr contains the actual instantiations of
      the tyvars in this instantiation of the record. *)
 
+let fresh_constr fresh env p tyl =
+  let params  = List.map (fresh []) tyl in
+  let ty_decl = Env.find_type p env in
+  (* Used in the sum type case - the type constructors contain uninstantiated
+     types, which we need to map to the instantiated type parameters. *)
+  let pm      = List.combine ty_decl.type_params params in
+  let varis   = List.map translate_variance ty_decl.type_variance in
+    match ty_decl.type_kind with
+      | Type_abstract ->
+          Fabstract (p, C.combine3 (Misc.mapi (fun _ i -> C.tuple_elem_id i) tyl) params varis, empty_refinement)
+      | Type_variant _ ->
+          let param_vars = List.combine tyl varis in
+          let (_, cds)   = List.split (Env.constructors_of_type p (Env.find_type p env)) in
+          let fresh_cstr cstr =
+            let args = cstr.cstr_args in
+            let ids  = Misc.mapi (fun _ i -> C.tuple_elem_id i) args in
+            let fs   = List.map (fresh pm) args in
+            let vs   = List.map (fun t -> try List.assoc (repr t) param_vars with Not_found -> Covariant) args in
+              (cstr.cstr_tag, C.combine3 ids fs vs)
+          in Fconstr (p, List.map fresh_cstr cds, empty_refinement)
+      | Type_record (fields, _, _) -> (* 1 *)
+          (* pmr: this param_map business is probably deprecated *)
+          let param_map = List.combine ty_decl.type_params tyl in
+          let fresh_field (name, muta, typ) =
+            let field_typ = try fresh [] (List.assoc typ param_map) with
+                Not_found -> fresh [] typ in
+              (Ident.create name, field_typ, mutable_variance muta) in
+            Frecord (p, List.map fresh_field fields, empty_refinement)
+
+let fresh_rec fresh env t = match t.desc with
+  | Tvar                 -> fresh_fvar ()
+  | Tarrow(_, t1, t2, _) -> Farrow (None, fresh [] t1, fresh [] t2)
+  | Ttuple ts            -> tuple_of_frames (List.map (fresh []) ts) empty_refinement
+  | Tconstr(p, tyl, _)   -> fresh_constr fresh env p (List.map repr tyl)
+  | _                    -> fprintf err_formatter "@[Warning: Freshing unsupported type]@."; Funknown
+
+(* a: this may be overzealous substitution - we want to be sure, for example, that
+   freshing (t, t) doesn't yield two ts with the same refinement *)
+
 (* Create a fresh frame with the same shape as the type of [exp] using
    [fresh_ref_var] to create new refinement variables. *)
-let fresh_with_var_fun vars env ty fresh_ref_var =
-  let rec fresh_rec freshf t =
+let fresh_with_var_fun env freshf t =
+  let tbl = Hashtbl.create 17 in
+  let rec fm pmap t =
     let t = repr t in
-    match t.desc with
-        Tvar ->
-          let fvar =
-            try List.assq t !vars with Not_found ->
-              let fv = fresh_fvar () in
-                vars := (t, fv) :: !vars; fv
-          in apply_refinement (freshf ()) fvar
-      | Tconstr(p, tyl, _) ->
-          let tyl = List.map repr tyl in
-          let params = List.map (fresh_rec freshf) tyl in
-          let ty_decl = Env.find_type p env in
-          let _ = vars := (List.combine ty_decl.type_params params) @ !vars in
-          let varis = List.map translate_variance ty_decl.type_variance in
-          begin match ty_decl.type_kind with
-            | Type_abstract ->
-                let names = Misc.mapi (fun _ i -> C.tuple_elem_id i) tyl in
-                  Fabstract(p, C.combine3 names params varis, freshf ())
-            | Type_variant _ ->
-                (* pmr: for the love of god can we deprecate this case already?! *)
-                if Path.same p Predef.path_unit then 
-                  Fconstr(p, [(Cstr_constant 0, [])], empty_refinement)
-                else
-                  let param_vars = List.combine tyl varis in
-                  let (_, cds) = List.split (Env.constructors_of_type p (Env.find_type p env)) in
-                  let fresh_cstr cstr =
-                    (cstr.cstr_tag,
-                     Misc.mapi
-                       (fun t i -> (C.tuple_elem_id i, fresh_rec freshf t, try List.assoc t param_vars with Not_found -> Covariant))
-                       (List.map repr cstr.cstr_args))
-                  in Fconstr(p, List.map fresh_cstr cds, freshf())
-            | Type_record (fields, _, _) -> (* 1 *)
-                (* pmr: this param_map business is probably deprecated *)
-                let param_map = List.combine ty_decl.type_params tyl in
-                let fresh_field (name, muta, typ) =
-                  let field_typ = try fresh_rec freshf (List.assoc typ param_map) with 
-                      Not_found -> fresh_rec freshf typ in
-                    (Ident.create name, field_typ, mutable_variance muta) in
-                  Frecord (p, List.map fresh_field fields, freshf())
-          end
-      | Tarrow(_, t1, t2, _) -> Farrow (None, fresh_rec freshf t1, fresh_rec freshf t2)
-      | Ttuple ts -> tuple_of_frames (List.map (fresh_rec freshf) ts) (freshf ())
-      | _ -> fprintf err_formatter "@[Warning: Freshing unsupported type]@."; Funknown
-  in fresh_rec fresh_ref_var (repr ty)
+      List.iter (fun (t, f) -> Hashtbl.replace tbl (repr t) f) pmap;
+      let f =
+        if Hashtbl.mem tbl t then
+          Hashtbl.find tbl t
+        else begin
+          Hashtbl.replace tbl t (fresh_fvar ());
+          let res = fresh_rec fm env t in Hashtbl.replace tbl t res; res
+        end
+      in
+        List.iter (fun (t, _) -> Hashtbl.remove tbl (repr t)) pmap;
+        map_refinements (fun _ -> freshf ()) f (* a *)
+  in fm [] t
 
 (* Create a fresh frame with the same shape as the given type
    [ty]. Uses type environment [env] to find type declarations.
@@ -434,7 +443,7 @@ let fresh_with_var_fun vars env ty fresh_ref_var =
    You probably want to consider using fresh_with_labels instead of this
    for subtype constraints. *)
 let fresh env ty =
-  fresh_with_var_fun (ref []) env ty (fresh_refinementvar Top)
+  fresh_with_var_fun env (fresh_refinementvar Top) ty
 
 (* Create a fresh frame with the same shape as [exp]'s type and [f],
    and the same labels as [f]. *)
@@ -445,10 +454,10 @@ let fresh_with_labels env ty f =
    No refinement variables are created - all refinements are initialized
    to true. *)
 let fresh_without_vars env ty =
-  fresh_with_var_fun (ref []) env ty (fun _ -> empty_refinement)
+  fresh_with_var_fun env (fun _ -> empty_refinement) ty
 
 let fresh_unconstrained env ty =
-  fresh_with_var_fun (ref []) env ty (fresh_refinementvar Bottom)
+  fresh_with_var_fun env (fresh_refinementvar Bottom) ty
 
 (**************************************************************)
 (********************* mlq translation ************************) 
