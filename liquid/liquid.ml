@@ -97,6 +97,7 @@ let load_mlq_in_env env fenv ifenv =
   List.fold_left load_frame fenv ifenv
 
 let load_builtins ppf env fenv =
+  let _ = Measure.mk_bms env in (* experimental measures *)
   let b = match !builtins_file with 
           | Some b -> if not(Sys.file_exists b) then failwith (sprintf "builtins: file %s does not exist" b) else b
           | None -> "" in
