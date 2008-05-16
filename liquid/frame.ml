@@ -374,8 +374,9 @@ let fresh_fvar () = Fvar(Path.mk_ident "a", empty_refinement)
 
 let rec canonicalize t =
   let t = repr t in
+    t.level <- 0;
     begin match t.desc with
-      | Tconstr _ -> t.id <- 0; t.level <- 0
+      | Tconstr _ -> t.id <- 0
       | _         -> ()
     end; Btype.iter_type_expr (fun t -> ignore (canonicalize t)) t; t
 
