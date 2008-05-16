@@ -72,86 +72,6 @@ and variance = Covariant | Contravariant | Invariant
 let path_tuple = Path.mk_ident "tuple"
 
 (**************************************************************)
-(******************** Frame pretty printers *******************) 
-(**************************************************************)
-
-let pprint_sub ppf (path, pexp) =
-  fprintf ppf "@[%s@ ->@ %a@]" (Path.name path) Predicate.pprint_pexpr pexp
-
-let pprint_subs ppf subs =
-  Oprint.print_list pprint_sub (fun ppf -> fprintf ppf ";@ ") ppf subs
-
-let pred_of_qual q =
-  Qualifier.apply (Predicate.Var (Path.mk_ident "V")) q
-
-let space ppf =
-  fprintf ppf " "
-
-let pprint_refexpr ppf (subs, (qconsts, qvars)) =
-  fprintf ppf "%a@;<1 0>%a"
-    (Oprint.print_list (fun ppf q -> Predicate.pprint ppf
-                          (Predicate.apply_substs subs (pred_of_qual q))) space) qconsts
-    (Oprint.print_list (fun ppf (v, _) -> fprintf ppf "%s" (C.path_name () v)) space) qvars
-
-let pprint_refinement ppf res =
-  Oprint.print_list pprint_refexpr space ppf res
-
-let rec pprint_pattern ppf = function
-  | Tpat_any -> fprintf ppf "_"
-  | Tpat_var x -> fprintf ppf "%s" (Ident.name x)
-  | Tpat_tuple pats ->
-      fprintf ppf "(%a)" pprint_pattern_list pats
-  | Tpat_construct (cstrdesc, pats) ->
-      begin match (repr cstrdesc.cstr_res).desc with
-        | Tconstr (p, _, _) -> fprintf ppf "%s(%a)" (Path.name p) pprint_pattern_list pats
-        | _ -> assert false
-      end
-  | _ -> assert false
-
-and pprint_pattern_list ppf pats =
-  Oprint.print_list pprint_pattern (fun ppf -> fprintf ppf ", ") ppf (List.map (fun p -> p.pat_desc) pats)
-
-let wrap_refined ppf pp r =
-  if List.for_all (function (_, ([], [])) -> true | _ -> false) r then
-    pp ppf
-  else
-    (fprintf ppf "@[{"; pp ppf; fprintf ppf " |@;<1 2>%a}@]" pprint_refinement r)
-
-let rec pprint ppf = function
-  | Fvar (a, r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "'%s" (C.path_name () a)) r
-  | Fconstr (path, [], r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "%s" (C.path_name () path)) r
-  | Fconstr (path, cs, r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "@[%s @[(%a)@]@]"
-                          (C.path_name () path)
-                          (Oprint.print_list pprint_constructor
-                             (fun ppf -> fprintf ppf "@;<1 0>|| ")) cs) r
-  | Farrow (None, f, f') ->
-      fprintf ppf "@[%a@ ->@;<1 2>%a@]" pprint1 f pprint f'
-  | Farrow (Some pat, f, f') ->
-      fprintf ppf "@[%a:@ %a@ ->@;<1 2>%a@]" pprint_pattern pat pprint1 f pprint f'
-  | Fabstract (path, params, r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "@[%a@ %s@]"
-                          (pprint_params ",") params
-                          (C.path_name () path)) r
-  | Frecord (p, ps, r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "%s {%a}" (C.path_name () p) (pprint_params "*") ps) r
-  | Funknown ->
-      fprintf ppf "[unknown]"
- and pprint1 ppf = function
-   | (Farrow _) as f ->
-       fprintf ppf "@[(%a)@]" pprint f
-   | _ as f -> pprint ppf f
- and pprint_constructor ppf (_, ps) = pprint_params "*" ppf ps
- and pprint_param ppf (name, f, _) = fprintf ppf "%s:@;<1 2>%a" (C.ident_name name) pprint f
- and pprint_params sep ppf ps =
-  Oprint.print_list pprint_param (fun ppf -> fprintf ppf "@;<1 2>%s@;<1 2>" sep) ppf ps
-
-let rec pprint_fenv ppf fenv =
-  Lightenv.maplist (fun k v -> printf "@[%s:@ %a@]@." (C.path_name () k) pprint v) fenv
-
-(**************************************************************)
 (**************** Constructed type accessors ******************)
 (**************************************************************)
 
@@ -282,6 +202,86 @@ let same_shape t1 t2 =
   and params_sshape ps qs =
     List.for_all sshape (List.combine (params_frames ps) (params_frames qs))
   in sshape (t1, t2)
+
+(**************************************************************)
+(******************** Frame pretty printers *******************)
+(**************************************************************)
+
+let pprint_sub ppf (path, pexp) =
+  fprintf ppf "@[%s@ ->@ %a@]" (Path.name path) Predicate.pprint_pexpr pexp
+
+let pprint_subs ppf subs =
+  Oprint.print_list pprint_sub (fun ppf -> fprintf ppf ";@ ") ppf subs
+
+let pred_of_qual q =
+  Qualifier.apply (Predicate.Var (Path.mk_ident "V")) q
+
+let space ppf =
+  fprintf ppf " "
+
+let pprint_refexpr ppf (subs, (qconsts, qvars)) =
+  fprintf ppf "%a@;<1 0>%a"
+    (Oprint.print_list (fun ppf q -> Predicate.pprint ppf
+                          (Predicate.apply_substs subs (pred_of_qual q))) space) qconsts
+    (Oprint.print_list (fun ppf (v, _) -> fprintf ppf "%s" (C.path_name () v)) space) qvars
+
+let pprint_refinement ppf res =
+  Oprint.print_list pprint_refexpr space ppf res
+
+let rec pprint_pattern ppf = function
+  | Tpat_any -> fprintf ppf "_"
+  | Tpat_var x -> fprintf ppf "%s" (Ident.name x)
+  | Tpat_tuple pats ->
+      fprintf ppf "(%a)" pprint_pattern_list pats
+  | Tpat_construct (cstrdesc, pats) ->
+      begin match (repr cstrdesc.cstr_res).desc with
+        | Tconstr (p, _, _) -> fprintf ppf "%s(%a)" (Path.name p) pprint_pattern_list pats
+        | _ -> assert false
+      end
+  | _ -> assert false
+
+and pprint_pattern_list ppf pats =
+  Oprint.print_list pprint_pattern (fun ppf -> fprintf ppf ", ") ppf (List.map (fun p -> p.pat_desc) pats)
+
+let wrap_refined ppf pp r =
+  if List.for_all (function (_, ([], [])) -> true | _ -> false) r then
+    pp ppf
+  else
+    (fprintf ppf "@[{"; pp ppf; fprintf ppf " |@;<1 2>%a}@]" pprint_refinement r)
+
+let rec pprint ppf = function
+  | Fvar (a, r) ->
+      wrap_refined ppf (fun ppf -> fprintf ppf "'%s" (C.path_name () a)) r
+  | Fconstr (path, [], r) ->
+      wrap_refined ppf (fun ppf -> fprintf ppf "%s" (C.path_name () path)) r
+  | Fconstr (path, cs, r) ->
+      wrap_refined ppf (fun ppf -> fprintf ppf "@[%s @[(%a)@]@]"
+                          (C.path_name () path)
+                          (Oprint.print_list pprint_constructor
+                             (fun ppf -> fprintf ppf "@;<1 0>|| ")) cs) r
+  | Farrow (None, f, f') ->
+      fprintf ppf "@[%a@ ->@;<1 2>%a@]" pprint1 f pprint f'
+  | Farrow (Some pat, f, f') ->
+      fprintf ppf "@[%a:@ %a@ ->@;<1 2>%a@]" pprint_pattern pat pprint1 f pprint f'
+  | Fabstract (path, params, r) ->
+      wrap_refined ppf (fun ppf -> fprintf ppf "@[%a@ %s@]"
+                          (pprint_params ",") params
+                          (C.path_name () path)) r
+  | Frecord (p, ps, r) ->
+      wrap_refined ppf (fun ppf -> fprintf ppf "%s {%a}" (C.path_name () p) (pprint_params "*") ps) r
+  | Funknown ->
+      fprintf ppf "[unknown]"
+ and pprint1 ppf = function
+   | (Farrow _) as f ->
+       fprintf ppf "@[(%a)@]" pprint f
+   | _ as f -> pprint ppf f
+ and pprint_constructor ppf (_, ps) = pprint_params "*" ppf ps
+ and pprint_param ppf (name, f, _) = fprintf ppf "%s:@;<1 2>%a" (C.ident_name name) pprint f
+ and pprint_params sep ppf ps =
+  Oprint.print_list pprint_param (fun ppf -> fprintf ppf "@;<1 2>%s@;<1 2>" sep) ppf ps
+
+let rec pprint_fenv ppf fenv =
+  Lightenv.maplist (fun k v -> printf "@[%s:@ %a@]@." (C.path_name () k) pprint v) fenv
 
 (**************************************************************)
 (********* Polymorphic and qualifier instantiation ************) 
