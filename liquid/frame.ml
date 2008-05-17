@@ -60,7 +60,6 @@ type t =
   | Fconstr of Path.t * constr list * refinement
   | Fabstract of Path.t * param list * refinement
   | Farrow of pattern_desc option * t * t
-  | Frecord of Path.t * param list * refinement
   | Funknown
 
 and param = Ident.t * t * variance
@@ -97,13 +96,11 @@ let rec map f = function
       f (Fconstr (p, List.map (fun (cd, ps) -> (cd, map_params f ps)) cs, r))
   | Fabstract (p, ps, r) -> f (Fabstract (p, map_params f ps, r))
   | Farrow (x, f1, f2) -> f (Farrow (x, map f f1, map f f2))
-  | Frecord (p, ps, r) -> f (Frecord (p, map_params f ps, r))
 
 let rec map_refinements_map f = function
   | Fvar (p, r) -> Fvar (p, f r)
   | Fconstr (p, cs, r) -> Fconstr (p, cs, f r)
   | Fabstract (p, ps, r) -> Fabstract (p, ps, f r)
-  | Frecord (p, ps, r) -> Frecord (p, ps, f r)
   | f -> f
 
 let map_refinements f fr =
@@ -117,8 +114,6 @@ let rec refinement_fold f l = function
   | Fconstr (_, cs, r) ->
       f r (List.fold_left (refinement_fold f) l (constrs_param_frames cs))
   | Fabstract (_, ps, r) ->
-      f r (List.fold_left (refinement_fold f) l (params_frames ps))
-  | Frecord (_, ps, r) ->
       f r (List.fold_left (refinement_fold f) l (params_frames ps))
   | _ -> l
 
@@ -139,11 +134,10 @@ let apply_refinement r = function
   | Fvar (p, _) -> Fvar (p, r)
   | Fconstr (p, cs, _) -> Fconstr (p, cs, r)
   | Fabstract (p, ps, _) -> Fabstract (p, ps, r)
-  | Frecord (p, ps, _) -> Frecord (p, ps, r)
   | f -> f
 
 let get_refinement = function
-  | Fvar (_, r) | Fconstr (_, _, r) | Fabstract (_, _, r) | Frecord (_, _, r) -> Some r
+  | Fvar (_, r) | Fconstr (_, _, r) | Fabstract (_, _, r) -> Some r
   | _ -> None
 
 let append_refinement res' f =
@@ -195,8 +189,6 @@ let same_shape t1 t2 =
         ismapped p p'
     | (Farrow(_, i, o), Farrow(_, i', o')) ->
         sshape (i, i') && sshape (o, o')
-    | (Frecord (p1, p1s, _), Frecord (p2, p2s, _)) when Path.same p1 p2 ->
-        params_sshape p1s p2s
     | (Funknown, Funknown) -> true
     | t -> false
   and params_sshape ps qs =
@@ -267,8 +259,6 @@ let rec pprint ppf = function
       wrap_refined ppf (fun ppf -> fprintf ppf "@[%a@ %s@]"
                           (pprint_params ",") params
                           (C.path_name () path)) r
-  | Frecord (p, ps, r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "%s {%a}" (C.path_name () p) (pprint_params "*") ps) r
   | Funknown ->
       fprintf ppf "[unknown]"
  and pprint1 ppf = function
@@ -304,8 +294,6 @@ let instantiate fr ftemplate =
           Fconstr(p, List.map2 (fun (cd, ps) (_, ps') -> (cd, inst_params ps ps')) cs cs', r)
       | (Fabstract(p, ps, r), Fabstract(_, ps', _)) ->
           Fabstract(p, inst_params ps ps', r)
-      | (Frecord (p, p1s, r), Frecord (_, p2s, _)) ->
-          Frecord (p, inst_params p1s p2s, r)
       | (Funknown, Funknown) -> Funknown
       | (f1, f2) ->
           fprintf std_formatter "@[Unsupported@ types@ for@ instantiation:@;<1 2>%a@;<1 2>%a@]@."
@@ -340,14 +328,14 @@ let label_like f f' =
     | (Farrow (Some p1, f1, f1'), Farrow (Some p2, f2, f2')) ->
         let vars' = List.map (fun (x, y) -> (Ident.name x, Path.Pident y)) (Pattern.bind_vars p1 p2) @ vars in
           Farrow (Some p2, label vars f1 f2, label vars' f1' f2')
-    | (Frecord (p1, p1s, r), Frecord (p2, p2s, _)) when Path.same p1 p2 ->
-        let label_rec (p, f1, vari) (_, f2, _) = (p, label vars f1 f2, vari) in
-          Frecord (p1, List.map2 label_rec p1s p2s, r)
     | _ -> printf "Can't label %a like %a" pprint f pprint f'; assert false
   in label [] f f'
 
+let record_of_params path ps r =
+  Fconstr(path, [(Cstr_constant 0, ps)], r)
+
 let tuple_of_frames fs r =
-  Frecord(path_tuple, Misc.mapi (fun f i -> (C.tuple_elem_id i, f, Covariant)) fs, r)
+  record_of_params path_tuple (Misc.mapi (fun f i -> (C.tuple_elem_id i, f, Covariant)) fs) r
 
 (**************************************************************)
 (******************* Fresh frames *****************************)
@@ -400,7 +388,7 @@ let fresh_constr fresh env p t tyl =
       | Type_record (fields, _, _) -> (* 1 *)
           let fresh_field (name, muta, t) =
             (Ident.create name, fresh pm t, mutable_variance muta)
-          in Frecord (p, List.map fresh_field fields, empty_refinement)
+          in record_of_params p (List.map fresh_field fields) empty_refinement
       | Type_variant _ ->
           let param_vars = List.combine tyl varis in
           let (_, cds)   = List.split (Env.constructors_of_type p (Env.find_type p env)) in
@@ -511,8 +499,8 @@ let rec translate_pframe env plist pf =
   and transl_record fs r =
     let ps = List.map (fun (f, s, m) -> (Ident.create s, transl_pframe_rec f, mutable_variance m)) fs in
     let path = Path.mk_ident "_anon_record" in
-    Frecord(path, ps, transl_pref r) in
-  transl_pframe_rec pf
+      record_of_params path ps (transl_pref r)
+  in transl_pframe_rec pf
 
 (**************************************************************)
 (********************* Pattern binding ************************) 
@@ -522,7 +510,7 @@ let bind env pat frame =
   let _bind = function
     | (Tpat_any, _) -> ([], [])
     | (Tpat_var x, f) -> ([], [(Path.Pident x, f)])
-    | (Tpat_tuple pats, Frecord (_, ps, _)) ->
+    | (Tpat_tuple pats, Fconstr (_, [(_, ps)], _)) ->
         (List.combine (Pattern.pattern_descs pats) (params_frames ps), [])
     | (Tpat_construct (cstrdesc, pats), Fconstr (p, cfvs, _)) ->
         (List.combine (Pattern.pattern_descs pats) (params_frames (List.assoc cstrdesc.cstr_tag cfvs)), [])
@@ -556,10 +544,6 @@ let refinement_predicate solution qual_var refn =
 let rec conjunct_fold cs solution qual_expr = function
   | Fvar(_, r) | Fconstr(_, _, r) | Fabstract(_, _, r) ->
       refinement_conjuncts solution qual_expr r @ cs
-  | Frecord (p, fs, r) ->
-      let subframe_fold b (id, f, _) =
-        conjunct_fold b solution (Predicate.Field (id, qual_expr)) f
-      in refinement_conjuncts solution qual_expr r @ List.fold_left subframe_fold cs fs
   | _ -> cs
 
 let rec conjuncts solution qual_expr fr =

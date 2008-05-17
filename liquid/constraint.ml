@@ -165,16 +165,13 @@ let simplify_frame gm x f =
     | F.Fconstr (a,b,[(subs,([(v1,v2,P.Iff (v3,p))],[]))]) when v3 = B.tag (P.Var v2) ->
         let p' = if pos then p else P.Not p in
         F.Fconstr (a,b,[(subs,([(v1,v2,p')],[]))])
-    | F.Frecord (a,b,[(subs,([(v1,v2,P.Iff (v3,p))],[]))]) when v3 = B.tag (P.Var v2) ->
-        let p' = if pos then p else P.Not p in
-        F.Frecord (a,b,[(subs,([(v1,v2,p')],[]))])
     | _ -> f
 
 let simplify_env env g =
   let gm = List.fold_left (fun m (x,b)  -> Le.add x b m) Le.empty g in
   Le.fold 
     (fun x f env' ->
-      match f with | F.Fvar _ | F.Fconstr _ | F.Fabstract _ | F.Frecord _ ->
+      match f with | F.Fvar _ | F.Fconstr _ | F.Fabstract _ ->
         Le.add x (simplify_frame gm x f) env' 
       | _ -> env')
     env Le.empty
@@ -244,11 +241,6 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
        split_sub_ref c env g r1 r2)
   | (F.Fabstract(_, ps1, r1), F.Fabstract(_, ps2, r2)) ->
       (split_sub_params c tenv env g ps1 ps2, split_sub_ref c env g r1 r2)
-  | (F.Frecord (_, p1s, r1), F.Frecord (_, p2s, r2)) ->
-      (split_sub_params c tenv env g p1s p2s,
-       if List.exists (fun (_, _, v) -> v = F.Invariant) p1s
-       then split_sub_ref c env g r1 r2 @ split_sub_ref c env g r2 r1
-       else split_sub_ref c env g r1 r2)
   | (_,_) -> 
       (printf "@[Can't@ split:@ %a@ <:@ %a@]" F.pprint f1 F.pprint f2; 
        assert false)
@@ -273,8 +265,6 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
   | F.Farrow (l, f, f') ->
       let env' = match l with None -> env | Some p -> F.env_bind tenv env p f in
         ([make_wff c tenv env f; make_wff c tenv env' f'], [])
-  | F.Frecord (_, ps, r) ->
-      (split_wf_params c tenv env ps, split_wf_ref f c env r)
   | F.Fvar (_, r) ->
       ([], split_wf_ref f c env r)
   | F.Funknown ->

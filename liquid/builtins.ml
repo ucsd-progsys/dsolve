@@ -91,7 +91,7 @@ let mk_named id fs qs env =
 
 let ref_contents_id = Ident.create "contents"
 let mk_ref f env =
-  Frecord(fst (find_constructed_type ["ref"; "Pervasives"] env), [(ref_contents_id, f, Invariant)], empty_refinement)
+  record_of_params (fst (find_constructed_type ["ref"; "Pervasives"] env)) [(ref_contents_id, f, Invariant)] empty_refinement
 
 let mk_bigarray_kind a b qs env = mk_named ["kind"; "Bigarray"] [a; b] qs env
 

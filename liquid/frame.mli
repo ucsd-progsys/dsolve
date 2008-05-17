@@ -48,7 +48,6 @@ type t =
   | Fconstr of Path.t * constr list * refinement
   | Fabstract of Path.t * param list * refinement
   | Farrow of pattern_desc option * t * t
-  | Frecord of Path.t * param list * refinement
   | Funknown
 
 and param = Ident.t * t * variance
@@ -59,6 +58,7 @@ and variance = Covariant | Contravariant | Invariant
 
 val path_tuple: Path.t
 
+val record_of_params: Path.t -> param list -> refinement -> t
 val tuple_of_frames: t list -> refinement -> t
 
 val pprint: formatter -> t -> unit
