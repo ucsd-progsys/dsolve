@@ -223,6 +223,7 @@ and constrain_case (env, guard, f) matchf matche (pat, e) =
 
 and constrain_match ((env, guard, f) as environment) e pexps partial =
   let (matchf, matchcstrs) = constrain e env guard in
+  let matchf = F.unfold matchf in
   let cases = List.map (constrain_case environment matchf (expression_to_pexpr e)) pexps in
   let (cstrs, subcstrs) = List.split cases in
     (f, WFFrame (env, f) :: cstrs, List.concat (matchcstrs :: subcstrs))
