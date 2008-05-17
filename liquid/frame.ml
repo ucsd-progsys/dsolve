@@ -202,8 +202,9 @@ let same_shape t1 t2 =
 (********************************** Unfolding *********************************)
 (******************************************************************************)
 
-let unfold p f t =
-  map (function Fvar (p', _) when Path.same p p' -> t | f -> f) f
+let unfold f = match f with
+  | Fconstr (_, Some p, _, _) -> map (function Fvar (p', _) when Path.same p p' -> f | f -> f) f
+  | _                          -> f
 
 (**************************************************************)
 (******************** Frame pretty printers *******************)
@@ -416,9 +417,8 @@ let fresh_constr fresh env p t tyl =
           in Fconstr (p, None, List.map fresh_cstr cds, empty_refinement)
 
 let close_recf rv = function
-  | f when unfold rv f f = f -> f
-  | Fconstr (p, _, cs, r)    -> Fconstr (p, Some rv, cs, r)
-  | f                        -> f
+  | Fconstr (p, _, cs, r) -> let f = Fconstr (p, Some rv, cs, r) in if unfold f = f then Fconstr (p, None, cs, r) else f
+  | f                     -> f
 
 let fresh_rec fresh env rv t = match t.desc with
   | Tvar                 -> fresh_fvar ()

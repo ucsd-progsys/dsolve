@@ -161,14 +161,14 @@ and constrain_constant path = function
   | _ -> assert false
 
 and constrain_constructed (env, guard, f) cstrdesc args e =
-  match f with
+  match F.unfold f with
   | F.Fconstr (path, rv, cstrs, _) ->
       let tag = cstrdesc.cstr_tag in
       let cstrref = match tag with
         | Cstr_constant n | Cstr_block n -> B.tag_refinement n
         | Cstr_exception _ -> assert false
       in
-      let f = F.Fconstr (path, rv, cstrs, cstrref) in
+      let f = F.apply_refinement cstrref f in
       let cstrargs = F.params_frames (List.assoc tag cstrs) in
       let (argframes, argcs) = constrain_subexprs env guard args in
         (f,
