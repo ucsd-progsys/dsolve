@@ -43,7 +43,7 @@ let fun_app_shapes = lazy(
     [("Array.length", abstract_app_shape [Predef.path_array] uInt);
      ("Bigarray.Array2.dim1", abstract_app_shape [array2_path] uInt);
      ("Bigarray.Array2.dim2", abstract_app_shape [array2_path] uInt);
-     (Builtins.tag_function, (function [Fconstr _] -> uInt | _ -> Funknown))]
+     (Builtins.tag_function, (function [Fsum _] -> uInt | _ -> Funknown))]
 )
 
 let pred_is_well_typed env p =
@@ -59,7 +59,7 @@ let pred_is_well_typed env p =
       if p1_int && p2_int then uInt else Funknown
   | Predicate.Field (name, r) ->
       begin match get_expr_shape r with
-        | Fconstr (_, _, [(_, fs)], _) ->
+        | Fsum (_, _, [(_, fs)], _) ->
             (* pmr: maybe we need to switch to ids for this *)
             let is_referenced_field (name2, _, _) = String.compare (Ident.name name) (Ident.name name2) = 0 in
               if List.exists is_referenced_field fs then

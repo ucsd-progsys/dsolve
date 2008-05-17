@@ -130,7 +130,7 @@ let rec constrain e env guard =
   let (f, cstrs, rec_cstrs) =
     match desc_ty with
       | (Texp_constant const_typ, F.Fabstract(path, [], _)) -> constrain_constant path const_typ
-      | (Texp_construct (cstrdesc, args), F.Fconstr _) -> constrain_constructed environment cstrdesc args e
+      | (Texp_construct (cstrdesc, args), F.Fsum _) -> constrain_constructed environment cstrdesc args e
       | (Texp_record (labeled_exprs, None), _) -> constrain_record environment labeled_exprs
       | (Texp_field (expr, label_desc), _) -> constrain_field environment expr label_desc
       | (Texp_ifthenelse (e1, e2, Some e3), _) -> constrain_if environment e1 e2 e3
@@ -162,7 +162,7 @@ and constrain_constant path = function
 
 and constrain_constructed (env, guard, f) cstrdesc args e =
   match F.unfold f with
-  | F.Fconstr (path, rv, cstrs, _) ->
+  | F.Fsum (path, rv, cstrs, _) ->
       let tag = cstrdesc.cstr_tag in
       let cstrref = match tag with
         | Cstr_constant n | Cstr_block n -> B.tag_refinement n
@@ -179,7 +179,7 @@ and constrain_constructed (env, guard, f) cstrdesc args e =
 and constrain_record (env, guard, f) labeled_exprs =
   let compare_labels ({lbl_pos = n}, _) ({lbl_pos = m}, _) = compare n m in
   let (_, sorted_exprs) = List.split (List.sort compare_labels labeled_exprs) in
-  let (p, ps) = match f with F.Fconstr(p, rv, [(_, ps)], _) -> (p, ps) | _ -> assert false in
+  let (p, ps) = match f with F.Fsum(p, rv, [(_, ps)], _) -> (p, ps) | _ -> assert false in
   let (fs, subexp_cs) = constrain_subexprs env guard sorted_exprs in
   let to_field (id, _, v) f = (id, f, v) in
   let field_qualifier (id, _, _) fexpr = B.field_eq_qualifier id (expression_to_pexpr fexpr) in
@@ -189,7 +189,7 @@ and constrain_record (env, guard, f) labeled_exprs =
 and constrain_field (env, guard, _) expr label_desc =
   let (recframe, cstrs) = constrain expr env guard in
   let (fieldname, fieldframe) = match recframe with
-    | F.Fconstr (_, _, [(_, ps)], _) -> (match List.nth ps label_desc.lbl_pos with (i, f, _) -> (i, f))
+    | F.Fsum (_, _, [(_, ps)], _) -> (match List.nth ps label_desc.lbl_pos with (i, f, _) -> (i, f))
     | _ -> assert false
   in
   let pexpr = P.Field (fieldname, expression_to_pexpr expr) in

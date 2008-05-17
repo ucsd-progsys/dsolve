@@ -57,7 +57,7 @@ type simple_refinement = substitution list * qexpr
 
 type t =
   | Fvar of Path.t * refinement
-  | Fconstr of Path.t * recvar * constr list * refinement
+  | Fsum of Path.t * recvar * constr list * refinement
   | Fabstract of Path.t * param list * refinement
   | Farrow of pattern_desc option * t * t
   | Funknown
@@ -94,14 +94,14 @@ let map_params f ps =
 
 let rec map f = function
   | (Funknown | Fvar _) as fr -> f fr
-  | Fconstr (p, rv, cs, r) ->
-      f (Fconstr (p, rv, List.map (fun (cd, ps) -> (cd, map_params f ps)) cs, r))
+  | Fsum (p, rv, cs, r) ->
+      f (Fsum (p, rv, List.map (fun (cd, ps) -> (cd, map_params f ps)) cs, r))
   | Fabstract (p, ps, r) -> f (Fabstract (p, map_params f ps, r))
   | Farrow (x, f1, f2) -> f (Farrow (x, map f f1, map f f2))
 
 let rec map_refinements_map f = function
   | Fvar (p, r) -> Fvar (p, f r)
-  | Fconstr (p, rv, cs, r) -> Fconstr (p, rv, cs, f r)
+  | Fsum (p, rv, cs, r) -> Fsum (p, rv, cs, f r)
   | Fabstract (p, ps, r) -> Fabstract (p, ps, f r)
   | f -> f
 
@@ -113,7 +113,7 @@ let map_refexprs f fr =
 
 let rec refinement_fold f l = function
   | Fvar (_, r) -> f r l
-  | Fconstr (_, _, cs, r) ->
+  | Fsum (_, _, cs, r) ->
       f r (List.fold_left (refinement_fold f) l (constrs_param_frames cs))
   | Fabstract (_, ps, r) ->
       f r (List.fold_left (refinement_fold f) l (params_frames ps))
@@ -134,12 +134,12 @@ let false_refinement =
 
 let apply_refinement r = function
   | Fvar (p, _) -> Fvar (p, r)
-  | Fconstr (p, rv, cs, _) -> Fconstr (p, rv, cs, r)
+  | Fsum (p, rv, cs, _) -> Fsum (p, rv, cs, r)
   | Fabstract (p, ps, _) -> Fabstract (p, ps, r)
   | f -> f
 
 let get_refinement = function
-  | Fvar (_, r) | Fconstr (_, _, _, r) | Fabstract (_, _, r) -> Some r
+  | Fvar (_, r) | Fsum (_, _, _, r) | Fabstract (_, _, r) -> Some r
   | _ -> None
 
 let append_refinement res' f =
@@ -183,7 +183,7 @@ let same_shape t1 t2 =
   let ismapped p q = try snd (List.find (fun (p', q) -> Path.same p p') !vars) = q with
       Not_found -> vars := (p, q) :: !vars; true in
   let rec sshape = function
-      (Fconstr(p, rv, cs, _), Fconstr(p', rv', cs', _)) ->
+      (Fsum(p, rv, cs, _), Fsum(p', rv', cs', _)) ->
         Path.same p p' && params_sshape (constrs_params cs) (constrs_params cs') &&
           (rv = rv' || match (rv, rv') with (Some rp, Some rp') -> ismapped rp rp' | _ -> false)
     | (Fabstract(p, ps, _), Fabstract(p', ps', _)) ->
@@ -203,7 +203,7 @@ let same_shape t1 t2 =
 (******************************************************************************)
 
 let unfold f = match f with
-  | Fconstr (_, Some p, _, _) -> map (function Fvar (p', _) when Path.same p p' -> f | f -> f) f
+  | Fsum (_, Some p, _, _) -> map (function Fvar (p', _) when Path.same p p' -> f | f -> f) f
   | _                          -> f
 
 (**************************************************************)
@@ -255,9 +255,9 @@ let wrap_refined ppf pp r =
 let rec pprint ppf = function
   | Fvar (a, r) ->
       wrap_refined ppf (fun ppf -> fprintf ppf "'%s" (C.path_name () a)) r
-  | Fconstr (path, _, [], r) ->
+  | Fsum (path, _, [], r) ->
       wrap_refined ppf (fun ppf -> fprintf ppf "%s" (C.path_name () path)) r
-  | Fconstr (path, rv, cs, r) ->
+  | Fsum (path, rv, cs, r) ->
       wrap_refined ppf (fun ppf -> fprintf ppf "@[%s%s @[(%a)@]@]"
                           (match rv with Some rp -> "μ" ^ C.path_name () rp ^ ". " | None -> "")
                           (C.path_name () path)
@@ -304,8 +304,8 @@ let instantiate fr ftemplate =
           in append_refinement r instf
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
           Farrow (l, inst f1 f2, inst f1' f2')
-      | (Fconstr (p, _, cs, r), Fconstr(p', rv', cs', _)) ->
-          Fconstr(p, rv', List.map2 (fun (cd, ps) (_, ps') -> (cd, inst_params ps ps')) cs cs', r)
+      | (Fsum (p, _, cs, r), Fsum(p', rv', cs', _)) ->
+          Fsum(p, rv', List.map2 (fun (cd, ps) (_, ps') -> (cd, inst_params ps ps')) cs cs', r)
       | (Fabstract(p, ps, r), Fabstract(_, ps', _)) ->
           Fabstract(p, inst_params ps ps', r)
       | (Funknown, Funknown) -> Funknown
@@ -335,7 +335,7 @@ let instantiate_qualifiers vars fr =
 let label_like f f' =
   let rec label vars f f' = match (f, f') with
     | (Fvar _, Fvar _) | (Funknown, Funknown)
-    | (Fconstr _, Fconstr _) | (Fabstract _, Fabstract _) ->
+    | (Fsum _, Fsum _) | (Fabstract _, Fabstract _) ->
         instantiate_qualifiers vars f
     | (Farrow (None, f1, f1'), Farrow (l, f2, f2')) ->
         Farrow (l, label vars f1 f2, label vars f1' f2')
@@ -346,7 +346,7 @@ let label_like f f' =
   in label [] f f'
 
 let record_of_params path ps r =
-  Fconstr(path, None, [(Cstr_constant 0, ps)], r)
+  Fsum(path, None, [(Cstr_constant 0, ps)], r)
 
 let tuple_of_frames fs r =
   record_of_params path_tuple (Misc.mapi (fun f i -> (C.tuple_elem_id i, f, Covariant)) fs) r
@@ -414,10 +414,10 @@ let fresh_constr fresh env p t tyl =
             let fs   = List.map (fresh []) args in
             let vs   = List.map (fun t -> try List.assoc (canonicalize t) param_vars with Not_found -> Covariant) args in
               (cstr.cstr_tag, C.combine3 ids fs vs)
-          in Fconstr (p, None, List.map fresh_cstr cds, empty_refinement)
+          in Fsum (p, None, List.map fresh_cstr cds, empty_refinement)
 
 let close_recf rv = function
-  | Fconstr (p, _, cs, r) -> let f = Fconstr (p, Some rv, cs, r) in if unfold f = f then Fconstr (p, None, cs, r) else f
+  | Fsum (p, _, cs, r) -> let f = Fsum (p, Some rv, cs, r) in if unfold f = f then Fsum (p, None, cs, r) else f
   | f                     -> f
 
 let fresh_rec fresh env rv t = match t.desc with
@@ -529,9 +529,9 @@ let bind env pat frame =
   let _bind = function
     | (Tpat_any, _) -> ([], [])
     | (Tpat_var x, f) -> ([], [(Path.Pident x, f)])
-    | (Tpat_tuple pats, Fconstr (_, _, [(_, ps)], _)) ->
+    | (Tpat_tuple pats, Fsum (_, _, [(_, ps)], _)) ->
         (List.combine (Pattern.pattern_descs pats) (params_frames ps), [])
-    | (Tpat_construct (cstrdesc, pats), Fconstr (p, _, cfvs, _)) ->
+    | (Tpat_construct (cstrdesc, pats), Fsum (p, _, cfvs, _)) ->
         (List.combine (Pattern.pattern_descs pats) (params_frames (List.assoc cstrdesc.cstr_tag cfvs)), [])
     | _ -> assert false
   in C.expand _bind [(pat, frame)] []
@@ -561,7 +561,7 @@ let refinement_predicate solution qual_var refn =
   Predicate.big_and (refinement_conjuncts solution qual_var refn)
 
 let rec conjunct_fold cs solution qual_expr = function
-  | Fvar(_, r) | Fconstr(_, _, _, r) | Fabstract(_, _, r) ->
+  | Fvar(_, r) | Fsum(_, _, _, r) | Fabstract(_, _, r) ->
       refinement_conjuncts solution qual_expr r @ cs
   | _ -> cs
 
