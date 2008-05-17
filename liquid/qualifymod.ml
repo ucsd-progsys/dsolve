@@ -169,12 +169,15 @@ and constrain_constructed (env, guard, f) cstrdesc args e =
         | Cstr_constant n | Cstr_block n -> B.tag_refinement n
         | Cstr_exception _ -> assert false
       in
-      let mref = try Some (B.const_ref [M.mk_qual (M.find_c path tag !M.bms)]) with
+      let mref = try let _ = Format.printf "@[M: looking for %s@]@." (Path.unique_name path) in Some (B.const_ref [M.mk_qual (M.find_c path tag !M.bms)]) with
                      Not_found -> None in
       let cstrref =
         match mref with
-            Some r -> cstrref @ r
+            Some r -> let _ = Format.printf "@[trying to add refinement: %a@]@." F.pprint_refinement r in
+                      r @ cstrref
           | None -> cstrref in
+      (*let test = B.equality_refinement () in
+      let cstrref = test @ cstrref in*)
       let f = F.Fconstr (path, cstrs, cstrref) in
       let cstrargs = F.params_frames (List.assoc tag cstrs) in
       let (argframes, argcs) = constrain_subexprs env guard args in

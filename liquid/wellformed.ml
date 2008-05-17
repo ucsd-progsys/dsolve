@@ -47,41 +47,45 @@ let builtin_fun_app_shapes = lazy(
 )
 
 let rec app_to_fun funf =
-  match funf with 
-    Farrow(_, f1, f2) ->
-      let func f = function
-        p :: ps -> 
-          same_shape f p && app_to_fun f2 ps
-      | [] ->
-          false in
-      func f1
-   | _ ->  
-      (function [] -> true | _ -> false)
+  match funf with
+      Farrow(_, f1, f2) ->
+        (fun ps -> 
+           match ps with
+             p :: ps ->
+               let _ = Format.printf "@[shapes: %a VS %a@]@." Frame.pprint f1 Frame.pprint p in
+               let _ = if same_shape p f1 then Format.printf "@[same shape@]@." else Format.printf "@[not same@]@." in
+               if same_shape p f1 then (app_to_fun f2) ps else Funknown
+           | [] -> Funknown)
+    | f -> 
+        (fun ps -> 
+           match ps with
+             [] -> f
+           | _ -> Funknown)
 
 let get_by_name n env =
   let s n' v = n = Path.name n' in
   let cs = Lightenv.filterlist s env in
     match cs with 
-      (c, _) :: [] ->  c
-    | (c, _) :: cs -> failwith (Printf.sprintf "too many definitions of %s" n)
-    | [] -> raise Not_found
+      c :: [] -> let _ = Format.printf "@[shape check on %s :: %a@]@." n Frame.pprint c in c
+    | c :: cs -> failwith (Printf.sprintf "too many definitions of %s" n)
+    | [] -> assert false
 
 let get_app_shape s env =
-  let unk x = Funknown in
+  (*let unk x = Funknown in*)
   try
     List.assoc s (Lazy.force builtin_fun_app_shapes)
   with Not_found -> 
-    try
-      app_to_fun (get_by_name s env) 
-    with Not_found -> 
-        unk
+    app_to_fun (get_by_name s env) 
 
 let pred_is_well_typed env p =
   let rec get_expr_shape = function
   | Predicate.PInt _ -> uInt
   | Predicate.Var x -> find_or_fail x env
   | Predicate.FunApp (s, p') -> 
-      (get_app_shape s env) (List.map get_expr_shape p')
+      let _ = Format.printf "@[typing: %s@]@." s in
+      let y = (get_app_shape s env) (List.map get_expr_shape p') in
+      let _ = Format.printf "@[yields: %a@]@." Frame.pprint y in
+        y
   | Predicate.Binop (p1, op, p2) ->
       let p1_shp = get_expr_shape p1 in
       let p1_int = same_shape p1_shp uInt in
@@ -115,5 +119,6 @@ let pred_is_well_typed env p =
 let refinement_well_formed env solution r qual_expr =
   let pred = refinement_predicate solution qual_expr r in
   let var_bound v = Lightenv.mem v env in
-  let well_scoped = List.for_all var_bound (Predicate.vars pred) in
+  let bound_by_name s = (Lightenv.filterlist (fun n v -> s = Path.name n) env) != [] in
+  let well_scoped = List.for_all var_bound (Predicate.vars pred) && List.for_all bound_by_name (Predicate.funs pred) in
     well_scoped && pred_is_well_typed env pred

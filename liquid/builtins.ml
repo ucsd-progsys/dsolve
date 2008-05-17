@@ -270,6 +270,7 @@ let _frames = [
                              fun y -> rInt "RandBounds" y ((PInt 0 <=. Var y) &&. (Var y <. Var x))));
 
   (["max_int"; "Pervasives"], uInt);
+
 ]
 
 let bigarray_dim_frame dim env =

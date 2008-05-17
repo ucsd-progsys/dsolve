@@ -43,6 +43,23 @@ let mk_bms env =
   let f g e h = add (g h) e in
   bms := List.fold_left (f (transl_desc env)) empty builtins 
 
+let mk_fun n = function
+    let funr a = P.Atom (P.Var x, P.Eq, P.FunApp(n, P.Var a))  
+    Farrow (a, b, f2) -> Farrow (a, b, F.append_refinement [funr a] fw)
+  | _ -> failwith "not a fun in mk_fun"
+
+let mk_tys env =
+  let gl y = List.rev_append (snd (snd y)) in
+  let funs = List.fold_left gl [] builtins in
+  let nms = List.map fst funs in
+  let mk_ty s = 
+    let shp = Wf.get_expr_shape (List.hd s) in
+    let f a = F.same_shape (Wf.get_expr_shape a) shp
+    if List.for_all f s then mk_fun shp
+    else failwith "conflicting shapes for measure" in
+  let assc = List.map (fun x -> (x, List.assoc x funs)) nms in
+   List.map 
+
 let mk_pred v (_, _, ms) =
   let cm (s, e) = P.Atom(P.FunApp(s, [P.Var v]), P.Eq, e) in 
   P.big_and (List.map cm ms) 

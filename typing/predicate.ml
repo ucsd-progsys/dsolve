@@ -231,15 +231,31 @@ let exp_vars_unexp = function
 let exp_vars e =
   C.expand exp_vars_unexp [e] []
 
-let var_unexp = function
+let exp_funs_unexp = function
+  | PInt _ -> ([], [])
+  | Var _ -> ([], [])
+  | Binop (e1, _, e2) -> ([e1; e2], [])
+  | FunApp (s, es) -> (es, [s])
+  | Field (_, e) -> ([e], [])
+
+let exp_funs e =
+  C.expand exp_funs_unexp [e] []
+
+let unexp f = function
   | True -> ([], [])
-  | Atom (e1, _, e2) -> ([], exp_vars e1 @ exp_vars e2)
-  | Iff (e, q) -> ([q], exp_vars e)
+  | Atom (e1, _, e2) -> ([], f e1 @ f e2)
+  | Iff (e, q) -> ([q], f e)
   | Not p -> ([p], [])
   | And (p, q) | Or (p, q) -> ([p; q], [])
 
+let var_unexp = unexp exp_vars
+let funs_unexp = unexp exp_funs
+
 let vars e =
   C.expand var_unexp [e] []
+
+let funs e =
+  C.expand funs_unexp [e] []
 
 let transl_op = function
   | Predexp_plus -> Plus
