@@ -57,7 +57,7 @@ type simple_refinement = substitution list * qexpr
 
 type t =
   | Fvar of Path.t * refinement
-  | Fconstr of Path.t * constr list * refinement
+  | Fconstr of Path.t * recvar * constr list * refinement
   | Fabstract of Path.t * param list * refinement
   | Farrow of pattern_desc option * t * t
   | Funknown
@@ -67,6 +67,8 @@ and param = Ident.t * t * variance
 and constr = constructor_tag * param list
 
 and variance = Covariant | Contravariant | Invariant
+
+and recvar = Path.t option
 
 let path_tuple = Path.mk_ident "tuple"
 
@@ -92,14 +94,14 @@ let map_params f ps =
 
 let rec map f = function
   | (Funknown | Fvar _) as fr -> f fr
-  | Fconstr (p, cs, r) ->
-      f (Fconstr (p, List.map (fun (cd, ps) -> (cd, map_params f ps)) cs, r))
+  | Fconstr (p, rv, cs, r) ->
+      f (Fconstr (p, rv, List.map (fun (cd, ps) -> (cd, map_params f ps)) cs, r))
   | Fabstract (p, ps, r) -> f (Fabstract (p, map_params f ps, r))
   | Farrow (x, f1, f2) -> f (Farrow (x, map f f1, map f f2))
 
 let rec map_refinements_map f = function
   | Fvar (p, r) -> Fvar (p, f r)
-  | Fconstr (p, cs, r) -> Fconstr (p, cs, f r)
+  | Fconstr (p, rv, cs, r) -> Fconstr (p, rv, cs, f r)
   | Fabstract (p, ps, r) -> Fabstract (p, ps, f r)
   | f -> f
 
@@ -111,7 +113,7 @@ let map_refexprs f fr =
 
 let rec refinement_fold f l = function
   | Fvar (_, r) -> f r l
-  | Fconstr (_, cs, r) ->
+  | Fconstr (_, _, cs, r) ->
       f r (List.fold_left (refinement_fold f) l (constrs_param_frames cs))
   | Fabstract (_, ps, r) ->
       f r (List.fold_left (refinement_fold f) l (params_frames ps))
@@ -132,12 +134,12 @@ let false_refinement =
 
 let apply_refinement r = function
   | Fvar (p, _) -> Fvar (p, r)
-  | Fconstr (p, cs, _) -> Fconstr (p, cs, r)
+  | Fconstr (p, rv, cs, _) -> Fconstr (p, rv, cs, r)
   | Fabstract (p, ps, _) -> Fabstract (p, ps, r)
   | f -> f
 
 let get_refinement = function
-  | Fvar (_, r) | Fconstr (_, _, r) | Fabstract (_, _, r) -> Some r
+  | Fvar (_, r) | Fconstr (_, _, _, r) | Fabstract (_, _, r) -> Some r
   | _ -> None
 
 let append_refinement res' f =
@@ -181,8 +183,9 @@ let same_shape t1 t2 =
   let ismapped p q = try snd (List.find (fun (p', q) -> Path.same p p') !vars) = q with
       Not_found -> vars := (p, q) :: !vars; true in
   let rec sshape = function
-      (Fconstr(p, cs, _), Fconstr(p', cs', _)) ->
-        Path.same p p' && params_sshape (constrs_params cs) (constrs_params cs')
+      (Fconstr(p, rv, cs, _), Fconstr(p', rv', cs', _)) ->
+        Path.same p p' && params_sshape (constrs_params cs) (constrs_params cs') &&
+          (rv = rv' || match (rv, rv') with (Some rp, Some rp') -> ismapped rp rp' | _ -> false)
     | (Fabstract(p, ps, _), Fabstract(p', ps', _)) ->
         Path.same p p' && params_sshape ps ps'
     | (Fvar (p, _), Fvar (p', _)) ->
@@ -194,6 +197,13 @@ let same_shape t1 t2 =
   and params_sshape ps qs =
     List.for_all sshape (List.combine (params_frames ps) (params_frames qs))
   in sshape (t1, t2)
+
+(******************************************************************************)
+(********************************** Unfolding *********************************)
+(******************************************************************************)
+
+let unfold p f t =
+  map (function Fvar (p', _) when Path.same p p' -> t | f -> f) f
 
 (**************************************************************)
 (******************** Frame pretty printers *******************)
@@ -244,10 +254,11 @@ let wrap_refined ppf pp r =
 let rec pprint ppf = function
   | Fvar (a, r) ->
       wrap_refined ppf (fun ppf -> fprintf ppf "'%s" (C.path_name () a)) r
-  | Fconstr (path, [], r) ->
+  | Fconstr (path, _, [], r) ->
       wrap_refined ppf (fun ppf -> fprintf ppf "%s" (C.path_name () path)) r
-  | Fconstr (path, cs, r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "@[%s @[(%a)@]@]"
+  | Fconstr (path, rv, cs, r) ->
+      wrap_refined ppf (fun ppf -> fprintf ppf "@[%s%s @[(%a)@]@]"
+                          (match rv with Some rp -> "μ" ^ C.path_name () rp ^ ". " | None -> "")
                           (C.path_name () path)
                           (Oprint.print_list pprint_constructor
                              (fun ppf -> fprintf ppf "@;<1 0>|| ")) cs) r
@@ -265,8 +276,10 @@ let rec pprint ppf = function
    | (Farrow _) as f ->
        fprintf ppf "@[(%a)@]" pprint f
    | _ as f -> pprint ppf f
- and pprint_constructor ppf (_, ps) = pprint_params "*" ppf ps
- and pprint_param ppf (name, f, _) = fprintf ppf "%s:@;<1 2>%a" (C.ident_name name) pprint f
+ and pprint_constructor ppf (_, ps) =
+    pprint_params "*" ppf ps
+ and pprint_param ppf (name, f, _) =
+  fprintf ppf "%s:@;<1 2>%a" (C.ident_name name) pprint f
  and pprint_params sep ppf ps =
   Oprint.print_list pprint_param (fun ppf -> fprintf ppf "@;<1 2>%s@;<1 2>" sep) ppf ps
 
@@ -290,8 +303,8 @@ let instantiate fr ftemplate =
           in append_refinement r instf
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
           Farrow (l, inst f1 f2, inst f1' f2')
-      | (Fconstr (p, cs, r), Fconstr(p', cs', _)) ->
-          Fconstr(p, List.map2 (fun (cd, ps) (_, ps') -> (cd, inst_params ps ps')) cs cs', r)
+      | (Fconstr (p, _, cs, r), Fconstr(p', rv', cs', _)) ->
+          Fconstr(p, rv', List.map2 (fun (cd, ps) (_, ps') -> (cd, inst_params ps ps')) cs cs', r)
       | (Fabstract(p, ps, r), Fabstract(_, ps', _)) ->
           Fabstract(p, inst_params ps ps', r)
       | (Funknown, Funknown) -> Funknown
@@ -332,7 +345,7 @@ let label_like f f' =
   in label [] f f'
 
 let record_of_params path ps r =
-  Fconstr(path, [(Cstr_constant 0, ps)], r)
+  Fconstr(path, None, [(Cstr_constant 0, ps)], r)
 
 let tuple_of_frames fs r =
   record_of_params path_tuple (Misc.mapi (fun f i -> (C.tuple_elem_id i, f, Covariant)) fs) r
@@ -400,13 +413,18 @@ let fresh_constr fresh env p t tyl =
             let fs   = List.map (fresh []) args in
             let vs   = List.map (fun t -> try List.assoc (canonicalize t) param_vars with Not_found -> Covariant) args in
               (cstr.cstr_tag, C.combine3 ids fs vs)
-          in Fconstr (p, List.map fresh_cstr cds, empty_refinement)
+          in Fconstr (p, None, List.map fresh_cstr cds, empty_refinement)
 
-let fresh_rec fresh env t = match t.desc with
+let close_recf rv = function
+  | f when unfold rv f f = f -> f
+  | Fconstr (p, _, cs, r)    -> Fconstr (p, Some rv, cs, r)
+  | f                        -> f
+
+let fresh_rec fresh env rv t = match t.desc with
   | Tvar                 -> fresh_fvar ()
   | Tarrow(_, t1, t2, _) -> Farrow (None, fresh [] t1, fresh [] t2)
   | Ttuple ts            -> tuple_of_frames (List.map (fresh []) ts) empty_refinement
-  | Tconstr(p, tyl, _)   -> fresh_constr fresh env p t (List.map canonicalize tyl)
+  | Tconstr(p, tyl, _)   -> close_recf rv (fresh_constr fresh env p t (List.map canonicalize tyl))
   | _                    -> fprintf err_formatter "@[Warning: Freshing unsupported type]@."; Funknown
 
 (* Create a fresh frame with the same shape as the type of [exp] using
@@ -420,8 +438,9 @@ let fresh_with_var_fun env freshf t =
         if Hashtbl.mem tbl t then
           Hashtbl.find tbl t
         else begin
-          Hashtbl.replace tbl t (fresh_fvar ());
-          let res = fresh_rec fm env t in Hashtbl.replace tbl t res; res
+          let rv = Path.mk_ident "t" in
+            Hashtbl.replace tbl t (Fvar (rv, empty_refinement));
+            let res = fresh_rec fm env rv t in Hashtbl.replace tbl t res; res
         end
       in List.iter (fun (t, _) -> Hashtbl.remove tbl (canonicalize t)) pmap; f
   in map_refinements (fun _ -> freshf ()) (fm [] t)
@@ -510,9 +529,9 @@ let bind env pat frame =
   let _bind = function
     | (Tpat_any, _) -> ([], [])
     | (Tpat_var x, f) -> ([], [(Path.Pident x, f)])
-    | (Tpat_tuple pats, Fconstr (_, [(_, ps)], _)) ->
+    | (Tpat_tuple pats, Fconstr (_, _, [(_, ps)], _)) ->
         (List.combine (Pattern.pattern_descs pats) (params_frames ps), [])
-    | (Tpat_construct (cstrdesc, pats), Fconstr (p, cfvs, _)) ->
+    | (Tpat_construct (cstrdesc, pats), Fconstr (p, _, cfvs, _)) ->
         (List.combine (Pattern.pattern_descs pats) (params_frames (List.assoc cstrdesc.cstr_tag cfvs)), [])
     | _ -> assert false
   in C.expand _bind [(pat, frame)] []
@@ -542,7 +561,7 @@ let refinement_predicate solution qual_var refn =
   Predicate.big_and (refinement_conjuncts solution qual_var refn)
 
 let rec conjunct_fold cs solution qual_expr = function
-  | Fvar(_, r) | Fconstr(_, _, r) | Fabstract(_, _, r) ->
+  | Fvar(_, r) | Fconstr(_, _, _, r) | Fabstract(_, _, r) ->
       refinement_conjuncts solution qual_expr r @ cs
   | _ -> cs
 

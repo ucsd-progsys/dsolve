@@ -45,7 +45,7 @@ val false_refinement: refinement
 
 type t =
   | Fvar of Path.t * refinement
-  | Fconstr of Path.t * constr list * refinement
+  | Fconstr of Path.t * recvar * constr list * refinement
   | Fabstract of Path.t * param list * refinement
   | Farrow of pattern_desc option * t * t
   | Funknown
@@ -55,6 +55,8 @@ and param = Ident.t * t * variance
 and constr = constructor_tag * param list
 
 and variance = Covariant | Contravariant | Invariant
+
+and recvar = Path.t option
 
 val path_tuple: Path.t
 

@@ -162,13 +162,13 @@ and constrain_constant path = function
 
 and constrain_constructed (env, guard, f) cstrdesc args e =
   match f with
-  | F.Fconstr (path, cstrs, _) ->
+  | F.Fconstr (path, rv, cstrs, _) ->
       let tag = cstrdesc.cstr_tag in
       let cstrref = match tag with
         | Cstr_constant n | Cstr_block n -> B.tag_refinement n
         | Cstr_exception _ -> assert false
       in
-      let f = F.Fconstr (path, cstrs, cstrref) in
+      let f = F.Fconstr (path, rv, cstrs, cstrref) in
       let cstrargs = F.params_frames (List.assoc tag cstrs) in
       let (argframes, argcs) = constrain_subexprs env guard args in
         (f,
@@ -179,7 +179,7 @@ and constrain_constructed (env, guard, f) cstrdesc args e =
 and constrain_record (env, guard, f) labeled_exprs =
   let compare_labels ({lbl_pos = n}, _) ({lbl_pos = m}, _) = compare n m in
   let (_, sorted_exprs) = List.split (List.sort compare_labels labeled_exprs) in
-  let (p, ps) = match f with F.Fconstr(p, [(_, ps)], _) -> (p, ps) | _ -> assert false in
+  let (p, ps) = match f with F.Fconstr(p, rv, [(_, ps)], _) -> (p, ps) | _ -> assert false in
   let (fs, subexp_cs) = constrain_subexprs env guard sorted_exprs in
   let to_field (id, _, v) f = (id, f, v) in
   let field_qualifier (id, _, _) fexpr = B.field_eq_qualifier id (expression_to_pexpr fexpr) in
@@ -189,7 +189,7 @@ and constrain_record (env, guard, f) labeled_exprs =
 and constrain_field (env, guard, _) expr label_desc =
   let (recframe, cstrs) = constrain expr env guard in
   let (fieldname, fieldframe) = match recframe with
-    | F.Fconstr (_, [(_, ps)], _) -> (match List.nth ps label_desc.lbl_pos with (i, f, _) -> (i, f))
+    | F.Fconstr (_, _, [(_, ps)], _) -> (match List.nth ps label_desc.lbl_pos with (i, f, _) -> (i, f))
     | _ -> assert false
   in
   let pexpr = P.Field (fieldname, expression_to_pexpr expr) in

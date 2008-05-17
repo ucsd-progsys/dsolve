@@ -162,9 +162,9 @@ let simplify_frame gm x f =
   if not (Le.mem x gm) then f else
     let pos = Le.find x gm in
     match f with 
-    | F.Fconstr (a,b,[(subs,([(v1,v2,P.Iff (v3,p))],[]))]) when v3 = B.tag (P.Var v2) ->
+    | F.Fconstr (a,b,c,[(subs,([(v1,v2,P.Iff (v3,p))],[]))]) when v3 = B.tag (P.Var v2) ->
         let p' = if pos then p else P.Not p in
-        F.Fconstr (a,b,[(subs,([(v1,v2,p')],[]))])
+        F.Fconstr (a,b,c,[(subs,([(v1,v2,p')],[]))])
     | _ -> f
 
 let simplify_env env g =
@@ -236,7 +236,7 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       ([], split_sub_ref c env g r1 r2)
   | (F.Funknown, F.Funknown) ->
       ([],[]) 
-  | (F.Fconstr(_, cs1, r1), F.Fconstr(_, cs2, r2)) ->  (* 2 *)
+  | (F.Fconstr(_, _, cs1, r1), F.Fconstr(_, _, cs2, r2)) ->  (* 2 *)
       (split_sub_params c tenv env g (F.constrs_params cs1) (F.constrs_params cs2),
        split_sub_ref c env g r1 r2)
   | (F.Fabstract(_, ps1, r1), F.Fabstract(_, ps2, r2)) ->
@@ -258,7 +258,7 @@ let rec split_wf_params c tenv env ps =
 
 let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFrame (env,f); lc_tenv = tenv} as c ->
   match f with
-  | F.Fconstr (_, cs, r) ->
+  | F.Fconstr (_, _, cs, r) ->
       (split_wf_params c tenv env (F.constrs_params cs), split_wf_ref f c env r)
   | F.Fabstract (_, ps, r) ->
       (split_wf_params c tenv env ps, split_wf_ref f c env r)
