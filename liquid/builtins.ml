@@ -63,14 +63,15 @@ let mk_abstract path qs =
 let mk_int qs = Fabstract(Predef.path_int, [], const_ref qs)
 
 let uFloat = Fabstract(Predef.path_float, [], empty_refinement)
-let uChar = Fconstr(Predef.path_char, [], empty_refinement)
 
-let mk_string qs = Fconstr(Predef.path_string, [], const_ref qs)
+let uChar = Fsum(Predef.path_char, None, [], empty_refinement)
+
+let mk_string qs = Fsum(Predef.path_string, None, [], const_ref qs)
 
 let uString = mk_string []
 let rString name v p = mk_string [(Path.mk_ident name, v, p)]
 
-let mk_bool qs = Fconstr(Predef.path_bool, [(Cstr_constant 0, []); (Cstr_constant 1, [])], const_ref qs)
+let mk_bool qs = Fsum(Predef.path_bool, None, [(Cstr_constant 0, []); (Cstr_constant 1, [])], const_ref qs)
 let uBool = mk_bool []
 let rBool name v p = mk_bool [(Path.mk_ident name, v, p)]
 
@@ -91,7 +92,7 @@ let mk_named id fs qs env =
 
 let ref_contents_id = Ident.create "contents"
 let mk_ref f env =
-  Frecord(fst (find_constructed_type ["ref"; "Pervasives"] env), [(ref_contents_id, f, Invariant)], empty_refinement)
+  record_of_params (fst (find_constructed_type ["ref"; "Pervasives"] env)) [(ref_contents_id, f, Invariant)] empty_refinement
 
 let mk_bigarray_kind a b qs env = mk_named ["kind"; "Bigarray"] [a; b] qs env
 
@@ -99,7 +100,7 @@ let mk_bigarray_layout a qs env = mk_named ["layout"; "Bigarray"] [a] qs env
 
 let mk_bigarray_type a b c qs env = mk_named ["t"; "Array2"; "Bigarray"] [a; b; c] qs env
 
-let uUnit = Fconstr(Predef.path_unit, [(Cstr_constant 0, [])], empty_refinement)
+let uUnit = Fsum(Predef.path_unit, None, [(Cstr_constant 0, [])], empty_refinement)
 
 let uInt = mk_int []
 let rInt name v p = mk_int [(Path.mk_ident name, v, p)]

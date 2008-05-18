@@ -43,10 +43,11 @@ let mk_bms env =
   let f g e h = add (g h) e in
   bms := List.fold_left (f (transl_desc env)) empty builtins 
 
-let mk_fun n = function
-    let funr a = P.Atom (P.Var x, P.Eq, P.FunApp(n, P.Var a))  
-    Farrow (a, b, f2) -> Farrow (a, b, F.append_refinement [funr a] fw)
-  | _ -> failwith "not a fun in mk_fun"
+let mk_fun n f = 
+    let funr a = P.Atom (P.Var x, P.Eq, P.FunApp(n, P.Var a)) in  
+    match f with
+      Farrow (a, b, f2) -> Farrow (a, b, F.append_refinement [funr a] fw)
+    | _ -> failwith "not a fun in mk_fun"
 
 let mk_tys env =
   let gl y = List.rev_append (snd (snd y)) in

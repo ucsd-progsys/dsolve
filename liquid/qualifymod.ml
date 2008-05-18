@@ -121,7 +121,7 @@ let expression_to_pexpr e =
     | _ -> P.Var (Path.mk_ident "dummy")
 
 let expr_fresh = function
-  | Texp_construct _ | Texp_assertfalse -> Frame.fresh_unconstrained
+  | Texp_construct _ | Texp_ident _ | Texp_assertfalse -> Frame.fresh_unconstrained
   | _ -> Frame.fresh
 
 let rec constrain e env guard =
@@ -131,8 +131,8 @@ let rec constrain e env guard =
   let (f, cstrs, rec_cstrs) =
     match desc_ty with
       | (Texp_constant const_typ, F.Fabstract(path, [], _)) -> constrain_constant path const_typ
-      | (Texp_construct (cstrdesc, args), F.Fconstr _) -> constrain_constructed environment cstrdesc args e
-      | (Texp_record (labeled_exprs, None), F.Frecord _) -> constrain_record environment labeled_exprs
+      | (Texp_construct (cstrdesc, args), F.Fsum _) -> constrain_constructed environment cstrdesc args e
+      | (Texp_record (labeled_exprs, None), _) -> constrain_record environment labeled_exprs
       | (Texp_field (expr, label_desc), _) -> constrain_field environment expr label_desc
       | (Texp_ifthenelse (e1, e2, Some e3), _) -> constrain_if environment e1 e2 e3
       | (Texp_match (e, pexps, partial), _) -> constrain_match environment e pexps partial
@@ -162,23 +162,20 @@ and constrain_constant path = function
   | _ -> assert false
 
 and constrain_constructed (env, guard, f) cstrdesc args e =
-  match f with
-  | F.Fconstr (path, cstrs, _) ->
+  match F.unfold f with
+  | F.Fsum (path, rv, cstrs, _) ->
       let tag = cstrdesc.cstr_tag in
       let cstrref = match tag with
         | Cstr_constant n | Cstr_block n -> B.tag_refinement n
         | Cstr_exception _ -> assert false
       in
-      let mref = try let _ = Format.printf "@[M: looking for %s@]@." (Path.unique_name path) in Some (B.const_ref [M.mk_qual (M.find_c path tag !M.bms)]) with
+      let mref = try Some (B.const_ref [M.mk_qual (M.find_c path tag !M.bms)]) with
                      Not_found -> None in
       let cstrref =
         match mref with
-            Some r -> let _ = Format.printf "@[trying to add refinement: %a@]@." F.pprint_refinement r in
-                      r @ cstrref
+            Some r -> r @ cstrref
           | None -> cstrref in
-      (*let test = B.equality_refinement () in
-      let cstrref = test @ cstrref in*)
-      let f = F.Fconstr (path, cstrs, cstrref) in
+      let f = F.apply_refinement cstrref f in
       let cstrargs = F.params_frames (List.assoc tag cstrs) in
       let (argframes, argcs) = constrain_subexprs env guard args in
         (f,
@@ -189,17 +186,17 @@ and constrain_constructed (env, guard, f) cstrdesc args e =
 and constrain_record (env, guard, f) labeled_exprs =
   let compare_labels ({lbl_pos = n}, _) ({lbl_pos = m}, _) = compare n m in
   let (_, sorted_exprs) = List.split (List.sort compare_labels labeled_exprs) in
-  let (p, ps) = match f with F.Frecord(p, ps, _) -> (p, ps) | _ -> assert false in
+  let (p, ps) = match f with F.Fsum(p, rv, [(_, ps)], _) -> (p, ps) | _ -> assert false in
   let (fs, subexp_cs) = constrain_subexprs env guard sorted_exprs in
   let to_field (id, _, v) f = (id, f, v) in
   let field_qualifier (id, _, _) fexpr = B.field_eq_qualifier id (expression_to_pexpr fexpr) in
-  let f = F.Frecord(p, List.map2 to_field ps fs, F.mk_refinement [] (List.map2 field_qualifier ps sorted_exprs) []) in
+  let f = F.record_of_params p (List.map2 to_field ps fs) (F.mk_refinement [] (List.map2 field_qualifier ps sorted_exprs) []) in
     (f, [WFFrame (env, f)], subexp_cs)
 
 and constrain_field (env, guard, _) expr label_desc =
   let (recframe, cstrs) = constrain expr env guard in
   let (fieldname, fieldframe) = match recframe with
-    | F.Frecord (_, fs, _) -> (match List.nth fs label_desc.lbl_pos with (i, f, _) -> (i, f))
+    | F.Fsum (_, _, [(_, ps)], _) -> (match List.nth ps label_desc.lbl_pos with (i, f, _) -> (i, f))
     | _ -> assert false
   in
   let pexpr = P.Field (fieldname, expression_to_pexpr expr) in
@@ -233,6 +230,7 @@ and constrain_case (env, guard, f) matchf matche (pat, e) =
 
 and constrain_match ((env, guard, f) as environment) e pexps partial =
   let (matchf, matchcstrs) = constrain e env guard in
+  let matchf = F.unfold matchf in
   let cases = List.map (constrain_case environment matchf (expression_to_pexpr e)) pexps in
   let (cstrs, subcstrs) = List.split cases in
     (f, WFFrame (env, f) :: cstrs, List.concat (matchcstrs :: subcstrs))

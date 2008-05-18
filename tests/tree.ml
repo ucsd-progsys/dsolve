@@ -30,4 +30,5 @@ let rec map f t =
     | Empty -> Empty
     | Node (l, t, r) -> Node (map f l, f t, map f r)
 
-let _ = map abs three_node
+let a = map abs three_node
+let _ = a

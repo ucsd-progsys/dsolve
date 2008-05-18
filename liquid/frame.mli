@@ -45,10 +45,9 @@ val false_refinement: refinement
 
 type t =
   | Fvar of Path.t * refinement
-  | Fconstr of Path.t * constr list * refinement
+  | Fsum of Path.t * recvar * constr list * refinement
   | Fabstract of Path.t * param list * refinement
   | Farrow of pattern_desc option * t * t
-  | Frecord of Path.t * param list * refinement
   | Funknown
 
 and param = Ident.t * t * variance
@@ -57,8 +56,11 @@ and constr = constructor_tag * param list
 
 and variance = Covariant | Contravariant | Invariant
 
+and recvar = Path.t option
+
 val path_tuple: Path.t
 
+val record_of_params: Path.t -> param list -> refinement -> t
 val tuple_of_frames: t list -> refinement -> t
 
 val pprint: formatter -> t -> unit
@@ -71,6 +73,7 @@ val constrs_params: constr list -> param list
 val params_frames: param list -> t list
 val same_shape: t -> t -> bool
 val translate_pframe: Env.t -> (string * (string * Parsetree.predicate_pattern)) list -> Parsetree.litframe -> t
+val unfold: t -> t
 val fresh: Env.t -> type_expr -> t
 val fresh_without_vars: Env.t -> type_expr -> t
 val fresh_unconstrained: Env.t -> type_expr -> t
