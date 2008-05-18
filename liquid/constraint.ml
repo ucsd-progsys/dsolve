@@ -234,6 +234,8 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       ((lequate_cs env g c F.Covariant f2 f1) @ (lequate_cs env' g c F.Covariant f1' f2'), [])
   | (F.Fvar (_, r1), F.Fvar (_, r2)) ->
       ([], split_sub_ref c env g r1 r2)
+  | (F.Frec _, F.Frec _) ->
+      ([], [])
   | (F.Funknown, F.Funknown) ->
       ([],[]) 
   | (F.Fsum(_, _, cs1, r1), F.Fsum(_, _, cs2, r2)) ->  (* 2 *)
@@ -267,6 +269,8 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
         ([make_wff c tenv env f; make_wff c tenv env' f'], [])
   | F.Fvar (_, r) ->
       ([], split_wf_ref f c env r)
+  | F.Frec _ ->
+      ([], [])
   | F.Funknown ->
       ([],[]) 
 

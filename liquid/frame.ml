@@ -57,6 +57,7 @@ type simple_refinement = substitution list * qexpr
 
 type t =
   | Fvar of Path.t * refinement
+  | Frec of Path.t
   | Fsum of Path.t * recvar * constr list * refinement
   | Fabstract of Path.t * param list * refinement
   | Farrow of pattern_desc option * t * t
@@ -93,7 +94,7 @@ let map_params f ps =
   List.map (fun (p, fr, v) -> (p, f fr, v)) ps
 
 let rec map f = function
-  | (Funknown | Fvar _) as fr -> f fr
+  | (Funknown | Fvar _ | Frec _) as fr -> f fr
   | Fsum (p, rv, cs, r) ->
       f (Fsum (p, rv, List.map (fun (cd, ps) -> (cd, map_params f ps)) cs, r))
   | Fabstract (p, ps, r) -> f (Fabstract (p, map_params f ps, r))
@@ -188,7 +189,7 @@ let same_shape t1 t2 =
           (rv = rv' || match (rv, rv') with (Some rp, Some rp') -> ismapped rp rp' | _ -> false)
     | (Fabstract(p, ps, _), Fabstract(p', ps', _)) ->
         Path.same p p' && params_sshape ps ps'
-    | (Fvar (p, _), Fvar (p', _)) ->
+    | (Fvar (p, _), Fvar (p', _)) | (Frec p, Frec p') ->
         ismapped p p'
     | (Farrow(_, i, o), Farrow(_, i', o')) ->
         sshape (i, i') && sshape (o, o')
@@ -203,8 +204,8 @@ let same_shape t1 t2 =
 (******************************************************************************)
 
 let unfold f = match f with
-  | Fsum (_, Some p, _, _) -> map (function Fvar (p', _) when Path.same p p' -> f | f -> f) f
-  | _                          -> f
+  | Fsum (_, Some p, _, _) -> map (function Frec p' when Path.same p p' -> f | f -> f) f
+  | _                      -> f
 
 (**************************************************************)
 (******************** Frame pretty printers *******************)
@@ -255,6 +256,8 @@ let wrap_refined ppf pp r =
 let rec pprint ppf = function
   | Fvar (a, r) ->
       wrap_refined ppf (fun ppf -> fprintf ppf "'%s" (C.path_name () a)) r
+  | Frec path ->
+      fprintf ppf "%s" (C.path_name () path)
   | Fsum (path, _, [], r) ->
       wrap_refined ppf (fun ppf -> fprintf ppf "%s" (C.path_name () path)) r
   | Fsum (path, rv, cs, r) ->
@@ -296,12 +299,15 @@ let rec pprint_fenv ppf fenv =
    one is undefined and unimportant. *)
 let instantiate fr ftemplate =
   let vars = ref [] in
+  let vmap p ft =
+    try List.assoc p !vars with Not_found -> vars := (p, ft) :: !vars; ft
+  in
   let rec inst f ft =
     match (f, ft) with
       | (Fvar (p, r), _) ->
-          let instf =
-            try List.assoc p !vars with Not_found -> vars := (p, ft) :: !vars; ft
-          in append_refinement r instf
+          let instf = vmap p ft in append_refinement r instf
+      | (Frec p, _) ->
+          vmap p ft
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
           Farrow (l, inst f1 f2, inst f1' f2')
       | (Fsum (p, _, cs, r), Fsum(p', rv', cs', _)) ->
@@ -334,7 +340,7 @@ let instantiate_qualifiers vars fr =
    must be completely unlabeled (as frames are after creation by fresh). *)
 let label_like f f' =
   let rec label vars f f' = match (f, f') with
-    | (Fvar _, Fvar _) | (Funknown, Funknown)
+    | (Fvar _, Fvar _) | (Frec _, Frec _) | (Funknown, Funknown)
     | (Fsum _, Fsum _) | (Fabstract _, Fabstract _) ->
         instantiate_qualifiers vars f
     | (Farrow (None, f1, f1'), Farrow (l, f2, f2')) ->
@@ -439,7 +445,7 @@ let fresh_with_var_fun env freshf t =
           Hashtbl.find tbl t
         else begin
           let rv = Path.mk_ident "t" in
-            Hashtbl.replace tbl t (Fvar (rv, empty_refinement));
+            Hashtbl.replace tbl t (Frec rv);
             let res = fresh_rec fm env rv t in Hashtbl.replace tbl t res; res
         end
       in List.iter (fun (t, _) -> Hashtbl.remove tbl (canonicalize t)) pmap; f

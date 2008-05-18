@@ -45,6 +45,7 @@ val false_refinement: refinement
 
 type t =
   | Fvar of Path.t * refinement
+  | Frec of Path.t
   | Fsum of Path.t * recvar * constr list * refinement
   | Fabstract of Path.t * param list * refinement
   | Farrow of pattern_desc option * t * t
