@@ -162,7 +162,7 @@ and constrain_constant path = function
 
 and constrain_constructed (env, guard, f) cstrdesc args e =
   match F.unfold f with
-  | F.Fsum (path, rv, cstrs, _) ->
+  | F.Fsum (path, _, cstrs, _) ->
       let tag = cstrdesc.cstr_tag in
       let cstrref = match tag with
         | Cstr_constant n | Cstr_block n -> B.tag_refinement n
@@ -179,7 +179,7 @@ and constrain_constructed (env, guard, f) cstrdesc args e =
 and constrain_record (env, guard, f) labeled_exprs =
   let compare_labels ({lbl_pos = n}, _) ({lbl_pos = m}, _) = compare n m in
   let (_, sorted_exprs) = List.split (List.sort compare_labels labeled_exprs) in
-  let (p, ps) = match f with F.Fsum(p, rv, [(_, ps)], _) -> (p, ps) | _ -> assert false in
+  let (p, ps) = match f with F.Fsum(p, _, [(_, ps)], _) -> (p, ps) | _ -> assert false in
   let (fs, subexp_cs) = constrain_subexprs env guard sorted_exprs in
   let to_field (id, _, v) f = (id, f, v) in
   let field_qualifier (id, _, _) fexpr = B.field_eq_qualifier id (expression_to_pexpr fexpr) in

@@ -238,7 +238,7 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       ([], [])
   | (F.Funknown, F.Funknown) ->
       ([],[]) 
-  | (F.Fsum(_, _, cs1, r1), F.Fsum(_, _, cs2, r2)) ->  (* 2 *)
+  | (F.Fsum(_, _, cs1, r1), F.Fsum(_, _, cs2, r2)) ->  (* 2 *) (* pmr: obviously not correct at all *)
       (split_sub_params c tenv env g (F.constrs_params cs1) (F.constrs_params cs2),
        split_sub_ref c env g r1 r2)
   | (F.Fabstract(_, ps1, r1), F.Fabstract(_, ps2, r2)) ->
@@ -260,6 +260,14 @@ let rec split_wf_params c tenv env ps =
 
 let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFrame (env,f); lc_tenv = tenv} as c ->
   match f with
+  | F.Fsum (p, Some (rp, rr), cs, r) when not (F.recref_is_empty rr) ->
+      (* This deviates from the paper's cons rule because we instantiate qualifiers using
+         the split constraints.  This would result in qualifiers with idents that don't
+         actually appear in the program or tuple labels appearing in the recursive
+         refinements as a result of rho-application's renaming. *)
+      let shp     = F.shape f in
+      let (f, f') = (F.unfold_with f shp, F.apply_recref rr shp) in
+        ([make_wff c tenv env f; make_wff c tenv env f'], [])
   | F.Fsum (_, _, cs, r) ->
       (split_wf_params c tenv env (F.constrs_params cs), split_wf_ref f c env r)
   | F.Fabstract (_, ps, r) ->

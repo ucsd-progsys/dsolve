@@ -32,6 +32,7 @@ module C = Common
 module PM = C.PathMap
 module T = Typetexp
 module Pat = Pattern
+module M = Misc
 
 (**************************************************************)
 (************** Type definitions: Refinements *****************)
@@ -45,6 +46,8 @@ type qvar = Path.t * open_assignment
 type refexpr = substitution list * (Qualifier.t list * qvar list)
 type refinement = refexpr list
 
+type recref = refinement option list list
+
 type qexpr =
   | Qconst of Qualifier.t
   | Qvar of qvar
@@ -57,8 +60,8 @@ type simple_refinement = substitution list * qexpr
 
 type t =
   | Fvar of Path.t * refinement
-  | Frec of Path.t
-  | Fsum of Path.t * recvar * constr list * refinement
+  | Frec of Path.t * recref
+  | Fsum of Path.t * (Path.t * recref) option * constr list * refinement
   | Fabstract of Path.t * param list * refinement
   | Farrow of pattern_desc option * t * t
   | Funknown
@@ -95,14 +98,18 @@ let map_params f ps =
 
 let rec map f = function
   | (Funknown | Fvar _ | Frec _) as fr -> f fr
-  | Fsum (p, rv, cs, r) ->
-      f (Fsum (p, rv, List.map (fun (cd, ps) -> (cd, map_params f ps)) cs, r))
+  | Fsum (p, ro, cs, r) ->
+      f (Fsum (p, ro, List.map (fun (cd, ps) -> (cd, map_params f ps)) cs, r))
   | Fabstract (p, ps, r) -> f (Fabstract (p, map_params f ps, r))
   | Farrow (x, f1, f2) -> f (Farrow (x, map f f1, map f f2))
 
+let map_recref f rr =
+  List.map (fun r -> List.map (M.may_map f) r) rr
+
 let rec map_refinements_map f = function
   | Fvar (p, r) -> Fvar (p, f r)
-  | Fsum (p, rv, cs, r) -> Fsum (p, rv, cs, f r)
+  | Frec (p, rr) -> Frec (p, map_recref f rr)
+  | Fsum (p, ro, cs, r) -> Fsum (p, M.may_map (fun (p, rr) -> (p, map_recref f rr)) ro, cs, f r)
   | Fabstract (p, ps, r) -> Fabstract (p, ps, f r)
   | f -> f
 
@@ -112,10 +119,18 @@ let map_refinements f fr =
 let map_refexprs f fr =
   map_refinements (fun r -> List.map f r) fr
 
+let recref_fl f r l = match r with
+  | Some r -> f r l
+  | None   -> l
+
+let recref_fold f rr l =
+  List.fold_right (recref_fl f) (List.flatten rr) l
+
 let rec refinement_fold f l = function
   | Fvar (_, r) -> f r l
-  | Fsum (_, _, cs, r) ->
-      f r (List.fold_left (refinement_fold f) l (constrs_param_frames cs))
+  | Frec (_, rr) -> recref_fold f rr l
+  | Fsum (_, ro, cs, r) ->
+      f r (List.fold_left (refinement_fold f) (match ro with Some (_, rr) -> recref_fold f rr l | None -> l) (constrs_param_frames cs))
   | Fabstract (_, ps, r) ->
       f r (List.fold_left (refinement_fold f) l (params_frames ps))
   | _ -> l
@@ -130,12 +145,24 @@ let mk_refinement subs qconsts qvars =
 let empty_refinement =
   mk_refinement [] [] []
 
+let refinement_is_empty qes =
+  List.for_all (function (_, ([], [])) -> true | _ -> false) qes
+
+let empty_recref cs =
+  List.map (fun (_, ps) -> List.map (function Frec _ -> None | _ -> Some empty_refinement) (params_frames ps)) cs
+
+let row_is_empty rs =
+  List.for_all (function None -> true | Some r -> refinement_is_empty r) rs
+
+let recref_is_empty rr =
+  List.for_all row_is_empty rr
+
 let false_refinement =
   mk_refinement [] [(Path.mk_ident "false", Path.mk_ident "V", Predicate.Not (Predicate.True))] []
 
 let apply_refinement r = function
   | Fvar (p, _) -> Fvar (p, r)
-  | Fsum (p, rv, cs, _) -> Fsum (p, rv, cs, r)
+  | Fsum (p, rr, cs, _) -> Fsum (p, rr, cs, r)
   | Fabstract (p, ps, _) -> Fabstract (p, ps, r)
   | f -> f
 
@@ -147,6 +174,26 @@ let append_refinement res' f =
   match get_refinement f with
     | Some res -> apply_refinement (res @ res') f
     | None -> f
+
+let apply_recref rr = function
+  | Frec (p, _)                   -> Frec (p, rr)
+  | Fsum (p, Some (rp, _), cs, r) -> Fsum (p, Some (rp, rr), cs, r)
+  | _                             -> assert false
+
+let get_recref = function
+  | Frec (_, rr) | Fsum (_, Some (_, rr), _, _) -> Some rr
+  | _                                           -> None
+
+let merge_recrefs rr rr' =
+  let merge r r' = match (r, r') with
+    | (Some r, Some r') -> Some (r @ r')
+    | (None, None)      -> None
+    | _                 -> assert false
+  in List.map2 (List.map2 merge) rr rr'
+
+let append_recref rr' f = match get_recref f with
+  | Some rr -> apply_recref (merge_recrefs rr rr') f
+  | None    -> f
 
 let apply_substitution_map sub (subs, qe) =
   (sub :: subs, qe)
@@ -179,17 +226,20 @@ let ref_of_simple = function
 (************************* Shapes *****************************) 
 (**************************************************************)
 
+let shape f =
+  map_refinements (fun _ -> empty_refinement) f
+
 let same_shape t1 t2 =
   let vars = ref [] in
   let ismapped p q = try snd (List.find (fun (p', q) -> Path.same p p') !vars) = q with
       Not_found -> vars := (p, q) :: !vars; true in
   let rec sshape = function
-      (Fsum(p, rv, cs, _), Fsum(p', rv', cs', _)) ->
+      (Fsum(p, ro, cs, _), Fsum(p', ro', cs', _)) ->
         Path.same p p' && params_sshape (constrs_params cs) (constrs_params cs') &&
-          (rv = rv' || match (rv, rv') with (Some rp, Some rp') -> ismapped rp rp' | _ -> false)
+          (ro = ro' || match (ro, ro') with (Some (rp, _), Some (rp', _)) -> ismapped rp rp' | _ -> false)
     | (Fabstract(p, ps, _), Fabstract(p', ps', _)) ->
         Path.same p p' && params_sshape ps ps'
-    | (Fvar (p, _), Fvar (p', _)) | (Frec p, Frec p') ->
+    | (Fvar (p, _), Fvar (p', _)) | (Frec (p, _), Frec (p', _)) ->
         ismapped p p'
     | (Farrow(_, i, o), Farrow(_, i', o')) ->
         sshape (i, i') && sshape (o, o')
@@ -198,14 +248,6 @@ let same_shape t1 t2 =
   and params_sshape ps qs =
     List.for_all sshape (List.combine (params_frames ps) (params_frames qs))
   in sshape (t1, t2)
-
-(******************************************************************************)
-(********************************** Unfolding *********************************)
-(******************************************************************************)
-
-let unfold f = match f with
-  | Fsum (_, Some p, _, _) -> map (function Frec p' when Path.same p p' -> f | f -> f) f
-  | _                      -> f
 
 (**************************************************************)
 (******************** Frame pretty printers *******************)
@@ -253,16 +295,29 @@ let wrap_refined ppf pp r =
   else
     (fprintf ppf "@[{"; pp ppf; fprintf ppf " |@;<1 2>%a}@]" pprint_refinement r)
 
+let comma ppf =
+  fprintf ppf ",@;<1 0>"
+
+let pprint_refs ppf rs =
+  fprintf ppf "@[[%a]@]" (Oprint.print_list (fun ppf -> function Some r -> pprint_refinement ppf r | None -> fprintf ppf "None") comma) rs
+
+let pprint_recref ppf rr =
+  fprintf ppf "@[[%a]@]" (Oprint.print_list pprint_refs comma) rr
+
+let pprint_recopt ppf = function
+  | Some (rp, rr) -> fprintf ppf "%a@;<1 0>μ%s." pprint_recref rr (C.path_name () rp)
+  | None          -> fprintf ppf "" (* pmr: necessary? *)
+
 let rec pprint ppf = function
   | Fvar (a, r) ->
       wrap_refined ppf (fun ppf -> fprintf ppf "'%s" (C.path_name () a)) r
-  | Frec path ->
-      fprintf ppf "%s" (C.path_name () path)
-  | Fsum (path, _, [], r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "%s" (C.path_name () path)) r
-  | Fsum (path, rv, cs, r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "@[%s%s @[(%a)@]@]"
-                          (match rv with Some rp -> "μ" ^ C.path_name () rp ^ ". " | None -> "")
+  | Frec (path, rr) ->
+      fprintf ppf "@[%a %s@]" pprint_recref rr (C.path_name () path)
+  | Fsum (path, ro, [], r) ->
+      wrap_refined ppf (fun ppf -> fprintf ppf "%a%s" pprint_recopt ro (C.path_name () path)) r
+  | Fsum (path, ro, cs, r) ->
+      wrap_refined ppf (fun ppf -> fprintf ppf "@[%a %s @[(%a)@]@]"
+                          pprint_recopt ro
                           (C.path_name () path)
                           (Oprint.print_list pprint_constructor
                              (fun ppf -> fprintf ppf "@;<1 0>|| ")) cs) r
@@ -290,6 +345,35 @@ let rec pprint ppf = function
 let rec pprint_fenv ppf fenv =
   Lightenv.maplist (fun k v -> printf "@[%s:@ %a@]@." (C.path_name () k) pprint v) fenv
 
+(******************************************************************************)
+(********************************** Unfolding *********************************)
+(******************************************************************************)
+
+let rec apply_refs (rs : refinement option list) ps = match (rs, ps) with
+  | (r :: rs, (i, f, v) :: ps) ->
+      let (ip, i') = (Path.Pident i, Ident.create (Ident.name i)) in
+      let sub      = (ip, Predicate.Var (Path.Pident i')) in
+      let ps       = List.map (fun (i, f, v) -> (i, apply_substitution sub f, v)) ps in
+      let rs       = List.map (Misc.may_map (List.map (apply_substitution_map sub))) rs in
+        (i', (match r with Some r -> append_refinement r f | None -> f), v) :: apply_refs rs ps
+  | ([], []) -> []
+  | _        -> assert false
+
+let apply_recref_constrs rr cs =
+  List.map2 (fun rs (t, ps) -> (t, apply_refs rs ps)) rr cs
+
+let apply_recref rr = function
+  | Fsum (p, ro, cs, r) -> Fsum (p, ro, apply_recref_constrs rr cs, r)
+  | _                   -> assert false
+
+let unfold_with f f' = match f with
+  | Fsum (p, Some (rp, rr), cs, r) ->
+      map (function Frec (rp', rr') when Path.same rp rp' -> append_recref rr' f' | f -> f) (Fsum (p, None, cs, r))
+  | _ -> f
+
+let unfold f =
+  unfold_with f f
+
 (**************************************************************)
 (********* Polymorphic and qualifier instantiation ************) 
 (**************************************************************)
@@ -306,12 +390,12 @@ let instantiate fr ftemplate =
     match (f, ft) with
       | (Fvar (p, r), _) ->
           let instf = vmap p ft in append_refinement r instf
-      | (Frec p, _) ->
+      | (Frec (p, _), _) ->
           vmap p ft
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
           Farrow (l, inst f1 f2, inst f1' f2')
-      | (Fsum (p, _, cs, r), Fsum(p', rv', cs', _)) ->
-          Fsum(p, rv', List.map2 (fun (cd, ps) (_, ps') -> (cd, inst_params ps ps')) cs cs', r)
+      | (Fsum (p, _, cs, r), Fsum(p', ro', cs', _)) ->
+          Fsum(p, ro', List.map2 (fun (cd, ps) (_, ps') -> (cd, inst_params ps ps')) cs cs', r)
       | (Fabstract(p, ps, r), Fabstract(_, ps', _)) ->
           Fabstract(p, inst_params ps ps', r)
       | (Funknown, Funknown) -> Funknown
@@ -423,8 +507,9 @@ let fresh_constr fresh env p t tyl =
           in Fsum (p, None, List.map fresh_cstr cds, empty_refinement)
 
 let close_recf rv = function
-  | Fsum (p, _, cs, r) -> let f = Fsum (p, Some rv, cs, r) in if unfold f = f then Fsum (p, None, cs, r) else f
-  | f                     -> f
+  | Fsum (p, _, cs, r) ->
+      let f = Fsum (p, Some (rv, empty_recref cs), cs, r) in if unfold f = f then Fsum (p, None, cs, r) else f
+  | f -> f
 
 let fresh_rec fresh env rv t = match t.desc with
   | Tvar                 -> fresh_fvar ()
@@ -432,6 +517,20 @@ let fresh_rec fresh env rv t = match t.desc with
   | Ttuple ts            -> tuple_of_frames (List.map (fresh []) ts) empty_refinement
   | Tconstr(p, tyl, _)   -> close_recf rv (fresh_constr fresh env p t (List.map canonicalize tyl))
   | _                    -> fprintf err_formatter "@[Warning: Freshing unsupported type]@."; Funknown
+
+let cstr_refinements cstr =
+  let (args, res) = Ctype.instance_constructor cstr in
+  let _           = close_constructor res args in
+  let (res, args) = (canonicalize res, List.map canonicalize args) in
+    List.map (fun t -> if t = res then None else Some empty_refinement) args
+
+let mk_recvar env t =
+  let rv = Path.mk_ident "t" in
+    match t.desc with
+      | Tconstr (p, tyl, _) ->
+          let (_, cstrs) = List.split (Env.constructors_of_type p (Env.find_type p env)) in
+          let rr         = List.map cstr_refinements cstrs in (rv, Frec (rv, rr))
+      | _ -> (rv, Frec (rv, []))
 
 (* Create a fresh frame with the same shape as the type of [exp] using
    [fresh_ref_var] to create new refinement variables. *)
@@ -444,8 +543,8 @@ let fresh_with_var_fun env freshf t =
         if Hashtbl.mem tbl t then
           Hashtbl.find tbl t
         else begin
-          let rv = Path.mk_ident "t" in
-            Hashtbl.replace tbl t (Frec rv);
+          let (rv, rf) = mk_recvar env t in
+            Hashtbl.replace tbl t rf;
             let res = fresh_rec fm env rv t in Hashtbl.replace tbl t res; res
         end
       in List.iter (fun (t, _) -> Hashtbl.remove tbl (canonicalize t)) pmap; f

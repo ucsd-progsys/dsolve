@@ -34,6 +34,8 @@ type qvar = Path.t * open_assignment
 type refexpr = substitution list * (Qualifier.t list * qvar list)
 type refinement = refexpr list
 
+type recref = refinement option list list
+
 type qexpr =
   | Qconst of Qualifier.t
   | Qvar of qvar
@@ -45,8 +47,8 @@ val false_refinement: refinement
 
 type t =
   | Fvar of Path.t * refinement
-  | Frec of Path.t
-  | Fsum of Path.t * recvar * constr list * refinement
+  | Frec of Path.t * recref
+  | Fsum of Path.t * (Path.t * recref) option * constr list * refinement
   | Fabstract of Path.t * param list * refinement
   | Farrow of pattern_desc option * t * t
   | Funknown
@@ -59,6 +61,8 @@ and variance = Covariant | Contravariant | Invariant
 
 and recvar = Path.t option
 
+val empty_recref: constr list -> recref
+
 val path_tuple: Path.t
 
 val record_of_params: Path.t -> param list -> refinement -> t
@@ -68,12 +72,15 @@ val pprint: formatter -> t -> unit
 val pprint_fenv: formatter -> t Lightenv.t -> unit list
 val pprint_sub: formatter -> substitution -> unit
 val pprint_refinement: formatter -> refinement -> unit
+val recref_is_empty: recref -> bool
 val mk_refinement: substitution list -> Qualifier.t list -> qvar list -> refinement
 val translate_variance: (bool * bool * bool) -> variance
 val constrs_params: constr list -> param list
 val params_frames: param list -> t list
+val shape: t -> t
 val same_shape: t -> t -> bool
 val translate_pframe: Env.t -> (string * (string * Parsetree.predicate_pattern)) list -> Parsetree.litframe -> t
+val unfold_with: t -> t -> t
 val unfold: t -> t
 val fresh: Env.t -> type_expr -> t
 val fresh_without_vars: Env.t -> type_expr -> t
@@ -91,6 +98,8 @@ val refinement_conjuncts:
 val refinement_predicate:
   (Path.t -> Qualifier.t list) -> Predicate.pexpr -> refinement -> Predicate.t
 val apply_refinement: refinement -> t -> t
+val apply_recref_constrs: recref -> constr list -> constr list
+val apply_recref: recref -> t -> t
 val qvars: t -> qvar list
 val refinement_qvars: refinement -> qvar list
 val ref_to_simples: refinement -> (simple_refinement list * simple_refinement list)
