@@ -34,7 +34,7 @@ let transl_desc mlenv (c, (ps, rs)) =
   let tag = c.cstr_tag in
   let fr = F.fresh_without_vars mlenv c.cstr_res in
   let p = function
-    F.Fconstr(p, _, _) -> p
+    F.Fsum(p, _, _) -> p
     | _ -> failwith "constructor result is not a constructed type?" in
   (p fr, (tag, ps, rs)) 
 
