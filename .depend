@@ -372,6 +372,14 @@ liquid/liquid.cmx: utils/warnings.cmx typing/types.cmx typing/typemod.cmx \
     liquid/measure.cmx parsing/longident.cmx liquid/liqerrors.cmx \
     liquid/lightenv.cmx typing/ident.cmx liquid/frame.cmx typing/env.cmx \
     utils/config.cmx typing/common.cmx utils/clflags.cmx liquid/builtins.cmx 
+liquid/measure.cmo: typing/types.cmi typing/typedtree.cmi \
+    typing/predicate.cmi typing/path.cmi parsing/longident.cmi \
+    liquid/lightenv.cmo typing/ident.cmi liquid/frame.cmi typing/env.cmi \
+    liquid/constraint.cmi 
+liquid/measure.cmx: typing/types.cmx typing/typedtree.cmx \
+    typing/predicate.cmx typing/path.cmx parsing/longident.cmx \
+    liquid/lightenv.cmx typing/ident.cmx liquid/frame.cmx typing/env.cmx \
+    liquid/constraint.cmx 
 liquid/message.cmo: liquid/message.cmi 
 liquid/message.cmx: liquid/message.cmi 
 liquid/normalize.cmo: liquid/qdebug.cmi parsing/printast.cmi \
