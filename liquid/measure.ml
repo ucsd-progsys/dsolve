@@ -4,6 +4,7 @@ module P = Predicate
 module C = Constraint
 module F = Frame
 module Le = Lightenv
+module Ty = Typedtree
 
 type mdef = (string * P.pexpr) 
 type m = (constructor_tag * Path.t option list * mdef list) list 
@@ -14,10 +15,20 @@ let builtins = [
   ("None", ([], [("h", P.PInt(0))]));
 ]
 
+let builtin_funs = [
+  "h";
+]
+
 let (empty: t) = Le.empty
 
 let find_c p t e =
   List.find (fun (t', _, _) -> t' = t) (Le.find p e)
+
+let find_by_name s e =
+  match Le.filterlist (fun p v -> (Path.name p) = s) e with
+    | x :: [] -> x
+    | x :: xs -> assert false
+    | [] -> raise Not_found
 
 let add (p, ((tag, _, _) as r)) env = 
   let cs = try Le.find p env with
@@ -34,7 +45,7 @@ let transl_desc mlenv (c, (ps, rs)) =
   let tag = c.cstr_tag in
   let fr = F.fresh_without_vars mlenv c.cstr_res in
   let p = function
-    F.Fsum(p, _, _) -> p
+    F.Fsum(p, None, _, _) -> p
     | _ -> failwith "constructor result is not a constructed type?" in
   (p fr, (tag, ps, rs)) 
 
@@ -44,22 +55,22 @@ let mk_bms env =
   bms := List.fold_left (f (transl_desc env)) empty builtins 
 
 let mk_fun n f = 
-    let funr a = P.Atom (P.Var x, P.Eq, P.FunApp(n, P.Var a)) in  
-    match f with
-      Farrow (a, b, f2) -> Farrow (a, b, F.append_refinement [funr a] fw)
-    | _ -> failwith "not a fun in mk_fun"
+  let funr a = 
+    let v = Path.mk_ident "v" in 
+    let a = Path.Pident a in
+    ([], ([(Path.mk_ident (String.concat "_" ["measure"; n]), v, P.Atom (P.Var v, P.Eq, P.FunApp(n, [P.Var a])))], [])) in  
+  match f with
+    F.Farrow (Some (Ty.Tpat_var a), b, f2) -> F.Farrow (Some (Ty.Tpat_var a), b, F.apply_refinement [funr a] f2)
+  | F.Farrow (None, b, f2) -> 
+      let a = Ident.create "x" in
+        F.Farrow (Some (Ty.Tpat_var a), b, F.apply_refinement [funr a] f2)
+  | _ -> failwith "not a fun in mk_fun"
 
-let mk_tys env =
-  let gl y = List.rev_append (snd (snd y)) in
-  let funs = List.fold_left gl [] builtins in
-  let nms = List.map fst funs in
-  let mk_ty s = 
-    let shp = Wf.get_expr_shape (List.hd s) in
-    let f a = F.same_shape (Wf.get_expr_shape a) shp
-    if List.for_all f s then mk_fun shp
-    else failwith "conflicting shapes for measure" in
-  let assc = List.map (fun x -> (x, List.assoc x funs)) nms in
-   List.map 
+let mk_tys e =
+  let ty s =
+    let sf = find_by_name s e in
+    mk_fun s sf in
+  List.map ty builtin_funs
 
 let mk_pred v (_, _, ms) =
   let cm (s, e) = P.Atom(P.FunApp(s, [P.Var v]), P.Eq, e) in 
