@@ -314,7 +314,7 @@ let rec pprint ppf = function
   | Frec (path, rr) ->
       fprintf ppf "@[%a %s@]" pprint_recref rr (C.path_name () path)
   | Fsum (path, ro, [], r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "%a%s" pprint_recopt ro (C.path_name () path)) r
+      wrap_refined ppf (fun ppf -> fprintf ppf "@[%a%s@]" pprint_recopt ro (C.path_name () path)) r
   | Fsum (path, ro, cs, r) ->
       wrap_refined ppf (fun ppf -> fprintf ppf "@[%a %s @[(%a)@]@]"
                           pprint_recopt ro
