@@ -161,7 +161,11 @@ and constrain_constant path = function
   | _ -> assert false
 
 and constrain_constructed (env, guard, f) cstrdesc args e =
-  match F.unfold f with
+  printf "Pre-unfold:  %a@.@." F.pprint f;
+  let f' = F.unfold f in
+  let f' = match F.get_recref f with Some rr -> F.apply_recref rr f' | None -> f' in
+    printf "Post-unfold: %a@.@." F.pprint f';
+  match f' with
   | F.Fsum (path, _, cstrs, _) ->
       let tag = cstrdesc.cstr_tag in
       let cstrref = match tag with

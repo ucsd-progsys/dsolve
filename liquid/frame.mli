@@ -68,6 +68,7 @@ val path_tuple: Path.t
 val record_of_params: Path.t -> param list -> refinement -> t
 val tuple_of_frames: t list -> refinement -> t
 
+val get_recref: t -> recref option
 val pprint: formatter -> t -> unit
 val pprint_fenv: formatter -> t Lightenv.t -> unit list
 val pprint_sub: formatter -> substitution -> unit

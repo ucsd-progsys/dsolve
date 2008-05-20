@@ -225,6 +225,11 @@ let resolve_extend_env tenv env f l1 l2 = match (l1, l2) with
   | (Some p, _) | (_, Some p) -> F.env_bind tenv env p f
   | _ -> env
 
+let no_recrefs = function
+  | (None, None)                   -> true
+  | (Some (_, rr1), Some (_, rr2)) -> F.recref_is_empty rr1 && F.recref_is_empty rr2
+  | _                              -> false
+
 let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubFrame (env,g,f1,f2); lc_tenv = tenv} as c ->
   match (f1, f2) with
   | (F.Farrow (l1, f1, f1'), F.Farrow (l2, f2, f2')) ->
@@ -238,9 +243,15 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       ([], [])
   | (F.Funknown, F.Funknown) ->
       ([],[]) 
-  | (F.Fsum(_, _, cs1, r1), F.Fsum(_, _, cs2, r2)) ->  (* 2 *) (* pmr: obviously not correct at all *)
+  | (F.Fsum(_, ro1, cs1, r1), F.Fsum(_, ro2, cs2, r2)) when no_recrefs (ro1, ro2) -> (* 2 *)
+      let _ = printf "AS: @[%a <:@;<1 0>%a@]@.@." F.pprint f1 F.pprint f2 in
       (split_sub_params c tenv env g (F.constrs_params cs1) (F.constrs_params cs2),
        split_sub_ref c env g r1 r2)
+  | (F.Fsum(_, Some (_, rr1), _, r1), F.Fsum(_, Some (_, rr2), _, r2)) ->
+      let _ = printf "PS: @[%a <:@;<1 0>%a@]@.@." F.pprint f1 F.pprint f2 in
+      let (shp1, shp2) = (F.shape f1, F.shape f2) in
+      let (f1, f2) = (F.unfold_with (F.apply_recref rr1 f1) shp1, F.unfold_with (F.apply_recref rr2 f2) shp2) in
+        (lequate_cs env g c F.Covariant f1 f2, split_sub_ref c env g r1 r2)
   | (F.Fabstract(_, ps1, r1), F.Fabstract(_, ps2, r2)) ->
       (split_sub_params c tenv env g ps1 ps2, split_sub_ref c env g r1 r2)
   | (_,_) -> 
