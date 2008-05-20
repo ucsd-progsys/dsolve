@@ -24,6 +24,8 @@ let (empty: t) = Le.empty
 let find_c p t e =
   List.find (fun (t', _, _) -> t' = t) (Le.find p e)
 
+let tsc (a, b, c) = (a, (b, c))
+
 let find_by_name s e =
   match Le.filterlist (fun p v -> (Path.name p) = s) e with
     | x :: [] -> x
@@ -33,8 +35,7 @@ let find_by_name s e =
 let add (p, ((tag, _, _) as r)) env = 
   let cs = try Le.find p env with
              Not_found -> [] in
-  let t (a, b, c) = (a, (b, c)) in
-  let cs' = List.map t cs in
+  let cs' = List.map tsc cs in
   let _ = try ignore (List.assoc tag cs'); failwith "constructor redef in measure" with 
             Not_found -> () in
   Lightenv.add p (r :: cs) env
@@ -49,6 +50,7 @@ let transl_desc mlenv (c, (ps, rs)) =
     | _ -> failwith "constructor result is not a constructed type?" in
   (p fr, (tag, ps, rs)) 
 
+(* don't panic! bms only set here *)
 let bms = ref empty
 let mk_bms env = 
   let f g e h = add (g h) e in
@@ -79,3 +81,16 @@ let mk_pred v (_, _, ms) =
 let mk_qual c =
   let v = Path.mk_ident "v" in
   (Path.mk_ident "measure", v, mk_pred v c)
+
+let mk_single_gd menv p vp (tag, _) =
+  try Some (mk_pred vp (find_c p tag menv)) with 
+    Not_found -> None
+
+let mk_guards f e pat_exps =
+  let vp = match e with 
+      Ty.Texp_ident (p, _) -> p 
+    | _ -> failwith "only match on idents supported; try normalizing" in
+  let (p, rows) = match f with
+      F.Fsum(p, None, constrs, _) -> (p, constrs)
+    | _ -> assert false in 
+    List.map (mk_single_gd !bms p vp) rows

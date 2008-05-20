@@ -228,10 +228,23 @@ and constrain_case (env, guard, f) matchf matche (pat, e) =
   let (fe, subcs) = constrain e env guard in
     (SubFrame (env, guard, fe, f), subcs)
 
-and constrain_match ((env, guard, f) as environment) e pexps partial =
+and def_measured_frame = function
+    Some g -> Some (F.Fvar(Path.mk_ident "", [([], ([(Path.mk_ident "", Path.mk_ident "", g)], []))]))
+  | None -> None
+
+and maybe_measured_env (guard, f) mgvar env g =
+  match g with
+      Some g -> (Le.add mgvar g env, guard, f)
+    | None -> (env, guard, f)
+
+and constrain_match (env, guard, f) e pexps partial =
   let (matchf, matchcstrs) = constrain e env guard in
   let matchf = F.unfold matchf in
-  let cases = List.map (constrain_case environment matchf (expression_to_pexpr e)) pexps in
+  let subguards = M.mk_guards matchf e.exp_desc pexps in
+  let subguards = List.map def_measured_frame subguards in
+  let mgvar = Path.mk_ident "measure_guardvar" in
+  let environments = List.map (maybe_measured_env (guard, f) mgvar env) subguards in
+  let cases = List.map (fun (en, p) -> constrain_case en matchf (expression_to_pexpr e) p) (List.combine environments pexps) in
   let (cstrs, subcstrs) = List.split cases in
     (f, WFFrame (env, f) :: cstrs, List.concat (matchcstrs :: subcstrs))
 
