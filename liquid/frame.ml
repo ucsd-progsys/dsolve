@@ -390,12 +390,12 @@ let instantiate fr ftemplate =
     match (f, ft) with
       | (Fvar (p, r), _) ->
           let instf = vmap p ft in append_refinement r instf
-      | (Frec (p, _), _) ->
-          vmap p ft
+      | (Frec _, _) ->
+          f
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
           Farrow (l, inst f1 f2, inst f1' f2')
-      | (Fsum (p, _, cs, r), Fsum(p', ro', cs', _)) ->
-          Fsum(p, ro', List.map2 (fun (cd, ps) (_, ps') -> (cd, inst_params ps ps')) cs cs', r)
+      | (Fsum (p, ro, cs, r), Fsum(p', _, cs', _)) ->
+          Fsum(p, ro, List.map2 (fun (cd, ps) (_, ps') -> (cd, inst_params ps ps')) cs cs', r)
       | (Fabstract(p, ps, r), Fabstract(_, ps', _)) ->
           Fabstract(p, inst_params ps ps', r)
       | (Funknown, Funknown) -> Funknown
