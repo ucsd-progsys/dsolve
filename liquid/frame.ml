@@ -481,9 +481,6 @@ let close_constructor res args =
 let fresh_constr fresh env p t tyl =
   let params  = List.map (fresh []) tyl in
   let ty_decl = Env.find_type p env in
-  (* Used in the sum type case - the type constructors contain uninstantiated
-     types, which we need to map to the instantiated type parameters. This is rather
-     easier than unification, which requires a type environment and more logic. *)
   let pm      = List.combine ty_decl.type_params params in
   let varis   = List.map translate_variance ty_decl.type_variance in
     match ty_decl.type_kind with
