@@ -160,20 +160,22 @@ and constrain_constant path = function
   | Const_string _ -> (B.uString, [], [])
   | _ -> assert false
 
+and replace_params ps fs =
+  List.map2 (fun (i, _, v) f -> (i, f, v)) ps fs
+
 and constrain_constructed (env, guard, f) cstrdesc args e =
   let f' = F.unfold_with (expr_fresh e.exp_desc e.exp_env e.exp_type) (expr_fresh e.exp_desc e.exp_env e.exp_type) in
   match f' with
-  | F.Fsum (path, _, cstrs, _) ->
+  | F.Fsum (path, ro, cstrs, _) ->
       let tag = cstrdesc.cstr_tag in
       let cstrref = match tag with
         | Cstr_constant n | Cstr_block n -> B.tag_refinement n
         | Cstr_exception _ -> assert false
       in
-      let f' = F.apply_refinement cstrref f' in
-      let cstrargs = F.params_frames (List.assoc tag cstrs) in
       let (argframes, argcs) = constrain_subexprs env guard args in
-      let cs = List.map2 (fun arg formal -> SubFrame(env, guard, arg, formal)) argframes cstrargs in
-        constrain_fold (env, guard, f) f' (WFFrame (env, f') :: cs) argcs
+      let cstrs = List.map (fun (t, ps) -> (t, if t = tag then replace_params ps argframes else ps)) cstrs in
+      let f' = F.Fsum (path, ro, cstrs, cstrref) in
+        constrain_fold (env, guard, f) f' [WFFrame (env, f')] argcs
   | _ -> assert false
 
 and constrain_fold (env, guard, f) f'' cstrs subcstrs = match f with
