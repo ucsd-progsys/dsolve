@@ -34,8 +34,14 @@ let maplist f env =
 let maplistfilter f env =
   fold (fun k v r -> let c = f k v in match c with Some c -> c::r | None -> r) env []
 
+let primfilterlist g f env =
+  fold (fun k v r -> if f k v then (g (k, v))::r else r) env []
+
 let filterlist f env =
-  fold (fun k v r -> if f k v then v::r else r) env []
+  primfilterlist snd f env
+
+let filterkeylist f env =
+  primfilterlist fst f env
 
 let mapfilter f env =
   fold (fun k v r -> match f k v with Some x -> x::r | None -> r) env []

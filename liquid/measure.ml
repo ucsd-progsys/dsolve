@@ -26,12 +26,6 @@ let find_c p t e =
 
 let tsc (a, b, c) = (a, (b, c))
 
-let find_by_name s e =
-  match Le.filterlist (fun p v -> (Path.name p) = s) e with
-    | x :: [] -> x
-    | x :: xs -> assert false
-    | [] -> raise Not_found
-
 let add (p, ((tag, _, _) as r)) env = 
   let cs = try Le.find p env with
              Not_found -> [] in
@@ -68,10 +62,17 @@ let mk_fun n f =
         F.Farrow (Some (Ty.Tpat_var a), b, F.apply_refinement [funr a] f2)
   | _ -> failwith "not a fun in mk_fun"
 
-let mk_tys e =
+let find_mlenv_by_name s env =
+  try 
+    let (p, v) = Env.lookup_value (Longident.parse s) env in
+    let fr = F.fresh_without_vars env v.val_type in
+      (p, fr)
+  with Not_found -> assert false
+
+let mk_tys env =
   let ty s =
-    let sf = find_by_name s e in
-    mk_fun s sf in
+    let (p, sf) = find_mlenv_by_name s env in
+    (p, mk_fun s sf) in
   List.map ty builtin_funs
 
 let mk_pred v (_, _, ms) =
