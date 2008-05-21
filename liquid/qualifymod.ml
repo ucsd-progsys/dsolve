@@ -161,10 +161,7 @@ and constrain_constant path = function
   | _ -> assert false
 
 and constrain_constructed (env, guard, f) cstrdesc args e =
-  printf "Pre-unfold:  %a@.@." F.pprint f;
-  let f' = F.unfold f in
-  let f' = match F.get_recref f with Some rr -> F.apply_recref rr f' | None -> f' in
-    printf "Post-unfold: %a@.@." F.pprint f';
+  let f' = F.unfold_with (expr_fresh e.exp_desc e.exp_env e.exp_type) (expr_fresh e.exp_desc e.exp_env e.exp_type) in
   match f' with
   | F.Fsum (path, _, cstrs, _) ->
       let tag = cstrdesc.cstr_tag in
@@ -172,12 +169,18 @@ and constrain_constructed (env, guard, f) cstrdesc args e =
         | Cstr_constant n | Cstr_block n -> B.tag_refinement n
         | Cstr_exception _ -> assert false
       in
-      let f = F.apply_refinement cstrref f in
+      let f' = F.apply_refinement cstrref f' in
       let cstrargs = F.params_frames (List.assoc tag cstrs) in
       let (argframes, argcs) = constrain_subexprs env guard args in
-        (f,
-         WFFrame(env, f) :: (List.map2 (fun arg formal -> SubFrame(env, guard, arg, formal)) argframes cstrargs),
-         argcs)
+      let cs = List.map2 (fun arg formal -> SubFrame(env, guard, arg, formal)) argframes cstrargs in
+        constrain_fold (env, guard, f) f' (WFFrame (env, f') :: cs) argcs
+  | _ -> assert false
+
+and constrain_fold (env, guard, f) f'' cstrs subcstrs = match f with
+  | F.Fsum (p, ro, cs, r) ->
+      let f' = match ro with Some (_, rr) -> F.apply_recref rr f | None -> f in
+      let f' = F.unfold_with f' f in
+        (f, WFFrame (env, f) :: SubFrame (env, guard, f'', f') :: cstrs, subcstrs)
   | _ -> assert false
 
 and constrain_record (env, guard, f) labeled_exprs =
