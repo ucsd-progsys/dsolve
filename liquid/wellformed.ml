@@ -43,7 +43,7 @@ let builtin_fun_app_shapes = lazy(
     [("Array.length", abstract_app_shape [Predef.path_array] uInt);
      ("Bigarray.Array2.dim1", abstract_app_shape [array2_path] uInt);
      ("Bigarray.Array2.dim2", abstract_app_shape [array2_path] uInt);
-     (Builtins.tag_function, (function [Fsum _] -> uInt | _ -> Funknown))]
+     (tag_function, (function [Fsum _] -> uInt | _ -> Funknown))]
 )
 
 let rec app_to_fun funf =

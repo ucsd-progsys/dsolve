@@ -38,6 +38,8 @@ let maybe_cons m xs = match m with
   | None -> xs
   | Some x -> x :: xs
 
+let maybe_list xs = List.fold_right maybe_cons xs []
+
 let rec _fli f n b = function
   | [] -> b
   | x :: xs -> _fli f (n + 1) (f n b x) xs

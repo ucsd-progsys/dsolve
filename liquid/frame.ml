@@ -32,6 +32,7 @@ module C = Common
 module PM = C.PathMap
 module T = Typetexp
 module Pat = Pattern
+module P = Predicate
 
 (**************************************************************)
 (************** Type definitions: Refinements *****************)
@@ -162,6 +163,23 @@ let refinement_qvars r =
 
 let qvars f =
   refinement_fold (fun r vs -> refinement_qvars r @ vs) [] f
+
+let tag_function = "__tag"
+
+let maybe_tag_qualifier (_, v, pred) =
+  match pred with
+     P.Atom (P.FunApp (tag_fun, [(P.Var v)]), P.Eq, P.PInt t) -> if tag_fun = tag_function then Some t else None
+   | _ -> None
+
+let find_tag_single ts r =
+  let (_, (qs, _)) = r in
+  (C.maybe_list (List.map maybe_tag_qualifier qs)) @ ts
+
+let find_tag rs =
+  match List.fold_left find_tag_single [] rs with
+    x :: [] -> Some (Cstr_block (x))
+    | x :: xs -> failwith "constructed value has too many tags"
+    | [] -> None
 
 (**************************************************************)
 (*********** Conversions to/from simple refinements ***********)

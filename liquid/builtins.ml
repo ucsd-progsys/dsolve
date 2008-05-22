@@ -137,8 +137,6 @@ let op_frame path qname op =
                 fun z -> rInt qname z (Var z ==. Binop (Var x, op, Var y))))
 
 
-let tag_function = "__tag"
-
 let tag x = FunApp(tag_function, [x])
 
 let or_frame () =
