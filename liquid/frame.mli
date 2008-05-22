@@ -72,6 +72,7 @@ val mk_refinement: substitution list -> Qualifier.t list -> qvar list -> refinem
 val translate_variance: (bool * bool * bool) -> variance
 val constrs_params: constr list -> param list
 val params_frames: param list -> t list
+val params_ids: param list -> Ident.t list
 val same_shape: t -> t -> bool
 val translate_pframe: Env.t -> (string * (string * Parsetree.predicate_pattern)) list -> Parsetree.litframe -> t
 val unfold: t -> t

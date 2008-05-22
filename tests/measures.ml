@@ -9,8 +9,6 @@ let a x =
 let h (x: int option) = let y = 5 in 2/y
 let x = Some 1
 
-let h = (fun
-
 let y = match x with
     Some y -> let x = 15 in x
   | None -> let x = 50 in x 

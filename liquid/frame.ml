@@ -80,6 +80,9 @@ let path_tuple = Path.mk_ident "tuple"
 let params_frames ps =
   List.map (fun (_, f, _) -> f) ps
 
+let params_ids ps =
+  List.map (fun (i, _, _) -> i) ps
+
 let constrs_params cs =
   C.flap snd cs
 

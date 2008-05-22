@@ -169,14 +169,16 @@ and constrain_constructed (env, guard, f) cstrdesc args e =
         | Cstr_constant n | Cstr_block n -> B.tag_refinement n
         | Cstr_exception _ -> assert false
       in
-      let mref = try Some (B.const_ref [M.mk_qual (M.find_c path tag !M.bms)]) with
+      let params = List.assoc tag cstrs in
+      let pls = List.map C.i2p (F.params_ids params) in
+      let mref = try Some (B.const_ref [M.mk_qual pls (M.find_c path tag !M.bms)]) with
                      Not_found -> None in
       let cstrref =
         match mref with
             Some r -> r @ cstrref
           | None -> cstrref in
       let f = F.apply_refinement cstrref f in
-      let cstrargs = F.params_frames (List.assoc tag cstrs) in
+      let cstrargs = F.params_frames params in
       let (argframes, argcs) = constrain_subexprs env guard args in
         (f,
          WFFrame(env, f) :: (List.map2 (fun arg formal -> SubFrame(env, guard, arg, formal)) argframes cstrargs),
@@ -240,7 +242,7 @@ and maybe_measured_env (guard, f) mgvar env g =
 and constrain_match (env, guard, f) e pexps partial =
   let (matchf, matchcstrs) = constrain e env guard in
   let matchf = F.unfold matchf in
-  let subguards = M.mk_guards matchf e.exp_desc pexps in
+  let subguards = M.mk_guards matchf e.exp_desc (fst (List.split pexps)) in
   let subguards = List.map def_measured_frame subguards in
   let mgvar = Path.mk_ident "measure_guardvar" in
   let environments = List.map (maybe_measured_env (guard, f) mgvar env) subguards in
