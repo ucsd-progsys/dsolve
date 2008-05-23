@@ -27,6 +27,7 @@ module F = Frame
 module Le = Lightenv
 module Pat = Pattern
 module P = Predicate
+module T = Types
 module TT = Typedtree
 module TP = TheoremProver
 module B = Builtins
@@ -225,6 +226,19 @@ let resolve_extend_env tenv env f l1 l2 = match (l1, l2) with
   | (Some p, _) | (_, Some p) -> F.env_bind tenv env p f
   | _ -> env
 
+let bind_tags_pr cs r env =
+  match F.find_tag r with
+      Some tag -> (Le.addn (List.map (fun (a, b, _) -> (C.i2p a, b)) (List.assoc tag cs)) env, tag)
+    | None -> (env, T.Cstr_constant 0)
+
+let bind_tags cs r env = fst (bind_tags_pr cs r env)
+
+let sum_subs bs cs tag =
+  let paths xs = List.map C.i2p (F.params_ids (List.assoc tag xs)) in
+  let mk_sub p1 p2 = (p1, P.Var p2) in
+  let (ps, qs) = (paths bs, paths cs) in
+    List.map2 mk_sub ps qs
+
 let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubFrame (env,g,f1,f2); lc_tenv = tenv} as c ->
   match (f1, f2) with
   | (F.Farrow (l1, f1, f1'), F.Farrow (l2, f2, f2')) ->
@@ -237,10 +251,13 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
   | (F.Frec _, F.Frec _) ->
       ([], [])
   | (F.Funknown, F.Funknown) ->
-      ([],[]) 
+      ([], []) 
   | (F.Fsum(_, _, cs1, r1), F.Fsum(_, _, cs2, r2)) ->  (* 2 *)
+      let (penv, tag) = bind_tags_pr cs1 r1 env in
+      let subs = if penv = env then [] else sum_subs cs1 cs2 tag in 
+      let aps ss (oss, qks) = (ss @ oss, qks) in
       (split_sub_params c tenv env g (F.constrs_params cs1) (F.constrs_params cs2),
-       split_sub_ref c env g r1 r2)
+       split_sub_ref c penv g r1 (List.map (aps subs) r2))
   | (F.Fabstract(_, ps1, r1), F.Fabstract(_, ps2, r2)) ->
       (split_sub_params c tenv env g ps1 ps2, split_sub_ref c env g r1 r2)
   | (_,_) -> 
@@ -261,11 +278,7 @@ let rec split_wf_params c tenv env ps =
 let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFrame (env,f); lc_tenv = tenv} as c ->
   match f with
   | F.Fsum (_, _, cs, r) ->
-      let penv =
-        match F.find_tag r with
-            Some tag -> Le.addn (List.map (fun (a, b, _) -> (C.i2p a, b)) (List.assoc tag cs)) env
-          | None -> env in
-      (split_wf_params c tenv env (F.constrs_params cs), split_wf_ref f c penv r)
+      (split_wf_params c tenv env (F.constrs_params cs), split_wf_ref f c (bind_tags cs r env) r)
   | F.Fabstract (_, ps, r) ->
       (split_wf_params c tenv env ps, split_wf_ref f c env r)
   | F.Farrow (l, f, f') ->
