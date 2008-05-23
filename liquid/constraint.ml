@@ -226,12 +226,17 @@ let resolve_extend_env tenv env f l1 l2 = match (l1, l2) with
   | (Some p, _) | (_, Some p) -> F.env_bind tenv env p f
   | _ -> env
 
-let bind_tags_pr cs r env =
+let bind_tags_pr (t, f) cs r env =
+  let is_recvar = function
+      (Some p, F.Fvar (p', _)) -> p' = p
+    | _ -> false in
+  let k (a, b, _) =
+    (C.i2p a, if is_recvar (t, b) then f else b) in
   match F.find_tag r with
-      Some tag -> (Le.addn (List.map (fun (a, b, _) -> (C.i2p a, b)) (List.assoc tag cs)) env, tag)
+      Some tag -> (Le.addn (List.map k (List.assoc tag cs)) env, tag)
     | None -> (env, T.Cstr_constant 0)
 
-let bind_tags cs r env = fst (bind_tags_pr cs r env)
+let bind_tags (t, f) cs r env = fst (bind_tags_pr (t, f) cs r env)
 
 let sum_subs bs cs tag =
   let paths xs = List.map C.i2p (F.params_ids (List.assoc tag xs)) in
@@ -253,7 +258,7 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
   | (F.Funknown, F.Funknown) ->
       ([], []) 
   | (F.Fsum(_, _, cs1, r1), F.Fsum(_, _, cs2, r2)) ->  (* 2 *)
-      let (penv, tag) = bind_tags_pr cs1 r1 env in
+      let (penv, tag) = bind_tags_pr (None, f1) cs1 r1 env in
       let subs = if penv = env then [] else sum_subs cs1 cs2 tag in 
       let aps ss (oss, qks) = (ss @ oss, qks) in
       (split_sub_params c tenv env g (F.constrs_params cs1) (F.constrs_params cs2),
@@ -277,8 +282,8 @@ let rec split_wf_params c tenv env ps =
 
 let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFrame (env,f); lc_tenv = tenv} as c ->
   match f with
-  | F.Fsum (_, _, cs, r) ->
-      (split_wf_params c tenv env (F.constrs_params cs), split_wf_ref f c (bind_tags cs r env) r)
+  | F.Fsum (_, t, cs, r) ->
+      (split_wf_params c tenv env (F.constrs_params cs), split_wf_ref f c (bind_tags (t, f) cs r env) r)
   | F.Fabstract (_, ps, r) ->
       (split_wf_params c tenv env ps, split_wf_ref f c env r)
   | F.Farrow (l, f, f') ->
