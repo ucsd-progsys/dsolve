@@ -457,17 +457,6 @@ let refine_simple s k1 k2 =
   let _ = C.cprintf C.ol_refine "@[%d --> %d@.@]" (List.length q2s) (List.length q2s') in
   List.length q2s' <> List.length q2s
 
-(*
-let qual_implied s lhs lhsm rhs_subs q =
-  let rhs = F.refinement_predicate (solution_map s) qual_test_var (rhs_subs, F.Qconst [q]) in
-  let (cached, cres) = if !Cf.cache_queries then TP.check_table lhs rhs else (false, false) in
-  if cached then cres else 
-    if (not !Cf.no_simple_subs) && PM.mem rhs lhsm then (incr stat_matches; true) else
-      let rv = Bstats.time "refinement query" (TP.implies lhs) rhs in
-      let _ = incr stat_imp_queries in
-      let _ = if rv then incr stat_valid_imp_queries in
-      rv 
-*)
 let implies_match env sm r1 =
   let lhsm =
     Bstats.time "close_over_env" 
