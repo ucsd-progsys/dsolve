@@ -261,11 +261,10 @@ let rec split_wf_params c tenv env ps =
 let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFrame (env,f); lc_tenv = tenv} as c ->
   match f with
   | F.Fsum (_, _, cs, r) ->
-      let tag = match F.find_tag r with
-          Some t -> t
-        | None -> assert false in
-      let penv = List.map (fun (a, b, _) -> (C.i2p a, b)) (List.assoc tag cs) in
-      let penv = Le.addn penv env in
+      let penv =
+        match F.find_tag r with
+            Some tag -> Le.addn (List.map (fun (a, b, _) -> (C.i2p a, b)) (List.assoc tag cs)) env
+          | None -> env in
       (split_wf_params c tenv env (F.constrs_params cs), split_wf_ref f c penv r)
   | F.Fabstract (_, ps, r) ->
       (split_wf_params c tenv env ps, split_wf_ref f c env r)
