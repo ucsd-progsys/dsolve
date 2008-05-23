@@ -549,14 +549,22 @@ let unsat_constraints sri s =
 (******************** Qualifier Instantiation *****************)
 (**************************************************************)
 
-module QualifierSet = Set.Make(Qualifier)
+module QSet = Set.Make(Qualifier)
+
+module VarMap = Map.Make(String)
+
+let add_path m path = match Path.ident_name path with
+  | Some name ->
+      let rest = try VarMap.find name m with Not_found -> [] in VarMap.add name (path :: rest) m
+  | None -> m
+
+let make_subs m =
+  VarMap.fold (fun n ps subs -> C.flap (fun p -> List.map (fun s -> (n, p) :: s) subs) ps) m [[]]
 
 let instantiate_in_env q qset d =
-  let varmap = C.map_partial (fun path -> match Path.ident_name path with Some name -> Some (name, path) | None -> None) d in
-  let inv = Qualifier.instantiate varmap q in
-    match inv with
-        Some inv -> QualifierSet.add inv qset
-      | None -> qset
+  let vm   = List.fold_left add_path VarMap.empty d in
+  let subs = make_subs vm in
+    List.fold_left (fun qs sub -> match Qualifier.instantiate sub q with Some q -> QSet.add q qs | None -> qs) qset subs
 
 let instantiate_qual ds qualset q =
   List.fold_left (instantiate_in_env q) qualset ds
@@ -565,10 +573,10 @@ let constraint_env_domain (_, c) =
   Le.domain (match c with | SubRef (e, _, _, _, _) -> e | WFRef (e, _, _) -> e)
 
 (* Make copies of all the qualifiers where the free identifiers are replaced
-   by the appropriate bound identifiers from the environment. *)
+   by the appropriate bound identifiers from all environments. *)
 let instantiate_in_environments cs qs =
-  QualifierSet.elements
-    (List.fold_left (instantiate_qual (List.map constraint_env_domain cs)) QualifierSet.empty qs)
+  QSet.elements
+    (List.fold_left (instantiate_qual (List.map constraint_env_domain cs)) QSet.empty qs)
 
 (**************************************************************)
 (************************ Initial Solution ********************)
