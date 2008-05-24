@@ -96,7 +96,7 @@ let rec pprint_pexpr ppf = function
 				| Div -> "/"
       in fprintf ppf "@[(%a@ %s@ %a)@]" pprint_pexpr p opstr pprint_pexpr q
   | Field (f, pexp) ->
-      fprintf ppf "@[%a.%s@]" pprint_pexpr pexp (Common.ident_name f)
+      fprintf ppf "@[%a.%s@]" pprint_pexpr pexp (Common.ident_name () f)
 
 let rec pprint ppf = function
   | True ->

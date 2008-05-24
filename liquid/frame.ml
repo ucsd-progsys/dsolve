@@ -276,7 +276,7 @@ let pprint_refinement ppf res =
 
 let rec pprint_pattern ppf = function
   | Tpat_any -> fprintf ppf "_"
-  | Tpat_var x -> fprintf ppf "%s" (Ident.unique_name x)
+  | Tpat_var x -> fprintf ppf "%s" (C.ident_name () x)
   | Tpat_tuple pats ->
       fprintf ppf "(%a)" pprint_pattern_list pats
   | Tpat_construct (cstrdesc, pats) ->
@@ -338,7 +338,7 @@ let rec pprint ppf = function
  and pprint_constructor ppf (_, ps) =
     pprint_params "*" ppf ps
  and pprint_param ppf (name, f, _) =
-  fprintf ppf "%s:@;<1 2>%a" (Ident.unique_name name) pprint f
+  fprintf ppf "%s:@;<1 2>%a" (C.ident_name () name) pprint f
  and pprint_params sep ppf ps =
   Oprint.print_list pprint_param (fun ppf -> fprintf ppf "@;<1 2>%s@;<1 2>" sep) ppf ps
 
