@@ -120,7 +120,7 @@ let expression_to_pexpr e =
     | _ -> P.Var (Path.mk_ident "dummy")
 
 let expr_fresh = function
-  | Texp_construct _ | Texp_ident _ | Texp_assertfalse -> Frame.fresh_unconstrained
+  | Texp_construct _ | Texp_assertfalse -> Frame.fresh_unconstrained
   | _ -> Frame.fresh
 
 let rec constrain e env guard =
