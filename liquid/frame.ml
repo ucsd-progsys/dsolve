@@ -195,11 +195,11 @@ let append_recref rr' f = match get_recref f with
   | Some rr -> apply_recref (merge_recrefs rr rr') f
   | None    -> f
 
-let apply_substitution_map sub (subs, qe) =
-  (sub :: subs, qe)
+let apply_subs_map subs' (subs, qe) =
+  (subs' @ subs, qe)
 
-let apply_substitution sub f =
-  map_refexprs (apply_substitution_map sub) f
+let apply_subs subs f =
+  map_refexprs (apply_subs_map subs) f
 
 let refinement_qvars r =
   C.flap (fun (_, (_, qvars)) -> qvars) r
@@ -353,8 +353,8 @@ let rec apply_refs (rs : refinement option list) ps = match (rs, ps) with
   | (r :: rs, (i, f, v) :: ps) ->
       let (ip, i') = (Path.Pident i, Ident.create (Ident.name i)) in
       let sub      = (ip, Predicate.Var (Path.Pident i')) in
-      let ps       = List.map (fun (i, f, v) -> (i, apply_substitution sub f, v)) ps in
-      let rs       = List.map (Misc.may_map (List.map (apply_substitution_map sub))) rs in
+      let ps       = List.map (fun (i, f, v) -> (i, apply_subs [sub] f, v)) ps in
+      let rs       = List.map (Misc.may_map (List.map (apply_subs_map [sub]))) rs in
         (i', (match r with Some r -> append_refinement r f | None -> f), v) :: apply_refs rs ps
   | ([], []) -> []
   | _        -> assert false
@@ -631,16 +631,27 @@ let rec translate_pframe env plist pf =
 (********************* Pattern binding ************************) 
 (**************************************************************)
 
-let bind env pat frame =
+let rec bind env pat frame =
   let _bind = function
     | (Tpat_any, _) -> ([], [])
     | (Tpat_var x, f) -> ([], [(Path.Pident x, f)])
     | (Tpat_tuple pats, Fsum (_, _, [(_, ps)], _)) ->
-        (List.combine (Pattern.pattern_descs pats) (params_frames ps), [])
+        ([], bind_params env (Pattern.pattern_descs pats) ps)
     | (Tpat_construct (cstrdesc, pats), Fsum (p, _, cfvs, _)) ->
-        (List.combine (Pattern.pattern_descs pats) (params_frames (List.assoc cstrdesc.cstr_tag cfvs)), [])
+        ([], bind_params env (Pattern.pattern_descs pats) (List.assoc cstrdesc.cstr_tag cfvs))
     | _ -> assert false
   in C.expand _bind [(pat, frame)] []
+
+and bind_param env (subs, binds) (i, f, _) pat =
+  let f = apply_subs subs f in
+  let subs =
+    match pat with
+      | Tpat_var x -> (Path.Pident i, Predicate.Var (Path.Pident x)) :: subs
+      | _          -> subs
+  in (subs, bind env pat f @ binds)
+
+and bind_params env pats params  =
+  snd (List.fold_left2 (bind_param env) ([], []) params pats)
 
 let env_bind tenv env pat frame =
   Lightenv.addn (bind tenv pat frame) env

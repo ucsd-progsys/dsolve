@@ -265,8 +265,7 @@ and apply_once env guard (f, cstrs, subexp_cstrs) e = match (f, e) with
   | (F.Farrow (l, f, f'), (Some e2, _)) ->
     let (f2, e2_cstrs) = constrain e2 env guard in
     let f'' = match l with
-      | Some pat ->
-        List.fold_right F.apply_substitution (Pattern.bind_pexpr pat (expression_to_pexpr e2)) f'
+      | Some pat -> F.apply_subs (Pattern.bind_pexpr pat (expression_to_pexpr e2)) f'
           (* pmr: The soundness of this next line is suspect,
              must investigate (i.e., what if there's a var that might
              somehow be substituted that isn't because of this?  How

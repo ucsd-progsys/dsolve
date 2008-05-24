@@ -206,7 +206,7 @@ let split_sub_ref c env g r1 r2 =
   sref_map (fun sr -> (Cstr c, SubRef(env, g, r1, sr, None))) r2
 
 let params_apply_substitutions subs ps =
-  List.map (fun (i, f, v) -> (i, List.fold_right F.apply_substitution subs f, v)) ps
+  List.map (fun (i, f, v) -> (i, F.apply_subs subs f, v)) ps
 
 let rec split_sub_params c tenv env g ps1 ps2 = match (ps1, ps2) with
   | ((i, f, v)::ps1, (i', f', _)::ps2) ->
@@ -235,7 +235,7 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
   | (F.Farrow (l1, f1, f1'), F.Farrow (l2, f2, f2')) ->
       let subs = match (l1, l2) with (Some p1, Some p2) when not (Pat.same p1 p2) -> subst_to p2 p1 | _ -> [] in
       let env' = resolve_extend_env tenv env f2 l1 l2 in
-      let f1' = List.fold_right F.apply_substitution subs f1' in
+      let f1' = F.apply_subs subs f1' in
       ((lequate_cs env g c F.Covariant f2 f1) @ (lequate_cs env' g c F.Covariant f1' f2'), [])
   | (F.Fvar (_, r1), F.Fvar (_, r2)) ->
       ([], split_sub_ref c env g r1 r2)

@@ -91,7 +91,7 @@ val instantiate: t -> t -> t
 val instantiate_qualifiers: (string * Path.t) list -> t -> t
 val bind: Env.t -> pattern_desc -> t -> (Path.t * t) list
 val env_bind: Env.t -> t Lightenv.t -> pattern_desc -> t -> t Lightenv.t
-val apply_substitution: substitution -> t -> t
+val apply_subs: substitution list -> t -> t
 val label_like: t -> t -> t
 val apply_solution: (Path.t -> Qualifier.t list) -> t -> t
 val refinement_conjuncts:
