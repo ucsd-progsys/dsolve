@@ -505,7 +505,11 @@ let fresh_constr fresh env p t tyl =
 
 let close_recf rv = function
   | Fsum (p, _, cs, r) ->
-      let f = Fsum (p, Some (rv, empty_recref cs), cs, r) in if unfold f = f then Fsum (p, None, cs, r) else f
+      let f = Fsum (p, Some (rv, empty_recref cs), cs, r) in
+        begin match unfold f with
+          | Fsum (_, _, cs', _) -> if cs = cs' then Fsum (p, None, cs, r) else f
+          | _                   -> assert false
+        end
   | f -> f
 
 let fresh_rec fresh env rv t = match t.desc with
