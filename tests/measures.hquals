@@ -1,2 +1,5 @@
 qualif A(v): h(v) = 1
+qualif AA(v): h(~A) = 1
 qualif B(v): h(v) = 0
+qualif BB(v): h(~A) = 0
+qualif C(v): v = h(~A)

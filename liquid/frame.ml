@@ -166,9 +166,20 @@ let qvars f =
 
 let tag_function = "__tag"
 
+let int_of_tag = function
+    Cstr_constant n -> 2*n
+  | Cstr_block n -> 2*n+1
+  | Cstr_exception _-> assert false
+                       
+let tag_of_int n = 
+  if 2*(n/2) = n then
+    Cstr_constant (n/2)
+  else
+    Cstr_block ((n-1)/2)
+
 let maybe_tag_qualifier (_, v, pred) =
   match pred with
-     P.Atom (P.FunApp (tag_fun, [(P.Var v)]), P.Eq, P.PInt t) -> if tag_fun = tag_function then Some t else None
+     P.Atom (P.FunApp (tag_fun, [(P.Var v)]), P.Eq, P.PInt t) when tag_fun = tag_function -> Some (tag_of_int t)
    | _ -> None
 
 let find_tag_single ts r =
@@ -176,10 +187,7 @@ let find_tag_single ts r =
   (C.maybe_list (List.map maybe_tag_qualifier qs)) @ ts
 
 let find_tag rs =
-  match List.fold_left find_tag_single [] rs with
-    x :: [] -> Some (Cstr_block (x))
-    | x :: xs -> failwith "constructed value has too many tags"
-    | [] -> None
+  C.only_one "too many tags in constructed value" (List.fold_left find_tag_single [] rs)
 
 (**************************************************************)
 (*********** Conversions to/from simple refinements ***********)

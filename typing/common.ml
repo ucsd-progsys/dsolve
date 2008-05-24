@@ -151,6 +151,13 @@ let tuple_elem_id i =
 
 let compose f g a = f (g a)
 
+let int_of_bool b = if b then 1 else 0
+
+let only_one s = function
+    x :: [] -> Some x
+  | x :: xs -> failwith s
+  | [] -> None
+
 (****************************************************************)
 (************* Output levels ************************************)
 (****************************************************************)

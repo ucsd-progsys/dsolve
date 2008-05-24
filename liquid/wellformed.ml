@@ -52,8 +52,6 @@ let rec app_to_fun funf =
         (fun ps -> 
            match ps with
              p :: ps ->
-               (*let _ = Format.printf "@[shapes: %a VS %a@]@." Frame.pprint f1 Frame.pprint p in
-               let _ = if same_shape p f1 then Format.printf "@[same shape@]@." else Format.printf "@[not same@]@." in *)
                if same_shape p f1 then (app_to_fun f2) ps else Funknown
            | [] -> Funknown)
     | f -> 
@@ -66,12 +64,11 @@ let get_by_name n env =
   let s n' v = n = Path.name n' in
   let cs = Lightenv.filterlist s env in
     match cs with 
-      c :: [] -> (* let _ = Format.printf "@[shape check on %s :: %a@]@." n Frame.pprint c in *) c
+      c :: [] -> c
     | c :: cs -> failwith (Printf.sprintf "too many definitions of %s" n)
     | [] -> assert false
 
 let get_app_shape s env =
-  (*let unk x = Funknown in*)
   try
     List.assoc s (Lazy.force builtin_fun_app_shapes)
   with Not_found -> 
@@ -82,9 +79,7 @@ let pred_is_well_typed env p =
   | Predicate.PInt _ -> uInt
   | Predicate.Var x -> find_or_fail x env
   | Predicate.FunApp (s, p') -> 
-      (* let _ = Format.printf "@[typing: %s@]@." s in *)
       let y = (get_app_shape s env) (List.map get_expr_shape p') in
-      (* let _ = Format.printf "@[yields: %a@]@." Frame.pprint y in *)
         y
   | Predicate.Binop (p1, op, p2) ->
       let p1_shp = get_expr_shape p1 in

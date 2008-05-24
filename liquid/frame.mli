@@ -93,6 +93,8 @@ val refinement_predicate:
   (Path.t -> Qualifier.t list) -> Predicate.pexpr -> refinement -> Predicate.t
 val apply_refinement: refinement -> t -> t
 val qvars: t -> qvar list
+val int_of_tag: constructor_tag -> int
+val tag_of_int: int -> constructor_tag
 val tag_function: string
 val find_tag: refinement -> constructor_tag  option
 val refinement_qvars: refinement -> qvar list

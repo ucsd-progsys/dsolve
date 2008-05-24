@@ -13,7 +13,7 @@ type t = m Le.t
 let (a, b, c, d) = (Path.mk_ident "a", Path.mk_ident "b", Path.mk_ident "c", Path.mk_ident "d")
 
 let builtins = [
-  ("Some", ([Some a], [("h", P.Var(a))])); 
+  ("Some", ([None], [("h", P.PInt(1))])); 
   ("None", ([], [("h", P.PInt(0))]));
 ]
 

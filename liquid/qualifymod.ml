@@ -165,10 +165,7 @@ and constrain_constructed (env, guard, f) cstrdesc args e =
   match F.unfold f with
   | F.Fsum (path, rv, cstrs, _) ->
       let tag = cstrdesc.cstr_tag in
-      let cstrref = match tag with
-        | Cstr_constant n | Cstr_block n -> B.tag_refinement n
-        | Cstr_exception _ -> assert false
-      in
+      let cstrref = B.tag_refinement tag in
       let params = List.assoc tag cstrs in
       let pls = List.map C.i2p (F.params_ids params) in
       let mref = try Some (B.const_ref [M.mk_qual pls (M.find_c path tag !M.bms)]) with
