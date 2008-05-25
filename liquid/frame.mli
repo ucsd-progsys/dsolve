@@ -83,6 +83,7 @@ val same_shape: t -> t -> bool
 val translate_pframe: Env.t -> (string * (string * Parsetree.predicate_pattern)) list -> Parsetree.litframe -> t
 val unfold_with: t -> t -> t
 val unfold: t -> t
+val unfold_applying: t -> t
 val fresh: Env.t -> type_expr -> t
 val fresh_without_vars: Env.t -> type_expr -> t
 val fresh_unconstrained: Env.t -> type_expr -> t
