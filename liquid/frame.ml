@@ -482,16 +482,15 @@ let close_constructor res args =
   List.iter (fun a -> Btype.iter_type_expr (close_arg res) a; close_arg res a) args
 
 let fresh_constr fresh env p t tyl =
-  let params  = List.map (fresh []) tyl in
+  let params  = List.map fresh tyl in
   let ty_decl = Env.find_type p env in
-  let pm      = List.combine ty_decl.type_params params in
   let varis   = List.map translate_variance ty_decl.type_variance in
     match ty_decl.type_kind with
       | Type_abstract ->
           Fabstract (p, C.combine3 (Misc.mapi (fun _ i -> C.tuple_elem_id i) tyl) params varis, empty_refinement)
       | Type_record (fields, _, _) -> (* 1 *)
           let fresh_field (name, muta, t) =
-            (Ident.create name, fresh pm t, mutable_variance muta)
+            (Ident.create name, fresh t, mutable_variance muta)
           in record_of_params p (List.map fresh_field fields) empty_refinement
       | Type_variant _ ->
           let param_vars = List.combine tyl varis in
@@ -501,7 +500,7 @@ let fresh_constr fresh env p t tyl =
             let _ = close_constructor res args; Ctype.unify Env.initial res t in
             let (res, args) = (canonicalize res, List.map canonicalize args) in
             let ids  = Misc.mapi (fun _ i -> C.tuple_elem_id i) args in
-            let fs   = List.map (fresh []) args in
+            let fs   = List.map fresh args in
             let vs   = List.map (fun t -> try List.assoc (canonicalize t) param_vars with Not_found -> Covariant) args in
               (cstr.cstr_tag, C.combine3 ids fs vs)
           in Fsum (p, None, List.map fresh_cstr cds, empty_refinement)
@@ -517,8 +516,8 @@ let close_recf rv = function
 
 let fresh_rec fresh env rv t = match t.desc with
   | Tvar                 -> fresh_fvar ()
-  | Tarrow(_, t1, t2, _) -> Farrow (None, fresh [] t1, fresh [] t2)
-  | Ttuple ts            -> tuple_of_frames (List.map (fresh []) ts) empty_refinement
+  | Tarrow(_, t1, t2, _) -> Farrow (None, fresh t1, fresh t2)
+  | Ttuple ts            -> tuple_of_frames (List.map fresh ts) empty_refinement
   | Tconstr(p, tyl, _)   -> close_recf rv (fresh_constr fresh env p t (List.map canonicalize tyl))
   | _                    -> fprintf err_formatter "@[Warning: Freshing unsupported type]@."; Funknown
 
@@ -540,19 +539,15 @@ let mk_recvar env t =
    [fresh_ref_var] to create new refinement variables. *)
 let fresh_with_var_fun env freshf t =
   let tbl = Hashtbl.create 17 in
-  let rec fm pmap t =
+  let rec fm t =
     let t = canonicalize t in
-      List.iter (fun (t, f) -> Hashtbl.replace tbl (canonicalize t) f) pmap;
-      let f =
-        if Hashtbl.mem tbl t then
-          Hashtbl.find tbl t
-        else begin
-          let (rv, rf) = mk_recvar env t in
-            Hashtbl.replace tbl t rf;
-            let res = fresh_rec fm env rv t in Hashtbl.replace tbl t res; res
-        end
-      in List.iter (fun (t, _) -> Hashtbl.remove tbl (canonicalize t)) pmap; f
-  in map_refinements (fun _ -> freshf ()) (fm [] t)
+      if Hashtbl.mem tbl t then
+        Hashtbl.find tbl t
+      else
+        let (rv, rf) = mk_recvar env t in
+          Hashtbl.replace tbl t rf;
+          let res = fresh_rec fm env rv t in Hashtbl.replace tbl t res; res
+  in map_refinements (fun _ -> freshf ()) (fm t)
 
 (* Create a fresh frame with the same shape as the given type
    [ty]. Uses type environment [env] to find type declarations.
