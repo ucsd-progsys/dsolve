@@ -643,8 +643,12 @@ let rec bind env pat frame =
     | (Tpat_var x, f) -> ([], [(Path.Pident x, f)])
     | (Tpat_tuple pats, Fsum (_, _, [(_, ps)], _)) ->
         ([], bind_params env (Pattern.pattern_descs pats) ps)
-    | (Tpat_construct (cstrdesc, pats), Fsum (p, _, cfvs, _)) ->
-        ([], bind_params env (Pattern.pattern_descs pats) (List.assoc cstrdesc.cstr_tag cfvs))
+    | (Tpat_construct (cstrdesc, pats), f) ->
+        begin match unfold_applying f with
+          | Fsum (p, _, cfvs, _) ->
+              ([], bind_params env (Pattern.pattern_descs pats) (List.assoc cstrdesc.cstr_tag cfvs))
+          | _ -> assert false
+        end
     | _ -> assert false
   in C.expand _bind [(pat, frame)] []
 
