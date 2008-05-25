@@ -8,3 +8,5 @@ let rec ins l x = match l with
 
 let insert_sort lst =
   List.fold_left ins [] lst
+
+let _ = insert_sort

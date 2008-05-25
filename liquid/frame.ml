@@ -375,7 +375,7 @@ let unfold f =
   unfold_with f f
 
 let unfold_applying f =
-  let f' = match get_recref f with Some rr -> apply_recref rr f | None -> f in unfold_with f f'
+  let f' = match get_recref f with Some rr -> apply_recref rr f | None -> f in unfold_with f' f
 
 (**************************************************************)
 (********* Polymorphic and qualifier instantiation ************) 
