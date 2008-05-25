@@ -1,7 +1,7 @@
 let rec ins l x = match l with
   | [] -> x :: []
   | h :: xs ->
-      if x < h then
+      if x > h then
         x :: h :: xs
       else
         h :: (ins xs x)
