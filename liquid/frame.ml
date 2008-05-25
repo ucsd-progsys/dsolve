@@ -302,7 +302,7 @@ let pprint_refs ppf rs =
   fprintf ppf "@[[%a]@]" (Oprint.print_list (fun ppf -> function Some r -> pprint_refinement ppf r | None -> fprintf ppf ".") comma) rs
 
 let pprint_recref ppf rr =
-  fprintf ppf "@[[%a]@]" (Oprint.print_list pprint_refs comma) rr
+  if not (recref_is_empty rr) then fprintf ppf "@[[%a]@]" (Oprint.print_list pprint_refs comma) rr else ()
 
 let pprint_recopt ppf = function
   | Some (rp, rr) -> fprintf ppf "%a@;<1 0>μ%s." pprint_recref rr (C.path_name () rp)
