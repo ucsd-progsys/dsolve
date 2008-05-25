@@ -120,7 +120,7 @@ let expression_to_pexpr e =
     | _ -> P.Var (Path.mk_ident "dummy")
 
 let expr_fresh = function
-  | Texp_construct _ | Texp_ident _ | Texp_assertfalse -> Frame.fresh_unconstrained
+  | Texp_construct _ | Texp_assertfalse -> Frame.fresh_unconstrained
   | _ -> Frame.fresh
 
 let rec constrain e env guard =
@@ -164,7 +164,7 @@ and replace_params ps fs =
   List.map2 (fun (i, _, v) f -> (i, f, v)) ps fs
 
 and constrain_constructed (env, guard, f) cstrdesc args e =
-  let f' = F.unfold_with (expr_fresh e.exp_desc e.exp_env e.exp_type) (expr_fresh e.exp_desc e.exp_env e.exp_type) in
+  let f' = F.unfold_with (F.fresh_false e.exp_env e.exp_type) (F.fresh_false e.exp_env e.exp_type) in
   match f' with
   | F.Fsum (path, ro, cstrs, _) ->
       let tag = cstrdesc.cstr_tag in

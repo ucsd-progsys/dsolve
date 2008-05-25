@@ -559,6 +559,9 @@ let fresh_with_var_fun env freshf t =
 let fresh env ty =
   fresh_with_var_fun env (fresh_refinementvar Top) ty
 
+let fresh_false env ty =
+  fresh_with_var_fun env (fun _ -> false_refinement) ty
+
 (* Create a fresh frame with the same shape as [exp]'s type and [f],
    and the same labels as [f]. *)
 let fresh_with_labels env ty f =
