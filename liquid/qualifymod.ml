@@ -119,16 +119,11 @@ let expression_to_pexpr e =
     | Texp_ident (id, _) -> P.Var id
     | _ -> P.Var (Path.mk_ident "dummy")
 
-let expr_fresh = function
-  | Texp_construct _ | Texp_assertfalse -> Frame.fresh_unconstrained
-  | _ -> Frame.fresh
-
 let rec constrain e env guard =
-  let freshf = expr_fresh e.exp_desc e.exp_env e.exp_type in
-  let desc_ty = (e.exp_desc, freshf) in
+  let freshf = Frame.fresh e.exp_env e.exp_type in
   let environment = (env, guard, freshf) in
   let (f, cstrs, rec_cstrs) =
-    match desc_ty with
+    match (e.exp_desc, freshf) with
       | (Texp_constant const_typ, F.Fabstract(path, [], _)) -> constrain_constant path const_typ
       | (Texp_construct (cstrdesc, args), F.Fsum _) -> constrain_constructed environment cstrdesc args e
       | (Texp_record (labeled_exprs, None), _) -> constrain_record environment labeled_exprs
@@ -145,7 +140,7 @@ let rec constrain e env guard =
       | (Texp_array es, _) -> constrain_array environment es
       | (Texp_sequence (e1, e2), _) -> constrain_sequence environment e1 e2
       | (Texp_tuple es, _) -> constrain_tuple environment es
-      | (Texp_assertfalse, _) -> constrain_assertfalse environment
+      | (Texp_assertfalse, _) -> constrain_assertfalse environment e.exp_env e.exp_type
       | (Texp_assert e, _) -> constrain_assert environment e
       | (_, f) ->
         fprintf err_formatter "@[Warning: Don't know how to constrain expression,
@@ -310,8 +305,8 @@ and constrain_tuple (env, guard, _) es =
   let f = F.tuple_of_frames fs (F.mk_refinement [] (Misc.mapi elem_qualifier es) []) in
     (f, [WFFrame(env, f)], subexp_cs)
 
-and constrain_assertfalse (env, _, f) =
-  (f, [WFFrame (env, f)], [])
+and constrain_assertfalse (env, _, _) tenv ty =
+  let f = F.fresh_false tenv ty in (f, [WFFrame (env, f)], [])
 
 and constrain_assert (env, guard, _) e =
   let (f, cstrs) = constrain e env guard in
