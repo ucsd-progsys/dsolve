@@ -85,7 +85,7 @@ let rec pprint_pexpr ppf = function
       if n < 0 then fprintf ppf "(0 - %d)" (-n)
       else fprintf ppf "%d" n
   | Var x ->
-      fprintf ppf "%s" ((Common.path_name ()) x) 
+      fprintf ppf "%s" (Common.path_name x)
   | FunApp (f, pexp) ->
       fprintf ppf "@[(%s@ %a)@]" f (Common.pprint_list " " pprint_pexpr) pexp
   | Binop (p, op, q) ->
@@ -96,7 +96,7 @@ let rec pprint_pexpr ppf = function
 				| Div -> "/"
       in fprintf ppf "@[(%a@ %s@ %a)@]" pprint_pexpr p opstr pprint_pexpr q
   | Field (f, pexp) ->
-      fprintf ppf "@[%a.%s@]" pprint_pexpr pexp (Common.ident_name () f)
+      fprintf ppf "@[%a.%s@]" pprint_pexpr pexp (Common.ident_name f)
 
 let rec pprint ppf = function
   | True ->

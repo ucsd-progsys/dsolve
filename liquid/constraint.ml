@@ -93,7 +93,7 @@ let is_wfref_constraint = function
 
 let solution_map s k = 
   C.do_catch 
-    (Printf.sprintf "ERROR: solution_map couldn't find: %s" (C.path_name () k))
+    (Printf.sprintf "ERROR: solution_map couldn't find: %s" (C.path_name k))
     (Sol.find s) k  
 
 let sref_map f r =

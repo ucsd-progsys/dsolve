@@ -269,14 +269,14 @@ let pprint_refexpr ppf (subs, (qconsts, qvars)) =
   fprintf ppf "%a@;<1 0>%a"
     (Oprint.print_list (fun ppf q -> Predicate.pprint ppf
                           (Predicate.apply_substs subs (pred_of_qual q))) space) qconsts
-    (Oprint.print_list (fun ppf (v, _) -> fprintf ppf "%s" (C.path_name () v)) space) qvars
+    (Oprint.print_list (fun ppf (v, _) -> fprintf ppf "%s" (C.path_name v)) space) qvars
 
 let pprint_refinement ppf res =
   Oprint.print_list pprint_refexpr space ppf res
 
 let rec pprint_pattern ppf = function
   | Tpat_any -> fprintf ppf "_"
-  | Tpat_var x -> fprintf ppf "%s" (C.ident_name () x)
+  | Tpat_var x -> fprintf ppf "%s" (C.ident_name x)
   | Tpat_tuple pats ->
       fprintf ppf "(%a)" pprint_pattern_list pats
   | Tpat_construct (cstrdesc, pats) ->
@@ -305,20 +305,20 @@ let pprint_recref ppf rr =
   if not (recref_is_empty rr) then fprintf ppf "@[[%a]@]" (Oprint.print_list pprint_refs comma) rr else ()
 
 let pprint_recopt ppf = function
-  | Some (rp, rr) -> fprintf ppf "%a@;<1 0>μ%s." pprint_recref rr (C.path_name () rp)
-  | None          -> fprintf ppf "" (* pmr: necessary? *)
+  | Some (rp, rr) -> fprintf ppf "%a@;<1 0>μ%s." pprint_recref rr (C.path_name rp)
+  | None          -> ()
 
 let rec pprint ppf = function
   | Fvar (a, r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "'%s" (C.path_name () a)) r
+      wrap_refined ppf (fun ppf -> fprintf ppf "'%s" (C.path_name a)) r
   | Frec (path, rr) ->
-      fprintf ppf "@[%a %s@]" pprint_recref rr (C.path_name () path)
+      fprintf ppf "@[%a %s@]" pprint_recref rr (C.path_name path)
   | Fsum (path, ro, [], r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "@[%a%s@]" pprint_recopt ro (C.path_name () path)) r
+      wrap_refined ppf (fun ppf -> fprintf ppf "@[%a%s@]" pprint_recopt ro (C.path_name path)) r
   | Fsum (path, ro, cs, r) ->
       wrap_refined ppf (fun ppf -> fprintf ppf "@[%a %s @[(%a)@]@]"
                           pprint_recopt ro
-                          (C.path_name () path)
+                          (C.path_name path)
                           (Oprint.print_list pprint_constructor
                              (fun ppf -> fprintf ppf "@;<1 0>|| ")) cs) r
   | Farrow (None, f, f') ->
@@ -328,7 +328,7 @@ let rec pprint ppf = function
   | Fabstract (path, params, r) ->
       wrap_refined ppf (fun ppf -> fprintf ppf "@[%a@ %s@]"
                           (pprint_params ",") params
-                          (C.path_name () path)) r
+                          (C.path_name path)) r
   | Funknown ->
       fprintf ppf "[unknown]"
  and pprint1 ppf = function
@@ -338,12 +338,12 @@ let rec pprint ppf = function
  and pprint_constructor ppf (_, ps) =
     pprint_params "*" ppf ps
  and pprint_param ppf (name, f, _) =
-  fprintf ppf "%s:@;<1 2>%a" (C.ident_name () name) pprint f
+  fprintf ppf "%s:@;<1 2>%a" (C.ident_name name) pprint f
  and pprint_params sep ppf ps =
   Oprint.print_list pprint_param (fun ppf -> fprintf ppf "@;<1 2>%s@;<1 2>" sep) ppf ps
 
 let rec pprint_fenv ppf fenv =
-  Lightenv.maplist (fun k v -> printf "@[%s:@ %a@]@." (C.path_name () k) pprint v) fenv
+  Lightenv.maplist (fun k v -> printf "@[%s:@ %a@]@." (C.path_name k) pprint v) fenv
 
 (******************************************************************************)
 (********************************** Unfolding *********************************)
