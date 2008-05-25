@@ -228,7 +228,7 @@ let resolve_extend_env tenv env f l1 l2 = match (l1, l2) with
 
 let bind_tags_pr (t, f) cs r env =
   let is_recvar = function
-      (Some p, F.Fvar (p', _)) -> p' = p
+      (Some p, F.Frec (p')) -> p' = p
     | _ -> false in
   let k (a, b, _) =
     (C.i2p a, if is_recvar (t, b) then f else b) in

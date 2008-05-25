@@ -228,7 +228,7 @@ and constrain_case (env, guard, f) matchf matche (pat, e) =
     (SubFrame (env, guard, fe, f), subcs)
 
 and def_measured_frame = function
-    Some g -> Some (F.Fvar(Path.mk_ident "", [([], ([(Path.mk_ident "", Path.mk_ident "", g)], []))]))
+    Some g -> Some (F.Fabstract(Path.mk_ident "", [], [([], ([(Path.mk_ident "", Path.mk_ident "", g)], []))]))
   | None -> None
 
 and maybe_measured_env (guard, f) mgvar env g =

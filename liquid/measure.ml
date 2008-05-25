@@ -12,13 +12,15 @@ type t = m Le.t
 
 let (a, b, c, d) = (Path.mk_ident "a", Path.mk_ident "b", Path.mk_ident "c", Path.mk_ident "d")
 
-let builtins = [
-  ("Some", ([None], [("h", P.PInt(1))])); 
-  ("None", ([], [("h", P.PInt(0))]));
-]
+let (h, hml) = ("_meas_h", "h")
 
 let builtin_funs = [
-  "h";
+  (h, hml);
+]
+
+let builtins = [
+  ("Some", ([None], [(h, P.PInt(1))])); 
+  ("None", ([], [(h, P.PInt(0))]));
 ]
 
 let (empty: t) = Le.empty
@@ -77,9 +79,9 @@ let find_mlenv_by_name s env =
   with Not_found -> assert false
 
 let mk_tys env =
-  let ty s =
-    let (p, sf) = find_mlenv_by_name s env in
-    (p, mk_fun s sf) in
+  let ty (s, mls) =
+    let (p, sf) = find_mlenv_by_name mls env in
+    (Path.mk_ident s, mk_fun s sf) in
   List.map ty builtin_funs
 
 let mk_pred v (_, ps, ms) mps =
