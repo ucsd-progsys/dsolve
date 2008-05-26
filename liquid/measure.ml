@@ -13,14 +13,18 @@ type t = m Le.t
 let (a, b, c, d) = (Path.mk_ident "a", Path.mk_ident "b", Path.mk_ident "c", Path.mk_ident "d")
 
 let (h, hml) = ("_meas_h", "h")
+let (len, lenml) = ("_meas_len", "len")
 
 let builtin_funs = [
   (h, hml);
+  (len, lenml);
 ]
 
 let builtins = [
   ("Some", ([None], [(h, P.PInt(1))])); 
   ("None", ([], [(h, P.PInt(0))]));
+  ("[]", ([], [(len, P.PInt(0))]));
+  ("::", ([None; Some a], [len, P.Binop(P.PInt(1), P.Plus, P.FunApp(len, [P.Var a]))]));
 ]
 
 let (empty: t) = Le.empty
@@ -72,17 +76,17 @@ let mk_fun n f =
   | _ -> failwith "not a fun in mk_fun"
 
 let find_mlenv_by_name s env =
-  try 
-    let (p, v) = Env.lookup_value (Longident.parse s) env in
-    let fr = F.fresh_without_vars env v.val_type in
-      (p, fr)
-  with Not_found -> assert false
+  let (p, v) = Env.lookup_value (Longident.parse s) env in
+  let fr = F.fresh_without_vars env v.val_type in
+    (p, fr)
 
 let mk_tys env =
   let ty (s, mls) =
-    let (p, sf) = find_mlenv_by_name mls env in
-    (Path.mk_ident s, mk_fun s sf) in
-  List.map ty builtin_funs
+    try
+      let (p, sf) = find_mlenv_by_name mls env in
+      Some (Path.mk_ident s, mk_fun s sf) 
+        with Not_found -> None in
+  C.maybe_list (List.map ty builtin_funs)
 
 let mk_pred v (_, ps, ms) mps =
   let _ = if List.length ps != List.length mps then failwith "argument arity mismatch" in
