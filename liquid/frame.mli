@@ -28,9 +28,7 @@ open Asttypes
 
 type substitution = Path.t * Predicate.pexpr
 
-type open_assignment = Top | Bottom
-
-type qvar = Path.t * open_assignment
+type qvar = Path.t
 type refexpr = substitution list * (Qualifier.t list * qvar list)
 type refinement = refexpr list
 
@@ -86,7 +84,6 @@ val unfold: t -> t
 val unfold_applying: t -> t
 val fresh: Env.t -> type_expr -> t
 val fresh_without_vars: Env.t -> type_expr -> t
-val fresh_unconstrained: Env.t -> type_expr -> t
 val fresh_false: Env.t -> type_expr -> t
 val fresh_with_labels: Env.t -> type_expr -> t -> t
 val instantiate: t -> t -> t

@@ -40,9 +40,7 @@ module M = Misc
 
 type substitution = Path.t * Predicate.pexpr
 
-type open_assignment = Top | Bottom
-
-type qvar = Path.t * open_assignment
+type qvar = Path.t
 type refexpr = substitution list * (Qualifier.t list * qvar list)
 type refinement = refexpr list
 
@@ -269,7 +267,7 @@ let pprint_refexpr ppf (subs, (qconsts, qvars)) =
   fprintf ppf "%a@;<1 0>%a"
     (Oprint.print_list (fun ppf q -> Predicate.pprint ppf
                           (Predicate.apply_substs subs (pred_of_qual q))) space) qconsts
-    (Oprint.print_list (fun ppf (v, _) -> fprintf ppf "%s" (C.path_name v)) space) qvars
+    (Oprint.print_list (fun ppf v -> fprintf ppf "%s" (C.path_name v)) space) qvars
 
 let pprint_refinement ppf res =
   Oprint.print_list pprint_refexpr space ppf res
@@ -458,8 +456,8 @@ let mutable_variance = function
   | Mutable -> Invariant
   | _ -> Covariant
 
-let fresh_refinementvar open_assn () =
-  mk_refinement [] [] [(Path.mk_ident "k", open_assn)]
+let fresh_refinementvar () =
+  mk_refinement [] [] [Path.mk_ident "k"]
 
 (* pmr: this looks suspect - ming? isn't this just empty_refinement? *)
 let fresh_true () =
@@ -555,7 +553,7 @@ let fresh_with_var_fun env freshf t =
    You probably want to consider using fresh_with_labels instead of this
    for subtype constraints. *)
 let fresh env ty =
-  fresh_with_var_fun env (fresh_refinementvar Top) ty
+  fresh_with_var_fun env fresh_refinementvar ty
 
 let fresh_false env ty =
   fresh_with_var_fun env (fun _ -> false_refinement) ty
@@ -570,9 +568,6 @@ let fresh_with_labels env ty f =
    to true. *)
 let fresh_without_vars env ty =
   fresh_with_var_fun env (fun _ -> empty_refinement) ty
-
-let fresh_unconstrained env ty =
-  fresh_with_var_fun env (fresh_refinementvar Bottom) ty
 
 (**************************************************************)
 (********************* mlq translation ************************) 
@@ -666,7 +661,7 @@ let env_bind tenv env pat frame =
 (**************************************************************)
 
 let refexpr_apply_solution solution (subs, (qconsts, qvars)) =
-  (subs, (qconsts @ C.flap (fun (k, _) -> solution k) qvars, []))
+  (subs, (qconsts @ C.flap solution qvars, []))
 
 let apply_solution solution f =
   map_refexprs (refexpr_apply_solution solution) f
