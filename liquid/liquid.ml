@@ -97,14 +97,16 @@ let load_mlq_in_env env fenv ifenv =
   List.fold_left load_frame fenv ifenv
 
 let load_builtins ppf env fenv =
+  let _ = Measure.mk_bms env in (* experimental measures *)
   let b = match !builtins_file with 
           | Some b -> if not(Sys.file_exists b) then failwith (sprintf "builtins: file %s does not exist" b) else b
           | None -> "" in
   let fenv = 
     try
       let kvl = load_mlqfile ppf env b in
+      let mvl = Measure.mk_tys env in
       let f = (fun (k, v) -> (lookup_path k env, F.label_like v v)) in
-      let kvl = List.map f kvl in
+      let kvl = mvl @ (List.map f kvl) in
       Lightenv.addn kvl fenv
     with Not_found -> failwith (Printf.sprintf "builtins: val %s does not correspond to library value" b) in
   (env, fenv)

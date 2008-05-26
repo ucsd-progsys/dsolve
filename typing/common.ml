@@ -38,6 +38,8 @@ let maybe_cons m xs = match m with
   | None -> xs
   | Some x -> x :: xs
 
+let maybe_list xs = List.fold_right maybe_cons xs []
+
 let rec _fli f n b = function
   | [] -> b
   | x :: xs -> _fli f (n + 1) (f n b x) xs
@@ -113,6 +115,11 @@ let pprint_list sepstr pp =
   (fun ppf -> Oprint.print_list pp
      (fun ppf -> F.fprintf ppf "%s@;<1 2>" sepstr) ppf)
 
+let rec is_unique xs =
+  match xs with
+      x :: xs -> if List.mem x xs then false else is_unique xs
+    | [] -> true 
+
 let resl_opt f = function
   | Some o -> f o
   | None -> []
@@ -131,8 +138,25 @@ let same_type q p = (Types.TypeOps.equal q p)
 
 let dummy () = Path.mk_ident ""
 
+let same_path_i p i = Path.unique_name p = Ident.unique_name i 
+
+let i2p i = Path.Pident i
+
+let p2i p = match p with
+    Path.Pident id -> id
+  | _ -> assert false
+
 let tuple_elem_id i =
   Ident.create ("e" ^ string_of_int i)
+
+let compose f g a = f (g a)
+
+let int_of_bool b = if b then 1 else 0
+
+let only_one s = function
+    x :: [] -> Some x
+  | x :: xs -> failwith s
+  | [] -> None
 
 (****************************************************************)
 (************* Output levels ************************************)

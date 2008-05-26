@@ -1,0 +1,2 @@
+qualif A(v) : _meas_len ~A = v
+qualif B(v) : _meas_len v = [0, 1, 2, 3]

@@ -37,6 +37,7 @@ module Cf = Clflags
 module B = Builtins
 module Le = Lightenv
 module F = Frame
+module M = Measure
 
 (******************************************************************************)
 (******************************* Error reporting ******************************)
@@ -163,10 +164,12 @@ and constrain_constructed (env, guard, f) cstrdesc args e =
   match f' with
   | F.Fsum (path, ro, cstrs, _) ->
       let tag = cstrdesc.cstr_tag in
-      let cstrref = match tag with
-        | Cstr_constant n | Cstr_block n -> B.tag_refinement n
-        | Cstr_exception _ -> assert false
-      in
+      let cstrref = B.tag_refinement tag in
+      let params = List.assoc tag cstrs in
+      let pls = List.map C.i2p (F.params_ids params) in
+      let mref = try (B.const_ref [M.mk_qual pls (M.find_c path tag !M.bms)]) with
+                     Not_found -> [] in
+      let f = F.apply_refinement (mref @ cstrref) f in
       let (argframes, argcs) = constrain_subexprs env guard args in
       let cstrs = List.map (fun (t, ps) -> (t, if t = tag then replace_params ps argframes else ps)) cstrs in
       let f' = F.Fsum (path, ro, cstrs, cstrref) in
@@ -225,9 +228,22 @@ and constrain_case (env, guard, f) matchf matche (pat, e) =
   let (fe, subcs) = constrain e env guard in
     (SubFrame (env, guard, fe, f), subcs)
 
-and constrain_match ((env, guard, f) as environment) e pexps partial =
+and def_measured_frame = function
+    Some g -> Some (F.Fabstract(Path.mk_ident "", [], [([], ([(Path.mk_ident "", Path.mk_ident "", g)], []))]))
+  | None -> None
+
+and maybe_measured_env (guard, f) mgvar env g =
+  match g with
+      Some g -> (Le.add mgvar g env, guard, f)
+    | None -> (env, guard, f)
+
+and constrain_match (env, guard, f) e pexps partial =
   let (matchf, matchcstrs) = constrain e env guard in
-  let cases = List.map (constrain_case environment matchf (expression_to_pexpr e)) pexps in
+  let subguards = M.mk_guards matchf e.exp_desc (fst (List.split pexps)) in
+  let subguards = List.map def_measured_frame subguards in
+  let mgvar = Path.mk_ident "__measure_guardvar" in
+  let environments = List.map (maybe_measured_env (guard, f) mgvar env) subguards in
+  let cases = List.map (fun (en, p) -> constrain_case en matchf (expression_to_pexpr e) p) (List.combine environments pexps) in
   let (cstrs, subcstrs) = List.split cases in
     (f, WFFrame (env, f) :: cstrs, List.concat (matchcstrs :: subcstrs))
 

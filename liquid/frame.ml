@@ -33,6 +33,7 @@ module PM = C.PathMap
 module T = Typetexp
 module Pat = Pattern
 module M = Misc
+module P = Predicate
 
 (**************************************************************)
 (************** Type definitions: Refinements *****************)
@@ -80,6 +81,9 @@ let path_tuple = Path.mk_ident "tuple"
 
 let params_frames ps =
   List.map (fun (_, f, _) -> f) ps
+
+let params_ids ps =
+  List.map (fun (i, _, _) -> i) ps
 
 let constrs_params cs =
   C.flap snd cs
@@ -204,6 +208,31 @@ let refinement_qvars r =
 
 let qvars f =
   refinement_fold (fun r vs -> refinement_qvars r @ vs) [] f
+
+let tag_function = "__tag"
+
+let int_of_tag = function
+    Cstr_constant n -> 2*n
+  | Cstr_block n -> 2*n+1
+  | Cstr_exception _-> assert false
+                       
+let tag_of_int n = 
+  if 2*(n/2) = n then
+    Cstr_constant (n/2)
+  else
+    Cstr_block ((n-1)/2)
+
+let maybe_tag_qualifier (_, v, pred) =
+  match pred with
+     P.Atom (P.FunApp (tag_fun, [(P.Var v)]), P.Eq, P.PInt t) when tag_fun = tag_function -> Some (tag_of_int t)
+   | _ -> None
+
+let find_tag_single ts r =
+  let (_, (qs, _)) = r in
+  (C.maybe_list (List.map maybe_tag_qualifier qs)) @ ts
+
+let find_tag rs =
+  C.only_one "too many tags in constructed value" (List.fold_left find_tag_single [] rs)
 
 (**************************************************************)
 (*********** Conversions to/from simple refinements ***********)

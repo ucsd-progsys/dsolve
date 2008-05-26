@@ -8,7 +8,7 @@ YACCFLAGS=-v
 CAMLLEX=ocamllex
 CAMLDEP=ocamldep
 DEPFLAGS=$(INCLUDES)
-COMPFLAGS=$(FLAGS) -dtypes -warn-error A $(INCLUDES)
+COMPFLAGS=$(FLAGS) -g -dtypes -warn-error A $(INCLUDES)
 LINKFLAGS=$(FLAGS) -cclib -lstdc++ -cclib -loyices -cclib -lgmp -cclib -lyices \
           -I external/yices/lib/ -I external/ocamlgraph/ -I $(QPHOME)
 INCLUDES=-I external/yices/lib/ -I external/ocamlgraph/ -I $(QPHOME) \
@@ -45,7 +45,7 @@ LIQUID=liquid/lightenv.cmo \
   liquid/theoremProverYices.cmo \
   liquid/theoremProverQprover.cmo \
   liquid/theoremProver.cmo \
-  liquid/constraint.cmo  \
+  liquid/constraint.cmo liquid/measure.cmo \
   liquid/qualifymod.cmo \
   liquid/qdebug.cmo liquid/normalize.cmo \
   liquid/qdump.cmo liquid/liqerrors.cmo liquid/liquid.cmo

@@ -71,6 +71,8 @@ val pprint_rel: binrel -> string
 val pprint: formatter -> t -> unit
 val pprint_pexpr: formatter -> pexpr -> unit
 
+val pexp_map_vars: (Path.t -> pexpr) -> pexpr -> pexpr 
+
 val big_and: t list -> t
 val big_or: t list -> t
 val equals: (pexpr * pexpr) -> t
@@ -98,6 +100,7 @@ val (--): pexpr -> pexpr -> pexpr
 val subst: pexpr -> Path.t -> t -> t
 val apply_substs: (Path.t * pexpr) list -> t -> t
 val vars: t -> Path.t list
+val funs: t -> string list
 (* pmr: change to plain old instantiate *)
 val instantiate_named_vars: (string * Path.t) list -> t -> t
 val transl_op: Asttypes.predexp_op -> binop                                                             

@@ -77,6 +77,7 @@ val translate_variance: (bool * bool * bool) -> variance
 val constrs_params: constr list -> param list
 val params_frames: param list -> t list
 val shape: t -> t
+val params_ids: param list -> Ident.t list
 val same_shape: t -> t -> bool
 val translate_pframe: Env.t -> (string * (string * Parsetree.predicate_pattern)) list -> Parsetree.litframe -> t
 val unfold_with: t -> t -> t
@@ -101,6 +102,10 @@ val apply_refinement: refinement -> t -> t
 val apply_recref_constrs: recref -> constr list -> constr list
 val apply_recref: recref -> t -> t
 val qvars: t -> qvar list
+val int_of_tag: constructor_tag -> int
+val tag_of_int: int -> constructor_tag
+val tag_function: string
+val find_tag: refinement -> constructor_tag  option
 val refinement_qvars: refinement -> qvar list
 val ref_to_simples: refinement -> (simple_refinement list * simple_refinement list)
 val ref_of_simple: simple_refinement -> refinement

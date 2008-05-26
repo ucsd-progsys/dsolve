@@ -137,8 +137,6 @@ let op_frame path qname op =
                 fun z -> rInt qname z (Var z ==. Binop (Var x, op, Var y))))
 
 
-let tag_function = "__tag"
-
 let tag x = FunApp(tag_function, [x])
 
 let or_frame () =
@@ -271,6 +269,7 @@ let _frames = [
                              fun y -> rInt "RandBounds" y ((PInt 0 <=. Var y) &&. (Var y <. Var x))));
 
   (["max_int"; "Pervasives"], uInt);
+
 ]
 
 let bigarray_dim_frame dim env =
@@ -338,7 +337,7 @@ let equality_refinement exp =
 
 let tag_refinement t =
   let x = Path.mk_ident "V" in
-    let pred = tag (Var x) ==. PInt t in
+    let pred = tag (Var x) ==. PInt (int_of_tag t) in
     Predicate.pprint Format.str_formatter pred;
     let expstr = Format.flush_str_formatter () in
       const_ref [(Path.mk_ident expstr, x, pred)]
