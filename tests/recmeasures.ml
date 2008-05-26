@@ -1,11 +1,12 @@
-let rec len (x: int list) =
+(*let rec len (x: int list) =
   match x with
-      [] -> let x = 0 in x
-    | s :: ss -> 1 + (len ss)
+      [] -> let x = 0 in x + 0
+    | s :: ss -> 1 + (len ss)*)
 
-let y = 1 :: 2 :: []
+let y = []
+let z = 1 :: y
 
-let x = (fun x -> x) y
+(*let x = (fun x -> x) len y
  
-let blah = assert (len y = 2)
+let blah = assert (len y = 0)*)
 

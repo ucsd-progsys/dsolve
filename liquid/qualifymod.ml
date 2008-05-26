@@ -168,13 +168,9 @@ and constrain_constructed (env, guard, f) cstrdesc args e =
       let cstrref = B.tag_refinement tag in
       let params = List.assoc tag cstrs in
       let pls = List.map C.i2p (F.params_ids params) in
-      let mref = try Some (B.const_ref [M.mk_qual pls (M.find_c path tag !M.bms)]) with
-                     Not_found -> None in
-      let cstrref =
-        match mref with
-            Some r -> r @ cstrref
-          | None -> cstrref in
-      let f = F.apply_refinement cstrref f in
+      let mref = try (B.const_ref [M.mk_qual pls (M.find_c path tag !M.bms)]) with
+                     Not_found -> [] in
+      let f = F.apply_refinement (mref @ cstrref) f in
       let cstrargs = F.params_frames params in
       let (argframes, argcs) = constrain_subexprs env guard args in
         (f,

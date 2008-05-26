@@ -14,10 +14,12 @@ let (a, b, c, d) = (Path.mk_ident "a", Path.mk_ident "b", Path.mk_ident "c", Pat
 
 let (h, hml) = ("_meas_h", "h")
 let (len, lenml) = ("_meas_len", "len")
+let (par, parml) = ("_meas_par", "par")
 
 let builtin_funs = [
   (h, hml);
   (len, lenml);
+  (par, parml);
 ]
 
 let builtins = [
@@ -25,6 +27,8 @@ let builtins = [
   ("None", ([], [(h, P.PInt(0))]));
   ("[]", ([], [(len, P.PInt(0))]));
   ("::", ([None; Some a], [len, P.Binop(P.PInt(1), P.Plus, P.FunApp(len, [P.Var a]))]));
+  ("Even", ([Some a], [(par, P.Binop(P.PInt(2), P.Times, P.Var(a)))]));
+  ("Odd", ([Some a], [(par, P.Binop(P.Binop(P.PInt(2), P.Times, P.Var(a)), P.Plus, P.PInt(1)))]));
 ]
 
 let (empty: t) = Le.empty
@@ -49,18 +53,23 @@ let sum_rows_path = function
 let sum_path = C.compose fst sum_rows_path
 
 let transl_desc mlenv (c, (ps, rs)) =
-  let _ = if not(C.is_unique ps) then failwith "Builtin measure labels not unique" in 
-  let c =  
+  try
+    let _ = if not(C.is_unique ps) then failwith "Builtin measure labels not unique" in 
+    let c =  
     (Env.lookup_constructor (Longident.parse c) mlenv) in
-  let tag = c.cstr_tag in
-  let _ = if List.length ps != c.cstr_arity then failwith "Wrong number of builtin measure labels" in
-  let fr = F.fresh_without_vars mlenv c.cstr_res in
- (sum_path fr, (tag, ps, rs)) 
+    let tag = c.cstr_tag in
+    let _ = if List.length ps != c.cstr_arity then failwith "Wrong number of builtin measure labels" in
+    let fr = F.fresh_without_vars mlenv c.cstr_res in
+    Some (sum_path fr, (tag, ps, rs)) 
+  with Not_found -> None
 
 (* don't panic! bms only set here *)
 let bms = ref empty
 let mk_bms env = 
-  let f g e h = add (g h) e in
+  let f g e h = 
+    match g h with
+        Some k -> add k e 
+      | None -> e in
   bms := List.fold_left (f (transl_desc env)) empty builtins 
 
 let mk_fun n f = 
