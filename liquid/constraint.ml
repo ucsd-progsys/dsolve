@@ -262,6 +262,12 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       ([], [])
   | (F.Funknown, F.Funknown) ->
       ([],[]) 
+  | (F.Fsum(_, t1, cs1, r1), F.Fsum(_, t2, cs2, r2)) when no_recrefs (t1, t2) ->  (* 2 *)
+      let (penv, tag) = bind_tags_pr (None, f1) cs1 r1 env in
+      let subs = if penv = env then [] else sum_subs cs1 cs2 tag in 
+      let aps ss (oss, qks) = (ss @ oss, qks) in
+      (split_sub_params c tenv env g (F.constrs_params cs1) (F.constrs_params cs2),
+       split_sub_ref c penv g r1 (List.map (aps subs) r2))
   | (F.Fsum(_, Some (_, rr1), cs1, r1), F.Fsum(_, Some (_, rr2), cs2, r2)) ->
       let (shp1, shp2) = (F.shape f1, F.shape f2) in
       let (f1, f2) = (F.unfold_with (F.apply_recref rr1 f1) shp1, F.unfold_with (F.apply_recref rr2 f2) shp2) in
@@ -270,12 +276,6 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       let aps ss (oss, qks) = (ss @ oss, qks) in
         (lequate_cs env g c F.Covariant f1 f2,
          split_sub_ref c penv g r1 (List.map (aps subs) r2))
-  | (F.Fsum(_, _, cs1, r1), F.Fsum(_, _, cs2, r2)) ->  (* 2 *)
-      let (penv, tag) = bind_tags_pr (None, f1) cs1 r1 env in
-      let subs = if penv = env then [] else sum_subs cs1 cs2 tag in 
-      let aps ss (oss, qks) = (ss @ oss, qks) in
-      (split_sub_params c tenv env g (F.constrs_params cs1) (F.constrs_params cs2),
-       split_sub_ref c penv g r1 (List.map (aps subs) r2))
   | (F.Fabstract(_, ps1, r1), F.Fabstract(_, ps2, r2)) ->
       (split_sub_params c tenv env g ps1 ps2, split_sub_ref c env g r1 r2)
   | (_,_) -> 

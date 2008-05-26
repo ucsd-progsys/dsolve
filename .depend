@@ -322,18 +322,18 @@ liquid/builtins.cmx: typing/types.cmx typing/typedtree.cmx \
     typing/predicate.cmx typing/predef.cmx typing/path.cmx utils/misc.cmx \
     parsing/longident.cmx typing/ident.cmx liquid/frame.cmx typing/env.cmx \
     typing/common.cmx parsing/asttypes.cmi 
-liquid/constraint.cmo: liquid/wellformed.cmi typing/typedtree.cmi \
-    liquid/theoremProver.cmo liquid/qualifier.cmi typing/predicate.cmi \
-    liquid/pattern.cmi typing/path.cmi parsing/location.cmi \
-    liquid/lightenv.cmo utils/heap.cmi liquid/frame.cmi typing/env.cmi \
-    typing/common.cmo utils/clflags.cmi liquid/builtins.cmo utils/bstats.cmi \
-    liquid/constraint.cmi 
-liquid/constraint.cmx: liquid/wellformed.cmx typing/typedtree.cmx \
-    liquid/theoremProver.cmx liquid/qualifier.cmx typing/predicate.cmx \
-    liquid/pattern.cmx typing/path.cmx parsing/location.cmx \
-    liquid/lightenv.cmx utils/heap.cmx liquid/frame.cmx typing/env.cmx \
-    typing/common.cmx utils/clflags.cmx liquid/builtins.cmx utils/bstats.cmx \
-    liquid/constraint.cmi 
+liquid/constraint.cmo: liquid/wellformed.cmi typing/types.cmi \
+    typing/typedtree.cmi liquid/theoremProver.cmo liquid/qualifier.cmi \
+    typing/predicate.cmi liquid/pattern.cmi typing/path.cmi \
+    parsing/location.cmi liquid/lightenv.cmo utils/heap.cmi liquid/frame.cmi \
+    typing/env.cmi typing/common.cmo utils/clflags.cmi liquid/builtins.cmo \
+    utils/bstats.cmi liquid/constraint.cmi 
+liquid/constraint.cmx: liquid/wellformed.cmx typing/types.cmx \
+    typing/typedtree.cmx liquid/theoremProver.cmx liquid/qualifier.cmx \
+    typing/predicate.cmx liquid/pattern.cmx typing/path.cmx \
+    parsing/location.cmx liquid/lightenv.cmx utils/heap.cmx liquid/frame.cmx \
+    typing/env.cmx typing/common.cmx utils/clflags.cmx liquid/builtins.cmx \
+    utils/bstats.cmx liquid/constraint.cmi 
 liquid/frame.cmo: typing/typetexp.cmi typing/types.cmi typing/typedtree.cmi \
     liquid/qualifier.cmi typing/qualdecl.cmo typing/predicate.cmi \
     liquid/pattern.cmi typing/path.cmi parsing/parsetree.cmi \
