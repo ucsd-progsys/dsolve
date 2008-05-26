@@ -1,2 +1,3 @@
 tests/bad-checklist.ml   1  True
 tests/bad-recisort.ml    10 False
+tests/bad-mktree.ml      10 False
