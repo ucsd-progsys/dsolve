@@ -160,8 +160,7 @@ and replace_params ps fs =
   List.map2 (fun (i, _, v) f -> (i, f, v)) ps fs
 
 and constrain_constructed (env, guard, f) cstrdesc args e =
-  let f' = F.unfold (F.fresh_false e.exp_env e.exp_type) in
-  match f' with
+  match F.unfold (F.fresh_false e.exp_env e.exp_type) with
   | F.Fsum (path, ro, cstrs, _) ->
       let tag = cstrdesc.cstr_tag in
       let cstrref = B.tag_refinement tag in
