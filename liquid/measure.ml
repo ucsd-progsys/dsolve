@@ -110,9 +110,12 @@ let mk_qual ps c =
   let v = Path.mk_ident "v" in
   (Path.mk_ident "measure", v, mk_pred v c ps)
 
-let mk_single_gd menv p vp (tag, ps) =
-  try Some (mk_pred vp (find_c p tag menv) ps) with 
-    Not_found -> None
+let mk_single_gd menv p vp tp =
+      match tp with 
+        | Some (tag, ps) -> 
+            (try Some (mk_pred vp (find_c p tag menv) ps) with 
+                Not_found -> None)
+        | None -> None
 
 let get_or_fail = function
     Texp_ident (p, _) -> p
@@ -129,8 +132,8 @@ let get_patvar p =
 let mk_guards f e pats =
  let vp = get_or_fail e in
   let gps pat = match pat.pat_desc with
-      Tpat_construct(cdesc, pl) -> (cdesc.cstr_tag, (List.map get_patvar pl))
-    | _ -> failwith "non-constructor matches not handled" in
+      Tpat_construct(cdesc, pl) -> Some (cdesc.cstr_tag, (List.map get_patvar pl))
+    | _ -> None in
   let ps = List.map gps pats in
   let p = sum_path f in
     List.map (mk_single_gd !bms p vp) ps
