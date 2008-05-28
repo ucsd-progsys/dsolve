@@ -169,7 +169,8 @@ and constrain_constructed (env, guard, f) cstrdesc args e =
       let pls = List.map C.i2p (F.params_ids params) in
       let mref = try (B.const_ref [M.mk_qual pls (M.find_c path tag !M.bms)]) with
                      Not_found -> [] in
-      let f = F.apply_refinement (mref @ cstrref) f in
+      let cstrref = mref @ cstrref in
+      let f = F.apply_refinement cstrref f in
       let (argframes, argcs) = constrain_subexprs env guard args in
       let cstrs = List.map (fun (t, ps) -> (t, if t = tag then replace_params ps argframes else ps)) cstrs in
       let f' = F.Fsum (path, ro, cstrs, cstrref) in
