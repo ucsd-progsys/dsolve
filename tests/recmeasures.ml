@@ -1,7 +1,7 @@
-(*let rec len (x: int list) =
+let rec len (x: int list) =
   match x with
       [] -> let x = 0 in x + 0
-    | s :: ss -> 1 + (len ss)*)
+    | s :: ss -> 1 + (len ss)
 
 let y = []
 (*let z = 1 :: y*)
