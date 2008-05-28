@@ -180,7 +180,7 @@ and constrain_fold (env, guard, f) f'' cstrs subcstrs = match f with
   | F.Fsum (p, ro, cs, r) ->
       let f' = match ro with Some (_, rr) -> F.apply_recref rr f | None -> f in
       let f' = F.unfold_with f' f in
-        (f, WFFrame (env, f) :: SubFrame (env, guard, f'', f') :: cstrs, subcstrs)
+        (f, WFFrame (env, f') :: SubFrame (env, guard, f'', f') :: cstrs, subcstrs)
   | _ -> assert false
 
 and constrain_record (env, guard, f) labeled_exprs =
