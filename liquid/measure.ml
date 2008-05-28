@@ -124,7 +124,7 @@ let get_or_fail = function
 let get_patvar p = 
   match p.pat_desc with
     Tpat_var (p) -> C.i2p p
-  | _ -> failwith "only matching to vars supported; try normalizing"
+  | _ -> raise Not_found
 
 (*let get_patvars_shallow pat = 
   Pattern.fold (fun x xs -> (C.i2p x) :: xs) pat *)
@@ -132,7 +132,9 @@ let get_patvar p =
 let mk_guards f e pats =
  let vp = get_or_fail e in
   let gps pat = match pat.pat_desc with
-      Tpat_construct(cdesc, pl) -> Some (cdesc.cstr_tag, (List.map get_patvar pl))
+      Tpat_construct(cdesc, pl) -> 
+        (try Some (cdesc.cstr_tag, (List.map get_patvar pl)) with
+            Not_found -> None)
     | _ -> None in
   let ps = List.map gps pats in
   let p = sum_path f in
