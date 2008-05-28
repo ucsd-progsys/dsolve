@@ -160,8 +160,7 @@ and replace_params ps fs =
   List.map2 (fun (i, _, v) f -> (i, f, v)) ps fs
 
 and constrain_constructed (env, guard, f) cstrdesc args e =
-  let f' = F.unfold_with (F.fresh_false e.exp_env e.exp_type) (F.fresh_false e.exp_env e.exp_type) in
-  match f' with
+  match F.unfold (F.fresh_false e.exp_env e.exp_type) with
   | F.Fsum (path, ro, cstrs, _) ->
       let tag = cstrdesc.cstr_tag in
       let cstrref = B.tag_refinement tag in
@@ -182,7 +181,7 @@ and constrain_fold (env, guard, f) f'' cstrs subcstrs = match f with
       let _ = printf "@[%a@]@." F.pprint f'' in
       let f' = F.unfold_with f' (F.apply_refinement F.empty_refinement f) in
       let _ = printf "@[%a@]@." F.pprint f' in
-        (f, WFFrame (env, f) :: SubFrame (env, guard, f'', f') :: cstrs, subcstrs)
+        (f, WFFrame (env, f') :: SubFrame (env, guard, f'', f') :: cstrs, subcstrs)
   | _ -> assert false
 
 and constrain_record (env, guard, f) labeled_exprs =
