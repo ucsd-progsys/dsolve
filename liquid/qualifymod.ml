@@ -120,16 +120,11 @@ let expression_to_pexpr e =
     | Texp_ident (id, _) -> P.Var id
     | _ -> P.Var (Path.mk_ident "dummy")
 
-let expr_fresh = function
-  | Texp_construct _ | Texp_ident _ | Texp_assertfalse -> Frame.fresh_unconstrained
-  | _ -> Frame.fresh
-
 let rec constrain e env guard =
-  let freshf = expr_fresh e.exp_desc e.exp_env e.exp_type in
-  let desc_ty = (e.exp_desc, freshf) in
+  let freshf = Frame.fresh e.exp_env e.exp_type in
   let environment = (env, guard, freshf) in
   let (f, cstrs, rec_cstrs) =
-    match desc_ty with
+    match (e.exp_desc, freshf) with
       | (Texp_constant const_typ, F.Fabstract(path, [], _)) -> constrain_constant path const_typ
       | (Texp_construct (cstrdesc, args), F.Fsum _) -> constrain_constructed environment cstrdesc args e
       | (Texp_record (labeled_exprs, None), _) -> constrain_record environment labeled_exprs
@@ -146,7 +141,7 @@ let rec constrain e env guard =
       | (Texp_array es, _) -> constrain_array environment es
       | (Texp_sequence (e1, e2), _) -> constrain_sequence environment e1 e2
       | (Texp_tuple es, _) -> constrain_tuple environment es
-      | (Texp_assertfalse, _) -> constrain_assertfalse environment
+      | (Texp_assertfalse, _) -> constrain_assertfalse environment e.exp_env e.exp_type
       | (Texp_assert e, _) -> constrain_assert environment e
       | (_, f) ->
         fprintf err_formatter "@[Warning: Don't know how to constrain expression,
@@ -161,27 +156,38 @@ and constrain_constant path = function
   | Const_string _ -> (B.uString, [], [])
   | _ -> assert false
 
+and replace_params ps fs =
+  List.map2 (fun (i, _, v) f -> (i, f, v)) ps fs
+
 and constrain_constructed (env, guard, f) cstrdesc args e =
-  match F.unfold f with
-  | F.Fsum (path, rv, cstrs, _) ->
+  let f' = F.unfold_with (F.fresh_false e.exp_env e.exp_type) (F.fresh_false e.exp_env e.exp_type) in
+  match f' with
+  | F.Fsum (path, ro, cstrs, _) ->
       let tag = cstrdesc.cstr_tag in
       let cstrref = B.tag_refinement tag in
       let params = List.assoc tag cstrs in
       let pls = List.map C.i2p (F.params_ids params) in
       let mref = try (B.const_ref [M.mk_qual pls (M.find_c path tag !M.bms)]) with
                      Not_found -> [] in
-      let f = F.apply_refinement (mref @ cstrref) f in
-      let cstrargs = F.params_frames params in
+      let cstrref = mref @ cstrref in
+      let f = F.apply_refinement cstrref f in
       let (argframes, argcs) = constrain_subexprs env guard args in
-        (f,
-         WFFrame(env, f) :: (List.map2 (fun arg formal -> SubFrame(env, guard, arg, formal)) argframes cstrargs),
-         argcs)
+      let cstrs = List.map (fun (t, ps) -> (t, if t = tag then replace_params ps argframes else ps)) cstrs in
+      let f' = F.Fsum (path, ro, cstrs, cstrref) in
+        constrain_fold (env, guard, f) f' [WFFrame (env, f')] argcs
+  | _ -> assert false
+
+and constrain_fold (env, guard, f) f'' cstrs subcstrs = match f with
+  | F.Fsum (p, ro, cs, r) ->
+      let f' = match ro with Some (_, rr) -> F.apply_recref rr f | None -> f in
+      let f' = F.unfold_with f' f in
+        (f, WFFrame (env, f) :: SubFrame (env, guard, f'', f') :: cstrs, subcstrs)
   | _ -> assert false
 
 and constrain_record (env, guard, f) labeled_exprs =
   let compare_labels ({lbl_pos = n}, _) ({lbl_pos = m}, _) = compare n m in
   let (_, sorted_exprs) = List.split (List.sort compare_labels labeled_exprs) in
-  let (p, ps) = match f with F.Fsum(p, rv, [(_, ps)], _) -> (p, ps) | _ -> assert false in
+  let (p, ps) = match f with F.Fsum(p, _, [(_, ps)], _) -> (p, ps) | _ -> assert false in
   let (fs, subexp_cs) = constrain_subexprs env guard sorted_exprs in
   let to_field (id, _, v) f = (id, f, v) in
   let field_qualifier (id, _, _) fexpr = B.field_eq_qualifier id (expression_to_pexpr fexpr) in
@@ -234,7 +240,6 @@ and maybe_measured_env (guard, f) mgvar env g =
 
 and constrain_match (env, guard, f) e pexps partial =
   let (matchf, matchcstrs) = constrain e env guard in
-  let matchf = F.unfold matchf in
   let subguards = M.mk_guards matchf e.exp_desc (fst (List.split pexps)) in
   let subguards = List.map def_measured_frame subguards in
   let mgvar = Path.mk_ident "__measure_guardvar" in
@@ -271,8 +276,7 @@ and apply_once env guard (f, cstrs, subexp_cstrs) e = match (f, e) with
   | (F.Farrow (l, f, f'), (Some e2, _)) ->
     let (f2, e2_cstrs) = constrain e2 env guard in
     let f'' = match l with
-      | Some pat ->
-        List.fold_right F.apply_substitution (Pattern.bind_pexpr pat (expression_to_pexpr e2)) f'
+      | Some pat -> F.apply_subs (Pattern.bind_pexpr pat (expression_to_pexpr e2)) f'
           (* pmr: The soundness of this next line is suspect,
              must investigate (i.e., what if there's a var that might
              somehow be substituted that isn't because of this?  How
@@ -317,8 +321,8 @@ and constrain_tuple (env, guard, _) es =
   let f = F.tuple_of_frames fs (F.mk_refinement [] (Misc.mapi elem_qualifier es) []) in
     (f, [WFFrame(env, f)], subexp_cs)
 
-and constrain_assertfalse (env, _, f) =
-  (f, [WFFrame (env, f)], [])
+and constrain_assertfalse (env, _, _) tenv ty =
+  let f = F.fresh_false tenv ty in (f, [WFFrame (env, f)], [])
 
 and constrain_assert (env, guard, _) e =
   let (f, cstrs) = constrain e env guard in

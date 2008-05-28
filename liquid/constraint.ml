@@ -94,7 +94,7 @@ let is_wfref_constraint = function
 
 let solution_map s k = 
   C.do_catch 
-    (Printf.sprintf "ERROR: solution_map couldn't find: %s" (C.path_name () k))
+    (Printf.sprintf "ERROR: solution_map couldn't find: %s" (C.path_name k))
     (Sol.find s) k  
 
 let sref_map f r =
@@ -207,7 +207,7 @@ let split_sub_ref c env g r1 r2 =
   sref_map (fun sr -> (Cstr c, SubRef(env, g, r1, sr, None))) r2
 
 let params_apply_substitutions subs ps =
-  List.map (fun (i, f, v) -> (i, List.fold_right F.apply_substitution subs f, v)) ps
+  List.map (fun (i, f, v) -> (i, F.apply_subs subs f, v)) ps
 
 let rec split_sub_params c tenv env g ps1 ps2 = match (ps1, ps2) with
   | ((i, f, v)::ps1, (i', f', _)::ps2) ->
@@ -226,9 +226,14 @@ let resolve_extend_env tenv env f l1 l2 = match (l1, l2) with
   | (Some p, _) | (_, Some p) -> F.env_bind tenv env p f
   | _ -> env
 
+let no_recrefs = function
+  | (None, None)                   -> true
+  | (Some (_, rr1), Some (_, rr2)) -> F.recref_is_empty rr1 && F.recref_is_empty rr2
+  | _                              -> false
+
 let bind_tags_pr (t, f) cs r env =
   let is_recvar = function
-      (Some p, F.Frec (p')) -> p' = p
+      (Some (p, _), F.Frec (p', _)) -> p' = p
     | _ -> false in
   let k (a, b, _) =
     (C.i2p a, if is_recvar (t, b) then f else b) in
@@ -249,20 +254,28 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
   | (F.Farrow (l1, f1, f1'), F.Farrow (l2, f2, f2')) ->
       let subs = match (l1, l2) with (Some p1, Some p2) when not (Pat.same p1 p2) -> subst_to p2 p1 | _ -> [] in
       let env' = resolve_extend_env tenv env f2 l1 l2 in
-      let f1' = List.fold_right F.apply_substitution subs f1' in
+      let f1' = F.apply_subs subs f1' in
       ((lequate_cs env g c F.Covariant f2 f1) @ (lequate_cs env' g c F.Covariant f1' f2'), [])
   | (F.Fvar (_, r1), F.Fvar (_, r2)) ->
       ([], split_sub_ref c env g r1 r2)
   | (F.Frec _, F.Frec _) ->
       ([], [])
   | (F.Funknown, F.Funknown) ->
-      ([], []) 
-  | (F.Fsum(_, _, cs1, r1), F.Fsum(_, _, cs2, r2)) ->  (* 2 *)
+      ([],[]) 
+  | (F.Fsum(_, t1, cs1, r1), F.Fsum(_, t2, cs2, r2)) when no_recrefs (t1, t2) ->  (* 2 *)
       let (penv, tag) = bind_tags_pr (None, f1) cs1 r1 env in
       let subs = if penv = env then [] else sum_subs cs1 cs2 tag in 
       let aps ss (oss, qks) = (ss @ oss, qks) in
       (split_sub_params c tenv env g (F.constrs_params cs1) (F.constrs_params cs2),
        split_sub_ref c penv g r1 (List.map (aps subs) r2))
+  | (F.Fsum(_, Some (_, rr1), cs1, r1), F.Fsum(_, Some (_, rr2), cs2, r2)) ->
+      let (shp1, shp2) = (F.shape f1, F.shape f2) in
+      let (f1, f2) = (F.unfold_with (F.apply_recref rr1 f1) shp1, F.unfold_with (F.apply_recref rr2 f2) shp2) in
+      let (penv, tag) = bind_tags_pr (None, f1) cs1 r1 env in
+      let subs = if penv = env then [] else sum_subs cs1 cs2 tag in 
+      let aps ss (oss, qks) = (ss @ oss, qks) in
+        (lequate_cs env g c F.Covariant f1 f2,
+         split_sub_ref c penv g r1 (List.map (aps subs) r2))
   | (F.Fabstract(_, ps1, r1), F.Fabstract(_, ps2, r2)) ->
       (split_sub_params c tenv env g ps1 ps2, split_sub_ref c env g r1 r2)
   | (_,_) -> 
@@ -282,6 +295,14 @@ let rec split_wf_params c tenv env ps =
 
 let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFrame (env,f); lc_tenv = tenv} as c ->
   match f with
+  | F.Fsum (p, (Some (rp, rr) as t), cs, r) when not (F.recref_is_empty rr) ->
+      (* This deviates from the paper's cons rule because we instantiate qualifiers using
+         the split constraints.  This would result in qualifiers with idents that don't
+         actually appear in the program or tuple labels appearing in the recursive
+         refinements as a result of rho-application's renaming. *)
+      let shp     = F.shape f in
+      let (f, f') = (F.unfold_with f shp, F.apply_recref rr shp) in
+        ([make_wff c tenv env f; make_wff c tenv env f'], split_wf_ref f c (bind_tags (t, f) cs r env) r)
   | F.Fsum (_, t, cs, r) ->
       (split_wf_params c tenv env (F.constrs_params cs), split_wf_ref f c (bind_tags (t, f) cs r env) r)
   | F.Fabstract (_, ps, r) ->
@@ -336,10 +357,10 @@ let get_ref_constraint sri i =
   C.do_catch "ERROR: get_constraint" (SIM.find i) sri.cnst
 
 let lhs_ks = function WFRef _ -> assert false | SubRef (env,_,r,_,_) ->
-  List.map fst (Le.fold (fun _ f l -> F.qvars f @ l) env (F.refinement_qvars r))
+  Le.fold (fun _ f l -> F.qvars f @ l) env (F.refinement_qvars r)
 
 let rhs_k = function
-  | SubRef (_,_,_,(_, F.Qvar (k, _)),_) -> Some k
+  | SubRef (_,_,_,(_, F.Qvar k),_) -> Some k
   | _ -> None
 
 let make_rank_map om cm =
@@ -460,17 +481,6 @@ let refine_simple s k1 k2 =
   let _ = C.cprintf C.ol_refine "@[%d --> %d@.@]" (List.length q2s) (List.length q2s') in
   List.length q2s' <> List.length q2s
 
-(*
-let qual_implied s lhs lhsm rhs_subs q =
-  let rhs = F.refinement_predicate (solution_map s) qual_test_var (rhs_subs, F.Qconst [q]) in
-  let (cached, cres) = if !Cf.cache_queries then TP.check_table lhs rhs else (false, false) in
-  if cached then cres else 
-    if (not !Cf.no_simple_subs) && PM.mem rhs lhsm then (incr stat_matches; true) else
-      let rv = Bstats.time "refinement query" (TP.implies lhs) rhs in
-      let _ = incr stat_imp_queries in
-      let _ = if rv then incr stat_valid_imp_queries in
-      rv 
-*)
 let implies_match env sm r1 =
   let lhsm =
     Bstats.time "close_over_env" 
@@ -497,11 +507,11 @@ let refine sri s c =
   let _ = incr stat_refines in
   let sm = solution_map s in 
   match c with
-  | SubRef (_, _, [([], ([], [(k1, _)]))], ([], F.Qvar (k2, _)), _)
+  | SubRef (_, _, [([], ([], [k1]))], ([], F.Qvar k2), _)
     when not (!Cf.no_simple || !Cf.verify_simple) ->
       let _ = incr stat_simple_refines in
       Bstats.time "refine_simple" (refine_simple s k1) k2
-  | SubRef (env,g,r1, (sub2s, F.Qvar (k2, _)), _)  ->
+  | SubRef (env,g,r1, (sub2s, F.Qvar k2), _)  ->
       let _ = incr stat_sub_refines in
       let qp2s = 
         List.map 
@@ -517,7 +527,7 @@ let refine sri s c =
       let _ = stat_imp_queries := !stat_imp_queries + (List.length qp2s) in
       let _ = stat_valid_imp_queries := !stat_valid_imp_queries + (List.length q2s'') in
       (List.length qp2s  <> List.length q2s'')
-  | WFRef (env, (subs, F.Qvar (k, _)), _) ->
+  | WFRef (env, (subs, F.Qvar k), _) ->
       let _ = incr stat_wf_refines in
       let qs  = solution_map s k in
       let qs' = List.filter (qual_wf sm env subs) qs in
@@ -552,14 +562,22 @@ let unsat_constraints sri s =
 (******************** Qualifier Instantiation *****************)
 (**************************************************************)
 
-module QualifierSet = Set.Make(Qualifier)
+module QSet = Set.Make(Qualifier)
+
+module VarMap = Map.Make(String)
+
+let add_path m path = match Path.ident_name path with
+  | Some name ->
+      let rest = try VarMap.find name m with Not_found -> [] in VarMap.add name (path :: rest) m
+  | None -> m
+
+let make_subs m =
+  VarMap.fold (fun n ps subs -> C.flap (fun p -> List.map (fun s -> (n, p) :: s) subs) ps) m [[]]
 
 let instantiate_in_env q qset d =
-  let varmap = C.map_partial (fun path -> match Path.ident_name path with Some name -> Some (name, path) | None -> None) d in
-  let inv = Qualifier.instantiate varmap q in
-    match inv with
-        Some inv -> QualifierSet.add inv qset
-      | None -> qset
+  let vm   = List.fold_left add_path VarMap.empty d in
+  let subs = make_subs vm in
+    List.fold_left (fun qs sub -> match Qualifier.instantiate sub q with Some q -> QSet.add q qs | None -> qs) qset subs
 
 let instantiate_qual ds qualset q =
   List.fold_left (instantiate_in_env q) qualset ds
@@ -568,10 +586,10 @@ let constraint_env_domain (_, c) =
   Le.domain (match c with | SubRef (e, _, _, _, _) -> e | WFRef (e, _, _) -> e)
 
 (* Make copies of all the qualifiers where the free identifiers are replaced
-   by the appropriate bound identifiers from the environment. *)
+   by the appropriate bound identifiers from all environments. *)
 let instantiate_in_environments cs qs =
-  QualifierSet.elements
-    (List.fold_left (instantiate_qual (List.map constraint_env_domain cs)) QualifierSet.empty qs)
+  QSet.elements
+    (List.fold_left (instantiate_qual (List.map constraint_env_domain cs)) QSet.empty qs)
 
 (**************************************************************)
 (************************ Initial Solution ********************)
@@ -587,8 +605,8 @@ let make_initial_solution sri qs =
   let s = Sol.create 17 in
   let addrv = function
   | (F.Qconst _, _) -> ()
-  | (F.Qvar (k, F.Top),false) -> if not (Sol.mem s k) then Sol.replace s k []
-  | (F.Qvar (k, _),_) -> Sol.replace s k qs in
+  | (F.Qvar k,false) -> if not (Sol.mem s k) then Sol.replace s k []
+  | (F.Qvar k,_) -> Sol.replace s k qs in
   SIM.iter 
     (fun _ c -> match c with 
     | SubRef (_, _, r1, (_, qe2), _) ->

@@ -32,6 +32,7 @@ module C = Common
 module PM = C.PathMap
 module T = Typetexp
 module Pat = Pattern
+module M = Misc
 module P = Predicate
 
 (**************************************************************)
@@ -40,11 +41,11 @@ module P = Predicate
 
 type substitution = Path.t * Predicate.pexpr
 
-type open_assignment = Top | Bottom
-
-type qvar = Path.t * open_assignment
+type qvar = Path.t
 type refexpr = substitution list * (Qualifier.t list * qvar list)
 type refinement = refexpr list
+
+type recref = refinement option list list
 
 type qexpr =
   | Qconst of Qualifier.t
@@ -58,8 +59,8 @@ type simple_refinement = substitution list * qexpr
 
 type t =
   | Fvar of Path.t * refinement
-  | Frec of Path.t
-  | Fsum of Path.t * recvar * constr list * refinement
+  | Frec of Path.t * recref
+  | Fsum of Path.t * (Path.t * recref) option * constr list * refinement
   | Fabstract of Path.t * param list * refinement
   | Farrow of pattern_desc option * t * t
   | Funknown
@@ -99,14 +100,18 @@ let map_params f ps =
 
 let rec map f = function
   | (Funknown | Fvar _ | Frec _) as fr -> f fr
-  | Fsum (p, rv, cs, r) ->
-      f (Fsum (p, rv, List.map (fun (cd, ps) -> (cd, map_params f ps)) cs, r))
+  | Fsum (p, ro, cs, r) ->
+      f (Fsum (p, ro, List.map (fun (cd, ps) -> (cd, map_params f ps)) cs, r))
   | Fabstract (p, ps, r) -> f (Fabstract (p, map_params f ps, r))
   | Farrow (x, f1, f2) -> f (Farrow (x, map f f1, map f f2))
 
+let map_recref f rr =
+  List.map (fun r -> List.map (M.may_map f) r) rr
+
 let rec map_refinements_map f = function
   | Fvar (p, r) -> Fvar (p, f r)
-  | Fsum (p, rv, cs, r) -> Fsum (p, rv, cs, f r)
+  | Frec (p, rr) -> Frec (p, map_recref f rr)
+  | Fsum (p, ro, cs, r) -> Fsum (p, M.may_map (fun (p, rr) -> (p, map_recref f rr)) ro, cs, f r)
   | Fabstract (p, ps, r) -> Fabstract (p, ps, f r)
   | f -> f
 
@@ -116,10 +121,18 @@ let map_refinements f fr =
 let map_refexprs f fr =
   map_refinements (fun r -> List.map f r) fr
 
+let recref_fl f r l = match r with
+  | Some r -> f r l
+  | None   -> l
+
+let recref_fold f rr l =
+  List.fold_right (recref_fl f) (List.flatten rr) l
+
 let rec refinement_fold f l = function
   | Fvar (_, r) -> f r l
-  | Fsum (_, _, cs, r) ->
-      f r (List.fold_left (refinement_fold f) l (constrs_param_frames cs))
+  | Frec (_, rr) -> recref_fold f rr l
+  | Fsum (_, ro, cs, r) ->
+      f r (List.fold_left (refinement_fold f) (match ro with Some (_, rr) -> recref_fold f rr l | None -> l) (constrs_param_frames cs))
   | Fabstract (_, ps, r) ->
       f r (List.fold_left (refinement_fold f) l (params_frames ps))
   | _ -> l
@@ -134,12 +147,24 @@ let mk_refinement subs qconsts qvars =
 let empty_refinement =
   mk_refinement [] [] []
 
+let refinement_is_empty qes =
+  List.for_all (function (_, ([], [])) -> true | _ -> false) qes
+
+let empty_recref cs =
+  List.map (fun (_, ps) -> List.map (function Frec _ -> None | _ -> Some empty_refinement) (params_frames ps)) cs
+
+let row_is_empty rs =
+  List.for_all (function None -> true | Some r -> refinement_is_empty r) rs
+
+let recref_is_empty rr =
+  List.for_all row_is_empty rr
+
 let false_refinement =
   mk_refinement [] [(Path.mk_ident "false", Path.mk_ident "V", Predicate.Not (Predicate.True))] []
 
 let apply_refinement r = function
   | Fvar (p, _) -> Fvar (p, r)
-  | Fsum (p, rv, cs, _) -> Fsum (p, rv, cs, r)
+  | Fsum (p, rr, cs, _) -> Fsum (p, rr, cs, r)
   | Fabstract (p, ps, _) -> Fabstract (p, ps, r)
   | f -> f
 
@@ -152,11 +177,31 @@ let append_refinement res' f =
     | Some res -> apply_refinement (res @ res') f
     | None -> f
 
-let apply_substitution_map sub (subs, qe) =
-  (sub :: subs, qe)
+let apply_recref rr = function
+  | Frec (p, _)                   -> Frec (p, rr)
+  | Fsum (p, Some (rp, _), cs, r) -> Fsum (p, Some (rp, rr), cs, r)
+  | _                             -> assert false
 
-let apply_substitution sub f =
-  map_refexprs (apply_substitution_map sub) f
+let get_recref = function
+  | Frec (_, rr) | Fsum (_, Some (_, rr), _, _) -> Some rr
+  | _                                           -> None
+
+let merge_recrefs rr rr' =
+  let merge r r' = match (r, r') with
+    | (Some r, Some r') -> Some (r @ r')
+    | (None, None)      -> None
+    | _                 -> assert false
+  in List.map2 (List.map2 merge) rr rr'
+
+let append_recref rr' f = match get_recref f with
+  | Some rr -> apply_recref (merge_recrefs rr rr') f
+  | None    -> f
+
+let apply_subs_map subs' (subs, qe) =
+  (subs' @ subs, qe)
+
+let apply_subs subs f =
+  map_refexprs (apply_subs_map subs) f
 
 let refinement_qvars r =
   C.flap (fun (_, (_, qvars)) -> qvars) r
@@ -208,17 +253,20 @@ let ref_of_simple = function
 (************************* Shapes *****************************) 
 (**************************************************************)
 
+let shape f =
+  map_refinements (fun _ -> empty_refinement) f
+
 let same_shape t1 t2 =
   let vars = ref [] in
   let ismapped p q = try snd (List.find (fun (p', q) -> Path.same p p') !vars) = q with
       Not_found -> vars := (p, q) :: !vars; true in
   let rec sshape = function
-      (Fsum(p, rv, cs, _), Fsum(p', rv', cs', _)) ->
+      (Fsum(p, ro, cs, _), Fsum(p', ro', cs', _)) ->
         Path.same p p' && params_sshape (constrs_params cs) (constrs_params cs') &&
-          (rv = rv' || match (rv, rv') with (Some rp, Some rp') -> ismapped rp rp' | _ -> false)
+          (ro = ro' || match (ro, ro') with (Some (rp, _), Some (rp', _)) -> ismapped rp rp' | _ -> false)
     | (Fabstract(p, ps, _), Fabstract(p', ps', _)) ->
         Path.same p p' && params_sshape ps ps'
-    | (Fvar (p, _), Fvar (p', _)) | (Frec p, Frec p') ->
+    | (Fvar (p, _), Fvar (p', _)) | (Frec (p, _), Frec (p', _)) ->
         ismapped p p'
     | (Farrow(_, i, o), Farrow(_, i', o')) ->
         sshape (i, i') && sshape (o, o')
@@ -227,14 +275,6 @@ let same_shape t1 t2 =
   and params_sshape ps qs =
     List.for_all sshape (List.combine (params_frames ps) (params_frames qs))
   in sshape (t1, t2)
-
-(******************************************************************************)
-(********************************** Unfolding *********************************)
-(******************************************************************************)
-
-let unfold f = match f with
-  | Fsum (_, Some p, _, _) -> map (function Frec p' when Path.same p p' -> f | f -> f) f
-  | _                      -> f
 
 (**************************************************************)
 (******************** Frame pretty printers *******************)
@@ -256,14 +296,14 @@ let pprint_refexpr ppf (subs, (qconsts, qvars)) =
   fprintf ppf "%a@;<1 0>%a"
     (Oprint.print_list (fun ppf q -> Predicate.pprint ppf
                           (Predicate.apply_substs subs (pred_of_qual q))) space) qconsts
-    (Oprint.print_list (fun ppf (v, _) -> fprintf ppf "%s" (C.path_name () v)) space) qvars
+    (Oprint.print_list (fun ppf v -> fprintf ppf "%s" (C.path_name v)) space) qvars
 
 let pprint_refinement ppf res =
   Oprint.print_list pprint_refexpr space ppf res
 
 let rec pprint_pattern ppf = function
   | Tpat_any -> fprintf ppf "_"
-  | Tpat_var x -> fprintf ppf "%s" (Ident.name x)
+  | Tpat_var x -> fprintf ppf "%s" (C.ident_name x)
   | Tpat_tuple pats ->
       fprintf ppf "(%a)" pprint_pattern_list pats
   | Tpat_construct (cstrdesc, pats) ->
@@ -282,17 +322,30 @@ let wrap_refined ppf pp r =
   else
     (fprintf ppf "@[{"; pp ppf; fprintf ppf " |@;<1 2>%a}@]" pprint_refinement r)
 
+let comma ppf =
+  fprintf ppf ",@;<1 0>"
+
+let pprint_refs ppf rs =
+  fprintf ppf "@[[%a]@]" (Oprint.print_list (fun ppf -> function Some r -> pprint_refinement ppf r | None -> fprintf ppf ".") comma) rs
+
+let pprint_recref ppf rr =
+  if not (recref_is_empty rr) then fprintf ppf "@[[%a]@]" (Oprint.print_list pprint_refs comma) rr else ()
+
+let pprint_recopt ppf = function
+  | Some (rp, rr) -> fprintf ppf "%a@;<1 0>μ%s." pprint_recref rr (C.path_name rp)
+  | None          -> ()
+
 let rec pprint ppf = function
   | Fvar (a, r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "'%s" (C.path_name () a)) r
-  | Frec path ->
-      fprintf ppf "%s" (C.path_name () path)
-  | Fsum (path, _, [], r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "%s" (C.path_name () path)) r
-  | Fsum (path, rv, cs, r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "@[%s%s @[(%a)@]@]"
-                          (match rv with Some rp -> "μ" ^ C.path_name () rp ^ ". " | None -> "")
-                          (C.path_name () path)
+      wrap_refined ppf (fun ppf -> fprintf ppf "'%s" (C.path_name a)) r
+  | Frec (path, rr) ->
+      fprintf ppf "@[%a %s@]" pprint_recref rr (C.path_name path)
+  | Fsum (path, ro, [], r) ->
+      wrap_refined ppf (fun ppf -> fprintf ppf "@[%a%s@]" pprint_recopt ro (C.path_name path)) r
+  | Fsum (path, ro, cs, r) ->
+      wrap_refined ppf (fun ppf -> fprintf ppf "@[%a %s @[(%a)@]@]"
+                          pprint_recopt ro
+                          (C.path_name path)
                           (Oprint.print_list pprint_constructor
                              (fun ppf -> fprintf ppf "@;<1 0>|| ")) cs) r
   | Farrow (None, f, f') ->
@@ -302,7 +355,7 @@ let rec pprint ppf = function
   | Fabstract (path, params, r) ->
       wrap_refined ppf (fun ppf -> fprintf ppf "@[%a@ %s@]"
                           (pprint_params ",") params
-                          (C.path_name () path)) r
+                          (C.path_name path)) r
   | Funknown ->
       fprintf ppf "[unknown]"
  and pprint1 ppf = function
@@ -317,7 +370,39 @@ let rec pprint ppf = function
   Oprint.print_list pprint_param (fun ppf -> fprintf ppf "@;<1 2>%s@;<1 2>" sep) ppf ps
 
 let rec pprint_fenv ppf fenv =
-  Lightenv.maplist (fun k v -> printf "@[%s:@ %a@]@." (C.path_name () k) pprint v) fenv
+  Lightenv.maplist (fun k v -> printf "@[%s:@ %a@]@." (C.path_name k) pprint v) fenv
+
+(******************************************************************************)
+(********************************** Unfolding *********************************)
+(******************************************************************************)
+
+let rec apply_refs (rs : refinement option list) ps = match (rs, ps) with
+  | (r :: rs, (i, f, v) :: ps) ->
+      let (ip, i') = (Path.Pident i, Ident.create (Ident.name i)) in
+      let sub      = (ip, Predicate.Var (Path.Pident i')) in
+      let ps       = List.map (fun (i, f, v) -> (i, apply_subs [sub] f, v)) ps in
+      let rs       = List.map (Misc.may_map (List.map (apply_subs_map [sub]))) rs in
+        (i', (match r with Some r -> append_refinement r f | None -> f), v) :: apply_refs rs ps
+  | ([], []) -> []
+  | _        -> assert false
+
+let apply_recref_constrs rr cs =
+  List.map2 (fun rs (t, ps) -> (t, apply_refs rs ps)) rr cs
+
+let apply_recref rr = function
+  | Fsum (p, ro, cs, r) -> Fsum (p, ro, apply_recref_constrs rr cs, r)
+  | _                   -> assert false
+
+let unfold_with f f' = match f with
+  | Fsum (p, Some (rp, rr), cs, r) ->
+      map (function Frec (rp', rr') when Path.same rp rp' -> append_recref rr' f' | f -> f) (Fsum (p, None, cs, r))
+  | _ -> f
+
+let unfold f =
+  unfold_with f f
+
+let unfold_applying f =
+  let f' = match get_recref f with Some rr -> apply_recref rr f | None -> f in unfold_with f' f
 
 (**************************************************************)
 (********* Polymorphic and qualifier instantiation ************) 
@@ -335,12 +420,12 @@ let instantiate fr ftemplate =
     match (f, ft) with
       | (Fvar (p, r), _) ->
           let instf = vmap p ft in append_refinement r instf
-      | (Frec p, _) ->
-          vmap p ft
+      | (Frec _, _) ->
+          f
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
           Farrow (l, inst f1 f2, inst f1' f2')
-      | (Fsum (p, _, cs, r), Fsum(p', rv', cs', _)) ->
-          Fsum(p, rv', List.map2 (fun (cd, ps) (_, ps') -> (cd, inst_params ps ps')) cs cs', r)
+      | (Fsum (p, ro, cs, r), Fsum(p', _, cs', _)) ->
+          Fsum(p, ro, List.map2 (fun (cd, ps) (_, ps') -> (cd, inst_params ps ps')) cs cs', r)
       | (Fabstract(p, ps, r), Fabstract(_, ps', _)) ->
           Fabstract(p, inst_params ps ps', r)
       | (Funknown, Funknown) -> Funknown
@@ -400,8 +485,8 @@ let mutable_variance = function
   | Mutable -> Invariant
   | _ -> Covariant
 
-let fresh_refinementvar open_assn () =
-  mk_refinement [] [] [(Path.mk_ident "k", open_assn)]
+let fresh_refinementvar () =
+  mk_refinement [] [] [Path.mk_ident "k"]
 
 (* pmr: this looks suspect - ming? isn't this just empty_refinement? *)
 let fresh_true () =
@@ -424,19 +509,15 @@ let close_constructor res args =
   List.iter (fun a -> Btype.iter_type_expr (close_arg res) a; close_arg res a) args
 
 let fresh_constr fresh env p t tyl =
-  let params  = List.map (fresh []) tyl in
+  let params  = List.map fresh tyl in
   let ty_decl = Env.find_type p env in
-  (* Used in the sum type case - the type constructors contain uninstantiated
-     types, which we need to map to the instantiated type parameters. This is rather
-     easier than unification, which requires a type environment and more logic. *)
-  let pm      = List.combine ty_decl.type_params params in
   let varis   = List.map translate_variance ty_decl.type_variance in
     match ty_decl.type_kind with
       | Type_abstract ->
           Fabstract (p, C.combine3 (Misc.mapi (fun _ i -> C.tuple_elem_id i) tyl) params varis, empty_refinement)
       | Type_record (fields, _, _) -> (* 1 *)
           let fresh_field (name, muta, t) =
-            (Ident.create name, fresh pm t, mutable_variance muta)
+            (Ident.create name, fresh t, mutable_variance muta)
           in record_of_params p (List.map fresh_field fields) empty_refinement
       | Type_variant _ ->
           let param_vars = List.combine tyl varis in
@@ -446,39 +527,54 @@ let fresh_constr fresh env p t tyl =
             let _ = close_constructor res args; Ctype.unify Env.initial res t in
             let (res, args) = (canonicalize res, List.map canonicalize args) in
             let ids  = Misc.mapi (fun _ i -> C.tuple_elem_id i) args in
-            let fs   = List.map (fresh []) args in
+            let fs   = List.map fresh args in
             let vs   = List.map (fun t -> try List.assoc (canonicalize t) param_vars with Not_found -> Covariant) args in
               (cstr.cstr_tag, C.combine3 ids fs vs)
           in Fsum (p, None, List.map fresh_cstr cds, empty_refinement)
 
 let close_recf rv = function
-  | Fsum (p, _, cs, r) -> let f = Fsum (p, Some rv, cs, r) in if unfold f = f then Fsum (p, None, cs, r) else f
-  | f                     -> f
+  | Fsum (p, _, cs, r) ->
+      let f = Fsum (p, Some (rv, empty_recref cs), cs, r) in
+        begin match unfold f with
+          | Fsum (_, _, cs', _) -> if cs = cs' then Fsum (p, None, cs, r) else f
+          | _                   -> assert false
+        end
+  | f -> f
 
 let fresh_rec fresh env rv t = match t.desc with
   | Tvar                 -> fresh_fvar ()
-  | Tarrow(_, t1, t2, _) -> Farrow (None, fresh [] t1, fresh [] t2)
-  | Ttuple ts            -> tuple_of_frames (List.map (fresh []) ts) empty_refinement
+  | Tarrow(_, t1, t2, _) -> Farrow (None, fresh t1, fresh t2)
+  | Ttuple ts            -> tuple_of_frames (List.map fresh ts) empty_refinement
   | Tconstr(p, tyl, _)   -> close_recf rv (fresh_constr fresh env p t (List.map canonicalize tyl))
   | _                    -> fprintf err_formatter "@[Warning: Freshing unsupported type]@."; Funknown
+
+let cstr_refinements cstr =
+  let (args, res) = Ctype.instance_constructor cstr in
+  let _           = close_constructor res args in
+  let (res, args) = (canonicalize res, List.map canonicalize args) in
+    List.map (fun t -> if t = res then None else Some empty_refinement) args
+
+let mk_recvar env t =
+  let rv = Path.mk_ident "t" in
+    match t.desc with
+      | Tconstr (p, tyl, _) ->
+          let (_, cstrs) = List.split (Env.constructors_of_type p (Env.find_type p env)) in
+          let rr         = List.map cstr_refinements cstrs in (rv, Frec (rv, rr))
+      | _ -> (rv, Frec (rv, []))
 
 (* Create a fresh frame with the same shape as the type of [exp] using
    [fresh_ref_var] to create new refinement variables. *)
 let fresh_with_var_fun env freshf t =
   let tbl = Hashtbl.create 17 in
-  let rec fm pmap t =
+  let rec fm t =
     let t = canonicalize t in
-      List.iter (fun (t, f) -> Hashtbl.replace tbl (canonicalize t) f) pmap;
-      let f =
-        if Hashtbl.mem tbl t then
-          Hashtbl.find tbl t
-        else begin
-          let rv = Path.mk_ident "t" in
-            Hashtbl.replace tbl t (Frec rv);
-            let res = fresh_rec fm env rv t in Hashtbl.replace tbl t res; res
-        end
-      in List.iter (fun (t, _) -> Hashtbl.remove tbl (canonicalize t)) pmap; f
-  in map_refinements (fun _ -> freshf ()) (fm [] t)
+      if Hashtbl.mem tbl t then
+        Hashtbl.find tbl t
+      else
+        let (rv, rf) = mk_recvar env t in
+          Hashtbl.replace tbl t rf;
+          let res = fresh_rec fm env rv t in Hashtbl.replace tbl t res; res
+  in map_refinements (fun _ -> freshf ()) (fm t)
 
 (* Create a fresh frame with the same shape as the given type
    [ty]. Uses type environment [env] to find type declarations.
@@ -486,7 +582,10 @@ let fresh_with_var_fun env freshf t =
    You probably want to consider using fresh_with_labels instead of this
    for subtype constraints. *)
 let fresh env ty =
-  fresh_with_var_fun env (fresh_refinementvar Top) ty
+  fresh_with_var_fun env fresh_refinementvar ty
+
+let fresh_false env ty =
+  fresh_with_var_fun env (fun _ -> false_refinement) ty
 
 (* Create a fresh frame with the same shape as [exp]'s type and [f],
    and the same labels as [f]. *)
@@ -498,9 +597,6 @@ let fresh_with_labels env ty f =
    to true. *)
 let fresh_without_vars env ty =
   fresh_with_var_fun env (fun _ -> empty_refinement) ty
-
-let fresh_unconstrained env ty =
-  fresh_with_var_fun env (fresh_refinementvar Bottom) ty
 
 (**************************************************************)
 (********************* mlq translation ************************) 
@@ -560,16 +656,31 @@ let rec translate_pframe env plist pf =
 (********************* Pattern binding ************************) 
 (**************************************************************)
 
-let bind env pat frame =
+let rec bind env pat frame =
   let _bind = function
     | (Tpat_any, _) -> ([], [])
     | (Tpat_var x, f) -> ([], [(Path.Pident x, f)])
     | (Tpat_tuple pats, Fsum (_, _, [(_, ps)], _)) ->
-        (List.combine (Pattern.pattern_descs pats) (params_frames ps), [])
-    | (Tpat_construct (cstrdesc, pats), Fsum (p, _, cfvs, _)) ->
-        (List.combine (Pattern.pattern_descs pats) (params_frames (List.assoc cstrdesc.cstr_tag cfvs)), [])
+        ([], bind_params env (Pattern.pattern_descs pats) ps)
+    | (Tpat_construct (cstrdesc, pats), f) ->
+        begin match unfold_applying f with
+          | Fsum (p, _, cfvs, _) ->
+              ([], bind_params env (Pattern.pattern_descs pats) (List.assoc cstrdesc.cstr_tag cfvs))
+          | _ -> assert false
+        end
     | _ -> assert false
   in C.expand _bind [(pat, frame)] []
+
+and bind_param env (subs, binds) (i, f, _) pat =
+  let f = apply_subs subs f in
+  let subs =
+    match pat with
+      | Tpat_var x -> (Path.Pident i, Predicate.Var (Path.Pident x)) :: subs
+      | _          -> subs
+  in (subs, bind env pat f @ binds)
+
+and bind_params env pats params  =
+  snd (List.fold_left2 (bind_param env) ([], []) params pats)
 
 let env_bind tenv env pat frame =
   Lightenv.addn (bind tenv pat frame) env
@@ -579,7 +690,7 @@ let env_bind tenv env pat frame =
 (**************************************************************)
 
 let refexpr_apply_solution solution (subs, (qconsts, qvars)) =
-  (subs, (qconsts @ C.flap (fun (k, _) -> solution k) qvars, []))
+  (subs, (qconsts @ C.flap solution qvars, []))
 
 let apply_solution solution f =
   map_refexprs (refexpr_apply_solution solution) f

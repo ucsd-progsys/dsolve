@@ -117,14 +117,19 @@ let mk_single_gd menv p vp (tag, ps) =
 let get_or_fail = function
     Texp_ident (p, _) -> p
   | _ -> failwith "only matching on idents supported; try normalizing"
-let get_or_fail_pat pat = match pat.pat_desc with
-    Tpat_var x -> C.i2p x
+
+let get_patvar p = 
+  match p.pat_desc with
+    Tpat_var (p) -> C.i2p p
   | _ -> failwith "only matching to vars supported; try normalizing"
+
+(*let get_patvars_shallow pat = 
+  Pattern.fold (fun x xs -> (C.i2p x) :: xs) pat *)
  
 let mk_guards f e pats =
  let vp = get_or_fail e in
   let gps pat = match pat.pat_desc with
-      Tpat_construct(cdesc, pl) -> (cdesc.cstr_tag, List.map get_or_fail_pat pl)
+      Tpat_construct(cdesc, pl) -> (cdesc.cstr_tag, (List.map get_patvar pl))
     | _ -> failwith "non-constructor matches not handled" in
   let ps = List.map gps pats in
   let p = sum_path f in

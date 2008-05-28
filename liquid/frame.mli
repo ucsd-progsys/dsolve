@@ -28,11 +28,11 @@ open Asttypes
 
 type substitution = Path.t * Predicate.pexpr
 
-type open_assignment = Top | Bottom
-
-type qvar = Path.t * open_assignment
+type qvar = Path.t
 type refexpr = substitution list * (Qualifier.t list * qvar list)
 type refinement = refexpr list
+
+type recref = refinement option list list
 
 type qexpr =
   | Qconst of Qualifier.t
@@ -45,8 +45,8 @@ val false_refinement: refinement
 
 type t =
   | Fvar of Path.t * refinement
-  | Frec of Path.t
-  | Fsum of Path.t * recvar * constr list * refinement
+  | Frec of Path.t * recref
+  | Fsum of Path.t * (Path.t * recref) option * constr list * refinement
   | Fabstract of Path.t * param list * refinement
   | Farrow of pattern_desc option * t * t
   | Funknown
@@ -59,32 +59,39 @@ and variance = Covariant | Contravariant | Invariant
 
 and recvar = Path.t option
 
+val empty_recref: constr list -> recref
+
 val path_tuple: Path.t
 
 val record_of_params: Path.t -> param list -> refinement -> t
 val tuple_of_frames: t list -> refinement -> t
 
+val get_recref: t -> recref option
 val pprint: formatter -> t -> unit
 val pprint_fenv: formatter -> t Lightenv.t -> unit list
 val pprint_sub: formatter -> substitution -> unit
 val pprint_refinement: formatter -> refinement -> unit
+val recref_is_empty: recref -> bool
 val mk_refinement: substitution list -> Qualifier.t list -> qvar list -> refinement
 val translate_variance: (bool * bool * bool) -> variance
 val constrs_params: constr list -> param list
 val params_frames: param list -> t list
+val shape: t -> t
 val params_ids: param list -> Ident.t list
 val same_shape: t -> t -> bool
 val translate_pframe: Env.t -> (string * (string * Parsetree.predicate_pattern)) list -> Parsetree.litframe -> t
+val unfold_with: t -> t -> t
 val unfold: t -> t
+val unfold_applying: t -> t
 val fresh: Env.t -> type_expr -> t
 val fresh_without_vars: Env.t -> type_expr -> t
-val fresh_unconstrained: Env.t -> type_expr -> t
+val fresh_false: Env.t -> type_expr -> t
 val fresh_with_labels: Env.t -> type_expr -> t -> t
 val instantiate: t -> t -> t
 val instantiate_qualifiers: (string * Path.t) list -> t -> t
 val bind: Env.t -> pattern_desc -> t -> (Path.t * t) list
 val env_bind: Env.t -> t Lightenv.t -> pattern_desc -> t -> t Lightenv.t
-val apply_substitution: substitution -> t -> t
+val apply_subs: substitution list -> t -> t
 val label_like: t -> t -> t
 val apply_solution: (Path.t -> Qualifier.t list) -> t -> t
 val refinement_conjuncts:
@@ -92,6 +99,8 @@ val refinement_conjuncts:
 val refinement_predicate:
   (Path.t -> Qualifier.t list) -> Predicate.pexpr -> refinement -> Predicate.t
 val apply_refinement: refinement -> t -> t
+val apply_recref_constrs: recref -> constr list -> constr list
+val apply_recref: recref -> t -> t
 val qvars: t -> qvar list
 val int_of_tag: constructor_tag -> int
 val tag_of_int: int -> constructor_tag

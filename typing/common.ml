@@ -191,9 +191,9 @@ let icprintf printer l ppf = if ck_olev l then printer ppf else printer null_for
 
 let cprintln l s = if ck_olev l then Printf.ksprintf (F.printf "@[%s@\n@]") s else nprintf
 
-let ident_name = if ck_olev ol_unique_names then Ident.unique_name else Ident.name
+let ident_name i = if ck_olev ol_unique_names then Ident.unique_name i else Ident.name i
 
-let path_name () = if ck_olev ol_unique_names then Path.unique_name else Path.name
+let path_name p = if ck_olev ol_unique_names then Path.unique_name p else Path.name p
 
 (****************************************************************)
 (************* SCC Ranking **************************************)

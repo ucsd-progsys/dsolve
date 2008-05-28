@@ -85,7 +85,7 @@ let rec pprint_pexpr ppf = function
       if n < 0 then fprintf ppf "(0 - %d)" (-n)
       else fprintf ppf "%d" n
   | Var x ->
-      fprintf ppf "%s" ((Common.path_name ()) x) 
+      fprintf ppf "%s" (Common.path_name x)
   | FunApp (f, pexp) ->
       fprintf ppf "@[(%s@ %a)@]" f (Common.pprint_list " " pprint_pexpr) pexp
   | Binop (p, op, q) ->
@@ -216,7 +216,7 @@ let rec map_vars f pred =
 let subst v x pred = map_vars (fun y -> if Path.same x y then v else Var y) pred
 
 let apply_substs subs pred =
-  let substitute p (x, e) = subst e x p in List.fold_left substitute pred subs
+  let substitute (x, e) p = subst e x p in List.fold_right substitute subs pred
 
 let rec instantiate_named_vars subs pred =
   map_vars (fun y -> Var (List.assoc (Path.ident_name_crash y) subs)) pred
