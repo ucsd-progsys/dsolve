@@ -105,8 +105,9 @@ let load_builtins ppf env fenv =
     try
       let kvl = load_mlqfile ppf env b in
       let mvl = Measure.mk_tys env in
+      let tag = (Path.mk_ident F.tag_function, F.Fvar(Path.mk_ident "", F.empty_refinement)) in
       let f = (fun (k, v) -> (lookup_path k env, F.label_like v v)) in
-      let kvl = mvl @ (List.map f kvl) in
+      let kvl = tag :: mvl @ (List.map f kvl) in
       Lightenv.addn kvl fenv
     with Not_found -> failwith (Printf.sprintf "builtins: val %s does not correspond to library value" b) in
   (env, fenv)
