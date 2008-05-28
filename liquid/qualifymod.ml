@@ -176,14 +176,9 @@ and constrain_constructed (env, guard, f) cstrdesc args e =
         outer_cstrs (constrain_fold (env, guard, f) f' [WFFrame (env, f')] argcs)
   | _ -> assert false
 
-and constrain_fold (env, guard, f) f'' cstrs subcstrs = match f with
-  | F.Fsum (p, ro, cs, r) ->
-      let f' = (match ro with Some (_, rr) -> F.apply_recref rr f | None -> f) in 
-      let _ = printf "@[%a@]@." F.pprint f'' in
-      let f' = F.unfold_with f' (F.apply_refinement F.empty_refinement f) in
-      let _ = printf "@[%a@]@." F.pprint f' in
-        (f, WFFrame (env, f') :: SubFrame (env, guard, f'', f') :: cstrs, subcstrs)
-  | _ -> assert false
+and constrain_fold (env, guard, f) f'' cstrs subcstrs =
+  let f' = F.unfold_applying f in
+    (f, WFFrame (env, f') :: SubFrame (env, guard, f'', f') :: cstrs, subcstrs)
 
 and constrain_record (env, guard, f) labeled_exprs =
   let compare_labels ({lbl_pos = n}, _) ({lbl_pos = m}, _) = compare n m in

@@ -393,16 +393,17 @@ let apply_recref rr = function
   | Fsum (p, ro, cs, r) -> Fsum (p, ro, apply_recref_constrs rr cs, r)
   | _                   -> assert false
 
-let unfold_with f f' = match f with
+let replace_recvar f f' = match f with
   | Fsum (p, Some (rp, rr), cs, r) ->
       map (function Frec (rp', rr') when Path.same rp rp' -> append_recref rr' f' | f -> f) (Fsum (p, None, cs, r))
   | _ -> f
 
 let unfold f =
-  unfold_with f f
+  replace_recvar f (apply_refinement empty_refinement f)
 
 let unfold_applying f =
-  let f' = match get_recref f with Some rr -> apply_recref rr f | None -> f in unfold_with f' f
+  let f' = match get_recref f with Some rr -> apply_recref rr f | None -> f in
+    replace_recvar f' (apply_refinement empty_refinement f)
 
 (**************************************************************)
 (********* Polymorphic and qualifier instantiation ************) 
