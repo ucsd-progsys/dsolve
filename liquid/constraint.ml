@@ -272,7 +272,7 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
        split_sub_ref c penv g r1 (List.map (app_subs subs) r2))
   | (F.Fsum(_, Some (_, rr1), cs1, r1), F.Fsum(_, Some (_, rr2), cs2, r2)) ->
       let (shp1, shp2) = (F.shape f1, F.shape f2) in
-      let (f1, f2) = (F.unfold_with (F.apply_recref rr1 f1) shp1, F.unfold_with (F.apply_recref rr2 f2) shp2) in
+      let (f1, f2) = (F.replace_recvar (F.apply_recref rr1 f1) shp1, F.replace_recvar (F.apply_recref rr2 f2) shp2) in
       let (penv, tag) = bind_tags_pr (None, f1) cs1 r1 env in
       let subs = if penv = env then [] else sum_subs cs1 cs2 tag in 
         (lequate_cs env g c F.Covariant f1 f2,
@@ -302,7 +302,7 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
          actually appear in the program or tuple labels appearing in the recursive
          refinements as a result of rho-application's renaming. *)
       let shp     = F.shape f in
-      let (f, f') = (F.unfold_with f shp, F.apply_recref rr shp) in
+      let (f, f') = (F.replace_recvar f shp, F.apply_recref rr shp) in
         ([make_wff c tenv env f; make_wff c tenv env f'], split_wf_ref f c (bind_tags (t, f) cs r env) r)
   | F.Fsum (_, t, cs, r) ->
       (split_wf_params c tenv env (F.constrs_params cs), split_wf_ref f c (bind_tags (t, f) cs r env) r)
