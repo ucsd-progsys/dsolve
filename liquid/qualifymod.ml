@@ -178,8 +178,10 @@ and constrain_constructed (env, guard, f) cstrdesc args e =
 
 and constrain_fold (env, guard, f) f'' cstrs subcstrs = match f with
   | F.Fsum (p, ro, cs, r) ->
-      let f' = match ro with Some (_, rr) -> F.apply_recref rr f | None -> f in
-      let f' = F.unfold_with f' f in
+      let f' = (match ro with Some (_, rr) -> F.apply_recref rr f | None -> f) in 
+      let _ = printf "@[%a@]@." F.pprint f'' in
+      let f' = F.unfold_with f' (F.apply_refinement F.empty_refinement f) in
+      let _ = printf "@[%a@]@." F.pprint f' in
         (f, WFFrame (env, f) :: SubFrame (env, guard, f'', f') :: cstrs, subcstrs)
   | _ -> assert false
 

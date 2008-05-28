@@ -418,8 +418,7 @@ let instantiate fr ftemplate =
   in
   let rec inst f ft =
     match (f, ft) with
-      | (Fvar (p, r), _) ->
-          let instf = vmap p ft in append_refinement r instf
+      | (Fvar (p, r), _) -> let instf = vmap p ft in append_refinement r instf
       | (Frec _, _) ->
           f
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
