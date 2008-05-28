@@ -4,7 +4,7 @@ let rec len (x: int list) =
     | s :: ss -> 1 + (len ss)
 
 let y = []
-(*let z = 1 :: y*)
+let z = 1 :: y
 
 (*let x = (fun x -> x) len y
  
