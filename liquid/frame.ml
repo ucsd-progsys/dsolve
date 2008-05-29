@@ -209,6 +209,25 @@ let refinement_qvars r =
 let qvars f =
   refinement_fold (fun r vs -> refinement_qvars r @ vs) [] f
 
+(**************************************************************)
+(*********** Conversions to/from simple refinements ***********)
+(**************************************************************)
+
+let split_refexpr (qc, qv) (subs, (qconsts, qvars)) =
+  (qc @ List.map (fun q -> (subs, Qconst q)) qconsts,
+   qv @ List.map (fun k -> (subs, Qvar k)) qvars)
+
+let ref_to_simples r =
+  List.fold_left split_refexpr ([], []) r
+
+let ref_of_simple = function
+  | (subs, Qconst q) -> mk_refinement subs [q] []
+  | (subs, Qvar v) -> mk_refinement subs [] [v]
+
+(******************************************************************************)
+(****************************** Constructor tags ******************************)
+(******************************************************************************)
+
 let tag_function = "__tag"
 
 let int_of_tag = function
@@ -233,21 +252,6 @@ let find_tag_single ts r =
 
 let find_tag rs =
   C.only_one "too many tags in constructed value" (List.fold_left find_tag_single [] rs)
-
-(**************************************************************)
-(*********** Conversions to/from simple refinements ***********)
-(**************************************************************)
-
-let split_refexpr (qc, qv) (subs, (qconsts, qvars)) =
-  (qc @ List.map (fun q -> (subs, Qconst q)) qconsts,
-   qv @ List.map (fun k -> (subs, Qvar k)) qvars)
-
-let ref_to_simples r =
-  List.fold_left split_refexpr ([], []) r
-
-let ref_of_simple = function
-  | (subs, Qconst q) -> mk_refinement subs [q] []
-  | (subs, Qvar v) -> mk_refinement subs [] [v]
 
 (**************************************************************)
 (************************* Shapes *****************************) 
