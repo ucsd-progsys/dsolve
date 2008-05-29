@@ -45,7 +45,7 @@ type qvar = Path.t
 type refexpr = substitution list * (Qualifier.t list * qvar list)
 type refinement = refexpr list
 
-type recref = refinement option list list
+type recref = refinement list list
 
 type qexpr =
   | Qconst of Qualifier.t
@@ -106,7 +106,7 @@ let rec map f = function
   | Farrow (x, f1, f2) -> f (Farrow (x, map f f1, map f f2))
 
 let map_recref f rr =
-  List.map (fun r -> List.map (M.may_map f) r) rr
+  List.map (fun r -> List.map f r) rr
 
 let rec map_refinements_map f = function
   | Fvar (p, r) -> Fvar (p, f r)
@@ -121,12 +121,8 @@ let map_refinements f fr =
 let map_refexprs f fr =
   map_refinements (fun r -> List.map f r) fr
 
-let recref_fl f r l = match r with
-  | Some r -> f r l
-  | None   -> l
-
 let recref_fold f rr l =
-  List.fold_right (recref_fl f) (List.flatten rr) l
+  List.fold_right f (List.flatten rr) l
 
 let rec refinement_fold f l = function
   | Fvar (_, r) -> f r l
@@ -147,17 +143,14 @@ let mk_refinement subs qconsts qvars =
 let empty_refinement =
   mk_refinement [] [] []
 
+let recvar_refinement =
+  mk_refinement [] [] []
+
 let refinement_is_empty qes =
   List.for_all (function (_, ([], [])) -> true | _ -> false) qes
 
-let empty_recref cs =
-  List.map (fun (_, ps) -> List.map (function Frec _ -> None | _ -> Some empty_refinement) (params_frames ps)) cs
-
-let row_is_empty rs =
-  List.for_all (function None -> true | Some r -> refinement_is_empty r) rs
-
 let recref_is_empty rr =
-  List.for_all row_is_empty rr
+  List.for_all (List.for_all refinement_is_empty) rr
 
 let false_refinement =
   mk_refinement [] [(Path.mk_ident "false", Path.mk_ident "V", Predicate.Not (Predicate.True))] []
@@ -187,11 +180,7 @@ let get_recref = function
   | _                                           -> None
 
 let merge_recrefs rr rr' =
-  let merge r r' = match (r, r') with
-    | (Some r, Some r') -> Some (r @ r')
-    | (None, None)      -> None
-    | _                 -> assert false
-  in List.map2 (List.map2 merge) rr rr'
+  List.map2 (List.map2 (@)) rr rr'
 
 let append_recref rr' f = match get_recref f with
   | Some rr -> apply_recref (merge_recrefs rr rr') f
@@ -330,10 +319,10 @@ let comma ppf =
   fprintf ppf ",@;<1 0>"
 
 let pprint_refs ppf rs =
-  fprintf ppf "@[[%a]@]" (Oprint.print_list (fun ppf -> function Some r -> pprint_refinement ppf r | None -> fprintf ppf ".") comma) rs
+  fprintf ppf "@[[%a]@]" (Oprint.print_list pprint_refinement comma) rs
 
 let pprint_recref ppf rr =
-  if not (recref_is_empty rr) then fprintf ppf "@[[%a]@]" (Oprint.print_list pprint_refs comma) rr else ()
+  if not (recref_is_empty rr) then fprintf ppf "@[[%a]@]" (Oprint.print_list pprint_refs comma) rr
 
 let pprint_recopt ppf = function
   | Some (rp, rr) -> fprintf ppf "%a@;<1 0>μ%s." pprint_recref rr (C.path_name rp)
@@ -380,13 +369,13 @@ let rec pprint_fenv ppf fenv =
 (********************************** Unfolding *********************************)
 (******************************************************************************)
 
-let rec apply_refs (rs : refinement option list) ps = match (rs, ps) with
+let rec apply_refs rs ps = match (rs, ps) with
   | (r :: rs, (i, f, v) :: ps) ->
       let (ip, i') = (Path.Pident i, Ident.create (Ident.name i)) in
       let sub      = (ip, Predicate.Var (Path.Pident i')) in
       let ps       = List.map (fun (i, f, v) -> (i, apply_subs [sub] f, v)) ps in
-      let rs       = List.map (Misc.may_map (List.map (apply_subs_map [sub]))) rs in
-        (i', (match r with Some r -> append_refinement r f | None -> f), v) :: apply_refs rs ps
+      let rs       = List.map (List.map (apply_subs_map [sub])) rs in
+        (i', append_refinement r f, v) :: apply_refs rs ps
   | ([], []) -> []
   | _        -> assert false
 
@@ -536,35 +525,38 @@ let fresh_constr fresh env p t tyl =
               (cstr.cstr_tag, C.combine3 ids fs vs)
           in Fsum (p, None, List.map fresh_cstr cds, empty_refinement)
 
-let close_recf rv = function
+let close_recf (rp, rr) = function
   | Fsum (p, _, cs, r) ->
-      let f = Fsum (p, Some (rv, empty_recref cs), cs, r) in
+      let f = Fsum (p, Some (rp, rr), cs, r) in
         begin match unfold f with
           | Fsum (_, _, cs', _) -> if cs = cs' then Fsum (p, None, cs, r) else f
           | _                   -> assert false
         end
   | f -> f
 
-let fresh_rec fresh env rv t = match t.desc with
+let fresh_rec fresh env (rv, rr) t = match t.desc with
   | Tvar                 -> fresh_fvar ()
   | Tarrow(_, t1, t2, _) -> Farrow (None, fresh t1, fresh t2)
   | Ttuple ts            -> tuple_of_frames (List.map fresh ts) empty_refinement
-  | Tconstr(p, tyl, _)   -> close_recf rv (fresh_constr fresh env p t (List.map canonicalize tyl))
+  | Tconstr(p, tyl, _)   -> close_recf (rv, rr) (fresh_constr fresh env p t (List.map canonicalize tyl))
   | _                    -> fprintf err_formatter "@[Warning: Freshing unsupported type]@."; Funknown
 
 let cstr_refinements cstr =
   let (args, res) = Ctype.instance_constructor cstr in
   let _           = close_constructor res args in
   let (res, args) = (canonicalize res, List.map canonicalize args) in
-    List.map (fun t -> if t = res then None else Some empty_refinement) args
+    List.map (fun t -> if t = res then recvar_refinement else empty_refinement) args
 
 let mk_recvar env t =
-  let rv = Path.mk_ident "t" in
+  let rp = Path.mk_ident "t" in
     match t.desc with
       | Tconstr (p, tyl, _) ->
           let (_, cstrs) = List.split (Env.constructors_of_type p (Env.find_type p env)) in
-          let rr         = List.map cstr_refinements cstrs in (rv, Frec (rv, rr))
-      | _ -> (rv, Frec (rv, []))
+            (rp, List.map cstr_refinements cstrs)
+      | _ -> (rp, [])
+
+let place_recvar freshf r =
+  if r == recvar_refinement then empty_refinement else freshf ()
 
 (* Create a fresh frame with the same shape as the type of [exp] using
    [fresh_ref_var] to create new refinement variables. *)
@@ -575,10 +567,10 @@ let fresh_with_var_fun env freshf t =
       if Hashtbl.mem tbl t then
         Hashtbl.find tbl t
       else
-        let (rv, rf) = mk_recvar env t in
-          Hashtbl.replace tbl t rf;
-          let res = fresh_rec fm env rv t in Hashtbl.replace tbl t res; res
-  in map_refinements (fun _ -> freshf ()) (fm t)
+        let (rp, rr) = mk_recvar env t in
+          Hashtbl.replace tbl t (Frec (rp, rr));
+          let res = fresh_rec fm env (rp, rr) t in Hashtbl.replace tbl t res; res
+  in map_refinements (place_recvar freshf) (fm t)
 
 (* Create a fresh frame with the same shape as the given type
    [ty]. Uses type environment [env] to find type declarations.
