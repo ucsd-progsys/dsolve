@@ -9,6 +9,6 @@ let par x =
 
 let y = Even 1
 
-let j = (fun x -> x) par y
+let j = (fun x -> x) (par y)
 
 let blah = assert (par y = 2)

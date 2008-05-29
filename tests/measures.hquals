@@ -1,3 +1,2 @@
 qualif B(v): h(v) = [0, 1]
-qualif BB(v): h(~A) = [0, 1]
 qualif C(v): v = _meas_h ~A
