@@ -661,6 +661,10 @@ let dump_solving qs sri s step =
      dump_solution_stats s;
      flush stdout)
 
+let dump_solution s =
+  Sol.iter (fun p r -> C.cprintf C.ol_solve "@[%s: %a@]@."
+              (Path.unique_name p) (Oprint.print_list Qualifier.pprint C.space) r) s
+
 (**************************************************************)
 (******************** Iterative - Refinement  *****************)
 (**************************************************************)
@@ -684,12 +688,15 @@ let solve qs cs =
   let qs = Bstats.time "instantiating quals" (instantiate_in_environments cs) qs in
   let sri = make_ref_index cs in
   let s = make_initial_solution sri qs in
+  let _ = dump_solution s in
   let _ = dump_solving qs sri s 0  in 
   let _ = Bstats.time "solving wfs" (solve_wf sri) s in
   let _ = dump_solving qs sri s 1 in
+  let _ = dump_solution s in
   let w = make_initial_worklist sri in
   let _ = Bstats.time "solving sub" (solve_sub sri s) w in
   let _ = dump_solving qs sri s 2 in
+  let _ = dump_solution s in
   let _ = TP.reset () in
   let unsat = Bstats.time "testing solution" (unsat_constraints sri) s in
   (if List.length unsat > 0 then 
