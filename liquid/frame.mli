@@ -32,7 +32,7 @@ type qvar = Path.t
 type refexpr = substitution list * (Qualifier.t list * qvar list)
 type refinement = refexpr list
 
-type recref = refinement option list list
+type recref = refinement list list
 
 type qexpr =
   | Qconst of Qualifier.t
@@ -58,8 +58,6 @@ and constr = constructor_tag * param list
 and variance = Covariant | Contravariant | Invariant
 
 and recvar = Path.t option
-
-val empty_recref: constr list -> recref
 
 val path_tuple: Path.t
 

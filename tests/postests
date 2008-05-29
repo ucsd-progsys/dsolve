@@ -1,3 +1,4 @@
+tests/recmergesort.ml  10 False
 tests/recisort.ml      10 False
 tests/checklist.ml     1  False
 tests/mktree.ml        10 False
