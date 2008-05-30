@@ -97,6 +97,7 @@ val refinement_conjuncts:
 val refinement_predicate:
   (Path.t -> Qualifier.t list) -> Predicate.pexpr -> refinement -> Predicate.t
 val apply_refinement: refinement -> t -> t
+val append_refinement: refinement -> t -> t
 val apply_recref_constrs: recref -> constr list -> constr list
 val apply_recref: recref -> t -> t
 val qvars: t -> qvar list
