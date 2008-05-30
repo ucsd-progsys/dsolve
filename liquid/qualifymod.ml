@@ -246,7 +246,7 @@ and constrain_match (env, guard, f) e pexps partial =
 and constrain_function (env, guard, f) t pat e' =
   match f with
     | (F.Farrow (_, f, unlabelled_f')) ->
-      let env' = F.env_bind e'.exp_env env pat.pat_desc f in
+      let env' = F.env_bind e'.exp_env env pat.pat_desc (F.fix_vars f) in
       let (f'', cstrs) = constrain e' env' guard in
       let f' = F.label_like unlabelled_f' f'' in
       let f = F.Farrow (Some pat.pat_desc, f, f') in
@@ -257,7 +257,9 @@ and instantiate_id id f env tenv =
   let env_f =
     try Le.find id env
     with Not_found -> Frame.fresh_without_vars tenv ((Env.find_value id tenv).val_type)
-  in F.instantiate env_f f
+  in
+    printf "Got id %s is %a@.@." (Path.unique_name id) Frame.pprint env_f;
+    F.instantiate env_f f
 
 and constrain_base_identifier (env, _, f) id e =
   let refn =

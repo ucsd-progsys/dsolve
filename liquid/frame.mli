@@ -44,12 +44,14 @@ val empty_refinement: refinement
 val false_refinement: refinement
 
 type t =
-  | Fvar of Path.t * refinement
+  | Fvar of Path.t * genericity * refinement
   | Frec of Path.t * recref
   | Fsum of Path.t * (Path.t * recref) option * constr list * refinement
   | Fabstract of Path.t * param list * refinement
   | Farrow of pattern_desc option * t * t
   | Funknown
+
+and genericity = Mono | Poly
 
 and param = Ident.t * t * variance
 
@@ -112,3 +114,5 @@ val predicate:
   (Path.t -> Qualifier.t list) -> Predicate.pexpr -> t -> Predicate.t
 val conjuncts:
   (Path.t -> Qualifier.t list) -> Predicate.pexpr -> t -> Predicate.t list
+
+val fix_vars: t -> t
