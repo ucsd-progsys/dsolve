@@ -268,7 +268,7 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
   | (F.Fsum(_, t1, cs1, r1), F.Fsum(_, t2, cs2, r2)) when no_recrefs (t1, t2) ->  (* 2 *)
       let (penv, tag) = bind_tags_pr (None, f1) cs1 r1 env in
       let subs = if penv = env then [] else sum_subs cs1 cs2 tag in 
-      (split_sub_params c tenv env g (F.constrs_params cs1) (F.constrs_params cs2),
+      (C.flap2 (fun (_, ps1) (_, ps2) -> split_sub_params c tenv env g ps1 ps2) cs1 cs2,
        split_sub_ref c penv g r1 (List.map (app_subs subs) r2))
   | (F.Fsum(_, Some (_, rr1), cs1, r1), F.Fsum(_, Some (_, rr2), cs2, r2)) ->
       let (shp1, shp2) = (F.shape f1, F.shape f2) in
@@ -305,7 +305,8 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
       let (f, f') = (F.replace_recvar f shp, F.apply_recref rr shp) in
         ([make_wff c tenv env f; make_wff c tenv env f'], split_wf_ref f c (bind_tags (t, f) cs r env) r)
   | F.Fsum (_, t, cs, r) ->
-      (split_wf_params c tenv env (F.constrs_params cs), split_wf_ref f c (bind_tags (t, f) cs r env) r)
+      (C.flap (fun (_, ps) -> split_wf_params c tenv env ps) cs,
+       split_wf_ref f c (bind_tags (t, f) cs r env) r)
   | F.Fabstract (_, ps, r) ->
       (split_wf_params c tenv env ps, split_wf_ref f c env r)
   | F.Farrow (l, f, f') ->
