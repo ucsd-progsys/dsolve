@@ -491,10 +491,9 @@ let fresh_fvar level = Fvar(Path.mk_ident "a", (if level = Btype.generic_level t
 
 let rec canonicalize t =
   let t = repr t in
-    if t.level != Btype.generic_level then t.level <- 0;
     begin match t.desc with
-      | Tconstr _ -> t.id <- 0
-      | _         -> ()
+      | Tvar -> ()
+      | _    -> (t.id <- 0; t.level <- 0)
     end; Btype.iter_type_expr (fun t -> ignore (canonicalize t)) t; t
 
 let close_arg res arg =
@@ -518,12 +517,17 @@ let fresh_constr fresh env p t tyl =
           let param_vars = List.combine tyl varis in
           let (_, cds)   = List.split (Env.constructors_of_type p (Env.find_type p env)) in
           let fresh_cstr cstr =
+            (* Trick pulled out of typecore - need begin/end def to ensure variables in constructors
+               remain generic *)
+            let _ = Ctype.begin_def () in
             let (args, res) = Ctype.instance_constructor cstr in
+            let _ = Ctype.end_def () in
+            let _ = List.iter Ctype.generalize args; Ctype.generalize res in
             let _ = close_constructor res args; Ctype.unify env res t in
             let (res, args) = (canonicalize res, List.map canonicalize args) in
             let ids  = Misc.mapi (fun _ i -> C.tuple_elem_id i) args in
             let fs   = List.map fresh args in
-            let vs   = List.map (fun t -> try List.assoc (canonicalize t) param_vars with Not_found -> Covariant) args in
+            let vs   = List.map (fun t -> try List.assoc t param_vars with Not_found -> Covariant) args in
               (cstr.cstr_tag, C.combine3 ids fs vs)
           in Fsum (p, None, List.map fresh_cstr cds, empty_refinement)
 

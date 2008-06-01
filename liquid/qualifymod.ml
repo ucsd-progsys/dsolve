@@ -258,7 +258,6 @@ and instantiate_id id f env tenv =
     try Le.find id env
     with Not_found -> Frame.fresh_without_vars tenv ((Env.find_value id tenv).val_type)
   in
-    printf "Got id %s is %a@.@." (Path.unique_name id) Frame.pprint env_f;
     F.instantiate env_f f
 
 and constrain_base_identifier (env, _, f) id e =
