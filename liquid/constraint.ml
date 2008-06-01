@@ -262,7 +262,7 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       let env' = resolve_extend_env tenv env f2 l1 l2 in
       let f1' = F.apply_subs subs f1' in
       ((lequate_cs env g c F.Covariant f2 f1) @ (lequate_cs env' g c F.Covariant f1' f2'), [])
-  | (F.Fvar (_, r1), F.Fvar (_, r2)) ->
+  | (F.Fvar (_, _, r1), F.Fvar (_, _, r2)) ->
       ([], split_sub_ref c env g r1 r2)
   | (F.Frec _, F.Frec _) ->
       ([], [])
@@ -315,7 +315,7 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
   | F.Farrow (l, f, f') ->
       let env' = match l with None -> env | Some p -> F.env_bind tenv env p f in
         ([make_wff c tenv env f; make_wff c tenv env' f'], [])
-  | F.Fvar (_, r) ->
+  | F.Fvar (_, _, r) ->
       ([], split_wf_ref f c env r)
   | F.Frec _ ->
       ([], [])
