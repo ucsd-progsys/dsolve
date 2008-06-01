@@ -59,7 +59,7 @@ type simple_refinement = substitution list * qexpr
 
 type t =
   | Fvar of Path.t * refinement
-  | Frec of Path.t * recref
+  | Frec of Path.t * recref * refinement
   | Fsum of Path.t * (Path.t * recref) option * constr list * refinement
   | Fabstract of Path.t * param list * refinement
   | Farrow of pattern_desc option * t * t
@@ -110,7 +110,7 @@ let map_recref f rr =
 
 let rec map_refinements_map f = function
   | Fvar (p, r) -> Fvar (p, f r)
-  | Frec (p, rr) -> Frec (p, map_recref f rr)
+  | Frec (p, rr, r) -> Frec (p, map_recref f rr, f r)
   | Fsum (p, ro, cs, r) -> Fsum (p, M.may_map (fun (p, rr) -> (p, map_recref f rr)) ro, cs, f r)
   | Fabstract (p, ps, r) -> Fabstract (p, ps, f r)
   | f -> f
@@ -126,7 +126,7 @@ let recref_fold f rr l =
 
 let rec refinement_fold f l = function
   | Fvar (_, r) -> f r l
-  | Frec (_, rr) -> recref_fold f rr l
+  | Frec (_, rr, r) -> f r (recref_fold f rr l)
   | Fsum (_, ro, cs, r) ->
       f r (List.fold_left (refinement_fold f) (match ro with Some (_, rr) -> recref_fold f rr l | None -> l) (constrs_param_frames cs))
   | Fabstract (_, ps, r) ->
@@ -171,12 +171,12 @@ let append_refinement res' f =
     | None -> f
 
 let apply_recref rr = function
-  | Frec (p, _)                   -> Frec (p, rr)
+  | Frec (p, _, r)                -> Frec (p, rr, r)
   | Fsum (p, Some (rp, _), cs, r) -> Fsum (p, Some (rp, rr), cs, r)
   | _                             -> assert false
 
 let get_recref = function
-  | Frec (_, rr) | Fsum (_, Some (_, rr), _, _) -> Some rr
+  | Frec (_, rr, _) | Fsum (_, Some (_, rr), _, _) -> Some rr
   | _                                           -> None
 
 let merge_recrefs rr rr' =
@@ -259,7 +259,7 @@ let same_shape t1 t2 =
           (ro = ro' || match (ro, ro') with (Some (rp, _), Some (rp', _)) -> ismapped rp rp' | _ -> false)
     | (Fabstract(p, ps, _), Fabstract(p', ps', _)) ->
         Path.same p p' && params_sshape ps ps'
-    | (Fvar (p, _), Fvar (p', _)) | (Frec (p, _), Frec (p', _)) ->
+    | (Fvar (p, _), Fvar (p', _)) | (Frec (p, _, _), Frec (p', _, _)) ->
         ismapped p p'
     | (Farrow(_, i, o), Farrow(_, i', o')) ->
         sshape (i, i') && sshape (o, o')
@@ -331,8 +331,8 @@ let pprint_recopt ppf = function
 let rec pprint ppf = function
   | Fvar (a, r) ->
       wrap_refined ppf (fun ppf -> fprintf ppf "'%s" (C.path_name a)) r
-  | Frec (path, rr) ->
-      fprintf ppf "@[%a %s@]" pprint_recref rr (C.path_name path)
+  | Frec (path, rr, r) ->
+      wrap_refined ppf (fun ppf -> fprintf ppf "@[%a@ %s@]" pprint_recref rr (C.path_name path)) r
   | Fsum (path, ro, [], r) ->
       wrap_refined ppf (fun ppf -> fprintf ppf "@[%a%s@]" pprint_recopt ro (C.path_name path)) r
   | Fsum (path, ro, cs, r) ->
@@ -388,7 +388,7 @@ let apply_recref rr = function
 
 let replace_recvar f f' = match f with
   | Fsum (p, Some (rp, rr), cs, r) ->
-      map (function Frec (rp', rr') when Path.same rp rp' -> append_recref rr' f' | f -> f) (Fsum (p, None, cs, r))
+      map (function Frec (rp', rr', r') when Path.same rp rp' -> apply_refinement r' (append_recref rr' f') | f -> f) (Fsum (p, None, cs, r))
   | _ -> f
 
 let unfold f =
@@ -568,7 +568,7 @@ let fresh_with_var_fun env freshf t =
         Hashtbl.find tbl t
       else
         let (rp, rr) = mk_recvar env t in
-          Hashtbl.replace tbl t (Frec (rp, rr));
+          Hashtbl.replace tbl t (Frec (rp, rr, empty_refinement));
           let res = fresh_rec fm env (rp, rr) t in Hashtbl.replace tbl t res; res
   in map_refinements (place_recvar freshf) (fm t)
 

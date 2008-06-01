@@ -171,13 +171,13 @@ and constrain_constructed (env, guard, f) cstrdesc args e =
       let cstrref = mref @ tagref in
       let (argframes, argcs) = constrain_subexprs env guard args in
       let cstrs = List.map (fun (t, ps) -> (t, if t = tag then replace_params ps argframes else ps)) cstrs in
-      let f' = F.Fsum (path, ro, cstrs, F.empty_refinement (*tagref*)) in
-        (constrain_fold (env, guard, f) f' cstrref tagref [WFFrame (env, f')] argcs)
+      let f' = F.Fsum (path, ro, cstrs, tagref) in
+        (constrain_fold (env, guard, f) f' cstrref tagref [] argcs)
   | _ -> assert false
 
 and constrain_fold (env, guard, f) f'' cstrref tagref cstrs subcstrs =
   let f' = F.unfold_applying f in
-    (F.append_refinement cstrref f, WFFrame (env, f'(*(F.append_refinement tagref f')*)) :: SubFrame (env, guard, f'', f') :: cstrs, subcstrs)
+    (F.append_refinement cstrref f, WFFrame (env, (F.append_refinement tagref f)) :: SubFrame (env, guard, f'', f') :: cstrs, subcstrs)
 
 and constrain_record (env, guard, f) labeled_exprs =
   let compare_labels ({lbl_pos = n}, _) ({lbl_pos = m}, _) = compare n m in

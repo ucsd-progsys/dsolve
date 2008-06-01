@@ -233,7 +233,7 @@ let no_recrefs = function
 
 let bind_tags_pr (t, f) cs r env =
   let is_recvar = function
-      (Some (p, _), F.Frec (p', _)) -> p' = p
+      (Some (p, _), F.Frec (p', _, _)) -> p' = p
     | _ -> false in
   let k (a, b, _) =
     (C.i2p a, if is_recvar (t, b) then f else b) in
@@ -305,8 +305,8 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
          actually appear in the program or tuple labels appearing in the recursive
          refinements as a result of rho-application's renaming. *)
       let shp     = F.shape f in
-      let (f, f') = (F.replace_recvar f shp, F.apply_recref rr shp) in
-        ([make_wff c tenv env f; make_wff c tenv env f'], split_wf_ref f c (bind_tags (t, f) cs r env) r)
+      let (f', f'') = (F.replace_recvar f shp, F.apply_recref rr shp) in
+        ([make_wff c tenv env (F.apply_refinement F.empty_refinement f'); make_wff c tenv env f''], split_wf_ref f c (bind_tags (t, f) cs r env) r)
   | F.Fsum (_, t, cs, r) ->
       (C.flap (fun (_, ps) -> split_wf_params c tenv env ps) cs,
        split_wf_ref f c (bind_tags (t, f) cs r env) r)
@@ -695,6 +695,7 @@ let solve qs cs =
   let _ = dump_solution s in
   let _ = dump_solving qs sri s 0  in 
   let _ = Bstats.time "solving wfs" (solve_wf sri) s in
+  let _ = printf "@[AFTER@ WF@]@." in
   let _ = dump_solving qs sri s 1 in
   let _ = dump_solution s in
   let w = make_initial_worklist sri in
