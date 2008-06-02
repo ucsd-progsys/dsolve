@@ -10,7 +10,7 @@ To compile dsolve:
 
 2. In the top-level dsolve directory, untar yices with:
 
-     tar zxvf [path to yices tar] --strip-components=1 -C external/yices
+     tar zxvf [path to yices tar] --strip-components 1 -C external/yices
 
 3. Run ./configure && make libs && make
 
@@ -18,6 +18,10 @@ NOTE: Be sure that the files in external/yices/lib are in your library
       path!  One way to do this is to run
 
         export LD_LIBRARY_PATH=[path to dsolve]/external/yices/lib:$LD_LIBRARY_PATH
+
+4. (Optional) Run the regression test suite via
+
+     make tests
 
 
 Running dsolve

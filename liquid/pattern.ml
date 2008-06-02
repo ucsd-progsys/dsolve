@@ -1,3 +1,26 @@
+(*
+ * Copyright © 2008 The Regents of the University of California. All rights reserved.
+ *
+ * Permission is hereby granted, without written agreement and without
+ * license or royalty fees, to use, copy, modify, and distribute this
+ * software and its documentation for any purpose, provided that the
+ * above copyright notice and the following two paragraphs appear in
+ * all copies of this software.
+ *
+ * IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY
+ * FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES
+ * ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN
+ * IF THE UNIVERSITY OF CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY
+ * OF SUCH DAMAGE.
+ *
+ * THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS
+ * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION
+ * TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+ *
+ *)
+
 open Typedtree
 
 module P = Predicate
@@ -20,6 +43,10 @@ let _bind_vars = function
 
 let bind_vars p1 p2 = C.expand _bind_vars [(p1, p2)] []
 
+let substitution p1 p2 =
+  let vars = bind_vars p1 p2 in
+    List.map (fun (x, y) -> (Path.Pident x, Predicate.Var (Path.Pident y))) vars
+
 let rec fold f b p = match p with
   | Tpat_any
   | Tpat_var _ -> f b p
@@ -40,7 +67,7 @@ let bind_pexpr pat pexp =
     | Tpat_any -> subs
     | Tpat_var x -> (Path.Pident x, pexp) :: subs
     | Tpat_tuple pats ->
-      let pexps = Misc.mapi (fun pat i -> (pat.pat_desc, P.Proj(i, pexp))) pats in
+      let pexps = Misc.mapi (fun pat i -> (pat.pat_desc, P.Field(C.tuple_elem_id i, pexp))) pats in
         List.fold_left bind_rec subs pexps
     | _ -> null_binding_fold subs pat
   in bind_rec [] (pat, pexp)

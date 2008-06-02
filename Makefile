@@ -8,8 +8,9 @@ YACCFLAGS=-v
 CAMLLEX=ocamllex
 CAMLDEP=ocamldep
 DEPFLAGS=$(INCLUDES)
-COMPFLAGS=$(FLAGS) -dtypes -warn-error A $(INCLUDES)
-LINKFLAGS=$(FLAGS) -cclib -loyices -cclib -lgmp -cclib -lyices -I external/yices/lib/ -I external/ocamlgraph/ -I $(QPHOME)
+COMPFLAGS=$(FLAGS) -g -dtypes -warn-error A $(INCLUDES)
+LINKFLAGS=$(FLAGS) -cclib -lstdc++ -cclib -loyices -cclib -lgmp -cclib -lyices \
+          -I external/yices/lib/ -I external/ocamlgraph/ -I $(QPHOME)
 INCLUDES=-I external/yices/lib/ -I external/ocamlgraph/ -I $(QPHOME) \
          -I utils -I parsing -I typing -I liquid
 
@@ -44,8 +45,8 @@ LIQUID=liquid/lightenv.cmo \
   liquid/theoremProverYices.cmo \
   liquid/theoremProverQprover.cmo \
   liquid/theoremProver.cmo \
-  liquid/constraint.cmo  \
-  liquid/printqual.cmo liquid/qualifymod.cmo \
+  liquid/constraint.cmo liquid/measure.cmo \
+  liquid/qualifymod.cmo \
   liquid/qdebug.cmo liquid/normalize.cmo \
   liquid/qdump.cmo liquid/liqerrors.cmo liquid/liquid.cmo
 
@@ -58,6 +59,10 @@ liquid.byte: $(LIQOBJS)
 
 liquid.opt: $(LIQOBJS:.cmo=.cmx)
 	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt str.cmxa unix.cmxa nums.cmxa oyices.cmxa graph.cmxa libqp.cmxa $(LIQOBJS:.cmo=.cmx)
+
+.PHONY: tests
+tests:
+	./regrtest.py
 
 depend: beforedepend
 	(for d in utils parsing typing liquid; \
@@ -74,6 +79,7 @@ distclean: clean
 	(for d in ./ utils parsing typing tests liquid; \
 	 do rm -f $$d/*.annot $$d/*~ $$d/*.quals $$d/*.pyc $$d/*.dot; \
 	 done);
+	rm -rf .git external/yices/lib external/yices/bin external/yices/include/*.h
 
 utils/config.ml: utils/config.mlp config/Makefile
 	@rm -f utils/config.ml

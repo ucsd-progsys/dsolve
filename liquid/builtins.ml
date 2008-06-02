@@ -1,3 +1,26 @@
+(*
+ * Copyright © 2008 The Regents of the University of California. All rights reserved.
+ *
+ * Permission is hereby granted, without written agreement and without
+ * license or royalty fees, to use, copy, modify, and distribute this
+ * software and its documentation for any purpose, provided that the
+ * above copyright notice and the following two paragraphs appear in
+ * all copies of this software.
+ *
+ * IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY
+ * FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES
+ * ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN
+ * IF THE UNIVERSITY OF CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY
+ * OF SUCH DAMAGE.
+ *
+ * THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS
+ * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION
+ * TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+ *
+ *)
+
 open Longident
 open Typedtree
 open Predicate
@@ -29,23 +52,31 @@ let qrel rel x y =
      x,
      Atom(Var x, rel, Var y))
 
-let mk_tyvar () = Frame.Fvar(Path.mk_ident "'a")
+let mk_tyvar () = Frame.Fvar(Path.mk_ident "a", Frame.Poly, empty_refinement)
 
-let mk_int qs = Fconstr(Predef.path_int, [], [], ([], Qconst qs))
+let const_ref qs =
+  mk_refinement [] qs []
 
-let uFloat = Fconstr(Predef.path_float, [], [], ([], Qconst []))
-let uChar = Fconstr(Predef.path_char, [], [], ([], Qconst []))
+let mk_abstract path qs =
+  Fabstract(path, [], const_ref qs)
 
-let mk_string qs = Fconstr(Predef.path_string, [], [], ([], Qconst qs))
+let mk_int qs = Fabstract(Predef.path_int, [], const_ref qs)
+
+let uFloat = Fabstract(Predef.path_float, [], empty_refinement)
+
+let uChar = Fsum(Predef.path_char, None, [], empty_refinement)
+
+let mk_string qs = Fsum(Predef.path_string, None, [], const_ref qs)
 
 let uString = mk_string []
 let rString name v p = mk_string [(Path.mk_ident name, v, p)]
 
-let mk_bool qs = Fconstr(Predef.path_bool, [], [], ([], Qconst qs))
+let mk_bool qs = Fsum(Predef.path_bool, None, [(Cstr_constant 0, []); (Cstr_constant 1, [])], const_ref qs)
 let uBool = mk_bool []
 let rBool name v p = mk_bool [(Path.mk_ident name, v, p)]
 
-let mk_array f qs = Fconstr(Predef.path_array, [f], [Invariant], ([], Qconst qs))
+let array_contents_id = Ident.create "contents"
+let mk_array f qs = Fabstract(Predef.path_array, [(array_contents_id, f, Invariant)], const_ref qs)
 
 let find_constructed_type id env =
   let path =
@@ -55,9 +86,13 @@ let find_constructed_type id env =
   let decl = Env.find_type path env in (path, List.map translate_variance decl.type_variance)
 
 let mk_named id fs qs env =
-  let (path, varis) = find_constructed_type id env in Fconstr(path, fs, varis, ([], Qconst qs))
+  let (path, varis) = find_constructed_type id env in
+  let fresh_names = Misc.mapi (fun _ i -> Common.tuple_elem_id i) varis in
+    Fabstract(path, Common.combine3 fresh_names fs varis, const_ref qs)
 
-let mk_ref f env = Frecord (fst (find_constructed_type ["ref"; "Pervasives"] env), [(f, "contents", Mutable)], ([], Qconst []))
+let ref_contents_id = Ident.create "contents"
+let mk_ref f env =
+  record_of_params (fst (find_constructed_type ["ref"; "Pervasives"] env)) [(ref_contents_id, f, Invariant)] empty_refinement
 
 let mk_bigarray_kind a b qs env = mk_named ["kind"; "Bigarray"] [a; b] qs env
 
@@ -65,8 +100,7 @@ let mk_bigarray_layout a qs env = mk_named ["layout"; "Bigarray"] [a] qs env
 
 let mk_bigarray_type a b c qs env = mk_named ["t"; "Array2"; "Bigarray"] [a; b; c] qs env
 
-let mk_unit () = Fconstr(Predef.path_unit, [], [], ([], Qconst []))
-let uUnit = mk_unit ()
+let uUnit = Fsum(Predef.path_unit, None, [(Cstr_constant 0, [])], empty_refinement)
 
 let uInt = mk_int []
 let rInt name v p = mk_int [(Path.mk_ident name, v, p)]
@@ -95,15 +129,13 @@ let (==>) x y = (x, y)
 
 let (===>) x y = x ==> fun _ -> def y
 
-let forall f = f (Frame.Fvar(Path.mk_ident "'a"))
+let forall f = f (Frame.Fvar(Path.mk_ident "a", Frame.Poly, empty_refinement))
 
 let op_frame path qname op =
   (path, defun (fun x -> uInt ===>
                 fun y -> uInt ==>
                 fun z -> rInt qname z (Var z ==. Binop (Var x, op, Var y))))
 
-
-let tag_function = "__tag"
 
 let tag x = FunApp(tag_function, [x])
 
@@ -173,8 +205,6 @@ let _frames = [
 
   (["pred"; "Pervasives"], defun (fun x -> uInt ==> fun y -> rInt "pred" y ((Var y) ==. ((Var x) -- PInt 1))));
 
-
-
   poly_rel_frame ["="; "Pervasives"] "=" Eq;
   poly_rel_frame ["=="; "Pervasives"] "==" Eq;
   poly_rel_frame ["!="; "Pervasives"] "!=" Ne;
@@ -237,6 +267,9 @@ let _frames = [
 
   (["int"; "Random"], defun (fun x -> rInt "PosMax" x (PInt 0 <. Var x) ==>
                              fun y -> rInt "RandBounds" y ((PInt 0 <=. Var y) &&. (Var y <. Var x))));
+
+  (["max_int"; "Pervasives"], uInt);
+
 ]
 
 let bigarray_dim_frame dim env =
@@ -299,23 +332,25 @@ let equality_qualifier exp =
     Predicate.pprint Format.str_formatter pred;
     let expstr = Format.flush_str_formatter () in (Path.mk_ident expstr, x, pred)
 
-let equality_refinement exp = ([], Qconst [equality_qualifier exp])
+let equality_refinement exp =
+  const_ref [equality_qualifier exp]
 
 let tag_refinement t =
   let x = Path.mk_ident "V" in
-    let pred = tag (Var x) ==. PInt t in
+    let pred = tag (Var x) ==. PInt (int_of_tag t) in
     Predicate.pprint Format.str_formatter pred;
     let expstr = Format.flush_str_formatter () in
-      ([], Qconst [(Path.mk_ident expstr, x, pred)])
+      const_ref [(Path.mk_ident expstr, x, pred)]
 
 let size_lit_refinement i =
   let x = Path.mk_ident "x" in
-    ([], Qconst [(Path.mk_ident "<size_lit_eq>",
-                  x,
-                  FunApp("Array.length", [Var x]) ==. PInt i)])
+    const_ref
+      [(Path.mk_ident "<size_lit_eq>",
+        x,
+        FunApp("Array.length", [Var x]) ==. PInt i)]
 
 let field_eq_qualifier name pexp =
   let x = Path.mk_ident "x" in (Path.mk_ident "<field_eq>", x, Field (name, Var x) ==. pexp)
 
 let proj_eq_qualifier n pexp =
-  let x = Path.mk_ident "x" in (Path.mk_ident "<tuple_nth_eq>", x, Proj (n, Var x) ==. pexp)
+  let x = Path.mk_ident "x" in (Path.mk_ident "<tuple_nth_eq>", x, Field (Common.tuple_elem_id n, Var x) ==. pexp)

@@ -1,3 +1,26 @@
+(*
+ * Copyright © 2008 The Regents of the University of California. All rights reserved.
+ *
+ * Permission is hereby granted, without written agreement and without
+ * license or royalty fees, to use, copy, modify, and distribute this
+ * software and its documentation for any purpose, provided that the
+ * above copyright notice and the following two paragraphs appear in
+ * all copies of this software.
+ *
+ * IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY
+ * FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES
+ * ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN
+ * IF THE UNIVERSITY OF CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY
+ * OF SUCH DAMAGE.
+ *
+ * THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS
+ * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION
+ * TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+ *
+ *)
+
 open Format
 
 type binop =
@@ -20,7 +43,6 @@ type patpexpr =
   | PFunApp of Longident.t * patpexpr list 
   | PBinop of patpexpr * binop list * patpexpr
   | PField of string * patpexpr
-  | PProj of int * patpexpr
 
 type tpat =
     PTrue
@@ -35,8 +57,7 @@ type pexpr =
   | Var of Path.t
   | FunApp of string * pexpr list 
   | Binop of pexpr * binop * pexpr 
-  | Field of string * pexpr     (* INVARIANT: disjoint fields in same module *)
-  | Proj of int * pexpr
+  | Field of Ident.t * pexpr     (* INVARIANT: disjoint fields in same module *)
 
 type t =  
     True
@@ -49,6 +70,8 @@ type t =
 val pprint_rel: binrel -> string
 val pprint: formatter -> t -> unit
 val pprint_pexpr: formatter -> pexpr -> unit
+
+val pexp_map_vars: (Path.t -> pexpr) -> pexpr -> pexpr 
 
 val big_and: t list -> t
 val big_or: t list -> t
@@ -77,6 +100,7 @@ val (--): pexpr -> pexpr -> pexpr
 val subst: pexpr -> Path.t -> t -> t
 val apply_substs: (Path.t * pexpr) list -> t -> t
 val vars: t -> Path.t list
+val funs: t -> string list
 (* pmr: change to plain old instantiate *)
 val instantiate_named_vars: (string * Path.t) list -> t -> t
 val transl_op: Asttypes.predexp_op -> binop                                                             

@@ -1,3 +1,26 @@
+(*
+ * Copyright © 2008 The Regents of the University of California. All rights reserved.
+ *
+ * Permission is hereby granted, without written agreement and without
+ * license or royalty fees, to use, copy, modify, and distribute this
+ * software and its documentation for any purpose, provided that the
+ * above copyright notice and the following two paragraphs appear in
+ * all copies of this software.
+ *
+ * IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY
+ * FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES
+ * ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN
+ * IF THE UNIVERSITY OF CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY
+ * OF SUCH DAMAGE.
+ *
+ * THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS
+ * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION
+ * TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+ *
+ *)
+
 module F = Format
 
 module StringMap = Map.Make(struct type t = string let compare = compare end)
@@ -14,6 +37,8 @@ module PathMap = Map.Make(ComparablePath)
 let maybe_cons m xs = match m with
   | None -> xs
   | Some x -> x :: xs
+
+let maybe_list xs = List.fold_right maybe_cons xs []
 
 let rec _fli f n b = function
   | [] -> b
@@ -39,6 +64,9 @@ let flap2 f xs ys =
 
 let flap3 f xs ys zs =
   List.flatten (map3 f xs ys zs)
+
+let combine3 xs ys zs =
+  map3 (fun x y z -> (x, y, z)) xs ys zs
 
 let rec expand f xs ys =
   match xs with
@@ -87,6 +115,11 @@ let pprint_list sepstr pp =
   (fun ppf -> Oprint.print_list pp
      (fun ppf -> F.fprintf ppf "%s@;<1 2>" sepstr) ppf)
 
+let rec is_unique xs =
+  match xs with
+      x :: xs -> if List.mem x xs then false else is_unique xs
+    | [] -> true 
+
 let resl_opt f = function
   | Some o -> f o
   | None -> []
@@ -104,6 +137,26 @@ let addl il i = il := List.rev_append i !il
 let same_type q p = (Types.TypeOps.equal q p)
 
 let dummy () = Path.mk_ident ""
+
+let same_path_i p i = Path.unique_name p = Ident.unique_name i 
+
+let i2p i = Path.Pident i
+
+let p2i p = match p with
+    Path.Pident id -> id
+  | _ -> assert false
+
+let tuple_elem_id i =
+  Ident.create ("e" ^ string_of_int i)
+
+let compose f g a = f (g a)
+
+let int_of_bool b = if b then 1 else 0
+
+let only_one s = function
+    x :: [] -> Some x
+  | x :: xs -> failwith s
+  | [] -> None
 
 (****************************************************************)
 (************* Output levels ************************************)
@@ -138,7 +191,9 @@ let icprintf printer l ppf = if ck_olev l then printer ppf else printer null_for
 
 let cprintln l s = if ck_olev l then Printf.ksprintf (F.printf "@[%s@\n@]") s else nprintf
 
-let path_name () = if ck_olev ol_unique_names then Path.unique_name else Path.name
+let ident_name i = if ck_olev ol_unique_names then Ident.unique_name i else Ident.name i
+
+let path_name p = if ck_olev ol_unique_names then Path.unique_name p else Path.name p
 
 (****************************************************************)
 (************* SCC Ranking **************************************)
@@ -257,3 +312,10 @@ let map_cnt f m =
 
 let set_cnt f s =
    List.length (f s)
+
+(******************************************************************************)
+(********************************* Formatting *********************************)
+(******************************************************************************)
+
+let space ppf =
+  F.fprintf ppf "@;<1 0>"

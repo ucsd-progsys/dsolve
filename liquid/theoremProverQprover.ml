@@ -1,3 +1,26 @@
+(*
+ * Copyright © 2008 The Regents of the University of California. All rights reserved.
+ *
+ * Permission is hereby granted, without written agreement and without
+ * license or royalty fees, to use, copy, modify, and distribute this
+ * software and its documentation for any purpose, provided that the
+ * above copyright notice and the following two paragraphs appear in
+ * all copies of this software.
+ *
+ * IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY
+ * FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES
+ * ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN
+ * IF THE UNIVERSITY OF CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY
+ * OF SUCH DAMAGE.
+ *
+ * THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS
+ * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION
+ * TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+ *
+ *)
+
 module C = Common
 module P = Predicate
 module QA = QpAst
@@ -20,7 +43,6 @@ let nb_queries = ref 0
 let div_sym = "DIV"
 let mul_sym = "MUL"
 let fld_sym = "SELECT_"
-let proj_sym = "PROJ_"
 
 let rec convert p : QpAst.predicate = failwith "TBD: convert to QpAst.predicate"
    
@@ -31,8 +53,7 @@ let rec convertExp = function
   | P.PInt i -> mk_const i 
   | P.Var s -> QA.Variable (Path.unique_name s) 
   | P.FunApp (f, e) -> QA.Application (f, List.map convertExp e)
-  | P.Field (f, e) -> QA.Application (fld_sym^f, [convertExp e])
-  | P.Proj (n, e) -> QA.Application (proj_sym^(string_of_int n), [convertExp e])
+  | P.Field (f, e) -> QA.Application (fld_sym^(Ident.unique_name f), [convertExp e])
   | P.Binop (e1,P.Plus,e2) -> QA.Sum [convertExp e1; convertExp e2] 
   | P.Binop (e1,P.Minus,e2) -> QA.Sum [convertExp e1; QA.Coeff (QA.Constant.Int (-1), convertExp e2)] 
   | P.Binop (e1,P.Div,e2) -> QA.Application (mul_sym, [convertExp e1; convertExp e2])

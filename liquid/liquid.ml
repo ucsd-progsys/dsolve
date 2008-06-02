@@ -1,3 +1,26 @@
+(*
+ * Copyright Â© 2008 The Regents of the University of California. All rights reserved.
+ *
+ * Permission is hereby granted, without written agreement and without
+ * license or royalty fees, to use, copy, modify, and distribute this
+ * software and its documentation for any purpose, provided that the
+ * above copyright notice and the following two paragraphs appear in
+ * all copies of this software.
+ *
+ * IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY
+ * FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES
+ * ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN
+ * IF THE UNIVERSITY OF CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY
+ * OF SUCH DAMAGE.
+ *
+ * THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS
+ * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION
+ * TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+ *
+ *)
+
 open Config
 open Format
 open Liqerrors
@@ -74,14 +97,17 @@ let load_mlq_in_env env fenv ifenv =
   List.fold_left load_frame fenv ifenv
 
 let load_builtins ppf env fenv =
+  let _ = Measure.mk_bms env in (* experimental measures *)
   let b = match !builtins_file with 
           | Some b -> if not(Sys.file_exists b) then failwith (sprintf "builtins: file %s does not exist" b) else b
           | None -> "" in
   let fenv = 
     try
       let kvl = load_mlqfile ppf env b in
+      let mvl = Measure.mk_tys env in
+      let tag = (Path.mk_ident F.tag_function, F.Fvar(Path.mk_ident "", F.Mono, F.empty_refinement)) in
       let f = (fun (k, v) -> (lookup_path k env, F.label_like v v)) in
-      let kvl = List.map f kvl in
+      let kvl = tag :: mvl @ (List.map f kvl) in
       Lightenv.addn kvl fenv
     with Not_found -> failwith (Printf.sprintf "builtins: val %s does not correspond to library value" b) in
   (env, fenv)
@@ -192,5 +218,5 @@ let main () =
   process_sourcefile !filename
 
 let _ = 
-  Printf.printf "dsolve 0.1: © Copyright 2008 Regents of the University of California \n";
+  Printf.printf "dsolve 0.1: © Copyright 2008 The Regents of the University of California, All rights reserved \n";
   main (); exit 0

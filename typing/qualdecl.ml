@@ -53,9 +53,7 @@ let transl_patpred_single simple valu env p =
       | Ppredpatexp_binop (e1, ops, e2) ->
 	        Binop (transl_expr_rec e1, transl_op (List.hd ops), transl_expr_rec e2)
       | Ppredpatexp_field (f, e1) ->
-          Field (f, transl_expr_rec e1)
-      | Ppredpatexp_proj (n, e1) ->
-          Proj (n, transl_expr_rec e1)
+          Field (Ident.create f, transl_expr_rec e1)
       | _ -> failwith "Wildcard used in single qualifier or predicate"
   in
   let rec transl_pred_rec pd =
@@ -117,8 +115,6 @@ let transl_patpred env (v, nv) (qgtymap, tyset, idset, intset) tymap p =
 	        PBinop (transl_expr_rec e1, transl_ops ops, transl_expr_rec e2)
       | Ppredpatexp_field (f, e1) ->
           PField (f, transl_expr_rec e1)
-      | Ppredpatexp_proj (n, e1) ->
-          PProj (n, transl_expr_rec e1)
   in
   let rec transl_pred_rec pd =
     match pd.ppredpat_desc with
@@ -166,10 +162,7 @@ let gen_preds p =
             tflap3 (e1s, ops, e2s) (fun c d e -> Binop (c, d, e))
       | PField (f, e1) ->
           let e1s = gen_expr_rec e1 in
-            List.map (fun e -> Field(f, e)) e1s
-      | PProj (n, e1) ->
-          let e1s = gen_expr_rec e1 in
-            List.map (fun e -> Proj(n, e)) e1s
+            List.map (fun e -> Field(Ident.create f, e)) e1s
   in    
   let rec gen_pred_rec pd =
     match pd with
@@ -216,8 +209,6 @@ let ck_consistent patpred pred =
           ck_expr_rec e1 e1'
       | (Ppredpatexp_mvar (x), Var(y)) ->
           ckm (x, Path.name y)
-      | (Ppredpatexp_proj (_, e), Proj (_, e')) ->
-          ck_expr_rec e e'
       | _ -> assert false in
   let rec ck_pred_rec pred pat =
     match (pred.ppredpat_desc, pat) with

@@ -1,3 +1,26 @@
+(*
+ * Copyright © 2008 The Regents of the University of California. All rights reserved.
+ *
+ * Permission is hereby granted, without written agreement and without
+ * license or royalty fees, to use, copy, modify, and distribute this
+ * software and its documentation for any purpose, provided that the
+ * above copyright notice and the following two paragraphs appear in
+ * all copies of this software.
+ *
+ * IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY
+ * FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES
+ * ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN
+ * IF THE UNIVERSITY OF CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY
+ * OF SUCH DAMAGE.
+ *
+ * THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS
+ * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION
+ * TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+ *
+ *)
+
 open Asttypes
 open Typedtree
 open Parsetree
@@ -14,6 +37,11 @@ module Cf = Clflags
 module B = Builtins
 module Le = Lightenv
 module F = Frame
+module M = Measure
+
+(******************************************************************************)
+(******************************* Error reporting ******************************)
+(******************************************************************************)
 
 type error =
   | NotSubtype of F.t * F.t
@@ -23,13 +51,35 @@ type error =
 exception Error of Location.t * error
 exception Errors of (Location.t * error) list
 
-let expression_to_pexpr e =
-  match e.exp_desc with
-    | Texp_constant (Const_int n) -> P.PInt n
-    | Texp_ident (id, _) -> P.Var id
-    | _ -> P.Var (Path.mk_ident "dummy")
+let make_frame_error s cstr =
+  let rec error_rec cstr =
+    match cstr.lc_orig with
+      | Loc loc ->
+        begin match cstr.lc_cstr with
+          | SubFrame (_, _, f1, f2) ->
+            (loc, NotSubtype (F.apply_solution s f1,  F.apply_solution s f2))
+          | WFFrame (_,f) -> (loc, IllFormed (F.apply_solution s f))
+        end
+      | Assert loc -> (loc, AssertMayFail)
+      | Cstr cstr -> error_rec cstr
+  in error_rec cstr
 
-let under_lambda = ref 0
+let report_error ppf  = function
+  | AssertMayFail ->
+    fprintf ppf "@[Assertion may fail@]"
+  | NotSubtype (f1, f2) ->
+    fprintf ppf "@[@[%a@]@;<1 2>is not a subtype of@;<1 2>@[%a@]" F.pprint f1 F.pprint f2
+  | IllFormed f ->
+    fprintf ppf "@[Type %a is ill-formed" F.pprint f
+
+let rec report_errors ppf = function
+  | (l, e) :: es ->
+    fprintf ppf "@[%a%a@\n@\n@]" Location.print l report_error e; report_errors ppf es
+  | [] -> ()
+
+(******************************************************************************)
+(****************************** .annot generation *****************************)
+(******************************************************************************)
 
 module FrameLog = Map.Make(struct type t = Location.t
                                   let compare = compare end)
@@ -56,86 +106,93 @@ let dump_frames sourcefile fmap =
     let pp = formatter_of_out_channel (open_out filename) in
       FrameLog.iter (dump_frame pp) fmap
 
+(******************************************************************************)
+(**************************** Constraint generation ***************************)
+(******************************************************************************)
+
 let label_constraint exp fc =
   let org = match exp.exp_desc with Texp_assert _ -> Assert exp.exp_loc | _ -> Loc exp.exp_loc in
     {lc_cstr = fc; lc_tenv = exp.exp_env; lc_orig = org; lc_id = fresh_fc_id()}
 
-let is_poly_instantiation = function
-  | (Texp_construct _, _)
-  | (Texp_ident _, _)
-  | (Texp_assertfalse, _) -> true
-  | _ -> false
-
-let expr_fresh desc_and_ty = if is_poly_instantiation desc_and_ty then Frame.fresh_unconstrained else Frame.fresh
+let expression_to_pexpr e =
+  match e.exp_desc with
+    | Texp_constant (Const_int n) -> P.PInt n
+    | Texp_ident (id, _) -> P.Var id
+    | _ -> P.Var (Path.mk_ident "dummy")
 
 let rec constrain e env guard =
-  let desc_ty = (e.exp_desc, repr e.exp_type) in
-  let environment = (env, guard, expr_fresh desc_ty e.exp_env e.exp_type) in
+  let freshf = Frame.fresh e.exp_env e.exp_type in
+  let environment = (env, guard, freshf) in
   let (f, cstrs, rec_cstrs) =
-    match desc_ty with
-      | (Texp_constant const_typ, {desc = Tconstr(path, [], _)}) -> constrain_constant path const_typ
-      | (Texp_construct (cstrdesc, args), {desc = Tconstr(_, _, _)}) -> constrain_constructed environment cstrdesc args e
-      | (Texp_record (labeled_exprs, None), {desc = (Tconstr _)}) -> constrain_record environment labeled_exprs
+    match (e.exp_desc, freshf) with
+      | (Texp_constant const_typ, F.Fabstract(path, [], _)) -> constrain_constant path const_typ
+      | (Texp_construct (cstrdesc, args), F.Fsum _) -> constrain_constructed environment cstrdesc args e
+      | (Texp_record (labeled_exprs, None), _) -> constrain_record environment labeled_exprs
       | (Texp_field (expr, label_desc), _) -> constrain_field environment expr label_desc
       | (Texp_ifthenelse (e1, e2, Some e3), _) -> constrain_if environment e1 e2 e3
       | (Texp_match (e, pexps, partial), _) -> constrain_match environment e pexps partial
       | (Texp_function ([(pat, e')], _), t) -> constrain_function environment t pat e'
-      | (Texp_ident (id, _), {desc = Tconstr (p, [], _)} ) -> constrain_base_identifier environment id e
+      | (Texp_ident (id, _), F.Fabstract(_, [], _))
+      | (Texp_ident (id, _), F.Fvar _) ->
+          constrain_base_identifier environment id e
       | (Texp_ident (id, _), _) -> constrain_identifier environment id e.exp_env
       | (Texp_apply (e1, exps), _) -> constrain_application environment e1 exps
       | (Texp_let (recflag, bindings, body_exp), t) -> constrain_let environment recflag bindings body_exp
       | (Texp_array es, _) -> constrain_array environment es
       | (Texp_sequence (e1, e2), _) -> constrain_sequence environment e1 e2
       | (Texp_tuple es, _) -> constrain_tuple environment es
-      | (Texp_assertfalse, _) -> constrain_assertfalse environment
+      | (Texp_assertfalse, _) -> constrain_assertfalse environment e.exp_env e.exp_type
       | (Texp_assert e, _) -> constrain_assert environment e
-      | (_, t) ->
+      | (_, f) ->
         fprintf err_formatter "@[Warning: Don't know how to constrain expression,
-        structure:@ %a@ location:@ %a@]@.@." Printtyp.raw_type_expr t Location.print e.exp_loc; flush stderr;
+        structure:@ %a@ location:@ %a@]@.@." F.pprint f Location.print e.exp_loc; flush stderr;
         assert false
   in log_frame e.exp_loc f; (f, (List.map (label_constraint e) cstrs) @ rec_cstrs)
 
 and constrain_constant path = function
-  | Const_int n ->
-      (B.mk_int [B.equality_qualifier (P.PInt n)], [], [])
+  | Const_int n -> (B.mk_int [B.equality_qualifier (P.PInt n)], [], [])
   | Const_float _ -> (B.uFloat, [], [])
   | Const_char _ -> (B.uChar, [], [])
   | Const_string _ -> (B.uString, [], [])
   | _ -> assert false
 
+and replace_params ps fs =
+  List.map2 (fun (i, _, v) f -> (i, f, v)) ps fs
+
 and constrain_constructed (env, guard, f) cstrdesc args e =
-  match f with
-  | F.Fconstr (path, tyargframes, cstrs, _) ->
+  match F.unfold (F.fresh_false e.exp_env e.exp_type) with
+  | F.Fsum (path, ro, cstrs, _) ->
       let tag = cstrdesc.cstr_tag in
-      let cstrref = match tag with
-        | Cstr_constant n | Cstr_block n -> B.tag_refinement n
-        | Cstr_exception _ -> assert false
-      in
-      let f = F.Fconstr (path, tyargframes, cstrs, cstrref) in
-      let cstrargs = F.fresh_constructor e.exp_env cstrdesc f in
-      let (argframes, argcstrs) = constrain_subexprs env guard args in
-        (f,
-         WFFrame(env, f) :: (List.map2 (fun arg formal -> SubFrame(env, guard, arg, formal)) argframes cstrargs),
-         argcstrs)
+      let tagref = B.tag_refinement tag in
+      let params = List.assoc tag cstrs in
+      let pls = List.map C.i2p (F.params_ids params) in
+      let mref = try (B.const_ref [M.mk_qual pls (M.find_c path tag !M.bms)]) with
+                     Not_found -> [] in
+      let cstrref = mref @ tagref in
+      let (argframes, argcs) = constrain_subexprs env guard args in
+      let cstrs = List.map (fun (t, ps) -> (t, if t = tag then replace_params ps argframes else ps)) cstrs in
+      let f' = F.Fsum (path, ro, cstrs, tagref) in
+        (constrain_fold (env, guard, f) f' cstrref tagref [] argcs)
   | _ -> assert false
+
+and constrain_fold (env, guard, f) f'' cstrref tagref cstrs subcstrs =
+  let f' = F.unfold_applying f in
+    (F.append_refinement cstrref f, WFFrame (env, (F.append_refinement tagref f)) :: SubFrame (env, guard, f'', f') :: cstrs, subcstrs)
 
 and constrain_record (env, guard, f) labeled_exprs =
   let compare_labels ({lbl_pos = n}, _) ({lbl_pos = m}, _) = compare n m in
   let (_, sorted_exprs) = List.split (List.sort compare_labels labeled_exprs) in
-  let (subframes, subexp_cs) = constrain_subexprs env guard sorted_exprs in
-  let subframe_field cs_rest fsub (fsup, _, _) = SubFrame (env, guard, fsub, fsup) :: cs_rest in
-  match f with
-    | F.Frecord (p, recframes, _) ->
-      let field_qualifier (_, name, _) fexpr = B.field_eq_qualifier name (expression_to_pexpr fexpr) in
-        (F.Frecord (p, recframes, ([], F.Qconst (List.map2 field_qualifier recframes sorted_exprs))),
-         WFFrame (env, f) :: List.fold_left2 subframe_field [] subframes recframes,
-         subexp_cs)
-    | _ -> assert false
+  let (p, ps) = match f with F.Fsum(p, _, [(_, ps)], _) -> (p, ps) | _ -> assert false in
+  let (fs, subexp_cs) = constrain_subexprs env guard sorted_exprs in
+  let to_field (id, _, v) f = (id, f, v) in
+  let field_qualifier (id, _, _) fexpr = B.field_eq_qualifier id (expression_to_pexpr fexpr) in
+  let f = F.record_of_params p (List.map2 to_field ps fs) (F.mk_refinement [] (List.map2 field_qualifier ps sorted_exprs) []) in
+    (f, [WFFrame (env, f)], subexp_cs)
 
 and constrain_field (env, guard, _) expr label_desc =
   let (recframe, cstrs) = constrain expr env guard in
-  let (fieldframe, fieldname) = match recframe with
-    | F.Frecord (_, fs, _) -> (match List.nth fs label_desc.lbl_pos with (fr, name, _) -> (fr, name))
+  let (fieldname, fieldframe) = match recframe with
+    | F.Fsum (_, _, [(_, ps)], _) -> (match List.nth ps label_desc.lbl_pos with (i, f, _) -> (i, f))
     | _ -> assert false
   in
   let pexpr = P.Field (fieldname, expression_to_pexpr expr) in
@@ -167,16 +224,29 @@ and constrain_case (env, guard, f) matchf matche (pat, e) =
   let (fe, subcs) = constrain e env guard in
     (SubFrame (env, guard, fe, f), subcs)
 
-and constrain_match ((env, guard, f) as environment) e pexps partial =
+and def_measured_frame = function
+    Some g -> Some (F.Fabstract(Path.mk_ident "", [], [([], ([(Path.mk_ident "", Path.mk_ident "", g)], []))]))
+  | None -> None
+
+and maybe_measured_env (guard, f) mgvar env g =
+  match g with
+      Some g -> (Le.add mgvar g env, guard, f)
+    | None -> (env, guard, f)
+
+and constrain_match (env, guard, f) e pexps partial =
   let (matchf, matchcstrs) = constrain e env guard in
-  let cases = List.map (constrain_case environment matchf (expression_to_pexpr e)) pexps in
+  let subguards = M.mk_guards matchf e.exp_desc (fst (List.split pexps)) in
+  let subguards = List.map def_measured_frame subguards in
+  let mgvar = Path.mk_ident "__measure_guardvar" in
+  let environments = List.map (maybe_measured_env (guard, f) mgvar env) subguards in
+  let cases = List.map (fun (en, p) -> constrain_case en matchf (expression_to_pexpr e) p) (List.combine environments pexps) in
   let (cstrs, subcstrs) = List.split cases in
     (f, WFFrame (env, f) :: cstrs, List.concat (matchcstrs :: subcstrs))
 
 and constrain_function (env, guard, f) t pat e' =
   match f with
     | (F.Farrow (_, f, unlabelled_f')) ->
-      let env' = F.env_bind e'.exp_env env pat.pat_desc f in
+      let env' = F.env_bind e'.exp_env env pat.pat_desc (F.fix_vars f) in
       let (f'', cstrs) = constrain e' env' guard in
       let f' = F.label_like unlabelled_f' f'' in
       let f = F.Farrow (Some pat.pat_desc, f, f') in
@@ -187,7 +257,8 @@ and instantiate_id id f env tenv =
   let env_f =
     try Le.find id env
     with Not_found -> Frame.fresh_without_vars tenv ((Env.find_value id tenv).val_type)
-  in F.instantiate env_f f
+  in
+    F.instantiate env_f f
 
 and constrain_base_identifier (env, _, f) id e =
   let refn =
@@ -201,8 +272,7 @@ and apply_once env guard (f, cstrs, subexp_cstrs) e = match (f, e) with
   | (F.Farrow (l, f, f'), (Some e2, _)) ->
     let (f2, e2_cstrs) = constrain e2 env guard in
     let f'' = match l with
-      | Some pat ->
-        List.fold_right F.apply_substitution (Pattern.bind_pexpr pat (expression_to_pexpr e2)) f'
+      | Some pat -> F.apply_subs (Pattern.bind_pexpr pat (expression_to_pexpr e2)) f'
           (* pmr: The soundness of this next line is suspect,
              must investigate (i.e., what if there's a var that might
              somehow be substituted that isn't because of this?  How
@@ -225,34 +295,30 @@ and constrain_let (env, guard, f) recflag bindings body =
         (f, [WFFrame (env, f); SubFrame (env', guard, body_frame, f)], cstrs1 @ cstrs2)
 
 and constrain_array (env, guard, f) elements =
-  let (f, fs) =
+  let (f, fa) =
     (match f with
-      | F.Fconstr(p, l, varis, _) -> (F.Fconstr(p, l, varis, B.size_lit_refinement(List.length elements)), l)
+      | F.Fabstract(p, ([(_, fa, _)] as ps), _) ->
+          (F.Fabstract(p, ps, B.size_lit_refinement(List.length elements)), fa)
       | _ -> assert false) in
   let list_rec (fs, c) e = (fun (f, cs) -> (f::fs, cs @ c)) (constrain e env guard) in
   let (fs', sub_cs) = List.fold_left list_rec ([], []) elements in
   let mksub b a = SubFrame(env, guard, a, b) in
-    (f, WFFrame(env, f) :: List.map (mksub (List.hd fs)) fs', sub_cs)
+    (f, WFFrame(env, f) :: List.map (mksub fa) fs', sub_cs)
 
 and constrain_sequence (env, guard, _) e1 e2 =
   let (_, cs1) = constrain e1 env guard in
   let (f, cs2) = constrain e2 env guard in (f, [], cs1 @ cs2)
 
-and constrain_tuple (env, guard, f) es =
-  let (fs, subexp_cs) = constrain_subexprs env guard es in
-  match f with
-    | F.Ftuple (fresh_fs, _) ->
-        let new_cs = List.fold_left2
-          (fun cs rec_frame fresh_frame ->
-            WFFrame (env, fresh_frame) :: SubFrame (env, guard, rec_frame, fresh_frame) :: cs)
-          [] fs fresh_fs in
-        let elem_qualifier fexpr n = B.proj_eq_qualifier n (expression_to_pexpr fexpr) in
-          (F.Ftuple (fresh_fs, ([], F.Qconst (Misc.mapi elem_qualifier es))),
-           WFFrame (env, f) :: new_cs, subexp_cs)
-    | _ -> assert false
+and elem_qualifier fexpr n =
+  B.proj_eq_qualifier n (expression_to_pexpr fexpr)
 
-and constrain_assertfalse (_, _, f) =
-  (f, [], [])
+and constrain_tuple (env, guard, _) es =
+  let (fs, subexp_cs) = constrain_subexprs env guard es in
+  let f = F.tuple_of_frames fs (F.mk_refinement [] (Misc.mapi elem_qualifier es) []) in
+    (f, [WFFrame(env, f)], subexp_cs)
+
+and constrain_assertfalse (env, _, _) tenv ty =
+  let f = F.fresh_false tenv ty in (f, [WFFrame (env, f)], [])
 
 and constrain_assert (env, guard, _) e =
   let (f, cstrs) = constrain e env guard in
@@ -262,7 +328,7 @@ and constrain_assert (env, guard, _) e =
     (Path.mk_ident "assertion",
      Path.mk_ident "null",
      P.equals (B.tag(P.Var guardvar), P.int_true))
-  in (B.mk_unit (), [SubFrame (env, guard, B.mk_int [], B.mk_int [assert_qualifier])], cstrs)
+  in (B.uUnit, [SubFrame (env, guard, B.mk_int [], B.mk_int [assert_qualifier])], cstrs)
 
 and constrain_and_bind guard (env, cstrs) (pat, e) =
   let (f, cstrs') = constrain e env guard in
@@ -316,47 +382,9 @@ let constrain_structure initfenv initquals str =
     | _ -> assert false
   in constrain_rec initquals initfenv [] str
 
-module QualifierSet = Set.Make(Qualifier)
-
-(* Make copies of all the qualifiers where the free identifiers are replaced
-   by the appropriate bound identifiers from the environment. *)
-let instantiate_in_environments cs qs =
-  let domains = List.map (fun c -> match c.lc_cstr with SubFrame (e,_,_,_) | WFFrame (e,_) -> Lightenv.domain e) cs in
-  let instantiate_qual qualset q =
-    let instantiate_in_env qset d =
-      let varmap = Common.map_partial (fun path -> match Path.ident_name path with Some name -> Some (name, path) | None -> None) d in
-      let inv = Qualifier.instantiate varmap q in
-        match inv with
-            Some inv -> QualifierSet.add inv qset
-          | None -> qset
-    in List.fold_left instantiate_in_env qualset domains
-  in QualifierSet.elements (List.fold_left instantiate_qual QualifierSet.empty qs)
-
-let make_frame_error s cstr =
-  let rec error_rec cstr =
-    match cstr.lc_orig with
-      | Loc loc ->
-        begin match cstr.lc_cstr with
-          | SubFrame (_, _, f1, f2) ->
-            (loc, NotSubtype (F.apply_solution s f1,  F.apply_solution s f2))
-          | WFFrame (_,f) -> (loc, IllFormed (F.apply_solution s f))
-        end
-      | Assert loc -> (loc, AssertMayFail)
-      | Cstr cstr -> error_rec cstr
-  in error_rec cstr
-
-let report_error ppf  = function
-  | AssertMayFail ->
-    fprintf ppf "@[Assertion may fail@]"
-  | NotSubtype (f1, f2) ->
-    fprintf ppf "@[@[%a@]@;<1 2>is not a subtype of@;<1 2>@[%a@]" F.pprint f1 F.pprint f2
-  | IllFormed f ->
-    fprintf ppf "@[Type %a is ill-formed" F.pprint f
-
-let rec report_errors ppf = function
-  | (l, e) :: es ->
-    fprintf ppf "@[%a%a@\n@\n@]" Location.print l report_error e; report_errors ppf es
-  | [] -> ()
+(******************************************************************************)
+(***************************** Qualifying modules *****************************)
+(******************************************************************************)
 
 let pre_solve () = 
   C.cprintf C.ol_solve_master "@[##solve##@\n@]"; Bstats.reset ()
@@ -381,8 +409,7 @@ let qualify_implementation sourcefile fenv ifenv env qs str =
   let (qs, fenv, cs) = constrain_structure fenv qs str in
   let cs = (List.map (lbl_dummy_cstr env) (Le.maplistfilter (mfm fenv) ifenv)) @ cs in
   let _ = pre_solve () in
-  let inst_qs = Bstats.time "instantiating quals" (instantiate_in_environments cs) qs in
-  let (s,cs) = Bstats.time "solving" (solve inst_qs) cs in
+  let (s,cs) = Bstats.time "solving" (solve qs) cs in
   let _ = post_solve () in
   let _ = dump_frames sourcefile (framemap_apply_solution s !flog) in
   match cs with [] -> () | _ ->
