@@ -1,0 +1,11 @@
+reftype 'a list{s} = 
+  | ([]) 
+  | (::) of x:'a * 'a list{s,[[];[x <= V]]}
+
+val quicksort : 'a list -> 'a list{s}
+
+val quicksort2: 'a list -> 'a list{s}
+
+val mergesort : 'a list -> 'a list{s}
+
+val insertsort: 'a list -> 'a list{s}
