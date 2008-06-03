@@ -251,9 +251,11 @@ let find_tag rs =
 let shape f =
   map_refinements (fun _ -> empty_refinement) f
 
+(* known bug: these don't treat constructor names properly. *)
+
 let same_shape t1 t2 =
   let vars = ref [] in
-  let ismapped p q = try snd (List.find (fun (p', q) -> Path.same p p') !vars) = q with
+  let ismapped p q = try (List.assoc p !vars) = q with
       Not_found -> vars := (p, q) :: !vars; true in
   let rec sshape = function
       (Fsum(p, ro, cs, _), Fsum(p', ro', cs', _)) ->
@@ -265,11 +267,32 @@ let same_shape t1 t2 =
         ismapped p p'
     | (Farrow(_, i, o), Farrow(_, i', o')) ->
         sshape (i, i') && sshape (o, o')
-    | (Funknown, Funknown) -> true
+    (*| (Funknown, Funknown) -> true*)
     | t -> false
   and params_sshape ps qs =
     List.for_all sshape (List.combine (params_frames ps) (params_frames qs))
   in sshape (t1, t2)
+
+(*let pseudo_unify t1 t2 =
+  let vars = ref [] in
+  let ismapped p q = try same_shape (List.assoc p !vars) q with
+      Not_found -> vars := (p, q) :: !vars; true in
+  let rec unify = function
+      (Fsum(p, ro, cs, _), Fsum(p', ro', cs', _) ->
+        Path.same p p' && params_unify (constrs_params cs) (constrs_params cs') &&
+       (ro = ro' || match (ro, ro') with (Some (_, _), Some(_, _)) -> true | _ -> false) 
+    | (Fabstract(p, ps, _), Fabstract(p', ps', _)) ->
+        Path.same p p' && params_unify ps ps'
+    | (Fvar (p, _, _), Fvar (p', _, _)) | (Frec (p, _, _), Frec (p', _, _)) ->
+        ismapped p p'
+    | (Farrow(_, i, o), Farrow(_, i', o')) ->
+        unify(i, i') && unify(o, o')
+    | (Funknown, Funknown) -> true
+    | t -> false*)
+ 
+
+  
+
 
 (**************************************************************)
 (******************** Frame pretty printers *******************)
