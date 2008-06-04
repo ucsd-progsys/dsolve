@@ -8,7 +8,7 @@ type ('a,'b) boolean =
 
 let rec partition f xs = 
   match xs with
-  | [] -> []
+  | [] -> ([], [])
   | x::xs' -> 
       let (ts,fs) = partition f xs' in
       (match f x with 
