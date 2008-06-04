@@ -97,15 +97,15 @@ let constrs_param_frames cs =
 (************************* Iterators **************************) 
 (**************************************************************)
 
-let map_params f ps =
-  List.map (fun (p, fr, v) -> (p, f fr, v)) ps
-
 let rec map f = function
   | (Funknown | Fvar _ | Frec _) as fr -> f fr
   | Fsum (p, ro, cs, r) ->
       f (Fsum (p, ro, List.map (fun (cd, ps) -> (cd, map_params f ps)) cs, r))
   | Fabstract (p, ps, r) -> f (Fabstract (p, map_params f ps, r))
   | Farrow (x, f1, f2) -> f (Farrow (x, map f f1, map f f2))
+
+and map_params f ps =
+  List.map (fun (p, fr, v) -> (p, map f fr, v)) ps
 
 let map_recref f rr =
   List.map (fun r -> List.map f r) rr
