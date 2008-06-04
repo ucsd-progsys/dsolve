@@ -177,7 +177,7 @@ and constrain_constructed (env, guard, f) cstrdesc args e =
 
 and constrain_fold (env, guard, f) f'' cstrref tagref cstrs subcstrs =
   let f' = F.unfold_applying f in
-    (F.append_refinement cstrref f, WFFrame (env, (F.append_refinement tagref f)) :: SubFrame (env, guard, f'', f') :: cstrs, subcstrs)
+    (F.append_refinement tagref f, WFFrame (env, (F.append_refinement tagref f)) :: SubFrame (env, guard, f'', f') :: cstrs, subcstrs)
 
 and constrain_record (env, guard, f) labeled_exprs =
   let compare_labels ({lbl_pos = n}, _) ({lbl_pos = m}, _) = compare n m in

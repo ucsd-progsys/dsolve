@@ -52,7 +52,7 @@ let rec app_to_fun funf =
         (fun ps -> 
            match ps with
              p :: ps ->
-               if same_shape p f1 then (app_to_fun f2) ps else Funknown
+               if pseudo_unify p f1 then (app_to_fun f2) ps else Funknown
            | [] -> Funknown)
     | f -> 
         (fun ps -> 

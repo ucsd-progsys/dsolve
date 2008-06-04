@@ -255,7 +255,7 @@ let shape f =
 
 let same_shape t1 t2 =
   let vars = ref [] in
-  let ismapped p q = try (List.assoc p !vars) = q with
+  let ismapped p q = try snd (List.find (fun (p', _) -> Path.same p p') !vars) = q with
       Not_found -> vars := (p, q) :: !vars; true in
   let rec sshape = function
       (Fsum(p, ro, cs, _), Fsum(p', ro', cs', _)) ->
@@ -273,27 +273,35 @@ let same_shape t1 t2 =
     List.for_all sshape (List.combine (params_frames ps) (params_frames qs))
   in sshape (t1, t2)
 
-(*let pseudo_unify t1 t2 =
+let pseudo_unify t1 t2 =
+  let assoc p l = snd (List.find (fun (x, y) -> Path.same p x) l) in
   let vars = ref [] in
-  let ismapped p q = try same_shape (List.assoc p !vars) q with
+  let ismapped p q = try same_shape (assoc p !vars) q with
       Not_found -> vars := (p, q) :: !vars; true in
-  let rec unify = function
-      (Fsum(p, ro, cs, _), Fsum(p', ro', cs', _) ->
+  let rec unify (f1, f2) = 
+    match (f1, f2) with
+    | (Funknown, _) | (_, Funknown) ->
+        false
+    | (Fsum(p, ro, cs, _), Fsum(p', ro', cs', _)) ->
         Path.same p p' && params_unify (constrs_params cs) (constrs_params cs') &&
        (ro = ro' || match (ro, ro') with (Some (_, _), Some(_, _)) -> true | _ -> false) 
     | (Fabstract(p, ps, _), Fabstract(p', ps', _)) ->
         Path.same p p' && params_unify ps ps'
-    | (Fvar (p, _, _), Fvar (p', _, _)) | (Frec (p, _, _), Frec (p', _, _)) ->
-        ismapped p p'
+    | (Frec(_, _, _), Frec(_, _, _)) ->
+        ismapped f1 f2
+    | (Frec(_, _, _), _) | (_, Frec(_, _, _)) ->
+        false
+    | (Fvar(_, _, _), Fvar(_, _, _)) | (Fvar(_, _, _), _) ->
+        ismapped f1 f2
+    (*| (_, Fvar(_, _, _)) ->
+        ismapped f2 f1*)
     | (Farrow(_, i, o), Farrow(_, i', o')) ->
         unify(i, i') && unify(o, o')
-    | (Funknown, Funknown) -> true
-    | t -> false*)
+    | t -> false 
+  and params_unify ps qs =
+    List.for_all unify (List.combine (params_frames ps) (params_frames qs)) in
+  unify (t1, t2)
  
-
-  
-
-
 (**************************************************************)
 (******************** Frame pretty printers *******************)
 (**************************************************************)
