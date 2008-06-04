@@ -171,7 +171,7 @@ and constrain_constructed (env, guard, f) cstrdesc args e =
       let cstrref = mref @ tagref in
       let (argframes, argcs) = constrain_subexprs env guard args in
       let cstrs = List.map (fun (t, ps) -> (t, if t = tag then replace_params ps argframes else ps)) cstrs in
-      let f' = F.Fsum (path, ro, cstrs, tagref) in
+      let f' = F.Fsum (path, ro, cstrs, cstrref) in
         (constrain_fold (env, guard, f) f' cstrref tagref [] argcs)
   | _ -> assert false
 
