@@ -272,13 +272,25 @@ let same_shape t1 t2 =
   and params_sshape ps qs =
     List.for_all sshape (List.combine (params_frames ps) (params_frames qs))
   in sshape (t1, t2)
+       
+let isvar = function
+    Fvar(_, _, _) -> true
+  | _ -> false
+
+let getp_or_fail = function
+    Fvar(p, _, _) -> p
+  | _ -> assert false
 
 let pseudo_unify t1 t2 =
   let assoc p l = snd (List.find (fun (x, y) -> Path.same p x) l) in
   let vars = ref [] in
-  let ismapped p q = try same_shape (assoc p !vars) q with
-      Not_found -> vars := (p, q) :: !vars; true in
-  let rec unify (f1, f2) = 
+  let rec ismapped p q = 
+    try
+      let p = assoc p !vars in
+        if isvar p then ismapped (getp_or_fail p) q
+        else same_shape p q
+    with Not_found -> (vars := (p, q) :: !vars; true)
+  and unify (f1, f2) = 
     match (f1, f2) with
     | (Funknown, _) | (_, Funknown) ->
         false
@@ -287,12 +299,14 @@ let pseudo_unify t1 t2 =
        (ro = ro' || match (ro, ro') with (Some (_, _), Some(_, _)) -> true | _ -> false) 
     | (Fabstract(p, ps, _), Fabstract(p', ps', _)) ->
         Path.same p p' && params_unify ps ps'
-    | (Frec(_, _, _), Frec(_, _, _)) ->
-        ismapped f1 f2
+    | (Frec(p, _, _), Frec(_, _, _)) ->
+        ismapped p f2
     | (Frec(_, _, _), _) | (_, Frec(_, _, _)) ->
         false
-    | (Fvar(_, _, _), Fvar(_, _, _)) | (Fvar(_, _, _), _) ->
-        ismapped f1 f2
+    | (Fvar(p1, _, _), Fvar(p2, _, _)) ->
+        ismapped p1 f2 && ismapped p2 f1
+    | (Fvar(p, _, _), _) ->
+        ismapped p f2
     (*| (_, Fvar(_, _, _)) ->
         ismapped f2 f1*)
     | (Farrow(_, i, o), Farrow(_, i', o')) ->

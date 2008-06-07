@@ -1,4 +1,4 @@
-let rec len (x: int list) = 
+let rec len x = 
   match x with
       [] -> 0 
     | s :: ss -> 1 + (len ss)
