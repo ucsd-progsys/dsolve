@@ -100,6 +100,7 @@ val (--): pexpr -> pexpr -> pexpr
 val subst: pexpr -> Path.t -> t -> t
 val apply_substs: (Path.t * pexpr) list -> t -> t
 val vars: t -> Path.t list
+val exp_vars: pexpr -> Path.t list
 val funs: t -> string list
 (* pmr: change to plain old instantiate *)
 val instantiate_named_vars: (string * Path.t) list -> t -> t

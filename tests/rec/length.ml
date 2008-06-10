@@ -1,13 +1,19 @@
-let rec len = function 
+let rec len x =
+  match x with
   | [] -> 0
   | x::xs -> 1 + len xs
 
-let rec append xs ys =
+let x = []
+
+let y = len x
+
+(*let rec append xs ys =
   match xs with
   | [] -> ys
   | x::xs' -> x::(append xs' ys)
 
-let rec rev = function
+let rec rev x =
+  match x with
   | [] -> []
   | x::xs -> (rev xs)@[x]
 
@@ -18,7 +24,8 @@ let rev2 xs =
     | x::xs' -> _r xs' (x::ys) in
   _r xs []
 
-let rec partition f = function
+let rec partition f x =
+  match x with
   | [] -> 
       ([],[])
   | x::xs -> 
@@ -34,7 +41,8 @@ let partition f xs =
         if f x then _p xs' (x::ys) zs else _p xs' ys (x::zs) in
   _p xs [] []
 
-let rec unzip = function
+let rec unzip x =
+  match x with
   | [] -> 
       ([],[])
   | (y,z)::xs -> 
@@ -51,4 +59,4 @@ let check xs ys zs =
   let _ = 
     let (xs',ys') = unzip zs in
     assert (len xs' = len zs && len ys' = len zs) in
-  ()
+  ()*)

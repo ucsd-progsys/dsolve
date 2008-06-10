@@ -159,25 +159,36 @@ and constrain_constant path = function
 and replace_params ps fs =
   List.map2 (fun (i, _, v) f -> (i, f, v)) ps fs
 
+and get_cstrrefs path tag args params =
+  let preds = List.map expression_to_pexpr args in
+  let ppaths = C.maybe_list_from_singles (List.map P.exp_vars preds) in
+  let ald = C.all_defined ppaths in
+  let ppaths = C.maybe_list ppaths in
+  let pls = List.map C.i2p (F.params_ids params) in
+  let pls = if ald then ppaths else pls in
+  let mref = try (B.const_ref [M.mk_qual pls (M.find_c path tag !M.bms)]) with
+                     Not_found -> [] in
+  let tagref = B.tag_refinement tag in
+  let lhsref = if ald then F.empty_refinement else (mref @ tagref) in
+  let rhsref = if ald then mref @ tagref else F.empty_refinement in
+  let wfref = if ald then tagref else F.empty_refinement in
+    (lhsref, rhsref, wfref) 
+
 and constrain_constructed (env, guard, f) cstrdesc args e =
   match F.unfold (F.fresh_false e.exp_env e.exp_type) with
   | F.Fsum (path, ro, cstrs, _) ->
       let tag = cstrdesc.cstr_tag in
-      let tagref = B.tag_refinement tag in
       let params = List.assoc tag cstrs in
-      let pls = List.map C.i2p (F.params_ids params) in
-      let mref = try (B.const_ref [M.mk_qual pls (M.find_c path tag !M.bms)]) with
-                     Not_found -> [] in
-      let cstrref = mref @ tagref in
+      let (lhsref, rhsref, wfref) = get_cstrrefs path tag args params in
       let (argframes, argcs) = constrain_subexprs env guard args in
       let cstrs = List.map (fun (t, ps) -> (t, if t = tag then replace_params ps argframes else ps)) cstrs in
-      let f' = F.Fsum (path, ro, cstrs, cstrref) in
-        (constrain_fold (env, guard, f) f' cstrref tagref [] argcs)
+      let f' = F.Fsum (path, ro, cstrs, lhsref) in
+        (constrain_fold (env, guard, f) f' rhsref wfref [] argcs)
   | _ -> assert false
 
-and constrain_fold (env, guard, f) f'' cstrref tagref cstrs subcstrs =
+and constrain_fold (env, guard, f) f'' rhsref wfref cstrs subcstrs =
   let f' = F.unfold_applying f in
-    (F.append_refinement tagref f, WFFrame (env, (F.append_refinement tagref f)) :: SubFrame (env, guard, f'', f') :: cstrs, subcstrs)
+    (F.append_refinement rhsref f, WFFrame (env, (F.append_refinement wfref f)) :: SubFrame (env, guard, f'', f') :: cstrs, subcstrs)
 
 and constrain_record (env, guard, f) labeled_exprs =
   let compare_labels ({lbl_pos = n}, _) ({lbl_pos = m}, _) = compare n m in

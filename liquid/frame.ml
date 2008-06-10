@@ -277,9 +277,13 @@ let isvar = function
     Fvar(_, _, _) -> true
   | _ -> false
 
-let getp_or_fail = function
+let getpvar_or_fail = function
     Fvar(p, _, _) -> p
   | _ -> assert false
+           
+let getpvar_maybe = function
+    Fvar(p, _, _) -> Some p
+  | _ -> None
 
 let pseudo_unify t1 t2 =
   let assoc p l = snd (List.find (fun (x, y) -> Path.same p x) l) in
@@ -287,7 +291,7 @@ let pseudo_unify t1 t2 =
   let rec ismapped p q = 
     try
       let p = assoc p !vars in
-        if isvar p then ismapped (getp_or_fail p) q
+        if isvar p then ismapped (getpvar_or_fail p) q
         else same_shape p q
     with Not_found -> (vars := (p, q) :: !vars; true)
   and unify (f1, f2) = 

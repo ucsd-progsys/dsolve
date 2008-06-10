@@ -158,6 +158,17 @@ let only_one s = function
   | x :: xs -> failwith s
   | [] -> None
 
+let rec maybe_list_from_singles = function
+    x :: xs -> (match x with [a] -> Some a |  [] -> None | _ -> None) :: (maybe_list_from_singles xs)
+  | [] -> []
+
+let maybe_bool = function
+  Some _ -> true
+  | None -> false
+
+let all_defined xs =
+  List.for_all maybe_bool xs
+
 (****************************************************************)
 (************* Output levels ************************************)
 (****************************************************************)
