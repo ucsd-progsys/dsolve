@@ -132,6 +132,7 @@ let rec constrain e env guard =
       | (Texp_ifthenelse (e1, e2, Some e3), _) -> constrain_if environment e1 e2 e3
       | (Texp_match (e, pexps, partial), _) -> constrain_match environment e pexps partial
       | (Texp_function ([(pat, e')], _), t) -> constrain_function environment t pat e'
+      | (Texp_ident (id, _), F.Fsum(_, _, _, _))
       | (Texp_ident (id, _), F.Fabstract(_, [], _))
       | (Texp_ident (id, _), F.Fvar _) ->
           constrain_base_identifier environment id e
@@ -161,17 +162,12 @@ and replace_params ps fs =
 
 and get_cstrrefs path tag args params =
   let preds = List.map expression_to_pexpr args in
-  let ppaths = C.maybe_list_from_singles (List.map P.exp_vars preds) in
-  let ald = C.all_defined ppaths in
-  let ppaths = C.maybe_list ppaths in
-  let pls = List.map C.i2p (F.params_ids params) in
-  let pls = if ald then ppaths else pls in
-  let mref = try (B.const_ref [M.mk_qual pls (M.find_c path tag !M.bms)]) with
+  let mref = try (B.const_ref [M.mk_qual preds (M.find_c path tag !M.bms)]) with
                      Not_found -> [] in
   let tagref = B.tag_refinement tag in
-  let lhsref = if ald then F.empty_refinement else (mref @ tagref) in
-  let rhsref = if ald then mref @ tagref else F.empty_refinement in
-  let wfref = if ald then tagref else F.empty_refinement in
+  let lhsref = F.empty_refinement in
+  let rhsref = mref @ tagref in
+  let wfref = lhsref in
     (lhsref, rhsref, wfref) 
 
 and constrain_constructed (env, guard, f) cstrdesc args e =

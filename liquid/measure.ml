@@ -100,7 +100,7 @@ let mk_tys env =
 let mk_pred v (_, ps, ms) mps =
   let _ = if List.length ps != List.length mps then failwith "argument arity mismatch" in
   let ps = List.combine ps mps in
-  let var_map v = try P.Var (List.assoc (Some v) ps) with Not_found -> assert false in
+  let var_map v = try List.assoc (Some v) ps with Not_found -> assert false in
   let cm (s, e) = 
     let e = P.pexp_map_vars var_map e in
     P.Atom(P.FunApp(s, [P.Var v]), P.Eq, e) in 
@@ -113,7 +113,7 @@ let mk_qual ps c =
 let mk_single_gd menv p vp tp =
       match tp with 
         | Some (tag, ps) -> 
-            (try Some (mk_pred vp (find_c p tag menv) ps) with 
+            (try Some (mk_pred vp (find_c p tag menv) (List.map (fun p -> P.Var p) ps)) with 
                 Not_found -> None)
         | None -> None
 
