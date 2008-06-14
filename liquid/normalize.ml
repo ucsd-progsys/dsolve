@@ -143,9 +143,6 @@ let normalize exp =
          exp
      | Pexp_construct(cstrdesc, Some e, b) ->
          let ls = norm_in e in
-         (*let (lbl, _, lo) = List.hd ls in
-         let inex = mk_ident_loc lbl lo in
-         let ls = List.tl ls ina*)
          let (inex, ls) = resolve_in_exp ls in
          let init = mk_construct cstrdesc inex b in
           rw_expr (List.fold_left (wrap Nonrecursive) init ls)

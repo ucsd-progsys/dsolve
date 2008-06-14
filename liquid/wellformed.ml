@@ -52,7 +52,9 @@ let rec app_to_fun funf =
         (fun ps -> 
            match ps with
              p :: ps ->
-               if same_shape p f1 then (app_to_fun f2) ps else Funknown
+               (*let _ = Format.printf "@[%a@.%a@.%b@]@.@." pprint f1 pprint p
+                * (pseudo_unify f1 p) in*)
+               if pseudo_unify f1 p then (app_to_fun f2) ps else Funknown
            | [] -> Funknown)
     | f -> 
         (fun ps -> 
@@ -105,7 +107,7 @@ let pred_is_well_typed env p =
   | Predicate.Atom (p1, rel, p2) -> 
       let p1_shp = get_expr_shape p1 in
       let p2_shp = get_expr_shape p2 in
-        ((same_shape p1_shp p2_shp) && not(same_shape p1_shp Funknown))
+        ((same_shape p1_shp p2_shp) (*&& not(same_shape p1_shp Funknown)*))
         || ((same_shape p1_shp uBool) && (same_shape p2_shp uInt))
         || ((same_shape p1_shp uInt) && (same_shape p2_shp uBool))
   | Predicate.Iff (px, q) -> same_shape (get_expr_shape px) uInt && pred_shape_is_bool q

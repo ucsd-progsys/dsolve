@@ -1,15 +1,18 @@
-let rec len = function 
+let rec len x =
+  match x with
   | [] -> 0
-  | x::xs -> 1 + len xs
+  | s::ss -> 1 + len ss
 
 let rec append xs ys =
   match xs with
   | [] -> ys
   | x::xs' -> x::(append xs' ys)
 
-let rec rev = function
+let rec rev x =
+  match x with
   | [] -> []
-  | x::xs -> (rev xs)@[x]
+  | x::xs -> append (rev xs) [x]
+               (* TODO: define @ in builtins *)
 
 let rev2 xs =
   let rec _r xs ys = 
@@ -18,14 +21,15 @@ let rev2 xs =
     | x::xs' -> _r xs' (x::ys) in
   _r xs []
 
-let rec partition f = function
+let rec partition f x =
+  match x with
   | [] -> 
       ([],[])
   | x::xs -> 
       let (ys,zs) = partition f xs in
       if f x then (x::ys,zs) else (ys,x::zs)
 
-let partition f xs =
+(*let partition f xs =
   let rec _p xs ys zs =
     match xs with 
     | [] -> 
@@ -34,12 +38,13 @@ let partition f xs =
         if f x then _p xs' (x::ys) zs else _p xs' ys (x::zs) in
   _p xs [] []
 
-let rec unzip = function
+let rec unzip x =
+  match x with
   | [] -> 
       ([],[])
   | (y,z)::xs -> 
       let (ys,zs) = unzip xs in
-      (y::ys,z::zs)
+      (y::ys,z::zs)*)
 
 let check xs ys zs = 
   let _ = assert (len (append xs ys) = len xs + len ys) in
@@ -48,7 +53,7 @@ let check xs ys zs =
   let _ = 
     let (ys,zs) = partition ((>) 0) xs in
     assert (len ys + len zs = len xs) in
-  let _ = 
+  (*let _ = 
     let (xs',ys') = unzip zs in
-    assert (len xs' = len zs && len ys' = len zs) in
+    assert (len xs' = len zs && len ys' = len zs) in*)
   ()

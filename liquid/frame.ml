@@ -97,15 +97,15 @@ let constrs_param_frames cs =
 (************************* Iterators **************************) 
 (**************************************************************)
 
-let map_params f ps =
-  List.map (fun (p, fr, v) -> (p, f fr, v)) ps
-
 let rec map f = function
   | (Funknown | Fvar _ | Frec _) as fr -> f fr
   | Fsum (p, ro, cs, r) ->
       f (Fsum (p, ro, List.map (fun (cd, ps) -> (cd, map_params f ps)) cs, r))
   | Fabstract (p, ps, r) -> f (Fabstract (p, map_params f ps, r))
   | Farrow (x, f1, f2) -> f (Farrow (x, map f f1, map f f2))
+
+and map_params f ps =
+  List.map (fun (p, fr, v) -> (p, map f fr, v)) ps
 
 let map_recref f rr =
   List.map (fun r -> List.map f r) rr
@@ -251,9 +251,11 @@ let find_tag rs =
 let shape f =
   map_refinements (fun _ -> empty_refinement) f
 
+(* known bug: these don't treat constructor names properly. *)
+
 let same_shape t1 t2 =
   let vars = ref [] in
-  let ismapped p q = try snd (List.find (fun (p', q) -> Path.same p p') !vars) = q with
+  let ismapped p q = try snd (List.find (fun (p', _) -> Path.same p p') !vars) = q with
       Not_found -> vars := (p, q) :: !vars; true in
   let rec sshape = function
       (Fsum(p, ro, cs, _), Fsum(p', ro', cs', _)) ->
@@ -265,12 +267,59 @@ let same_shape t1 t2 =
         ismapped p p'
     | (Farrow(_, i, o), Farrow(_, i', o')) ->
         sshape (i, i') && sshape (o, o')
-    | (Funknown, Funknown) -> true
+    (*| (Funknown, Funknown) -> true*)
     | t -> false
   and params_sshape ps qs =
     List.for_all sshape (List.combine (params_frames ps) (params_frames qs))
   in sshape (t1, t2)
+       
+let isvar = function
+    Fvar(_, _, _) -> true
+  | _ -> false
 
+let getpvar_or_fail = function
+    Fvar(p, _, _) -> p
+  | _ -> assert false
+           
+let getpvar_maybe = function
+    Fvar(p, _, _) -> Some p
+  | _ -> None
+
+let pseudo_unify t1 t2 =
+  let assoc p l = snd (List.find (fun (x, y) -> Path.same p x) l) in
+  let vars = ref [] in
+  let rec ismapped p q = 
+    try
+      let p = assoc p !vars in
+        if isvar p then ismapped (getpvar_or_fail p) q
+        else same_shape p q
+    with Not_found -> (vars := (p, q) :: !vars; true)
+  and unify (f1, f2) = 
+    match (f1, f2) with
+    | (Funknown, _) | (_, Funknown) ->
+        false
+    | (Fsum(p, ro, cs, _), Fsum(p', ro', cs', _)) ->
+        Path.same p p' && params_unify (constrs_params cs) (constrs_params cs') &&
+       (ro = ro' || match (ro, ro') with (Some (_, _), Some(_, _)) -> true | _ -> false) 
+    | (Fabstract(p, ps, _), Fabstract(p', ps', _)) ->
+        Path.same p p' && params_unify ps ps'
+    | (Frec(p, _, _), Frec(_, _, _)) ->
+        ismapped p f2
+    | (Frec(_, _, _), _) | (_, Frec(_, _, _)) ->
+        false
+    | (Fvar(p1, _, _), Fvar(p2, _, _)) ->
+        ismapped p1 f2 && ismapped p2 f1
+    | (Fvar(p, _, _), _) ->
+        ismapped p f2
+    (*| (_, Fvar(_, _, _)) ->
+        ismapped f2 f1*)
+    | (Farrow(_, i, o), Farrow(_, i', o')) ->
+        unify(i, i') && unify(o, o')
+    | t -> false 
+  and params_unify ps qs =
+    List.for_all unify (List.combine (params_frames ps) (params_frames qs)) in
+  unify (t1, t2)
+ 
 (**************************************************************)
 (******************** Frame pretty printers *******************)
 (**************************************************************)
