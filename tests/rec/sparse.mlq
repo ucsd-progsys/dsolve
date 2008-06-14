@@ -1,0 +1,9 @@
+val mat_vec_mult:
+   vec: float array 
+   -> (({V:int | 0 <= V and V < Array.length vec} * float) list) array 
+   -> {V:float array | Array.length V = Array.length vec}
+
+val mat_vec_multI:
+   (m:int * n:int * (({V:int | 0 <= V and V < n} * float) list) array)
+   -> {V:float array | Array.length V = n}
+   -> {V:float array | Array.length V = m} 

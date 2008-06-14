@@ -1,11 +1,22 @@
-reftype 'a list{s} = 
-  | ([]) 
-  | (::) of x:'a * 'a list{s,[[];[x <= V]]}
+measure s =  [] -> 0 | _::xs -> 1 + s xs
+measure ss = [] -> 0 | x::xs -> s x + ss xs
 
-val quicksort : 'a list -> 'a list{s}
+refinement sort  is 'a list = [] | (::) of x:'a * ([[true];[x<=V;true]]) 'a list
+refinement dsort is 'a list = [] | (::) of x:'a * ([[true];[x>=V;true]]) 'a list
 
-val quicksort2: 'a list -> 'a list{s}
+(* private : for debugging dsolve *)
+val initlist: xs: 'a list -> {V : 'a list<sort> list | ss V = s xs} 
+val merge:    xs: 'a list<sort> -> ys: 'a list<sort> -> {V: 'a list<sort> | s V = s xs + s ys}
+val merge2:   xss: 'a list<sort> list -> {V: 'a list<sort> list | ss V = ss xss} 
+val mergeAll: xss: 'a list<sort> list -> {V: 'a list<sort> | s V = ss xss}
 
-val mergesort : 'a list -> 'a list{s}
+(* public *)
+val quicksort : xs: 'a list -> {V : 'a list<sort> | s V = s xs}
+val quicksort2: xs: 'a list -> {V : 'a list<sort> | s V = s xs}
+val mergesort : xs: 'a list -> {V : 'a list<sort> | s V = s xs}
+val mergesort2: xs: 'a list -> {V : 'a list<sort> | s V = s xs}
+val insertsort: xs: 'a list -> {V : 'a list<sort> | s V = s xs}
+val rev:        xs: 'a list<sort> -> {V : 'a list<dsort> | s V = s xs}
 
-val insertsort: 'a list -> 'a list{s}
+
+

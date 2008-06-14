@@ -1,0 +1,28 @@
+(* private *)
+measure s = 
+   | Empty -> 0
+   | Node _,l,r -> 1 + s l + s r
+
+measure h = 
+   | Empty -> 0
+   | Node _,l,r -> if h l > h r then 1 + h l else 1 + h r 
+
+refinement bal is ([[_];[_;_; -1 <= h V - h l && h V - h l <= 1]) 'a tree = 
+   | Empty 
+   | Node of 'a * l: 'a tree * 'a tree
+
+refinement bst is 'a tree = 
+   | Empty 
+   | Node of x: 'a * ([[_];[V<=x;_;_]]) 'a tree * ([[_];[V>=x;_;_]]) 'a tree
+
+refinement List.sort  is 'a list = 
+   | [] 
+   | (::) of x:'a * ([[true];[x<=V;true]]) 'a list
+
+type 'a t = 'a tree <bst,bal>
+
+(* public *)
+val size: 'a t -> int
+val create: unit -> {V : 'a t | size V = 0} 
+val add: 'a -> :'a t -> {V : 'a t | size V = 1 + size t}
+val toList: t:  'a t -> {V: 'a list <List.sort> | List.length V = size t}
