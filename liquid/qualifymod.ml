@@ -269,8 +269,11 @@ and instantiate_id id f env tenv =
 
 and constrain_base_identifier (env, _, f) id e =
   let refn =
-    if Le.mem id env then B.equality_refinement (expression_to_pexpr e) else F.empty_refinement
-  in (F.apply_refinement refn (instantiate_id id f env e.exp_env), [], [])
+    if Le.mem id env then B.equality_refinement (expression_to_pexpr e) else F.empty_refinement in
+  let wfc = match f with
+     F. Fsum _ -> [WFFrame(env, f)] 
+    | _ -> [] in
+  (F.apply_refinement refn (instantiate_id id f env e.exp_env), wfc, [])
 
 and constrain_identifier (env, guard, f) id tenv =
   let f = instantiate_id id f env tenv in (f, [WFFrame(env, f)], [])

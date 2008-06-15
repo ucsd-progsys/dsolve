@@ -12,7 +12,7 @@ let rec rev x =
   match x with
   | [] -> []
   | x::xs -> append (rev xs) [x]
-               (* TODO: define @ in builtins *)
+               (* TODO: define @ in builtins? *)
 
 let rev2 xs =
   let rec _r xs ys = 
