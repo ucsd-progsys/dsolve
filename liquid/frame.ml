@@ -688,11 +688,11 @@ let rec translate_pframe env plist pf =
     | PFtuple (fs, r) -> tuple_of_frames (List.map transl_pframe_rec fs) (transl_pref r)
     | PFrecord (fs, r) -> transl_record fs r 
   and transl_constr l fs r =
-(*    let (path, decl) = try Env.lookup_type l env with
+    let (path, decl) = try Env.lookup_type l env with
       Not_found -> raise (T.Error(Location.none, T.Unbound_type_constructor l)) in
     let _ = if List.length fs != decl.type_arity then
       raise (T.Error(Location.none, T.Type_arity_mismatch(l, decl.type_arity, List.length fs))) in
-    let fs = List.map transl_pframe_rec fs in
+(*    let fs = List.map transl_pframe_rec fs in
     let fresh freshf ty = fresh_with_var_fun (ref []) env ty freshf in
     let id = (fun f -> f) in
     let refinement () = transl_pref r in *)

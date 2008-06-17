@@ -7,15 +7,15 @@ measure h =
    | Empty -> 0
    | Node _,l,r -> if h l > h r then 1 + h l else 1 + h r 
 
-refinement bal is ([[_];[_;_; -1 <= h V - h l && h V - h l <= 1]) 'a tree = 
+refinement bal of 'a tree = 
    | Empty 
-   | Node of 'a * l: 'a tree * 'a tree
+   | Node of 'a * l: 'a tree * {v: 'a tree | -1 <= h V - h l && h V - h l <= 1}
 
-refinement bst is 'a tree = 
+refinement bst of 'a tree = 
    | Empty 
    | Node of x: 'a * ([[_];[V<=x;_;_]]) 'a tree * ([[_];[V>=x;_;_]]) 'a tree
 
-refinement List.sort  is 'a list = 
+refinement List.sort of 'a list = 
    | [] 
    | (::) of x:'a * ([[true];[x<=V;true]]) 'a list
 
