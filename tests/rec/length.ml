@@ -34,14 +34,14 @@ let rec partition f x =
                                      * instantiation -- fix eventually *)
                                     (* polymorphic instantiation seems to be
                                      * breaking thing *)
-(*let partition2 f ixs =
+let partition2 f ixs =
   let rec _p xs ys zs =
     match xs with 
     | [] -> 
         (fun x -> x) (ys,zs)
     | x::xs' ->
-        if f x then _p xs' (x::ys) zs else _p xs' ys (x::zs) in
-  _p ixs [] []*)
+        if f x then _p ((fun x -> x) xs') (x::ys) zs else _p xs' ys (x::zs) in
+  _p ixs [] []
 
 let rec unzip x =
   match x with
@@ -59,9 +59,9 @@ let check xs ys zs =
   let _ = 
     let (ys,zs) = partition ((>) 0) xs in
     assert (len ys + len zs = len xs) in
-  (*let _ = 
+  let _ = 
     let (ys,zs) = partition2 ((>) 0) xs in
-    assert (len ys + len zs = len xs) in*)
+    assert (len ys + len zs = len xs) in
   let _ = 
     let (xs',ys') = unzip zs in
     assert (len xs' = len zs && len ys' = len zs) in

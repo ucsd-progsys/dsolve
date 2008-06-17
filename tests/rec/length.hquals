@@ -1,0 +1,17 @@
+qualif A(v) : _meas_len ~A = v
+qualif B(v) : _meas_len v = [0, 1, 2, 3]
+qualif C(v): _meas_len v = 1 + _meas_len ~A 
+
+qualif D(v): _meas_len v = _meas_len x 
+qualif DD(v): _meas_len v = _meas_len xs 
+
+qualif E(v): _meas_len v = _meas_len xs + _meas_len ys
+qualif EE(v): _meas_len v + _meas_len e0 = _meas_len x
+
+qualif F(v): _meas_len v + _meas_len xs + _meas_len ys = _meas_len ixs
+qualif FF(v): _meas_len v <= _meas_len ixs
+qualif E(v): _meas_len v + _meas_len e0 = _meas_len ixs
+
+
+qualif C(v) : __tag v = 0
+qualif D(v) : __tag v = 1
