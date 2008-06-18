@@ -532,10 +532,6 @@ let mutable_variance = function
 let fresh_refinementvar () =
   mk_refinement [] [] [Path.mk_ident "k"]
 
-(* pmr: this looks suspect - ming? isn't this just empty_refinement? *)
-let fresh_true () =
-  mk_refinement [] [(C.dummy (), Path.mk_ident "true", Predicate.True)] []
-
 let fresh_fvar level = Fvar(Path.mk_ident "a", (if level = Btype.generic_level then Poly else Mono), empty_refinement)
 
 let rec canonicalize t =
@@ -551,17 +547,23 @@ let close_arg res arg =
 let close_constructor res args =
   List.iter (fun a -> Btype.iter_type_expr (close_arg res) a; close_arg res a) args
 
+let fresh_abstract p params varis =
+  Fabstract (p, C.combine3 (Misc.mapi (fun _ i -> C.tuple_elem_id i) params) params varis, empty_refinement)
+
+let fresh_record fresh p fields =
+  let fresh_field (name, muta, t) =
+    (Ident.create name, fresh t, mutable_variance muta)
+  in record_of_params p (List.map fresh_field fields) empty_refinement
+
 let fresh_constr fresh env p t tyl =
   let params  = List.map fresh tyl in
   let ty_decl = Env.find_type p env in
   let varis   = List.map translate_variance ty_decl.type_variance in
     match ty_decl.type_kind with
       | Type_abstract ->
-          Fabstract (p, C.combine3 (Misc.mapi (fun _ i -> C.tuple_elem_id i) tyl) params varis, empty_refinement)
+          fresh_abstract p params varis
       | Type_record (fields, _, _) -> (* 1 *)
-          let fresh_field (name, muta, t) =
-            (Ident.create name, fresh t, mutable_variance muta)
-          in record_of_params p (List.map fresh_field fields) empty_refinement
+          fresh_record fresh p fields
       | Type_variant _ ->
           let param_vars = List.combine tyl varis in
           let (_, cds)   = List.split (Env.constructors_of_type p (Env.find_type p env)) in
@@ -688,16 +690,20 @@ let rec translate_pframe env plist pf =
     | PFtuple (fs, r) -> tuple_of_frames (List.map transl_pframe_rec fs) (transl_pref r)
     | PFrecord (fs, r) -> transl_record fs r 
   and transl_constr l fs r =
+    let params = List.map transl_pframe_rec fs in
     let (path, decl) = try Env.lookup_type l env with
       Not_found -> raise (T.Error(Location.none, T.Unbound_type_constructor l)) in
     let _ = if List.length fs != decl.type_arity then
       raise (T.Error(Location.none, T.Type_arity_mismatch(l, decl.type_arity, List.length fs))) in
-(*    let fs = List.map transl_pframe_rec fs in
-    let fresh freshf ty = fresh_with_var_fun (ref []) env ty freshf in
-    let id = (fun f -> f) in
-    let refinement () = transl_pref r in *)
-      assert false
-      (*fresh_constr fresh_true refinement path decl id id fs fresh *)
+    let varis   = List.map translate_variance decl.type_variance in
+      match decl.type_kind with 
+          Type_abstract ->
+            fresh_abstract path params varis
+        | Type_record(fields, _, _) ->
+            fresh_record (fresh_without_vars env) path fields
+        | Type_variant _ -> (* we don't have access to the ML type here, so instantiation
+                             becomes more difficult *)
+            assert false
   and transl_record fs r =
     let ps = List.map (fun (f, s, m) -> (Ident.create s, transl_pframe_rec f, mutable_variance m)) fs in
     let path = Path.mk_ident "_anon_record" in
