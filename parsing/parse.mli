@@ -16,7 +16,7 @@
 
 val implementation : Lexing.lexbuf -> Parsetree.structure
 val interface : Lexing.lexbuf -> Parsetree.signature
-val liquid_interface : Lexing.lexbuf -> Parsetree.penv
+val liquid_interface : Lexing.lexbuf -> Parsetree.liquid_sig
 val toplevel_phrase : Lexing.lexbuf -> Parsetree.toplevel_phrase
 val use_file : Lexing.lexbuf -> Parsetree.toplevel_phrase list
 val qualifiers : Lexing.lexbuf -> Parsetree.qualifier_declaration list

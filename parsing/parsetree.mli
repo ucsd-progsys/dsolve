@@ -140,7 +140,6 @@ and exception_declaration = core_type list
 (* Predicate_Declarations *)
 
 and predicate_alias_declaration = string * predicate_pattern
-and predicate_alias = string
 
 and predicate_pattern =
     { ppredpat_desc: predpat_desc;
@@ -167,8 +166,17 @@ and predpatexp_desc =
   | Ppredpatexp_field of string * predpatexp
 
 (* Signature structure *)
+                                   
+and predicate_alias = string * predicate_alias_declaration
 
-and penv = (string * (string * predicate_pattern)) list * (string * litframe) list  
+and cstr = string * string option list * predpatexp
+
+and liquid_decl =
+    LvalDecl of string * litframe
+  | LmeasDecl of (string * string) * cstr list 
+  | LrecrefDecl
+
+and liquid_sig = predicate_alias list * liquid_decl list  
 
 (* Parsed frames *)
 

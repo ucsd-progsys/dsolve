@@ -29,6 +29,8 @@ open Types
 open Clflags
 
 module F = Frame
+module MLQ = Mlqmod
+module C = Common
 
 let usage = "Usage: liquid <options> [source-file]\noptions are:"
 
@@ -76,41 +78,29 @@ let load_qualfile ppf qualfile =
   let qs = Pparse.file ppf qualfile Parse.qualifiers ast_impl_magic_number in
     List.map Qualmod.type_qualifier qs
 
-let load_mlqfile ppf env ifacefile =
-  let (preds, vals) = if Sys.file_exists ifacefile then Pparse.file ppf ifacefile Parse.liquid_interface ast_impl_magic_number else ([], []) in
+let load_mlqfile iname env fenv =
+  let mlq = MLQ.parse std_formatter env iname in
+    MLQ.load env fenv mlq
+
+let load_valfile ppf env ifacefile =
+  let (preds, decls) = MLQ.parse ppf env ifacefile in
+  let vals = MLQ.filter_vals decls in
     List.map (fun (s, pf) -> (s, F.translate_pframe env preds pf)) vals 
 
-let lookup_path s env =
-  fst (Env.lookup_value (Longident.parse s) env)
-
-let load_mlq_in_env env fenv ifenv =
-  let load_frame fenv (s, pf) =
-    try
-      let p = lookup_path s env in
-      (*let ff = Frame.fresh_without_vars env ((Env.find_value p env).val_type)
-       * in*)
-      let _ = if String.contains s '.' then failwith (Printf.sprintf "mlq: val %s has invalid name" s) in    
-      (*let _ = if not(F.same_shape true ff pf) then
-                failwith (sprintf "mlq: val %s has shape which differs from usage" s) in*)
-        Lightenv.add p pf fenv 
-    with Not_found -> failwith (Printf.sprintf "mlq: val %s does not correspond to program value" s) in
-  List.fold_left load_frame fenv ifenv
-
 let load_builtins ppf env fenv =
-  let _ = Measure.mk_bms env in (* experimental measures *)
   let b = match !builtins_file with 
           | Some b -> if not(Sys.file_exists b) then failwith (sprintf "builtins: file %s does not exist" b) else b
           | None -> "" in
   let fenv = 
     try
-      let kvl = load_mlqfile ppf env b in
-      let mvl = Measure.mk_tys env in
+      let kvl = load_valfile ppf env b in
       let tag = (Path.mk_ident F.tag_function, F.Fvar(Path.mk_ident "", F.Mono, F.empty_refinement)) in
-      let f = (fun (k, v) -> (lookup_path k env, F.label_like v v)) in
-      let kvl = tag :: mvl @ (List.map f kvl) in
+      let f = (fun (k, v) -> (C.lookup_path k env, F.label_like v v)) in
+      let kvl = tag :: (List.map f kvl) in
       Lightenv.addn kvl fenv
     with Not_found -> failwith (Printf.sprintf "builtins: val %s does not correspond to library value" b) in
   (env, fenv)
+
     
 let load_sourcefile ppf sourcefile =
   init_path ();
@@ -126,18 +116,17 @@ let process_sourcefile fname =
   let bname = Misc.chop_extension_if_any fname in
   let (qname, iname) = (bname ^ ".quals", bname ^ ".mlq") in
   try
-   let (str, env, fenv) as source = load_sourcefile std_formatter !filename in
-   if !dump_qualifs
-   then
-     Qdump.dump_default_qualifiers source qname
-   else
-    let quals = load_qualfile std_formatter qname in
-     let (env, fenv) = load_builtins std_formatter env fenv in 
-     let ifenv = load_mlqfile std_formatter env iname in
-     let ifenv = load_mlq_in_env env Lightenv.empty ifenv in
-     let source = (List.rev_append quals str, env, fenv, ifenv) in
-     analyze std_formatter !filename source
-  with x -> (report_error std_formatter x; exit 1)
+    let (str, env, fenv) as source = load_sourcefile std_formatter !filename in
+    if !dump_qualifs
+    then
+      Qdump.dump_default_qualifiers source qname
+    else
+      let quals = load_qualfile std_formatter qname in
+      let (env, fenv) = load_builtins std_formatter env fenv in 
+      let (fenv, mlqenv) = load_mlqfile iname env fenv in
+      let source = (List.rev_append quals str, env, fenv, mlqenv) in
+      analyze std_formatter !filename source
+   with x -> (report_error std_formatter x; exit 1)
 
 let main () =
   Arg.parse [

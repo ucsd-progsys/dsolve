@@ -9,6 +9,17 @@ module Le = Lightenv
 type mdef = (string * P.pexpr) 
 type m = (constructor_tag * Path.t option list * mdef list) list 
 type t = m Le.t
+type pre_measure = (string * (Path.t option list * (string * P.pexpr) list))
+
+type meas_entry =
+    Mcstr of pre_measure
+  | Mname of string * string
+
+let filter_cstrs es =
+  C.maybe_list (List.map (function Mcstr p -> Some p | _ -> None) es)
+
+let filter_names es =
+  C.maybe_list (List.map (function Mname (n, mn) -> Some (n, mn) | _ -> None ) es)
 
 let (a, b, c, d) = (Path.mk_ident "a", Path.mk_ident "b", Path.mk_ident "c", Path.mk_ident "d")
 
@@ -67,14 +78,13 @@ let transl_desc mlenv (c, (ps, rs)) =
     Some (sum_path fr, (tag, ps, rs)) 
   with Not_found -> None
 
-(* don't panic! bms only set here *)
 let bms = ref empty
-let mk_bms env = 
+let mk_measures env ms = 
   let f g e h = 
     match g h with
         Some k -> add k e 
       | None -> e in
-  bms := List.fold_left (f (transl_desc env)) empty builtins 
+  bms := List.fold_left (f (transl_desc env)) empty ms 
 
 let mk_fun n f = 
   let funr a = 
@@ -93,13 +103,13 @@ let find_mlenv_by_name s env =
   let fr = F.fresh_without_vars env v.val_type in
     (p, fr)
 
-let mk_tys env =
-  let ty (s, mls) =
+let mk_tys env ms =
+  let ty f (s, mls) =
     try
       let (p, sf) = find_mlenv_by_name mls env in
       Some (Path.mk_ident s, mk_fun s sf) 
-        with Not_found -> None in
-  C.maybe_list (List.map ty builtin_funs)
+        with Not_found -> f s in
+  C.maybe_list ((List.map (ty (fun x -> None)) builtin_funs) @ (List.map (ty (fun x -> failwith x)) ms))
 
 let mk_pred v (_, ps, ms) mps =
   let _ = if List.length ps != List.length mps then failwith "argument arity mismatch" in

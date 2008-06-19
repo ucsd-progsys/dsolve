@@ -146,6 +146,12 @@ let p2i p = match p with
     Path.Pident id -> id
   | _ -> assert false
 
+let lookup_path s env =
+  fst (Env.lookup_value (Longident.parse s) env)
+
+let lookup_type p env =
+  (Env.find_value p env).Types.val_type
+
 let tuple_elem_id i =
   Ident.create ("e" ^ string_of_int i)
 

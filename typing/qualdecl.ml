@@ -30,6 +30,23 @@ let transl_rels rels =
       [] -> rel_star 
     | _ -> List.map transl_rel rels
 
+let rec transl_patpredexp_single_map f pe =
+  match pe.ppredpatexp_desc with
+    | Ppredpatexp_int (n) ->
+        let _ = if List.length n != 1 then failwith "Set of int lits used in single qualifier" in
+	      PInt (List.hd n)
+    | Ppredpatexp_var (y) ->
+        let y = match y with [sty] -> sty | _ -> failwith "Var ident set used in single qualifier or predicate" in
+	      Var (f (conflat y))
+    | Ppredpatexp_funapp (g, es) ->
+	      FunApp (conflat g, List.map (transl_patpredexp_single_map f) es)
+    | Ppredpatexp_binop (e1, ops, e2) ->
+	      Binop (transl_patpredexp_single_map f e1, transl_op (List.hd ops), transl_patpredexp_single_map f e2)
+    | Ppredpatexp_field (g, e1) ->
+        Field (Ident.create g, transl_patpredexp_single_map f e1)
+    | _ -> failwith "Wildcard used in single qualifier or predicate"
+
+(* needs major refactoring *)
 let transl_patpred_single simple valu env p =
   let penv = ref [(Path.name valu, valu)] in
   let ap p pid = penv := (p, pid)::!penv; pid in

@@ -308,8 +308,9 @@ let mktrue_record a = mkrecord a ptrue
 %token PRIVATE
 %token QUALIF
 %token SINGLE_QUALIF
-%token LVAL
 %token PREDICATE
+%token MEASURE
+%token REFINEMENT
 %token QUESTION
 %token QUESTIONQUESTION
 %token QUOTE
@@ -416,7 +417,7 @@ The precedences must be listed from low to high.
 %start qualifier_patterns               /* pattern qualifier files */
 %type <Parsetree.qualifier_declaration list> qualifier_patterns
 %start liquid_interface                 /* for mlq refined interface files */
-%type <Parsetree.penv> liquid_interface
+%type <Parsetree.liquid_sig> liquid_interface
 
 %%
 
@@ -1568,12 +1569,51 @@ qual_lit_op_list:
 /* Liquid signatures */
 
 liquid_signature:
-    liquid_val_decl liquid_signature        { $1 :: $2 }
-  | liquid_val_decl                         { [$1] }
+    liquid_decl liquid_signature        { $1 :: $2 }
+  | liquid_decl                         { [$1] }
+
+liquid_decl:
+    liquid_val_decl                     { let (name, decl) = $1 in LvalDecl(name, decl) }
+  | liquid_measure_decl                 { let (name, decl) = $1 in LmeasDecl(name, decl) }
+  | liquid_recref_decl                  { LrecrefDecl }
 
 liquid_val_decl:
     VAL val_longident COLON liquid_type           
       { (String.concat "." (Longident.flatten $2), $4) }
+
+/* Refinement specifications */
+
+liquid_recref_decl:
+    REFINEMENT                          { None }
+
+/* Measure specifications */
+
+liquid_measure_decl:
+    MEASURE LIDENT EQUAL measure_constructor_list              { (("_meas_"^$2, $2), $4) }
+
+measure_constructor_list:
+    opt_bar measure_constructor opt_measure_constructor_list   { $2 :: $3 }
+
+opt_measure_constructor_list:
+    /* empty */                                                { [] }
+  | BAR measure_constructor opt_measure_constructor_list       { $2 :: $3 } 
+
+measure_constructor:
+    UIDENT measure_args MINUSGREATER qual_expr                 { ($1, $2, $4) }
+
+measure_args:
+    measure_arg                                                { [$1] }
+  | LPAREN measure_arg_comma_list RPAREN                       { $2 }
+
+measure_arg_comma_list:
+    measure_arg                                                { [$1] }
+  | measure_arg COMMA measure_arg_comma_list                   { $1 :: $3 }
+
+measure_arg:
+    LIDENT                                                     { Some $1 }
+  | UNDERSCORE                                                 { None }
+
+/* Refinement specifications */
 
 /* Liquid types */
 
@@ -1590,7 +1630,6 @@ liquid_type:
       { mktuple ($4::$6) (RLiteral($2, $8)) }
   | LBRACE liquid_type1 STAR liquid_type_list BAR UIDENT RBRACE 
       { mktuple ($2::$4) (RVar($6)) }
-
 
 liquid_type1:
     LBRACE LIDENT COLON liquid_type2 BAR predicate RBRACE 
