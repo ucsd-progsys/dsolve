@@ -1599,10 +1599,11 @@ opt_measure_constructor_list:
   | BAR measure_constructor opt_measure_constructor_list       { $2 :: $3 } 
 
 measure_constructor:
-    UIDENT measure_args MINUSGREATER qual_expr                 { ($1, $2, $4) }
+    UIDENT opt_measure_args MINUSGREATER qual_expr                 { ($1, $2, $4) }
 
-measure_args:
-    measure_arg                                                { [$1] }
+opt_measure_args:
+    /* empty */                                                { [] }
+  | measure_arg                                                { [$1] }
   | LPAREN measure_arg_comma_list RPAREN                       { $2 }
 
 measure_arg_comma_list:

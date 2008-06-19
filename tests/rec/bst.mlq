@@ -1,9 +1,9 @@
 (* private *)
-measure s = 
+measure size = 
    | Empty -> 0
-   | Node _,l,r -> 1 + s l + s r
+   | Node (_,l,r) -> 1 + size l + size r
 
-measure h = 
+(*measure h = 
    | Empty -> 0
    | Node _,l,r -> if h l > h r then 1 + h l else 1 + h r 
 
@@ -25,4 +25,4 @@ type 'a t = 'a tree <bst,bal>
 val size: 'a t -> int
 val create: unit -> {V : 'a t | size V = 0} 
 val add: 'a -> :'a t -> {V : 'a t | size V = 1 + size t}
-val toList: t:  'a t -> {V: 'a list <List.sort> | List.length V = size t}
+val toList: t:  'a t -> {V: 'a list <List.sort> | List.length V = size t}*)

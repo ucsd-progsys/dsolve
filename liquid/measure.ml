@@ -32,7 +32,7 @@ let builtin_funs = [
   (h, hml);
   (len, lenml);
   (par, parml);
-  (sz, szml);
+(*  (sz, szml);*)
 ]
 
 let builtins = [
@@ -42,8 +42,8 @@ let builtins = [
   ("::", ([None; Some a], [len, P.Binop(P.PInt(1), P.Plus, P.FunApp(len, [P.Var a]))]));
   ("Even", ([Some a], [(par, P.Binop(P.PInt(2), P.Times, P.Var(a)))]));
   ("Odd", ([Some a], [(par, P.Binop(P.Binop(P.PInt(2), P.Times, P.Var(a)), P.Plus, P.PInt(1)))]));
-  ("Empty", ([], [(sz, P.PInt(0))]));
-  ("Node", ([None; Some a; Some b], [(sz, P.Binop(P.PInt(1), P.Plus, P.Binop((P.FunApp(sz, [P.Var a])), P.Plus, (P.FunApp(sz, [P.Var b])))))]))
+(*  ("Empty", ([], [(sz, P.PInt(0))]));
+  ("Node", ([None; Some a; Some b], [(sz, P.Binop(P.PInt(1), P.Plus, P.Binop((P.FunApp(sz, [P.Var a])), P.Plus, (P.FunApp(sz, [P.Var b])))))]))*)
 ]
 
 let (empty: t) = Le.empty
