@@ -72,6 +72,7 @@ val pprint: formatter -> t -> unit
 val pprint_pexpr: formatter -> pexpr -> unit
 
 val pexp_map_vars: (Path.t -> pexpr) -> pexpr -> pexpr 
+val pexp_map_funs: (string -> string) -> pexpr -> pexpr
 
 val big_and: t list -> t
 val big_or: t list -> t

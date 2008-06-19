@@ -382,12 +382,14 @@ liquid/measure.cmx: typing/types.cmx typing/typedtree.cmx \
     typing/common.cmx 
 liquid/message.cmo: liquid/message.cmi 
 liquid/message.cmx: liquid/message.cmi 
-liquid/mlqmod.cmo: typing/qualdecl.cmo parsing/pparse.cmi typing/path.cmi \
-    parsing/parsetree.cmi parsing/parse.cmi liquid/measure.cmo \
-    liquid/lightenv.cmo liquid/frame.cmi utils/config.cmi 
-liquid/mlqmod.cmx: typing/qualdecl.cmx parsing/pparse.cmx typing/path.cmx \
-    parsing/parsetree.cmi parsing/parse.cmx liquid/measure.cmx \
-    liquid/lightenv.cmx liquid/frame.cmx utils/config.cmx 
+liquid/mlqmod.cmo: typing/qualdecl.cmo typing/predicate.cmi \
+    parsing/pparse.cmi typing/path.cmi parsing/parsetree.cmi \
+    parsing/parse.cmi liquid/measure.cmo liquid/lightenv.cmo liquid/frame.cmi \
+    utils/config.cmi 
+liquid/mlqmod.cmx: typing/qualdecl.cmx typing/predicate.cmx \
+    parsing/pparse.cmx typing/path.cmx parsing/parsetree.cmi \
+    parsing/parse.cmx liquid/measure.cmx liquid/lightenv.cmx liquid/frame.cmx \
+    utils/config.cmx 
 liquid/normalize.cmo: liquid/qdebug.cmi parsing/printast.cmi \
     parsing/parsetree.cmi parsing/longident.cmi parsing/location.cmi \
     typing/common.cmo parsing/asttypes.cmi 

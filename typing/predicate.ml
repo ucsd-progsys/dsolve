@@ -198,6 +198,19 @@ let rec pexp_map_vars f pexp =
         e
   in map_rec pexp
 
+let rec pexp_map_funs f pexp =
+  let rec map_rec = function
+      Var x -> Var x
+    | FunApp (fn, e) ->
+        FunApp (f fn, List.map map_rec e)
+    | Binop (e1, op, e2) ->
+        Binop (map_rec e1, op, map_rec e2)
+    | Field (f, pexp) ->
+        Field (f, map_rec pexp)
+    | e ->
+        e
+  in map_rec pexp
+
 let rec map_vars f pred =
   let rec map_rec = function
       True ->

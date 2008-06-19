@@ -3,6 +3,7 @@ open Parsetree
 
 module F = Frame
 module M = Measure
+module P = Predicate
 
 (* MLQs *)
 
@@ -19,17 +20,20 @@ let load_val env fenv (s, pf) =
       Lightenv.add p pf fenv
   with Not_found -> failwith (Printf.sprintf "mlq: val %s does not correspond to program value" s)
 
-let map_constructor_args env mname (cname, args, cpred) =
+let map_constructor_args env (name, mlname) (cname, args, cpred) =
   let dargs = C.maybe_list args in
   let argmap = List.combine dargs (List.map (fun s -> Path.mk_ident s) dargs) in
   let f s =
     try List.assoc s argmap with Not_found -> C.lookup_path s env in
   let pred = Qualdecl.transl_patpredexp_single_map f cpred in
+  let fn s =
+    if s = mlname then name else s in
+  let pred = P.pexp_map_funs fn pred in
   let args = List.map (function Some s -> Some (List.assoc s argmap) | None -> None) args in
-    Mcstr(cname, (args, [(mname, pred)]))
+    Mcstr(cname, (args, [(name, pred)]))
 
 let load_measure env ((n, mn), cstrs) =
-  (Mname(n, mn)) :: (List.map (map_constructor_args env n) cstrs)  
+  (Mname(n, mn)) :: (List.map (map_constructor_args env (n, mn)) cstrs)  
 
 let load env fenv (preds, decls) =
   let load_decl (ifenv, menv) = function
@@ -44,5 +48,3 @@ let load env fenv (preds, decls) =
 
 let filter_vals xs =
   C.maybe_list (List.map (function LvalDecl(x, y)  -> Some(x, y)  | _ -> None) xs)
-
-

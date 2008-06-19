@@ -1,1 +1,2 @@
 qualif A(v): _meas_size t = v
+qualif B(v): v = 1 + size l + size r
