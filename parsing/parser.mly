@@ -1599,7 +1599,7 @@ opt_measure_constructor_list:
   | BAR measure_constructor opt_measure_constructor_list       { $2 :: $3 } 
 
 measure_constructor:
-    UIDENT opt_measure_args MINUSGREATER qual_expr                 { ($1, $2, $4) }
+    constr_longident opt_measure_args MINUSGREATER qual_expr   { ((String.concat "." (Longident.flatten $1)), $2, $4) }
 
 opt_measure_args:
     /* empty */                                                { [] }

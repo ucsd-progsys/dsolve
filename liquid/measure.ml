@@ -30,7 +30,7 @@ let (sz, szml) = ("_meas_size", "size")
 
 let builtin_funs = [
   (h, hml);
-  (len, lenml);
+(*  (len, lenml);*)
   (par, parml);
 (*  (sz, szml);*)
 ]
@@ -38,8 +38,8 @@ let builtin_funs = [
 let builtins = [
   ("Some", ([None], [(h, P.PInt(1))])); 
   ("None", ([], [(h, P.PInt(0))]));
-  ("[]", ([], [(len, P.PInt(0))]));
-  ("::", ([None; Some a], [len, P.Binop(P.PInt(1), P.Plus, P.FunApp(len, [P.Var a]))]));
+(*  ("[]", ([], [(len, P.PInt(0))]));
+  ("::", ([None; Some a], [len, P.Binop(P.PInt(1), P.Plus, P.FunApp(len, [P.Var a]))])); *)
   ("Even", ([Some a], [(par, P.Binop(P.PInt(2), P.Times, P.Var(a)))]));
   ("Odd", ([Some a], [(par, P.Binop(P.Binop(P.PInt(2), P.Times, P.Var(a)), P.Plus, P.PInt(1)))]));
 (*  ("Empty", ([], [(sz, P.PInt(0))]));
