@@ -1600,7 +1600,7 @@ opt_measure_constructor_list:
 
 measure_constructor:
     constr_longident opt_measure_args MINUSGREATER qual_expr   { ((String.concat "." (Longident.flatten $1)), $2, $4) }
-  | measure_arg COLON COLON measure_arg MINUSGREATER qual_expr { ("::", [$1; $4], $6) }
+  | measure_arg COLONCOLON measure_arg MINUSGREATER qual_expr { ("::", [$1; $3], $5) }
 
 opt_measure_args:
     /* empty */                                                { [] }

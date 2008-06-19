@@ -32,8 +32,6 @@ let rec partition f x =
                                     (* xs in outer and inner scope is probably
                                      * causing a name collision in qualifier
                                      * instantiation -- fix eventually *)
-                                    (* polymorphic instantiation seems to be
-                                     * breaking thing *)
 let partition2 f ixs =
   let rec _p xs ys zs =
     match xs with 
