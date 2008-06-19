@@ -112,22 +112,26 @@ let mk_tys env ms =
   C.maybe_list ((List.map (ty (fun x -> None)) builtin_funs) @ (List.map (ty (fun x -> failwith x)) ms))
 
 let mk_pred v (_, ps, ms) mps =
+  let maybe_fail = function Some p -> p | None -> raise Not_found in
   let _ = if List.length ps != List.length mps then failwith "argument arity mismatch" in
   let ps = List.combine ps mps in
-  let var_map v = try List.assoc (Some v) ps with Not_found -> assert false in
+  let var_map v = maybe_fail (List.assoc (Some v) ps) in
   let cm (s, e) = 
     let e = P.pexp_map_vars var_map e in
     P.Atom(P.FunApp(s, [P.Var v]), P.Eq, e) in 
   P.big_and (List.map cm ms) 
 
+let mk_pred_def v c ps =
+  mk_pred v c (List.map (fun x -> Some x) ps)
+
 let mk_qual ps c =
   let v = Path.mk_ident "v" in
-  (Path.mk_ident "measure", v, mk_pred v c ps)
+  (Path.mk_ident "measure", v, mk_pred_def v c ps)
 
 let mk_single_gd menv p vp tp =
       match tp with 
         | Some (tag, ps) -> 
-            (try Some (mk_pred vp (find_c p tag menv) (List.map (fun p -> P.Var p) ps)) with 
+            (try Some (mk_pred vp (find_c p tag menv) (List.map (function Some p -> Some (P.Var p) | _ -> None) ps)) with 
                 Not_found -> None)
         | None -> None
 
@@ -137,7 +141,8 @@ let get_or_fail = function
 
 let get_patvar p = 
   match p.pat_desc with
-    Tpat_var (p) -> C.i2p p
+    Tpat_var (p) -> Some (C.i2p p)
+  | Tpat_any -> None
   | _ -> raise Not_found
 
 (*let get_patvars_shallow pat = 
@@ -147,8 +152,7 @@ let mk_guards f e pats =
  let vp = get_or_fail e in
   let gps pat = match pat.pat_desc with
       Tpat_construct(cdesc, pl) -> 
-        (try Some (cdesc.cstr_tag, (List.map get_patvar pl)) with
-            Not_found -> None)
+        (try Some (cdesc.cstr_tag, (List.map get_patvar pl)) with Not_found -> None)
     | _ -> None in
   let ps = List.map gps pats in
   let p = sum_path f in
