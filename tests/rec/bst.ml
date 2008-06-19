@@ -6,7 +6,7 @@ type 'a tree =
 
 let rec size t = 
   match t with
-  | Empty -> 0
+  | Empty -> (fun x -> x) 0
   | Node (_,l,r) -> 1 + size l + size r
 
 let create () = 

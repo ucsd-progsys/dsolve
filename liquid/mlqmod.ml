@@ -29,7 +29,7 @@ let map_constructor_args env mname (cname, args, cpred) =
     Mcstr(cname, (args, [(mname, pred)]))
 
 let load_measure env ((n, mn), cstrs) =
-  (Mname(n, mn)) :: (List.map (map_constructor_args env mn) cstrs)  
+  (Mname(n, mn)) :: (List.map (map_constructor_args env n) cstrs)  
 
 let load env fenv (preds, decls) =
   let load_decl (ifenv, menv) = function
