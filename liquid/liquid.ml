@@ -78,9 +78,9 @@ let load_qualfile ppf qualfile =
   let qs = Pparse.file ppf qualfile Parse.qualifiers ast_impl_magic_number in
     List.map Qualmod.type_qualifier qs
 
-let load_mlqfile iname env fenv =
+let load_mlqfile iname env fenv quals =
   let mlq = MLQ.parse std_formatter env iname in
-    MLQ.load env fenv mlq
+    MLQ.load env fenv mlq quals
 
 let load_valfile ppf env ifacefile =
   let (preds, decls) = MLQ.parse ppf env ifacefile in
@@ -123,7 +123,7 @@ let process_sourcefile fname =
     else
       let quals = load_qualfile std_formatter qname in
       let (env, fenv) = load_builtins std_formatter env fenv in 
-      let (fenv, mlqenv) = load_mlqfile iname env fenv in
+      let (fenv, mlqenv, quals) = load_mlqfile iname env fenv quals in
       let source = (List.rev_append quals str, env, fenv, mlqenv) in
       analyze std_formatter !filename source
    with x -> (report_error std_formatter x; exit 1)

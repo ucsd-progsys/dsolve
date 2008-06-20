@@ -35,14 +35,15 @@ let map_constructor_args env (name, mlname) (cname, args, cpred) =
 let load_measure env ((n, mn), cstrs) =
   (Mname(n, mn)) :: (List.map (map_constructor_args env (n, mn)) cstrs)  
 
-let load env fenv (preds, decls) =
+let load env fenv (preds, decls) quals =
   let load_decl (ifenv, menv) = function
       LvalDecl(s, f)  -> (load_val env fenv (s, F.translate_pframe env preds f), menv)
     | LmeasDecl (name, cstrs) -> (ifenv, List.rev_append (load_measure env (name, cstrs)) menv)
     | LrecrefDecl -> (ifenv, menv) in
   let (ifenv, menv) = List.fold_left load_decl (Lightenv.empty, []) decls in
   let _ = M.mk_measures env (M.builtins @ (M.filter_cstrs menv)) in 
-    (Lightenv.addn (M.mk_tys env (M.filter_names menv)) fenv, ifenv)
+  let mnames = M.filter_names menv in
+    (Lightenv.addn (M.mk_tys env mnames) fenv, ifenv, Qualmod.map_preds (M.transl_pred (C.list_assoc_flip mnames)) quals)
 
 (* builtins *)
 

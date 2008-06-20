@@ -40,6 +40,10 @@ let maybe_cons m xs = match m with
 
 let maybe_list xs = List.fold_right maybe_cons xs []
 
+let list_assoc_flip xs = 
+  let r (x, y) = (y, x) in
+    List.map r xs
+
 let rec _fli f n b = function
   | [] -> b
   | x :: xs -> _fli f (n + 1) (f n b x) xs

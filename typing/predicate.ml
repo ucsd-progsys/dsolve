@@ -211,13 +211,13 @@ let rec pexp_map_funs f pexp =
         e
   in map_rec pexp
 
-let rec map_vars f pred =
+let rec map f pred =
   let rec map_rec = function
       True ->
         True
     | Atom (e1, rel, e2) ->
-        Atom (pexp_map_vars f e1, rel, pexp_map_vars f e2)
-    | Iff (px, q) -> Iff (pexp_map_vars f px, map_rec q)
+        Atom (f e1, rel, f e2)
+    | Iff (px, q) -> Iff (f px, map_rec q)
     | Not p ->
         Not (map_rec p)
     | And (p, q) ->
@@ -225,6 +225,12 @@ let rec map_vars f pred =
     | Or (p, q) ->
         Or (map_rec p, map_rec q)
   in map_rec pred
+
+let rec map_vars f pred =
+  map (pexp_map_vars f) pred
+
+let rec map_funs f pred =
+  map (pexp_map_funs f) pred
 
 let subst v x pred = map_vars (fun y -> if Path.same x y then v else Var y) pred
 

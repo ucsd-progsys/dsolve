@@ -29,19 +29,19 @@ let (par, parml) = ("_meas_par", "par")
 let (sz, szml) = ("_meas_size", "size")
 
 let builtin_funs = [
-  (h, hml);
+(*  (h, hml); *)
 (*  (len, lenml);*)
-  (par, parml);
+(*  (par, parml);*)
 (*  (sz, szml);*)
 ]
 
 let builtins = [
-  ("Some", ([None], [(h, P.PInt(1))])); 
-  ("None", ([], [(h, P.PInt(0))]));
+(*  ("Some", ([None], [(h, P.PInt(1))])); 
+  ("None", ([], [(h, P.PInt(0))])); *)
 (*  ("[]", ([], [(len, P.PInt(0))]));
   ("::", ([None; Some a], [len, P.Binop(P.PInt(1), P.Plus, P.FunApp(len, [P.Var a]))])); *)
-  ("Even", ([Some a], [(par, P.Binop(P.PInt(2), P.Times, P.Var(a)))]));
-  ("Odd", ([Some a], [(par, P.Binop(P.Binop(P.PInt(2), P.Times, P.Var(a)), P.Plus, P.PInt(1)))]));
+(*  ("Even", ([Some a], [(par, P.Binop(P.PInt(2), P.Times, P.Var(a)))]));
+  ("Odd", ([Some a], [(par, P.Binop(P.Binop(P.PInt(2), P.Times, P.Var(a)), P.Plus, P.PInt(1)))]));*)
 (*  ("Empty", ([], [(sz, P.PInt(0))]));
   ("Node", ([None; Some a; Some b], [(sz, P.Binop(P.PInt(1), P.Plus, P.Binop((P.FunApp(sz, [P.Var a])), P.Plus, (P.FunApp(sz, [P.Var b])))))]))*)
 ]
@@ -157,3 +157,6 @@ let mk_guards f e pats =
   let ps = List.map gps pats in
   let p = sum_path f in
     List.map (mk_single_gd !bms p vp) ps
+
+let transl_pred names (v, p) =
+  (v, P.map_funs (fun x -> try List.assoc x names with Not_found -> x) p) 
