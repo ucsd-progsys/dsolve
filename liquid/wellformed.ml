@@ -68,7 +68,7 @@ let get_by_name n env =
     match cs with 
       c :: [] -> c
     | c :: cs -> failwith (Printf.sprintf "too many definitions of %s" n)
-    | [] -> assert false
+    | [] -> assert false (* this is going to break a number of fascinating things in bitv *)
 
 let get_app_shape s env =
   try
