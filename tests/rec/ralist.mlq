@@ -1,18 +1,19 @@
-measure sz =
+measure size =
   | Nil -> 0
-  | One _ -> 1
-  | Even l,l' -> sz l + sz l'
-  | Odd _,l,l' -> 1 + sz l + sz l'
+  | One (_) -> 1
+  | Even (l,l') -> length l + length l'
+  | Odd  (_,l,l') -> 1 + length l + length l'
 
-refinement valid is ((_);(_);(_;sz l = sz V);(_;_;sz l = sz V)) 'a rlist = 
+(*
+refinement valid is ((_);(_);(_;length l = length V);(_;_;length l = length V)) 'a rlist = 
   | Nil 
   | One of 'a
   | Even of l:'a rlist * 'a rlist
   | Odd  of 'a * l:'a rlist * 'a rlist
 
-val length: l: 'a rlist <valid> -> {V : int | V = sz l } 
-val head:   l: {V : 'a rlist <valid> | sz V > 0} -> 'a 
-val tail:   l: {V : 'a rlist <valid> | sz V > 0} -> {V:'a rlist | sz V = sz l - 1 } 
-val lookup: l: 'a rlist <valid> -> {V : int | 0 <= V && V < sz l} -> 'a 
-
+val length: l: 'a rlist <valid> -> {V : int | V = length l } 
+val head:   l: {V : 'a rlist <valid> | length V > 0} -> 'a 
+val tail:   l: {V : 'a rlist <valid> | length V > 0} -> {V:'a rlist | length V = length l - 1 } 
+val lookup: l: 'a rlist <valid> -> {V : int | 0 <= V && V < length l} -> 'a 
+*)
 

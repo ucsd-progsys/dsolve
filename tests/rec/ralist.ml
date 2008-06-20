@@ -1,9 +1,25 @@
+let show x = x
+
+let rec spin () = spin ()
+
 type 'a rlist = 
   | Nil 
   | One of 'a
   | Even of 'a rlist * 'a rlist
   | Odd  of 'a * 'a rlist * 'a rlist
 
+let rec size l = 
+  match l with
+  | Nil -> 0
+  | One x -> 1 
+  | Even (l1, l2) -> (size l1) + (size l2)
+  | Odd (_, l1, l2) -> (size l1) + (size l2)
+
+let check xs = 
+  let _ = size xs in
+  let _ = show size in
+    ()
+(*
 let rec cons x = function
   | Nil -> One x
   | One y ->  Even(One(x), One(y))
@@ -40,12 +56,6 @@ let tail = function
   | Even _ as l ->  tail_safe l
   | Odd _ as l ->  tail_safe l
 
-let rec length = function
-  | Nil -> 0
-  | One _ -> 1
-  | Even (l1, _) -> 2 * (length l1)
-  | Odd (_, l1, _) -> 2 * (length l1) + 1
-
 let rec lookup l i =
   match l with
   | Nil -> assert false
@@ -62,3 +72,5 @@ let rec print_rlist = function
   | One _ as l -> let (x, _) = uncons l in print_int x; print_newline ()
   | Even _ as l -> let (x, l) = uncons l in print_int x; print_string "; "; print_rlist l
   | Odd _ as l -> let (x, l) = uncons l in print_int x; print_string "; "; print_rlist l 
+*)
+

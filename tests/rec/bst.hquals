@@ -1,1 +1,13 @@
 qualif A(v): _meas_size t = v
+qualif B(v): _meas_size v { * * } ~A
+qualif C(v): _meas_size v = _meas_size ~A + 1
+qualif D(v): _meas_size v = [0, 1, 2, 3, 4]
+
+qualif E(v): v = [0, 1, 2, 3, 4]
+qualif F(v): v = ~A
+
+qualif G(v): _meas_len v = _meas_len ~A + _meas_len ~B
+qualif G(v): _meas_len v = _meas_size ~A
+qualif G(v): v = _meas_len ~A
+
+
