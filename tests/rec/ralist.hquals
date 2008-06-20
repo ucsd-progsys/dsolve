@@ -1,0 +1,17 @@
+qualif D(v): v = sz l
+
+(*qualif A(v) : sz ~A { * * } v
+qualif B(v) : sz v = [0, 1, 2, 3]
+qualif C(v): sz v = 1 + sz ~A*)
+
+(*
+qualif D(v): _meas_len v = _meas_len x 
+qualif DD(v): _meas_len v = _meas_len xs 
+qualif E(v): _meas_len v = _meas_len xs + _meas_len ys
+qualif EE(v): _meas_len v + _meas_len e0 = _meas_len x
+qualif F(v): _meas_len v + _meas_len xs + _meas_len ys = _meas_len ixs
+qualif FF(v): _meas_len v <= _meas_len ixs
+qualif E(v): _meas_len v + _meas_len e0 = _meas_len ixs
+qualif C(v) : __tag v = 0
+qualif D(v) : __tag v = 1
+*)

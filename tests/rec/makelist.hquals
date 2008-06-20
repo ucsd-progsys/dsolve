@@ -1,0 +1,4 @@
+qualif AA(v) : ~A { * * } len v
+qualif A(v) : len ~A { * * } v
+qualif B(v) : len v = [0, 1, 2, 3]
+qualif C(v): len v = 1 + len ~A 
