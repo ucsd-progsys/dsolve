@@ -1,6 +1,6 @@
-let show x = x
+(*let show x = x
 
-let rec spin () = spin ()
+let rec spin () = spin ()*)
 
 type 'a rlist = 
   | Nil 
@@ -15,10 +15,10 @@ let rec sz l =
   | Even (l1, l2) -> (sz l1) + (sz l2)
   | Odd (_, l1, l2) -> 1 + (sz l1) + (sz l2)
 
-let check xs = 
+(*let check xs = 
   let _ = sz xs in
   let _ = show sz in
-    ()
+    ()*)
 (*
 let rec cons x = function
   | Nil -> One x

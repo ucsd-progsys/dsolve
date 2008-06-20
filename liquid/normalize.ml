@@ -40,9 +40,6 @@ let fresh_name () = Longident.parse (fresh_name_s ())
  * happen in our code so this assumption is OK *)
 let li_flatten li = String.concat "." (Longident.flatten li) 
 
-(* constant divisions and multiplications are wreaking havoc on us
- * because non-const ops turn into uninterpreted functions and make
- * life difficult *)
 let is_op exp nm = 
   match exp.pexp_desc with
     | Pexp_ident(id) ->
@@ -82,12 +79,6 @@ let is_const_mult exp =
         if mult then is_const (List.nth es 1) || is_const (List.hd es)
         else false
     | _ -> false
-
-
-(* ming: we dummy out all the pattern locations because we don't use them.
- * this is technically destructive though, if we do implement pattern matching
- * it will have to be fixed. *)
-let mk_dum_varpat x = {ppat_desc = Ppat_var x; ppat_loc = dummy}
 
 let mk_let_lit r pes e2 = Pexp_let(r, pes, e2)
 let mk_let r x e1 e2 = mk_let_lit r [({ppat_desc = Ppat_var x; ppat_loc = dummy}, e1)] e2
