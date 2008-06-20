@@ -288,13 +288,18 @@ let getpvar_maybe = function
 let pseudo_unify t1 t2 =
   let assoc p l = snd (List.find (fun (x, y) -> Path.same p x) l) in
   let vars = ref [] in
-  let rec ismapped p q = 
-    try
-      let p = assoc p !vars in
-        if isvar p then ismapped (getpvar_or_fail p) q
-        else same_shape p q
-    with Not_found -> (vars := (p, q) :: !vars; true)
-  and unify (f1, f2) = 
+  let ismapped p q =  (* cycle detection: unspeakably ugly. future: equivs *)
+    let rec ismapped_rec ps q =
+      try
+        let p = assoc (List.hd ps) !vars in
+          if isvar p then begin
+            let p' = getpvar_or_fail p in
+              if List.mem p' ps then false else
+                ismapped_rec (p' :: ps) q end else
+                  same_shape p q
+      with Not_found -> (vars := (p, q) :: !vars; true)
+    in ismapped_rec [p] q in
+  let rec unify (f1, f2) = 
     match (f1, f2) with
     | (Funknown, _) | (_, Funknown) ->
         false
