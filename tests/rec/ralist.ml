@@ -15,12 +15,19 @@ let rec sz l =
   | Even (l1, l2) -> (sz l1) + (sz l2)
   | Odd (_, l1, l2) -> (1 + (sz l1) + (sz l2)) 
 
+let create () = Nil
+
 let rec cons x xs =
   match xs with
   | Nil -> One x
   | One y ->  Even(One(x), One(y))
   | Even(l1, l2) -> Odd(x, l1, l2)
   | Odd(y, l1, l2) -> Even(cons x l1, cons y l2)
+
+let rec makelist n =
+  if n = 0 then create () else
+  let l = show (makelist (n-1)) in
+   cons n l 
 
 let rec uncons xs =
   match xs with
@@ -29,24 +36,24 @@ let rec uncons xs =
   | Even(l1, l2) ->
     let (x, l1) = uncons l1 in
     let (y, l2) = uncons l2 in
-    if sz l1 = sz l2 then
-      begin
-        match l1 with
-          Nil -> show (x, One y)
-        | One _ -> show (x, Odd(y, l1, l2))
-        | Even _ -> show (x, Odd(y, l1, l2))
-        | Odd _ -> show (x, Odd(y, l1, l2))
-      end
-    else spin ()
+    begin
+      match l1 with
+        Nil -> show (x, One y)
+      | One _ -> show (x, Odd(y, l1, l2))
+      | Even _ -> show (x, Odd(y, l1, l2))
+      | Odd _ -> show (x, Odd(y, l1, l2))
+    end
   | Odd(x, l1, l2) -> show (x, Even(l1, l2))
 
-let check xs x = 
+let check xs x n = 
   let _ = sz xs in
   let _ = show sz in (* BUG! we're losing the argument labels when we push sz through show *)
   let _ = 
     let ys = cons x xs in
       assert(sz ys = 1 + sz xs) in
   let _ =
+    let xs = makelist n in
+    let _ = assert (n = sz xs) in
     let ys = uncons xs in
       assert(sz (snd ys) = sz xs - 1) in
     ()
