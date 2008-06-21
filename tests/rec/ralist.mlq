@@ -1,7 +1,7 @@
 measure sz =
   | Nil -> 0
-(*  | One _ -> 1 
-  | Even (l,l') -> sz l + sz l' *)
+  | One _ -> 1 
+  | Even (l,l') -> sz l + sz l'
   | Odd  (_,l,l') -> 1 + sz l + sz l'
 
 (*
