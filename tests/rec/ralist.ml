@@ -2,11 +2,17 @@ let show x = x
 
 let rec spin () = spin ()
 
-type 'a rlist = 
+(*type 'a rlist = 
   | Nil 
   | One of 'a
   | Even of 'a rlist * 'a rlist
-  | Odd  of 'a * 'a rlist * 'a rlist
+  | Odd  of 'a * 'a rlist * 'a rlist*)
+
+type rlist = 
+  | Nil 
+  | One of int
+  | Even of rlist * rlist
+  | Odd  of int * rlist * rlist
 
 let rec sz l = 
   match l with
@@ -25,7 +31,7 @@ let rec cons x xs =
   | Odd(y, l1, l2) -> Even(cons x l1, cons y l2)
 
 let rec makelist n =
-  if n = 0 then create () else
+  if n = 0 then show (create ()) else
   let l = show (makelist (n-1)) in
    cons n l 
 

@@ -1,6 +1,12 @@
 qualif A(v) : sz l = v
+qualif AA(v) : sz v = n
 qualif B(v) : sz v = 1 + sz xs
 qualif C(v) : sz v = sz xs - 1
+
+qualif D(v) : len v = len e0
+qualif E(v) : lev v = len e1
+
+qualif ZERO(v) : len v = 0
 
 
 (*qualif A(v) : sz ~A { * * } v
