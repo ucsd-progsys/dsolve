@@ -1,10 +1,19 @@
+let show x = x
+
+let rec len xs = 
+  match xs with 
+  | [] -> 0
+  | x::xs' -> 1 + len xs'
+
+
 (**************************************************************************************)
 (******************************* Quick Sort *******************************************)
 (**************************************************************************************)
-
+(*
 type ('a,'b) boolean = 
   | True of 'a
   | False of 'b
+
 
 let rec partition f xs = 
   match xs with
@@ -14,54 +23,62 @@ let rec partition f xs =
       (match f x with 
        | True x' ->  (x'::ts,fs)
        | False x' -> (ts,x'::fs))
-
+      
 let rec append k xs ys = 
   match xs with
   | []     -> ys
   | x::xs' -> x::(append k xs' ys)
 
-let rec quicksort = function 
+let rec quicksort xs = 
+  match xs with
   | [] -> [] 
-  | x::xs ->
-      let (ls,rs) = partition (fun y -> if y < x then True y else False y) xs in
+  | x::xs' ->
+      let (ls,rs) = partition (fun y -> if y < x then True y else False y) xs' in
       let (ls',rs') = (quicksort ls, quicksort rs) in
       append x ls' (x::rs')
- 
+
 (**************************************************************************************)
 (************************ Faster Quick Sort *******************************************)
 (**************************************************************************************)
 
-let reverse =
-  let rec rev k rs = function 
+let reverse zs =
+  let rec rev k rs xs = 
+    match xs with
     | []    -> k::rs
     | y::ys -> rev y (k::rs) ys in
-  function 
+  match zs with
     | [] -> [] 
-    | x::xs -> rev x [] xs 
+    | z::zs' -> rev z [] zs' 
 
 let rec rev_append k xs ys =
   match xs with
   | [] -> ys
   | x::xs' -> rev_append x xs' (x::ys)
 
-let rec quicksort2 = function
+let rec quicksort2 xs = 
+  match xs with
   | [] -> []
-  | x::xs ->
-      let (ls,rs) = partition (fun y -> if y < x then True y else False y) xs in
+  | x::xs' ->
+      let (ls,rs) = partition (fun y -> if y < x then True y else False y) xs' in
       let (ls',rs') = (quicksort2 ls, quicksort2 rs) in
       rev_append x (reverse ls') (x::rs')
 
+*)
 (**************************************************************************************)
 (******************************* Merge Sort *******************************************)
 (**************************************************************************************)
 
-let rec halve = function 
-  | []   -> [], []
-  | [x]  -> [x], []
-  | x::xs ->
-      let (ys, zs) = halve xs in
+let rec halve xs =
+  match xs with
+  | []   -> ([], [])
+  (*| x::[]  -> ([x], []) *)
+  | x::xs' ->
+      let (ys, zs) = halve xs' in
       (x::zs, ys)
 
+let _ = show halve
+
+      (*
 let rec merge xs ys = 
   match (xs,ys) with
   | (_,[]) -> 
@@ -80,10 +97,18 @@ let rec mergesort = function
       let (ys,zs) = halve xs in
       merge (mergesort ys) (mergesort zs)
 
+let check xs = 
+  let _ = assert (len xs = len (quicksort xs)) in 
+  let _ = assert (len xs = len (quicksort2 xs)) in
+  let _ = assert (len xs = len (mergesort xs)) in
+  ()
+*)
+
 (**************************************************************************************)
 (******************************* DML Merge Sort ***************************************)
 (**************************************************************************************)
 
+(* 
 let rec initlist = function
   | [] -> []
   | [x] -> [[x]]
@@ -130,4 +155,5 @@ let rec insert x = function
 let rec insertsort = function
   | [] -> []
   | x::xs -> insert x (insertsort xs)
+*)
 
