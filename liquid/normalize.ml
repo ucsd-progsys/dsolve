@@ -146,7 +146,7 @@ let normalize exp =
      | Pexp_function(lbl, elbl, ps) ->
         let xlbl = fresh_name_s () in
         let x = mk_dum_ident (Longident.parse xlbl) dummy in
-        let dmatch = mk_match x ps in
+        let dmatch = mk_dummy (mk_match x ps) dummy in
           rw_expr (mk_function lbl elbl (mk_argpat xlbl) dmatch)
      | Pexp_let(Recursive, pes, e2) ->
         (* we can assume more or less that all recursive ands are 
