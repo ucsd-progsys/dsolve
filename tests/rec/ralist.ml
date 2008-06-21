@@ -21,8 +21,6 @@ let rec sz l =
   | Even (l1, l2) -> (sz l1) + (sz l2)
   | Odd (_, l1, l2) -> (1 + (sz l1) + (sz l2)) 
 
-let create () = Nil
-
 let rec cons x xs =
   match xs with
   | Nil -> One x
@@ -31,7 +29,7 @@ let rec cons x xs =
   | Odd(y, l1, l2) -> Even(cons x l1, cons y l2)
 
 let rec makelist n =
-  if n = 0 then show (create ()) else
+  if n = 0 then Nil else
   let l = show (makelist (n-1)) in
    cons n l 
 
