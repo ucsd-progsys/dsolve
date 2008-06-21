@@ -142,6 +142,8 @@ and pprint_pattern ppf pat =
               fprintf ppf "(%a)" pprint_pat_list el
           | Some ({ppat_desc = Ppat_var v}) ->
               fprintf ppf "%s" v
+          | Some ({ppat_desc = Ppat_any}) ->
+              fprintf ppf "_"
           | None ->
               fprintf ppf ""
           | _ ->

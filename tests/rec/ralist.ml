@@ -1,6 +1,6 @@
 let show x = x
 
-(*let rec spin () = spin () *)
+let rec spin () = spin ()
 
 type 'a rlist = 
   | Nil 
@@ -10,35 +10,49 @@ type 'a rlist =
 
 let rec sz l = 
   match l with
-  | Nil -> show 0
+  | Nil -> 0
   | One x -> 1
   | Even (l1, l2) -> (sz l1) + (sz l2)
-  | Odd (_, l1, l2) -> show (1 + (sz l1) + (sz l2)) 
+  | Odd (_, l1, l2) -> (1 + (sz l1) + (sz l2)) 
 
-let check xs = 
-  let _ = sz xs in
-(*  let _ = show sz in *)
-    ()
-(*
-let rec cons x = function
+let rec cons x xs =
+  match xs with
   | Nil -> One x
   | One y ->  Even(One(x), One(y))
   | Even(l1, l2) -> Odd(x, l1, l2)
   | Odd(y, l1, l2) -> Even(cons x l1, cons y l2)
 
-let rec uncons = function
-  | One x -> (x, Nil)
+let rec uncons xs =
+  match xs with
+  | Nil -> spin ()
+  | One x -> show (x, Nil)
   | Even(l1, l2) ->
-    let (x, l1) = uncons l1 and (y, l2) = uncons l2 in begin
-      match l1 with
-        Nil -> (x, One y)
-      | One _ -> (x, Odd(y, l1, l2))
-      | Even _ -> (x, Odd(y, l1, l2))
-      | Odd _ -> (x, Odd(y, l1, l2))
-    end
-  | Odd(x, l1, l2) -> (x, Even(l1, l2))
+    let (x, l1) = uncons l1 in
+    let (y, l2) = uncons l2 in
+    if sz l1 = sz l2 then
+      begin
+        match l1 with
+          Nil -> show (x, One y)
+        | One _ -> show (x, Odd(y, l1, l2))
+        | Even _ -> show (x, Odd(y, l1, l2))
+        | Odd _ -> show (x, Odd(y, l1, l2))
+      end
+    else spin ()
+  | Odd(x, l1, l2) -> show (x, Even(l1, l2))
 
-let head_safe l =
+let check xs x = 
+  let _ = sz xs in
+  let _ = show sz in (* BUG! we're losing the argument labels when we push sz through show *)
+  let _ = 
+    let ys = cons x xs in
+      assert(sz ys = 1 + sz xs) in
+  let _ =
+    let ys = uncons xs in
+      assert(sz (snd ys) = sz xs - 1) in
+    ()
+
+
+(*let head_safe l =
   let (x, _) = uncons l in x
 
 let tail_safe l =

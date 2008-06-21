@@ -53,8 +53,8 @@ let rec app_to_fun funf =
            match ps with
              p :: ps ->
                (*let _ = Format.printf "@[%a@.%a@.%b@]@.@." pprint f1 pprint p
-                * (pseudo_unify f1 p) in*)
-               if pseudo_unify f1 p then (app_to_fun f2) ps else Funknown
+                * (subt f1 p) in*)
+               if subt f1 p then (app_to_fun f2) ps else Funknown
            | [] -> Funknown)
     | f -> 
         (fun ps -> 

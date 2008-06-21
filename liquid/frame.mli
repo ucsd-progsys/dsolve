@@ -79,10 +79,7 @@ val params_frames: param list -> t list
 val shape: t -> t
 val params_ids: param list -> Ident.t list
 val same_shape: t -> t -> bool
-val isvar: t -> bool
-val getpvar_or_fail: t -> Path.t
-val getpvar_maybe: t -> Path.t option
-val pseudo_unify: t -> t -> bool
+val subt: t -> t -> bool
 val translate_pframe: Env.t -> (string * (string * Parsetree.predicate_pattern)) list -> Parsetree.litframe -> t
 val replace_recvar: t -> t -> t
 val unfold: t -> t

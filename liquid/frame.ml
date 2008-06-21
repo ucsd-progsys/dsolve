@@ -273,57 +273,70 @@ let same_shape t1 t2 =
     List.for_all sshape (List.combine (params_frames ps) (params_frames qs))
   in sshape (t1, t2)
        
-let isvar = function
-    Fvar(_, _, _) -> true
-  | _ -> false
+let fid () = Path.mk_ident "p"
+let maybe_assoc p l =
+  try
+    Some (List.assoc p l) 
+  with Not_found -> None
 
-let getpvar_or_fail = function
-    Fvar(p, _, _) -> p
-  | _ -> assert false
-           
-let getpvar_maybe = function
-    Fvar(p, _, _) -> Some p
-  | _ -> None
-
-let pseudo_unify t1 t2 =
-  let assoc p l = snd (List.find (fun (x, y) -> Path.same p x) l) in
-  let vars = ref [] in
-  let ismapped p q =  (* cycle detection: unspeakably ugly. future: equivs *)
-    let rec ismapped_rec ps q =
-      try
-        let p = assoc (List.hd ps) !vars in
-          if isvar p then begin
-            let p' = getpvar_or_fail p in
-              if List.mem p' ps then false else
-                ismapped_rec (p' :: ps) q end else
-                  same_shape p q
-      with Not_found -> (vars := (p, q) :: !vars; true)
-    in ismapped_rec [p] q in
-  let rec unify (f1, f2) = 
+let subt t1 t2 =
+  (* yes, i inlined a union find :( *)
+  let map = ref [] in
+  let pmap = ref [] in
+  let get_ind p =
+    try
+      List.assoc p !pmap
+    with Not_found -> 
+      let p' = fid () in 
+      let _ = pmap := (p, p') :: !pmap in
+        p' in
+  let get_set p =
+    let p' = get_ind p in
+    List.filter (fun (x, y) -> y = p') !pmap in
+  let ismapped p f =
+    let p' = get_ind p in
+    try
+      same_shape (List.assoc p' !map) f
+    with Not_found -> (map := (p', f) :: !map; true) in
+  let join p' q' =
+    pmap := ((List.map (fun (x, _) -> (x, p')) (get_set q')) @ !pmap) in
+  let equiv p q =
+    let p' = get_ind p in
+    let q' = get_ind q in
+    if p' = q' then true else
+      match (maybe_assoc p' !map, maybe_assoc q' !map) with
+          (Some f1, Some f2) -> 
+          if same_shape f1 f2 then
+            let _ = join p' q' in true
+            else false
+        | (None, Some f) | (Some f, None) ->
+          let _ = map := ((p', f) :: !map) in
+          let _ = join p' q' in true
+        | (None, None) ->
+          let _ = join p' q' in true in
+  let rec s_rec (f1, f2) = 
     match (f1, f2) with
     | (Funknown, _) | (_, Funknown) ->
         false
     | (Fsum(p, ro, cs, _), Fsum(p', ro', cs', _)) ->
-        Path.same p p' && params_unify (constrs_params cs) (constrs_params cs') &&
+        Path.same p p' && p_s (constrs_params cs) (constrs_params cs') &&
        (ro = ro' || match (ro, ro') with (Some (_, _), Some(_, _)) -> true | _ -> false) 
     | (Fabstract(p, ps, _), Fabstract(p', ps', _)) ->
-        Path.same p p' && params_unify ps ps'
-    | (Frec(p, _, _), Frec(_, _, _)) ->
-        ismapped p f2
+        Path.same p p' && p_s ps ps'
+    | (Frec(_, _, _), Frec(_, _, _)) ->
+        true
     | (Frec(_, _, _), _) | (_, Frec(_, _, _)) ->
-        false
+        true (* ? *)
     | (Fvar(p1, _, _), Fvar(p2, _, _)) ->
-        ismapped p1 f2 && ismapped p2 f1
-    | (Fvar(p, _, _), _) ->
+        equiv p1 p2
+    | (Fvar(p, _, _), _) -> (* if it's monomorphic? *)
         ismapped p f2
-    (*| (_, Fvar(_, _, _)) ->
-        ismapped f2 f1*)
     | (Farrow(_, i, o), Farrow(_, i', o')) ->
-        unify(i, i') && unify(o, o')
+        s_rec(i, i') && s_rec(o, o')
     | t -> false 
-  and params_unify ps qs =
-    List.for_all unify (List.combine (params_frames ps) (params_frames qs)) in
-  unify (t1, t2)
+  and p_s ps qs =
+    List.for_all s_rec (List.combine (params_frames ps) (params_frames qs)) in
+  s_rec (t1, t2)
  
 (**************************************************************)
 (******************** Frame pretty printers *******************)
