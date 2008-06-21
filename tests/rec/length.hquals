@@ -1,3 +1,5 @@
+
+qualif EQ(v) : ~A { * * } v
 qualif A(v) : len ~A { * * } v
 qualif B(v) : len v = [0, 1, 2, 3]
 qualif C(v): len v = 1 + len ~A 
@@ -8,6 +10,6 @@ qualif DD(v): len v = len xs
 qualif E(v): len v = len xs + len ys
 qualif EE(v): len v + len e0 = len x
 
-qualif F(v): len v + len xs + len ys = len ixs
+qualif F(v): len v + len xs + len ys = len ~A 
 qualif FF(v): len v <= len ixs
 qualif E(v): len v + len e0 = len ixs

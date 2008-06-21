@@ -1,3 +1,5 @@
+let show x = x
+
 let rec len x =
   match x with
   | [] -> 0
@@ -29,16 +31,18 @@ let rec partition f x =
       let (ys,zs) = partition f xs in
       if f x then (x::ys,zs) else (ys,x::zs)
 
-                                    (* xs in outer and inner scope is probably
-                                     * causing a name collision in qualifier
-                                     * instantiation -- fix eventually *)
+(* xs in outer and inner scope is probably
+ * causing a name collision in qualifier
+ * instantiation -- fix eventually *)
+
+
 let partition2 f ixs =
   let rec _p xs ys zs =
     match xs with 
     | [] -> 
-        (fun x -> x) (ys,zs)
+         (ys,zs)
     | x::xs' ->
-        if f x then _p ((fun x -> x) xs') (x::ys) zs else _p xs' ys (x::zs) in
+        if f x then _p ( xs') (x::ys) zs else _p xs' ys (x::zs) in
   _p ixs [] []
 
 let rec unzip x =
@@ -64,3 +68,4 @@ let check xs ys zs =
     let (xs',ys') = unzip zs in
     assert (len xs' = len zs && len ys' = len zs) in
   ()
+

@@ -9,7 +9,6 @@ let rec len xs =
 (**************************************************************************************)
 (******************************* Quick Sort *******************************************)
 (**************************************************************************************)
-(*
 type ('a,'b) boolean = 
   | True of 'a
   | False of 'b
@@ -63,7 +62,6 @@ let rec quicksort2 xs =
       let (ls',rs') = (quicksort2 ls, quicksort2 rs) in
       rev_append x (reverse ls') (x::rs')
 
-*)
 (**************************************************************************************)
 (******************************* Merge Sort *******************************************)
 (**************************************************************************************)
@@ -71,38 +69,43 @@ let rec quicksort2 xs =
 let rec halve xs =
   match xs with
   | []   -> ([], [])
-  (*| x::[]  -> ([x], []) *)
   | x::xs' ->
       let (ys, zs) = halve xs' in
       (x::zs, ys)
 
-let _ = show halve
-
-      (*
 let rec merge xs ys = 
-  match (xs,ys) with
-  | (_,[]) -> 
-      xs
-  | ([],_) -> 
-      ys
-  | (x::xs',y::ys') ->
-      if x < y 
-      then x::(merge xs' (y::ys')) 
-      else y::(merge (x::xs') ys')
-
-let rec mergesort = function 
+  match xs with
+  | [] -> ys
+  | x::xs' ->
+      begin
+        match ys with
+        | [] -> xs
+        | y::ys' -> 
+            if x < y 
+            then x::(merge xs' (y::ys')) 
+            else y::(merge (x::xs') ys')
+      end
+  
+let rec mergesort xs = 
+  match xs with
   | []  -> []
-  | [x] -> [x]
-  | xs  -> 
+(*  | [x] -> [x] *)
+  | x::xs'  -> 
       let (ys,zs) = halve xs in
       merge (mergesort ys) (mergesort zs)
 
-let check xs = 
+
+let _ =  show quicksort 
+let _ =  show quicksort2
+let _ =  show mergesort
+
+let check () = 
+  let xs = [1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1] in 
   let _ = assert (len xs = len (quicksort xs)) in 
-  let _ = assert (len xs = len (quicksort2 xs)) in
+  let _ = assert (len xs = len (quicksort2 xs)) in 
   let _ = assert (len xs = len (mergesort xs)) in
+  let _ = assert (1=2) in
   ()
-*)
 
 (**************************************************************************************)
 (******************************* DML Merge Sort ***************************************)
