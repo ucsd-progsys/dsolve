@@ -9,6 +9,7 @@ let rec len xs =
 (**************************************************************************************)
 (******************************* Quick Sort *******************************************)
 (**************************************************************************************)
+(*
 type ('a,'b) boolean = 
   | True of 'a
   | False of 'b
@@ -73,6 +74,7 @@ let rec halve xs =
       let (ys, zs) = halve xs' in
       (x::zs, ys)
 
+
 let rec merge xs ys = 
   match xs with
   | [] -> ys
@@ -85,49 +87,79 @@ let rec merge xs ys =
             then x::(merge xs' (y::ys')) 
             else y::(merge (x::xs') ys')
       end
-  
-let rec mergesort xs = 
-  match xs with
-  | []  -> []
-(*  | [x] -> [x] *)
-  | x::xs'  -> 
-      let (ys,zs) = halve xs in
-      merge (mergesort ys) (mergesort zs)
 
 
-let _ =  show quicksort 
-let _ =  show quicksort2
-let _ =  show mergesort
+let rec mergesort ps = 
+  match ps with
+  | [] -> []
+  | p::ps'  -> 
+      let (qs,rs) = halve (show ps) in
+      let qs' = mergesort (show qs) in
+      let rs' = mergesort (show rs) in (* this is the problem! *)
+      merge qs' rs'
 
-let check () = 
-  let xs = [1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1] in 
-  let _ = assert (len xs = len (quicksort xs)) in 
-  let _ = assert (len xs = len (quicksort2 xs)) in 
-  let _ = assert (len xs = len (mergesort xs)) in
-  let _ = assert (1=2) in
-  ()
 
+let _ = show mergesort
+
+*)
+(*
+
+let splitter n =
+  let rec f a b = 
+    if read_int () > 0 
+    then f (a-1) (b+1) 
+    else (a,b) in
+  f n 0
+
+let joiner x y = 
+  x + y
+
+let tester n = 
+  let (a,b) = splitter n in
+  joiner a b
+
+let _ = show tester
+*)
 (**************************************************************************************)
 (******************************* DML Merge Sort ***************************************)
 (**************************************************************************************)
 
-(* 
-let rec initlist = function
-  | [] -> []
-  | [x] -> [[x]]
-  | x1::x2::xs -> (* bug in DML version! *)
-      let y = if x1 < x2 then [x1;x2] else [x2;x1] in
-      let ys = initlist xs in
-      y::ys
+type 'a llist = Nil | Cons of 'a list * 'a llist
 
+let rec llen xss = 
+  match xss with
+  | Nil -> 0
+  | Cons(xs,xss') -> len xs + llen xss'
+
+let rec initlist xs =
+  match xs with
+  | [] -> Nil 
+  | x1::xs' -> 
+      begin
+        match xs' with
+        | [] -> Cons([x1],Nil)
+        | x2::xs'' -> (* bug in DML version! *)
+            let y = if x1 < x2 then x1::x2::[] else x2::x1::[] in
+            let ys = initlist xs'' in
+            Cons(y,ys)
+      end
+
+let _ = show llen
+let _ = show initlist
+
+(* 
 let rec merge xs ys = 
-  match xs, ys with
-  | [],_  -> ys
-  | _ ,[] -> xs
-  | (x::xs'),(y::ys') ->
-      if x < y 
-      then x::(merge xs' (y::ys')) 
-      else y::(merge (x::xs') ys')
+  match xs with
+  | [] -> ys
+  | x::xs' ->
+      begin
+        match ys with
+        | [] -> xs
+        | y::ys' -> 
+            if x < y 
+            then x::(merge xs' (y::ys')) 
+            else y::(merge (x::xs') ys')
+      end
 
 let rec merge2 xss = 
   match xss with 
@@ -143,20 +175,41 @@ let rec mergeall xss =
 
 let mergesort2 xs =
   mergeall (initlist xs)
+*)
 
 (**************************************************************************************)
 (******************************* Insertion Sort ***************************************)
 (**************************************************************************************)
 
-let rec insert x = function
+
+(* 
+let rec insert x ys =
+  match ys with 
   | [] -> [x]
-  | y::ys -> 
+  | y::ys' -> 
       if x <= y 
-      then (x::y::ys)
-      else (y::(insert x ys))
+      then (x::y::ys')
+      else (y::(insert x ys'))
 
-let rec insertsort = function
+let rec insertsort xs =
+  match xs with
   | [] -> []
-  | x::xs -> insert x (insertsort xs)
-*)
+  | x::xs' -> insert x (insertsort xs')
 
+let _ = show halve
+let _ = show merge 
+let _ = show mergesort
+let _ = show insert 
+let _ = show insertsort
+let _ = show quicksort 
+let _ = show quicksort2
+
+let check () = 
+  let xs = [1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1] in 
+  let _ = assert (len xs = len (quicksort xs)) in 
+  let _ = assert (len xs = len (quicksort2 xs)) in 
+  let _ = assert (len xs = len (mergesort xs)) in
+  let _ = assert (1=2) in
+  ()
+
+*)
