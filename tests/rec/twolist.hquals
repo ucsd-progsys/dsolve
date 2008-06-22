@@ -1,0 +1,2 @@
+qualif A(v): size v = size e0
+qualif B(v): size ~A = v 
