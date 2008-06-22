@@ -47,7 +47,7 @@ let rec merge xs ys =
 
 let rec merge2 xss = 
   match xss with 
-  | Nil -> show Nil 
+  | Nil -> (fun x -> x) Nil 
   | Cons(xs1, xs') -> 
       match xs' with
           Nil -> show xss

@@ -279,7 +279,7 @@ let maybe_assoc p l =
     Some (List.assoc p l) 
   with Not_found -> None
 
-let subt t1 t2 =
+let rec subt t1 t2 =
   (* yes, i inlined a union find :( *)
   let map = ref [] in
   let pmap = ref [] in
@@ -325,11 +325,14 @@ let subt t1 t2 =
         Path.same p p' && p_s ps ps'
     | (Frec(_, _, _), Frec(_, _, _)) ->
         true
-    | (Frec(_, _, _), _) | (_, Frec(_, _, _)) ->
-        true (* ? *)
+    | (Frec(_, _, _), _) ->
+        false
+        (* s_rec (f2, t1) *)
+    | (_, Frec(_, _, _)) ->
+        assert false (* assume that the LHS is folded up *)
     | (Fvar(p1, _, _), Fvar(p2, _, _)) ->
         equiv p1 p2
-    | (Fvar(p, _, _), _) -> (* if it's monomorphic? *)
+    | (Fvar(p, _, _), _) -> 
         ismapped p f2
     | (Farrow(_, i, o), Farrow(_, i', o')) ->
         s_rec(i, i') && s_rec(o, o')
@@ -460,7 +463,7 @@ let replace_recvar f f' = match f with
       map (function Frec (rp', rr', r') when Path.same rp rp' -> apply_refinement r' (append_recref rr' f') | f -> f) (Fsum (p, None, cs, r))
   | _ -> f
 
-let unfold f =
+let unfold f = (* this may not be right *)
   replace_recvar f (apply_refinement empty_refinement f)
 
 let unfold_applying f =

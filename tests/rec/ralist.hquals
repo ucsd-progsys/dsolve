@@ -3,10 +3,10 @@ qualif AA(v) : sz v = n
 qualif B(v) : sz v = 1 + sz xs
 qualif C(v) : sz v = sz xs - 1
 
-qualif D(v) : len v = len e0
-qualif E(v) : lev v = len e1
+qualif D(v) : sz v = sz e0
+qualif E(v) : lev v = sz e1
 
-qualif ZERO(v) : len v = 0
+qualif ZERO(v) : sz v = 0
 
 
 (*qualif A(v) : sz ~A { * * } v
@@ -14,13 +14,13 @@ qualif B(v) : sz v = [0, 1, 2, 3]
 qualif C(v): sz v = 1 + sz ~A*)
 
 (*
-qualif D(v): _meas_len v = _meas_len x 
-qualif DD(v): _meas_len v = _meas_len xs 
-qualif E(v): _meas_len v = _meas_len xs + _meas_len ys
-qualif EE(v): _meas_len v + _meas_len e0 = _meas_len x
-qualif F(v): _meas_len v + _meas_len xs + _meas_len ys = _meas_len ixs
-qualif FF(v): _meas_len v <= _meas_len ixs
-qualif E(v): _meas_len v + _meas_len e0 = _meas_len ixs
+qualif D(v): _meas_sz v = _meas_sz x 
+qualif DD(v): _meas_sz v = _meas_sz xs 
+qualif E(v): _meas_sz v = _meas_sz xs + _meas_sz ys
+qualif EE(v): _meas_sz v + _meas_sz e0 = _meas_sz x
+qualif F(v): _meas_sz v + _meas_sz xs + _meas_sz ys = _meas_sz ixs
+qualif FF(v): _meas_sz v <= _meas_sz ixs
+qualif E(v): _meas_sz v + _meas_sz e0 = _meas_sz ixs
 qualif C(v) : __tag v = 0
 qualif D(v) : __tag v = 1
 *)

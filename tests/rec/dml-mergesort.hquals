@@ -1,11 +1,10 @@
-qualif EQ(v) : ~A { * * } v
+(*qualif EQ(v) : ~A { * * } v
 qualif A(v) : len ~A { * * } v
-qualif B(v) : len v = [0, 1, 2, 3]
+(*qualif B(v) : len v = [0, 1, 2, 3]*)
 qualif C(v): len v = 1 + len ~A 
 qualif D(v): len v = len ~A 
-qualif E(v): len v = len ~A + len ~B
-qualif EE(v): len v + len e0 = len ~A
-qualif F(v): len v = len ~A + len ~B + 1
+qualif E(v): len v = len xs + len ys
+qualif EE(v): len v + len e0 = len ~A*)
 
 
 qualif E(v): len v + len e0 = len ~A
@@ -14,7 +13,7 @@ qualif P(v): v + e0 = ~A
 qualif Q(v): v + e0 = ~A + ~B
 qualif R(v): v = ~A + ~B
 
-
+qualif LC(v): llen v = 0
 qualif LA(v): v = llen ~A 
 qualif LB(v): llen v = len ~A
 qualif BL(v): len v = llen ~A

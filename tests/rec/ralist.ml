@@ -28,8 +28,10 @@ let rec cons x xs =
   | Even(l1, l2) -> Odd(x, l1, l2)
   | Odd(y, l1, l2) -> Even(cons x l1, cons y l2)
 
+let create () = Nil
+                        
 let rec makelist n =
-  if n = 0 then Nil else
+  if n = 0 then show (create ()) else (* unsoundness *)
   let l = show (makelist (n-1)) in
    cons n l 
 

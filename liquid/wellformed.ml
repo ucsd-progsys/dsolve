@@ -54,7 +54,7 @@ let rec app_to_fun funf =
              p :: ps ->
                (*let _ = Format.printf "@[%a@.%a@.%b@]@.@." pprint f1 pprint p
                 * (subt f1 p) in*)
-               if subt f1 p then (app_to_fun f2) ps else Funknown
+               if (subt f1 p || subt (unfold f1) p) then (app_to_fun f2) ps else Funknown
            | [] -> Funknown)
     | f -> 
         (fun ps -> 
