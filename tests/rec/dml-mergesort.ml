@@ -13,8 +13,11 @@ type 'a llist = Nil | Cons of 'a list * 'a llist
 
 let rec llen xss = 
   match xss with
-  | Nil -> 0
-  | Cons(xs,xss') -> len xs + llen xss'
+  | Nil -> show 0
+  | Cons(xs,xss') -> show (len xs + llen xss')
+
+let check xs =
+  llen xs
 
 let rec initlist xs =
   match xs with
@@ -29,10 +32,6 @@ let rec initlist xs =
             Cons(y,ys)
       end
 
-let _ = show llen
-let _ = show initlist
-
-(* 
 let rec merge xs ys = 
   match xs with
   | [] -> ys
@@ -48,14 +47,14 @@ let rec merge xs ys =
 
 let rec merge2 xss = 
   match xss with 
-  | [] -> []
-  | [xs] -> [xs]
-  | xs1::xs2::xss' -> (merge xs1 xs2)::(merge2 xss')
+  | Nil -> Nil 
+  | Cons(xs, Nil) -> xss
+  | Cons(xs1, Cons(xs2, xss')) -> Cons((merge xs1 xs2), (merge2 xss'))
 
 let rec mergeall xss = 
   match xss with 
-  | []  -> [] 
-  | [xs] -> xs
+  | Nil  -> [] 
+  | Cons(xs, Nil) -> xs
   | _  -> mergeall (merge2 xss)
 
 let mergesort2 xs =
@@ -64,7 +63,3 @@ let mergesort2 xs =
 let check xs = 
   let _ = assert (len xs = len (mergesort2 xs)) in
   ()
-
-*)
-
-

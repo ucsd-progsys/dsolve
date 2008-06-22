@@ -15,7 +15,7 @@ qualif Q(v): v + e0 = ~A + ~B
 qualif R(v): v = ~A + ~B
 
 
-qualif LA(v): v = llen ~A
+qualif LA(v): v = llen ~A 
 qualif LB(v): llen v = len ~A
 
 

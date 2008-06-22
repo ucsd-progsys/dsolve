@@ -541,7 +541,7 @@ let translate_variance = function
   | (true, true, true) -> Invariant
   | (true, false, false) -> Covariant
   | (false, true, false) -> Contravariant
-  | _ -> assert false
+  | (a, b, c) -> printf "@[(%b,@ %b,@ %b)@]@." a b c; assert false
 
 let mutable_variance = function
   | Mutable -> Invariant
