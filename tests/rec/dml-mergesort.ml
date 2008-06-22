@@ -47,15 +47,19 @@ let rec merge xs ys =
 
 let rec merge2 xss = 
   match xss with 
-  | Nil -> Nil 
-  | Cons(xs, Nil) -> xss
-  | Cons(xs1, Cons(xs2, xss')) -> Cons((merge xs1 xs2), (merge2 xss'))
+  | Nil -> show Nil 
+  | Cons(xs1, xs') -> 
+      match xs' with
+          Nil -> show xss
+        | Cons(xs2, xss') -> Cons((merge xs1 xs2), (merge2 xss'))
 
 let rec mergeall xss = 
   match xss with 
-  | Nil  -> [] 
-  | Cons(xs, Nil) -> xs
-  | _  -> mergeall (merge2 xss)
+  | Nil  -> show [] 
+  | Cons(xs, xs') -> 
+      match xs' with
+          Nil -> xs
+        | Cons (xs1, xs2) -> mergeall (merge2 xss)
 
 let mergesort2 xs =
   mergeall (initlist xs)
