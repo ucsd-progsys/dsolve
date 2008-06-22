@@ -1,0 +1,9 @@
+qualif EQ(v) : ~A { * * } v
+qualif A(v) : len ~A { * * } v
+qualif B(v) : len v = [0, 1, 2, 3]
+qualif C(v): len v = 1 + len ~A 
+qualif D(v): len v = len ~A 
+qualif E(v): len v = len ~A + len ~B
+qualif EE(v): len v + len e0 = len ~A
+qualif F(v): len v = len ~A + len ~B + 1
+qualif E(v): len v + len e0 = len ~A

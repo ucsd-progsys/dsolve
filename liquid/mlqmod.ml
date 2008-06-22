@@ -26,11 +26,8 @@ let map_constructor_args env (name, mlname) (cname, args, cpred) =
   let f s =
     try List.assoc s argmap with Not_found -> C.lookup_path s env in
   let pred = Qualdecl.transl_patpredexp_single_map f cpred in
-  let fn s =
-    if s = mlname then name else s in
-  let pred = P.pexp_map_funs fn pred in
   let args = List.map (function Some s -> Some (List.assoc s argmap) | None -> None) args in
-    Mcstr(cname, (args, [(name, pred)]))
+    Mcstr(cname, (args, (name, pred)))
 
 let load_measure env ((n, mn), cstrs) =
   (Mname(n, mn)) :: (List.map (map_constructor_args env (n, mn)) cstrs)  
@@ -41,9 +38,11 @@ let load env fenv (preds, decls) quals =
     | LmeasDecl (name, cstrs) -> (ifenv, List.rev_append (load_measure env (name, cstrs)) menv)
     | LrecrefDecl -> (ifenv, menv) in
   let (ifenv, menv) = List.fold_left load_decl (Lightenv.empty, []) decls in
-  let _ = M.mk_measures env (M.builtins @ (M.filter_cstrs menv)) in 
+  let mcstrs = M.filter_cstrs menv in
   let mnames = M.filter_names menv in
-    (Lightenv.addn (M.mk_tys env mnames) fenv, ifenv, Qualmod.map_preds (M.transl_pred (C.list_assoc_flip mnames)) quals)
+  let mnsubs = C.list_assoc_flip mnames in
+  let _ = M.mk_measures env mnsubs mcstrs in 
+    (Lightenv.addn (M.mk_tys env mnames) fenv, ifenv, Qualmod.map_preds (M.transl_pred mnsubs) quals)
 
 (* builtins *)
 

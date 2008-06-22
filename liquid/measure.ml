@@ -7,9 +7,9 @@ module F = Frame
 module Le = Lightenv
 
 type mdef = (string * P.pexpr) 
-type m = (constructor_tag * Path.t option list * mdef list) list 
+type m = (constructor_tag * Path.t option list * mdef) list 
 type t = m Le.t
-type pre_measure = (string * (Path.t option list * (string * P.pexpr) list))
+type pre_measure = (string * (Path.t option list * mdef))
 
 type meas_entry =
     Mcstr of pre_measure
@@ -21,45 +21,21 @@ let filter_cstrs es =
 let filter_names es =
   C.maybe_list (List.map (function Mname (n, mn) -> Some (n, mn) | _ -> None ) es)
 
-let (a, b, c, d) = (Path.mk_ident "a", Path.mk_ident "b", Path.mk_ident "c", Path.mk_ident "d")
-
-let (h, hml) = ("_meas_h", "h")
-let (len, lenml) = ("_meas_len", "len")
-let (par, parml) = ("_meas_par", "par")
-let (sz, szml) = ("_meas_size", "size")
-
-let builtin_funs = [
-(*  (h, hml); *)
-(*  (len, lenml);*)
-(*  (par, parml);*)
-(*  (sz, szml);*)
-]
-
-let builtins = [
-(*  ("Some", ([None], [(h, P.PInt(1))])); 
-  ("None", ([], [(h, P.PInt(0))])); *)
-(*  ("[]", ([], [(len, P.PInt(0))]));
-  ("::", ([None; Some a], [len, P.Binop(P.PInt(1), P.Plus, P.FunApp(len, [P.Var a]))])); *)
-(*  ("Even", ([Some a], [(par, P.Binop(P.PInt(2), P.Times, P.Var(a)))]));
-  ("Odd", ([Some a], [(par, P.Binop(P.Binop(P.PInt(2), P.Times, P.Var(a)), P.Plus, P.PInt(1)))]));*)
-(*  ("Empty", ([], [(sz, P.PInt(0))]));
-  ("Node", ([None; Some a; Some b], [(sz, P.Binop(P.PInt(1), P.Plus, P.Binop((P.FunApp(sz, [P.Var a])), P.Plus, (P.FunApp(sz, [P.Var b])))))]))*)
-]
-
 let (empty: t) = Le.empty
 
 let find_c p t e =
-  List.find (fun (t', _, _) -> t' = t) (Le.find p e)
+  List.filter (fun (t', _, _) -> t' = t) (Le.find p e)
 
 let tsc (a, b, c) = (a, (b, c))
 
-let add (p, ((tag, _, _) as r)) env = 
-  let cs = try Le.find p env with
+let add (p, ((tag, args, ref) as r)) menv = 
+  let cs = try Le.find p menv with
              Not_found -> [] in
-  let cs' = List.map tsc cs in
-  let _ = try ignore (List.assoc tag cs'); failwith "constructor redef in measure" with 
-            Not_found -> () in
-  Lightenv.add p (r :: cs) env
+  let (nm, _) = ref in
+  let _ = if List.exists (fun (x, y, z) -> let (nm', _) = z in tag = x && nm = nm') cs then 
+      let errmsg = Printf.sprintf "measure redef %s for path %s" nm (Path.name p) in
+        failwith errmsg in
+  Lightenv.add p (r :: cs) menv
 
 let sum_rows_path = function
     F.Fsum(p, rows, _, _) -> (p, rows)
@@ -67,24 +43,27 @@ let sum_rows_path = function
 
 let sum_path = C.compose fst sum_rows_path
 
-let transl_desc mlenv (c, (ps, rs)) =
+let rewrite_pred subs r =
+    let (n, p) = r in
+      (n, P.pexp_map_funs subs p)
+
+let transl_desc mlenv subs (c, (ps, r)) =
   try
-    let _ = if not(C.is_unique ps) then failwith "Builtin measure labels not unique" in 
-    let c =  
-    (Env.lookup_constructor (Longident.parse c) mlenv) in
+    let _ = if not(C.is_unique ps) then failwith "Measure args not unique" in 
+    let c = (Env.lookup_constructor (Longident.parse c) mlenv) in
     let tag = c.cstr_tag in
-    let _ = if List.length ps != c.cstr_arity then failwith "Wrong number of builtin measure labels" in
+    let _ = if List.length ps != c.cstr_arity then failwith "Wrong number of measure args" in
     let fr = F.fresh_without_vars mlenv c.cstr_res in
-    Some (sum_path fr, (tag, ps, rs)) 
+    Some (sum_path fr, (tag, ps, rewrite_pred (fun x -> try List.assoc x subs with Not_found -> x) r)) 
   with Not_found -> None
 
 let bms = ref empty
-let mk_measures env ms = 
+let mk_measures env subs ms = 
   let f g e h = 
     match g h with
         Some k -> add k e 
       | None -> e in
-  bms := List.fold_left (f (transl_desc env)) empty ms 
+  bms := List.fold_left (f (transl_desc env subs)) empty ms 
 
 let mk_fun n f = 
   let funr a = 
@@ -109,9 +88,9 @@ let mk_tys env ms =
       let (p, sf) = find_mlenv_by_name mls env in
       Some (Path.mk_ident s, mk_fun s sf) 
         with Not_found -> f s in
-  C.maybe_list ((List.map (ty (fun x -> None)) builtin_funs) @ (List.map (ty (fun x -> failwith x)) ms))
+  C.maybe_list (List.map (ty (fun x -> failwith x)) ms)
 
-let mk_pred v (_, ps, ms) mps =
+let mk_pred v mps (_, ps, ms) =
   let maybe_fail = function Some p -> p | None -> raise Not_found in
   let _ = if List.length ps != List.length mps then failwith "argument arity mismatch" in
   let ps = List.combine ps mps in
@@ -119,10 +98,13 @@ let mk_pred v (_, ps, ms) mps =
   let cm (s, e) = 
     let e = P.pexp_map_vars var_map e in
     P.Atom(P.FunApp(s, [P.Var v]), P.Eq, e) in 
-  P.big_and (List.map cm ms) 
+  cm ms 
+    
+let mk_preds v mps mcstrs =
+  P.big_and (List.map (mk_pred v mps) mcstrs)
 
-let mk_pred_def v c ps =
-  mk_pred v c (List.map (fun x -> Some x) ps)
+let mk_pred_def v (path, tag) ps =
+  mk_preds v (List.map (fun x -> Some x) ps) (find_c path tag !bms)
 
 let mk_qual ps c =
   let v = Path.mk_ident "v" in
@@ -131,7 +113,7 @@ let mk_qual ps c =
 let mk_single_gd menv p vp tp =
       match tp with 
         | Some (tag, ps) -> 
-            (try Some (mk_pred vp (find_c p tag menv) (List.map (function Some p -> Some (P.Var p) | _ -> None) ps)) with 
+            (try Some (mk_preds vp (List.map (function Some p -> Some (P.Var p) | _ -> None) ps) (find_c p tag menv)) with 
                 Not_found -> None)
         | None -> None
 

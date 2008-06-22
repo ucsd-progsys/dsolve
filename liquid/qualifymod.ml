@@ -162,7 +162,7 @@ and replace_params ps fs =
 
 and get_cstrrefs path tag args params =
   let preds = List.map expression_to_pexpr args in
-  let mref = try (B.const_ref [M.mk_qual preds (M.find_c path tag !M.bms)]) with
+  let mref = try (B.const_ref [M.mk_qual preds (path, tag)]) with
                      Not_found -> [] in
   let tagref = B.tag_refinement tag in
   let lhsref = F.empty_refinement in

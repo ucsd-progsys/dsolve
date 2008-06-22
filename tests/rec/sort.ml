@@ -66,7 +66,7 @@ let rec quicksort2 xs =
 (**************************************************************************************)
 (******************************* Merge Sort *******************************************)
 (**************************************************************************************)
-
+*)
 let rec halve xs =
   match xs with
   | []   -> ([], [])
@@ -101,7 +101,7 @@ let rec mergesort ps =
 
 let _ = show mergesort
 
-*)
+
 (*
 
 let splitter n =
@@ -203,13 +203,12 @@ let _ = show insert
 let _ = show insertsort
 let _ = show quicksort 
 let _ = show quicksort2
-
+ *)
 let check () = 
   let xs = [1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1] in 
-  let _ = assert (len xs = len (quicksort xs)) in 
-  let _ = assert (len xs = len (quicksort2 xs)) in 
+  (*let _ = assert (len xs = len (quicksort xs)) in 
+  let _ = assert (len xs = len (quicksort2 xs)) in*) 
   let _ = assert (len xs = len (mergesort xs)) in
   let _ = assert (1=2) in
   ()
 
-*)
