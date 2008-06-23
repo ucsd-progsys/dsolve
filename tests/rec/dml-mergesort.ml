@@ -21,7 +21,7 @@ let check xs =
 
 let rec initlist xs =
   match xs with
-  | [] -> Nil 
+  | [] -> show Nil 
   | x1::xs' -> 
       begin
         match xs' with
@@ -47,10 +47,10 @@ let rec merge xs ys =
 
 let rec merge2 xss = 
   match xss with 
-  | Nil -> (fun x -> x) Nil 
+  | Nil -> Nil 
   | Cons(xs1, xs') -> 
       match xs' with
-          Nil -> show xss
+          Nil -> xss
         | Cons(xs2, xss') -> Cons((merge xs1 xs2), (merge2 xss'))
 
 let rec mergeall xss = 

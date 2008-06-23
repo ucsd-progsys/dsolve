@@ -1,0 +1,8 @@
+measure len =
+    [] -> 0
+  | x :: xs -> 1 + len xs
+ 
+measure llen = 
+    Nil -> 0
+  | Cons(xs, xss) -> len xs + llen xss
+
