@@ -633,7 +633,7 @@ let mk_recvar env t =
             (rp, List.map cstr_refinements cstrs)
       | _ -> (rp, [])
 
-let place_recvar freshf r =
+let place_refvar freshf r =
   if r == recvar_refinement then empty_refinement else freshf ()
 
 (* Create a fresh frame with the same shape as the type of [exp] using
@@ -649,7 +649,7 @@ let fresh_with_var_fun env freshf t =
         let (rp, rr) = mk_recvar env t in
           Hashtbl.replace tbl t (Frec (rp, rr, empty_refinement));
           let res = fresh_rec fm env (rp, rr) level t in Hashtbl.replace tbl t res; res
-  in map_refinements (place_recvar freshf) (fm t)
+  in map_refinements (place_refvar freshf) (fm t)
 
 (* Create a fresh frame with the same shape as the given type
    [ty]. Uses type environment [env] to find type declarations.
