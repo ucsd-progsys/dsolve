@@ -569,6 +569,14 @@ let unsat_constraints sri s =
 
 module QSet = Set.Make(Qualifier)
 
+module CLe = 
+struct
+    type t = F.t Le.t
+    let compare = compare
+end
+
+module CSet = Set.Make(CLe)
+
 module VarMap = Map.Make(String)
 
 let add_path m path = match Path.ident_name path with
@@ -587,14 +595,15 @@ let instantiate_in_env q qset d =
 let instantiate_qual ds qualset q =
   List.fold_left (instantiate_in_env q) qualset ds
 
-let constraint_env_domain (_, c) =
-  Le.domain (match c with | SubRef (e, _, _, _, _) -> e | WFRef (e, _, _) -> e)
+let constraint_env (_, c) =
+  (match c with | SubRef (e, _, _, _, _) -> e | WFRef (e, _, _) -> e)
 
 (* Make copies of all the qualifiers where the free identifiers are replaced
    by the appropriate bound identifiers from all environments. *)
 let instantiate_in_environments cs qs =
+  let cs = CSet.elements (List.fold_right CSet.add (List.map constraint_env cs) CSet.empty) in
   QSet.elements
-    (List.fold_left (instantiate_qual (List.map constraint_env_domain cs)) QSet.empty qs)
+    (List.fold_left (instantiate_qual (List.map Le.domain cs)) QSet.empty qs)
 
 (**************************************************************)
 (************************ Initial Solution ********************)
