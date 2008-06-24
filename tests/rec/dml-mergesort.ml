@@ -26,10 +26,11 @@ let rec initlist xs =
       begin
         match xs' with
         | [] -> Cons([x1],Nil)
-        | x2::xs'' -> (* bug in DML version! *)
-            let y = if x1 < x2 then x1::x2::[] else x2::x1::[] in
+        | x2::xs'' -> 
             let ys = initlist xs'' in
-            Cons(y,ys)
+            (* if x1 < x2 then Cons(x1::x2::[],ys) else Cons(x1::x2::[],ys)  
+               bug in DML version *)
+            if x1 < x2 then Cons(x1::x2::[],ys) else Cons(x2::x1::[],ys)  
       end
 
 let rec merge xs ys = 
@@ -62,8 +63,17 @@ let rec mergeall xss =
         | Cons (xs1, xs2) -> mergeall (merge2 xss)
 
 let mergesort2 xs =
-  mergeall (initlist xs)
+  let xs' = initlist xs in
+  mergeall (show xs')
 
-let check xs = 
-  let _ = assert (len xs = len (mergesort2 xs)) in
+let rec checksort xs =
+  match xs with | [] -> () | x :: xs' ->
+    (match xs' with [] -> () | x'::xs'' -> 
+      let _ = assert (x <= x') in 
+      checksort xs')
+
+let check xs =
+  let xs' = mergesort2 xs in
+  let _ = checksort xs' in
+  let _ = assert (len xs = len xs') in
   ()
