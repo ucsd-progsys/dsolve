@@ -416,7 +416,7 @@ let make_ref_index ocs =
         let i = get_ref_id c in 
         (SIM.add i o om, SIM.add i c cm))
       (SIM.empty, SIM.empty) ics in
-  let (dm,rm) = make_rank_map om cm in
+  let (dm,rm) = Bstats.time "make rank map" (make_rank_map om) cm in
   {orig = om; cnst = cm; rank = rm; depm = dm; pend = Hashtbl.create 17}
 
 let get_ref_orig sri c = 
@@ -710,17 +710,17 @@ let solve_wf sri s =
 
 let solve qs cs = 
   let cs = if !Cf.simpguard then List.map simplify_fc cs else cs in
-  let cs = split cs in
+  let cs = Bstats.time "splitting constraints" split cs in
   let (qs, allqs) = Bstats.time "instantiating quals" (instantiate_per_environment cs) qs in
-  let sri = make_ref_index cs in
-  let s = make_initial_solution (List.combine (strip_origins cs) qs) allqs in
+  let sri = Bstats.time "making ref index" make_ref_index cs in
+  let s = Bstats.time "make initial solution" (make_initial_solution (List.combine (strip_origins cs) qs)) allqs in
   let _ = dump_solution s in
   let _ = dump_solving qs sri s 0  in 
   let _ = Bstats.time "solving wfs" (solve_wf sri) s in
   let _ = printf "@[AFTER@ WF@]@." in
   let _ = dump_solving qs sri s 1 in
   let _ = dump_solution s in
-  let w = make_initial_worklist sri in
+  let w = Bstats.time "make initial worklist" make_initial_worklist sri in
   let _ = Bstats.time "solving sub" (solve_sub sri s) w in
   let _ = dump_solving qs sri s 2 in
   let _ = dump_solution s in

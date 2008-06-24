@@ -1,6 +1,6 @@
 let show x = x
 
-let rec spin () = spin ()
+let rec spin (z: unit) = spin ()
 
 (*type 'a rlist = 
   | Nil 
@@ -23,25 +23,27 @@ let rec sz l =
 
 let rec cons x xs =
   match xs with
-  | Nil -> One x
-  | One y ->  Even(One(x), One(y))
-  | Even(l1, l2) -> Odd(x, l1, l2)
-  | Odd(y, l1, l2) -> Even(cons x l1, cons y l2)
+  | Nil -> show (One x)
+  | One y ->  show (Even(One(x), One(y)))
+  | Even(l1, l2) -> show (Odd(x, l1, l2))
+  | Odd(y, l1, l2) -> show (Even(cons x l1, cons y l2))
 
-let create () = Nil
+let create (z: unit) = Nil
                         
 let rec makelist n =
-  if n = 0 then show (create ()) else (* unsoundness *)
-  let l = show (makelist (n-1)) in
+  if n = 0 then (create ()) else
+  let l = (makelist (n-1)) in
    cons n l 
 
 let rec uncons xs =
   match xs with
-  | Nil -> spin ()
+  | Nil -> (0, Nil)
   | One x -> show (x, Nil)
   | Even(l1, l2) ->
+    let _ = assert (sz l1 = sz l2) in
     let (x, l1) = uncons l1 in
     let (y, l2) = uncons l2 in
+    let _ = assert (sz l1 = sz l2) in
     begin
       match l1 with
         Nil -> show (x, One y)
@@ -54,9 +56,9 @@ let rec uncons xs =
 let check xs x n = 
   let _ = sz xs in
   let _ = show sz in (* BUG! we're losing the argument labels when we push sz through show *)
-  let _ = 
+  (*let _ = 
     let ys = cons x xs in
-      assert(sz ys = 1 + sz xs) in
+      assert(sz ys = 1 + sz xs) in*)
   let _ =
     let xs = makelist n in
     let _ = assert (n = sz xs) in

@@ -1,6 +1,3 @@
-
-
-qualif TLEQ(v) : e1 <= v
-qualif TGEQ(v) : e1 >= v
-qualif TEQ(v)  : e1 = v
-
+qualif FALSE(v) : 1 = 0
+qualif TCOMP(v) : e0 { * * } v
+qualif COMP(v)  : ~A { * * } v

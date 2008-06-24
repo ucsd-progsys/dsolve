@@ -2,7 +2,7 @@
 
     type 'a t =
         Empty
-      | Node of 'a t * 'a * int * 'a t * int
+      | Node of 'a * int * 'a t *  'a t * int
 
       (* 
     let height = function
@@ -48,19 +48,23 @@
 
     let is_empty = function Empty -> true | _ -> false
 
-    let rec add x data = function
+    let bal x d l r =
+      Node(x, d, l, r, 0)
+
+    let rec add x data t =
+      match t with 
         Empty ->
-          Node(Empty, x, data, Empty, 1)
-      | Node(l, v, d, r, h) ->
+          Node(x, data, Empty, Empty, 1)
+      | Node(v, d, l, r, h) ->
           (* let c = Ord.compare x v in *)
           if x = v (* c = 0 *) then
-            Node(l, x, data, r, h)
+            Node(x, data, l, r, h)
           else if x < v (* c < 0 *) then
-            bal (add x data l) v d r
+            Node (v, d, (add x data l), r, h)
           else
-            bal l v d (add x data r)
+            Node (v, d, l, (add x data r), h) 
 
-    let rec find x = function
+(*    let rec find x = function
         Empty ->
           raise Not_found
       | Node(l, v, d, r, _) ->
@@ -123,25 +127,30 @@
         Empty -> accu
       | Node(l, v, d, r, _) ->
           fold f r (f v d (fold f l accu))
-
+ *)
     (*****************************************************************)
 
     let show x = x
     let _ = show add
-    let _ = show remove
-    let _ = show merge
+(*    let _ = show remove
+    let _ = show merge*)
     let _ = show bal
     
     let rec checker = function
       | Empty -> ()
-      | Node (l, v, d, r, h) -> begin
-          let _ = match l with Empty -> () | Node (l',v',d',r',h') -> assert (v' <= v) in
-          let _ = match r with Empty -> () | Node (l',v',d',r',h') -> assert (v' >= v) in
+      | Node (v, d, l, r, h) -> begin
+          let _ = match l with Empty -> () | Node (v',d',l',r',h') -> assert (v' <= v) in
+          let _ = match r with Empty -> () | Node (v',d',l',r',h') -> assert (v' >= v) in
           let _ = checker l; checker r in ()
       end
 
     let tester xs =   
-      let t = List.fold_left (fun t x -> add x 0 t) Empty xs in
+      (* let t = List.fold_left (fun t x -> add x 0 t) Empty xs in*)
+      let t0 = Empty in
+      let t1 = add 12 0 t0 in
+      let t2 = add 1  0 t1 in
+      let t3 = add 14 0 t2 in
+      let t = t3 in
       let _ = show t in
       checker t
 
