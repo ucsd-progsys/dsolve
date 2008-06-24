@@ -647,14 +647,16 @@ let dump_constraints sri =
   iter_ref_constraints sri (fun c -> printf "@[%a@.@]" (pprint_ref None) c))
 
 let dump_solution_stats s = 
-  let kn  = Sol.length s in
-  let (sum, max, min) =   
-    (Sol.fold (fun _ qs x -> (+) x (List.length qs)) s 0,
-     Sol.fold (fun _ qs x -> max x (List.length qs)) s min_int,
-     Sol.fold (fun _ qs x -> min x (List.length qs)) s max_int) in
-  C.cprintf C.ol_solve_stats "@[Quals:@\n\tTotal:@ %d@\n\tAvg:@ %f@\n\tMax:@ %d@\n\tMin:@ %d@\n@\n@]"
-  sum ((float_of_int sum) /. (float_of_int kn)) max min;
-  print_flush ()
+  if C.ck_olev C.ol_solve then
+    let kn  = Sol.length s in
+    let (sum, max, min) =   
+      (Sol.fold (fun _ qs x -> (+) x (List.length qs)) s 0,
+      Sol.fold (fun _ qs x -> max x (List.length qs)) s min_int,
+      Sol.fold (fun _ qs x -> min x (List.length qs)) s max_int) in
+    C.cprintf C.ol_solve_stats "@[Quals:@\n\tTotal:@ %d@\n\tAvg:@ %f@\n\tMax:@ %d@\n\tMin:@ %d@\n@\n@]"
+    sum ((float_of_int sum) /. (float_of_int kn)) max min;
+    print_flush ()
+  else ()
   
 let dump_solving qs sri s step =
   if step = 0 then 
