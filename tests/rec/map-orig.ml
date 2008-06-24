@@ -1,10 +1,11 @@
+module Make(Ord: OrderedType) = struct
 
+    type key = Ord.t
 
     type 'a t =
         Empty
-      | Node of 'a t * 'a * int * 'a t * int
+      | Node of 'a t * key * 'a * 'a t * int
 
-      (* 
     let height = function
         Empty -> 0
       | Node(_,_,_,_,h) -> h
@@ -42,7 +43,6 @@
             end
       end else
         Node(l, x, d, r, (if hl >= hr then hl + 1 else hr + 1))
-*)
 
     let empty = Empty
 
@@ -52,10 +52,10 @@
         Empty ->
           Node(Empty, x, data, Empty, 1)
       | Node(l, v, d, r, h) ->
-          (* let c = Ord.compare x v in *)
-          if x = v (* c = 0 *) then
+          let c = Ord.compare x v in
+          if c = 0 then
             Node(l, x, data, r, h)
-          else if x < v (* c < 0 *) then
+          else if c < 0 then
             bal (add x data l) v d r
           else
             bal l v d (add x data r)
@@ -64,16 +64,16 @@
         Empty ->
           raise Not_found
       | Node(l, v, d, r, _) ->
-          (* let c = Ord.compare x v in *)
-          if x = v (*c = 0*) then d
-          else find x (if x < v (* c < 0 *) then l else r)
+          let c = Ord.compare x v in
+          if c = 0 then d
+          else find x (if c < 0 then l else r)
 
     let rec mem x = function
         Empty ->
           false
       | Node(l, v, d, r, _) ->
-          (* let c = Ord.compare x v in*)
-          x = v (* c = 0 *) || mem x (if x < v (* c < 0 *) then l else r)
+          let c = Ord.compare x v in
+          c = 0 || mem x (if c < 0 then l else r)
 
     let rec min_binding = function
         Empty -> raise Not_found
@@ -97,10 +97,10 @@
         Empty ->
           Empty
       | Node(l, v, d, r, h) ->
-          (* let c = Ord.compare x v in *)
-          if x = v (* c = 0 *) then
+          let c = Ord.compare x v in
+          if c = 0 then
             merge l r
-          else if x < v (* c < 0 *) then
+          else if c < 0 then
             bal (remove x l) v d r
           else
             bal l v d (remove x r)
@@ -124,29 +124,6 @@
       | Node(l, v, d, r, _) ->
           fold f r (f v d (fold f l accu))
 
-    (*****************************************************************)
-
-    let show x = x
-    let _ = show add
-    let _ = show remove
-    let _ = show merge
-    let _ = show bal
-    
-    let rec checker = function
-      | Empty -> ()
-      | Node (l, v, d, r, h) -> begin
-          let _ = match l with Empty -> () | Node (l',v',d',r',h') -> assert (v' <= v) in
-          let _ = match r with Empty -> () | Node (l',v',d',r',h') -> assert (v' >= v) in
-          let _ = checker l; checker r in ()
-      end
-
-    let tester xs =   
-      let t = List.fold_left (fun t x -> add x 0 t) Empty xs in
-      let _ = show t in
-      checker t
-
-    (*****************************************************************)
-    (* 
     type 'a enumeration = End | More of key * 'a * 'a t * 'a enumeration
 
     let rec cons_enum m e =
@@ -177,5 +154,6 @@
         | (More(v1, d1, r1, e1), More(v2, d2, r2, e2)) ->
             Ord.compare v1 v2 = 0 && cmp d1 d2 &&
             equal_aux (cons_enum r1 e1) (cons_enum r2 e2)
-      in equal_aux (cons_enum m1 End) (cons_enum m2 End) *)
+      in equal_aux (cons_enum m1 End) (cons_enum m2 End)
 
+end
