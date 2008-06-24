@@ -19,4 +19,3 @@ qualif F(v): len v = len ~A + len ~B + 1
 qualif C(v): len v = 1 + len ~A
 
 qualif EQ(v) : ~A { * * } v
-

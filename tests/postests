@@ -4,3 +4,4 @@ tests/checklist.ml     1  False
 tests/mktree.ml        10 False
 tests/rec/quicksort.ml 10 False
 tests/null_subst.lm    10 False
+tests/rjmerge.ml       10 False
