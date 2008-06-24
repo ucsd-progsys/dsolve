@@ -5,37 +5,7 @@ let rec len xs =
   | [] -> 0
   | x::xs' -> 1 + len xs'
 
-
-(**************************************************************************************)
-(******************************* Quick Sort *******************************************)
-(**************************************************************************************)
 (*
-type ('a,'b) boolean = 
-  | True of 'a
-  | False of 'b
-
-
-let rec partition f xs = 
-  match xs with
-  | [] -> ([], [])
-  | x::xs' -> 
-      let (ts,fs) = partition f xs' in
-      (match f x with 
-       | True x' ->  (x'::ts,fs)
-       | False x' -> (ts,x'::fs))
-      
-let rec append k xs ys = 
-  match xs with
-  | []     -> ys
-  | x::xs' -> x::(append k xs' ys)
-
-let rec quicksort xs = 
-  match xs with
-  | [] -> [] 
-  | x::xs' ->
-      let (ls,rs) = partition (fun y -> if y < x then True y else False y) xs' in
-      let (ls',rs') = (quicksort ls, quicksort rs) in
-      append x ls' (x::rs')
 
 (**************************************************************************************)
 (************************ Faster Quick Sort *******************************************)
@@ -67,6 +37,7 @@ let rec quicksort2 xs =
 (******************************* Merge Sort *******************************************)
 (**************************************************************************************)
 *)
+
 let rec halve xs =
   match xs with
   | []   -> ([], [])
@@ -74,8 +45,7 @@ let rec halve xs =
       let (ys, zs) = halve xs' in
       (x::zs, ys)
 
-
-let rec merge xs ys = 
+let rec merge xs ys =
   match xs with
   | [] -> ys
   | x::xs' ->
@@ -88,18 +58,31 @@ let rec merge xs ys =
             else y::(merge (x::xs') ys')
       end
 
-
-let rec mergesort ps = 
+let rec mergesort ps =
   match ps with
   | [] -> []
-  | p::ps'  -> 
-      let (qs,rs) = halve (show ps) in
-      let qs' = mergesort (show qs) in
-      let rs' = mergesort (show rs) in (* this is the problem! *)
-      merge qs' rs'
+  | p::ps' -> begin
+      match ps' with [] -> [p] 
+      | _ -> 
+        let (qs,rs) = halve (show ps) in
+        let _ = show qs in
+        let _ = show rs in 
+        let qs' = mergesort (show qs) in
+        let rs' = mergesort (show rs) in (* this is the problem! *)      
+        merge qs' rs'
+    end
 
-
-let _ = show mergesort
+let rec spin_mergesort (ps: int list) =
+  match ps with
+  | [] -> []
+  | p::ps' ->
+      let qs = [p; p] in
+      let _ = show qs in
+      let _ = assert (len qs > 0) in
+      let _ = spin_mergesort (show qs) in
+      let _ = show qs in
+      let _ = assert (1 = 0) in
+        [p]
 
 
 (*
@@ -204,7 +187,9 @@ let _ = show insertsort
 let _ = show quicksort 
 let _ = show quicksort2*)
  
-let check xs = 
+let _ = show quicksort2
+
+let check xs  = 
   (*let _ = assert (len xs = len (quicksort xs)) in 
   let _ = assert (len xs = len (quicksort2 xs)) in*) 
   let _ = assert (len xs = len (insertsort xs)) in
