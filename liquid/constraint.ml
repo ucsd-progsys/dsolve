@@ -626,8 +626,8 @@ let make_initial_solution cs qs =
   let s = Sol.create 1000 in
   let addrv qs = function
     | (F.Qconst _, _) -> ()
-    | (F.Qvar k, RHS) -> if not (Sol.mem s k) then Sol.replace s k []
-    | (F.Qvar k, LHS) -> Sol.replace s k qs
+    | (F.Qvar k, LHS) -> if not (Sol.mem s k) then Sol.replace s k []
+    | (F.Qvar k, RHS) -> Sol.replace s k qs
     | (F.Qvar k, _) -> if Sol.find s k != [] then Sol.replace s k qs in
   let ga (c, q) = match c with
     | SubRef (_, _, r1, (_, qe2), _) ->
