@@ -16,7 +16,7 @@ let rec len x =
   | [] -> 0
   | s::ss -> 1 + len ss
 
-let create () = 
+let create (z: unit) = 
   Empty
 
 let rec add x' t = 
@@ -38,8 +38,8 @@ let rec toList t =
   | Node (x,l,r) -> append x (toList l) (x::(toList r))
 
 let rec make_tree n = 
-  if n = 0 then show (create ()) else
-    let t = show (make_tree (n-1)) in
+  if n = 0 then create () else
+    let t = (make_tree (n-1)) in
     add n t 
 
 let _ = show size

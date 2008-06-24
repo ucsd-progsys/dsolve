@@ -623,7 +623,7 @@ let strip_origins cs = snd (List.split cs)
 type solmode = WFS | LHS | RHS
 
 let make_initial_solution cs qs =
-  let s = Sol.create 1000 in
+  let s = Sol.create 100 in
   let addrv qs = function
     | (F.Qconst _, _) -> ()
     | (F.Qvar k, LHS) -> if not (Sol.mem s k) then Sol.replace s k []
