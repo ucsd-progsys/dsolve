@@ -647,7 +647,7 @@ let dump_constraints sri =
   iter_ref_constraints sri (fun c -> printf "@[%a@.@]" (pprint_ref None) c))
 
 let dump_solution_stats s = 
-  if C.ck_olev C.ol_solve then
+  if C.ck_olev C.ol_solve_stats then
     let kn  = Sol.length s in
     let (sum, max, min) =   
       (Sol.fold (fun _ qs x -> (+) x (List.length qs)) s 0,
