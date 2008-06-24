@@ -592,7 +592,7 @@ let instantiate_in_env d (qsetl, qseta) q =
   let subs = make_subs vm in
     List.fold_left (fun (ql, qa) sub -> match Qualifier.instantiate sub q with Some q -> (QSet.add q ql, QSet.add q qa) | None -> (ql, qa)) (qsetl, qseta) subs
 
-let instantiate_quals_in_env qs (m, qsets, qsetall) env =
+let instantiate_quals_in_env qs env (m, qsets, qsetall) =
   try let q = (CMap.find env m) in (m, (QSet.elements q) :: qsets, QSet.union q qsetall) with Not_found ->
     let (q, qsetall) = (List.fold_left (instantiate_in_env (Le.domain env)) (QSet.empty, qsetall) qs) in
       (CMap.add env q m, (QSet.elements q) :: qsets, qsetall)
@@ -603,7 +603,7 @@ let constraint_env (_, c) =
 (* Make copies of all the qualifiers where the free identifiers are replaced
    by the appropriate bound identifiers from all environments. *)
 let instantiate_per_environment cs qs =
-  let (_, qsets, qs) = (List.fold_left (instantiate_quals_in_env qs) (CMap.empty, [], QSet.empty) (List.map constraint_env cs)) in
+  let (_, qsets, qs) = (List.fold_right (instantiate_quals_in_env qs) (List.map constraint_env cs) (CMap.empty, [], QSet.empty)) in
   (qsets, QSet.elements qs)
 
 (**************************************************************)
@@ -632,7 +632,7 @@ let make_initial_solution cs qs =
   let ga (c, q) = match c with
     | SubRef (_, _, r1, (_, qe2), _) ->
         List.iter (fun qv -> addrv [] (F.Qvar qv, LHS)) (F.refinement_qvars r1); addrv qs (qe2, RHS)
-    | WFRef (_, (_, qe), _) -> addrv [] (qe, LHS); addrv qs (qe, WFS) in
+    | WFRef (_, (_, qe), _) -> addrv [] (qe, LHS); addrv q (qe, WFS) in
   let wfs = filter_wfs cs in
   let subs = filter_subs cs in
     List.iter ga subs; List.iter ga wfs; s
