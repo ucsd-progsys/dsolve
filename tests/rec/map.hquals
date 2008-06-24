@@ -1,0 +1,6 @@
+
+
+qualif TLEQ(v) : e1 <= v
+qualif TGEQ(v) : e1 >= v
+qualif TEQ(v)  : e1 = v
+
