@@ -219,12 +219,7 @@ and constrain_if (env, guard, f) e1 e2 e3 =
     cstrs1 @ cstrs2 @ cstrs3)
 
 and bind tenv env guard pat frame pexpr =
-  let env = F.env_bind tenv env pat.pat_desc frame in
-    if Pattern.is_deep pat.pat_desc then
-      Le.add (Path.mk_ident "pattern")
-        (B.mk_int [(Path.mk_ident "", Path.mk_ident "", Pattern.desugar_bind pat.pat_desc pexpr)])
-        env
-    else env
+  F.env_bind tenv env pat.pat_desc frame
 
 and constrain_case (env, guard, f) matchf matche (pat, e) =
   let env = bind e.exp_env env guard pat matchf matche in

@@ -26,11 +26,6 @@ open Typedtree
 module P = Predicate
 module C = Common
 
-let is_deep = function
-  | Tpat_any
-  | Tpat_var _ -> false
-  | _ -> true
-
 let pattern_descs = List.map (fun p -> p.pat_desc)
 
 let _bind_vars = function
@@ -69,11 +64,8 @@ let bind_pexpr pat pexp =
     | Tpat_tuple pats ->
       let pexps = Misc.mapi (fun pat i -> (pat.pat_desc, P.Field(C.tuple_elem_id i, pexp))) pats in
         List.fold_left bind_rec subs pexps
-    | _ -> null_binding_fold subs pat
+    | _ -> failwith "Not trying to bind pexpr to exotic pattern (see tests/null_subst.ml)\n"
   in bind_rec [] (pat, pexp)
-
-let desugar_bind pat pexp =
-  P.big_and (List.map (fun (x, exp) -> P.equals(P.Var x, exp)) (bind_pexpr pat pexp))
 
 let rec same p1 p2 =
   match (p1, p2) with
