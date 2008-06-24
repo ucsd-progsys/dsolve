@@ -460,7 +460,7 @@ let apply_recref rr = function
 
 let replace_recvar f f' = match f with
   | Fsum (p, Some (rp, rr), cs, r) ->
-      map (function Frec (rp', rr', r') when Path.same rp rp' -> apply_refinement r' (append_recref rr' f') | f -> f) (Fsum (p, None, cs, r))
+      map (function Frec (rp', rr', r') when Path.same rp rp' -> append_refinement r' (append_recref rr' f') | f -> f) (Fsum (p, None, cs, r))
   | _ -> f
 
 let unfold f = (* this may not be right *)

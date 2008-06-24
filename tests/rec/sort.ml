@@ -182,7 +182,7 @@ let mergesort2 xs =
 (**************************************************************************************)
 
 
-(* 
+ 
 let rec insert x ys =
   match ys with 
   | [] -> [x]
@@ -196,19 +196,18 @@ let rec insertsort xs =
   | [] -> []
   | x::xs' -> insert x (insertsort xs')
 
-let _ = show halve
+(*let _ = show halve
 let _ = show merge 
 let _ = show mergesort
 let _ = show insert 
 let _ = show insertsort
 let _ = show quicksort 
-let _ = show quicksort2
- *)
-let check () = 
-  let xs = [1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1] in 
+let _ = show quicksort2*)
+ 
+let check xs = 
   (*let _ = assert (len xs = len (quicksort xs)) in 
   let _ = assert (len xs = len (quicksort2 xs)) in*) 
+  let _ = assert (len xs = len (insertsort xs)) in
   let _ = assert (len xs = len (mergesort xs)) in
-  let _ = assert (1=2) in
   ()
 
