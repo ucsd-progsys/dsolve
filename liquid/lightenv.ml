@@ -51,6 +51,7 @@ let addn items env =
 
 let cardinality e = fold (fun _ _ c -> c + 1) e 0
 
+let setcompare e1 e2 = compare (fun x y -> 0) e1 e2
 let compare e1 e2 = Pervasives.compare (cardinality e1) (cardinality e2)
 
 let domain env = maplist (fun k _ -> k) env

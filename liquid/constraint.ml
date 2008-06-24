@@ -344,7 +344,6 @@ module WH =
 type ref_index = 
   { orig: labeled_constraint SIM.t;     (* id -> orig *)
     cnst: refinement_constraint SIM.t;  (* id -> refinement_constraint *) 
-    qs  : Qualifier.t list SIM.t;       (* id -> instantiated qualifiers *)
     rank: (int * bool * fc_id) SIM.t;           (* id -> dependency rank *)
     depm: subref_id list SIM.t;         (* id -> successor ids *)
     pend: (subref_id,unit) Hashtbl.t;   (* id -> is in wkl ? *)
@@ -409,16 +408,16 @@ let fresh_refc =
 
 (* API *)
 let make_ref_index ocs = 
-  let ics = List.map (fun ((o,c),qs) -> (o,fresh_refc c,qs)) ocs in
-  let (om,cm,qm) = 
+  let ics = List.map (fun (o,c) -> (o,fresh_refc c)) ocs in
+  let (om,cm) = 
     List.fold_left 
-      (fun (om,cm,qm) (o,c,qs) ->
+      (fun (om,cm) (o,c) ->
         let o = match o with Cstr fc -> fc | _ -> assert false in
         let i = get_ref_id c in 
-        (SIM.add i o om, SIM.add i c cm, SIM.add i qs qm))
-      (SIM.empty, SIM.empty, SIM.empty) ics in
+        (SIM.add i o om, SIM.add i c cm))
+      (SIM.empty, SIM.empty) ics in
   let (dm,rm) = make_rank_map om cm in
-  {orig = om; cnst = cm; qs = qm; rank = rm; depm = dm; pend = Hashtbl.create 17}
+  {orig = om; cnst = cm; rank = rm; depm = dm; pend = Hashtbl.create 17}
 
 let get_ref_orig sri c = 
   C.do_catch "ERROR: get_ref_orig" (SIM.find (get_ref_id c)) sri.orig
@@ -573,7 +572,7 @@ module QSet = Set.Make(Qualifier)
 module CLe = 
 struct
     type t = F.t Le.t
-    let compare = compare
+    let compare = Le.setcompare
 end
 
 module CMap = Map.Make(CLe)
@@ -588,15 +587,15 @@ let add_path m path = match Path.ident_name path with
 let make_subs m =
   VarMap.fold (fun n ps subs -> C.flap (fun p -> List.map (fun s -> (n, p) :: s) subs) ps) m [[]]
 
-let instantiate_in_env d qset q =
+let instantiate_in_env d (qsetl, qseta) q =
   let vm   = List.fold_left add_path VarMap.empty d in
   let subs = make_subs vm in
-    List.fold_left (fun qs sub -> match Qualifier.instantiate sub q with Some q -> QSet.add q qs | None -> qs) qset subs
+    List.fold_left (fun (ql, qa) sub -> match Qualifier.instantiate sub q with Some q -> (QSet.add q ql, QSet.add q qa) | None -> (ql, qa)) (qsetl, qseta) subs
 
-let instantiate_quals_in_env qs (m, qsets) env =
-  try (m, (CMap.find env m) :: qsets) with Not_found ->
-    let q = QSet.elements (List.fold_left (instantiate_in_env (Le.domain env)) QSet.empty qs) in
-      (CMap.add env q m, q :: qsets)
+let instantiate_quals_in_env qs (m, qsets, qsetall) env =
+  try let q = (CMap.find env m) in (m, (QSet.elements q) :: qsets, QSet.union q qsetall) with Not_found ->
+    let (q, qsetall) = (List.fold_left (instantiate_in_env (Le.domain env)) (QSet.empty, qsetall) qs) in
+      (CMap.add env q m, (QSet.elements q) :: qsets, qsetall)
 
 let constraint_env (_, c) =
   (match c with | SubRef (_, _, _, _, _) -> Le.empty | WFRef (e, _, _) -> e)
@@ -604,7 +603,8 @@ let constraint_env (_, c) =
 (* Make copies of all the qualifiers where the free identifiers are replaced
    by the appropriate bound identifiers from all environments. *)
 let instantiate_per_environment cs qs =
-  List.combine cs (snd (List.fold_left (instantiate_quals_in_env qs) (CMap.empty, []) (List.map constraint_env cs)))
+  let (_, qsets, qs) = (List.fold_left (instantiate_quals_in_env qs) (CMap.empty, [], QSet.empty) (List.map constraint_env cs)) in
+  (qsets, QSet.elements qs)
 
 (**************************************************************)
 (************************ Initial Solution ********************)
@@ -616,19 +616,26 @@ let instantiate_per_environment cs qs =
  * know anything about its value.  For uncalled functions, this will give
  * us the type which makes the least assumptions about the input. *)
 
-let make_initial_solution sri =
+let filter_wfs cs = List.filter (fun (r, _) -> match r with WFRef(_, _, _) -> true | _ -> false) cs
+let filter_subs cs = List.filter (fun (r, _) -> match r with SubRef(_, _, _, _, _) -> true | _ -> false) cs
+let strip_origins cs = snd (List.split cs)
+                      
+type solmode = WFS | LHS | RHS
+
+let make_initial_solution cs qs =
   let s = Sol.create 1000 in
-  let addrv i = function
-  | (F.Qconst _, _) -> ()
-  | (F.Qvar k,false) -> if not (Sol.mem s k) then Sol.replace s k []
-  | (F.Qvar k,_) -> let qs = try SIM.find i sri.qs with Not_found -> failwith "qualifiers not found" in
-      Sol.replace s k qs (* faster? set inter... *) in
-  SIM.iter 
-    (fun i c -> match c with 
+  let addrv qs = function
+    | (F.Qconst _, _) -> ()
+    | (F.Qvar k, RHS) -> if not (Sol.mem s k) then Sol.replace s k []
+    | (F.Qvar k, LHS) -> Sol.replace s k qs
+    | (F.Qvar k, _) -> if Sol.find s k != [] then Sol.replace s k qs in
+  let ga (c, q) = match c with
     | SubRef (_, _, r1, (_, qe2), _) ->
-        List.iter (fun qv -> addrv i (F.Qvar qv,false)) (F.refinement_qvars r1); addrv i (qe2,true)
-    | WFRef (_, (_, qe), _) -> addrv i (qe,false)) sri.cnst;
-  s
+        List.iter (fun qv -> addrv [] (F.Qvar qv, LHS)) (F.refinement_qvars r1); addrv qs (qe2, RHS)
+    | WFRef (_, (_, qe), _) -> addrv [] (qe, LHS); addrv qs (qe, WFS) in
+  let wfs = filter_wfs cs in
+  let subs = filter_subs cs in
+    List.iter ga subs; List.iter ga wfs; s
 
 (**************************************************************)
 (****************** Debug/Profile Information *****************)
@@ -677,8 +684,10 @@ let dump_solving qs sri s step =
      flush stdout)
 
 let dump_solution s =
-  Sol.iter (fun p r -> C.cprintf C.ol_solve "@[%s: %a@]@."
+  if C.ck_olev C.ol_solve then
+    Sol.iter (fun p r -> C.cprintf C.ol_solve "@[%s: %a@]@."
               (Path.unique_name p) (Oprint.print_list Qualifier.pprint C.space) r) s
+  else ()
 
 (**************************************************************)
 (******************** Iterative - Refinement  *****************)
@@ -700,9 +709,9 @@ let solve_wf sri s =
 let solve qs cs = 
   let cs = if !Cf.simpguard then List.map simplify_fc cs else cs in
   let cs = split cs in
-  let cs = Bstats.time "instantiating quals" (instantiate_per_environment cs) qs in
+  let (qs, allqs) = Bstats.time "instantiating quals" (instantiate_per_environment cs) qs in
   let sri = make_ref_index cs in
-  let s = make_initial_solution sri in
+  let s = make_initial_solution (List.combine (strip_origins cs) qs) allqs in
   let _ = dump_solution s in
   let _ = dump_solving qs sri s 0  in 
   let _ = Bstats.time "solving wfs" (solve_wf sri) s in
