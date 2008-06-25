@@ -1,12 +1,16 @@
 qualif A(v) : sz l = v
 qualif AA(v) : sz v = n
+qualif AAA(v) : sz v = sz ~A - n
 qualif B(v) : sz v = 1 + sz ~A
 qualif C(v) : sz v = sz ~A - 1
 
 qualif D(v) : sz v = sz e0
 qualif E(v) : sz v = sz e1
 
-qualif ZERO(v) : sz v = 0
+qualif ZERO(v) : sz v { * * } 0
+qualif NZERO(v) : nil v { * * } [0, 1]
+
+
 
 qualif NIL(v) : v = nil ~A 
 qualif NIL0(v) : nil v = 0

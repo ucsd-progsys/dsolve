@@ -21,12 +21,12 @@ let rec sz l =
 
 let nil l =
   match l with
-  | Nil -> show 1
-  | One _ -> show 0
-  | Even (a, b) -> show 0
-  | Odd (_, _, _) -> show 0
+  | Nil -> 1
+  | One _ -> 0
+  | Even (a, b) -> 0
+  | Odd (_, _, _) -> 0
 
-(*let rec cons x xs =
+let rec cons x xs =
   match xs with
   | Nil -> show (One x)
   | One y ->  show (Even(One(x), One(y)))
@@ -43,7 +43,7 @@ let rec makelist n =
 let rec uncons xs =
   let _ = assert (nil xs = 0) in
   match xs with
-  | Nil -> assert false
+  | Nil -> let _ = assert (1 = 0) in assert false
   | One x -> (x, Nil)
   | Even(l1, l2) ->
     let _ = assert (sz l1 = sz l2) in
@@ -59,17 +59,17 @@ let rec uncons xs =
     end
   | Odd(x, l1, l2) -> show (x, Even(l1, l2))
 
-let rec destroylist n xs =
-  if n > 0 then destroylist (n-1) (snd (uncons xs)) else xs
+(*let rec destroylist n xs =
+  if n = 1 then xs else destroylist (n-1) (snd (uncons xs))*)
 
-(*let head_safe l =
+let head_safe l =
   let (x, _) = uncons l in x
 
 let tail_safe l =
   let (x, l) = uncons l in l
 
 let head l = 
-  let _ = assert (sz l > 0) in
+  let _ = assert (nil l = 0) in
   match l with
   | Nil -> assert false 
   | One _ -> head_safe l
@@ -77,12 +77,12 @@ let head l =
   | Odd _ ->  head_safe l
 
 let tail l =
-  let _ = assert (sz l > 0) in
+  let _ = assert (nil l = 0) in
   match l with
   | Nil -> assert false 
   | One _ -> tail_safe l
   | Even _ ->  tail_safe l
-  | Odd _ ->  tail_safe l*)
+  | Odd _ ->  tail_safe l
 
 (*
 let rec lookup l i =
@@ -101,20 +101,22 @@ let rec print_rlist = function
   | One _ as l -> let (x, _) = uncons l in print_int x; print_newline ()
   | Even _ as l -> let (x, l) = uncons l in print_int x; print_string "; "; print_rlist l
   | Odd _ as l -> let (x, l) = uncons l in print_int x; print_string "; "; print_rlist l 
-*)*)
+*)
 
-let check xs x n = 
-  (*let xs = makelist n in*)
-  let _ = sz xs in
-  let _ = nil xs in
-  (*let _ = assert (n = sz xs) in
-  let _ = show sz in (* BUG! we're losing the argument labels when we push sz through show *)
-  let _ =
-    let ys = uncons xs in
-      assert(sz (snd ys) = sz xs - 1) in
-  let _ =
+let check x n = 
+  if n > 0 then
+    let xs = makelist n in
+    let _ = sz xs in
+    let _ = nil xs in
+    let _ = assert (n = sz xs) in
+    let _ = show sz in (* BUG! we're losing the argument labels when we push sz through show *)
+    let _ =
+      let ys = uncons xs in
+        assert(sz (snd ys) = sz xs - 1) in
+    let _ = head xs in
+    let _ = tail xs in
+  (*let _ =
     let ys = destroylist n xs in
       assert (nil ys = 1) in*)
-    ()
-
+      () else ()
 
