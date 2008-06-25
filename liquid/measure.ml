@@ -49,7 +49,7 @@ let rewrite_pred subs r =
 
 let transl_desc mlenv subs (c, (ps, r)) =
   try
-    let _ = if not(C.is_unique ps) then failwith "Measure args not unique" in 
+    let _ = if not(C.is_unique (C.maybe_list ps)) then failwith "Measure args not unique" in 
     let c = (Env.lookup_constructor (Longident.parse c) mlenv) in
     let tag = c.cstr_tag in
     let _ = if List.length ps != c.cstr_arity then failwith "Wrong number of measure args" in

@@ -377,16 +377,16 @@ let make_rank_map om cm =
         | SubRef _ -> List.fold_left (upd id) vm (lhs_ks c))
       cm VM.empty in
   let (dm,deps) = 
-    SIM.fold
+    Bstats.time "make deps" (SIM.fold
       (fun id c (dm,deps) -> 
         match (c, rhs_k c) with 
         | (WFRef _,_) -> (dm,deps) 
         | (_,None) -> (dm,(id,id)::deps) 
         | (_,Some k) -> 
-          let kds = get km k in
-          let deps' = List.map (fun id' -> (id,id')) (id::kds) in
-          (SIM.add id kds dm, List.rev_append deps deps'))
-      cm (SIM.empty,[]) in
+          let kds = Bstats.time "get" (get km) k in
+          let deps' = Bstats.time "map" (List.map (fun id' -> (id,id'))) (id::kds) in
+          ((SIM.add id kds dm, (Bstats.time "revappend" (List.rev_append deps') deps)))
+      cm) (SIM.empty,[]) in
   let flabel i = C.io_to_string ((SIM.find i om).lc_id) in
   let rm = 
     List.fold_left
@@ -394,7 +394,7 @@ let make_rank_map om cm =
         let b = (not !Cf.psimple) || (is_simple_constraint (SIM.find id cm)) in
         let fci = (SIM.find id om).lc_id in
         SIM.add id (r,b,fci) rm)
-      SIM.empty (C.scc_rank flabel deps) in
+      SIM.empty (Bstats.time "scc rank" (C.scc_rank flabel) deps) in
   (dm,rm)
 
 let fresh_refc = 

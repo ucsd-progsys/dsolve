@@ -1,7 +1,5 @@
 let show x = x
 
-let rec spin (z: unit) = spin ()
-
 (*type 'a rlist = 
   | Nil 
   | One of 'a
@@ -21,6 +19,13 @@ let rec sz l =
   | Even (l1, l2) -> (sz l1) + (sz l2)
   | Odd (_, l1, l2) -> (1 + (sz l1) + (sz l2)) 
 
+let nil l =
+  match l with
+  | Nil -> 1
+  | One _ -> 0
+  | Even (_, _) -> 0
+  | Odd (_, _, _) -> 0
+
 let rec cons x xs =
   match xs with
   | Nil -> show (One x)
@@ -36,9 +41,10 @@ let rec makelist n =
    cons n l 
 
 let rec uncons xs =
+  let _ = assert (nil xs = 0) in
   match xs with
-  | Nil -> (0, Nil)
-  | One x -> show (x, Nil)
+  | Nil -> assert false
+  | One x -> (x, Nil)
   | Even(l1, l2) ->
     let _ = assert (sz l1 = sz l2) in
     let (x, l1) = uncons l1 in
@@ -53,19 +59,8 @@ let rec uncons xs =
     end
   | Odd(x, l1, l2) -> show (x, Even(l1, l2))
 
-let check xs x n = 
-  let _ = sz xs in
-  let _ = show sz in (* BUG! we're losing the argument labels when we push sz through show *)
-  (*let _ = 
-    let ys = cons x xs in
-      assert(sz ys = 1 + sz xs) in*)
-  let _ =
-    let xs = makelist n in
-    let _ = assert (n = sz xs) in
-    let ys = uncons xs in
-      assert(sz (snd ys) = sz xs - 1) in
-    ()
-
+let rec destroylist n xs =
+  if n != 0 then destroylist (n-1) (snd (uncons xs)) else xs
 
 (*let head_safe l =
   let (x, _) = uncons l in x
@@ -73,18 +68,23 @@ let check xs x n =
 let tail_safe l =
   let (x, l) = uncons l in l
 
-let head = function
+let head l = 
+  let _ = assert (sz l > 0) in
+  match l with
   | Nil -> assert false 
-  | One _ as l -> head_safe l
-  | Even _ as l ->  head_safe l
-  | Odd _ as l ->  head_safe l
+  | One _ -> head_safe l
+  | Even _ ->  head_safe l
+  | Odd _ ->  head_safe l
 
-let tail = function
+let tail l =
+  let _ = assert (sz l > 0) in
+  match l with
   | Nil -> assert false 
-  | One _ as l -> tail_safe l
-  | Even _ as l ->  tail_safe l
-  | Odd _ as l ->  tail_safe l
+  | One _ -> tail_safe l
+  | Even _ ->  tail_safe l
+  | Odd _ ->  tail_safe l*)
 
+(*
 let rec lookup l i =
   match l with
   | Nil -> assert false
@@ -102,4 +102,19 @@ let rec print_rlist = function
   | Even _ as l -> let (x, l) = uncons l in print_int x; print_string "; "; print_rlist l
   | Odd _ as l -> let (x, l) = uncons l in print_int x; print_string "; "; print_rlist l 
 *)
+
+let check x n = 
+  let xs = makelist n in
+  let _ = sz xs in
+  let _ = nil xs in
+  let _ = assert (n = sz xs) in
+  let _ = show sz in (* BUG! we're losing the argument labels when we push sz through show *)
+  let _ =
+    let ys = uncons xs in
+      assert(sz (snd ys) = sz xs - 1) in
+  let _ =
+    let ys = destroylist n xs in
+      assert (nil ys = 1) in
+    ()
+
 
