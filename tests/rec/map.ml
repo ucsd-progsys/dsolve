@@ -1,8 +1,35 @@
+type 'a t =
+    Empty
+  | Node of 'a * int * 'a t * 'a t * int
 
+let empty = Empty
 
-    type 'a t =
-        Empty
-      | Node of 'a * int * 'a t *  'a t * int
+let rec add x data t =
+  match t with
+      Empty ->
+        Node(x, data, Empty, Empty, 1)
+    | Node(v, d, l, r, h) ->
+        (* let c = Ord.compare x v in *)
+        if x = v (* c = 0 *) then
+          Node(x, data, l, r, h)
+        else if x < v (* c < 0 *) then
+          Node (v, d, (add x data l), r, h)
+        else
+          Node (v, d, l, (add x data r), h)
+
+let rec checker = function
+  | Empty -> ()
+  | Node (v, d, l, r, h) ->
+      let _ = match l with Empty -> () | Node (v',d',l',r',h') -> assert (v' <= v) in
+      let _ = match r with Empty -> () | Node (v',d',l',r',h') -> assert (v' >= v) in
+      let _ = checker l; checker r in ()
+
+let test_add (z: unit) x d x' d' =
+  let z = add x d Empty in
+  let t = add x' d' z in
+    checker t
+
+(*
 
       (* 
     let height = function
@@ -50,19 +77,6 @@
 
     let bal x d l r =
       Node(x, d, l, r, 0)
-
-    let rec add x data t =
-      match t with 
-        Empty ->
-          Node(x, data, Empty, Empty, 1)
-      | Node(v, d, l, r, h) ->
-          (* let c = Ord.compare x v in *)
-          if x = v (* c = 0 *) then
-            Node(x, data, l, r, h)
-          else if x < v (* c < 0 *) then
-            Node (v, d, (add x data l), r, h)
-          else
-            Node (v, d, l, (add x data r), h) 
 
 (*    let rec find x = function
         Empty ->
@@ -188,3 +202,6 @@
             equal_aux (cons_enum r1 e1) (cons_enum r2 e2)
       in equal_aux (cons_enum m1 End) (cons_enum m2 End) *)
 
+
+
+*)
