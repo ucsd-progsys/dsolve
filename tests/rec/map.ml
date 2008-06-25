@@ -24,9 +24,10 @@ let rec checker = function
       let _ = match r with Empty -> () | Node (v',d',l',r',h') -> assert (v' >= v) in
       let _ = checker l; checker r in ()
 
-let test_add (z: unit) x d x' d' =
+let test_add (z: unit) x d x' d' x'' d'' =
   let z = add x d Empty in
-  let t = add x' d' z in
+  let o = add x' d' z in
+  let t = add x'' d'' o in
     checker t
 
 (*
