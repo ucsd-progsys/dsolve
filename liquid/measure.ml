@@ -95,10 +95,11 @@ let mk_pred v mps (_, ps, ms) =
   let _ = if List.length ps != List.length mps then failwith "argument arity mismatch" in
   let ps = List.combine ps mps in
   let var_map v = maybe_fail (List.assoc (Some v) ps) in
-  let cm (s, e) = 
-    let e = P.pexp_map_vars var_map e in
-    P.Atom(P.FunApp(s, [P.Var v]), P.Eq, e) in 
-  cm ms 
+    try
+      let (s, e) = ms in
+      let e = P.pexp_map_vars var_map e in
+      P.Atom(P.FunApp(s, [P.Var v]), P.Eq, e) 
+    with Not_found -> P.True
     
 let mk_preds v mps mcstrs =
   P.big_and (List.map (mk_pred v mps) mcstrs)
@@ -127,9 +128,6 @@ let get_patvar p =
   | Tpat_any -> None
   | _ -> raise Not_found
 
-(*let get_patvars_shallow pat = 
-  Pattern.fold (fun x xs -> (C.i2p x) :: xs) pat *)
- 
 let mk_guards f e pats =
  let vp = get_or_fail e in
   let gps pat = match pat.pat_desc with

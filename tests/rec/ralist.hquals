@@ -8,7 +8,7 @@ qualif E(v) : sz v = sz e1
 
 qualif ZERO(v) : sz v = 0
 
-qualif NIL(v) : v = nil ~A
+qualif NIL(v) : v = nil ~A 
 qualif NIL0(v) : nil v = 0
 qualif NIL1(v) : nil v = 1
 

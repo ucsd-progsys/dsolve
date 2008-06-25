@@ -21,12 +21,12 @@ let rec sz l =
 
 let nil l =
   match l with
-  | Nil -> 1
-  | One _ -> 0
-  | Even (_, _) -> 0
-  | Odd (_, _, _) -> 0
+  | Nil -> show 1
+  | One _ -> show 0
+  | Even (a, b) -> show 0
+  | Odd (_, _, _) -> show 0
 
-let rec cons x xs =
+(*let rec cons x xs =
   match xs with
   | Nil -> show (One x)
   | One y ->  show (Even(One(x), One(y)))
@@ -60,7 +60,7 @@ let rec uncons xs =
   | Odd(x, l1, l2) -> show (x, Even(l1, l2))
 
 let rec destroylist n xs =
-  if n != 0 then destroylist (n-1) (snd (uncons xs)) else xs
+  if n > 0 then destroylist (n-1) (snd (uncons xs)) else xs
 
 (*let head_safe l =
   let (x, _) = uncons l in x
@@ -101,20 +101,20 @@ let rec print_rlist = function
   | One _ as l -> let (x, _) = uncons l in print_int x; print_newline ()
   | Even _ as l -> let (x, l) = uncons l in print_int x; print_string "; "; print_rlist l
   | Odd _ as l -> let (x, l) = uncons l in print_int x; print_string "; "; print_rlist l 
-*)
+*)*)
 
-let check x n = 
-  let xs = makelist n in
+let check xs x n = 
+  (*let xs = makelist n in*)
   let _ = sz xs in
   let _ = nil xs in
-  let _ = assert (n = sz xs) in
+  (*let _ = assert (n = sz xs) in
   let _ = show sz in (* BUG! we're losing the argument labels when we push sz through show *)
   let _ =
     let ys = uncons xs in
       assert(sz (snd ys) = sz xs - 1) in
   let _ =
     let ys = destroylist n xs in
-      assert (nil ys = 1) in
+      assert (nil ys = 1) in*)
     ()
 
 

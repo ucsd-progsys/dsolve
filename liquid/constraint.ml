@@ -385,7 +385,7 @@ let make_rank_map om cm =
         | (_,Some k) -> 
           let kds = Bstats.time "get" (get km) k in
           let deps' = Bstats.time "map" (List.map (fun id' -> (id,id'))) (id::kds) in
-          ((SIM.add id kds dm, (Bstats.time "revappend" (List.rev_append deps') deps)))
+          (SIM.add id kds dm, (Bstats.time "revappend" (List.rev_append deps') deps)))
       cm) (SIM.empty,[]) in
   let flabel i = C.io_to_string ((SIM.find i om).lc_id) in
   let rm = 
