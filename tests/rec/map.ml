@@ -2,6 +2,36 @@ type 'a t =
     Empty
   | Node of 'a * int * 'a t * 'a t * int
 
+let rec checker = function
+  | Empty -> ()
+  | Node (v, d, l, r, h) ->
+      let _ = match l with Empty -> () | Node (v',d',l',r',h') -> assert (v' <= v) in
+      let _ = match r with Empty -> () | Node (v',d',l',r',h') -> assert (v' >= v) in
+      let _ = checker l; checker r in ()
+
+let create x d l r =
+  Node (x, d, l, r, 0)
+
+let bal x d l r =
+  match l with
+      Empty -> assert false (* invalid_arg "Map.bal" *)
+    | Node (lv, ld, ll, lr, _) ->
+        create lv ld ll (create x d lr r)
+
+let test () =
+  let ll = Node (-3, max_int, Empty, Empty, max_int) in
+  let lr = Node (-1, max_int, Empty, Empty, max_int) in
+  let lt = Node (-2, max_int, ll, lr, max_int) in
+
+  let rl = Node (1, max_int, Empty, Empty, max_int) in
+  let rr = Node (3, max_int, Empty, Empty, max_int) in
+  let rt = Node (2, max_int, rl, rr, max_int) in
+
+  let b = bal 0 max_int lt rt in
+
+    checker b
+
+(*
 let empty = Empty
 
 let rec add x data t =
@@ -17,20 +47,13 @@ let rec add x data t =
         else
           Node (v, d, l, (add x data r), h)
 
-let rec checker = function
-  | Empty -> ()
-  | Node (v, d, l, r, h) ->
-      let _ = match l with Empty -> () | Node (v',d',l',r',h') -> assert (v' <= v) in
-      let _ = match r with Empty -> () | Node (v',d',l',r',h') -> assert (v' >= v) in
-      let _ = checker l; checker r in ()
-
 let test_add (z: unit) x d x' d' x'' d'' =
   let z = add x d Empty in
   let o = add x' d' z in
   let t = add x'' d'' o in
     checker t
 
-(*
+
 
       (* 
     let height = function
