@@ -12,11 +12,39 @@ let rec checker = function
 let create x d l r =
   Node (x, d, l, r, 0)
 
+let height = function
+  | Empty -> 0
+  | Node (_,_,_,_,h) -> h
+
 let bal x d l r =
-  match l with
-      Empty -> assert false (* invalid_arg "Map.bal" *)
-    | Node (lv, ld, ll, lr, _) ->
-        create lv ld ll (create x d lr r)
+  let hl = height l in
+  let hr = height r in
+    if hl > hr + 2 then
+      match r with
+          Empty -> assert false (* invalid_arg "Map.bal" *)
+        | Node(rv, rd, rl, rr, _) ->
+            if height rr >= height rl then
+              create rv rd (create x d l rl) rr
+            else begin
+              match rl with
+                  Empty -> assert false (* invalid_arg "Map.bal" *)
+                | Node(rlv, rld, rll, rlr, _) ->
+                    create rlv rld (create x d l rll) (create rv rd rlr rr)
+            end
+    else if hr > hl + 2 then
+      match l with
+          Empty -> assert false (* invalid_arg "Map.bal" *)
+        | Node (lv, ld, ll, lr, _) ->
+            if height ll >= height lr then
+              create lv ld ll (create x d lr r)
+            else begin
+              match lr with
+                  Empty -> assert false (* invalid_arg "Map.bal" *)
+                | Node(lrv, lrd, lrl, lrr, _)->
+                    create lrv lrd (create lv ld ll lrl) (create x d lrr r)
+            end
+    else
+      Node(x, d, l, r, if hl >= hr then hl + 1 else hr + 1)
 
 let test () =
   let ll = Node (-3, max_int, Empty, Empty, max_int) in
