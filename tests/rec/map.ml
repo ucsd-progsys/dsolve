@@ -9,12 +9,13 @@ let rec checker = function
       let _ = match r with Empty -> () | Node (v',d',l',r',h') -> assert (v' >= v) in
       let _ = checker l; checker r in ()
 
-let create x d l r =
-  Node (x, d, l, r, 0)
-
 let height = function
   | Empty -> 0
   | Node (_,_,_,_,h) -> h
+
+let create x d l r =
+  let hl = height l and hr = height r in
+    Node(x, d, l, r, if hl >= hr then hl + 1 else hr + 1)
 
 let bal x d l r =
   let hl = height l in
@@ -46,7 +47,7 @@ let bal x d l r =
     else
       Node(x, d, l, r, if hl >= hr then hl + 1 else hr + 1)
 
-let test () =
+let test_bal () =
   let ll = Node (-3, max_int, Empty, Empty, max_int) in
   let lr = Node (-1, max_int, Empty, Empty, max_int) in
   let lt = Node (-2, max_int, ll, lr, max_int) in
@@ -58,9 +59,6 @@ let test () =
   let b = bal 0 max_int lt rt in
 
     checker b
-
-(*
-let empty = Empty
 
 let rec add x data t =
   match t with
@@ -75,60 +73,16 @@ let rec add x data t =
         else
           Node (v, d, l, (add x data r), h)
 
-let test_add (z: unit) x d x' d' x'' d'' =
-  let z = add x d Empty in
-  let o = add x' d' z in
-  let t = add x'' d'' o in
+let test_add () =
+  let z = add max_int max_int Empty in
+  let o = add max_int max_int z in
+  let t = add max_int max_int o in
     checker t
 
-
-
-      (* 
-    let height = function
-        Empty -> 0
-      | Node(_,_,_,_,h) -> h
-
-    let create l x d r =
-      let hl = height l and hr = height r in
-      Node(l, x, d, r, (if hl >= hr then hl + 1 else hr + 1))
-
-    let bal l x d r =
-      let hl = match l with Empty -> 0 | Node(_,_,_,_,h) -> h in
-      let hr = match r with Empty -> 0 | Node(_,_,_,_,h) -> h in
-      if hl > hr + 2 then begin
-        match l with
-          Empty -> invalid_arg "Map.bal"
-        | Node(ll, lv, ld, lr, _) ->
-            if height ll >= height lr then
-              create ll lv ld (create lr x d r)
-            else begin
-              match lr with
-                Empty -> invalid_arg "Map.bal"
-              | Node(lrl, lrv, lrd, lrr, _)->
-                  create (create ll lv ld lrl) lrv lrd (create lrr x d r)
-            end
-      end else if hr > hl + 2 then begin
-        match r with
-          Empty -> invalid_arg "Map.bal"
-        | Node(rl, rv, rd, rr, _) ->
-            if height rr >= height rl then
-              create (create l x d rl) rv rd rr
-            else begin
-              match rl with
-                Empty -> invalid_arg "Map.bal"
-              | Node(rll, rlv, rld, rlr, _) ->
-                  create (create l x d rll) rlv rld (create rlr rv rd rr)
-            end
-      end else
-        Node(l, x, d, r, (if hl >= hr then hl + 1 else hr + 1))
-*)
-
-    let empty = Empty
+(*
+let empty = Empty
 
     let is_empty = function Empty -> true | _ -> false
-
-    let bal x d l r =
-      Node(x, d, l, r, 0)
 
 (*    let rec find x = function
         Empty ->
@@ -194,31 +148,6 @@ let test_add (z: unit) x d x' d' x'' d'' =
       | Node(l, v, d, r, _) ->
           fold f r (f v d (fold f l accu))
  *)
-    (*****************************************************************)
-
-    let show x = x
-    let _ = show add
-(*    let _ = show remove
-    let _ = show merge*)
-    let _ = show bal
-    
-    let rec checker = function
-      | Empty -> ()
-      | Node (v, d, l, r, h) -> begin
-          let _ = match l with Empty -> () | Node (v',d',l',r',h') -> assert (v' <= v) in
-          let _ = match r with Empty -> () | Node (v',d',l',r',h') -> assert (v' >= v) in
-          let _ = checker l; checker r in ()
-      end
-
-    let tester xs =   
-      (* let t = List.fold_left (fun t x -> add x 0 t) Empty xs in*)
-      let t0 = Empty in
-      let t1 = add 12 0 t0 in
-      let t2 = add 1  0 t1 in
-      let t3 = add 14 0 t2 in
-      let t = t3 in
-      let _ = show t in
-      checker t
 
     (*****************************************************************)
     (* 
@@ -253,7 +182,5 @@ let test_add (z: unit) x d x' d' x'' d'' =
             Ord.compare v1 v2 = 0 && cmp d1 d2 &&
             equal_aux (cons_enum r1 e1) (cons_enum r2 e2)
       in equal_aux (cons_enum m1 End) (cons_enum m2 End) *)
-
-
 
 *)
