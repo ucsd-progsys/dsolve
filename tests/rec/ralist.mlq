@@ -10,6 +10,12 @@ measure nil =
   | Even (_, _) -> 0
   | Odd (_, _, _) -> 0
 
+measure one =
+  | Nil -> 0
+  | One _ -> 1
+  | Even (_, _) -> 0
+  | Odd (_, _, _) -> 0
+
 (*
 refinement valid is ((_);(_);(_;length l = length V);(_;_;length l = length V)) 'a rlist = 
   | Nil 

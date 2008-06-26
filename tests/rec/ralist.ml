@@ -26,6 +26,13 @@ let nil l =
   | Even (_, _) -> 0
   | Odd (_, _, _) -> 0
 
+let one l =
+  match l with
+  | Nil -> 0
+  | One _ -> 1
+  | Even (_, _) -> 0
+  | Odd (_, _, _) -> 0
+
 let rec cons x xs =
   match xs with
   | Nil -> (One x)
@@ -33,14 +40,12 @@ let rec cons x xs =
   | Even(l1, l2) -> (Odd(x, l1, l2))
   | Odd(y, l1, l2) -> (Even(cons x l1, cons y l2))
 
-let create (z: unit) = Nil
-                        
 let rec makelist n =
-  if n = 0 then (create ()) else
+  if n = 0 then Nil else
   let l = (makelist (n-1)) in
    cons n l 
 
-let rec uncons xs =
+(*let rec uncons xs =
   let _ = assert (nil xs = 0) in
   match xs with
   | Nil -> let _ = assert (1 = 0) in assert false
@@ -80,12 +85,12 @@ let tail l =
   | Nil -> assert false 
   | One _ -> tail_safe l
   | Even _ ->  tail_safe l
-  | Odd _ ->  tail_safe l
+  | Odd _ ->  tail_safe l*)
 
 let rec lookup l i =
   match l with
-  | Nil -> assert false
-  | One x -> if i = 0 then x else assert false 
+  | Nil -> let _ = assert (1 = 0) in assert false
+  | One x -> if i = 0 then x else let _ = assert (1 = 0) in assert false 
   | Even (l1, l2) ->
     if 2 * (i / 2) = i then lookup l1 (i / 2) else lookup l2 (i / 2) 
   | Odd(x, l1, l2) ->
@@ -93,13 +98,13 @@ let rec lookup l i =
      else if 2 * (i / 2) = i then lookup l2 ((i - 1) / 2) 
           else lookup l1 ((i - 1) / 2)
 
-let rec print_rlist l =
+(*let rec print_rlist l =
   match l with
     Nil -> ()
   | One _ -> let (x, _) = uncons l in ()(*print_int x; print_newline ()*)
   | Even _ -> let (x, l) = uncons l in ()(*print_int x; print_string "; "; print_rlist l*)
   | Odd _ -> let (x, l) = uncons l in ()(*print_int x; print_string "; "; print_rlist l*)
-
+ *)
 let check x n n' i = 
   if n > 0 then
     let xs = makelist n in
@@ -107,7 +112,7 @@ let check x n n' i =
     let _ = nil xs in
     let _ = assert (n = sz xs) in
     let _ = show sz in (* BUG! we're losing the argument labels when we push sz through show *)
-    let _ =
+    (*let _ =
       let ys = uncons xs in
         assert(sz (snd ys) = sz xs - 1) in
     (*let _ = (* lack of polymorphism makes this particular test not really possible atm *)
@@ -119,12 +124,10 @@ let check x n n' i =
     (* simpler test of head and tail *)
     let _ = head xs in
     let _ = tail xs in
-    let _ = print_rlist xs in
+    let _ = print_rlist xs in*)
     let _ = 
-      if (i <= n) && (i >= 0) then 
-        let res = lookup xs i in 
-        let _ = assert (res <= n) in
-        let _ = assert (res >= 0) in () else () in
+      if (i < n) && (i >= 0) then 
+        let _ = lookup xs i in () else () in
     (*let _ = if i > n then let _ = lookup xs i in () else () in*) 
                                                                    (* polymorphism again *)
   (*let _ =

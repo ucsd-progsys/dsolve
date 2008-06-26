@@ -588,13 +588,16 @@ let make_subs m =
   VarMap.fold (fun n ps subs -> C.flap (fun p -> List.map (fun s -> (n, p) :: s) subs) ps) m [[]]
 
 let instantiate_in_env d (qsetl, qseta) q =
-  let vm   = List.fold_left add_path VarMap.empty d in
-  let subs = make_subs vm in
-    List.fold_left (fun (ql, qa) sub -> match Qualifier.instantiate sub q with Some q -> (QSet.add q ql, QSet.add q qa) | None -> (ql, qa)) (qsetl, qseta) subs
+  let vm   = Bstats.time "making varmap" (List.fold_left add_path VarMap.empty) d in
+  let subs = Bstats.time "making subs" make_subs vm in
+    List.fold_left (fun (ql, qa) sub -> match Bstats.time "instantiating single qualifier" (Qualifier.instantiate sub) q with Some q -> (QSet.add q ql, QSet.add q qa) | None -> (ql, qa)) (qsetl, qseta) subs
 
 let instantiate_quals_in_env qs env (m, qsets, qsetall) =
   try let q = (CMap.find env m) in (m, (QSet.elements q) :: qsets, QSet.union q qsetall) with Not_found ->
-    let (q, qsetall) = (List.fold_left (instantiate_in_env (Le.domain env)) (QSet.empty, qsetall) qs) in
+    let (q, qsetall) = 
+      let domenv = Bstats.time "env to list conversion" Le.domain env in
+      (*let _ = printf "@[%i@]@." (List.length domenv) in*)
+      Bstats.time "instantiate_in_env" (List.fold_left (instantiate_in_env (domenv)) (QSet.empty, qsetall)) qs in
       (CMap.add env q m, (QSet.elements q) :: qsets, qsetall)
 
 let constraint_env (_, c) =
