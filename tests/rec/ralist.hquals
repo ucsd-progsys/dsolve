@@ -11,12 +11,13 @@ qualif N(v) : v { * * } ~A
 qualif ZERO(v) : sz v { * * } 0
 qualif NZERO(v) : nil v { * * } [0, 1]
 
-
+qualif EE(v) : v { * * } e0
 
 qualif NIL(v) : v = nil ~A 
 qualif NIL0(v) : nil v = 0
 qualif NIL1(v) : nil v = 1
 
+qualif FALSE(v) : (1 = 0)
 
 (*qualif A(v) : sz ~A { * * } v
 qualif B(v) : sz v = [0, 1, 2, 3]

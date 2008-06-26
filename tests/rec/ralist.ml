@@ -120,7 +120,11 @@ let check x n n' i =
     let _ = head xs in
     let _ = tail xs in
     let _ = print_rlist xs in
-    let _ = if i <= n then let res = lookup xs i in assert (res <= n); assert (res >= 0) else () in
+    let _ = 
+      if (i <= n) && (i >= 0) then 
+        let res = lookup xs i in 
+        let _ = assert (res <= n) in
+        let _ = assert (res >= 0) in () else () in
     (*let _ = if i > n then let _ = lookup xs i in () else () in*) 
                                                                    (* polymorphism again *)
   (*let _ =
