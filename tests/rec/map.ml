@@ -2,13 +2,6 @@ type 'a t =
     Empty
   | Node of 'a * int * 'a t * 'a t * int
 
-let rec checker = function
-  | Empty -> ()
-  | Node (v, d, l, r, h) ->
-      let _ = match l with Empty -> () | Node (v',d',l',r',h') -> assert (v' <= v) in
-      let _ = match r with Empty -> () | Node (v',d',l',r',h') -> assert (v' >= v) in
-      let _ = checker l; checker r in ()
-
 let height = function
   | Empty -> 0
   | Node (_,_,_,_,h) -> h
@@ -47,19 +40,6 @@ let bal x d l r =
     else
       Node(x, d, l, r, if hl >= hr then hl + 1 else hr + 1)
 
-let test_bal () =
-  let ll = Node (-3, max_int, Empty, Empty, max_int) in
-  let lr = Node (-1, max_int, Empty, Empty, max_int) in
-  let lt = Node (-2, max_int, ll, lr, max_int) in
-
-  let rl = Node (1, max_int, Empty, Empty, max_int) in
-  let rr = Node (3, max_int, Empty, Empty, max_int) in
-  let rt = Node (2, max_int, rl, rr, max_int) in
-
-  let b = bal 0 max_int lt rt in
-
-    checker b
-
 let rec add x data t =
   match t with
       Empty ->
@@ -69,14 +49,21 @@ let rec add x data t =
         if x = v (* c = 0 *) then
           Node(x, data, l, r, h)
         else if x < v (* c < 0 *) then
-          Node (v, d, (add x data l), r, h)
+          bal v d (add x data l) r
         else
-          Node (v, d, l, (add x data r), h)
+          bal v d l (add x data r)
 
-let test_add () =
-  let z = add max_int max_int Empty in
-  let o = add max_int max_int z in
-  let t = add max_int max_int o in
+let rec checker = function
+  | Empty -> ()
+  | Node (v, d, l, r, h) ->
+      let _ = match l with Empty -> () | Node (v',d',l',r',h') -> assert (v' <= v) in
+      let _ = match r with Empty -> () | Node (v',d',l',r',h') -> assert (v' >= v) in
+      let _ = checker l; checker r in ()
+
+let test_add x d x' d' x'' d'' =
+  let z = add x d Empty in
+  let o = add x' d' z in
+  let t = add x'' d'' o in
     checker t
 
 (*
@@ -116,18 +103,6 @@ let empty = Empty
       | (_, _) ->
           let (x, d) = min_binding t2 in
           bal t1 x d (remove_min_binding t2)
-
-    let rec remove x = function
-        Empty ->
-          Empty
-      | Node(l, v, d, r, h) ->
-          (* let c = Ord.compare x v in *)
-          if x = v (* c = 0 *) then
-            merge l r
-          else if x < v (* c < 0 *) then
-            bal (remove x l) v d r
-          else
-            bal l v d (remove x r)
 
     let rec iter f = function
         Empty -> ()
