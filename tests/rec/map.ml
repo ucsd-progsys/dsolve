@@ -66,7 +66,41 @@ let test_add x d x' d' x'' d'' =
   let t = add x'' d'' o in
     checker t
 
+let rec remove_min_binding t = match t with
+    Empty -> assert false
+  | Node(x, d, Empty, r, _) -> (x, d, r)
+  | Node(x, d, l, r, _) ->
+      let (x', d', l') = remove_min_binding l in
+        (x', d', bal x d l' r)
+
+let merge m t1 t2 =
+  match (t1, t2) with
+      (Empty, t) -> t
+    | (t, Empty) -> t
+    | (_, _) ->
+        let (x, d, t2') = remove_min_binding t2 in
+          bal x d t1 t2'
+
+let rec remove x t = match t with
+    Empty ->
+      Empty
+  | Node(v, d, l, r, _) ->
+      if x = v then
+        merge x l r
+      else if x < v then
+        bal v d (remove x l) r
+      else
+        bal v d l (remove x r)
+
+let test_remove x d x' d' =
+  let z = add x d Empty in
+  let o = add x' d' z in
+  let t = remove x o in
+    checker t
+
 (*
+
+
 let empty = Empty
 
     let is_empty = function Empty -> true | _ -> false
@@ -85,24 +119,6 @@ let empty = Empty
       | Node(l, v, d, r, _) ->
           (* let c = Ord.compare x v in*)
           x = v (* c = 0 *) || mem x (if x < v (* c < 0 *) then l else r)
-
-    let rec min_binding = function
-        Empty -> raise Not_found
-      | Node(Empty, x, d, r, _) -> (x, d)
-      | Node(l, x, d, r, _) -> min_binding l
-
-    let rec remove_min_binding = function
-        Empty -> invalid_arg "Map.remove_min_elt"
-      | Node(Empty, x, d, r, _) -> r
-      | Node(l, x, d, r, _) -> bal (remove_min_binding l) x d r
-
-    let merge t1 t2 =
-      match (t1, t2) with
-        (Empty, t) -> t
-      | (t, Empty) -> t
-      | (_, _) ->
-          let (x, d) = min_binding t2 in
-          bal t1 x d (remove_min_binding t2)
 
     let rec iter f = function
         Empty -> ()

@@ -641,7 +641,7 @@ let place_refvar freshf r =
 let fresh_with_var_fun env freshf t =
   let tbl = Hashtbl.create 17 in
   let rec fm t =
-    let level = t.level in
+    let level = (repr t).level in
     let t = canonicalize t in
       if Hashtbl.mem tbl t then
         Hashtbl.find tbl t
