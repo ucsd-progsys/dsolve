@@ -1,0 +1,3 @@
+measure height =
+    Empty -> 0
+  | Node (_, _, _, _, h) -> h
