@@ -3,8 +3,6 @@ let rec len x =
   | [] -> 0
   | s::ss -> 1 + len ss
 
-let rec spin () = spin ()
-
 let rec make_list n =
   if n <= 0 then [] else
    let l = make_list (n-1) in

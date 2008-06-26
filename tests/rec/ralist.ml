@@ -23,15 +23,15 @@ let nil l =
   match l with
   | Nil -> 1
   | One _ -> 0
-  | Even (a, b) -> 0
+  | Even (_, _) -> 0
   | Odd (_, _, _) -> 0
 
 let rec cons x xs =
   match xs with
-  | Nil -> show (One x)
-  | One y ->  show (Even(One(x), One(y)))
-  | Even(l1, l2) -> show (Odd(x, l1, l2))
-  | Odd(y, l1, l2) -> show (Even(cons x l1, cons y l2))
+  | Nil -> (One x)
+  | One y -> (Even(One(x), One(y)))
+  | Even(l1, l2) -> (Odd(x, l1, l2))
+  | Odd(y, l1, l2) -> (Even(cons x l1, cons y l2))
 
 let create (z: unit) = Nil
                         
@@ -69,7 +69,6 @@ let tail_safe l =
   let (x, l) = uncons l in l
 
 let head l = 
-  let _ = assert (nil l = 0) in
   match l with
   | Nil -> assert false 
   | One _ -> head_safe l
@@ -77,33 +76,31 @@ let head l =
   | Odd _ ->  head_safe l
 
 let tail l =
-  let _ = assert (nil l = 0) in
   match l with
   | Nil -> assert false 
   | One _ -> tail_safe l
   | Even _ ->  tail_safe l
   | Odd _ ->  tail_safe l
 
-(*
 let rec lookup l i =
   match l with
   | Nil -> assert false
   | One x -> if i = 0 then x else assert false 
   | Even (l1, l2) ->
-    if i mod 2 = 0 then lookup l1 (i / 2) else lookup l2 (i / 2) 
+    if 2 * (i / 2) = i then lookup l1 (i / 2) else lookup l2 (i / 2) 
   | Odd(x, l1, l2) ->
     if i = 0 then x
-     else if i mod 2 = 0 then lookup l2 ((i - 1) / 2) 
-          else lookup l1 ((i - 1) / 2) 
+     else if 2 * (i / 2) = i then lookup l2 ((i - 1) / 2) 
+          else lookup l1 ((i - 1) / 2)
 
-let rec print_rlist = function
+let rec print_rlist l =
+  match l with
     Nil -> ()
-  | One _ as l -> let (x, _) = uncons l in print_int x; print_newline ()
-  | Even _ as l -> let (x, l) = uncons l in print_int x; print_string "; "; print_rlist l
-  | Odd _ as l -> let (x, l) = uncons l in print_int x; print_string "; "; print_rlist l 
-*)
+  | One _ -> let (x, _) = uncons l in ()(*print_int x; print_newline ()*)
+  | Even _ -> let (x, l) = uncons l in ()(*print_int x; print_string "; "; print_rlist l*)
+  | Odd _ -> let (x, l) = uncons l in ()(*print_int x; print_string "; "; print_rlist l*)
 
-let check x n = 
+let check x n n' i = 
   if n > 0 then
     let xs = makelist n in
     let _ = sz xs in
@@ -113,8 +110,19 @@ let check x n =
     let _ =
       let ys = uncons xs in
         assert(sz (snd ys) = sz xs - 1) in
+    (*let _ = (* lack of polymorphism makes this particular test not really possible atm *)
+      if n' >= 0 then
+        let xs = makelist n' in
+        let _ = head xs in
+        let _ = tail xs in
+        print_rlist xs in*)
+    (* simpler test of head and tail *)
     let _ = head xs in
     let _ = tail xs in
+    let _ = print_rlist xs in
+    let _ = if i <= n then let res = lookup xs i in assert (res <= n); assert (res >= 0) else () in
+    (*let _ = if i > n then let _ = lookup xs i in () else () in*) 
+                                                                   (* polymorphism again *)
   (*let _ =
     let ys = destroylist n xs in
       assert (nil ys = 1) in*)
