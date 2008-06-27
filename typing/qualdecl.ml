@@ -147,21 +147,6 @@ let transl_patpred env (v, nv) (qgtymap, tyset, idset, intset) tymap p =
           POr (transl_pred_rec p1, transl_pred_rec p2)
   in transl_pred_rec p
 
-let rec lflap es =
-  match es with
-    | s :: [] ->
-        List.map (fun c -> [c]) s
-    | s :: es ->
-        C.flap (fun c -> List.map (fun d -> c :: d) (lflap es)) s
-    | [] ->
-        []
-
-let tflap3 (e1, e2, e3) f =
-  C.flap (fun c -> C.flap (fun d -> List.map (fun e -> f c d e) e3) e2) e1
-
-let tflap2 (e1, e2) f =
-  C.flap (fun c -> List.map (fun d -> f c d) e2) e1
-
 let gen_preds p =
   let rec gen_expr_rec pe =
     match pe with
@@ -172,11 +157,11 @@ let gen_preds p =
       | PFunApp (f, es) ->
           let f' = conflat f in
           let ess = List.map gen_expr_rec es in
-            List.map (fun e -> FunApp (f', e)) (lflap ess) 
+            List.map (fun e -> FunApp (f', e)) (C.lflap ess) 
       | PBinop (e1, ops, e2) ->
           let e1s = gen_expr_rec e1 in
           let e2s = gen_expr_rec e2 in
-            tflap3 (e1s, ops, e2s) (fun c d e -> Binop (c, d, e))
+            C.tflap3 (e1s, ops, e2s) (fun c d e -> Binop (c, d, e))
       | PField (f, e1) ->
           let e1s = gen_expr_rec e1 in
             List.map (fun e -> Field(Ident.create f, e)) e1s
@@ -190,19 +175,19 @@ let gen_preds p =
       | POr (p1, p2) ->
           let p1s = gen_pred_rec p1 in
           let p2s = gen_pred_rec p2 in
-            tflap2 (p1s, p2s) (fun c d -> Or (c, d))
+            C.tflap2 (p1s, p2s) (fun c d -> Or (c, d))
       | PAnd (p1, p2) ->
           let p1s = gen_pred_rec p1 in
           let p2s = gen_pred_rec p2 in
-            tflap2 (p1s, p2s) (fun c d -> And (c, d))
+            C.tflap2 (p1s, p2s) (fun c d -> And (c, d))
       | PAtom (e1, rels, e2) ->      
           let e1s = gen_expr_rec e1 in
           let e2s = gen_expr_rec e2 in
-            tflap3 (e1s, rels, e2s) (fun c d e -> Atom (c, d, e))
+            C.tflap3 (e1s, rels, e2s) (fun c d e -> Atom (c, d, e))
       | PIff (e1, p1) ->
           let e1s = gen_expr_rec e1 in
           let p1s = gen_pred_rec p1 in
-            tflap2 (e1s, p1s) (fun c d -> Iff (c, d))
+            C.tflap2 (e1s, p1s) (fun c d -> Iff (c, d))
   in gen_pred_rec p
 
 let ck_consistent patpred pred =

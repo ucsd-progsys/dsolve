@@ -308,7 +308,7 @@ liquid/frame.cmi: typing/types.cmi typing/typedtree.cmi liquid/qualifier.cmi \
 liquid/pattern.cmi: typing/typedtree.cmi typing/predicate.cmi \
     typing/ident.cmi liquid/frame.cmi 
 liquid/qdebug.cmi: liquid/qualifymod.cmi parsing/parsetree.cmi 
-liquid/qualifier.cmi: typing/predicate.cmi typing/path.cmi 
+liquid/qualifier.cmi: typing/predicate.cmi typing/path.cmi typing/common.cmo 
 liquid/qualifymod.cmi: typing/typedtree.cmi liquid/qualifier.cmi \
     parsing/location.cmi liquid/lightenv.cmo liquid/frame.cmi typing/env.cmi \
     liquid/constraint.cmi 
@@ -382,14 +382,14 @@ liquid/measure.cmx: typing/types.cmx typing/typedtree.cmx \
     typing/common.cmx 
 liquid/message.cmo: liquid/message.cmi 
 liquid/message.cmx: liquid/message.cmi 
-liquid/mlqmod.cmo: typing/qualdecl.cmo typing/predicate.cmi \
-    parsing/pparse.cmi typing/path.cmi parsing/parsetree.cmi \
-    parsing/parse.cmi liquid/measure.cmo liquid/lightenv.cmo liquid/frame.cmi \
-    utils/config.cmi 
-liquid/mlqmod.cmx: typing/qualdecl.cmx typing/predicate.cmx \
-    parsing/pparse.cmx typing/path.cmx parsing/parsetree.cmi \
-    parsing/parse.cmx liquid/measure.cmx liquid/lightenv.cmx liquid/frame.cmx \
-    utils/config.cmx 
+liquid/mlqmod.cmo: typing/qualmod.cmo typing/qualdecl.cmo \
+    typing/predicate.cmi parsing/pparse.cmi typing/path.cmi \
+    parsing/parsetree.cmi parsing/parse.cmi liquid/measure.cmo \
+    liquid/lightenv.cmo liquid/frame.cmi utils/config.cmi 
+liquid/mlqmod.cmx: typing/qualmod.cmx typing/qualdecl.cmx \
+    typing/predicate.cmx parsing/pparse.cmx typing/path.cmx \
+    parsing/parsetree.cmi parsing/parse.cmx liquid/measure.cmx \
+    liquid/lightenv.cmx liquid/frame.cmx utils/config.cmx 
 liquid/normalize.cmo: liquid/qdebug.cmi parsing/printast.cmi \
     parsing/parsetree.cmi parsing/longident.cmi parsing/location.cmi \
     typing/common.cmo parsing/asttypes.cmi 
@@ -412,9 +412,9 @@ liquid/qdump.cmo: typing/qualgen.cmo typing/qualdecl.cmo typing/predicate.cmi \
 liquid/qdump.cmx: typing/qualgen.cmx typing/qualdecl.cmx typing/predicate.cmx \
     parsing/pparse.cmx parsing/parsetree.cmi parsing/parse.cmx \
     utils/config.cmx typing/common.cmx parsing/asttypes.cmi 
-liquid/qualifier.cmo: typing/predicate.cmi typing/path.cmi \
+liquid/qualifier.cmo: typing/predicate.cmi typing/path.cmi typing/common.cmo \
     liquid/qualifier.cmi 
-liquid/qualifier.cmx: typing/predicate.cmx typing/path.cmx \
+liquid/qualifier.cmx: typing/predicate.cmx typing/path.cmx typing/common.cmx \
     liquid/qualifier.cmi 
 liquid/qualifymod.cmo: typing/types.cmi typing/typedtree.cmi \
     typing/stypes.cmi typing/predicate.cmi liquid/pattern.cmi typing/path.cmi \

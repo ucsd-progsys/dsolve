@@ -22,6 +22,9 @@
  *)
 
 open Format
+open Predicate
+
+module C = Common
 
 type t = Path.t * Path.t * Predicate.t
 
@@ -52,3 +55,39 @@ let instantiate varmap (path, valu, pred) =
   let varmap = (Path.ident_name_crash valu, valu) :: varmap in
     try Some (path, valu, Predicate.instantiate_named_vars varmap pred)
     with Not_found -> None
+
+let vars (path, valu, pred) =
+  C.maybe_list (List.map (fun x -> if Path.same x valu then None else Some (Path.ident_name_crash x)) (Predicate.vars pred))
+
+(* in qualifier.ml to avoid an odd dependency problem that breaks the build *)
+let expand_about vm p =
+  let rec e_rec = function
+      PInt x -> [PInt x]
+    | Var p -> 
+        let p = Path.ident_name_crash p in
+        List.map (fun x -> Var x) (C.StringMap.find p vm)
+    | FunApp (s, ps) ->
+        let ess = List.map e_rec ps in
+          List.map (fun x -> FunApp (s, x)) (C.lflap ess)
+    | Binop (e1, b, e2) ->
+        C.tflap2 (e_rec e1, e_rec e2) (fun a c -> Binop (a, b, c))
+    | Field (f, e1) ->
+        List.map (fun e -> Field(f, e)) (e_rec e1)
+  and t_rec = function
+      True -> [True]
+    | Atom(e1, b, e2) -> 
+        C.tflap2 (e_rec e1, e_rec e2) (fun a c -> Atom (a, b, c))
+    | Iff(e, t) ->
+        C.tflap2 (e_rec e, t_rec t) (fun a b -> Iff (a, b))
+    | Not t ->
+        List.map (fun a -> Not a) (t_rec t)
+    | And (t1, t2) ->
+        C.tflap2 (t_rec t1, t_rec t2) (fun a b -> And (a, b))
+    | Or (t1, t2) ->
+        C.tflap2 (t_rec t1, t_rec t2) (fun a b -> Or (a, b)) in
+  t_rec p
+
+let instantiate_about vm (path, valu, pred) = 
+  let vm = C.StringMap.add (Path.ident_name_crash valu) [valu] vm in
+    try List.map (fun x -> (path, valu, x)) (expand_about vm pred)
+    with Not_found -> []

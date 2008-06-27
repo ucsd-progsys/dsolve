@@ -577,27 +577,21 @@ end
 
 module CMap = Map.Make(CLe)
 
-module VarMap = Map.Make(String)
-
-let add_path m path = match Path.ident_name path with
-  | Some name ->
-      let rest = try VarMap.find name m with Not_found -> [] in VarMap.add name (path :: rest) m
-  | None -> m
-
-let make_subs m =
-  VarMap.fold (fun n ps subs -> C.flap (fun p -> List.map (fun s -> (n, p) :: s) subs) ps) m [[]]
+let add_path vars path _ m = 
+  match Path.ident_name path with
+  | Some name when List.mem name vars ->
+      let rest = try C.StringMap.find name m with Not_found -> [] in C.StringMap.add name (path :: rest) m
+  | _ -> m
 
 let instantiate_in_env d (qsetl, qseta) q =
-  let vm   = Bstats.time "making varmap" (List.fold_left add_path VarMap.empty) d in
-  let subs = Bstats.time "making subs" make_subs vm in
-    List.fold_left (fun (ql, qa) sub -> match Bstats.time "instantiating single qualifier" (Qualifier.instantiate sub) q with Some q -> (QSet.add q ql, QSet.add q qa) | None -> (ql, qa)) (qsetl, qseta) subs
+  let uvars = Bstats.time "getting qual vars" Qualifier.vars q in
+  let vm = Bstats.time "building varmap" (Le.fold (add_path uvars) d) C.StringMap.empty in
+    List.fold_left (fun (ql, qa) q -> (QSet.add q ql, QSet.add q qa)) (qsetl, qseta) (Qualifier.instantiate_about vm q)
 
 let instantiate_quals_in_env qs env (m, qsets, qsetall) =
   try let q = (CMap.find env m) in (m, (QSet.elements q) :: qsets, QSet.union q qsetall) with Not_found ->
     let (q, qsetall) = 
-      let domenv = Bstats.time "env to list conversion" Le.domain env in
-      (*let _ = printf "@[%i@]@." (List.length domenv) in*)
-      Bstats.time "instantiate_in_env" (List.fold_left (instantiate_in_env (domenv)) (QSet.empty, qsetall)) qs in
+      Bstats.time "instantiate_in_env" (List.fold_left (instantiate_in_env env) (QSet.empty, qsetall)) qs in
       (CMap.add env q m, (QSet.elements q) :: qsets, qsetall)
 
 let constraint_env (_, c) =

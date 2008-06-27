@@ -23,7 +23,7 @@
 
 module F = Format
 
-module StringMap = Map.Make(struct type t = string let compare = compare end)
+module StringMap = Map.Make(String)
 
 module ComparablePath = struct
   type t = Path.t
@@ -63,6 +63,15 @@ let zip_partition xs bs =
 let flap f xs = 
   List.flatten (List.map f xs)
 
+let rec lflap es =
+  match es with
+    | s :: [] ->
+        List.map (fun c -> [c]) s
+    | s :: es ->
+        flap (fun c -> List.map (fun d -> c :: d) (lflap es)) s
+    | [] ->
+        []
+
 let flap2 f xs ys = 
   List.flatten (List.map2 f xs ys)
 
@@ -71,6 +80,12 @@ let flap3 f xs ys zs =
 
 let combine3 xs ys zs =
   map3 (fun x y z -> (x, y, z)) xs ys zs
+
+let tflap2 (e1, e2) f =
+  flap (fun c -> List.map (fun d -> f c d) e2) e1
+
+let tflap3 (e1, e2, e3) f =
+  flap (fun c -> flap (fun d -> List.map (fun e -> f c d e) e3) e2) e1
 
 let rec expand f xs ys =
   match xs with
