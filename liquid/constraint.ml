@@ -588,7 +588,7 @@ let instantiate_in_env d (qsetl, qseta) q =
   let vm = Bstats.time "building varmap" (Le.fold (add_path uvars) d) C.StringMap.empty in
     List.fold_left (fun (ql, qa) q -> (QSet.add q ql, QSet.add q qa)) (qsetl, qseta) (Qualifier.instantiate_about vm q)
 
-let instantiate_quals_in_env qs env (m, qsets, qsetall) =
+let instantiate_quals_in_env qs (m, qsets, qsetall) env =
   try let q = (CMap.find env m) in (m, (QSet.elements q) :: qsets, QSet.union q qsetall) with Not_found ->
     let (q, qsetall) = 
       Bstats.time "instantiate_in_env" (List.fold_left (instantiate_in_env env) (QSet.empty, qsetall)) qs in
@@ -600,8 +600,8 @@ let constraint_env (_, c) =
 (* Make copies of all the qualifiers where the free identifiers are replaced
    by the appropriate bound identifiers from all environments. *)
 let instantiate_per_environment cs qs =
-  let (_, qsets, qs) = (List.fold_right (instantiate_quals_in_env qs) (List.map constraint_env cs) (CMap.empty, [], QSet.empty)) in
-  (qsets, QSet.elements qs)
+  let (_, qsets, qs) = (List.fold_left (instantiate_quals_in_env qs) (CMap.empty, [], QSet.empty) (List.map constraint_env cs)) in
+  (List.rev qsets, QSet.elements qs)
 
 (**************************************************************)
 (************************ Initial Solution ********************)
