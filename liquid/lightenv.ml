@@ -54,6 +54,6 @@ let cardinality e = fold (fun _ _ c -> c + 1) e 0
 let setcompare e1 e2 = compare (fun x y -> 0) e1 e2
 let compare e1 e2 = Pervasives.compare (cardinality e1) (cardinality e2)
 
-let setstring e = fold (fun k _ s -> match Path.ident_name k with Some n when String.length n <= 6 || String.sub n 0 6 != "__atmp" -> s ^ n | _ -> s) e ""
+let setstring e = fold (fun k _ s -> match Path.unique_ident_name k with Some n when String.length n <= 6 || String.sub n 0 6 != "__atmp" -> s ^ " A " ^ n | _ -> s) e ""
 
 let domain env = maplist (fun k _ -> k) env

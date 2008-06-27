@@ -346,8 +346,8 @@ liquid/frame.cmx: typing/typetexp.cmx typing/types.cmx typing/typedtree.cmx \
     typing/oprint.cmx utils/misc.cmx parsing/location.cmx liquid/lightenv.cmx \
     typing/ident.cmx typing/env.cmx typing/ctype.cmx typing/common.cmx \
     typing/btype.cmx parsing/asttypes.cmi liquid/frame.cmi 
-liquid/lightenv.cmo: typing/common.cmo 
-liquid/lightenv.cmx: typing/common.cmx 
+liquid/lightenv.cmo: typing/path.cmi typing/common.cmo 
+liquid/lightenv.cmx: typing/path.cmx typing/common.cmx 
 liquid/liqerrors.cmo: typing/typetexp.cmi typing/typemod.cmi \
     typing/typedecl.cmi typing/typecore.cmi typing/typeclass.cmi \
     parsing/syntaxerr.cmi liquid/qualifymod.cmi parsing/pparse.cmi \

@@ -29,6 +29,7 @@ val nopos: int
 
 val ident_name: t -> string option
 val ident_name_crash: t -> string
+val unique_ident_name: t -> string option
 val name: t -> string
 val unique_name: t -> string
 val head: t -> Ident.t

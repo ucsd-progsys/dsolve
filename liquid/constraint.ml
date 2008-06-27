@@ -577,6 +577,8 @@ end
 
 module CMap = Map.Make(CLe)
 
+let memo = Hashtbl.create 1000
+
 let add_path vars path _ m = 
   match Path.ident_name path with
   | Some name when List.mem name vars ->
@@ -589,10 +591,11 @@ let instantiate_in_env d (qsetl, qseta) q =
     List.fold_left (fun (ql, qa) q -> (QSet.add q ql, QSet.add q qa)) (qsetl, qseta) (Qualifier.instantiate_about vm q)
 
 let instantiate_quals_in_env qs (m, qsets, qsetall) env =
-  try let q = (CMap.find env m) in (m, (QSet.elements q) :: qsets, QSet.union q qsetall) with Not_found ->
+  try let q = (Hashtbl.find memo (Le.setstring env)) in (m, (QSet.elements q) :: qsets, QSet.union q qsetall) with Not_found ->
     let (q, qsetall) = 
       Bstats.time "instantiate_in_env" (List.fold_left (instantiate_in_env env) (QSet.empty, qsetall)) qs in
-      (CMap.add env q m, (QSet.elements q) :: qsets, qsetall)
+      let _ = Hashtbl.add memo (Le.setstring env) q in
+      (m, (QSet.elements q) :: qsets, qsetall)
 
 let constraint_env (_, c) =
   (match c with | SubRef (_, _, _, _, _) -> Le.empty | WFRef (e, _, _) -> e)

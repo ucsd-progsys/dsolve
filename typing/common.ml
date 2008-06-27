@@ -28,7 +28,7 @@ module StringMap = Map.Make(String)
 module ComparablePath = struct
   type t = Path.t
   let compare = compare
-  let equal = (=)
+  let equal = Path.same 
   let hash = Hashtbl.hash
 end
 
