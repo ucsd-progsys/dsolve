@@ -10,7 +10,7 @@ let height t =
 let create x d l r =
   let hl = height l and hr = height r in
     Node(x, d, l, r, if hl >= hr then hl + 1 else hr + 1)
-(*
+
 let bal x d l r =
   let hl = height l in
   let hr = height r in
@@ -41,6 +41,9 @@ let bal x d l r =
     else
       Node(x, d, l, r, if hl >= hr then hl + 1 else hr + 1)
 
+let check x d l r =
+  bal x d l r 
+(*
 let rec add x data t =
   match t with
       Empty ->
