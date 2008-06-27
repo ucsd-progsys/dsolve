@@ -7,9 +7,13 @@ let height t =
   | Empty -> 0
   | Node (_,_,_,_,h) -> h
 
+let show x = x
+
 let create x d l r =
   let hl = height l and hr = height r in
-    Node(x, d, l, r, if hl >= hr then hl + 1 else hr + 1)
+  let fat = Node(x, d, l, r, show (if hl >= hr then hl + 1 else hr + 1)) in
+    show fat
+
 
 let bal x d l r =
   let hl = height l in
@@ -42,8 +46,10 @@ let bal x d l r =
       Node(x, d, l, r, if hl >= hr then hl + 1 else hr + 1)
 
 let check x d l r =
-  create x d l r 
+  let _ = create x d l r in
+    bal x d l r
 
+(*
 let rec add x data t =
   match t with
       Empty ->
@@ -100,7 +106,7 @@ let test_remove x d x' d' =
   let z = add x d Empty in
   let o = add x' d' z in
   let t = remove x o in
-    checker t
+    checker t*)
 
 (*
 

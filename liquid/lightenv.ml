@@ -28,6 +28,8 @@ module E = Map.Make(Common.ComparablePath)
 
 include E
 
+module B = Buffer
+
 let maplist f env =
   fold (fun k v r -> (f k v)::r) env []
 
@@ -54,6 +56,7 @@ let cardinality e = fold (fun _ _ c -> c + 1) e 0
 let setcompare e1 e2 = compare (fun x y -> 0) e1 e2
 let compare e1 e2 = Pervasives.compare (cardinality e1) (cardinality e2)
 
-let setstring e = fold (fun k _ s -> match Path.unique_ident_name k with Some n when String.length n <= 6 || String.sub n 0 6 != "__atmp" -> s ^ " A " ^ n | _ -> s) e ""
+let badstring s = s.[0] = '_' && s.[1] = '\''
+let setstring e = B.contents (fold (fun k _ s -> match Path.unique_ident_name k with Some n when String.length n <= 2 || not(badstring n) -> B.add_char s '*'; B.add_string s n; s | _ -> s) e (B.create 400))
 
 let domain env = maplist (fun k _ -> k) env

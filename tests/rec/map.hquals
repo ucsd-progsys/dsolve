@@ -3,8 +3,8 @@ qualif TCOMP(v) : e0 { * * } v
 qualif COMP(v)  : ~A { * * } v
 qualif INTLIT(v): ^ { * * } v
 
+qualif HH(v)    : v = ~A
 qualif H(v)     : v { * * } height ~A
-qualif E4(v)    : height v = e4
 qualif BAL(v)   : height v { * * } height e2 + [1, 2, 3]
 qualif BALA(v)  : height v { * * } height ~A + [1, 2, 3]
 qualif HMEAS(v) : v { * * } height [e2, e3] + [1, 2, 3]

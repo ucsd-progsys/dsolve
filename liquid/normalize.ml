@@ -31,7 +31,7 @@ let dummy = Location.none
 
 (* we can't avoid a global counter here: generate unique names *)
 let ncnt = ref 0 
-let fresh_name_s () = incr ncnt; "__atmp" ^ (string_of_int !ncnt) 
+let fresh_name_s () = incr ncnt; "_'" ^ (string_of_int !ncnt) 
 let fresh_name () = Longident.parse (fresh_name_s ())
  
     

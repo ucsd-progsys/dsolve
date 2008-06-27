@@ -568,6 +568,7 @@ let unsat_constraints sri s =
 (**************************************************************)
 
 module QSet = Set.Make(Qualifier)
+module NSet = Set.Make(String)
 
 module CLe = 
 struct
@@ -579,22 +580,36 @@ module CMap = Map.Make(CLe)
 
 let memo = Hashtbl.create 1000
 
-let add_path vars path _ m = 
+let add_path vars m path = 
   match Path.ident_name path with
   | Some name when List.mem name vars ->
       let rest = try C.StringMap.find name m with Not_found -> [] in C.StringMap.add name (path :: rest) m
   | _ -> m
 
+let add_path_set vars m path =
+  match Path.ident_name path with
+  | Some name when NSet.mem name vars ->
+      let rest = try C.StringMap.find name m with Not_found -> [] in C.StringMap.add name (path :: rest) m
+  | _ -> m
+
 let instantiate_in_env d (qsetl, qseta) q =
   let uvars = Bstats.time "getting qual vars" Qualifier.vars q in
-  let vm = Bstats.time "building varmap" (Le.fold (add_path uvars) d) C.StringMap.empty in
-    List.fold_left (fun (ql, qa) q -> (QSet.add q ql, QSet.add q qa)) (qsetl, qseta) (Qualifier.instantiate_about vm q)
+  let vm = Bstats.time "building varmap" (List.fold_left (add_path uvars) C.StringMap.empty) d in
+    List.fold_left (fun (ql, qa) q -> (QSet.add q ql, QSet.add q qa)) (qsetl, qseta) (Bstats.time "instantiate_about" (Qualifier.instantiate_about vm) q)
+
+let instantiate_in_env_vm vm (qsetl, qseta) q =
+    List.fold_left (fun (ql, qa) q -> (QSet.add q ql, QSet.add q qa)) (qsetl, qseta) (Bstats.time "instantiate_about" (Qualifier.instantiate_about vm) q)
 
 let instantiate_quals_in_env qs (m, qsets, qsetall) env =
-  try let q = (Hashtbl.find memo (Le.setstring env)) in (m, (QSet.elements q) :: qsets, QSet.union q qsetall) with Not_found ->
+  let estr = Le.setstring env in
+  try let q = (Hashtbl.find memo estr) in (m, (QSet.elements q) :: qsets, QSet.union q qsetall) with Not_found ->
     let (q, qsetall) = 
-      Bstats.time "instantiate_in_env" (List.fold_left (instantiate_in_env env) (QSet.empty, qsetall)) qs in
-      let _ = Hashtbl.add memo (Le.setstring env) q in
+      let d = Le.domain env in
+      let aqs = List.fold_left (fun xs x -> List.rev_append (Qualifier.vars x) xs) [] qs in
+      let aqs = List.fold_left (fun xs x -> NSet.add x xs) NSet.empty aqs in
+      let vm = List.fold_left (add_path_set aqs) C.StringMap.empty d in
+      Bstats.time "instantiate_in_env" (List.fold_left (instantiate_in_env_vm vm) (QSet.empty, qsetall)) qs in
+      let _ = Hashtbl.add memo estr q in
       (m, (QSet.elements q) :: qsets, qsetall)
 
 let constraint_env (_, c) =
