@@ -1,16 +1,16 @@
 let show x = x
 
-(*type 'a rlist = 
+type 'a rlist = 
   | Nil 
   | One of 'a
   | Even of 'a rlist * 'a rlist
-  | Odd  of 'a * 'a rlist * 'a rlist*)
+  | Odd  of 'a * 'a rlist * 'a rlist
 
-type rlist = 
+(*type rlist = 
   | Nil 
   | One of int
   | Even of rlist * rlist
-  | Odd  of int * rlist * rlist
+  | Odd  of int * rlist * rlist*)
 
 let rec sz l = 
   match l with
@@ -26,13 +26,6 @@ let nil l =
   | Even (_, _) -> 0
   | Odd (_, _, _) -> 0
 
-let one l =
-  match l with
-  | Nil -> 0
-  | One _ -> 1
-  | Even (_, _) -> 0
-  | Odd (_, _, _) -> 0
-
 let rec cons x xs =
   match xs with
   | Nil -> (One x)
@@ -45,7 +38,7 @@ let rec makelist n =
   let l = (makelist (n-1)) in
    cons n l 
 
-(*let rec uncons xs =
+let rec uncons xs =
   let _ = assert (nil xs = 0) in
   match xs with
   | Nil -> let _ = assert (1 = 0) in assert false
@@ -85,7 +78,7 @@ let tail l =
   | Nil -> assert false 
   | One _ -> tail_safe l
   | Even _ ->  tail_safe l
-  | Odd _ ->  tail_safe l*)
+  | Odd _ ->  tail_safe l
 
 let rec lookup l i =
   match l with
@@ -98,13 +91,13 @@ let rec lookup l i =
      else if 2 * (i / 2) = i then lookup l2 ((i - 1) / 2) 
           else lookup l1 ((i - 1) / 2)
 
-(*let rec print_rlist l =
+let rec print_rlist l =
   match l with
     Nil -> ()
   | One _ -> let (x, _) = uncons l in ()(*print_int x; print_newline ()*)
   | Even _ -> let (x, l) = uncons l in ()(*print_int x; print_string "; "; print_rlist l*)
   | Odd _ -> let (x, l) = uncons l in ()(*print_int x; print_string "; "; print_rlist l*)
- *)
+
 let check x n n' i = 
   if n > 0 then
     let xs = makelist n in
@@ -112,24 +105,16 @@ let check x n n' i =
     let _ = nil xs in
     let _ = assert (n = sz xs) in
     let _ = show sz in (* BUG! we're losing the argument labels when we push sz through show *)
-    (*let _ =
+    let _ =
       let ys = uncons xs in
         assert(sz (snd ys) = sz xs - 1) in
-    (*let _ = (* lack of polymorphism makes this particular test not really possible atm *)
-      if n' >= 0 then
-        let xs = makelist n' in
-        let _ = head xs in
-        let _ = tail xs in
-        print_rlist xs in*)
     (* simpler test of head and tail *)
     let _ = head xs in
     let _ = tail xs in
-    let _ = print_rlist xs in*)
+    let _ = print_rlist xs in
     let _ = 
       if (i < n) && (i >= 0) then 
         let _ = lookup xs i in () else () in
-    (*let _ = if i > n then let _ = lookup xs i in () else () in*) 
-                                                                   (* polymorphism again *)
   (*let _ =
     let ys = destroylist n xs in
       assert (nil ys = 1) in*)

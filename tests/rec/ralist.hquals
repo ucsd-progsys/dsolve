@@ -10,12 +10,10 @@ qualif ZEROC(v) : v { * * } 0
 qualif N(v) : v { * * } ~A 
 qualif ZERO(v) : sz v { * * } 0
 qualif NZERO(v) : nil v { * * } [0, 1]
-qualif ONEBLAH(v) : one v { * * } [0, 1]
 
 qualif EE(v) : v { * * } e0
 
 qualif NIL(v) : v = nil ~A 
-qualif ONE(v) : v = one ~A
 
 qualif FALSE(v) : (1 = 0)
 

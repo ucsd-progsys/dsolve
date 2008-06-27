@@ -2,14 +2,15 @@ type 'a t =
     Empty
   | Node of 'a * int * 'a t * 'a t * int
 
-let height = function
+let height t =
+  match t with
   | Empty -> 0
   | Node (_,_,_,_,h) -> h
 
 let create x d l r =
   let hl = height l and hr = height r in
     Node(x, d, l, r, if hl >= hr then hl + 1 else hr + 1)
-
+(*
 let bal x d l r =
   let hl = height l in
   let hr = height r in
@@ -96,7 +97,7 @@ let test_remove x d x' d' =
   let z = add x d Empty in
   let o = add x' d' z in
   let t = remove x o in
-    checker t
+    checker t*)
 
 (*
 

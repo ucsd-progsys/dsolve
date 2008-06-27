@@ -329,7 +329,7 @@ let rec subt t1 t2 =
         false
         (* s_rec (f2, t1) *)
     | (_, Frec(_, _, _)) ->
-        assert false (* assume that the LHS is folded up *)
+        (*assert*) false (* assume that the LHS is folded up *)
     | (Fvar(p1, _, _), Fvar(p2, _, _)) ->
         equiv p1 p2
     | (Fvar(p, _, _), _) -> 
