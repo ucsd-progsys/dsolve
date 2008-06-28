@@ -137,7 +137,7 @@ let rec refinement_fold f l = function
 (*************************** Type level manipulation **************************)
 (******************************************************************************)
 
-let generic_level = -1000000
+let generic_level = -Btype.generic_level
 
 let current_level = ref (-1)
 
@@ -663,10 +663,22 @@ let mk_recvar env t =
 let place_refvar freshf r =
   if r == recvar_refinement then empty_refinement else freshf ()
 
+let rec pos_type_levels t =
+  if t.level < 0 then t.level <- -t.level; Btype.iter_type_expr pos_type_levels t
+
+let rec neg_type_levels t =
+  if t.level > 0 then t.level <- -t.level; Btype.iter_type_expr neg_type_levels t
+
+let rec flip_frame_levels f =
+  map (function Fvar (p, level, r) -> Fvar (p, -level, r) | f -> f) f
+
 (* Create a fresh frame with the same shape as the type of [exp] using
    [fresh_ref_var] to create new refinement variables. *)
 let fresh_with_var_fun env freshf t =
   let tbl = Hashtbl.create 17 in
+  (* Negative type levels wreak havoc with the unify, etc. functions used in fresh_constr;
+     we'll just reverse them temporarily... *)
+  let _  = pos_type_levels t in
   let rec fm t =
     let level = (repr t).level in
     let t = canonicalize t in
@@ -675,8 +687,12 @@ let fresh_with_var_fun env freshf t =
       else
         let (rp, rr) = mk_recvar env t in
           Hashtbl.replace tbl t (Frec (rp, rr, empty_refinement));
-          let res = fresh_rec fm env (rp, rr) level t in Hashtbl.replace tbl t res; res
-  in map_refinements (place_refvar freshf) (fm t)
+          let res = fresh_rec fm env (rp, rr) level t in
+            Hashtbl.replace tbl t res; res
+  in
+  let f = map_refinements (place_refvar freshf) (fm t) in
+  let _ = neg_type_levels t in
+    flip_frame_levels f
 
 (* Create a fresh frame with the same shape as the given type
    [ty]. Uses type environment [env] to find type declarations.
