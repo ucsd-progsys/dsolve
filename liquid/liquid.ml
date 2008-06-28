@@ -94,7 +94,7 @@ let load_builtins ppf env fenv =
   let fenv = 
     try
       let kvl = load_valfile ppf env b in
-      let tag = (Path.mk_ident F.tag_function, F.Fvar(Path.mk_ident "", F.Mono, F.empty_refinement)) in
+      let tag = (Path.mk_ident F.tag_function, F.Fvar(Path.mk_ident "", 0, F.empty_refinement)) in
       let f = (fun (k, v) -> (C.lookup_path k env, F.label_like v v)) in
       let kvl = tag :: (List.map f kvl) in
       Lightenv.addn kvl fenv
