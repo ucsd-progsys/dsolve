@@ -766,9 +766,10 @@ let rec translate_pframe env plist pf =
             abstract_of_params path params varis
         | Type_record(fields, _, _) ->
             fresh_record (fresh_without_vars env) path fields
-        | Type_variant _ -> (* we don't have access to the ML type here, so instantiation
-                             becomes more difficult *)
-            assert false
+        | Type_variant _ ->
+            match List.split (Env.constructors_of_type path (Env.find_type path env)) with
+              | (_, cstr :: _) -> fresh_without_vars env (snd (Ctype.instance_constructor cstr))
+              | _              -> failwith "Annotated type has no constructors!"
   and transl_record fs r =
     let ps = List.map (fun (f, s, m) -> (Ident.create s, transl_pframe_rec f, mutable_variance m)) fs in
     let path = Path.mk_ident "_anon_record" in
