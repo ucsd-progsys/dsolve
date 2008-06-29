@@ -24,6 +24,7 @@ let map_constructor_args env (name, mlname) (cname, args, cpred) =
   let dargs = C.maybe_list args in
   let argmap = List.combine dargs (List.map (fun s -> Path.mk_ident s) dargs) in
   let f s =
+    let s = String.concat "." (Longident.flatten s) in
     try List.assoc s argmap with Not_found -> C.lookup_path s env in
   let pred = Qualdecl.transl_patpredexp_single_map f cpred in
   let args = List.map (function Some s -> Some (List.assoc s argmap) | None -> None) args in

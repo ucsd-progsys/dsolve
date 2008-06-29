@@ -48,8 +48,9 @@ type patpexpr =
   | PFunApp of Longident.t * patpexpr list 
   | PBinop of patpexpr * binop list * patpexpr
   | PField of string * patpexpr 
+  | Pite of tpat * patpexpr * patpexpr
 
-type tpat =
+and tpat =
     PTrue
   | PAtom of patpexpr * binrel list * patpexpr
   | PIff of patpexpr * tpat
@@ -63,8 +64,9 @@ type pexpr =
   | FunApp of string * pexpr list  
   | Binop of pexpr * binop * pexpr
   | Field of Ident.t * pexpr
+  | Ite of t * pexpr * pexpr
 
-type t =
+and t =
     True
   | Atom of pexpr * binrel * pexpr 
   | Iff of pexpr * t
@@ -97,8 +99,10 @@ let rec pprint_pexpr ppf = function
       in fprintf ppf "@[(%a@ %s@ %a)@]" pprint_pexpr p opstr pprint_pexpr q
   | Field (f, pexp) ->
       fprintf ppf "@[%a.%s@]" pprint_pexpr pexp (Common.ident_name f)
+  | Ite (t, e1, e2) ->
+      fprintf ppf "@[if@ (%a)@ then@ (%a)@ else@ (%a)@]" pprint t pprint_pexpr e1 pprint_pexpr e2
 
-let rec pprint ppf = function
+and pprint ppf = function
   | True ->
       fprintf ppf "true"
   | Atom (p, rel, q) ->
@@ -194,11 +198,13 @@ let rec pexp_map_vars f pexp =
         Binop (map_rec e1, op, map_rec e2)
     | Field (f, pexp) ->
         Field (f, map_rec pexp)
+    | Ite (t, e1, e2) ->
+        Ite (map (pexp_map_vars f) t, map_rec e1, map_rec e2)
     | e ->
         e
   in map_rec pexp
 
-let rec pexp_map_funs f pexp =
+and pexp_map_funs f pexp =
   let rec map_rec = function
       Var x -> Var x
     | FunApp (fn, e) ->
@@ -207,11 +213,13 @@ let rec pexp_map_funs f pexp =
         Binop (map_rec e1, op, map_rec e2)
     | Field (f, pexp) ->
         Field (f, map_rec pexp)
+    | Ite (t, e1, e2) ->
+        Ite (map (pexp_map_funs f) t, map_rec e1, map_rec e2)
     | e ->
         e
   in map_rec pexp
 
-let rec map f pred =
+and map f pred =
   let rec map_rec = function
       True ->
         True
@@ -240,26 +248,6 @@ let apply_substs subs pred =
 let rec instantiate_named_vars subs pred =
   map_vars (fun y -> Var (List.assoc (Path.ident_name_crash y) subs)) pred
 
-let exp_vars_unexp = function
-  | PInt _ -> ([], [])
-  | Var x -> ([], [x])
-  | Binop (e1, _, e2) -> ([e1; e2], [])
-  | FunApp (_, es) -> (es, [])
-  | Field (_, e) -> ([e], [])
-
-let exp_vars e =
-  C.expand exp_vars_unexp [e] []
-
-let exp_funs_unexp = function
-  | PInt _ -> ([], [])
-  | Var _ -> ([], [])
-  | Binop (e1, _, e2) -> ([e1; e2], [])
-  | FunApp (s, es) -> (es, [s])
-  | Field (_, e) -> ([e], [])
-
-let exp_funs e =
-  C.expand exp_funs_unexp [e] []
-
 let unexp f = function
   | True -> ([], [])
   | Atom (e1, _, e2) -> ([], f e1 @ f e2)
@@ -267,13 +255,35 @@ let unexp f = function
   | Not p -> ([p], [])
   | And (p, q) | Or (p, q) -> ([p; q], [])
 
-let var_unexp = unexp exp_vars
-let funs_unexp = unexp exp_funs
+let rec exp_vars_unexp = function
+  | PInt _ -> ([], [])
+  | Var x -> ([], [x])
+  | Binop (e1, _, e2) -> ([e1; e2], [])
+  | FunApp (_, es) -> (es, [])
+  | Field (_, e) -> ([e], [])
+  | Ite (t, e1, e2) -> ([e1; e2], vars t)
 
-let vars e =
+and exp_vars e =
+  C.expand exp_vars_unexp [e] []
+
+and exp_funs_unexp = function
+  | PInt _ -> ([], [])
+  | Var _ -> ([], [])
+  | Binop (e1, _, e2) -> ([e1; e2], [])
+  | FunApp (s, es) -> (es, [s])
+  | Field (_, e) -> ([e], [])
+  | Ite (t, e1, e2) -> ([e1; e2], funs t)
+
+and exp_funs e =
+  C.expand exp_funs_unexp [e] []
+
+and var_unexp p = unexp exp_vars p
+and funs_unexp p = unexp exp_funs p
+
+and vars e =
   C.expand var_unexp [e] []
 
-let funs e =
+and funs e =
   C.expand funs_unexp [e] []
 
 let transl_op = function

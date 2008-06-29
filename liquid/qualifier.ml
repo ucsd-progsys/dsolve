@@ -73,6 +73,8 @@ let expand_about vm p =
         C.tflap2 (e_rec e1, e_rec e2) (fun a c -> Binop (a, b, c))
     | Field (f, e1) ->
         List.map (fun e -> Field(f, e)) (e_rec e1)
+    | Ite (t, e1, e2) ->
+        C.tflap3 (t_rec t, e_rec e1, e_rec e2) (fun a b c -> Ite (a, b, c))
   and t_rec = function
       True -> [True]
     | Atom(e1, b, e2) -> 

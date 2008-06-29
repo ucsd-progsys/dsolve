@@ -63,8 +63,9 @@ let rec convertExp = function
       | (Some i1, None) -> QA.Coeff ((QA.Constant.Int i1), convertExp e2)
       | (None, Some i2) -> QA.Coeff ((QA.Constant.Int i2), convertExp e1)
       | (None, None) -> QA.Application (mul_sym, [convertExp e1; convertExp e2]))
+  | P.Ite (t, e1, e2) -> QA.Ite (convertPred t, convertExp e1, convertExp e2)
 
-let rec convertPred = function 
+and convertPred = function 
   | P.True -> QA.True 
   | P.Not p -> QA.Not (convertPred p)  
   | P.And (p1,p2) -> QA.And [convertPred p1; convertPred p2] 
