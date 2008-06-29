@@ -338,9 +338,7 @@ and constrain_assert (env, guard, _) e =
 
 and constrain_and_bind guard (env, cstrs) (pat, e) =
   let (f, cstrs') = F.begin_def (); let r = constrain e env guard in F.end_def (); r in
-  let f = F.generalize f in
-  let _ = printf "GENERALIZED: %a@.@." F.pprint f in
-  let env = bind e.exp_env env guard pat f (expression_to_pexpr e) in
+  let env = bind e.exp_env env guard pat (F.generalize f) (expression_to_pexpr e) in
     (env, cstrs @ cstrs')
 
 and bind_all bindings fs tenv env guard =
