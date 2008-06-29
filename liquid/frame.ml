@@ -562,6 +562,9 @@ let label_like f f' =
 let record_of_params path ps r =
   Fsum(path, None, [(Cstr_constant 0, ps)], r)
 
+let abstract_of_params p params varis =
+  Fabstract (p, C.combine3 (Misc.mapi (fun _ i -> C.tuple_elem_id i) params) params varis, empty_refinement)
+
 let tuple_of_frames fs r =
   record_of_params path_tuple (Misc.mapi (fun f i -> (C.tuple_elem_id i, f, Covariant)) fs) r
 
@@ -597,13 +600,26 @@ let close_arg res arg =
 let close_constructor res args =
   List.iter (fun a -> Btype.iter_type_expr (close_arg res) a; close_arg res a) args
 
-let fresh_abstract p params varis =
-  Fabstract (p, C.combine3 (Misc.mapi (fun _ i -> C.tuple_elem_id i) params) params varis, empty_refinement)
-
 let fresh_record fresh p fields =
   let fresh_field (name, muta, t) =
     (Ident.create name, fresh t, mutable_variance muta)
   in record_of_params p (List.map fresh_field fields) empty_refinement
+
+let fresh_sum fresh env p t tyl varis =
+  let param_vars = List.combine tyl varis in
+  let (_, cds)   = List.split (Env.constructors_of_type p (Env.find_type p env)) in
+  let fresh_cstr cstr =
+    let _ = Ctype.begin_def () in
+    let (args, res) = Ctype.instance_constructor cstr in
+    let _ = Ctype.end_def () in
+    let _ = List.iter Ctype.generalize args; Ctype.generalize res in
+    let _ = close_constructor res args; Ctype.unify env res t in
+    let (res, args) = (canonicalize res, List.map canonicalize args) in
+    let ids  = Misc.mapi (fun _ i -> C.tuple_elem_id i) args in
+    let fs   = List.map fresh args in
+    let vs   = List.map (fun t -> try List.assoc t param_vars with Not_found -> Covariant) args in
+      (cstr.cstr_tag, C.combine3 ids fs vs)
+  in Fsum (p, None, List.map fresh_cstr cds, empty_refinement)
 
 let fresh_constr fresh env p t tyl =
   let params  = List.map fresh tyl in
@@ -611,24 +627,11 @@ let fresh_constr fresh env p t tyl =
   let varis   = List.map translate_variance ty_decl.type_variance in
     match ty_decl.type_kind with
       | Type_abstract ->
-          fresh_abstract p params varis
+          abstract_of_params p params varis
       | Type_record (fields, _, _) -> (* 1 *)
           fresh_record fresh p fields
       | Type_variant _ ->
-          let param_vars = List.combine tyl varis in
-          let (_, cds)   = List.split (Env.constructors_of_type p (Env.find_type p env)) in
-          let fresh_cstr cstr =
-            let _ = Ctype.begin_def () in
-            let (args, res) = Ctype.instance_constructor cstr in
-            let _ = Ctype.end_def () in
-            let _ = List.iter Ctype.generalize args; Ctype.generalize res in
-            let _ = close_constructor res args; Ctype.unify env res t in
-            let (res, args) = (canonicalize res, List.map canonicalize args) in
-            let ids  = Misc.mapi (fun _ i -> C.tuple_elem_id i) args in
-            let fs   = List.map fresh args in
-            let vs   = List.map (fun t -> try List.assoc t param_vars with Not_found -> Covariant) args in
-              (cstr.cstr_tag, C.combine3 ids fs vs)
-          in Fsum (p, None, List.map fresh_cstr cds, empty_refinement)
+          fresh_sum fresh env p t tyl varis
 
 let close_recf (rp, rr) = function
   | Fsum (p, _, cs, r) ->
@@ -760,7 +763,7 @@ let rec translate_pframe env plist pf =
     let varis   = List.map translate_variance decl.type_variance in
       match decl.type_kind with 
           Type_abstract ->
-            fresh_abstract path params varis
+            abstract_of_params path params varis
         | Type_record(fields, _, _) ->
             fresh_record (fresh_without_vars env) path fields
         | Type_variant _ -> (* we don't have access to the ML type here, so instantiation
