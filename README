@@ -79,6 +79,7 @@ qualif IsXPlus3(v): v >= x + 3
 
 * Condition expression (ifthenelse) *
 qualif Max(v): v = if (x > y) then (x) else (y)
+qualif Max(v): v = (x > y ? x : y)
 
 * Sets of Integer Literals *
 qualif A(v): v = [0,1,2]

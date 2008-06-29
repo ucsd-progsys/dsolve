@@ -1529,8 +1529,11 @@ qual_term:
     { mkpredpatexp (Ppredpatexp_int($2)) }
   | qual_term DOT LIDENT                
     { mkpredpatexp (Ppredpatexp_field($3, $1)) }
-  | IF LPAREN qualifier_pattern RPAREN THEN LPAREN qual_expr RPAREN ELSE
-  LPAREN qual_expr RPAREN
+  | LPAREN qualifier_pattern QUESTION qual_expr COLON 
+    qual_expr RPAREN
+    { mkpredpatexp (Ppredpatexp_ite($2, $4, $6)) }
+  | IF LPAREN qualifier_pattern RPAREN THEN LPAREN qual_expr RPAREN ELSE 
+    LPAREN qual_expr RPAREN
     { mkpredpatexp (Ppredpatexp_ite($3, $7, $11)) }
 
 qual_intlist:
