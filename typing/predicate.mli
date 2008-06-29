@@ -43,8 +43,9 @@ type patpexpr =
   | PFunApp of Longident.t * patpexpr list 
   | PBinop of patpexpr * binop list * patpexpr
   | PField of string * patpexpr
+  | Pite of tpat * patpexpr * patpexpr
 
-type tpat =
+and tpat =
     PTrue
   | PAtom of patpexpr * binrel list * patpexpr
   | PIff of patpexpr * tpat
@@ -58,8 +59,9 @@ type pexpr =
   | FunApp of string * pexpr list 
   | Binop of pexpr * binop * pexpr 
   | Field of Ident.t * pexpr     (* INVARIANT: disjoint fields in same module *)
+  | Ite of t * pexpr * pexpr
 
-type t =  
+and t =  
     True
   | Atom of pexpr * binrel * pexpr 
   | Iff of pexpr * t

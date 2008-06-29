@@ -107,8 +107,11 @@ module YicesProver : PROVER =
              same module *)
           let (fn, e') = (yicesVar me (Printf.sprintf "SELECT_%s" (Ident.unique_name f)) me.f, yicesExp me e) in
             Y.yices_mk_app me.c fn [|e'|]
+      | Predicate.Ite (t, e1, e2) ->
+          let (b, i, e) = (yicesPred me t, yicesExp me e1, yicesExp me e2) in
+            Y.yices_mk_ite me.c b i e
 
-    let rec yicesPred me p = 
+    and yicesPred me p = 
       match p with 
         Predicate.True -> Y.yices_mk_true me.c
       | Predicate.Not p' -> Y.yices_mk_not me.c (yicesPred me p')

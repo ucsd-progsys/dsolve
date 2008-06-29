@@ -31,22 +31,41 @@ let transl_rels rels =
     | _ -> List.map transl_rel rels
 
 let rec transl_patpredexp_single_map f pe =
-  match pe.ppredpatexp_desc with
-    | Ppredpatexp_int (n) ->
-        let _ = if List.length n != 1 then failwith "Set of int lits used in single qualifier" in
-	      PInt (List.hd n)
-    | Ppredpatexp_var (y) ->
-        let y = match y with [sty] -> sty | _ -> failwith "Var ident set used in single qualifier or predicate" in
-	      Var (f (conflat y))
-    | Ppredpatexp_funapp (g, es) ->
-	      FunApp (conflat g, List.map (transl_patpredexp_single_map f) es)
-    | Ppredpatexp_binop (e1, ops, e2) ->
-	      Binop (transl_patpredexp_single_map f e1, transl_op (List.hd ops), transl_patpredexp_single_map f e2)
-    | Ppredpatexp_field (g, e1) ->
-        Field (Ident.create g, transl_patpredexp_single_map f e1)
-    | _ -> failwith "Wildcard used in single qualifier or predicate"
+  let rec transl_expr_rec pe =
+    match pe.ppredpatexp_desc with
+      | Ppredpatexp_int (n) ->
+          let _ = if List.length n != 1 then assert false in
+	        PInt (List.hd n)
+      | Ppredpatexp_var (y) ->
+          let y = match y with [sty] -> sty | _ -> failwith "Var ident set used in single qualifier or predicate" in
+	        Var (f y)
+      | Ppredpatexp_funapp (f, es) ->
+	        FunApp (conflat f, List.map transl_expr_rec es)
+      | Ppredpatexp_binop (e1, ops, e2) ->
+	        Binop (transl_expr_rec e1, transl_op (List.hd ops), transl_expr_rec e2)
+      | Ppredpatexp_field (f, e1) ->
+          Field (Ident.create f, transl_expr_rec e1)
+      | Ppredpatexp_ite (t, e1, e2) ->
+          Ite (transl_patpred_single_map f t, transl_expr_rec e1, transl_expr_rec e2)
+      | _ -> failwith "Wildcard used in single qualifier or predicate"
+  in
+  transl_expr_rec pe
+ 
+and transl_patpred_single_map f p =
+  let rec transl_pred_rec pd =
+    match pd.ppredpat_desc with
+      | Ppredpat_true -> 
+          True
+      | Ppredpat_atom (e1, rels, e2) ->
+	        Atom (transl_patpredexp_single_map f e1, transl_rel (List.hd rels), transl_patpredexp_single_map f e2)
+      | Ppredpat_not (p) -> 
+          Not (transl_pred_rec p)
+      | Ppredpat_and (p1, p2) -> 
+          And (transl_pred_rec p1, transl_pred_rec p2)
+      | Ppredpat_or (p1, p2) -> 
+          Or (transl_pred_rec p1, transl_pred_rec p2)
+  in transl_pred_rec p
 
-(* needs major refactoring *)
 let transl_patpred_single simple valu env p =
   let penv = ref [(Path.name valu, valu)] in
   let ap p pid = penv := (p, pid)::!penv; pid in
@@ -57,35 +76,8 @@ let transl_patpred_single simple valu env p =
         Not_found -> try let ep = fep p' in ap p ep with
           Not_found -> let pid = Path.mk_ident p in 
             ap p pid in
-  let rec transl_expr_rec pe =
-    match pe.ppredpatexp_desc with
-      | Ppredpatexp_int (n) ->
-          let _ = if List.length n != 1 then assert false in
-	        PInt (List.hd n)
-      | Ppredpatexp_var (y) ->
-          let y = match y with [sty] -> sty | _ -> failwith "Var ident set used in single qualifier or predicate" in
-	        Var (if simple then Path.mk_ident (conflat y) else fp y)
-      | Ppredpatexp_funapp (f, es) ->
-	        FunApp (conflat f, List.map transl_expr_rec es)
-      | Ppredpatexp_binop (e1, ops, e2) ->
-	        Binop (transl_expr_rec e1, transl_op (List.hd ops), transl_expr_rec e2)
-      | Ppredpatexp_field (f, e1) ->
-          Field (Ident.create f, transl_expr_rec e1)
-      | _ -> failwith "Wildcard used in single qualifier or predicate"
-  in
-  let rec transl_pred_rec pd =
-    match pd.ppredpat_desc with
-      | Ppredpat_true -> 
-          True
-      | Ppredpat_atom (e1, rels, e2) ->
-	        Atom (transl_expr_rec e1, transl_rel (List.hd rels), transl_expr_rec e2)
-      | Ppredpat_not (p) -> 
-          Not (transl_pred_rec p)
-      | Ppredpat_and (p1, p2) -> 
-          And (transl_pred_rec p1, transl_pred_rec p2)
-      | Ppredpat_or (p1, p2) -> 
-          Or (transl_pred_rec p1, transl_pred_rec p2)
-  in transl_pred_rec p
+  let f l = if simple then Path.mk_ident (conflat l) else fp l in
+    transl_patpred_single_map f p
 
 (* unifying does something odd with state, we'll see how this works.. *)
 let unifies env a b = try (Ct.unify env a b; true) with Ct.Unify(_) -> false
@@ -132,8 +124,9 @@ let transl_patpred env (v, nv) (qgtymap, tyset, idset, intset) tymap p =
 	        PBinop (transl_expr_rec e1, transl_ops ops, transl_expr_rec e2)
       | Ppredpatexp_field (f, e1) ->
           PField (f, transl_expr_rec e1)
-  in
-  let rec transl_pred_rec pd =
+      | Ppredpatexp_ite (t, e1, e2) ->
+          Pite (transl_pred_rec t, transl_expr_rec e1, transl_expr_rec e2)
+  and transl_pred_rec pd =
     match pd.ppredpat_desc with
       | Ppredpat_true -> 
           PTrue
@@ -165,8 +158,12 @@ let gen_preds p =
       | PField (f, e1) ->
           let e1s = gen_expr_rec e1 in
             List.map (fun e -> Field(Ident.create f, e)) e1s
-  in    
-  let rec gen_pred_rec pd =
+      | Pite (t, e1, e2) ->
+          let ts = gen_pred_rec t in
+          let e1s = gen_expr_rec e1 in
+          let e2s = gen_expr_rec e2 in
+            C.tflap3 (ts, e1s, e2s) (fun a b c -> Ite (a, b, c))
+  and gen_pred_rec pd =
     match pd with
       | PTrue ->
           [True] 
@@ -197,8 +194,8 @@ let ck_consistent patpred pred =
     try List.find (fun (c, _) -> a = c) !m 
       with Not_found -> addm (a, b); (a,b) in
   let ckm (a, b) = (fun (_, d) -> b = d) (gtm (a, b)) in
-  let rec ck_expr_rec pred pat =
-    match (pred.ppredpatexp_desc, pat) with
+  let rec ck_expr_rec pat pred =
+    match (pat.ppredpatexp_desc, pred) with
       | (Ppredpatexp_var (_), Var(_))
       | (Ppredpatexp_any_int, PInt (_)) 
       | (Ppredpatexp_int (_), PInt (_)) ->
@@ -211,9 +208,11 @@ let ck_consistent patpred pred =
           ck_expr_rec e1 e1'
       | (Ppredpatexp_mvar (x), Var(y)) ->
           ckm (x, Path.name y)
-      | _ -> assert false in
-  let rec ck_pred_rec pred pat =
-    match (pred.ppredpat_desc, pat) with
+      | (Ppredpatexp_ite (t, e1, e2), Ite (t', e1', e2')) ->
+          ck_pred_rec t t' && ck_expr_rec e1 e1' && ck_expr_rec e2 e2'
+      | _ -> assert false
+  and ck_pred_rec pat pred =
+    match (pat.ppredpat_desc, pred) with
       | (Ppredpat_true, True) -> 
           true
       | (Ppredpat_atom (e1, _, e2), Atom (ee1, _, ee2)) ->

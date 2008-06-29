@@ -24,6 +24,8 @@
 open Builtins
 open Frame
 
+module P = Predicate
+
 let find_or_fail var env = try Lightenv.find var env with Not_found -> assert false
 
 let abstract_app_shape paths out_shape in_shapes =
@@ -78,18 +80,18 @@ let get_app_shape s env =
 
 let pred_is_well_typed env p =
   let rec get_expr_shape = function
-  | Predicate.PInt _ -> uInt
-  | Predicate.Var x -> find_or_fail x env
-  | Predicate.FunApp (s, p') -> 
+  | P.PInt _ -> uInt
+  | P.Var x -> find_or_fail x env
+  | P.FunApp (s, p') -> 
       let y = (get_app_shape s env) (List.map get_expr_shape p') in
         y
-  | Predicate.Binop (p1, op, p2) ->
+  | P.Binop (p1, op, p2) ->
       let p1_shp = get_expr_shape p1 in
       let p1_int = same_shape p1_shp uInt in
       let p2_shp = get_expr_shape p2 in
       let p2_int = same_shape p2_shp uInt in
       if p1_int && p2_int then uInt else Funknown
-  | Predicate.Field (name, r) ->
+  | P.Field (name, r) ->
       begin match get_expr_shape r with
         | Fsum (_, _, [(_, fs)], _) ->
             (* pmr: maybe we need to switch to ids for this *)
@@ -99,23 +101,28 @@ let pred_is_well_typed env p =
               else Funknown
         | f -> Funknown
       end
+  | P.Ite (t, e1, e2) ->
+      let e1_shp = get_expr_shape e1 in
+      let e2_shp = get_expr_shape e2 in
+        if pred_shape_is_bool t && same_shape e1_shp e2_shp 
+        then e1_shp else Funknown
   and pred_shape_is_bool = function
-  | Predicate.True -> true
-  | Predicate.Not p -> pred_shape_is_bool p 
-  | Predicate.Or (p1, p2)  
-  | Predicate.And (p1, p2) -> (pred_shape_is_bool p1) && (pred_shape_is_bool p2)
-  | Predicate.Atom (p1, rel, p2) -> 
+  | P.True -> true
+  | P.Not p -> pred_shape_is_bool p 
+  | P.Or (p1, p2)  
+  | P.And (p1, p2) -> (pred_shape_is_bool p1) && (pred_shape_is_bool p2)
+  | P.Atom (p1, rel, p2) -> 
       let p1_shp = get_expr_shape p1 in
       let p2_shp = get_expr_shape p2 in
         ((same_shape p1_shp p2_shp) (*&& not(same_shape p1_shp Funknown)*))
         || ((same_shape p1_shp uBool) && (same_shape p2_shp uInt))
         || ((same_shape p1_shp uInt) && (same_shape p2_shp uBool))
-  | Predicate.Iff (px, q) -> same_shape (get_expr_shape px) uInt && pred_shape_is_bool q
+  | P.Iff (px, q) -> same_shape (get_expr_shape px) uInt && pred_shape_is_bool q
   in pred_shape_is_bool p
 
 let refinement_well_formed env solution r qual_expr =
   let pred = refinement_predicate solution qual_expr r in
   let var_bound v = Lightenv.mem v env in
   let bound_by_name s = (Lightenv.filterlist (fun n v -> s = Path.name n) env) != [] in
-  let well_scoped = List.for_all var_bound (Predicate.vars pred) && List.for_all bound_by_name (Predicate.funs pred) in
+  let well_scoped = List.for_all var_bound (P.vars pred) && List.for_all bound_by_name (P.funs pred) in
     well_scoped && pred_is_well_typed env pred
