@@ -58,14 +58,12 @@ type simple_refinement = substitution list * qexpr
 (**************************************************************)
 
 type t =
-  | Fvar of Path.t * genericity * refinement
+  | Fvar of Path.t * int * refinement
   | Frec of Path.t * recref * refinement
   | Fsum of Path.t * (Path.t * recref) option * constr list * refinement
   | Fabstract of Path.t * param list * refinement
   | Farrow of pattern_desc option * t * t
   | Funknown
-
-and genericity = Mono | Poly
 
 and param = Ident.t * t * variance
 
@@ -112,7 +110,7 @@ let map_recref f rr =
 
 let rec map_refinements_map f = function
   | Frec (p, rr, r) -> Frec (p, map_recref f rr, f r)
-  | Fvar (p, g, r) -> Fvar (p, g, f r)
+  | Fvar (p, level, r) -> Fvar (p, level, f r)
   | Fsum (p, ro, cs, r) -> Fsum (p, M.may_map (fun (p, rr) -> (p, map_recref f rr)) ro, cs, f r)
   | Fabstract (p, ps, r) -> Fabstract (p, ps, f r)
   | f -> f
@@ -134,6 +132,36 @@ let rec refinement_fold f l = function
   | Fabstract (_, ps, r) ->
       f r (List.fold_left (refinement_fold f) l (params_frames ps))
   | _ -> l
+
+(******************************************************************************)
+(*************************** Type level manipulation **************************)
+(******************************************************************************)
+
+let generic_level = -Btype.generic_level
+
+let current_level = ref (-1)
+
+let uninitialized_level = 0
+
+let rec initialize_type_expr_levels t =
+  let t = repr t in
+    if t.level >= uninitialized_level then t.level <- !current_level;
+    Btype.iter_type_expr initialize_type_expr_levels t
+
+let begin_def () =
+  decr current_level
+
+let end_def () =
+  incr current_level
+
+let generalize_map = function
+  | Fvar (p, level, r) ->
+      let level = if level < !current_level then generic_level else level in
+        Fvar (p, level, r)
+  | f -> f
+
+let generalize f =
+  map generalize_map f
 
 (**************************************************************)
 (****************** Refinement manipulation *******************) 
@@ -158,7 +186,7 @@ let false_refinement =
   mk_refinement [] [(Path.mk_ident "false", Path.mk_ident "V", Predicate.Not (Predicate.True))] []
 
 let apply_refinement r = function
-  | Fvar (p, g, _) -> Fvar (p, g, r)
+  | Fvar (p, level, _) -> Fvar (p, level, r)
   | Fsum (p, rr, cs, _) -> Fsum (p, rr, cs, r)
   | Fabstract (p, ps, _) -> Fabstract (p, ps, r)
   | f -> f
@@ -403,8 +431,8 @@ let pprint_recopt ppf = function
 let rec pprint ppf = function
   | Frec (path, rr, r) ->
       wrap_refined ppf (fun ppf -> fprintf ppf "@[%a@ %s@]" pprint_recref rr (C.path_name path)) r
-  | Fvar (a, g, r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "'%s%s" (C.path_name a) (match g with Mono -> "M" | Poly -> "P")) r
+  | Fvar (a, level, r) ->
+      wrap_refined ppf (fun ppf -> fprintf ppf "'%s%s" (C.path_name a) (if level = generic_level then "P" else "M")) r
   | Fsum (path, ro, [], r) ->
       wrap_refined ppf (fun ppf -> fprintf ppf "@[%a%s@]" pprint_recopt ro (C.path_name path)) r
   | Fsum (path, ro, cs, r) ->
@@ -484,7 +512,8 @@ let instantiate fr ftemplate =
   in
   let rec inst f ft =
     match (f, ft) with
-      | (Fvar (p, Poly, r), _) -> let instf = vmap p ft in append_refinement r instf
+      | (Fvar (p, level, r), _) when level = generic_level ->
+          let instf = vmap p ft in append_refinement r instf
       | (Fvar _, _) | (Frec _, _) ->
           f
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
@@ -553,13 +582,13 @@ let mutable_variance = function
 let fresh_refinementvar () =
   mk_refinement [] [] [Path.mk_ident "k"]
 
-let fresh_fvar level = Fvar(Path.mk_ident "a", (if level = Btype.generic_level then Poly else Mono), empty_refinement)
+let fresh_fvar level = Fvar (Path.mk_ident "a", level, empty_refinement)
 
 let rec canonicalize t =
   let t = repr t in
     begin match t.desc with
       | Tvar -> ()
-      | _    -> (t.id <- 0; t.level <- 0)
+      | _    -> t.id <- 0
     end; Btype.iter_type_expr (fun t -> ignore (canonicalize t)) t; t
 
 let close_arg res arg =
@@ -589,8 +618,6 @@ let fresh_constr fresh env p t tyl =
           let param_vars = List.combine tyl varis in
           let (_, cds)   = List.split (Env.constructors_of_type p (Env.find_type p env)) in
           let fresh_cstr cstr =
-            (* Trick pulled out of typecore - need begin/end def to ensure variables in constructors
-               remain generic *)
             let _ = Ctype.begin_def () in
             let (args, res) = Ctype.instance_constructor cstr in
             let _ = Ctype.end_def () in
@@ -636,20 +663,34 @@ let mk_recvar env t =
 let place_refvar freshf r =
   if r == recvar_refinement then empty_refinement else freshf ()
 
+let rec abs_type_levels t =
+  t.level <- abs t.level; Btype.iter_type_expr abs_type_levels t
+
+let rec flip_frame_levels f =
+  map (function Fvar (p, level, r) -> Fvar (p, -level, r) | f -> f) f
+
+let rec copy_type = function
+  | {desc = Tlink t} -> copy_type t (* Ensures copied types gets target's id/level, not link's *)
+  | t                -> {t with desc = Btype.copy_type_desc copy_type t.desc}
+
 (* Create a fresh frame with the same shape as the type of [exp] using
    [fresh_ref_var] to create new refinement variables. *)
 let fresh_with_var_fun env freshf t =
   let tbl = Hashtbl.create 17 in
+  let t   = copy_type t in
+  (* Negative type levels wreak havoc with the unify, etc. functions used in fresh_constr *)
+  let _   = abs_type_levels t in
   let rec fm t =
     let level = (repr t).level in
-    let t = canonicalize t in
+    let t     = canonicalize t in
       if Hashtbl.mem tbl t then
         Hashtbl.find tbl t
       else
         let (rp, rr) = mk_recvar env t in
           Hashtbl.replace tbl t (Frec (rp, rr, empty_refinement));
-          let res = fresh_rec fm env (rp, rr) level t in Hashtbl.replace tbl t res; res
-  in map_refinements (place_refvar freshf) (fm t)
+          let res = fresh_rec fm env (rp, rr) level t in
+            Hashtbl.replace tbl t res; res
+  in flip_frame_levels (map_refinements (place_refvar freshf) (fm t))
 
 (* Create a fresh frame with the same shape as the given type
    [ty]. Uses type environment [env] to find type declarations.
@@ -698,7 +739,7 @@ let rec translate_pframe env plist pf =
   let transl_pref = transl_pref plist env in
   let rec transl_pframe_rec pf =
     match pf with
-    | PFvar (a, r) -> Fvar (getvar a, Poly, empty_refinement)
+    | PFvar (a, r) -> Fvar (getvar a, generic_level, empty_refinement)
     | PFconstr (l, fs, r) -> transl_constr l fs r
     | PFarrow (v, a, b) ->
         let pat = match v with
@@ -795,7 +836,3 @@ let rec conjuncts solution qual_expr fr =
 
 let predicate solution qual_expr f =
   Predicate.big_and (conjuncts solution qual_expr f)
-
-
-let fix_vars f =
-  map (function Fvar (p, _, r) -> Fvar (p, Mono, r) | f -> f) f

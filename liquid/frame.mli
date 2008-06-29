@@ -44,14 +44,12 @@ val empty_refinement: refinement
 val false_refinement: refinement
 
 type t =
-  | Fvar of Path.t * genericity * refinement
+  | Fvar of Path.t * int * refinement
   | Frec of Path.t * recref * refinement
   | Fsum of Path.t * (Path.t * recref) option * constr list * refinement
   | Fabstract of Path.t * param list * refinement
   | Farrow of pattern_desc option * t * t
   | Funknown
-
-and genericity = Mono | Poly
 
 and param = Ident.t * t * variance
 
@@ -61,10 +59,17 @@ and variance = Covariant | Contravariant | Invariant
 
 and recvar = Path.t option
 
+val generic_level: int
+
 val path_tuple: Path.t
 
 val record_of_params: Path.t -> param list -> refinement -> t
 val tuple_of_frames: t list -> refinement -> t
+
+val begin_def: unit -> unit
+val end_def: unit -> unit
+val generalize: t -> t
+val initialize_type_expr_levels: type_expr -> unit
 
 val get_recref: t -> recref option
 val pprint: formatter -> t -> unit
@@ -115,5 +120,3 @@ val predicate:
   (Path.t -> Qualifier.t list) -> Predicate.pexpr -> t -> Predicate.t
 val conjuncts:
   (Path.t -> Qualifier.t list) -> Predicate.pexpr -> t -> Predicate.t list
-
-val fix_vars: t -> t

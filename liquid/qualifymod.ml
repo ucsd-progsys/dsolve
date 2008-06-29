@@ -121,6 +121,7 @@ let expression_to_pexpr e =
     | _ -> P.Var (Path.mk_ident "dummy")
 
 let rec constrain e env guard =
+  let _ = Frame.initialize_type_expr_levels e.exp_type in
   let freshf = Frame.fresh e.exp_env e.exp_type in
   let environment = (env, guard, freshf) in
   let (f, cstrs, rec_cstrs) =
@@ -248,7 +249,7 @@ and constrain_match (env, guard, f) e pexps partial =
 and constrain_function (env, guard, f) t pat e' =
   match f with
     | (F.Farrow (_, f, unlabelled_f')) ->
-      let env' = F.env_bind e'.exp_env env pat.pat_desc (F.fix_vars f) in
+      let env' = F.env_bind e'.exp_env env pat.pat_desc f in
       let (f'', cstrs) = constrain e' env' guard in
       let f' = F.label_like unlabelled_f' f'' in
       let f = F.Farrow (Some pat.pat_desc, f, f') in
@@ -336,8 +337,8 @@ and constrain_assert (env, guard, _) e =
   in (B.uUnit, [SubFrame (env, guard, B.mk_int [], B.mk_int [assert_qualifier])], cstrs)
 
 and constrain_and_bind guard (env, cstrs) (pat, e) =
-  let (f, cstrs') = constrain e env guard in
-  let env = bind e.exp_env env guard pat f (expression_to_pexpr e) in
+  let (f, cstrs') = F.begin_def (); let r = constrain e env guard in F.end_def (); r in
+  let env = bind e.exp_env env guard pat (F.generalize f) (expression_to_pexpr e) in
     (env, cstrs @ cstrs')
 
 and bind_all bindings fs tenv env guard =
@@ -352,14 +353,22 @@ and constrain_bindings env guard recflag bindings =
     let bindings = List.map (fun (p, e) -> (p, e, expression_to_pexpr e)) bindings in
 
     (* We need to figure out all the frames' labels before we can properly bind them. *)
-    let unlabeled_frames = List.map (fun e -> F.fresh e.exp_env e.exp_type) exprs in
+    let _ = F.begin_def () in
+    let unlabeled_frames = List.map (fun e -> F.initialize_type_expr_levels e.exp_type; F.fresh e.exp_env e.exp_type) exprs in
+    let _ = F.end_def () in
     let unlabeled_env = bind_all bindings unlabeled_frames tenv env guard in
     let (label_frames, _) = constrain_subexprs unlabeled_env guard exprs in
     let binding_frames = List.map2 F.label_like unlabeled_frames label_frames in
+    let binding_frames = List.map F.generalize binding_frames in
             
     (* Redo constraints now that we know what the right labels are *)
     let bound_env = bind_all bindings binding_frames tenv env guard in
+    let _ = F.begin_def () in
     let (found_frames, subexp_cstrs) = constrain_subexprs bound_env guard exprs in
+    let _ = F.end_def () in
+    let found_frames = List.map F.generalize found_frames in
+    let _ = List.iter (fun f -> printf "Bound: %a@.@." F.pprint f) binding_frames in
+    let _ = List.iter (fun f -> printf "Found: %a@.@." F.pprint f) found_frames in
 
     let make_cstr fc = {lc_cstr = fc; lc_tenv = tenv; lc_orig = Loc Location.none; lc_id = fresh_fc_id ()} in
     let build_found_frame_cstr_list cs found_frame binding_frame =
