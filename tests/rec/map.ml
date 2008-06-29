@@ -11,9 +11,7 @@ let show x = x
 
 let create x d l r =
   let hl = height l and hr = height r in
-  let fat = Node(x, d, l, r, show (if hl >= hr then hl + 1 else hr + 1)) in
-    show fat
-
+  Node(x, d, l, r, show (if hl >= hr then hl + 1 else hr + 1))
 
 let bal x d l r =
   let hl = height l in
@@ -44,10 +42,11 @@ let bal x d l r =
             end
     else
       Node(x, d, l, r, if hl >= hr then hl + 1 else hr + 1)
-
+ 
 let check x d l r =
-  let _ = create x d l r in
-    bal x d l r
+  if height l <= height r + 3 && height l >= height l - 3 then
+    l
+  else bal x d Empty Empty 
 
 (*
 let rec add x data t =

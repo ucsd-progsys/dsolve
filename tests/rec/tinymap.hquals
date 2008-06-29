@@ -1,1 +1,4 @@
 qualif H(v) : v = height ~A
+qualif Hz(v) : v = hz ~A
+
+qualif M(v) : v = ~A - 1

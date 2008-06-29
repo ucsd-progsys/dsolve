@@ -1,4 +1,7 @@
 measure height =
     Empty -> 0
-  | Node (_, _, l, r, _) -> if (height l > height r) then (1 + height l) else (1 + hright r)
+  | Node (_, _, l, r, _) -> if (height l > height r) then (1 + height l) else (1 + height r)
   
+measure hz =
+    Empty -> 0
+  | Node (_, _, _, _, h) -> h
