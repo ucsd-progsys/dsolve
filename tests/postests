@@ -1,7 +1,7 @@
-tests/recmergesort.ml  10 False
-tests/recisort.ml      10 False
-tests/checklist.ml     1  False
-tests/mktree.ml        10 False
+tests/rec/pmrmerge.ml  10 False
+tests/rec/pmrisort.ml  10 False
+tests/rec/checklist.ml 1  False
+tests/rec/mktree.ml    10 False
 tests/rec/quicksort.ml 10 False
 tests/null_subst.lm    10 False
 tests/rec/rjmerge.ml   10 False
