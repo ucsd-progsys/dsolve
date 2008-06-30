@@ -49,13 +49,13 @@ let restore_left arg = match arg with
 
 let rec ins1 key d = match d with
   | Black(key1, left, right) ->
-      if key = key1 then Black (key, left, right)
+      if key = key1 then Black (key, left, right)  
       else if key < key1 then restore_left (Black (key1, ins1 key left, right))
       else restore_right (Black (key1, left, ins1 key right))
   | Red (key1, left, right) ->
       if key = key1 then Black (key, left, right)
-      else if key < key1 then Black (key1, ins1 key left, right)
-      else Black (key1, left, ins1 key right)
+      else if key > key1 then Black (key1, ins1 key left, right)
+      else Black (key1, left, ins1 key right) 
   | Empty -> Red (key, Empty, Empty)
 
 let insert dict key =

@@ -3,3 +3,4 @@ tests/bad-checklist.ml    1  True
 tests/bad-recisort.ml     10 False
 tests/bad-mktree.ml       10 False
 tests/rec/bad-quicksort.ml 10 False
+tests/rec/bad-redblack.ml 10 False

@@ -6,3 +6,4 @@ tests/rec/quicksort.ml 10 False
 tests/null_subst.lm    10 False
 tests/rec/rjmerge.ml   10 False
 tests/rec/map.ml       10 False
+tests/rec/redblack.ml  10 False
