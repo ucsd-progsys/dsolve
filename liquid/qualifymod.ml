@@ -367,8 +367,6 @@ and constrain_bindings env guard recflag bindings =
     let (found_frames, subexp_cstrs) = constrain_subexprs bound_env guard exprs in
     let _ = F.end_def () in
     let found_frames = List.map F.generalize found_frames in
-    let _ = List.iter (fun f -> printf "Bound: %a@.@." F.pprint f) binding_frames in
-    let _ = List.iter (fun f -> printf "Found: %a@.@." F.pprint f) found_frames in
 
     let make_cstr fc = {lc_cstr = fc; lc_tenv = tenv; lc_orig = Loc Location.none; lc_id = fresh_fc_id ()} in
     let build_found_frame_cstr_list cs found_frame binding_frame =
