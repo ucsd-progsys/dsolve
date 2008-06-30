@@ -222,6 +222,9 @@ let rec split_sub_params c tenv env g ps1 ps2 = match (ps1, ps2) with
   | ([], []) -> []
   | _ -> assert false
 
+let rec sub_recrefs c env g rr1 rr2 =
+  C.flap2 (fun rs1 rs2 -> C.flap2 (split_sub_ref c env g) rs1 rs2) rr1 rr2
+
 let resolve_extend_env tenv env f l1 l2 = match (l1, l2) with
   | (Some p, _) | (_, Some p) -> F.env_bind tenv env p f
   | _ -> env
@@ -264,8 +267,8 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       ((lequate_cs env g c F.Covariant f2 f1) @ (lequate_cs env' g c F.Covariant f1' f2'), [])
   | (F.Fvar (_, _, r1), F.Fvar (_, _, r2)) ->
       ([], split_sub_ref c env g r1 r2)
-  | (F.Frec _, F.Frec _) ->
-      ([], [])
+  | (F.Frec (_, rr1, r1), F.Frec (_, rr2, r2)) ->
+      ([], sub_recrefs c env g rr1 rr2 @ split_sub_ref c env g r1 r2)
   | (F.Funknown, F.Funknown) ->
       ([],[]) 
   | (F.Fsum(_, t1, cs1, r1), F.Fsum(_, t2, cs2, r2)) when no_recrefs (t1, t2) ->  (* 2 *)
@@ -273,13 +276,16 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       let subs = sum_subs cs1 cs2 tag in
       (C.flap2 (fun (_, ps1) (_, ps2) -> split_sub_params c tenv env g ps1 ps2) cs1 cs2,
        split_sub_ref c penv g r1 (List.map (app_subs subs) r2))
-  | (F.Fsum(_, Some (_, rr1), cs1, r1), F.Fsum(_, Some (_, rr2), cs2, r2)) ->
-      let (shp1, shp2) = (F.shape f1, F.shape f2) in
-      let (f1, f2) = (F.replace_recvar (F.apply_recref rr1 f1) shp1, F.replace_recvar (F.apply_recref rr2 f2) shp2) in
-      let (penv, tag) = bind_tags_pr (None, f1) cs1 r1 env in
-      let subs = sum_subs cs1 cs2 tag in
-      (lequate_cs env g c F.Covariant f1 f2,
-       split_sub_ref c penv g r1 (List.map (app_subs subs) r2))
+  | (F.Fsum(_, Some (_, rr1), _, _), F.Fsum(_, Some (_, rr2), _, _)) ->
+      let (f1, f2) = (F.apply_recref rr1 f1, F.apply_recref rr2 f2) in
+        begin match (f1, f2) with
+          | (F.Fsum(_, _, cs1, r1), F.Fsum(_, _, cs2, r2)) ->
+              let (penv, tag) = bind_tags_pr (None, f1) cs1 r1 env in
+              let subs = sum_subs cs1 cs2 tag in
+                (C.flap2 (fun (_, ps1) (_, ps2) -> split_sub_params c tenv env g ps1 ps2) cs1 cs2,
+                 split_sub_ref c penv g r1 (List.map (app_subs subs) r2))
+          | _ -> assert false
+        end
   | (F.Fabstract(_, ps1, r1), F.Fabstract(_, ps2, r2)) ->
       (split_sub_params c tenv env g ps1 ps2, split_sub_ref c env g r1 r2)
   | (_,_) -> 
