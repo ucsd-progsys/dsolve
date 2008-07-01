@@ -1,14 +1,38 @@
 qualif FALSE(v) : 1 = 0
-qualif TCOMP(v) : e0 { * * } v
-qualif COMP(v)  : ~A { * * } v
-qualif INTLIT(v): ^ { * * } v
-
 qualif HH(v)    : v = ~A
-qualif H(v)     : v { * * } height ~A
-qualif BAL(v)   : height v { * * } height e2 + [1, 2, 3]
-qualif BALA(v)  : height v { * * } height ~A + [1, 2, 3]
-qualif HMEAS(v) : v { * * } height [e2, e3] + [1, 2, 3]
+qualif Height(v): v = height ~A
 
+(* qualif BAL(v)   : v { <=, >= } height e2 - [1, 2]
+qualif BAL(v)   : v { <=, >= } height e2 + [1, 2]
+qualif BAL(v)   : height v { <=, >= } height e2 - [1, 2]
+qualif BAL(v)   : height v { <=, >= } height e2 + [1, 2]
+*)
 
-qualif Height(v): v = height t
+qualif BAL(v)   : v { <=, >= } height ~A - [1, 2, 3]
+qualif BAL(v)   : v { <=, >= } height ~A + [1, 2, 3]
+qualif BAL(v)   : v { <=, >= } height e2 - [1, 2, 3]
+qualif BAL(v)   : v { <=, >= } height e2 + [1, 2, 3]
+
+qualif BAL(v)   : height v { <=, >= } height ~A - [1, 2, 3]
+qualif BAL(v)   : height v { <=, >= } height ~A + [1, 2, 3]
+qualif BAL(v)   : height v { <=, >= } height e2 - [1, 2, 3]
+qualif BAL(v)   : height v { <=, >= } height e2 + [1, 2, 3]
+
+qualif H(v)     : height v { * * } height ~A
+qualif H(v)     : height v { * * } height e2
+
+qualif Ph(v)    : v = (height l >= height r ? height l + 1 : height r + 1)
+qualif Ph(v)    : v = (height e2 >= height e3 ? height e2 + 1 : height e3 + 1)
+qualif Phh(v)   : height v = (height ~A >= height ~B ? height ~A + 1 : height ~B + 1)
+qualif Ph(v)    : pheight v = pheight ~A + 1
+
+(*qualif TCOMP(v) : e0 { * * } v
+qualif COMP(v)  : ~A { * * } v
+qualif INTLIT(v): ^ { * * } v 
+qualif INT(v) : v = [0, 1, 2, 3, 4, 5] 
+qualif HINT(v) : height v = [0, 1, 2, 3, 4, 5]
+qualif BAL(v)   : height v { <, <=, >, >= } height [e2, l, r] + [1, 2]
+qualif BAL(v)   : height v { <, <=, >, >= } height [e2, l, r] - [1, 2]
+qualif BAL3(v)  : height v { * * } height [e2, l, r] 
 qualif Pheight(v): v = pheight t
+*)

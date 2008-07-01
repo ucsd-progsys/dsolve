@@ -10,17 +10,21 @@ let height t =
 let pheight t =
   match t with
   | Empty -> 0
-  | Node (_,_,l,r,_) -> if height l >= height r then height l else height r
+  | Node (_,_,l,r,_) -> if height l >= height r then height l + 1 else height r + 1
+
+let show x = x
 
 let create x d l r =
-  let hl = height l and hr = height r in
-    Node(x, d, l, r, if hl >= hr then hl + 1 else hr + 1)
+  let hl = height l in
+  let hr = height r in
+  let h = if hl >= hr then hl + 1 else hr + 1 in
+  Node (x, d, l, r, h)
 
 let bal x d l r =
   let hl = height l in
   let hr = height r in
-    if hl > hr + 2 then
-      match r with
+    if hr > hl + 2 then
+      (*match r with
           Empty -> assert false (* invalid_arg "Map.bal" *)
         | Node(rv, rd, rl, rr, _) ->
             if height rr >= height rl then
@@ -30,23 +34,91 @@ let bal x d l r =
                   Empty -> assert false (* invalid_arg "Map.bal" *)
                 | Node(rlv, rld, rll, rlr, _) ->
                     create rlv rld (create x d l rll) (create rv rd rlr rr)
-            end
-    else if hr > hl + 2 then
+            end*)
+      assert false
+    else if hl > hr + 2 then
+      let _ = show hr in
+      let _ = show hl in
       match l with
           Empty -> assert false (* invalid_arg "Map.bal" *)
-        | Node (lv, ld, ll, lr, _) ->
+        | Node (lv, ld, ll, lr, h) -> (* we know by driver that ll = lr *)
+            let _ = assert (height ll <= height l - 1) in
+            let _ = assert (height lr <= height l - 1) in
+            let _ = assert (height ll >= height lr - 2) in
+            let _ = assert (height ll <= height lr + 2) in
+            (*let _ = assert (height ll >= height lr) in*)
+            let _ = assert (height ll >= height r) in
+            let _ = assert (height lr >= height r) in
             if height ll >= height lr then
+              let _ = assert (height ll <= height lr + 2) in
+              let _ = show ll in
+              let _ = show lr in
+              let _ = show (height ll) in
               create lv ld ll (create x d lr r)
             else begin
               match lr with
                   Empty -> assert false (* invalid_arg "Map.bal" *)
                 | Node(lrv, lrd, lrl, lrr, _)->
-                    create lrv lrd (create lv ld ll lrl) (create x d lrr r)
+                    (*create lrv lrd (create lv ld ll lrl) (create x d lrr r)*)
+                    assert false
             end
     else
-      Node(x, d, l, r, if hl >= hr then hl + 1 else hr + 1)
+      (*Node(x, d, l, r, if hl >= hr then hl + 1 else hr + 1)*)
+      assert false
 
-let rec add x data t =
+let balanced t =
+  match t with
+  | Empty -> assert false
+  | Node(_, _, l, r, h) ->
+     let hl = height l in
+     let hr = height r in
+     let _ = assert (h = (if hl >= hr then hl + 1 else hr + 1)) in
+     let _ = assert (hl <= hr + 2) in
+     let _ = assert (hl >= hr - 2) in
+     let _ = assert (1 = 0) in
+    ()
+
+let checker () = 
+  let t0 = Empty in
+  (*let t1' = create 0 0 t0 t0 in*)
+  let t1 = Node(0, 0, t0, t0, 1) in
+  let t2 = Node(1, 1, t0, t1, 2) in
+  let t3 = Node(1, 1, t2, t0, 3) in
+  let t4 = Node(0, 0, t1, t3, 4) in
+  let t5 = bal 0 0 t4 t1 in
+  let _ = assert (height t5 <= height t4 + 1) in
+  let _ = assert (height t5 <= height t4 + 2) in
+  let _ = assert (height t5 >= height t4) in
+  let _ = balanced t5 in
+  let _ = assert (1 = 0) in
+  (*let t1 = create 0 0 t0 t0 in 
+  let t2 = create 1 1 t0 t1 in
+  let t3 = create 2 2 t1 t0 in*) 
+  let _ = show t1 in
+  (*let _ = show t2  in
+  let _ = show t3 in*) 
+  (* let t3 = create 2 2 t1 t0 in
+  let t2 = create 1 0 t1 t0 in
+  let _ = show create in *)
+  ()
+
+
+(*
+let check x e =
+  let a = 1 in
+  let b = 2 in
+  let c = 3 in
+  let d = 4 in
+  let sz1 = Node(x, e, Empty, Empty, a) in
+  let sz2 = Node(x, e, sz1, sz1, b) in
+  let sz3 = Node(x, e, sz2, sz2, c) in
+  let sz4 = Node(x, e, sz3, sz3, d) in
+  let _ = assert (show (height (show sz4)) = 4) in
+  let _ = assert (height sz1 = 1) in
+  let _ = assert (height sz2 = 3) in
+    bal x d sz1 sz4
+
+ let rec add x data t =
   match t with
       Empty ->
         Node(x, data, Empty, Empty, 1)
@@ -102,7 +174,7 @@ let test_remove x d x' d' =
   let z = add x d Empty in
   let o = add x' d' z in
   let t = remove x o in
-    checker t
+    checker t*)
 
 (*
 
