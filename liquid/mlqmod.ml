@@ -13,10 +13,7 @@ let parse ppf env fname =
 let load_val env fenv (s, pf) =
   try
     let p = C.lookup_path s env in
-    let shape = Frame.fresh_without_vars env (C.lookup_type p env) in
     let _ = if String.contains s '.' then failwith (Printf.sprintf "mlq: val %s has invalid name" s) in
-    let _ = if not(F.same_shape shape pf) then
-      failwith (Printf.sprintf "mlq: val %s has shape which differs from usage" s) in
       Lightenv.add p pf fenv
   with Not_found -> failwith (Printf.sprintf "mlq: val %s does not correspond to program value" s)
 

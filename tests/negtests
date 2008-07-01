@@ -1,5 +1,6 @@
-tests/bad-recmergesort.ml 10 False
-tests/bad-checklist.ml    1  True
-tests/bad-recisort.ml     10 False
-tests/bad-mktree.ml       10 False
+tests/rec/bad-pmrmerge.ml  10 False
+tests/rec/bad-checklist.ml 1  True
+tests/rec/bad-pmrisort.ml  10 False
+tests/rec/bad-mktree.ml    10 False
 tests/rec/bad-quicksort.ml 10 False
+tests/rec/bad-redblack.ml  10 False

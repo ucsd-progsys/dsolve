@@ -381,7 +381,7 @@ let pred_of_qual q =
   Qualifier.apply (Predicate.Var (Path.mk_ident "V")) q
 
 let space ppf =
-  fprintf ppf " "
+  fprintf ppf "@;<0 1>"
 
 let pprint_refexpr ppf (subs, (qconsts, qvars)) =
   fprintf ppf "%a@;<1 0>%a"

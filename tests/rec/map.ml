@@ -2,9 +2,15 @@ type 'a t =
     Empty
   | Node of 'a * int * 'a t * 'a t * int
 
-let height = function
+let height t =
+  match t with
   | Empty -> 0
   | Node (_,_,_,_,h) -> h
+
+let pheight t =
+  match t with
+  | Empty -> 0
+  | Node (_,_,l,r,_) -> if height l >= height r then height l else height r
 
 let create x d l r =
   let hl = height l and hr = height r in
