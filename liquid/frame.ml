@@ -540,21 +540,31 @@ let instantiate_qualifiers vars fr =
 (********************* Argument labeling **********************) 
 (**************************************************************)
 
-(* Label all the function formals in [f] with their corresponding labels in
+(* Label all the formals in [f] with their corresponding labels in
    [f'] and changing constant qualifiers appropriately.
    [f] and [f'] are expected to be of the same shape; also, [f]
    must be completely unlabeled (as frames are after creation by fresh). *)
 let label_like f f' =
   let rec label vars f f' = match (f, f') with
-    | (Fvar _, Fvar _) | (Frec _, Frec _) | (Funknown, Funknown)
-    | (Fsum _, Fsum _) | (Fabstract _, Fabstract _) ->
+    | (Fvar _, Fvar _) | (Funknown, Funknown) | (Frec _, Frec _) | (Fabstract _, Fabstract _) ->
         instantiate_qualifiers vars f
+    | (Fsum (p, rro, cs1, r), Fsum (_, _, cs2, _)) ->
+        Fsum (p, rro, label_constrs_like vars cs1 cs2, List.map (instantiate_qualifiers_map vars) r)
     | (Farrow (None, f1, f1'), Farrow (l, f2, f2')) ->
         Farrow (l, label vars f1 f2, label vars f1' f2')
     | (Farrow (Some p1, f1, f1'), Farrow (Some p2, f2, f2')) ->
         let vars' = List.map (fun (x, y) -> (Ident.name x, Path.Pident y)) (Pattern.bind_vars p1 p2) @ vars in
           Farrow (Some p2, label vars f1 f2, label vars' f1' f2')
     | _ -> printf "Can't label %a like %a" pprint f pprint f'; assert false
+  and label_constrs_like vars cs1 cs2 =
+    List.map2 (fun (t, ps1) (_, ps2) -> (t, label_params_like vars ps1 ps2)) cs1 cs2
+  and label_params_like vars ps1 ps2 = match (ps1, ps2) with
+    | ([], []) -> []
+    | ((i1, f1, v1) :: ps1, (i2, f2, _) :: ps2) ->
+        let f1 = label vars f1 f2 in
+        let vars = (Ident.name i1, Path.Pident i2) :: vars in
+          (i2, f1, v1) :: label_params_like vars ps1 ps2
+    | _ -> assert false
   in label [] f f'
 
 let record_of_params path ps r =
