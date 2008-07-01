@@ -1,4 +1,5 @@
 tests/depannot.ml      10 False
+tests/rec/recmlq.ml    10 False
 tests/rec/pmrmerge.ml  10 False
 tests/rec/pmrisort.ml  10 False
 tests/rec/checklist.ml 1  False

@@ -1661,8 +1661,8 @@ liquid_type1:
 liquid_type2:
     QUOTE LIDENT                                          /* tyvar */
       { mktrue_var $2 }
-  | DOT liquid_recref LIDENT
-      { mktrue_recvar $3 $2 }
+  | liquid_recref LIDENT                                  /* recursive tyvar */
+      { mktrue_recvar $2 $1 }
   | LPAREN liquid_type_comma_list RPAREN %prec below_IDENT 
       { match $2 with [stn] -> stn | _ -> raise Parse_error } 
   | type_longident                                       /* base_type */
@@ -1695,7 +1695,7 @@ liquid_constr:
 liquid_param_list:
     /* empty */
       { [] }
-  | liquid_param SHARP liquid_param_list
+  | liquid_param COMMA liquid_param_list
       { $1 :: $3 }
   | liquid_param
       { [$1] }
@@ -1703,6 +1703,8 @@ liquid_param_list:
 liquid_param:
     LIDENT COLON liquid_type
       { ($1, $3) }
+  | LBRACE LIDENT COLON liquid_type BAR predicate RBRACE
+      { ($2, rw_frame_lit $4 $2 $6) }
 
 liquid_type_comma_list:
     liquid_type
