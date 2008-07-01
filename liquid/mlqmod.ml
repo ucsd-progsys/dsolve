@@ -32,7 +32,7 @@ let load_measure env ((n, mn), cstrs) =
 
 let load env fenv (preds, decls) quals =
   let load_decl (ifenv, menv) = function
-      LvalDecl(s, f)  -> (load_val env fenv (s, F.translate_pframe env preds f), menv)
+      LvalDecl(s, f)  -> (load_val env ifenv (s, F.translate_pframe env preds f), menv)
     | LmeasDecl (name, cstrs) -> (ifenv, List.rev_append (load_measure env (name, cstrs)) menv)
     | LrecrefDecl -> (ifenv, menv) in
   let (ifenv, menv) = List.fold_left load_decl (Lightenv.empty, []) decls in
