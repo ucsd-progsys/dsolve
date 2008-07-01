@@ -57,8 +57,6 @@ and constr = constructor_tag * param list
 
 and variance = Covariant | Contravariant | Invariant
 
-and recvar = Path.t option
-
 val generic_level: int
 
 val path_tuple: Path.t
