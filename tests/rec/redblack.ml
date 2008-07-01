@@ -71,35 +71,3 @@ let insert dict key =
                 end
           end
       | dict -> dict                                    (* depend on sequential matching *)
-
-let rec checker = function
-  | Empty -> ()
-  | Red (v, l, r) ->
-      let _ = match l with
-        | Empty -> ()
-        | Black (v', _, _) -> assert (v' <= v)
-        | Red (v', _, _) -> assert (v' <= v)
-      in
-      let _ = match r with
-        | Empty -> ()
-        | Black (v', _, _) -> assert (v' >= v)
-        | Red (v', _, _) -> assert (v' >= v)
-      in
-      let _ = checker l; checker r in ()
-  | Black (v, l, r) ->
-      let _ = match l with
-        | Empty -> ()
-        | Black (v', _, _) -> assert (v' <= v)
-        | Red (v', _, _) -> assert (v' <= v)
-      in
-      let _ = match r with
-        | Empty -> ()
-        | Black (v', _, _) -> assert (v' >= v)
-        | Red (v', _, _) -> assert (v' >= v)
-      in
-      let _ = checker l; checker r in ()
-
-let test_insert x x' =
-  let a = insert Empty x in
-  let b = insert a x' in
-    checker b
