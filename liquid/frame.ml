@@ -71,8 +71,6 @@ and constr = constructor_tag * param list
 
 and variance = Covariant | Contravariant | Invariant
 
-and recvar = Path.t option
-
 let path_tuple = Path.mk_ident "tuple"
 
 (**************************************************************)
