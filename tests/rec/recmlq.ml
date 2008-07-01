@@ -1,8 +1,13 @@
-type 'a lst = Nil | Cons of 'a * 'a lst
+let rec len xs =
+  match xs with
+  | [] -> 0
+  | x::xs' -> 1 + len xs'
 
-let test (xs: 'a lst) = match xs with
-  | Nil -> ()
-  | Cons (x, xs) ->
+let test xs =
+  assert (len xs = 15);
+  match xs with
+  | [] -> ()
+  | x :: xs ->
       match xs with
-        | Nil -> ()
-        | Cons (y, _) -> assert (y > x)
+        | [] -> ()
+        | y :: _ -> assert (y > x)
