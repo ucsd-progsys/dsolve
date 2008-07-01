@@ -560,8 +560,8 @@ let label_like f f' =
 let record_of_params path ps r =
   Fsum(path, None, [(Cstr_constant 0, ps)], r)
 
-let abstract_of_params p params varis =
-  Fabstract (p, C.combine3 (Misc.mapi (fun _ i -> C.tuple_elem_id i) params) params varis, empty_refinement)
+let abstract_of_params p params varis r =
+  Fabstract (p, C.combine3 (Misc.mapi (fun _ i -> C.tuple_elem_id i) params) params varis, r)
 
 let tuple_of_frames fs r =
   record_of_params path_tuple (Misc.mapi (fun f i -> (C.tuple_elem_id i, f, Covariant)) fs) r
@@ -625,7 +625,7 @@ let fresh_constr fresh env p t tyl =
   let varis   = List.map translate_variance ty_decl.type_variance in
     match ty_decl.type_kind with
       | Type_abstract ->
-          abstract_of_params p params varis
+          abstract_of_params p params varis empty_refinement
       | Type_record (fields, _, _) -> (* 1 *)
           fresh_record fresh p fields
       | Type_variant _ ->
@@ -761,7 +761,7 @@ let rec translate_pframe env plist pf =
     let varis   = List.map translate_variance decl.type_variance in
       match decl.type_kind with 
           Type_abstract ->
-            abstract_of_params path params varis
+            abstract_of_params path params varis (transl_pref r)
         | Type_record(fields, _, _) ->
             fresh_record (fresh_without_vars env) path fields
         | Type_variant _ ->
