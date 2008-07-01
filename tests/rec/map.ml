@@ -24,7 +24,7 @@ let bal x d l r =
   let hl = height l in
   let hr = height r in
     if hr > hl + 2 then
-      (*match r with
+      match r with
           Empty -> assert false (* invalid_arg "Map.bal" *)
         | Node(rv, rd, rl, rr, _) ->
             if height rr >= height rl then
@@ -34,14 +34,13 @@ let bal x d l r =
                   Empty -> assert false (* invalid_arg "Map.bal" *)
                 | Node(rlv, rld, rll, rlr, _) ->
                     create rlv rld (create x d l rll) (create rv rd rlr rr)
-            end*)
-      assert false
+            end
     else if hl > hr + 2 then
       let _ = show hr in
       let _ = show hl in
       match l with
           Empty -> assert false (* invalid_arg "Map.bal" *)
-        | Node (lv, ld, ll, lr, h) -> (* we know by driver that ll = lr *)
+        | Node (lv, ld, ll, lr, h) ->  (* h must be defd for meas to be asserted *)
             let _ = assert (height ll <= height l - 1) in
             let _ = assert (height lr <= height l - 1) in
             let _ = assert (height ll >= height lr - 2) in
@@ -58,13 +57,11 @@ let bal x d l r =
             else begin
               match lr with
                   Empty -> assert false (* invalid_arg "Map.bal" *)
-                | Node(lrv, lrd, lrl, lrr, _)->
-                    (*create lrv lrd (create lv ld ll lrl) (create x d lrr r)*)
-                    assert false
+                | Node(lrv, lrd, lrl, lrr, h) ->
+                    create lrv lrd (create lv ld ll lrl) (create x d lrr r)
             end
     else
-      (*Node(x, d, l, r, if hl >= hr then hl + 1 else hr + 1)*)
-      assert false
+      Node(x, d, l, r, if hl >= hr then hl + 1 else hr + 1)
 
 let balanced t =
   match t with
@@ -82,10 +79,10 @@ let checker () =
   let t0 = Empty in
   (*let t1' = create 0 0 t0 t0 in*)
   let t1 = Node(0, 0, t0, t0, 1) in
-  let t2 = Node(1, 1, t0, t1, 2) in
-  let t3 = Node(1, 1, t2, t0, 3) in
-  let t4 = Node(0, 0, t1, t3, 4) in
-  let t5 = bal 0 0 t4 t1 in
+  let t2 = Node(1, 1, t1, t1, 2) in
+  let t3 = Node(1, 1, t2, t2, 3) in
+  let t4 = Node(0, 0, t2, t3, 4) in
+  let t5 = bal 0 0 t4 t4 in
   let _ = assert (height t5 <= height t4 + 1) in
   let _ = assert (height t5 <= height t4 + 2) in
   let _ = assert (height t5 >= height t4) in
