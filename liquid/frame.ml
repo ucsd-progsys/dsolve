@@ -741,6 +741,8 @@ let rec translate_pframe env plist pf =
   let rec transl_pframe_rec pf =
     match pf with
     | PFvar (a, r) -> Fvar (getvar a, generic_level, empty_refinement)
+    | PFrec (a, rr, r) -> Frec (getvar a, transl_recref rr, transl_pref r)
+    | PFsum (l, rro, cs, r) -> transl_sum l rro cs r
     | PFconstr (l, fs, r) -> transl_constr l fs r
     | PFarrow (v, a, b) ->
         let pat = match v with
@@ -751,7 +753,26 @@ let rec translate_pframe env plist pf =
           | None -> None
         in Farrow (pat, transl_pframe_rec a, transl_pframe_rec b)
     | PFtuple (fs, r) -> tuple_of_frames (List.map transl_pframe_rec fs) (transl_pref r)
-    | PFrecord (fs, r) -> transl_record fs r 
+    | PFrecord (fs, r) -> transl_record fs r
+  and transl_sum l rro cs r =
+    let (path, decl) =
+      try
+        Env.lookup_type l env
+      with
+        Not_found -> raise (T.Error(Location.none, T.Unbound_type_constructor l))
+    in
+    let cstrs = snd (List.split (Env.constructors_of_type path (Env.find_type path env))) in
+    let rro = match rro with None -> None | Some (rvar, rr) -> Some (getvar rvar, transl_recref rr) in
+      Fsum (path, rro, transl_cstrs (List.combine cs cstrs), transl_pref r)
+  and transl_cstrs = function
+    | []                  -> []
+    | (ps, cstr) :: cstrs -> (cstr.cstr_tag, transl_params ps) :: transl_cstrs cstrs
+  and transl_params = function
+    | [] -> []
+        (* pmr: need real variance here *)
+    | (id, f) :: ps -> (Ident.create id, transl_pframe_rec f, Covariant) :: transl_params ps
+  and transl_recref rr =
+    List.map (fun rs -> List.map transl_pref rs) rr
   and transl_constr l fs r =
     let params = List.map transl_pframe_rec fs in
     let (path, decl) = try Env.lookup_type l env with

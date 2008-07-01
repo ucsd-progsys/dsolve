@@ -194,6 +194,8 @@ let bigarray_set arr arg newval =
 let rw_frame f nr =
     match f with
       PFvar(s, r) -> PFvar(s, nr)
+    | PFrec(s, rr, _) -> PFrec(s, rr, nr)
+    | PFsum(l, rro, cs, _) -> PFsum(l, rro, cs, nr)
     | PFconstr(s, f, r) -> PFconstr(s, f, nr)
     | PFarrow _ -> assert false
     | PFtuple(a, r) -> PFtuple(a, nr)
@@ -211,12 +213,16 @@ let ptrue = RLiteral( "", {ppredpat_desc = Ppredpat_true;
                           ppredpat_loc = Location.none} )
 
 let mkconstr a b r = PFconstr (a, b, r)
+let mksum p rro cs r = PFsum (p, rro, cs, r)
 let mkvar a r = PFvar (a, r)
+let mkrecvar a rr r = PFrec (a, rr, r)
 let mkarrow v a b = PFarrow (v, a, b)
 let mktuple a r = PFtuple (a, r)
 let mkrecord a r = PFrecord (a, r)
 let mktrue_constr a b = mkconstr a b ptrue
+let mktrue_sum p rro cs = mksum p rro cs ptrue
 let mktrue_var a = mkvar a ptrue
+let mktrue_recvar a rr = mkrecvar a rr ptrue
 let mktrue_tuple a = mktuple a ptrue
 let mktrue_record a = mkrecord a ptrue
 
@@ -378,6 +384,7 @@ The precedences must be listed from low to high.
 %nonassoc below_COMMA
 %left     COMMA                         /* expr/expr_comma_list (e,e,e) */
 %right    MINUSGREATER                  /* core_type2 (t -> t -> t) */
+%nonassoc below_BARBAR
 %right    OR BARBAR                     /* expr (e || e || e) */
 %right    AMPERSAND AMPERAMPER          /* expr (e && e && e) */
 %nonassoc below_EQUAL
@@ -1654,6 +1661,8 @@ liquid_type1:
 liquid_type2:
     QUOTE LIDENT                                          /* tyvar */
       { mktrue_var $2 }
+  | DOT liquid_recref LIDENT
+      { mktrue_recvar $3 $2 }
   | LPAREN liquid_type_comma_list RPAREN %prec below_IDENT 
       { match $2 with [stn] -> stn | _ -> raise Parse_error } 
   | type_longident                                       /* base_type */
@@ -1662,8 +1671,38 @@ liquid_type2:
       { mktrue_constr $2 [$1] }
   | LPAREN liquid_type_comma_list RPAREN type_longident  /* multi-param constructed */
       { mktrue_constr $4 $2 }
+  | liquid_type3
+      { $1 }
+
+liquid_type3:
+    LBRACKET type_longident DOT liquid_constr_list RBRACKET
+      { mktrue_sum $2 None $4 }
+  | liquid_recref LBRACKET LIDENT COLON type_longident DOT liquid_constr_list RBRACKET
+      { mktrue_sum $5 (Some ($3, $1)) $7 }
   | liquid_record
       { mktrue_record $1 }
+
+liquid_constr_list:
+    liquid_constr BARBAR liquid_constr_list
+      { $1 :: $3 }
+  | liquid_constr                       %prec below_BARBAR
+      { [$1] }
+
+liquid_constr:
+    liquid_param_list
+      { $1 }
+
+liquid_param_list:
+    /* empty */
+      { [] }
+  | liquid_param SHARP liquid_param_list
+      { $1 :: $3 }
+  | liquid_param
+      { [$1] }
+
+liquid_param:
+    LIDENT COLON liquid_type
+      { ($1, $3) }
 
 liquid_type_comma_list:
     liquid_type
@@ -1686,6 +1725,36 @@ liquid_field_list:
       { $1 :: $3 }
   | liquid_field
       { [$1] }
+
+liquid_recref:
+    LBRACKET liquid_constr_ref_list RBRACKET
+      { $2 }
+
+liquid_constr_ref_list:
+    /* empty */
+      { [] }
+  | liquid_constr_ref COMMA liquid_constr_ref_list
+      { $1 :: $3 }
+  | liquid_constr_ref
+      { [$1] }
+
+liquid_constr_ref:
+    LBRACKET liquid_elem_ref_list RBRACKET
+      { $2 }
+
+liquid_elem_ref_list:
+    /* empty */
+      { [] }
+  | liquid_elem_ref COMMA liquid_elem_ref_list
+      { $1 :: $3 }
+  | liquid_elem_ref
+      { [$1] }
+
+liquid_elem_ref:
+    UIDENT
+      { RVar $1 }
+  | LIDENT COLON predicate
+      { RLiteral ($1, $3) }
 
 /* Predicates */
 

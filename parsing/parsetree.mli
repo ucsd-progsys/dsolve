@@ -183,14 +183,22 @@ and liquid_sig = predicate_alias list * liquid_decl list
 
 and litframe =
     PFvar of string * refinement
+  | PFrec of string * recref * refinement
+  | PFsum of Longident.t * (string * recref) option * constr list * refinement
   | PFconstr of Longident.t * litframe list * refinement
   | PFarrow of string option * litframe * litframe
   | PFtuple of litframe list * refinement
   | PFrecord of (litframe * string * mutable_flag) list * refinement
 
+and constr = param list
+
+and param = string * litframe
+
 and refinement =
   | RLiteral of string * predicate_pattern
   | RVar of string
+
+and recref = refinement list list
 
 (* Qualifier declarations *)
 

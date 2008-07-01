@@ -413,6 +413,7 @@ let mfm fenv p f =
   if Le.mem p fenv
   then
     let f' = Le.find p fenv in
+    let _ = printf "MLQ:@.@[%a@;<1 0><:@;<1 0>%a@]@.@." F.pprint f' F.pprint f in
     Some (SubFrame (fenv, [], f', F.label_like f f'))
   else
     None 
