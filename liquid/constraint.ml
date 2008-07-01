@@ -127,7 +127,7 @@ let environment_predicate sm env =
   P.big_and (Le.maplist (fun v -> F.predicate sm (P.Var v)) env)
 
 let pprint_local_binding ppf = function
-  | (Path.Pident _ as k, v) -> fprintf ppf "@[%s@;=>@;<1 2>%a@],@;<1 0>" (Path.unique_name k) F.pprint v
+  | (Path.Pident _ as k, v) -> fprintf ppf "@[%s@ =>@ %a@],@;<0 2>" (Path.unique_name k) F.pprint v
   | _ -> ()
 
 let pprint_env_pred so ppf env =
@@ -147,11 +147,11 @@ let pprint_io ppf = function
 
 let pprint_ref so ppf = function
   | SubRef (env,g,r1,sr2,io) ->
-      fprintf ppf "@[%a@ Env:@ @[%a@];@;<1 2>Guard:@ %a@;<1 0>|-@;<1 2>%a@;<1 2><:@;<1 2>%a@]"
+      fprintf ppf "@[%a@ Env:@ @[%a@];@;<1 2>Guard:@ %a@\n|-@;<1 2>%a@;<1 2><:@;<1 2>%a@]"
       pprint_io io (pprint_env_pred so) env P.pprint (guard_predicate () g) 
       F.pprint_refinement r1 F.pprint_refinement (F.ref_of_simple sr2)
   | WFRef (env,sr,io) ->
-      fprintf ppf "@[%a@ Env:@ @[%a@];@;<1 2>|-@;<1 2>%a@;<1 2>@]"
+      fprintf ppf "@[%a@ Env:@ @[%a@];@\n|-@;<1 2>%a@;<1 2>@]"
       pprint_io io (pprint_env_pred so) env F.pprint_refinement (F.ref_of_simple sr)
 
 

@@ -109,6 +109,7 @@ let resolve_in_exp_when f ls =
     | _ -> (mk_ident_loc lbl loc, ls) 
 
 let resolve_in_exp = resolve_in_exp_when (fun e -> true) 
+let resolve_in_exp_never = resolve_in_exp_when (fun e -> false)
  
 
 let normalize exp =
@@ -256,10 +257,6 @@ let normalize exp =
          let e_this = Some (rw_expr (mk_construct cstrdesc inex b)) in
          (this, e_this, loc)::ls
      | Pexp_ident(id) ->
-         (* ming: to preserve annotations over idents we actually want something
-          * like (id, exp), but that will add another layer to all scopes and
-          * generally make life more difficult while debugging. will turn this
-          * off eventually *)
          [(id, None, loc)]
      | Pexp_function(_, _, _)     
      | Pexp_let(_, _, _) -> 
