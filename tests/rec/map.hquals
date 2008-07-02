@@ -18,6 +18,6 @@ qualif H(v)(A: 'a t): v = height ~A
 qualif Ph(v)    : v = (height l >= height r ? height l + 1 : height r + 1)
 qualif Ph(v)    : v = (height e2 >= height e3 ? height e2 + 1 : height e3 + 1)
 qualif Phh(v)   : height v = (height ~A >= height ~B ? height ~A + 1 : height ~B + 1)
-qualif Phh(v)   : height v <= (height ~A >= height ~B ? height ~A + 2 : height ~B + 2) 
-qualif Phh(v)   : height v >= (height ~A >= height ~B ? height ~B : height ~A)
+qualif Phh(v)   : height v <= (height ~A >= height ~B ? height ~A + 1 : height ~B + 1) 
+qualif Phh(v)   : height v >= (height ~A >= height ~B ? height ~A : height ~B)
                   

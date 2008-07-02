@@ -33,17 +33,17 @@ let bal x d l r =
       match l with
           Empty -> assert false (* invalid_arg "Map.bal" *)
         | Node (lv, ld, ll, lr, h) ->  (* h must be defd for meas to be asserted *)
-            let _ = assert (height ll <= height l - 1) in
+            (*let _ = assert (height ll <= height l - 1) in
             let _ = assert (height lr <= height l - 1) in
             let _ = assert (height ll >= height lr - 2) in
             let _ = assert (height ll <= height lr + 2) in
             let _ = assert (height ll >= height r) in
-            let _ = assert (height lr >= height r) in
+            let _ = assert (height lr >= height r) in*)
             if height ll >= height lr then
-              let _ = assert (height ll <= height lr + 2) in
+              (*let _ = assert (height ll <= height lr + 2) in
               let _ = show ll in
               let _ = show lr in
-              let _ = show (height ll) in
+              let _ = show (height ll) in*)
               create lv ld ll (create x d lr r)
             else begin
               match lr with
@@ -120,7 +120,7 @@ let check x e =
         else if x < v (* c < 0 *) then
           bal v d (add x data l) r
         else
-          bal v d l (add x data r)
+          assert false (*bal v d l (add x data r)*)
 (*
 let rec checker = function
   | Empty -> ()

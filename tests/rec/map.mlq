@@ -11,8 +11,8 @@ val bal: 'a -> int ->
               {e4: int | e4 = (height e2 >= height e3 ? height e2 + 1 : height e3 + 1)}] | height v' <= height l + 3 and height v' >= height l - 3 } ->
          {v': [[], [v: true, v: true, v: true, v: true, v: true]] [z: t . || e0: 'a, e1: int, e2: [[], [v: true, v: true, v: true, v: true, v: true]] z, 
             {e3: [[], [v: true, v: true, v: true, v: true, v: true]] z | height e3 <= height e2 + 2 and height e3 >= height e2 - 2},
-            {e4: int | e4 = (height e2 >= height e3 ? height e2 + 1 : height e3 + 1)}] | height v' <= (height l >= height r ? height l + 2 : height r + 2) and
-                                                                                         height v' >= (height l >= height r ? height r : height l)}
+            {e4: int | e4 = (height e2 >= height e3 ? height e2 + 1 : height e3 + 1)}] | height v' <= (height l >= height r ? height l + 1 : height r + 1) and
+                                                                                         height v' >= (height l >= height r ? height l : height r)}
 
 val create: 'a -> int ->
          l: [[], [v: true, v: true, v: true, v: true, v: true]] [z: t . || e0: 'a, e1: int, e2: [[], [v: true, v: true, v: true, v: true, v: true]] z, 
@@ -24,4 +24,13 @@ val create: 'a -> int ->
          {v': [[], [v: true, v: true, v: true, v: true, v: true]] [z: t . || e0: 'a, e1: int, e2: [[], [v: true, v: true, v: true, v: true, v: true]] z, 
             {e3: [[], [v: true, v: true, v: true, v: true, v: true]] z | height e3 <= height e2 + 2 and height e3 >= height e2 - 2},
             {e4: int | e4 = (height e2 >= height e3 ? height e2 + 1 : height e3 + 1)}] | height v' = (height l >= height r ? height l + 1 : height r + 1)}
+
+val add: 'a -> int ->
+         t: [[], [v: true, v: true, v: true, v: true, v: true]] [z: t . || e0: 'a, e1: int, e2: [[], [v: true, v: true, v: true, v: true, v: true]] z, 
+              {e3: [[], [v: true, v: true, v: true, v: true, v: true]] z | height e3 <= height e2 + 2 and height e3 >= height e2 - 2}, 
+              {e4: int | e4 = (height e2 >= height e3 ? height e2 + 1 : height e3 + 1)}] ->
+         {v': [[], [v: true, v: true, v: true, v: true, v: true]] [z: t . || e0: 'a, e1: int, e2: [[], [v: true, v: true, v: true, v: true, v: true]] z, 
+            {e3: [[], [v: true, v: true, v: true, v: true, v: true]] z | height e3 <= height e2 + 2 and height e3 >= height e2 - 2},
+            {e4: int | e4 = (height e2 >= height e3 ? height e2 + 1 : height e3 + 1)}] | height v' <= height t + 1 and height v' >= height t }
+
 
