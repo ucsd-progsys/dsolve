@@ -77,7 +77,7 @@ let checker () =
   let t4 = Node(0, 0, t3, t1, 4) in
   let t5 = bal 0 0 t4 t1 in
   let _ = show t5 in
-  let _ = assert (height t5 <= height t4 + 1) in
+  let _ = assert (height t5 <= height t4 + 1) in (* this wasn't correct. i have my doubts about this whole business.. *)
   let _ = assert (height t5 <= height t4 + 2) in
   let _ = assert (height t5 >= height t4) in
   let _ = balanced t5 in
@@ -107,7 +107,7 @@ let check x e =
   let _ = assert (show (height (show sz4)) = 4) in
   let _ = assert (height sz1 = 1) in
   let _ = assert (height sz2 = 3) in
-    bal x d sz1 sz4
+    bal x d sz1 sz4*)
 
  let rec add x data t =
   match t with
@@ -121,7 +121,7 @@ let check x e =
           bal v d (add x data l) r
         else
           bal v d l (add x data r)
-
+(*
 let rec checker = function
   | Empty -> ()
   | Node (v, d, l, r, h) ->

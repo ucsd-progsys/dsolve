@@ -81,7 +81,8 @@ let flap3 f xs ys zs =
 let combine3 xs ys zs =
   map3 (fun x y z -> (x, y, z)) xs ys zs
 
-(* these do odd things with order for performance *)
+(* these do odd things with order for performance 
+ * it is possible that fast is a misnomer *)
 let fast_flatten xs =
   List.fold_left (fun x xs -> List.rev_append x xs) [] xs
 
@@ -89,10 +90,10 @@ let fast_flap f xs =
   fast_flatten (List.rev_map f xs)
 
 let tflap2 (e1, e2) f =
-  fast_flap (fun c -> List.rev_map (fun d -> f c d) e2) e1
+  List.fold_left (fun bs b -> List.fold_left (fun aas a -> f a b :: aas) bs e1) [] e2
 
 let tflap3 (e1, e2, e3) f =
-  fast_flap (fun c -> fast_flap (fun d -> List.rev_map (fun e -> f c d e) e3) e2) e1
+  List.fold_left (fun cs c -> List.fold_left (fun bs b -> List.fold_left (fun aas a -> f a b c :: aas) bs e1) cs e2) [] e3
 
 let rec expand f xs ys =
   match xs with

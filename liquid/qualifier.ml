@@ -65,14 +65,14 @@ let expand_about vm p =
       PInt x -> [PInt x]
     | Var p -> 
         let p = Path.ident_name_crash p in
-        List.map (fun x -> Var x) (C.StringMap.find p vm)
+        List.rev_map (fun x -> Var x) (C.StringMap.find p vm)
     | FunApp (s, ps) ->
         let ess = List.map e_rec ps in
-          List.map (fun x -> FunApp (s, x)) (C.lflap ess)
+          List.rev_map (fun x -> FunApp (s, x)) (C.lflap ess)
     | Binop (e1, b, e2) ->
         C.tflap2 (e_rec e1, e_rec e2) (fun a c -> Binop (a, b, c))
     | Field (f, e1) ->
-        List.map (fun e -> Field(f, e)) (e_rec e1)
+        List.rev_map (fun e -> Field(f, e)) (e_rec e1)
     | Ite (t, e1, e2) ->
         C.tflap3 (t_rec t, e_rec e1, e_rec e2) (fun a b c -> Ite (a, b, c))
   and t_rec = function
@@ -82,7 +82,7 @@ let expand_about vm p =
     | Iff(e, t) ->
         C.tflap2 (e_rec e, t_rec t) (fun a b -> Iff (a, b))
     | Not t ->
-        List.map (fun a -> Not a) (t_rec t)
+        List.rev_map (fun a -> Not a) (t_rec t)
     | And (t1, t2) ->
         C.tflap2 (t_rec t1, t_rec t2) (fun a b -> And (a, b))
     | Or (t1, t2) ->
