@@ -167,12 +167,13 @@ Records are specified as follows:
 
 Tuples work similarly.
 
+ADTs can be specified as follows:
 
-Type variables cannot be refined.
+{v: [[], [v: v > 0, v: true]] [t: list . || {e0: int | e0 > 10},
+                                            e1: [[], [v: v > 1, v: true]] t] | len v = 2}
 
-Simple ADTs (meaning 'a list) will also work, but disjoint
-unions/variants/etc. will NOT work.
-
+Note that || separates type constructors, and the first constructor,
+[], has no parameters.
 
 Error Messages
 --------------
