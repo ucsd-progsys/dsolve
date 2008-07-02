@@ -12,8 +12,7 @@ let show x = x
 let create x d l r =
   let hl = height l in
   let hr = height r in
-  let h = if hl >= hr then hl + 1 else hr + 1 in
-  Node (x, d, l, r, h)
+    Node (x, d, l, r, if hl >= hr then hl + 1 else hr + 1)
 
 let bal x d l r =
   let hl = height l in
@@ -31,8 +30,6 @@ let bal x d l r =
                     create rlv rld (create x d l rll) (create rv rd rlr rr)
             end
     else if hl > hr + 2 then
-      let _ = show hr in
-      let _ = show hl in
       match l with
           Empty -> assert false (* invalid_arg "Map.bal" *)
         | Node (lv, ld, ll, lr, h) ->  (* h must be defd for meas to be asserted *)
