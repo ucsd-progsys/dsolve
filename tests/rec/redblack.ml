@@ -53,9 +53,9 @@ let rec ins1 key d = match d with
       else if key < key1 then restore_left (Black (key1, ins1 key left, right))
       else restore_right (Black (key1, left, ins1 key right))
   | Red (key1, left, right) ->
-      if key = key1 then Black (key, left, right)
-      else if key < key1 then Black (key1, ins1 key left, right)
-      else Black (key1, left, ins1 key right)
+      if key = key1 then Red (key, left, right)
+      else if key < key1 then Red (key1, ins1 key left, right)
+      else Red (key1, left, ins1 key right)
   | Empty -> Red (key, Empty, Empty)
 
 let insert dict key =
@@ -71,35 +71,3 @@ let insert dict key =
                 end
           end
       | dict -> dict                                    (* depend on sequential matching *)
-
-let rec checker = function
-  | Empty -> ()
-  | Red (v, l, r) ->
-      let _ = match l with
-        | Empty -> ()
-        | Black (v', _, _) -> assert (v' <= v)
-        | Red (v', _, _) -> assert (v' <= v)
-      in
-      let _ = match r with
-        | Empty -> ()
-        | Black (v', _, _) -> assert (v' >= v)
-        | Red (v', _, _) -> assert (v' >= v)
-      in
-      let _ = checker l; checker r in ()
-  | Black (v, l, r) ->
-      let _ = match l with
-        | Empty -> ()
-        | Black (v', _, _) -> assert (v' <= v)
-        | Red (v', _, _) -> assert (v' <= v)
-      in
-      let _ = match r with
-        | Empty -> ()
-        | Black (v', _, _) -> assert (v' >= v)
-        | Red (v', _, _) -> assert (v' >= v)
-      in
-      let _ = checker l; checker r in ()
-
-let test_insert x x' =
-  let a = insert Empty x in
-  let b = insert a x' in
-    checker b

@@ -1,0 +1,9 @@
+val insert:
+ [[], [v: true, v: true, v: true], [v: true, v: true, v: true]]
+[t: dict . || e0: 'a, e1: [[], [v: v < e0, v: true, v: true], [v: v < e0, v: true, v: true]] t, e2: [[], [v: v > e0, v: true, v: true], [v: v > e0, v: true, v: true]] t
+           || e0: 'a, e1: [[], [v: v < e0, v: true, v: true], [v: v < e0, v: true, v: true]] t, e2: [[], [v: v > e0, v: true, v: true], [v: v > e0, v: true, v: true]] t]
+ -> 'a
+ ->
+[[], [v: true, v: true, v: true], [v: true, v: true, v: true]]
+[t: dict . || e0: 'a, e1: [[], [v: v < e0, v: true, v: true], [v: v < e0, v: true, v: true]] t, e2: [[], [v: v > e0, v: true, v: true], [v: v > e0, v: true, v: true]] t
+           || e0: 'a, e1: [[], [v: v < e0, v: true, v: true], [v: v < e0, v: true, v: true]] t, e2: [[], [v: v > e0, v: true, v: true], [v: v > e0, v: true, v: true]] t]
