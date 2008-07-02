@@ -78,6 +78,8 @@ and psimple = ref true                  (* -psimple *)
 and no_simple_subs = ref false          (* -no-simple-subs *)
 and builtins_file = ref None              (* -use_builtins *)
 and simpguard = ref true                (* simplify guard *)
+and no_recrefs = ref false              (* true out recursive refinements *)
+
 and verbose = ref false                 (* -verb *)
 let keep_asm_file = ref false           (* -S *)
 let optimize_for_speed = ref true       (* -compact *)

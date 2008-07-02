@@ -171,9 +171,6 @@ let mk_refinement subs qconsts qvars =
 let empty_refinement =
   mk_refinement [] [] []
 
-let recvar_refinement =
-  mk_refinement [] [] []
-
 let refinement_is_empty qes =
   List.for_all (function (_, ([], [])) -> true | _ -> false) qes
 
@@ -657,11 +654,14 @@ let fresh_rec fresh env (rv, rr) level t = match t.desc with
   | Tconstr(p, tyl, _)   -> close_recf (rv, rr) (fresh_constr fresh env p t (List.map canonicalize tyl))
   | _                    -> fprintf err_formatter "@[Warning: Freshing unsupported type]@."; Funknown
 
+let null_refinement =
+  mk_refinement [] [] []
+
 let cstr_refinements cstr =
   let (args, res) = Ctype.instance_constructor cstr in
   let _           = close_constructor res args in
   let (res, args) = (canonicalize res, List.map canonicalize args) in
-    List.map (fun t -> if t = res then recvar_refinement else empty_refinement) args
+    List.map (fun t -> if t = res || !Clflags.no_recrefs then null_refinement else empty_refinement) args
 
 let mk_recvar env t =
   let rp = Path.mk_ident "t" in
@@ -671,8 +671,8 @@ let mk_recvar env t =
             (rp, List.map cstr_refinements cstrs)
       | _ -> (rp, [])
 
-let place_refvar freshf r =
-  if r == recvar_refinement then empty_refinement else freshf ()
+let place_freshref freshf r =
+  if r == null_refinement then empty_refinement else freshf ()
 
 let rec abs_type_levels t =
   t.level <- abs t.level; Btype.iter_type_expr abs_type_levels t
@@ -701,7 +701,7 @@ let fresh_with_var_fun env freshf t =
           Hashtbl.replace tbl t (Frec (rp, rr, empty_refinement));
           let res = fresh_rec fm env (rp, rr) level t in
             Hashtbl.replace tbl t res; res
-  in flip_frame_levels (map_refinements (place_refvar freshf) (fm t))
+  in flip_frame_levels (map_refinements (place_freshref freshf) (fm t))
 
 (* Create a fresh frame with the same shape as the given type
    [ty]. Uses type environment [env] to find type declarations.

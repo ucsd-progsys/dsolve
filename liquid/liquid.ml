@@ -192,6 +192,7 @@ let main () =
      "-cacheq", Arg.Set cache_queries, "cache theorem prover queries";
      "-psimple", Arg.Set psimple, "prioritize simple constraints";
      "-simpguard", Arg.Set simpguard, "simplify guard (remove iff)";
+     "-no-recrefs", Arg.Set no_recrefs, "true out recursive refinements";
      "-v", Arg.Int (fun c -> Common.verbose_level := c), 
               "<level> Set degree of analyzer verbosity:\n\
                \032    0      No output\n\
