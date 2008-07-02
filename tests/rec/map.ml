@@ -26,13 +26,13 @@ let bal x d l r =
     if hr > hl + 2 then
       match r with
           Empty -> assert false (* invalid_arg "Map.bal" *)
-        | Node(rv, rd, rl, rr, _) ->
+        | Node(rv, rd, rl, rr, h) ->
             if height rr >= height rl then
               create rv rd (create x d l rl) rr
             else begin
               match rl with
                   Empty -> assert false (* invalid_arg "Map.bal" *)
-                | Node(rlv, rld, rll, rlr, _) ->
+                | Node(rlv, rld, rll, rlr, h) ->
                     create rlv rld (create x d l rll) (create rv rd rlr rr)
             end
     else if hl > hr + 2 then

@@ -93,3 +93,8 @@ let instantiate_about vm (path, valu, pred) =
   let vm = C.StringMap.add (Path.ident_name_crash valu) [valu] vm in
     try List.map (fun x -> (path, valu, x)) (expand_about vm pred)
     with Not_found -> []
+
+let map_preds f quals =
+  let map_pred (p, v, pred) =
+    let (v, pred) = f (v, pred) in (p, v, pred) in
+  List.map map_pred quals

@@ -78,6 +78,7 @@ val recref_is_empty: recref -> bool
 val mk_refinement: substitution list -> Qualifier.t list -> qvar list -> refinement
 val translate_variance: (bool * bool * bool) -> variance
 val constrs_params: constr list -> param list
+val map_refexprs: (refexpr -> refexpr) -> t -> t
 val params_frames: param list -> t list
 val shape: t -> t
 val params_ids: param list -> Ident.t list

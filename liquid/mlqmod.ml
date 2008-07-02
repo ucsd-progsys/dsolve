@@ -39,6 +39,7 @@ let load env fenv (preds, decls) quals =
   let mcstrs = M.filter_cstrs menv in
   let mnames = M.filter_names menv in
   let mnsubs = C.list_assoc_flip mnames in
+  let ifenv = Le.map (fun f -> F.map_refexprs (fun (a, (qs, b)) -> (a, ((Qualifier.map_preds (M.transl_pred mnsubs)) qs, b))) f) ifenv in
   let _ = M.mk_measures env mnsubs mcstrs in 
     (Lightenv.addn (M.mk_tys env mnames) fenv, ifenv, Qualmod.map_preds (M.transl_pred mnsubs) quals)
 
