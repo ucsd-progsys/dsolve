@@ -409,7 +409,7 @@ let post_solve () =
 let lbl_dummy_cstr env c =
   { lc_cstr = c; lc_tenv = env; lc_orig = Loc (Location.none); lc_id = fresh_fc_id () }
 
-let mfm fenv p f = 
+let maybe_cstr_from_unlabel_frame fenv p f = 
   if Le.mem p fenv
   then
     let f' = Le.find p fenv in
@@ -419,7 +419,7 @@ let mfm fenv p f =
  
 let qualify_implementation sourcefile fenv ifenv env qs str =
   let (qs, fenv, cs) = constrain_structure fenv qs str in
-  let cs = (List.map (lbl_dummy_cstr env) (Le.maplistfilter (mfm fenv) ifenv)) @ cs in
+  let cs = (List.map (lbl_dummy_cstr env) (Le.maplistfilter (maybe_cstr_from_unlabel_frame fenv) ifenv)) @ cs in
   let _ = pre_solve () in
   let (s,cs) = Bstats.time "solving" (solve qs) cs in
   let _ = post_solve () in

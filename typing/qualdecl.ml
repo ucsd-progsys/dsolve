@@ -162,6 +162,8 @@ let gen_preds p =
           let ts = gen_pred_rec t in
           let e1s = gen_expr_rec e1 in
           let e2s = gen_expr_rec e2 in
+          let a = List.length e1s * List.length e2s * List.length ts in
+          let _ = Format.printf "@[nasty ITE@ %i@]@." a in
             C.tflap3 (ts, e1s, e2s) (fun a b c -> Ite (a, b, c))
   and gen_pred_rec pd =
     match pd with
@@ -230,7 +232,6 @@ let ck_consistent patpred pred =
 let transl_pattern env prgids {Parsetree.pqual_pat_desc = (v, anno, pred)} nv =
   let preds = (gen_preds (transl_patpred env (v, nv) prgids (List.fold_left (fa env) AM.empty anno) pred)) in
     List.filter (fun p -> ck_consistent pred p) preds
-
 
 let transl_pattern_valu env prgids name ({Parsetree.pqual_pat_desc = (valu, anno, pred)} as p) =
   let normal_valu = "_V" in

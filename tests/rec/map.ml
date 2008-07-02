@@ -45,7 +45,6 @@ let bal x d l r =
             let _ = assert (height lr <= height l - 1) in
             let _ = assert (height ll >= height lr - 2) in
             let _ = assert (height ll <= height lr + 2) in
-            (*let _ = assert (height ll >= height lr) in*)
             let _ = assert (height ll >= height r) in
             let _ = assert (height lr >= height r) in
             if height ll >= height lr then

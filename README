@@ -91,14 +91,14 @@ qualif A(v) : v = [a, b, c]
 qualif PlusSomething(v): a = b + ^
 
 * Sets of Arithmetic Operators *
-qualif A(v) : v [| +, - |] 5 > 0
+qualif A(v) : v {< +, - >} 5 > 0
 
 * Sets of Relational Operators *
 qualif A(v): v { <, <= } 5
 
 * (* *) - Operator Wildcard *
 qualif A(v): v { * * } 5
-qualif A(v) : v [| * * |] 5 > 0
+qualif A(v) : v {< * * >} 5 > 0 (possibly)
 
 * Metavariables With Optional Type Annotations *
 qualif A(v) : ~A + v = ^
