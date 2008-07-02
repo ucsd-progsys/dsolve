@@ -7,11 +7,6 @@ let height t =
   | Empty -> 0
   | Node (_,_,_,_,h) -> h
 
-let pheight t =
-  match t with
-  | Empty -> 0
-  | Node (_,_,l,r,_) -> if height l >= height r then height l + 1 else height r + 1
-
 let show x = x
 
 let create x d l r =
@@ -62,15 +57,17 @@ let bal x d l r =
     else
       Node(x, d, l, r, if hl >= hr then hl + 1 else hr + 1)
 
-let balanced t =
+(*let rec balanced t =
   match t with
-  | Empty -> assert false
+  | Empty -> ()
   | Node(_, _, l, r, h) ->
      let hl = height l in
      let hr = height r in
      let _ = assert (h = (if hl >= hr then hl + 1 else hr + 1)) in
      let _ = assert (hl <= hr + 2) in
      let _ = assert (hl >= hr - 2) in
+     let _ = balanced l in
+     let _ = balanced r in
      let _ = assert (1 = 0) in
     ()
 
@@ -80,8 +77,9 @@ let checker () =
   let t1 = Node(0, 0, t0, t0, 1) in
   let t2 = Node(1, 1, t1, t1, 2) in
   let t3 = Node(1, 1, t2, t2, 3) in
-  let t4 = Node(0, 0, t2, t3, 4) in
-  let t5 = bal 0 0 t4 t4 in
+  let t4 = Node(0, 0, t3, t1, 4) in
+  let t5 = bal 0 0 t4 t1 in
+  let _ = show t5 in
   let _ = assert (height t5 <= height t4 + 1) in
   let _ = assert (height t5 <= height t4 + 2) in
   let _ = assert (height t5 >= height t4) in
@@ -96,7 +94,7 @@ let checker () =
   (* let t3 = create 2 2 t1 t0 in
   let t2 = create 1 0 t1 t0 in
   let _ = show create in *)
-  ()
+  ()*)
 
 
 (*
