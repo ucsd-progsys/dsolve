@@ -222,11 +222,6 @@ let resolve_extend_env tenv env f l1 l2 = match (l1, l2) with
   | (Some p, _) | (_, Some p) -> F.env_bind tenv env p f
   | _ -> env
 
-let no_recrefs = function
-  | (None, None)                   -> true
-  | (Some (_, rr1), Some (_, rr2)) -> F.recref_is_empty rr1 && F.recref_is_empty rr2
-  | _                              -> false
-
 let bind_tags_pr (t, f) cs r env =
   let is_recvar = function
       (Some (p, _), F.Frec (p', _, _)) -> p' = p
