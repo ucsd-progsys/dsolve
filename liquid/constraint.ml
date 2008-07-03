@@ -248,7 +248,7 @@ let app_subs ss (oss, qks) =
 
 let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubFrame (env,g,f1,f2); lc_tenv = tenv} as c ->
   match (f1, f2) with
-  | (_, f2) when F.is_shape f2 ->
+  | (f1, f2) when F.is_shape f1 && F.is_shape f2 ->
       ([], [])
   | (F.Farrow (l1, f1, f1'), F.Farrow (l2, f2, f2')) ->
       let subs = match (l1, l2) with (Some p1, Some p2) when not (Pat.same p1 p2) -> subst_to p2 p1 | _ -> [] in
