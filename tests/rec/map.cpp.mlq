@@ -3,6 +3,15 @@
 #define U(name, rec) name: TRUEREF rec
 #define TREE(rec, k, v, l, r, h) TRUEREF [rec: t . || k, v, l, r, h]
 
+#define H(x) height x
+#define ITE(x, y, z) (x ? y : z)
+#define MAX(x, y) ITE(x >= y, x, y)
+#define ISHEIGHT(e2, e3, v) ((v = MAX(H(e2), H(e3)) + 1) and v >= 0)
+
+#define HG0(v) (H(v) >= 0)
+#define BALW(e2, v, n) (H(v) <= H(e2) + n and H(v) >= H(e2) - n)
+
+
 measure height =
     Empty -> 0
   | Node (_, _, _, _, h) -> h
@@ -41,5 +50,19 @@ val create: 'a -> int ->
 val add:
   'a ->
   int ->
-  t: TREE(z, e0: 'a, e1: int, U(e2, z), R(e3, z, height e3 <= height e2 + 2 and height e3 >= height e2 - 2), {e4: int | e4 = (height e2 >= height e3 ? height e2 + 1 : height e3 + 1)}) ->
-  {v': TREE(z, e0: 'a, e1: int, U(e2, z), R(e3, z, height e3 <= height e2 + 2 and height e3 >= height e2 - 2), {e4: int | e4 = (height e2 >= height e3 ? height e2 + 1 : height e3 + 1)}) | height v' <= height t + 1 and height v' >= height t}
+  t: TREE(z, e0: 'a, e1: int, R(e2, z, HG0(e2)), R(e3, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) ->
+  {v': TREE(z, e0: 'a, e1: int, R(e2, z, HG0(e2)), R(e3, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) | height v' <= height t + 1 and height v' >= height t}
+
+
+val remove_min_binding:
+  t: TREE(z, e0: 'a, e1: int, R(e2, z, HG0(e2)), R(e3, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) ->
+  'a * int * {v': TREE(z, e0: 'a, e1: int, R(e2, z, HG0(e2)), R(e3, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) 
+                                                                                            | height v' >= height t - 1 and height v' <= height t}
+
+
+val merge:
+  m: 'a ->
+  t1: TREE(z, e0: 'a, e1: int, R(e2, z, HG0(e2)), R(e3, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) ->
+  {t2: TREE(z, e0: 'a, e1: int, R(e2, z, HG0(e2)), R(e3, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) | BALW(t1, t2, 2)} ->
+  {v': TREE(z, e0: 'a, e1: int, R(e2, z, HG0(e2)), R(e3, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) 
+                                                                                            | H(v') <= MAX(H(t1), H(t2)) + 1 and H(v') >= MAX(H(t1), H(t2)) }

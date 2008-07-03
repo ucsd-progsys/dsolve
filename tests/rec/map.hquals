@@ -3,6 +3,8 @@ qualif HH(v)    : v = ~A
 (*qualif TCOMP(v) : e0 { * * } v*) (* BST *)
 (*qualif COMP(v)  : ~A { * * } v*) (* BST *)
 (*qualif INTLIT(v): ^ { * * } v*) (* BST *) 
+qualif GT0(v) : v >= 0
+qualif HGT0(v) : height v >= 0
 
 qualif BAL(v)(*A: 'a t*): v { <=, >= } height ~A {< -, + >} [1, 2, 3]
 qualif BAL(v)   : v { <=, >= } height e2 {< -, + >} [1, 2, 3]
@@ -20,11 +22,11 @@ qualif Ph(v)    : v = (height e2 >= height e3 ? height e2 + 1 : height e3 + 1)
 qualif Phh(v)   : height v = (height [l, ll, lrl] >= height [r, lr, lrr] ? height [l, ll, lrl] + 1 : height [r, lr, lrr] + 1)
 qualif Phh(v)   : height v <= (height [l, ll, lrl] >= height [r, lr, lrr] ? height [l, ll, lrl] + 1 : height [r, lr, lrr] + 1) 
 qualif Phh(v)   : height v >= (height [l, ll, lrl] >= height [r, lr, lrr] ? height [l, ll, lrl] : height [r, lr, lrr])
-qualif OMG(v)   :  
+qualif BALINVAR(v)   :  
 (height v <= (height l <= height r + 2 and height l >= height r - 2 ? 
    (height l >= height r ? height l + 1 : height r + 1) :
    (height l >= height r ? height l : height r) + 1))
-qualif OMG(v)   :
+qualif BALINVAR(v)   :
 (height v >= (height l <= height r + 2 and height l >= height r - 2 ?
    (height l >= height r ? height l + 1 : height r + 1) :
    (height l >= height r ? height l : height r)))

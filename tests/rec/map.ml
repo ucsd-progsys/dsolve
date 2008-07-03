@@ -54,7 +54,7 @@ let bal x d l r =
     else
       Node(x, d, l, r, if hl >= hr then hl + 1 else hr + 1)
 
- let rec add x data t =
+(* let rec add x data t =
   match t with
       Empty ->
         Node(x, data, Empty, Empty, 1)
@@ -63,12 +63,9 @@ let bal x d l r =
         if x = v (* c = 0 *) then
           Node(x, data, l, r, h)
         else if x < v (* c < 0 *) then
-          let daf = add x data l in
-          (*let _ = assert (height daf <= height r + 3) in
-          let _ = assert (height daf >= height r - 3) in*)
-          bal v d daf r
+          bal v d (add x data l) r
         else
-          bal v d l (add x data r)
+          bal v d l (add x data r)*)
 (*
 let rec checker = function
   | Empty -> ()
@@ -82,22 +79,34 @@ let test_add x d x' d' x'' d'' =
   let o = add x' d' z in
   let t = add x'' d'' o in
     checker t
-
+*)
 let rec remove_min_binding t = match t with
     Empty -> assert false
-  | Node(x, d, Empty, r, _) -> (x, d, r)
-  | Node(x, d, l, r, _) ->
-      let (x', d', l') = remove_min_binding l in
-        (x', d', bal x d l' r)
+  | Node(x, d, l, r, h) ->
+      match l with
+      | Empty -> (x, d, r)
+      | Node(_, _, ll, lr, h') ->
+        let (x', d', l') = remove_min_binding l in
+          (x', d', bal x d l' r)
 
 let merge m t1 t2 =
-  match (t1, t2) with
-      (Empty, t) -> t
+  match t1 with
+  | Empty -> t2
+  | Node(_, _, l1, r1, h1) -> 
+      match t2 with
+      | Empty -> t1
+      | Node(_, _, l2, e2, h2) ->
+          let (x, d, t2') = remove_min_binding t2 in
+            bal x d t1 t2'
+
+(*match (t1, t2) with
+      (t, t) -> t
     | (t, Empty) -> t
     | (_, _) ->
         let (x, d, t2') = remove_min_binding t2 in
-          bal x d t1 t2'
+          bal x d t1 t2'*)
 
+(*
 let rec remove x t = match t with
     Empty ->
       Empty
