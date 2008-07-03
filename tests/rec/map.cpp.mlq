@@ -45,7 +45,7 @@ val create: 'a -> int ->
          {v': [[], [v: true, v: true, v: true, v: true, v: true]] [z: t . || e0: 'a, e1: int, e2: [[], [v: true, v: true, v: true, v: true, v: true]] z, 
             {e3: [[], [v: true, v: true, v: true, v: true, v: true]] z | height e3 <= height e2 + 2 and height e3 >= height e2 - 2},
             {e4: int | e4 = (height e2 >= height e3 ? height e2 + 1 : height e3 + 1)}] | height v' = (height l >= height r ? height l + 1 : height r + 1)}
-
+*)
 val add:
   'a ->
   int ->
@@ -57,8 +57,6 @@ val remove_min_binding:
   t: TREE(z, e0: 'a, e1: int, R(e2, z, HG0(e2)), R(e3, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) ->
   'a * int * {v': TREE(z, e0: 'a, e1: int, R(e2, z, HG0(e2)), R(e3, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) 
                                                                                             | height v' >= height t - 1 and height v' <= height t}
-*)
-
 
 
 val merge:

@@ -54,7 +54,7 @@ let bal x d l r =
     else
       Node(x, d, l, r, if hl >= hr then hl + 1 else hr + 1)
 
-(* let rec add x data t =
+let rec add x data t =
   match t with
       Empty ->
         Node(x, data, Empty, Empty, 1)
@@ -65,7 +65,7 @@ let bal x d l r =
         else if x < v (* c < 0 *) then
           bal v d (add x data l) r
         else
-          bal v d l (add x data r)*)
+          bal v d l (add x data r)
 (*
 let rec checker = function
   | Empty -> ()
