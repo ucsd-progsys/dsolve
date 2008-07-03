@@ -1,0 +1,24 @@
+measure tag =
+  | Empty -> 0
+  ...
+
+measure h = 
+  | ...
+
+
+#red = tag(v) = 1
+#blk = tag(v) = 2
+#nop = tag(v) <= 2
+#bal = h(v) = h(e1)
+
+
+#rn  = e0:'a * e1: blk * e2: blk && bal
+#n   = e0:'a * e1: nop * e2: nop && bal
+
+#rbt = ut. Empty + Red rn + Black n + PurpleL n + PurpleR n
+#gbt = {v : ut. Empty + Red rn + Black n + PurpleL n + PurpleR n | nop}
+
+restore_left : 'a -> l: rbt -> r: {grbt| h(v) = h(l)} -> {v:grbt | h(v) = h l + 1}
+ins1 : 'a -> l: grbt -> {v:rbt| h(v) = h(l) && (tag(v) <= 2 \/ tag(l) = 1)}
+insert: 'a -> d: grbt -> {v:grbt | h(l) <= h(v) <= h(l) + 1}
+

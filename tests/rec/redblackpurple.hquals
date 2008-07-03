@@ -1,0 +1,6 @@
+qualif TAG(v): tag(v) = [0, 1, 2, 3, 4]
+qualif TAGP(v): tag(v) <= 2
+qualif PUR(v) : (tag(v) <= 2 \/ tag(~A) = 1)
+qualif INC(v) : h v = 1 + h ~A
+qualif BAL(v) : h v = h e1
+qualif FALSE(v) : 0 = 1
