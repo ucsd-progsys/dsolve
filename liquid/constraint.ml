@@ -315,8 +315,8 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
         ([make_wff c tenv env f; make_wff c tenv env' f'], [])
   | F.Fvar (_, _, r) ->
       ([], split_wf_ref f c env r)
-  | F.Frec (_, _, r) ->
-      ([], split_wf_ref f c env r)
+  | F.Frec _ ->
+      ([], [])
   | F.Funknown ->
       ([],[]) 
 
