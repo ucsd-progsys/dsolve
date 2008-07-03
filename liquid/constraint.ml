@@ -185,13 +185,6 @@ let simplify_fc c =
       (* let _ = printf "@[Simplify env to: %a@.@]" (pprint_env_pred None) env' in *)
       {c with lc_cstr = SubFrame(env', g, a, b)}
 
-(* Notes:
-  * 2. pmr: because we were only filtering through invariant types 
-  * anyway, we might as well just use invariants until we start 
-  * getting problems from it --- for now, it's too much trouble 
-  * to work around all the BigArray stuff
-  *)
-
 let make_lc c fc = {lc_cstr = fc; lc_tenv = c.lc_tenv; lc_orig = Cstr c; lc_id = c.lc_id}
 
 let lequate_cs env g c variance f1 f2 = match variance with
@@ -260,6 +253,8 @@ let app_subs ss (oss, qks) =
 
 let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubFrame (env,g,f1,f2); lc_tenv = tenv} as c ->
   match (f1, f2) with
+  | (_, f2) when F.is_shape f2 ->
+      ([], [])
   | (F.Farrow (l1, f1, f1'), F.Farrow (l2, f2, f2')) ->
       let subs = match (l1, l2) with (Some p1, Some p2) when not (Pat.same p1 p2) -> subst_to p2 p1 | _ -> [] in
       let env' = resolve_extend_env tenv env f2 l1 l2 in
@@ -271,7 +266,7 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       ([], sub_recrefs c env g rr1 rr2 @ split_sub_ref c env g r1 r2)
   | (F.Funknown, F.Funknown) ->
       ([],[]) 
-  | (F.Fsum(_, t1, cs1, r1), F.Fsum(_, t2, cs2, r2)) when no_recrefs (t1, t2) ->  (* 2 *)
+  | (F.Fsum(_, None, cs1, r1), F.Fsum(_, None, cs2, r2)) ->
       let (penv, tag) = bind_tags_pr (None, f1) cs1 r1 env in
       let subs = sum_subs cs1 cs2 tag in
       (C.flap2 (fun (_, ps1) (_, ps2) -> split_sub_params c tenv env g ps1 ps2) cs1 cs2,
