@@ -20,3 +20,13 @@ qualif Ph(v)    : v = (height e2 >= height e3 ? height e2 + 1 : height e3 + 1)
 qualif Phh(v)   : height v = (height [l, ll, lrl] >= height [r, lr, lrr] ? height [l, ll, lrl] + 1 : height [r, lr, lrr] + 1)
 qualif Phh(v)   : height v <= (height [l, ll, lrl] >= height [r, lr, lrr] ? height [l, ll, lrl] + 1 : height [r, lr, lrr] + 1) 
 qualif Phh(v)   : height v >= (height [l, ll, lrl] >= height [r, lr, lrr] ? height [l, ll, lrl] : height [r, lr, lrr])
+qualif OMG(v)   :  
+(height v <= (height l <= height r + 2 and height l >= height r - 2 ? 
+   (height l >= height r ? height l + 1 : height r + 1) :
+   (height l >= height r ? height l : height r) + 1))
+qualif OMG(v)   :
+(height v >= (height l <= height r + 2 and height l >= height r - 2 ?
+   (height l >= height r ? height l + 1 : height r + 1) :
+   (height l >= height r ? height l : height r)))
+
+

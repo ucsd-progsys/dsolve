@@ -64,11 +64,11 @@ let bal x d l r =
           Node(x, data, l, r, h)
         else if x < v (* c < 0 *) then
           let daf = add x data l in
-          let _ = assert (height daf <= height r + 3) in
-          let _ = assert (height daf >= height r - 3) in
+          (*let _ = assert (height daf <= height r + 3) in
+          let _ = assert (height daf >= height r - 3) in*)
           bal v d daf r
         else
-          (*bal v d l (add x data r)*) assert false
+          bal v d l (add x data r)
 (*
 let rec checker = function
   | Empty -> ()
