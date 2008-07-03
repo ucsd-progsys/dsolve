@@ -305,7 +305,12 @@ let rec split_wf_params c tenv env ps =
 
 let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFrame (env,f); lc_tenv = tenv} as c ->
   match f with
-  | F.Fsum (p, (Some (rp, rr) as t), cs, r) when not (F.recref_is_empty rr) ->
+  | f when F.is_shape f ->
+      ([], [])
+  | F.Fsum (_, (None as t), cs, r) ->
+      (C.flap (fun (_, ps) -> split_wf_params c tenv env ps) cs,
+       split_wf_ref f c (bind_tags (t, f) cs r env) r)
+  | F.Fsum (p, (Some (_, rr) as t), cs, r) ->
       (* This deviates from the paper's cons rule because we instantiate qualifiers using
          the split constraints.  This would result in qualifiers with idents that don't
          actually appear in the program or tuple labels appearing in the recursive
@@ -313,9 +318,6 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
       let shp     = F.shape f in
       let (f', f'') = (F.replace_recvar f shp, F.apply_recref rr shp) in
         ([make_wff c tenv env (F.apply_refinement F.empty_refinement f'); make_wff c tenv env f''], split_wf_ref f c (bind_tags (t, f) cs r env) r)
-  | F.Fsum (_, t, cs, r) ->
-      (C.flap (fun (_, ps) -> split_wf_params c tenv env ps) cs,
-       split_wf_ref f c (bind_tags (t, f) cs r env) r)
   | F.Fabstract (_, ps, r) ->
       (split_wf_params c tenv env ps, split_wf_ref f c env r)
   | F.Farrow (l, f, f') ->

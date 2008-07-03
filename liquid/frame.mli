@@ -81,6 +81,7 @@ val constrs_params: constr list -> param list
 val map_refexprs: (refexpr -> refexpr) -> t -> t
 val params_frames: param list -> t list
 val shape: t -> t
+val is_shape: t -> bool
 val params_ids: param list -> Ident.t list
 val same_shape: t -> t -> bool
 val subt: t -> t -> bool
