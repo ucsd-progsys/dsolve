@@ -91,34 +91,26 @@ let rec remove_min_binding t = match t with
 
 let merge m t1 t2 =
   match t1 with                         (* these shows are here because of an incredibly frustrating bug relating to consgen *)
-  | Empty -> let h = height t2 in let fat1 = show t2 in fat1
+  | Empty -> let h = height t2 in let yarr = show t2 in yarr 
               (* this call to height is here because in the most insanely frustrating problem with our typing rules, we don't know that height t2 >= 0 without it *)
   | Node(_, _, ll, lr, h1) -> 
       match t2 with
-      | Empty -> let fat = show t1 in fat
+      | Empty -> let aye = show t1 in aye 
       | Node(_, _, rl, rr, h2) ->
-          (*let (x, d, t2') = remove_min_binding t2 in
-            bal x d t1 t2'*) assert false
+          let (x, d, t2') = remove_min_binding t2 in
+            bal x d t1 t2'
 
-(*match (t1, t2) with
-      (t, t) -> t
-    | (t, Empty) -> t
-    | (_, _) ->
-        let (x, d, t2') = remove_min_binding t2 in
-          bal x d t1 t2'*)
-
-(*
 let rec remove x t = match t with
     Empty ->
       Empty
-  | Node(v, d, l, r, _) ->
+  | Node(v, d, l, r, h) ->
       if x = v then
         merge x l r
       else if x < v then
         bal v d (remove x l) r
       else
         bal v d l (remove x r)
-
+(*
 let test_remove x d x' d' =
   let z = add x d Empty in
   let o = add x' d' z in

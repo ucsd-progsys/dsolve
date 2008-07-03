@@ -67,3 +67,8 @@ val merge:
   t2: {t2: TREE(z, e0: 'a, e1: int, R(e2, z, HG0(e2)), R(e3, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) | BALW(t1, t2, 2)} ->
   {v': TREE(z, e0: 'a, e1: int, R(e2, z, HG0(e2)), R(e3, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) 
                                                                                             | H(v') <= MAXP(H(t1), H(t2), 1) and H(v') >= MAX(H(t1), H(t2)) }
+
+val remove:
+  'a ->
+  t: TREE(z, e0: 'a, e1: int, R(e2, z, HG0(e2)), R(e3, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) ->
+  {v': TREE(z, e0: 'a, e1: int, R(e2, z, HG0(e2)), R(e3, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) | height v' >= height t - 1 and height v' <= height t}
