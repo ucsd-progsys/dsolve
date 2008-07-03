@@ -6,7 +6,8 @@
 #define H(x) height x
 #define ITE(x, y, z) (x ? y : z)
 #define MAX(x, y) ITE(x >= y, x, y)
-#define ISHEIGHT(e2, e3, v) ((v = MAX(H(e2), H(e3)) + 1) and v >= 0)
+#define MAXP(x, y, n) ITE(x >= y, x + n, y + n)
+#define ISHEIGHT(e2, e3, v) ((v = MAXP(H(e2), H(e3), 1)) and v >= 0)
 
 #define HG0(v) (H(v) >= 0)
 #define BALW(e2, v, n) (H(v) <= H(e2) + n and H(v) >= H(e2) - n)
@@ -65,4 +66,4 @@ val merge:
   t1: TREE(z, e0: 'a, e1: int, R(e2, z, HG0(e2)), R(e3, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) ->
   {t2: TREE(z, e0: 'a, e1: int, R(e2, z, HG0(e2)), R(e3, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) | BALW(t1, t2, 2)} ->
   {v': TREE(z, e0: 'a, e1: int, R(e2, z, HG0(e2)), R(e3, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) 
-                                                                                            | H(v') <= MAX(H(t1), H(t2)) + 1 and H(v') >= MAX(H(t1), H(t2)) }
+                                                                                            | H(v') <= MAXP(H(t1), H(t2), 1) and H(v') >= MAX(H(t1), H(t2)) }
