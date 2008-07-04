@@ -1,0 +1,88 @@
+#define TRUEREF [[], [v: true, v: true, v: true, v: true, v: true, v: true]]
+#define R(name, rec, ref) {name: TRUEREF rec | ref}
+#define U(name, rec) name: TRUEREF rec
+#define TREE(rec, l, ll, d, r, lr, h) TRUEREF [rec: t . || l, ll, d, r, lr, h]
+
+#define H(x) height x
+#define L(v) length v
+#define ITE(x, y, z) (x ? y : z)
+#define MAX(x, y) ITE(x >= y, x, y)
+#define MAXP(x, y, n) ITE(x >= y, x, y) + n
+#define ISHEIGHT(e2, e3, v) ((v = MAXP(H(e2), H(e3), 1)) and v >= 0)
+
+#define ISLEN(v, e) (v = length e)
+
+#define HG0(v) (H(v) >= 0)
+#define BALW(e2, v, n) (H(v) <= H(e2) + n and H(v) >= H(e2) - n)
+
+
+measure height =
+  | Empty -> 0
+  | Node (_, _, _, _, _, h) -> h
+
+measure length =
+  | Empty -> 0
+  | Node (_, cl, _, _, cr, _) -> 1 + cl + cr
+
+
+(*val makenode:
+  l: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
+          R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
+          {e5: int | ISHEIGHT(e0, e3, e5)}) ->
+  'a ->
+  r: {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
+              R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
+              {e5: int | ISHEIGHT(e0, e3, e5)}) | BALW(l, v, 2) } ->
+  {v': TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
+       R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
+       {e5: int | ISHEIGHT(e0, e3, e5)}) | H(v') = MAXP(H(l), H(r), 1) }
+
+val create:
+  'a ->
+  n: {v: int | v >= 0} ->
+  {v': TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
+       R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
+       {e5: int | ISHEIGHT(e0, e3, e5)}) | (*L(v') = n*) true }
+*)
+
+val bal:
+  l: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
+          R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
+          {e5: int | ISHEIGHT(e0, e3, e5)}) ->
+  'a ->
+  r: {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
+              R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
+              {e5: int | ISHEIGHT(e0, e3, e5)}) | BALW(l, v, 3) } ->
+  {v': TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
+       R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
+       {e5: int | ISHEIGHT(e0, e3, e5)}) | H(v') <= MAXP(H(l), H(r), 1) and
+                                           H(v') >= MAX(H(l), H(r)) + ITE(BALW(l, r, 2), 1, 0) }
+
+val recbal:
+  l: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
+          R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
+          {e5: int | ISHEIGHT(e0, e3, e5)}) ->
+  'a ->
+  r: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
+          R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
+          {e5: int | ISHEIGHT(e0, e3, e5)})  ->
+  {v': TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
+       R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
+       {e5: int | ISHEIGHT(e0, e3, e5)}) | H(v') <= MAXP(H(l), H(r), 1) and
+                                           H(v') >= ITE(BALW(l, r, 2), MAXP(H(l), H(r), 1), 0) }
+
+
+val recbal2:
+  l: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
+          R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
+          {e5: int | ISHEIGHT(e0, e3, e5)}) ->
+  'a ->
+  r: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
+          R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
+          {e5: int | ISHEIGHT(e0, e3, e5)})  ->
+  {v': TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
+       R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
+       {e5: int | ISHEIGHT(e0, e3, e5)}) | H(v') <= MAXP(H(l), H(r), 1) and
+                                           H(v') >= MAX(H(l), H(r)) + ITE(BALW(l, r, 2), 1, 0-1) }
+
+

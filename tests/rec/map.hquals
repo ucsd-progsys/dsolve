@@ -32,3 +32,5 @@ qualif BALINVAR(v)   :
 (height v >= (height l <= height r + 2 and height l >= height r - 2 ?
    (height l >= height r ? height l + 1 : height r + 1) :
    (height l >= height r ? height l : height r)))
+
+   (* this can be shortened to just hv <= max(l, r)+1 an hv >= max(l,r)+(balanced(l, r) ? 1, 0) *)
