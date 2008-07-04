@@ -54,7 +54,7 @@ let bal x d l r =
     else
       Node(x, d, l, r, if hl >= hr then hl + 1 else hr + 1)
 
-(* let rec add x data t =
+let rec add x data t =
   match t with
       Empty ->
         Node(x, data, Empty, Empty, 1)
@@ -65,7 +65,7 @@ let bal x d l r =
         else if x < v (* c < 0 *) then
           bal v d (add x data l) r
         else
-          bal v d l (add x data r)*)
+          bal v d l (add x data r)
 (*
 let rec checker = function
   | Empty -> ()
@@ -90,12 +90,12 @@ let rec remove_min_binding t = match t with
           (x', d', bal x d l' r)
 
 let merge m t1 t2 =
-  match t1 with                         (* these shows are here because of an incredibly frustrating bug relating to consgen *)
-  | Empty -> let h = height t2 in let yarr = show t2 in yarr 
+  match t1 with
+  | Empty -> let h = height t2 in t2
               (* this call to height is here because in the most insanely frustrating problem with our typing rules, we don't know that height t2 >= 0 without it *)
   | Node(_, _, ll, lr, h1) -> 
       match t2 with
-      | Empty -> let aye = show t1 in aye 
+      | Empty -> t1
       | Node(_, _, rl, rr, h2) ->
           let (x, d, t2') = remove_min_binding t2 in
             bal x d t1 t2'
