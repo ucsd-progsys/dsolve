@@ -9,29 +9,59 @@ type 'a dict =
   | PurpleL of 'a * 'a dict * 'a dict
   | PurpleR of 'a * 'a dict * 'a dict
 
-let restore_right arg = match arg with
-  | Black (e, lt, PurpleL (re, rl, rr)) ->
-      begin match (lt, (re, rl, rr)) with
-        | (Red (le, ll, lr), (_, Red _, _)) ->
-            Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
-        | _ ->
-            begin match (rl, rr) with
-              | (Red (rle, rll, rlr), _) ->
+let color = function
+  | Empty -> 0
+  | Black (a, b, c) -> 1
+  | Red (a, b, c) -> 2
+  | PurpleL (a, b, c) -> 3
+  | PurpleR (a, b, c) -> 4
+
+let show x = x
+
+let restore_right e lt r =
+  match r with
+  | PurpleL (re, rl, rr) ->
+      begin match lt with
+        | Red (le, ll, lr) ->
+            begin match rl with
+              | Red _ ->
+                  Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
+              | Black _ -> assert (0 = 1); assert false
+              | PurpleL _ -> assert (0 = 1); assert false
+              | PurpleR _ -> assert (0 = 1); assert false
+            end
+        | Black _ ->
+            begin match rl with
+              | Red (rle, rll, rlr) ->
                   (* l is black, deep rotate *)
                   Black (rle, Red (e, lt, rll), Red (re, rlr, rr))
-              | _ -> arg
+              | Black _ -> assert (0 = 1); assert false
+              | PurpleL _ -> assert (0 = 1); assert false
+              | PurpleR _ -> assert (0 = 1); assert false
             end
+        | PurpleL _ -> assert (0 = 1); assert false
+        | PurpleR _ -> assert (0 = 1); assert false
       end
-  | Black (e, lt, PurpleR (re, rl, rr)) ->
-      begin match (lt, (re, rl, rr)) with
-        | (Red (le, ll, lr), (_, _, Red _)) ->
-            Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
-        | _ ->
+  | PurpleR (re, rl, rr) ->
+      begin match lt with
+        | Red (le, ll, lr) ->
+            begin match rr with
+              |  Red _ ->
+                   Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
+              | Black _ -> assert (0 = 1); assert false
+              | PurpleL _ -> assert (0 = 1); assert false
+              | PurpleR _ -> assert (0 = 1); assert false
+            end
+        | Black _ ->
             (* l is black, shallow rotate *)
             Black(re, Red(e, lt, rl), rr)
+        | PurpleL _ -> assert (0 = 1); assert false
+        | PurpleR _ -> assert (0 = 1); assert false
       end
-  | d -> d
+  | Red _ -> Black (e, lt, r)
+  | Black _ -> Black (e, lt, r)
 
+(*
 let restore_left arg = match arg with
   | Black (e, PurpleL (le, ll, lr), rt) ->
       begin match ((le, ll, lr), rt) with
@@ -77,3 +107,4 @@ let insert dict key =
       | PurpleL (d, lt, rt) -> Black (d, lt, rt) (* re-color *)
       | PurpleR (d, lt, rt) -> Black (d, lt, rt) (* re-color *)
       | dict -> dict                             (* depend on sequential matching *)
+*)
