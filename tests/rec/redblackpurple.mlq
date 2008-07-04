@@ -1,24 +1,9 @@
-measure tag =
+(* #bal = h(v) = h(e1) *)
+measure color =
   | Empty -> 0
-  ...
-
-measure h = 
-  | ...
-
-
-#red = tag(v) = 1
-#blk = tag(v) = 2
-#nop = tag(v) <= 2
-#bal = h(v) = h(e1)
-
-
-#rn  = e0:'a * e1: blk * e2: blk && bal
-#n   = e0:'a * e1: nop * e2: nop && bal
-
-#rbt = ut. Empty + Red rn + Black n + PurpleL n + PurpleR n
-#gbt = {v : ut. Empty + Red rn + Black n + PurpleL n + PurpleR n | nop}
-
-restore_left : 'a -> l: rbt -> r: {grbt| h(v) = h(l)} -> {v:grbt | h(v) = h l + 1}
-ins1 : 'a -> l: grbt -> {v:rbt| h(v) = h(l) && (tag(v) <= 2 \/ tag(l) = 1)}
-insert: 'a -> d: grbt -> {v:grbt | h(l) <= h(v) <= h(l) + 1}
-
+  | Black (a, b, c) -> 1
+  | Red (a, b, c) -> 2
+  | PurpleL (a, b, c) -> 3
+  | PurpleR (a, b, c) -> 4
+(* pmr: also need to check for falses in the purple data (and/or measure?) positions *)
+val restore_right: e: 'a -> l: {v: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] [z: dict . || e0: 'a, {e1: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e1 <= 2}, {e2: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e2 <= 2} || e0: 'a, {e1: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e1 <= 1}, {e2: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e2 <= 1} || e0: 'a, {e1: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e1 = 2}, {e2: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e2 <= 1} || e0: 'a, {e1: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e1 <= 1}, {e2: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e2 = 2}] | color v <= 2} -> r: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] [z: dict . || e0: 'a, {e1: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e1 <= 2}, {e2: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e2 <= 2} || e0: 'a, {e1: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e1 <= 1}, {e2: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e2 <= 1} || e0: 'a, {e1: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e1 = 2}, {e2: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e2 <= 1} || e0: 'a, {e1: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e1 <= 1}, {e2: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e2 = 2}] -> {v: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] [z: dict . || e0: 'a, {e1: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e1 <= 2}, {e2: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e2 <= 2} || e0: 'a, {e1: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e1 <= 1}, {e2: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e2 <= 1} || e0: 'a, {e1: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e1 = 2}, {e2: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e2 <= 1} || e0: 'a, {e1: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e1 <= 1}, {e2: [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]] z | color e2 = 2}] | color v <= 2}
