@@ -1,0 +1,29 @@
+#define R [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]]
+
+#define EBLK(v) color v <= 1
+#define RED(v)  color v = 2
+#define NOP(v)  color v <= 2
+
+#define RN e0: 'a, {e1: R z | EBLK(e1)}, {e2: R z | EBLK(e2)}
+#define N  e0: 'a, {e1: R z | NOP(e1)}, {e2: R z | NOP(e2)}
+#define PL e0: 'a, {e1: R z | RED(e1)}, {e2: R z | EBLK(e2)}
+#define PR e0: 'a, {e1: R z | EBLK(e1)}, {e2: R z | RED(e2)}
+
+#define RBT R [z: dict . || N || RN || PL || PR]
+#define GBT {v: R [z: dict . || N || RN || PL || PR] | NOP(v)}
+
+(* #bal = h(v) = h(e1) *)
+
+measure color =
+  | Empty -> 0
+  | Black (a, b, c) -> 1
+  | Red (a, b, c) -> 2
+  | PurpleL (a, b, c) -> 3
+  | PurpleR (a, b, c) -> 4
+
+val restore_right: e: 'a -> l: GBT -> r: RBT -> GBT
+val restore_left: e: 'a -> l: RBT -> r: GBT -> GBT
+
+val ins1: key: 'a -> d: GBT -> RBT
+
+(* pmr: also make sure that we get falses on purple data to get a _real_ RBT? *)
