@@ -1,0 +1,9 @@
+qualif FALSE(v) : 1 = 0
+
+qualif HS(v): height v = [0, 1, 2]
+
+(*
+qualif TCOMP(v) : v { * * } e0
+qualif COMP(v)  : ~A { * * } v
+qualif INTLIT(v): ^ { * * } v
+*)
