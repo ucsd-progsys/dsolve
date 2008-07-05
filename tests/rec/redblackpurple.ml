@@ -16,6 +16,16 @@ let color = function
   | PurpleL (a, b, c) -> 3
   | PurpleR (a, b, c) -> 4
 
+let max x y =
+  if x > y then x else y
+
+let rec height = function
+  | Empty -> 0
+  | Red (_, l, r) -> (max (height l) (height r))
+  | Black (_, l, r) -> (max (height l) (height r)) + 1
+  | PurpleL (_, l, r) -> (max (height l) (height r))
+  | PurpleR (_, l, r) -> (max (height l) (height r))
+
 let show x = x
 
 let restore_right e lt r =

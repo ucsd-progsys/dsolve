@@ -3,8 +3,6 @@ qualif COLOR(v):          color v = [0, 1, 2, 3, 4]
 qualif COLORNOTPURPLE(v): color v <= [0, 1, 2]
 qualif WHENPURPLE(v):     (color v <= 2) or (color ~A = 2)
 
-(*
-
-qualif INC(v) : h v = 1 + h ~A
-qualif BAL(v) : h v = h e1
-*)
+qualif INC(v): height v = 1 + height ~A
+qualif EQH(v): height v = height ~A
+qualif BAL(v): height v = height e1

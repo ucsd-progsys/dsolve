@@ -3,16 +3,15 @@
 #define EBLK(v) color v <= 1
 #define RED(v)  color v = 2
 #define NOP(v)  color v <= 2
+#define HINV(v) height v = height e1
 
-#define RN e0: 'a, {e1: R z | EBLK(e1)}, {e2: R z | EBLK(e2)}
-#define N  e0: 'a, {e1: R z | NOP(e1)}, {e2: R z | NOP(e2)}
-#define PL e0: 'a, {e1: R z | RED(e1)}, {e2: R z | EBLK(e2)}
-#define PR e0: 'a, {e1: R z | EBLK(e1)}, {e2: R z | RED(e2)}
+#define RN e0: 'a, {e1: R z | EBLK(e1)}, {e2: R z | EBLK(e2) and HINV(e2)}
+#define N  e0: 'a, {e1: R z | NOP(e1)}, {e2: R z | NOP(e2) and HINV(e2)}
+#define PL e0: 'a, {e1: R z | RED(e1)}, {e2: R z | EBLK(e2) and HINV(e2)}
+#define PR e0: 'a, {e1: R z | EBLK(e1)}, {e2: R z | RED(e2) and HINV(e2)}
 
 #define RBT R [z: dict . || N || RN || PL || PR]
 #define GBT {v: R [z: dict . || N || RN || PL || PR] | NOP(v)}
-
-(* #bal = h(v) = h(e1) *)
 
 measure color =
   | Empty -> 0
@@ -21,10 +20,18 @@ measure color =
   | PurpleL (a, b, c) -> 3
   | PurpleR (a, b, c) -> 4
 
-(*
-val restore_right: e: 'a -> l: GBT -> r: RBT -> GBT
-val restore_left: e: 'a -> l: RBT -> r: GBT -> GBT
+#define MAX(a, b) (a > b ? a : b)
 
+measure height =
+  | Empty             -> 0
+  | Red (e, l, r)     -> MAX(height l, height r)
+  | Black (e, l, r)   -> MAX(height l, height r) + 1
+  | PurpleL (e, l, r) -> MAX(height l, height r)
+  | PurpleR (e, l, r) -> MAX(height l, height r)
+
+(*
+val restore_right: e: 'a -> l: GBT -> r: {v: RBT | height v = height l} -> GBT
+val restore_left: e: 'a -> l: RBT -> r: {v: RBT | NOP(v) and height v = height l} -> GBT
 val ins1: key: 'a -> d: GBT -> RBT
 *)
 
