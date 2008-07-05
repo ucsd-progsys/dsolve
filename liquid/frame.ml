@@ -531,12 +531,18 @@ let instantiate fr ftemplate =
     List.map2 (fun (p, f, v) (_, f', _) -> (p, inst f f', v)) ps ps'
   in inst fr ftemplate
 
-let instantiate_qualifiers_map vars (subs, (qconsts, qvars)) =
+let instantiate_refexpr_qualifiers vars (subs, (qconsts, qvars)) =
   (subs, (List.map (fun q -> match Qualifier.instantiate vars q with Some q -> q | None -> q) qconsts,
           qvars))
 
+let instantiate_ref_qualifiers vars r =
+  List.map (instantiate_refexpr_qualifiers vars) r
+
+let instantiate_recref_qualifiers vars rr =
+  List.map (fun r -> List.map (instantiate_ref_qualifiers vars) r) rr
+
 let instantiate_qualifiers vars fr =
-  map_refexprs (instantiate_qualifiers_map vars) fr
+  map_refexprs (instantiate_refexpr_qualifiers vars) fr
 
 (**************************************************************)
 (********************* Argument labeling **********************) 
@@ -551,7 +557,11 @@ let label_like f f' =
     | (Fvar _, Fvar _) | (Funknown, Funknown) | (Frec _, Frec _) | (Fabstract _, Fabstract _) ->
         instantiate_qualifiers vars f
     | (Fsum (p, rro, cs1, r), Fsum (_, _, cs2, _)) ->
-        Fsum (p, rro, label_constrs_like vars cs1 cs2, List.map (instantiate_qualifiers_map vars) r)
+        let rro =
+          match rro with
+            | None -> None
+            | Some (rv, rr) -> Some (rv, instantiate_recref_qualifiers vars rr)
+        in Fsum (p, rro, label_constrs_like vars cs1 cs2, instantiate_ref_qualifiers vars r)
     | (Farrow (None, f1, f1'), Farrow (l, f2, f2')) ->
         Farrow (l, label vars f1 f2, label vars f1' f2')
     | (Farrow (Some p1, f1, f1'), Farrow (Some p2, f2, f2')) ->
