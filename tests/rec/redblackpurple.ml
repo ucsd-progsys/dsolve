@@ -26,7 +26,7 @@ let restore_right e lt r =
             begin match rl with
               | Red _ ->
                   Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
-              | Black _ -> assert (0 = 1); assert false
+              | Black _   -> assert (0 = 1); assert false
               | PurpleL _ -> assert (0 = 1); assert false
               | PurpleR _ -> assert (0 = 1); assert false
             end
@@ -35,7 +35,7 @@ let restore_right e lt r =
               | Red (rle, rll, rlr) ->
                   (* l is black, deep rotate *)
                   Black (rle, Red (e, lt, rll), Red (re, rlr, rr))
-              | Black _ -> assert (0 = 1); assert false
+              | Black _   -> assert (0 = 1); assert false
               | PurpleL _ -> assert (0 = 1); assert false
               | PurpleR _ -> assert (0 = 1); assert false
             end
@@ -48,7 +48,7 @@ let restore_right e lt r =
             begin match rr with
               |  Red _ ->
                    Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
-              | Black _ -> assert (0 = 1); assert false
+              | Black _   -> assert (0 = 1); assert false
               | PurpleL _ -> assert (0 = 1); assert false
               | PurpleR _ -> assert (0 = 1); assert false
             end
@@ -58,53 +58,86 @@ let restore_right e lt r =
         | PurpleL _ -> assert (0 = 1); assert false
         | PurpleR _ -> assert (0 = 1); assert false
       end
-  | Red _ -> Black (e, lt, r)
+  | Red _   -> Black (e, lt, r)
   | Black _ -> Black (e, lt, r)
 
-(*
-let restore_left arg = match arg with
-  | Black (e, PurpleL (le, ll, lr), rt) ->
-      begin match ((le, ll, lr), rt) with
-        | ((_, Red _, _), Red (re, rl, rr)) ->
-            Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
-        | _ ->
+let restore_left e l rt =
+  match l with
+  | PurpleL (le, ll, lr) ->
+      begin match rt with
+        | Red (re, rl, rr) ->
+            begin match ll with
+              | Red _ ->
+                  Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
+              | Black _   -> assert (0 = 1); assert false
+              | PurpleL _ -> assert (0 = 1); assert false
+              | PurpleR _ -> assert (0 = 1); assert false
+            end
+        | Black _ ->
             (* r is black, shallow rotate *)
             Black (le, ll, Red (e, lr, rt))
+        | PurpleL _ -> assert (0 = 1); assert false
+        | PurpleR _ -> assert (0 = 1); assert false
       end
-  | Black (e, PurpleR (le, ll, lr), rt) ->
-      begin match ((le, ll, lr), rt) with
-        | ((_, _, Red _), Red (re, rl, rr)) ->
-            Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
-        | _ ->
-            begin match (ll, lr) with
-              | (_, Red (lre, lrl, lrr)) ->
+  | PurpleR (le, ll, lr) ->
+      begin match rt with
+        | Red (re, rl, rr) ->
+            begin match lr with
+              | Red _ ->
+                  Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
+              | Black _   -> assert (0 = 1); assert false
+              | PurpleL _ -> assert (0 = 1); assert false
+              | PurpleR _ -> assert (0 = 1); assert false
+            end
+        | Black _ ->
+            begin match lr with
+              | Red (lre, lrl, lrr) ->
                   (* r is black, deep rotate *)
                   Black (lre, Red (le, ll, lrl), Red(e, lrr, rt))
-              | _ -> arg
+              | Black _   -> assert (0 = 1); assert false
+              | PurpleL _ -> assert (0 = 1); assert false
+              | PurpleR _ -> assert (0 = 1); assert false
             end
+        | PurpleL _ -> assert (0 = 1); assert false
+        | PurpleR _ -> assert (0 = 1); assert false
       end
-  | d -> d
+  | Red _   -> Black (e, l, rt)
+  | Black _ -> Black (e, l, rt)
 
 let rec ins1 key d = match d with
   | Black(key1, left, right) ->
       if key = key1 then Black (key, left, right)
-      else if key < key1 then restore_left (Black (key1, ins1 key left, right))
-      else restore_right (Black (key1, left, ins1 key right))
+      else if key < key1 then restore_left key1 (ins1 key left) right
+      else restore_right key1 left (ins1 key right)
   | Red (key1, left, right) ->
       if key = key1 then Red (key, left, right)
       else if key < key1 then
         let l' = ins1 key left in
-          (match l' with Red _ -> PurpleL (key, l', right) | _ -> Red (key, l', right))
+          begin match l' with
+            | Red _     -> PurpleL (key, l', right)
+            | Black _   -> Red (key, l', right)
+            | Empty     -> Red (key, l', right)
+            | PurpleL _ -> assert (0 = 1); assert false
+            | PurpleR _ -> assert (0 = 1); assert false
+          end
       else
         let r' = ins1 key right in
-          (match r' with Red _ -> PurpleR (key, left, r') | _ -> Red (key, left, r'))
-  | Empty -> Red (key, Empty, Empty)
-  | _ -> assert false (* todo: prove these don't happen *)
+          begin match r' with
+            | Red _     -> PurpleR (key, left, r')
+            | Black _   -> Red (key, left, r')
+            | Empty     -> Red (key, left, r')
+            | PurpleL _ -> assert (0 = 1); assert false
+            | PurpleR _ -> assert (0 = 1); assert false
+          end
+  | Empty     -> Red (key, Empty, Empty)
+  | PurpleL _ -> assert (0 = 1); assert false
+  | PurpleR _ -> assert (0 = 1); assert false
 
 let insert dict key =
   let dict = ins1 key dict in
     match dict with
       | PurpleL (d, lt, rt) -> Black (d, lt, rt) (* re-color *)
       | PurpleR (d, lt, rt) -> Black (d, lt, rt) (* re-color *)
-      | dict -> dict                             (* depend on sequential matching *)
-*)
+      | Red (d, lt, rt)     -> Red (d, lt, rt)
+      | Black (d, lt, rt)   -> Black (d, lt, rt)
+      | Empty               -> Empty

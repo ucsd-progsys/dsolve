@@ -1,10 +1,7 @@
 qualif FALSE(v):          0 = 1
 qualif COLOR(v):          color v = [0, 1, 2, 3, 4]
 qualif COLORNOTPURPLE(v): color v <= [0, 1, 2]
-
-(*
 qualif WHENPURPLE(v):     (color v <= 2) or (color ~A = 2)
-*)
 
 (*
 
