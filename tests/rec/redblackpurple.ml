@@ -124,18 +124,18 @@ let rec ins1 key d = match d with
       else if key < key1 then
         let l' = ins1 key left in
           begin match l' with
-            | Red _     -> PurpleL (key, l', right)
-            | Black _   -> Red (key, l', right)
-            | Empty     -> Red (key, l', right)
+            | Red _     -> PurpleL (key1, l', right)
+            | Black _   -> Red (key1, l', right)
+            | Empty     -> Red (key1, l', right)
             | PurpleL _ -> assert (0 = 1); assert false
             | PurpleR _ -> assert (0 = 1); assert false
           end
       else
         let r' = ins1 key right in
           begin match r' with
-            | Red _     -> PurpleR (key, left, r')
-            | Black _   -> Red (key, left, r')
-            | Empty     -> Red (key, left, r')
+            | Red _     -> PurpleR (key1, left, r')
+            | Black _   -> Red (key1, left, r')
+            | Empty     -> Red (key1, left, r')
             | PurpleL _ -> assert (0 = 1); assert false
             | PurpleR _ -> assert (0 = 1); assert false
           end
