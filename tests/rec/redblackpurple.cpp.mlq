@@ -7,13 +7,13 @@
 #define NOP(v)  color v <= 2
 #define HINV(v) height v = height e1
 
-
+#define DN e0: 'a, {e1: R z | EBLK(e1)}, {e2: R z | EBLK(e2) and HINV(e2)}
 #define N  e0: 'a, {e1: R z | NOP(e1)}, {e2: R z | NOP(e2) and HINV(e2)}
 #define PL e0: 'a, {e1: R z | RED(e1)}, {e2: R z | EBLK(e2) and HINV(e2)}
 #define PR e0: 'a, {e1: R z | EBLK(e1)}, {e2: R z | RED(e2) and HINV(e2)}
 
-#define RBT R [z: dict . || N || RN || PL || PR]
-#define GBT {v: R [z: dict . || N || RN || PL || PR] | NOP(v)}
+#define RBT R [z: dict . || N || DN || PL || PR]
+#define GBT {v: R [z: dict . || N || DN || PL || PR] | NOP(v)}
 
 measure color =
   | Empty -> 0
@@ -31,10 +31,13 @@ measure height =
   | PurpleL (e, l, r) -> MAX(height l, height r)
   | PurpleR (e, l, r) -> MAX(height l, height r)
 
+(*
 
 val restore_right: e: 'a -> l: GBT -> r: {v: RBT | height v = height l} -> GBT
 val restore_left: e: 'a -> l: RBT -> r: {v: RBT | NOP(v) and height v = height l} -> GBT
 val ins1: key: 'a -> d: GBT -> RBT
+
+*)
 
 val insert: dict: GBT -> key: 'a -> GBT
 
