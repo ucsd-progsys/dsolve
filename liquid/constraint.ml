@@ -478,15 +478,25 @@ let refine_simple s k1 k2 =
   let _ = C.cprintf C.ol_refine "@[%d --> %d@.@]" (List.length q2s) (List.length q2s') in
   List.length q2s' <> List.length q2s
 
+let pfalse = P.Not (P.True)
+
+let falses = [pfalse; P.Atom (P.PInt 0, P.Eq, P.PInt 1)]
+
+let implies_always _ =
+  true
+
 let implies_match env sm r1 =
   let lhsm =
     Bstats.time "close_over_env" 
       (fun () ->
         List.fold_left (fun pm p -> PM.add p true pm) PM.empty 
         ((close_over_env env sm) (F.refinement_conjuncts sm qual_test_expr r1))) () in
-  fun (_,p) -> 
-    let rv = (not !Cf.no_simple_subs) && PM.mem p lhsm in
-    let _ = if rv then incr stat_matches in rv
+    if List.exists (fun p -> PM.mem p lhsm) falses then
+      implies_always
+    else
+      fun (_,p) ->
+        let rv = (not !Cf.no_simple_subs) && (p = P.True || PM.mem p lhsm) in
+        let _ = if rv then incr stat_matches in rv
 
 let implies_tp env g sm r1 = 
   let lhs = 
@@ -495,7 +505,10 @@ let implies_tp env g sm r1 =
     let r1p = Bstats.time "make r1p" (F.refinement_predicate sm qual_test_expr) r1 in
     P.big_and [envp;gp;r1p] in
   let ch = Bstats.time "TP implies" TP.implies lhs in
-  fun (_,p) -> Bstats.time "ch" ch p 
+    if ch pfalse then
+      implies_always
+    else
+      fun (_,p) -> Bstats.time "ch" ch p
 
 let qual_wf sm env subs q =
   refinement_well_formed env sm (F.mk_refinement subs [q] []) qual_test_expr
@@ -508,6 +521,8 @@ let refine sri s c =
     when not (!Cf.no_simple || !Cf.verify_simple) ->
       let _ = incr stat_simple_refines in
       Bstats.time "refine_simple" (refine_simple s k1) k2
+  | SubRef (env,g,r1, (_, F.Qvar k2), _) when sm k2 = [] ->
+      false
   | SubRef (env,g,r1, (sub2s, F.Qvar k2), _)  ->
       let _ = incr stat_sub_refines in
       let qp2s = 
@@ -515,9 +530,15 @@ let refine sri s c =
           (fun q -> (q,F.refinement_predicate sm qual_test_expr (F.mk_refinement sub2s [q] [])))
           (sm k2) in
       let (qp2s1,qp2s') = Bstats.time "match check" (List.partition (implies_match env sm r1)) qp2s in
-      let tpc = Bstats.time "implies_tp" (implies_tp env g sm) r1 in
-      let (qp2s2,_)    = Bstats.time "imp check" (List.partition tpc) qp2s' in
-      let _ = Bstats.time "finish" TP.finish () in
+      let qp2s2 =
+        if qp2s' = [] then
+          []
+        else
+          let tpc = Bstats.time "implies_tp" (implies_tp env g sm) r1 in
+          let (qp2s2,_)    = Bstats.time "imp check" (List.partition tpc) qp2s' in
+          let _ = Bstats.time "finish" TP.finish () in
+            qp2s2
+      in
       let q2s'' = List.map fst (qp2s1 @ qp2s2) in
       let _ = Sol.replace s k2 q2s'' in
       let _ = C.cprintf C.ol_refine "@[%d --> %d@.@]" (List.length qp2s) (List.length q2s'') in
