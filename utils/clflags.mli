@@ -72,6 +72,7 @@ val cache_queries: bool ref
 val psimple: bool ref
 val simpguard : bool ref
 val no_recrefs: bool ref
+val no_recvarrefs: bool ref
 val no_simple_subs: bool ref
 val builtins_file: string option ref
 val less_qualifs: bool ref
