@@ -480,7 +480,7 @@ let refine_simple s k1 k2 =
 
 let pfalse = P.Not (P.True)
 
-let falses = [pfalse; P.Atom (P.PInt 0, P.Eq, P.PInt 1)]
+let falses = [pfalse; P.Atom (P.PInt 0, P.Eq, P.PInt 1); P.Atom (P.PInt 1, P.Eq, P.PInt 0)]
 
 let implies_always _ =
   true
