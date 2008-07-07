@@ -107,9 +107,9 @@ let rec elim_anys p =
     let np = 
       match p.ppat_desc with
       | Ppat_any -> Ppat_var (fresh_name_s ())
-      | Ppat_tuple (pl) -> Ppat_tuple (List.map elim_anys pl)
+      | Ppat_tuple (pl) -> Ppat_tuple (List.map elim_rec pl)
       | Ppat_construct (id, p, b) -> 
-          let p = match p with Some p -> Some (elim_anys p) | None -> None in
+          let p = match p with Some p -> Some (elim_rec p) | None -> None in
             Ppat_construct(id, p, b)
       | p -> p in
     {ppat_desc = np; ppat_loc = p.ppat_loc} in
