@@ -103,15 +103,17 @@ let mk_dum_ident id loc = mk_dummy (mk_ident id) loc
 let mk_ident_loc id loc = {pexp_desc = mk_ident id; pexp_loc = loc}
 
 let rec elim_anys p =
-  let np = 
-    match p.ppat_desc with
-    | Ppat_any -> Ppat_var (fresh_name_s ())
-    | Ppat_tuple (pl) -> Ppat_tuple (List.map elim_anys pl)
-    | Ppat_construct (id, p, b) -> 
-        let p = match p with Some p -> Some (elim_anys p) | None -> None in
-          Ppat_construct(id, p, b)
-    | p -> p in
-  {ppat_desc = np; ppat_loc = p.ppat_loc}
+  let elim_rec p =
+    let np = 
+      match p.ppat_desc with
+      | Ppat_any -> Ppat_var (fresh_name_s ())
+      | Ppat_tuple (pl) -> Ppat_tuple (List.map elim_anys pl)
+      | Ppat_construct (id, p, b) -> 
+          let p = match p with Some p -> Some (elim_anys p) | None -> None in
+            Ppat_construct(id, p, b)
+      | p -> p in
+    {ppat_desc = np; ppat_loc = p.ppat_loc} in
+  if (fun x -> match x.ppat_desc with Ppat_any -> true | _ -> false) p then p else elim_rec p
  
 
 let resolve_in_exp_when f ls =
