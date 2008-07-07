@@ -159,8 +159,8 @@ let rec recbal l d r =
   end 
   else makenode l d r
   *)
-
-  
+*)
+ 
 let rec recbal2 l d r =
   let hl = match l with Empty -> 0 | Node(_,_,_,_,_,h) -> h in
   let hr = match r with Empty -> 0 | Node(_,_,_,_,_,h) -> h in
@@ -229,16 +229,18 @@ let rec recbal2 l d r =
         end
   end 
   else makenode l d r*)
-      
+
 
 let empty = Empty
   
-let is_empty t = 
+(*let is_empty t = 
   match t with
   | Empty -> true
   |_ -> false
+  *)
 
 let singleton d = Node (Empty, 0, d, Empty, 0, 1)
+
 
 
 (*let rec get i t =
@@ -264,6 +266,7 @@ let rec append d t =
   | Node (l, ll, dd, r, lr, h) -> 
       bal l dd (append d r)
       
+      
   
  (* 
 let setappend d0 d i v =
@@ -276,8 +279,8 @@ let setappend d0 d i v =
     done; 
     append d !vr
   end *)
- *)
 
+ 
 let rec leftmost t =
   match t with
     Empty -> let _ = assert (1 = 0) in assert false (*raise Vec_index_out_of_bounds*)
@@ -306,7 +309,8 @@ let merge t1 t2 =
           let d = leftmost t2 in
           bal t1 d (remove_leftmost t2)
           
-(*
+          
+
 (* Concat works also for t1 and t2 of very different heights *)
 let concat t1 t2 =
   match t1 with
@@ -317,7 +321,7 @@ let concat t1 t2 =
       | Node(l', ll', d', r', lr', h') ->
           let d = leftmost t2 in
           recbal2 t1 d (remove_leftmost t2)
-*)
+
 
 let rec pop i t =
   match t with
@@ -342,19 +346,23 @@ let rec remove i t =
 	bal l d (remove (i - cl - 1) r)
       else merge l r 
 
-(*	  
-let rec insert i d = function 
+	  
+let rec insert i d t =
+  match t with
     Empty -> begin
       if i = 0 
       then Node (Empty, 0, d, Empty, 0, 1)
-      else raise Vec_index_out_of_bounds
+      else (*let _ = assert (1 = 0) in*) assert false (*raise Vec_index_out_of_bounds*)
     end
   | Node(l, cl, dd, r, cr, h) -> 
       if i < cl then bal (insert i d l) dd r 
       else if i > cl then bal l dd (insert (i - cl - 1) d r)
       else bal l d (insert 0 dd r)
+      
 
-let rec sub i j v = match v with 
+      
+let rec sub i j v = 
+  match v with 
     Empty -> Empty
   | Node (l, cl, dd, r, cr, _) -> 
       if i >= j then Empty
@@ -369,10 +377,11 @@ let rec sub i j v = match v with
 	  (* dd straddles the interval *)
 	  let ll = sub i cl l in 
 	  let rr = sub 0 (j - cl - 1) r in 
-	  recbal ll dd rr 
+	  recbal2 ll dd rr 
 	end
       end
 
+      (*
 let rec iter f = function
     Empty -> ()
   | Node(l, _, d, r, _, _) ->
