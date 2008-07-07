@@ -276,6 +276,7 @@ let setappend d0 d i v =
     done; 
     append d !vr
   end *)
+ *)
 
 let rec leftmost t =
   match t with
@@ -305,7 +306,7 @@ let merge t1 t2 =
           let d = leftmost t2 in
           bal t1 d (remove_leftmost t2)
           
-
+(*
 (* Concat works also for t1 and t2 of very different heights *)
 let concat t1 t2 =
   match t1 with
@@ -316,7 +317,7 @@ let concat t1 t2 =
       | Node(l', ll', d', r', lr', h') ->
           let d = leftmost t2 in
           recbal2 t1 d (remove_leftmost t2)
-
+*)
 
 let rec pop i t =
   match t with
@@ -330,7 +331,7 @@ let rec pop i t =
 	(e, bal l d v)
       else (d, merge l r)
 
-(*
+
 let rec remove i t =
   match t with
     Empty -> (*let _ = assert (1 = 0) in*) assert false (*raise Vec_index_out_of_bounds*)
@@ -340,7 +341,6 @@ let rec remove i t =
       else if i > cl then 
 	bal l d (remove (i - cl - 1) r)
       else merge l r 
- *)*)     
 
 (*	  
 let rec insert i d = function 

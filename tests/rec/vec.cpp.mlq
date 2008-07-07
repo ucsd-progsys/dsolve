@@ -110,7 +110,7 @@ val append:
   {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
            {e5: int | ISHEIGHT(e0, e3, e5)}) | height v <= height t + 1 and height t >= height t - 1 }
-           
+*)           
 
 val leftmost:
   t: {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
@@ -139,7 +139,7 @@ val merge:
        {e5: int | ISHEIGHT(e0, e3, e5)}) | H(v') <= MAXP(H(t1), H(t2), 1) and H(v') >= MAX(H(t1), H(t2))}
        
 
-
+(*
 val concat:
   t1: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
           R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
@@ -150,7 +150,7 @@ val concat:
   {v': TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
        R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
        {e5: int | ISHEIGHT(e0, e3, e5)}) | H(v') <= MAXP(H(t1), H(t2), 1) and H(v') >= MAX(H(t1), H(t2))}
-
+*)
 
 val pop:
   int ->
@@ -161,17 +161,13 @@ val pop:
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
            {e5: int | ISHEIGHT(e0, e3, e5)}) | height v >= height t - 1 and height v <= height t }
            
-
-(*
 val remove:
   int ->
   t: {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
-           R(e3, z, BALW(0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
+           R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
            {e5: int | ISHEIGHT(e0, e3, e5)}) | (*height v > 0*) true } ->
   {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
            {e5: int | ISHEIGHT(e0, e3, e5)}) | height v >= height t - 1 and height v <= height t }
-           *)
            
-*)
 
