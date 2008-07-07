@@ -139,13 +139,13 @@ and pprint_pattern ppf pat =
           begin
           match e with
           | Some ({ppat_desc = Ppat_tuple el}) ->
-              fprintf ppf "(%a)" pprint_pat_list el
+              fprintf ppf "%s (%a)" id pprint_pat_list el
           | Some ({ppat_desc = Ppat_var v}) ->
-              fprintf ppf "%s" v
+              fprintf ppf "%s %s" id v
           | Some ({ppat_desc = Ppat_any}) ->
-              fprintf ppf "_"
+              fprintf ppf "%s _" id
           | None ->
-              fprintf ppf ""
+              fprintf ppf "%s " id
           | _ ->
               assert false
           end

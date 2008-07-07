@@ -113,7 +113,7 @@ let elim_anys p =
             Ppat_construct(id, p, b)
       | p -> p in
     {ppat_desc = np; ppat_loc = p.ppat_loc} in
-  if (fun x -> match x.ppat_desc with Ppat_any -> true | _ -> false) p then p else elim_rec p
+  if (fun x -> match x.ppat_desc with Ppat_construct (_, Some {ppat_desc = Ppat_any}, _) -> true | _ -> false) p then p else elim_rec p
  
 
 let resolve_in_exp_when f ls =
