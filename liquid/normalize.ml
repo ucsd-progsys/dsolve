@@ -102,8 +102,8 @@ let mk_dummy desc loc = {pexp_desc = desc; pexp_loc = loc}
 let mk_dum_ident id loc = mk_dummy (mk_ident id) loc
 let mk_ident_loc id loc = {pexp_desc = mk_ident id; pexp_loc = loc}
 
-let rec elim_anys p =
-  let elim_rec p =
+let elim_anys p =
+  let rec elim_rec p =
     let np = 
       match p.ppat_desc with
       | Ppat_any -> Ppat_var (fresh_name_s ())
