@@ -5,7 +5,8 @@
 qualif M(v) : v = height ~A
 qualif M(v) : v = length ~A
 qualif GT0(v) : v >= 0
-qualif HGT0(v) : height v >= 0
+qualif HGE0(v) : height v >= 0
+qualif HGT0(v) : height v > 0
 
 qualif Ph(v): v = (height e0 >= height e3 ? height e0 : height e3) + 1
 qualif Ph(v)    : v = (height l >= height r ? height l : height r) + 1
@@ -35,6 +36,9 @@ qualif BALINVAR(v):
 
 qualif Phh(v)   : height v {=, <=} (height [l, ll, lrl, rll] >= height [r, lr, lrr, rlr] ? height [l, ll, lrl, rll] : height [r, lr, lrr, rlr]) + 1 
 qualif Phh(v)   : height v {=, >=} (height [l, ll, lrl, rll] >= height [r, lr, lrr, rlr] ? height [l, ll, lrl, rll] : height [r, lr, lrr, rlr])
+qualif PhhHH(v)   : height v {>=, <=} (height t1 >= height t2 ? height t1 : height t2)
+qualif PhhHH(v)   : height v {>=, <=} (height t1 >= height t2 ? height t1 {< -, + >} 1 : height t2 {< -, + >} 1)
+
  
 (* qualif FALSE(v) : 1 = 0
 qualif HH(v)    : v = ~A

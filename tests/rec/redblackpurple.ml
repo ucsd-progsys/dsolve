@@ -151,3 +151,4 @@ let insert dict key =
       | Red (d, lt, rt)     -> Red (d, lt, rt)
       | Black (d, lt, rt)   -> Black (d, lt, rt)
       | Empty               -> Empty
+

@@ -215,9 +215,6 @@ let rec split_sub_params c tenv env g ps1 ps2 = match (ps1, ps2) with
   | ([], []) -> []
   | _ -> assert false
 
-let rec sub_recrefs c env g rr1 rr2 =
-  C.flap2 (fun rs1 rs2 -> C.flap2 (split_sub_ref c env g) rs1 rs2) rr1 rr2
-
 let resolve_extend_env tenv env f l1 l2 = match (l1, l2) with
   | (Some p, _) | (_, Some p) -> F.env_bind tenv env p f
   | _ -> env
@@ -257,8 +254,8 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       ((lequate_cs env g c F.Covariant f2 f1) @ (lequate_cs env' g c F.Covariant f1' f2'), [])
   | (F.Fvar (_, _, r1), F.Fvar (_, _, r2)) ->
       ([], split_sub_ref c env g r1 r2)
-  | (F.Frec (_, rr1, r1), F.Frec (_, rr2, r2)) ->
-      ([], sub_recrefs c env g rr1 rr2 @ split_sub_ref c env g r1 r2)
+  | (F.Frec _, F.Frec _) ->
+      ([], [])
   | (F.Funknown, F.Funknown) ->
       ([],[]) 
   | (F.Fsum(_, None, cs1, r1), F.Fsum(_, None, cs2, r2)) ->
@@ -266,16 +263,13 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       let subs = sum_subs cs1 cs2 tag in
       (C.flap2 (fun (_, ps1) (_, ps2) -> split_sub_params c tenv env g ps1 ps2) cs1 cs2,
        split_sub_ref c penv g r1 (List.map (app_subs subs) r2))
-  | (F.Fsum(_, Some (_, rr1), _, _), F.Fsum(_, Some (_, rr2), _, _)) ->
-      let (f1, f2) = (F.apply_recref rr1 f1, F.apply_recref rr2 f2) in
-        begin match (f1, f2) with
-          | (F.Fsum(_, _, cs1, r1), F.Fsum(_, _, cs2, r2)) ->
-              let (penv, tag) = bind_tags_pr (None, f1) cs1 r1 env in
-              let subs = sum_subs cs1 cs2 tag in
-                (C.flap2 (fun (_, ps1) (_, ps2) -> split_sub_params c tenv env g ps1 ps2) cs1 cs2,
-                 split_sub_ref c penv g r1 (List.map (app_subs subs) r2))
-          | _ -> assert false
-        end
+  | (F.Fsum(_, Some (_, rr1), cs1, r1), F.Fsum(_, Some (_, rr2), cs2, r2)) ->
+      let (shp1, shp2) = (F.shape f1, F.shape f2) in
+      let (f1, f2) = (F.replace_recvar (F.apply_recref rr1 f1) shp1, F.replace_recvar (F.apply_recref rr2 f2) shp2) in
+      let (penv, tag) = bind_tags_pr (None, f1) cs1 r1 env in
+      let subs = sum_subs cs1 cs2 tag in
+      (lequate_cs env g c F.Covariant f1 f2,
+       split_sub_ref c penv g r1 (List.map (app_subs subs) r2))
   | (F.Fabstract(_, ps1, r1), F.Fabstract(_, ps2, r2)) ->
       (split_sub_params c tenv env g ps1 ps2, split_sub_ref c env g r1 r2)
   | (_,_) -> 
@@ -484,15 +478,25 @@ let refine_simple s k1 k2 =
   let _ = C.cprintf C.ol_refine "@[%d --> %d@.@]" (List.length q2s) (List.length q2s') in
   List.length q2s' <> List.length q2s
 
+let pfalse = P.Not (P.True)
+
+let falses = [pfalse; P.Atom (P.PInt 0, P.Eq, P.PInt 1); P.Atom (P.PInt 1, P.Eq, P.PInt 0)]
+
+let implies_always _ =
+  true
+
 let implies_match env sm r1 =
   let lhsm =
     Bstats.time "close_over_env" 
       (fun () ->
         List.fold_left (fun pm p -> PM.add p true pm) PM.empty 
         ((close_over_env env sm) (F.refinement_conjuncts sm qual_test_expr r1))) () in
-  fun (_,p) -> 
-    let rv = (not !Cf.no_simple_subs) && PM.mem p lhsm in
-    let _ = if rv then incr stat_matches in rv
+    if List.exists (fun p -> PM.mem p lhsm) falses then
+      implies_always
+    else
+      fun (_,p) ->
+        let rv = (not !Cf.no_simple_subs) && (p = P.True || PM.mem p lhsm) in
+        let _ = if rv then incr stat_matches in rv
 
 let implies_tp env g sm r1 = 
   let lhs = 
@@ -501,7 +505,10 @@ let implies_tp env g sm r1 =
     let r1p = Bstats.time "make r1p" (F.refinement_predicate sm qual_test_expr) r1 in
     P.big_and [envp;gp;r1p] in
   let ch = Bstats.time "TP implies" TP.implies lhs in
-  fun (_,p) -> Bstats.time "ch" ch p 
+    if ch pfalse then
+      implies_always
+    else
+      fun (_,p) -> Bstats.time "ch" ch p
 
 let qual_wf sm env subs q =
   refinement_well_formed env sm (F.mk_refinement subs [q] []) qual_test_expr
@@ -514,6 +521,8 @@ let refine sri s c =
     when not (!Cf.no_simple || !Cf.verify_simple) ->
       let _ = incr stat_simple_refines in
       Bstats.time "refine_simple" (refine_simple s k1) k2
+  | SubRef (env,g,r1, (_, F.Qvar k2), _) when sm k2 = [] ->
+      false
   | SubRef (env,g,r1, (sub2s, F.Qvar k2), _)  ->
       let _ = incr stat_sub_refines in
       let qp2s = 
@@ -521,9 +530,15 @@ let refine sri s c =
           (fun q -> (q,F.refinement_predicate sm qual_test_expr (F.mk_refinement sub2s [q] [])))
           (sm k2) in
       let (qp2s1,qp2s') = Bstats.time "match check" (List.partition (implies_match env sm r1)) qp2s in
-      let tpc = Bstats.time "implies_tp" (implies_tp env g sm) r1 in
-      let (qp2s2,_)    = Bstats.time "imp check" (List.partition tpc) qp2s' in
-      let _ = Bstats.time "finish" TP.finish () in
+      let qp2s2 =
+        if qp2s' = [] then
+          []
+        else
+          let tpc = Bstats.time "implies_tp" (implies_tp env g sm) r1 in
+          let (qp2s2,_)    = Bstats.time "imp check" (List.partition tpc) qp2s' in
+          let _ = Bstats.time "finish" TP.finish () in
+            qp2s2
+      in
       let q2s'' = List.map fst (qp2s1 @ qp2s2) in
       let _ = Sol.replace s k2 q2s'' in
       let _ = C.cprintf C.ol_refine "@[%d --> %d@.@]" (List.length qp2s) (List.length q2s'') in
@@ -728,7 +743,7 @@ let solve qs cs =
   let sri = Bstats.time "making ref index" make_ref_index cs in
   let s = Bstats.time "make initial solution" (make_initial_solution (List.combine (strip_origins cs) qs)) allqs in
   let _ = dump_solution s in
-  let _ = dump_solving qs sri s 0  in 
+  let _ = dump_solving allqs sri s 0  in 
   let _ = Bstats.time "solving wfs" (solve_wf sri) s in
   let _ = printf "@[AFTER@ WF@]@." in
   let _ = dump_solving qs sri s 1 in

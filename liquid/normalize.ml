@@ -102,6 +102,20 @@ let mk_dummy desc loc = {pexp_desc = desc; pexp_loc = loc}
 let mk_dum_ident id loc = mk_dummy (mk_ident id) loc
 let mk_ident_loc id loc = {pexp_desc = mk_ident id; pexp_loc = loc}
 
+let elim_anys p =
+  let rec elim_rec p =
+    let np = 
+      match p.ppat_desc with
+      | Ppat_any -> Ppat_var (fresh_name_s ())
+      | Ppat_tuple (pl) -> Ppat_tuple (List.map elim_rec pl)
+      | Ppat_construct (id, p, b) -> 
+          let p = match p with Some p -> Some (elim_rec p) | None -> None in
+            Ppat_construct(id, p, b)
+      | p -> p in
+    {ppat_desc = np; ppat_loc = p.ppat_loc} in
+  if (fun x -> match x.ppat_desc with Ppat_any -> true | _ -> false) p then p else elim_rec p
+ 
+
 let resolve_in_exp_when f ls =
   let (lbl, lex, loc) = List.hd ls in
   match lex with
@@ -222,7 +236,7 @@ let normalize exp =
         let ee = List.concat (List.rev ee) in
           rw_expr (List.fold_left (wrap Nonrecursive) init ee)
      | Pexp_match(e, pel) ->
-        let npel = List.map (fun (p, e) -> (p, norm_out e)) pel in
+        let npel = List.map (fun (p, e) -> (elim_anys p, norm_out e)) pel in
         let ls = norm_in e in
         let (lbl, _, lo) = List.hd ls in
         let init = mk_match (mk_ident_loc lbl lo) npel in
@@ -317,7 +331,7 @@ let normalize exp =
         let (lbl, _, lo) = List.hd ls in
           (fresh_name (), Some (rw_expr (mk_field (mk_ident_loc lbl lo) s)), loc)::ls
      | Pexp_match(e, pel) ->
-         let npel = List.map (fun (p, e) -> (p, norm_out e)) pel in
+         let npel = List.map (fun (p, e) -> (elim_anys p, norm_out e)) pel in
          let ls = norm_in e in
          let (lbl, _, lo) = List.hd ls in
           (fresh_name (), Some (rw_expr (mk_match (mk_ident_loc lbl lo) npel)), loc)::ls

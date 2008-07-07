@@ -713,7 +713,7 @@ let fresh_with_var_fun env freshf t =
         Hashtbl.find tbl t
       else
         let (rp, rr) = mk_recvar env t in
-          Hashtbl.replace tbl t (Frec (rp, rr, empty_refinement));
+          Hashtbl.replace tbl t (Frec (rp, rr, if !Clflags.no_recvarrefs then null_refinement else empty_refinement));
           let res = fresh_rec fm env (rp, rr) level t in
             Hashtbl.replace tbl t res; res
   in flip_frame_levels (map_refinements (place_freshref freshf) (fm t))
