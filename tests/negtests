@@ -1,3 +1,4 @@
+tests/rec/bad-stable_sort2.ml  10 False
 tests/rec/bad-pmrmerge.ml  10 False
 tests/rec/bad-checklist.ml 1  True
 tests/rec/bad-pmrisort.ml  10 False

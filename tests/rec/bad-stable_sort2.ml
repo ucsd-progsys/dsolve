@@ -170,7 +170,7 @@ let stable_sort l =
     | x1 :: x2 :: x3 :: [] ->
        if x1 > x2 then begin
          if x2 > x3 then [x1; x2; x3]
-         else if x1 > x3 then [x1; x3; x2] 
+         else if x1 > x3 then [x3; x1; x2] (* BUG swap 3,1*)
          else [x3; x1; x2]
        end else begin
          if x1 > x3 then [x2; x1; x3]
