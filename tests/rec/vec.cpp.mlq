@@ -37,14 +37,13 @@ val makenode:
        R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
        {e5: int | ISHEIGHT(e0, e3, e5)}) | H(v') = MAXP(H(l), H(r), 1) and L(v') = 1 + L(r) + L(l) }
 
-(*
+
 val create:
   'a ->
   n: {v: int | v >= 0} ->
   {v': TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
        R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
-       {e5: int | ISHEIGHT(e0, e3, e5)}) | L(v') <= n }
-       *)
+       {e5: int | ISHEIGHT(e0, e3, e5)}) | L(v') = n }
 
 
 
@@ -124,6 +123,7 @@ val set:
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
            {e5: int | ISHEIGHT(e0, e3, e5)}) | height v = height t and length v = length t}
            
+           (*
 val setappend:
   'a ->
   'a ->
@@ -133,8 +133,8 @@ val setappend:
            {e5: int | ISHEIGHT(e0, e3, e5)}) | HG0(v)} ->
   {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
-           {e5: int | ISHEIGHT(e0, e3, e5)}) | if length t > i then (height v = height t and length v = length t) else
-                                                                    (height v >= height t and length v = i + 1) }
+           {e5: int | ISHEIGHT(e0, e3, e5)}) | length v = ITE(L(t) > i, L(t), i-1) and H(v) >= H(t)}
+           *)
  
 
 val append:
@@ -154,13 +154,15 @@ val leftmost:
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
            {e5: int | ISHEIGHT(e0, e3, e5)}) | height v > 0} -> 'a
   
+
 val remove_leftmost:
   t: {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
            {e5: int | ISHEIGHT(e0, e3, e5)}) | height v > 0} ->
   {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
-           {e5: int | ISHEIGHT(e0, e3, e5)}) | height v <= height t and height t >= height t - 1 }
+           {e5: int | ISHEIGHT(e0, e3, e5)}) | (H(v) <= H(t) and H(v) >= H(t) - 1) and 
+                                               L(v) = L(t) - 1}
            
 
 
@@ -173,7 +175,8 @@ val merge:
           {e5: int | ISHEIGHT(e0, e3, e5)}) | BALW(t1, v, 2) }  ->
   {v': TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
        R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
-       {e5: int | ISHEIGHT(e0, e3, e5)}) | H(v') <= MAXP(H(t1), H(t2), 1) and H(v') >= MAX(H(t1), H(t2))}
+       {e5: int | ISHEIGHT(e0, e3, e5)}) | (H(v') <= MAXP(H(t1), H(t2), 1) and H(v') >= MAX(H(t1), H(t2))) and
+                                           L(v') = L(t1) + L(t2)}
        
 
 
@@ -186,31 +189,32 @@ val concat:
           {e5: int | ISHEIGHT(e0, e3, e5)}) | BALW(t1, v, 2) }  ->
   {v': TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
        R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
-       {e5: int | ISHEIGHT(e0, e3, e5)}) | H(v') <= MAXP(H(t1), H(t2), 1) and H(v') >= MAX(H(t1), H(t2))}
+       {e5: int | ISHEIGHT(e0, e3, e5)}) | (H(v') <= MAXP(H(t1), H(t2), 1) and H(v') >= MAX(H(t1), H(t2))) and
+                                            L(v') = L(t1) + L(t2)}
 
 
 val pop:
-  int ->
+  i: {v: int | v >= 0} ->
   t: {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
-           {e5: int | ISHEIGHT(e0, e3, e5)}) | (*height v > 0*) true } ->
+           {e5: int | ISHEIGHT(e0, e3, e5)}) | (H(v) > 0 and L(v) < i)} ->
   'a * {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
-           {e5: int | ISHEIGHT(e0, e3, e5)}) | height v >= height t - 1 and height v <= height t }
+           {e5: int | ISHEIGHT(e0, e3, e5)}) | (H(v) >= H(t) - 1 and H(v) <= H(t)) and L(v) = L(t) - 1}
            
 
 val remove:
-  int ->
+  i: {v: int | v >= 0} ->
   t: {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
-           {e5: int | ISHEIGHT(e0, e3, e5)}) | (*height v > 0*) true } ->
+           {e5: int | ISHEIGHT(e0, e3, e5)}) | H(v) > 0 and L(v) < i} ->
   {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
-           {e5: int | ISHEIGHT(e0, e3, e5)}) | height v >= height t - 1 and height v <= height t }
+           {e5: int | ISHEIGHT(e0, e3, e5)}) | (H(v) >= H(t) - 1 and H(v) <= H(t)) and L(v) = L(t) - 1}
            
 
 val insert:
-  int ->
+  i: {v: int | v >= 0} ->
   'a ->
   t: {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},

@@ -35,11 +35,10 @@
    write to the Free Software Foundation, Inc., 59 Temple Place -
    Suite 330, Boston, MA 02111-1307, USA.
  *)
-
 type 'a t =
     Empty
       (* meaning: node of left el, left n.els, element, right el, right n. els, heigth *)
-  | Node of 'a t * int * 'a * 'a t * int * int 
+  | Node of 'a t * int * 'a * 'a t * int * int
 
 (*exception Vec_index_out_of_bounds*)
 
@@ -48,27 +47,28 @@ let height t =
     Empty -> 0
   | Node(_, _, _, _, _, h) -> h
 
-let length t = 
+let length t =
   match t with
-    Empty -> 0 
-  | Node (_, cl, _, _, cr, _) -> 1 + cl + cr 
+    Empty -> 0
+  | Node (_, cl, _, _, cr, _) -> 1 + cl + cr
 
-let ffor s d body = 
+let ffor s d body =
     let rec loop i =
-        let i' = i + 1 in 
-        if i <= d then (body i; loop i') else () 
+        let i' = i + 1 in
+        if i <= d then (body i; loop i') else ()
     in loop s
 
 let makenode l d r =
-  let (hl, cl) = match l with 
-                    Empty -> (0,0) 
-                  | Node(_,lcl,_,_,lcr,h) -> (h, lcl + lcr + 1) in 
-  let (hr, cr) = match r with 
-                    Empty -> (0,0) 
-                  | Node(_,rcl,_,_,rcr,h) -> (h, rcl + rcr + 1) in 
+  let (hl, cl) = match l with
+                    Empty -> (0,0)
+                  | Node(_,lcl,_,_,lcr,h) -> (h, lcl + lcr + 1) in
+  let (hr, cr) = match r with
+                    Empty -> (0,0)
+                  | Node(_,rcl,_,_,rcr,h) -> (h, rcl + rcr + 1) in
   Node(l, cl, d, r, cr, (if hl >= hr then hl + 1 else hr + 1))
 
-(*let rec create d n =
+
+let rec create d n =
     if n = 0 then Empty else
       let ml = n / 2 in 
       let mr = n - ml - 1 in 
@@ -78,7 +78,6 @@ let makenode l d r =
         assert false 
       else
         makenode l d r
-        *)
 
 
 (* bal assumes that l and r are of similar height *)
@@ -273,17 +272,22 @@ let rec append d t =
   | Node (l, ll, dd, r, lr, h) -> 
       bal l dd (append d r)
       
-  
+ (* 
 let setappend d0 d i v =
   let l = length v in 
   if l > i then set i d v 
   else begin
-    let vr = ref v in 
+    let rec app_rec n v =
+      if n = 0 then v else app_rec (n-1) (append d0 v) in 
+    append d (app_rec (i-l-1) v)
+    (*let vr = ref v in 
+    let _ = (fun x -> x) vr in
     let body i =
       vr := append d0 !vr in
-    ffor 1 (i-1) body;
-    append d !vr
+    ffor l (i-1) body;
+    append d !vr*)
   end 
+  *)
 
  
 let rec leftmost t =
@@ -327,10 +331,11 @@ let concat t1 t2 =
           let d = leftmost t2 in
           recbal2 t1 d (remove_leftmost t2)
 
+let show x = x
 
 let rec pop i t =
   match t with
-    Empty -> (*let _ = assert (1 = 0) in*) assert false (*raise Vec_index_out_of_bounds*)
+    Empty -> let _ = show (height t) in let _ = assert (1 = 0) in assert false (*raise Vec_index_out_of_bounds*)
   | Node(l, cl, d, r, cr, h) ->
       if i < cl then 
 	let (e, v) = pop i l in 
