@@ -1,1 +1,3 @@
 qualif INC(v): v >= e0
+qualif EQ(v) : v { * * } ^
+qualif FALSE(v): 0 = 1

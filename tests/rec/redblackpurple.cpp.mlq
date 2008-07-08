@@ -1,16 +1,21 @@
 #define R [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]]
 
-(* Color, balance interfaces *)
+(* Color, balance, BST interfaces *)
 
 #define EBLK(v) color v <= 1
 #define RED(v)  color v = 2
 #define NOP(v)  color v <= 2
 #define HINV(v) height v = height e1
 
-#define DN e0: 'a, {e1: R z | EBLK(e1)}, {e2: R z | EBLK(e2) and HINV(e2)}
-#define N  e0: 'a, {e1: R z | NOP(e1)}, {e2: R z | NOP(e2) and HINV(e2)}
-#define PL e0: 'a, {e1: R z | RED(e1)}, {e2: R z | EBLK(e2) and HINV(e2)}
-#define PR e0: 'a, {e1: R z | EBLK(e1)}, {e2: R z | RED(e2) and HINV(e2)}
+#define LR(e0) [v: v < e0, v: true, v: true]
+#define LN(e0) [[], LR(e0), LR(e0), LR(e0), LR(e0)]
+#define RR(e0) [v: v > e0, v: true, v: true]
+#define RN(e0) [[], RR(e0), RR(e0), RR(e0), RR(e0)]
+
+#define DN e0: 'a, {e1: LN(e0) z | EBLK(e1)}, {e2: RN(e0) z | EBLK(e2) and HINV(e2)}
+#define N  e0: 'a, {e1: LN(e0) z | NOP(e1)}, {e2: RN(e0) z | NOP(e2) and HINV(e2)}
+#define PL e0: 'a, {e1: LN(e0) z | RED(e1)}, {e2: RN(e0) z | EBLK(e2) and HINV(e2)}
+#define PR e0: 'a, {e1: LN(e0) z | EBLK(e1)}, {e2: RN(e0) z | RED(e2) and HINV(e2)}
 
 #define RBT R [z: dict . || N || DN || PL || PR]
 #define GBT {v: R [z: dict . || N || DN || PL || PR] | NOP(v)}
@@ -43,11 +48,6 @@ val insert: dict: GBT -> key: 'a -> GBT
 
 
 (* BST interfaces
-
-#define LR(e0) [v: v < e0, v: true, v: true]
-#define LN(e0) [[], LR(e0), LR(e0), LR(e0), LR(e0)]
-#define RR(e0) [v: v > e0, v: true, v: true]
-#define RN(e0) [[], RR(e0), RR(e0), RR(e0), RR(e0)]
 
 #define BN e0: 'a, e1: LN(e0) z, e2: RN(e0) z
 
