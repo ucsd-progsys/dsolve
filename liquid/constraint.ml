@@ -593,22 +593,11 @@ module CMap = Map.Make(CLe)
 
 let memo = Hashtbl.create 1000
 
-let add_path vars m path = 
-  match Path.ident_name path with
-  | Some name when List.mem name vars ->
-      let rest = try C.StringMap.find name m with Not_found -> [] in C.StringMap.add name (path :: rest) m
-  | _ -> m
-
 let add_path_set vars m path =
   match Path.ident_name path with
   | Some name when NSet.mem name vars ->
       let rest = try C.StringMap.find name m with Not_found -> [] in C.StringMap.add name (path :: rest) m
   | _ -> m
-
-let instantiate_in_env d (qsetl, qseta) q =
-  let uvars = Bstats.time "getting qual vars" Qualifier.vars q in
-  let vm = Bstats.time "building varmap" (List.fold_left (add_path uvars) C.StringMap.empty) d in
-    List.fold_left (fun (ql, qa) q -> (QSet.add q ql, QSet.add q qa)) (qsetl, qseta) (Bstats.time "instantiate_about" (Qualifier.instantiate_about vm) q)
 
 let instantiate_in_env_vm vm qsetl q =
     List.fold_left (fun ql q -> Bstats.time "QS add" (QSet.add q) ql) qsetl (Bstats.time "instantiate_about" (Qualifier.instantiate_about vm) q)
