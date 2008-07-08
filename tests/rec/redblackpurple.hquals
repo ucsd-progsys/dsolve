@@ -10,10 +10,8 @@ qualif INC(v): height v = 1 + height ~A
 qualif EQH(v): height v = height ~A
 qualif BAL(v): height v = height e1
 
-(* BST quals
+(* BST quals *)
 
 qualif FALSE(v) : 1 = 0
 qualif TCOMP(v) : v { >, < } e0
 qualif COMP(v)  : ~A { >, < } v
-
-*)
