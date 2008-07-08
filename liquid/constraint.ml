@@ -476,7 +476,7 @@ let refine_simple s k1 k2 =
   let q2s' = List.filter (fun q -> List.mem q q1s) q2s in
   let _    = Sol.replace s k2 q2s' in
   let _ = C.cprintf C.ol_refine "@[%d --> %d@.@]" (List.length q2s) (List.length q2s') in
-  List.length q2s' <> List.length q2s
+    not (C.same_length q2s' q2s)
 
 let pfalse = P.Not (P.True)
 
@@ -511,7 +511,7 @@ let implies_tp env g sm r1 =
       fun (_,p) -> Bstats.time "ch" ch p
 
 let qual_wf sm env subs q =
-  refinement_well_formed env sm (F.mk_refinement subs [q] []) qual_test_expr
+  Bstats.time "qual_wf" (refinement_well_formed env sm (F.mk_refinement subs [q] [])) qual_test_expr
 
 let refine sri s c =
   let _ = incr stat_refines in
@@ -544,13 +544,13 @@ let refine sri s c =
       let _ = C.cprintf C.ol_refine "@[%d --> %d@.@]" (List.length qp2s) (List.length q2s'') in
       let _ = stat_imp_queries := !stat_imp_queries + (List.length qp2s) in
       let _ = stat_valid_imp_queries := !stat_valid_imp_queries + (List.length q2s'') in
-      (List.length qp2s  <> List.length q2s'')
+        not (C.same_length qp2s q2s'')
   | WFRef (env, (subs, F.Qvar k), _) ->
       let _ = incr stat_wf_refines in
       let qs  = solution_map s k in
       let qs' = List.filter (qual_wf sm env subs) qs in
       let _   = Sol.replace s k qs' in
-      (List.length qs <> List.length qs')
+        not (C.same_length qs qs')
   | _ -> false
 
 
@@ -592,7 +592,8 @@ let add_path_set vars m path =
   | _ -> m
 
 let instantiate_in_env_vm vm qsetl q =
-    List.fold_left (fun ql q -> Bstats.time "QS add" (QSet.add q) ql) qsetl (Bstats.time "instantiate_about" (Qualifier.instantiate_about vm) q)
+  let qs = List.fold_left (fun ql q -> Bstats.time "QS add" (QSet.add q) ql) QSet.empty (Bstats.time "instantiate_about" (Qualifier.instantiate_about vm) q) in
+    QSet.union qsetl qs
 
 let instantiate_quals_in_env qs =
   let aqs = List.fold_left (fun xs x -> List.rev_append (Qualifier.vars x) xs) [] qs in
