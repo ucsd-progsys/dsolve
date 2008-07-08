@@ -26,7 +26,7 @@ open Frame
 
 module P = Predicate
 
-let find_or_fail var env = try Lightenv.find var env with Not_found -> assert false
+let find_or_fail var env = try Lightenv.find var env with Not_found -> Funknown
 
 let abstract_app_shape paths out_shape in_shapes =
   let f i o = 
@@ -121,8 +121,4 @@ let pred_is_well_typed env p =
   in pred_shape_is_bool p
 
 let refinement_well_formed env solution r qual_expr =
-  let pred = refinement_predicate solution qual_expr r in
-  let var_bound v = Lightenv.mem v env in
-  let bound_by_name s = (Lightenv.filterlist (fun n v -> s = Path.name n) env) != [] in
-  let well_scoped = List.for_all var_bound (P.vars pred) && List.for_all bound_by_name (P.funs pred) in
-    well_scoped && pred_is_well_typed env pred
+  pred_is_well_typed env (refinement_predicate solution qual_expr r)
