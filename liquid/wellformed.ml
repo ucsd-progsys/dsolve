@@ -26,8 +26,6 @@ open Frame
 
 module P = Predicate
 
-let find_or_fail var env = try Lightenv.find var env with Not_found -> assert false
-
 let abstract_app_shape paths out_shape in_shapes =
   let f i o = 
     match o with
@@ -64,7 +62,7 @@ let rec app_to_fun funf =
              [] -> f
            | _ -> Funknown)
 
-let get_by_name n env =
+let get_by_name (n, env) =
   let s n' v = n = Path.name n' in
   let cs = Lightenv.filterlist s env in
     match cs with 
@@ -72,25 +70,33 @@ let get_by_name n env =
     | c :: cs -> failwith (Printf.sprintf "too many definitions of %s" n)
     | [] -> assert false (* this is going to break a number of fascinating things in bitv *)
 
+let get_by_name =
+  let tbl = Hashtbl.create 17 in
+    fun n env -> Common.do_memo tbl get_by_name (n, env) (n, env)
+
 let get_app_shape s env =
   try
-    List.assoc s (Lazy.force builtin_fun_app_shapes)
+    Bstats.time "assoc" (List.assoc s) (Lazy.force builtin_fun_app_shapes)
   with Not_found -> 
-    app_to_fun (get_by_name s env) 
+    app_to_fun (Bstats.time "get_by_name" (get_by_name s) env)
+
+exception IllFormed
 
 let pred_is_well_typed env p =
   let rec get_expr_shape = function
   | P.PInt _ -> uInt
-  | P.Var x -> find_or_fail x env
+  | P.Var x -> (try Lightenv.find x env with Not_found -> raise IllFormed)
   | P.FunApp (s, p') -> 
-      let y = (get_app_shape s env) (List.map get_expr_shape p') in
+      let y = ((get_app_shape s) env) (List.map get_expr_shape p') in
         y
   | P.Binop (p1, op, p2) ->
-      let p1_shp = get_expr_shape p1 in
-      let p1_int = same_shape p1_shp uInt in
-      let p2_shp = get_expr_shape p2 in
-      let p2_int = same_shape p2_shp uInt in
-      if p1_int && p2_int then uInt else Funknown
+      if same_shape (get_expr_shape p1) uInt then
+        if same_shape (get_expr_shape p2) uInt then
+          uInt
+        else
+          raise IllFormed
+      else
+        raise IllFormed
   | P.Field (name, r) ->
       begin match get_expr_shape r with
         | Fsum (_, _, [(_, fs)], _) ->
@@ -98,31 +104,39 @@ let pred_is_well_typed env p =
             let is_referenced_field (name2, _, _) = String.compare (Ident.name name) (Ident.name name2) = 0 in
               if List.exists is_referenced_field fs then
                 (match (List.find is_referenced_field fs) with (_, f, _) -> f)
-              else Funknown
-        | f -> Funknown
+              else raise IllFormed
+        | f -> raise IllFormed
       end
   | P.Ite (t, e1, e2) ->
-      let e1_shp = get_expr_shape e1 in
-      let e2_shp = get_expr_shape e2 in
-        if pred_shape_is_bool t && same_shape e1_shp e2_shp 
-        then e1_shp else Funknown
+      if pred_shape_is_bool t then
+        let e1_shp = get_expr_shape e1 in
+          if same_shape e1_shp (get_expr_shape e2) then e1_shp else raise IllFormed
+      else
+        raise IllFormed
   and pred_shape_is_bool = function
   | P.True -> true
   | P.Not p -> pred_shape_is_bool p 
   | P.Or (p1, p2)  
-  | P.And (p1, p2) -> (pred_shape_is_bool p1) && (pred_shape_is_bool p2)
+  | P.And (p1, p2) ->
+      if pred_shape_is_bool p1 then
+        pred_shape_is_bool p2
+      else
+        raise IllFormed
   | P.Atom (p1, rel, p2) -> 
       let p1_shp = get_expr_shape p1 in
       let p2_shp = get_expr_shape p2 in
         ((same_shape p1_shp p2_shp) (*&& not(same_shape p1_shp Funknown)*))
         || ((same_shape p1_shp uBool) && (same_shape p2_shp uInt))
         || ((same_shape p1_shp uInt) && (same_shape p2_shp uBool))
-  | P.Iff (px, q) -> same_shape (get_expr_shape px) uInt && pred_shape_is_bool q
+  | P.Iff (px, q) ->
+      if same_shape (get_expr_shape px) uInt then
+        pred_shape_is_bool q
+      else
+        raise IllFormed
   in pred_shape_is_bool p
 
 let refinement_well_formed env solution r qual_expr =
-  let pred = refinement_predicate solution qual_expr r in
-  let var_bound v = Lightenv.mem v env in
-  let bound_by_name s = (Lightenv.filterlist (fun n v -> s = Path.name n) env) != [] in
-  let well_scoped = List.for_all var_bound (P.vars pred) && List.for_all bound_by_name (P.funs pred) in
-    well_scoped && pred_is_well_typed env pred
+  try
+    Bstats.time "pred_well_typed" (pred_is_well_typed env) (Bstats.time "building refpred" (refinement_predicate solution qual_expr) r)
+  with IllFormed ->
+    false

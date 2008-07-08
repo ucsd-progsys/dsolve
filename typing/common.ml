@@ -374,3 +374,8 @@ let set_cnt f s =
 
 let space ppf =
   F.fprintf ppf "@;<1 0>"
+
+let rec same_length l1 l2 = match l1, l2 with
+  | [], []           -> true
+  | _ :: xs, _ :: ys -> same_length xs ys
+  | _                -> false

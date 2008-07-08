@@ -476,7 +476,7 @@ let refine_simple s k1 k2 =
   let q2s' = List.filter (fun q -> List.mem q q1s) q2s in
   let _    = Sol.replace s k2 q2s' in
   let _ = C.cprintf C.ol_refine "@[%d --> %d@.@]" (List.length q2s) (List.length q2s') in
-  List.length q2s' <> List.length q2s
+    not (C.same_length q2s' q2s)
 
 let pfalse = P.Not (P.True)
 
@@ -511,7 +511,7 @@ let implies_tp env g sm r1 =
       fun (_,p) -> Bstats.time "ch" ch p
 
 let qual_wf sm env subs q =
-  refinement_well_formed env sm (F.mk_refinement subs [q] []) qual_test_expr
+  Bstats.time "qual_wf" (refinement_well_formed env sm (F.mk_refinement subs [q] [])) qual_test_expr
 
 let refine sri s c =
   let _ = incr stat_refines in
@@ -544,13 +544,13 @@ let refine sri s c =
       let _ = C.cprintf C.ol_refine "@[%d --> %d@.@]" (List.length qp2s) (List.length q2s'') in
       let _ = stat_imp_queries := !stat_imp_queries + (List.length qp2s) in
       let _ = stat_valid_imp_queries := !stat_valid_imp_queries + (List.length q2s'') in
-      (List.length qp2s  <> List.length q2s'')
+        not (C.same_length qp2s q2s'')
   | WFRef (env, (subs, F.Qvar k), _) ->
       let _ = incr stat_wf_refines in
       let qs  = solution_map s k in
       let qs' = List.filter (qual_wf sm env subs) qs in
       let _   = Sol.replace s k qs' in
-      (List.length qs <> List.length qs')
+        not (C.same_length qs qs')
   | _ -> false
 
 
@@ -583,21 +583,7 @@ let unsat_constraints sri s =
 module QSet = Set.Make(Qualifier)
 module NSet = Set.Make(String)
 
-module CLe = 
-struct
-    type t = F.t Le.t
-    let compare = Le.setcompare
-end
-
-module CMap = Map.Make(CLe)
-
 let memo = Hashtbl.create 1000
-
-let add_path vars m path = 
-  match Path.ident_name path with
-  | Some name when List.mem name vars ->
-      let rest = try C.StringMap.find name m with Not_found -> [] in C.StringMap.add name (path :: rest) m
-  | _ -> m
 
 let add_path_set vars m path =
   match Path.ident_name path with
@@ -605,25 +591,23 @@ let add_path_set vars m path =
       let rest = try C.StringMap.find name m with Not_found -> [] in C.StringMap.add name (path :: rest) m
   | _ -> m
 
-let instantiate_in_env d (qsetl, qseta) q =
-  let uvars = Bstats.time "getting qual vars" Qualifier.vars q in
-  let vm = Bstats.time "building varmap" (List.fold_left (add_path uvars) C.StringMap.empty) d in
-    List.fold_left (fun (ql, qa) q -> (QSet.add q ql, QSet.add q qa)) (qsetl, qseta) (Bstats.time "instantiate_about" (Qualifier.instantiate_about vm) q)
+let instantiate_in_env_vm vm qsetl q =
+  let qs = List.fold_left (fun ql q -> Bstats.time "QS add" (QSet.add q) ql) QSet.empty (Bstats.time "instantiate_about" (Qualifier.instantiate_about vm) q) in
+    QSet.union qsetl qs
 
-let instantiate_in_env_vm vm (qsetl, qseta) q =
-    List.fold_left (fun (ql, qa) q -> (QSet.add q ql, QSet.add q qa)) (qsetl, qseta) (Bstats.time "instantiate_about" (Qualifier.instantiate_about vm) q)
-
-let instantiate_quals_in_env qs (m, qsets, qsetall) env =
-  let estr = Le.setstring env in
-  try let q = (Hashtbl.find memo estr) in (m, (QSet.elements q) :: qsets, QSet.union q qsetall) with Not_found ->
-    let (q, qsetall) = 
-      let d = Le.domain env in
-      let aqs = List.fold_left (fun xs x -> List.rev_append (Qualifier.vars x) xs) [] qs in
-      let aqs = List.fold_left (fun xs x -> NSet.add x xs) NSet.empty aqs in
-      let vm = List.fold_left (add_path_set aqs) C.StringMap.empty d in
-      Bstats.time "instantiate_in_env" (List.fold_left (instantiate_in_env_vm vm) (QSet.empty, qsetall)) qs in
-      let _ = Hashtbl.add memo estr q in
-      (m, (QSet.elements q) :: qsets, qsetall)
+let instantiate_quals_in_env qs =
+  let aqs = List.fold_left (fun xs x -> List.rev_append (Qualifier.vars x) xs) [] qs in
+  let aqs = List.fold_left (fun xs x -> NSet.add x xs) NSet.empty aqs in
+    fun (qsets, qsetall) env ->
+      let estr = Le.setstring env in
+        try let q = Hashtbl.find memo estr in (q :: qsets, qsetall) with Not_found ->
+          let q =
+            let d = Le.domain env in
+            let vm = List.fold_left (add_path_set aqs) C.StringMap.empty d in
+              Bstats.time "instantiate_in_env" (List.fold_left (instantiate_in_env_vm vm) QSet.empty) qs in
+          let els = QSet.elements q in
+          let _ = Hashtbl.add memo estr els in
+            (els :: qsets, QSet.union q qsetall)
 
 let constraint_env (_, c) =
   (match c with | SubRef (_, _, _, _, _) -> Le.empty | WFRef (e, _, _) -> e)
@@ -631,8 +615,8 @@ let constraint_env (_, c) =
 (* Make copies of all the qualifiers where the free identifiers are replaced
    by the appropriate bound identifiers from all environments. *)
 let instantiate_per_environment cs qs =
-  let (_, qsets, qs) = (List.fold_left (instantiate_quals_in_env qs) (CMap.empty, [], QSet.empty) (List.map constraint_env cs)) in
-  (List.rev qsets, QSet.elements qs)
+  let (qsets, qs) = (List.fold_left (instantiate_quals_in_env qs) ([], QSet.empty) (List.rev_map constraint_env cs)) in
+    (qsets, QSet.elements qs)
 
 (**************************************************************)
 (************************ Initial Solution ********************)
