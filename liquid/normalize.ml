@@ -106,6 +106,7 @@ let elim_anys p =
   let rec elim_rec p =
     let np = 
       match p.ppat_desc with
+      | Ppat_construct (_, Some {ppat_desc = Ppat_any}, _) -> p.ppat_desc
       | Ppat_any -> Ppat_var (fresh_name_s ())
       | Ppat_tuple (pl) -> Ppat_tuple (List.map elim_rec pl)
       | Ppat_construct (id, p, b) -> 
@@ -113,7 +114,7 @@ let elim_anys p =
             Ppat_construct(id, p, b)
       | p -> p in
     {ppat_desc = np; ppat_loc = p.ppat_loc} in
-  if (fun x -> match x.ppat_desc with Ppat_construct (_, Some {ppat_desc = Ppat_any}, _) -> true | _ -> false) p then p else elim_rec p
+  elim_rec p
  
 
 let resolve_in_exp_when f ls =

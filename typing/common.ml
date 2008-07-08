@@ -208,6 +208,11 @@ let maybe_bool = function
 let all_defined xs =
   List.for_all maybe_bool xs
 
+let strip_meas s =
+  try if String.sub s 0 6 = "_meas_" then 
+    String.sub s 6 (String.length s - 6) 
+  else s with Invalid_argument _ -> s
+
 (****************************************************************)
 (************* Output levels ************************************)
 (****************************************************************)

@@ -89,7 +89,7 @@ let rec pprint_pexpr ppf = function
   | Var x ->
       fprintf ppf "%s" (Common.path_name x)
   | FunApp (f, pexp) ->
-      fprintf ppf "@[(%s@ %a)@]" f (Common.pprint_list " " pprint_pexpr) pexp
+      fprintf ppf "@[(%s@ %a)@]" (C.strip_meas f) (Common.pprint_list " " pprint_pexpr) pexp
   | Binop (p, op, q) ->
       let opstr = match op with
         | Plus -> "+"
