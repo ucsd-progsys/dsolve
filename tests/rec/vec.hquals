@@ -8,6 +8,15 @@ qualif GT0(v) : v >= 0
 qualif HGE0(v) : height v >= 0
 qualif HGT0(v) : height v > 0
 
+qualif LVAR(v) : length v { * * } ~A 
+qualif LVARV(v) : v { * * } length ~A
+qualif LVARVV(v) : length v { * * } length ~A
+qualif LCONST(v) : length v { * * } [0, 1]
+qualif LPLUSONE(v) : length v { * * } length t + 1
+qualif LLL(v) : if length v 
+
+qualif LSUM(v) : length v = 1 + length l + length r
+
 qualif Ph(v): v = (height e0 >= height e3 ? height e0 : height e3) + 1
 qualif Ph(v)    : v = (height l >= height r ? height l : height r) + 1
 

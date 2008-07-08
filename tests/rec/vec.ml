@@ -46,12 +46,18 @@ type 'a t =
 let height t =
   match t with
     Empty -> 0
-  | Node(_,_,_,_,_,h) -> h
+  | Node(_, _, _, _, _, h) -> h
 
 let length t = 
   match t with
     Empty -> 0 
   | Node (_, cl, _, _, cr, _) -> 1 + cl + cr 
+
+let ffor s d body = 
+    let rec loop i =
+        let i' = i + 1 in 
+        if i <= d then (body i; loop i') else () 
+    in loop s
 
 let makenode l d r =
   let (hl, cl) = match l with 
@@ -62,15 +68,15 @@ let makenode l d r =
                   | Node(_,rcl,_,_,rcr,h) -> (h, rcl + rcr + 1) in 
   Node(l, cl, d, r, cr, (if hl >= hr then hl + 1 else hr + 1))
 
-  (*
-let rec create d n =
+(*let rec create d n =
     if n = 0 then Empty else
       let ml = n / 2 in 
       let mr = n - ml - 1 in 
       let l = create d ml in
       let r = create d mr in (* defer this particular property to runtime *)
-      if height l > height r + 2 or height l < height r - 2 then
-        assert false else
+      if height l >= height r + 3 or height l <= height r - 3 then
+        assert false 
+      else
         makenode l d r
         *)
 
@@ -187,9 +193,9 @@ let rec recbal2 l d r =
           match rl with
             Empty -> assert false (*invalid_arg "Vec.bal"*)
           | Node(rll, lrll, rld, rlr, lrlr, h) ->
-              if height rll >= height rlr then (*this is the bad case*)
-                makenode (recbal2 l d rll) rld (makenode rll rd rr)
-              else
+              if height rll >= height rlr then 
+                makenode (recbal2 l d rll) rld (makenode rlr rd rr)
+              else                            (*this is the bad case*)
                 makenode (recbal2 l d rlr) rld (makenode rll rd rr)
         end
   end 
@@ -243,7 +249,7 @@ let singleton d = Node (Empty, 0, d, Empty, 0, 1)
 
 
 
-(*let rec get i t =
+let rec get i t =
   match t with
     Empty -> let _ = assert (1 = 0) in assert false (*raise Vec_index_out_of_bounds*)
   | Node (l, cl, d, r, cr, _) -> 
@@ -251,13 +257,14 @@ let singleton d = Node (Empty, 0, d, Empty, 0, 1)
       else if i > cl then get (i - cl - 1) r 
       else d 
 
-let rec set i d = function 
-    Empty -> raise Vec_index_out_of_bounds
+      
+let rec set i d t =
+  match t with
+    Empty -> let _ = assert (1 = 0) in assert false (*raise Vec_index_out_of_bounds*)
   | Node (l, cl, dd, r, cr, _) -> 
-      if i < cl then makenode (set i d l) dd r  
-      else if i > cl then makenode l dd (set (i - cl - 1) d r)
+      if i < cl then (*makenode (set i d l) dd r*) assert false  
+      else if i > cl then (*makenode l dd (set (i - cl - 1) d r)*) assert false
       else makenode l d r 
-      *)
 
 
 let rec append d t =
@@ -266,19 +273,17 @@ let rec append d t =
   | Node (l, ll, dd, r, lr, h) -> 
       bal l dd (append d r)
       
-      
   
- (* 
 let setappend d0 d i v =
   let l = length v in 
   if l > i then set i d v 
   else begin
     let vr = ref v in 
-    for j = l to i - 1 do 
-      vr := append d0 !vr 
-    done; 
+    let body i =
+      vr := append d0 !vr in
+    ffor 1 (i-1) body;
     append d !vr
-  end *)
+  end 
 
  
 let rec leftmost t =
@@ -584,3 +589,4 @@ if false then begin
   print_vec (setappend (-2) (-1) 16 (sub 4 12 v))
 
 end;;*)
+      
