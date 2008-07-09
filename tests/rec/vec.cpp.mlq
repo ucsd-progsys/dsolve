@@ -197,7 +197,7 @@ val pop:
   i: {v: int | v >= 0} ->
   t: {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
-           {e5: int | ISHEIGHT(e0, e3, e5)}) | (H(v) > 0 and L(v) < i)} ->
+           {e5: int | ISHEIGHT(e0, e3, e5)}) | (H(v) > 0 and L(v) > i)} ->
   'a * {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
            {e5: int | ISHEIGHT(e0, e3, e5)}) | (H(v) >= H(t) - 1 and H(v) <= H(t)) and L(v) = L(t) - 1}
@@ -207,7 +207,7 @@ val remove:
   i: {v: int | v >= 0} ->
   t: {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
-           {e5: int | ISHEIGHT(e0, e3, e5)}) | H(v) > 0 and L(v) < i} ->
+           {e5: int | ISHEIGHT(e0, e3, e5)}) | H(v) > 0 and L(v) > i} ->
   {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
            {e5: int | ISHEIGHT(e0, e3, e5)}) | (H(v) >= H(t) - 1 and H(v) <= H(t)) and L(v) = L(t) - 1}
@@ -218,18 +218,18 @@ val insert:
   'a ->
   t: {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
-           {e5: int | ISHEIGHT(e0, e3, e5)}) | true } ->
+           {e5: int | ISHEIGHT(e0, e3, e5)}) | L(v) >= i } ->
   {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
-           {e5: int | ISHEIGHT(e0, e3, e5)}) | height v <= height t + 1 and height v >= height t }
+           {e5: int | ISHEIGHT(e0, e3, e5)}) | (H(v) <= H(t) + 1 and H(v) >= H(t)) and L(v) = L(t) + 1}
  
 val sub:
-  int ->
-  int ->
+  i: {v: int | v >= 0 } ->
+  j: {v: int | v >= i } ->
   t: {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
-           {e5: int | ISHEIGHT(e0, e3, e5)}) | true } ->
+           {e5: int | ISHEIGHT(e0, e3, e5)}) | L(v) >= 0 and L(v) > j } ->
   {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
-           {e5: int | ISHEIGHT(e0, e3, e5)}) | height v <= height t and height v >= 0 }
+           {e5: int | ISHEIGHT(e0, e3, e5)}) | (H(v) <= H(t) and HG0(v)) and L(v) = j-i }
  

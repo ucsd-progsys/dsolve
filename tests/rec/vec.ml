@@ -331,11 +331,9 @@ let concat t1 t2 =
           let d = leftmost t2 in
           recbal2 t1 d (remove_leftmost t2)
 
-let show x = x
-
 let rec pop i t =
   match t with
-    Empty -> let _ = show (height t) in let _ = assert (1 = 0) in assert false (*raise Vec_index_out_of_bounds*)
+    Empty -> let _ = assert (1 = 0) in assert false (*raise Vec_index_out_of_bounds*)
   | Node(l, cl, d, r, cr, h) ->
       if i < cl then 
 	let (e, v) = pop i l in 
@@ -348,7 +346,7 @@ let rec pop i t =
 
 let rec remove i t =
   match t with
-    Empty -> (*let _ = assert (1 = 0) in*) assert false (*raise Vec_index_out_of_bounds*)
+    Empty -> let _ = assert (1 = 0) in assert false (*raise Vec_index_out_of_bounds*)
   | Node(l, cl, d, r, cr, h) ->
       if i < cl then 
 	bal (remove i l) d r 
@@ -362,7 +360,7 @@ let rec insert i d t =
     Empty -> begin
       if i = 0 
       then Node (Empty, 0, d, Empty, 0, 1)
-      else (*let _ = assert (1 = 0) in*) assert false (*raise Vec_index_out_of_bounds*)
+      else let _ = assert (1 = 0) in assert false (*raise Vec_index_out_of_bounds*)
     end
   | Node(l, cl, dd, r, cr, h) -> 
       if i < cl then bal (insert i d l) dd r 
