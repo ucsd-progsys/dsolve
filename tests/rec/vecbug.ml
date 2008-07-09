@@ -128,39 +128,6 @@ let rec recbal l d r =
   end 
   else makenode l d r 
 
-let rec createh d n =
-  if n = 1 then create d n else
-    makenode (createh d (n-1)) d (createh d (n-1))
-
-let rec balanced t =
-  match t with
-  | Empty -> true
-  | Node(l, _, _, r, _, _) ->
-      if (height l <= height r - 3) || (height l >= height r + 3) then
-        false
-      else (balanced r && balanced l)
-
-let bs t n =
-  balanced t && height t = n
-
-let check k =
-    let t15 = createh 0 k in
-    let t25 = createh 0 (k + 4) in
-    let t23 = createh 0 (k + 2) in
-    let t24 = createh 0 (k + 3) in
-    let t29 = createh 0 (k + 8) in
-    let t28 = createh 0 (k + 7) in
-    let t26 = makenode t25 0 t23 in
-    let t27 = makenode t26 0 t24 in
-    let t30 = makenode t27 0 t29 in
-    let t31 = makenode t30 0 t28 in
-    let unbal = recbal t15 0 t31 in 
-    let _ = assert (bs t15 k) in
-    let _ = assert (balanced t31) in
-    let _ = assert (balanced t15) in
-    let _ = assert (balanced unbal) in
-    ()
-      
 let empty = Empty
   
 let is_empty = function Empty -> true | _ -> false
@@ -224,7 +191,9 @@ let concat t1 t2 =
   | (_, _) ->
       let d = leftmost t2 in
       recbal t1 d (remove_leftmost t2)
-	
+
+
+
 let rec pop i = function
     Empty -> raise Vec_index_out_of_bounds
   | Node(l, cl, d, r, cr, h) ->
@@ -256,6 +225,76 @@ let rec insert i d = function
       if i < cl then bal (insert i d l) dd r 
       else if i > cl then bal l dd (insert (i - cl - 1) d r)
       else bal l d (insert 0 dd r)
+
+let comb t1 t2 = concat t1 (insert 0 0 t2)
+
+let rec pow n = if n = 0 then 1 else 2 * pow (n-1)
+
+let createh n = create 0 (pow (n-1))
+
+let left = function Empty -> assert false | Node(l, _, _, _, _, _) -> l
+
+let right = function Empty -> assert false | Node (_, _, _, r, _, _) -> r
+
+let rec createh2 d n =
+  if n = 1 then create d n else
+    makenode (createh2 d (n-1)) d (createh2 d (n-1))
+
+let rec balanced t =
+  match t with
+  | Empty -> true
+  | Node(l, _, _, r, _, _) ->
+      if (height l <= height r - 3) || (height l >= height r + 3) then
+        false
+      else (balanced r && balanced l)
+
+let bs t n =
+  balanced t && height t = n
+
+let check2 k =
+    let t15 = createh2 0 k in
+    let t25 = createh2 0 (k + 4) in
+    let t23 = createh2 0 (k + 2) in
+    let t24 = createh2 0 (k + 3) in
+    let t29 = createh2 0 (k + 8) in
+    let t28 = createh2 0 (k + 7) in
+    let t26 = makenode t25 0 t23 in
+    let t27 = makenode t26 0 t24 in
+    let t30 = makenode t27 0 t29 in
+    let t31 = makenode t30 0 t28 in
+    let unbal = recbal t15 0 t31 in 
+    let _ = assert (bs t15 k) in
+    let _ = assert (balanced t31) in
+    let _ = assert (balanced t15) in
+    (*let _ = assert (balanced unbal) in*)
+    unbal
+
+
+
+let check k =
+    let t3 = createh 3 in
+    let t5 = createh 5 in
+    let t6 = comb t5 t3 in
+    let _ = assert (bs t6 6 && bs (left t6) 5 && bs (right t6) 3) in
+    let t4 = createh 4 in
+    let t7 = comb t6 t4 in
+    let _ = assert (bs t7 7 && bs (left t7) 6 && bs (right t7) 4) in
+    let t9 = createh 9 in
+    let t10 = comb t7 t9 in
+    let _ = assert (bs t10 10 && bs (left t10) 7 && bs (right t10) 9) in
+    let t8 = createh 8 in
+    let t11 = comb t10 t8 in
+    let _ = assert (bs t11 11 && bs (left t11) 10 && bs (right t11) 8) in
+    let t1 = singleton 0 in
+    let unbal = comb t1 (insert 0 1 t11) in
+    let _ = assert (balanced unbal) in
+    (*let _ = assert (bs t11 11 && bs (left t11) 10 && bs (right t11) 8) in
+    let _ = assert (bs t10 10 && bs (left t10) 7 && bs (right t10) 9) in
+    let _ = assert (bs t7 7 && bs (left t7) 6 && bs (right t7) 4) in
+    let _ = assert (bs t6 6 && bs (left t6) 5 && bs (right t6) 3) in*)
+    () 
+     
+
 
 let rec sub i j v = match v with 
     Empty -> Empty
