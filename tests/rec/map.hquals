@@ -1,9 +1,9 @@
 qualif GT0(v) : v >= 0
 qualif FALSE(v) : 1 = 0
 qualif HH(v)    : v = ~A
-(*qualif TCOMP(v) : e0 { * * } v*) (* BST *)
-(*qualif COMP(v)  : ~A { * * } v*) (* BST *)
-(*qualif INTLIT(v): ^ { * * } v*) (* BST *) 
+qualif TCOMP(v) : v { * * } e0 (* BST *)
+qualif COMP(v)  : ~A { * * } v (* BST *)
+qualif INTLIT(v): ^ { * * } v (* BST *) 
 
 qualif HGT0(v) : height v >= 0
 

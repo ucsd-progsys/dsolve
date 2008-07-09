@@ -66,20 +66,7 @@ let rec add x data t =
           bal v d (add x data l) r
         else
           bal v d l (add x data r)
-(*
-let rec checker = function
-  | Empty -> ()
-  | Node (v, d, l, r, h) ->
-      let _ = match l with Empty -> () | Node (v',d',l',r',h') -> assert (v' <= v) in
-      let _ = match r with Empty -> () | Node (v',d',l',r',h') -> assert (v' >= v) in
-      let _ = checker l; checker r in ()
 
-let test_add x d x' d' x'' d'' =
-  let z = add x d Empty in
-  let o = add x' d' z in
-  let t = add x'' d'' o in
-    checker t
-*)
 let rec remove_min_binding t = match t with
     Empty -> assert false
   | Node(x, d, l, r, h) ->
@@ -110,6 +97,7 @@ let rec remove x t = match t with
         bal v d (remove x l) r
       else
         bal v d l (remove x r)
+
 (*
 let test_remove x d x' d' =
   let z = add x d Empty in
