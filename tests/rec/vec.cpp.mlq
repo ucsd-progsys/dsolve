@@ -10,8 +10,7 @@
 #define MAXP(x, y, n) ITE(x >= y, x, y) + n
 #define ISHEIGHT(e2, e3, v) ((v = MAXP(H(e2), H(e3), 1)) and v >= 0)
 
-#define ISLEN(v, e) (v = L(e) and v >= 0)
-#define RINVAR(v, e1) (v >= e1 - 1 and v <= e1)
+#define ISLEN(v, e) (v = length e and v >= 0)
 
 #define HG0(v) (H(v) >= 0)
 #define BALW(e2, v, n) (H(v) <= H(e2) + n and H(v) >= H(e2) - n)
@@ -28,42 +27,40 @@ measure length =
 
 val makenode:
   l: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
-          R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3) and RINVAR(e4, e1)},
+          R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
           {e5: int | ISHEIGHT(e0, e3, e5)}) ->
   'a ->
   r: {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
-              R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3) and RINVAR(e4, e1)},
+              R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
               {e5: int | ISHEIGHT(e0, e3, e5)}) | BALW(l, v, 2) } ->
   {v': TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
        R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
        {e5: int | ISHEIGHT(e0, e3, e5)}) | H(v') = MAXP(H(l), H(r), 1) and L(v') = 1 + L(r) + L(l) }
-       
 
-(*
+
 val create:
   'a ->
   n: {v: int | v >= 0} ->
   {v': TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
-       R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3) and RINVAR(e4, e1)},
+       R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
        {e5: int | ISHEIGHT(e0, e3, e5)}) | L(v') = n }
-       *)
 
 
 
 val bal:
   l: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
-          R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3) and RINVAR(e4, e1)},
+          R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
           {e5: int | ISHEIGHT(e0, e3, e5)}) ->
   'a ->
   r: {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
-              R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3) and RINVAR(e4, e1)},
+              R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
               {e5: int | ISHEIGHT(e0, e3, e5)}) | BALW(l, v, 3) } ->
   {v': TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
-       R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3) and RINVAR(e4, e1)},
+       R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
        {e5: int | ISHEIGHT(e0, e3, e5)}) | (H(v') <= MAXP(H(l), H(r), 1) and
                                            H(v') >= MAX(H(l), H(r)) + ITE(BALW(l, r, 2), 1, 0)) and
                                            L(v') = 1 + L(l) + L(r) }
-(*
+
 (*
 val recbal:
   l: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
@@ -154,16 +151,16 @@ val append:
 
 val leftmost:
   t: {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
-           R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3) and RINVAR(e4, e1)},
+           R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
            {e5: int | ISHEIGHT(e0, e3, e5)}) | height v > 0} -> 'a
   
 
 val remove_leftmost:
   t: {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
-           R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3) and RINVAR(e4, e1)},
+           R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
            {e5: int | ISHEIGHT(e0, e3, e5)}) | height v > 0} ->
   {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
-           R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3) and RINVAR(e4, e1)},
+           R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
            {e5: int | ISHEIGHT(e0, e3, e5)}) | (H(v) <= H(t) and H(v) >= H(t) - 1) and 
                                                L(v) = L(t) - 1}
            
@@ -171,13 +168,13 @@ val remove_leftmost:
 
 val merge:
   t1: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
-          R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3) and RINVAR(e4, e1)},
+          R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
           {e5: int | ISHEIGHT(e0, e3, e5)}) ->
   t2: {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
-          R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3) and RINVAR(e4, e1)},
+          R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
           {e5: int | ISHEIGHT(e0, e3, e5)}) | BALW(t1, v, 2) }  ->
   {v': TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
-       R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3) and RINVAR(e4, e1)},
+       R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
        {e5: int | ISHEIGHT(e0, e3, e5)}) | (H(v') <= MAXP(H(t1), H(t2), 1) and H(v') >= MAX(H(t1), H(t2))) and
                                            L(v') = L(t1) + L(t2)}
        
@@ -235,4 +232,4 @@ val sub:
   {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
            {e5: int | ISHEIGHT(e0, e3, e5)}) | height v <= height t and height v >= 0 }
-*) 
+ 

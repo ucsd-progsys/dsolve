@@ -4,9 +4,6 @@
 
 qualif M(v) : v = height ~A
 qualif M(v) : v = length ~A
-qualif RINVAR(v) : v >= e1 - 1
-qualif RINVAR(v) : v <= e1
-qualif RINVAR(v) : length v >= length l - 1
 qualif G0(v) : v { >, >= } 0
 qualif HG0(v) : height v { >, >= } 0
 

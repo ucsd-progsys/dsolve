@@ -52,6 +52,12 @@ let length t =
     Empty -> 0
   | Node (_, cl, _, _, cr, _) -> 1 + cl + cr
 
+let ffor s d body =
+    let rec loop i =
+        let i' = i + 1 in
+        if i <= d then (body i; loop i') else ()
+    in loop s
+
 let makenode l d r =
   let (hl, cl) = match l with
                     Empty -> (0,0)
@@ -61,7 +67,7 @@ let makenode l d r =
                   | Node(_,rcl,_,_,rcr,h) -> (h, rcl + rcr + 1) in
   Node(l, cl, d, r, cr, (if hl >= hr then hl + 1 else hr + 1))
 
-  (*
+
 let rec create d n =
     if n = 0 then Empty else
       let ml = n / 2 in 
@@ -72,7 +78,6 @@ let rec create d n =
         assert false 
       else
         makenode l d r
-*)
 
 
 (* bal assumes that l and r are of similar height *)
@@ -111,7 +116,6 @@ let bal l d r =
         end
   end 
   else makenode l d r
-  (*
 (*
   (* recbal as written did not balance. two "fixes" below. the first probably doesn't terminate
    * (but it does typecheck!). the second doesn't preserve the order property. *)
@@ -337,8 +341,8 @@ let rec pop i t =
 	let (e, v) = pop i l in 
 	(e, bal v d r)
       else if i > cl then 
-	(*let (e, v) = pop (i - cl - 1) r in 
-	(e, bal l d v)*) assert false
+	let (e, v) = pop (i - cl - 1) r in 
+	(e, bal l d v)
       else (d, merge l r)
 
 
@@ -590,4 +594,4 @@ if false then begin
   print_vec (setappend (-2) (-1) 16 (sub 4 12 v))
 
 end;;*)
-     *) 
+      
