@@ -1,3 +1,2 @@
-qualif G(v): v >= e0
-qualif L(v): v <= e0
-qualif EQ(v) : v { * * } ~A
+qualif G(v): v { >=, <= } e0
+qualif EQ(v) : v { >=, <= } ~A

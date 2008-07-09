@@ -1,9 +1,5 @@
-qualif FALSE(_V): 1 = 0
-qualif COMP(v): e0 <= v
-qualif COMP(v): e0 >= v
-qualif EQ(v) :  ~A <= v
-qualif EQ(v) :  ~A >= v
-
+qualif COMP(v): e0 { <=, >= } v
+qualif EQ(v) :  ~A { <=, >= } v
 
 (* 
 qualif B(v) : v { * * }  [0, 1, 2, 3]

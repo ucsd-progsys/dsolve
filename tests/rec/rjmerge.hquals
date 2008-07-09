@@ -1,21 +1,6 @@
-qualif COMP(v): e0 { * * } v
+qualif COMP(v): e0 { >=, <= } v
 qualif LEN(v): v = len ~A
-qualif FALSE(_V): 1 = 0
-
 qualif D(v): len v = len ~A 
-
 qualif E(v): len v = len ~A + len ~B
-
-qualif B(v) : len v = [0, 1, 2, 3]
-
-
 qualif E(v): len v + len e0 = len ~A
-
-
-qualif F(v): len v = len ~A + len ~B + 1
-
-
-
-qualif C(v): len v = 1 + len ~A
-
-qualif EQ(v) : ~A { * * } v
+qualif EQ(v) : ~A { >=, <= } v
