@@ -1,8 +1,10 @@
 (* Color quals *)
 qualif FALSE(v):          0 = 1
-qualif COLOR(v):          color v = [0, 1, 2, 3, 4]
+qualif COLOR(v):          color v = [0, 1, 2, 3]
 qualif COLORNOTPURPLE(v): color v <= [0, 1, 2]
 qualif WHENPURPLE(v):     (color v <= 2) or (color ~A = 2)
+qualif MAYBERED(v):       color v <= 1 or color e1 <= 1
+qualif MAYBERED(v):       color v = 2 or color e1 = 2
 
 (* Balance quals *)
 

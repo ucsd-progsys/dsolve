@@ -1,31 +1,30 @@
-#define R [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]]
+#define R [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]]
 
 (* Color, balance, BST interfaces *)
 
 #define EBLK(v) color v <= 1
 #define RED(v)  color v = 2
 #define NOP(v)  color v <= 2
+#define MRED(v) (EBLK(v) or EBLK(e1)) and (RED(v) or RED(e1))
 #define HINV(v) height v = height e1
 
 #define LR(e0) [v: v < e0, v: true, v: true]
-#define LN(e0) [[], LR(e0), LR(e0), LR(e0), LR(e0)]
+#define LN(e0) [[], LR(e0), LR(e0), LR(e0)]
 #define RR(e0) [v: v > e0, v: true, v: true]
-#define RN(e0) [[], RR(e0), RR(e0), RR(e0), RR(e0)]
+#define RN(e0) [[], RR(e0), RR(e0), RR(e0)]
 
 #define DN e0: 'a, {e1: LN(e0) z | EBLK(e1)}, {e2: RN(e0) z | EBLK(e2) and HINV(e2)}
 #define N  e0: 'a, {e1: LN(e0) z | NOP(e1)}, {e2: RN(e0) z | NOP(e2) and HINV(e2)}
-#define PL e0: 'a, {e1: LN(e0) z | RED(e1)}, {e2: RN(e0) z | EBLK(e2) and HINV(e2)}
-#define PR e0: 'a, {e1: LN(e0) z | EBLK(e1)}, {e2: RN(e0) z | RED(e2) and HINV(e2)}
+#define PN e0: 'a, {e1: LN(e0) z | NOP(e1)}, {e2: RN(e0) z | NOP(e2) and ((MRED(e2)) and HINV(e2))}
 
-#define RBT R [z: dict . || N || DN || PL || PR]
-#define GBT {v: R [z: dict . || N || DN || PL || PR] | NOP(v)}
+#define RBT R [z: dict . || N || DN || PN]
+#define GBT {v: R [z: dict . || N || DN || PN] | NOP(v)}
 
 measure color =
   | Empty -> 0
   | Black (a, b, c) -> 1
   | Red (a, b, c) -> 2
-  | PurpleL (a, b, c) -> 3
-  | PurpleR (a, b, c) -> 4
+  | Purple (a, b, c) -> 3
 
 #define MAX(a, b) (a > b ? a : b)
 
@@ -33,8 +32,7 @@ measure height =
   | Empty             -> 0
   | Red (e, l, r)     -> MAX(height l, height r)
   | Black (e, l, r)   -> MAX(height l, height r) + 1
-  | PurpleL (e, l, r) -> MAX(height l, height r)
-  | PurpleR (e, l, r) -> MAX(height l, height r)
+  | Purple (e, l, r) -> MAX(height l, height r)
 
 (*
 
@@ -45,7 +43,6 @@ val ins1: key: 'a -> d: GBT -> RBT
 *)
 
 val insert: dict: GBT -> key: 'a -> GBT
-
 
 (* BST interfaces
 
