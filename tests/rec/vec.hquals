@@ -39,7 +39,7 @@ qualif H(v)(A: 'a t): height v { * * } height ~A
 qualif H(v)     : height v { * * } height e0
 
 qualif BALINVAR(v):
-   height v { >=, <= } (height l >= height r ? height l : height r) {< +, - >} 1
+   height v { >=, <= } (height l >= height r ? height l : height r) {< +, - >} [1, 2]
 qualif BALINVAR(v):
    height v >= (height l <= height r + 2 and height l >= height r - 2 ? (height l >= height r ? height l : height r) + 1 : 0)
 qualif BALINVAR(v):

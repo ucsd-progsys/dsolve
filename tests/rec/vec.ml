@@ -258,10 +258,10 @@ let concat t1 t2 =
       match t2 with
       | Empty -> t1
       | Node(_, _, _, _, _, _) ->
-          (*let d = leftmost t2 in
-          recbal t1 d (remove_leftmost t2)*) assert false
+          let d = leftmost t2 in
+          recbal t1 d (remove_leftmost t2)
 
-(*
+
 let rec pop i t =
   match t with
     Empty -> let _ = assert (1 = 0) in assert false (*raise Vec_index_out_of_bounds*)
@@ -298,7 +298,7 @@ let rec insert i d t =
       else if i > cl then bal l dd (insert (i - cl - 1) d r)
       else bal l d (insert 0 dd r)
       
-
+(*
       
 (*let rec sub i j v = 
   match v with 

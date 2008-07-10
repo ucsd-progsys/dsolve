@@ -50,7 +50,6 @@ val is_empty: t: UGDTREE -> {v: bool | v = (H(t) = 0 or L(t) = 0 ? 1: 0)}
 
 val singleton: 'a -> RGDTREE(v, H(v) = 1 and L(v) = 1)
 
-
 val get: i: {v: int | v >= 0} -> t: RGDTREE(v, H(v) > 0 and L(v) > i) -> 'a
 
 val set: i: {v: int | v >= 0} -> 'a -> t: RGDTREE(v, H(v) > 0 and L(v) > i) -> RGDTREE(v, H(v) = H(t) and L(v) = L(t))
@@ -83,9 +82,9 @@ val merge: t1: UGDTREE -> t2: RGDTREE(v, H(v) >= H(t1) - 2 and H(v) <= H(t1) + 3
   RGDTREE(v, HBTWN(v, MAX(H(t1), H(t2)), MAXP(H(t1), H(t2), 1)) and LSUM(v, t1, t2))
 
 
-val concat: t1: UGDTREE -> t2: UGDTREE -> RGDTREE(v, HBTWN(v, MAXP(H(t1), H(t2), 0-1), MAXP(H(t1), H(t2), 1)) and LSUM(v, t1, t2))
+val concat: t1: UGDTREE -> t2: UGDTREE -> RGDTREE(v, HBTWN(v, MAX(H(t1), H(t2)) - 2, MAXP(H(t1), H(t2), 1)) and LSUM(v, t1, t2))
  
-(*
+
 val pop: i: {v: int | v >= 0} -> t: RGDTREE(v, H(v) > 0 and L(v) > i) -> 'a * RGDTREE(v, HBTWN(v, H(t) - 1, H(t)) and L(v) = L(t) - 1)
 
 
@@ -94,6 +93,7 @@ val remove: i: {v: int | v >= 0} -> t: RGDTREE(v, H(v) > 0 and L(v) > i) -> RGDT
 
 val insert: i: {v: int | v >= 0} -> 'a -> t: RGDTREE(v, L(v) >= i) -> RGDTREE(v, HBTWN(v, H(t), H(t) + 1) and L(v) = L(t) + 1)
  
+ (*
 (*val sub:
   i: {v: int | v >= 0 } ->
   j: {v: int | v >= i } ->
