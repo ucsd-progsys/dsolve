@@ -52,12 +52,6 @@ let length t =
     Empty -> 0
   | Node (_, cl, _, _, cr, _) -> 1 + cl + cr
 
-let ffor s d body =
-    let rec loop i =
-        let i' = i + 1 in
-        if i <= d then (body i; loop i') else ()
-    in loop s
-
 let makenode l d r =
   let (hl, cl) = match l with
                     Empty -> (0,0)
@@ -199,23 +193,17 @@ let rec append d t =
   | Node (l, ll, dd, r, lr, h) -> 
       bal l dd (append d r)
 
-  (*    
+let show x = x
+      
 (* although it's not obvious from setappend, length v > 0 due to dep on set *)
 let setappend d0 d i v =
   let l = length v in 
   if l > i then set i d v 
   else begin
     let rec app_rec n v =
-      if n = 0 then v else app_rec (n-1) (append d0 v) in 
-    append d (app_rec (i-l-1) v)
-    (*let vr = ref v in 
-    let _ = (fun x -> x) vr in
-    let body i =
-      vr := append d0 !vr in
-    ffor l (i-1) body;
-    append d !vr*)
+      if n = (l-1) then v else append d0 (app_rec (n-1) v) in 
+    append d (app_rec (i-1) v)
   end 
-  *)
 
 
  
@@ -298,8 +286,6 @@ let rec insert i d t =
       else if i > cl then bal l dd (insert (i - cl - 1) d r)
       else bal l d (insert 0 dd r)
       
-(*
-      
 (*let rec sub i j v = 
   match v with 
     Empty -> Empty
@@ -314,17 +300,27 @@ let rec insert i d t =
 	else if i > cl then sub (i - cl - 1) (j - cl - 1) r
 	else begin
 	  (* dd straddles the interval *)
-	  let ll = sub i cl l in 
+	  (*let ll = sub i cl l in 
 	  let rr = sub 0 (j - cl - 1) r in 
-	  recbal ll dd rr 
+	  recbal ll dd rr *)
 	end
-      end*)
+      end
+
+let sub i j v =
+  match v with
+  | Empty -> Empty
+  | Node (_, _, _, _, _, _) ->
+      if i >= j then Empty
+      else if i <= 0 && j >= cl + cr + 1 then v
+      else sub_rec i j v *)
+      
 
       (*
 let rec iter f = function
     Empty -> ()
   | Node(l, _, d, r, _, _) ->
       iter f l; f d; iter f r
+      *)
 
 let rec iteri f v = 
   let rec offsetiteri f k = function
@@ -333,6 +329,7 @@ let rec iteri f v =
       offsetiteri f k l; f (k + cl) d; offsetiteri f (k + cl + 1) r
   in offsetiteri f 0 v
 
+(*(*
 let rec reviter f = function
     Empty -> ()
   | Node(l, _, d, r, _, _) ->

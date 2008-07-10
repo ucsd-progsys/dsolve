@@ -9,16 +9,15 @@ qualif HG0(v) : height v { >, >= } 0
 
 qualif ISEMPTY(v) : v = (height t = 0 or length t = 0 ? 1 : 0)
 
-qualif LVAR(v) : length v { * * } ~A 
+qualif LVAR(_v) : length _v { * * } ~A 
 qualif LVARV(v) : v { * * } length ~A
 qualif LVARVV(v) : length v { * * } length ~A
 qualif LCONST(v) : length v { * * } [0, 1]
 qualif LPLUSONE(v) : length v { * * } length t {< -, + >} 1
 
-qualif LLL(v) : length v = (length t > i ? length t : i + 1)
-qualif LLL(v) : length v = length v + n
-
-qualif FAKEHEIGHT(v) : height v >= height t
+(* note to self: do some aggressive variable renaming at some point *)
+qualif LLL(_v) : length _v = (length v > i ? length v : i + 1)
+qualif LLL(v) : length v = [n, i] {< +, - >} 1
 
 qualif LSUM(v) : length v = [0, 1] + length [t1, l] + length [t2, r]
 
@@ -35,7 +34,7 @@ qualif BAL(v)(*A: 'a t*)   : height v { <=, >= } height ~A {< -, + >} [1, 2, 3, 
 (* typing the qualifier seems to cull too much. this is a bug *)
 qualif BAL(v)   : height v { <=, >= } height e0 {< -, + >} [1, 2, 3, 4]
 
-qualif H(v)(A: 'a t): height v { * * } height ~A
+qualif H(_v)(A: 'a t): height _v { * * } height ~A
 qualif H(v)     : height v { * * } height e0
 
 qualif BALINVAR(v):

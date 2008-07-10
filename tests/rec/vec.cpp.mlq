@@ -57,19 +57,8 @@ val set: i: {v: int | v >= 0} -> 'a -> t: RGDTREE(v, H(v) > 0 and L(v) > i) -> R
 val append: 'a -> t: UGDTREE -> RGDTREE(v, (H(v) <= H(t) + 1 and H(t) >= H(t) - 1) and L(v) = L(t) + 1)
 
 
-    (*       
-val setappend:
-  'a ->
-  'a ->
-  i: {v: int | v >= 0}  ->
-  t: {v: TREE(z, R(e0, z, HGE0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
-           R(e3, z, BALW(e0, e3, 2) and HGE0(e3)), {e4: int | ISLEN(e4, e3)},
-           {e5: int | ISHEIGHT(e0, e3, e5)}) | HGE0(v) and L(v) > 0} ->
-  {v: TREE(z, R(e0, z, HGE0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
-           R(e3, z, BALW(e0, e3, 2) and HGE0(e3)), {e4: int | ISLEN(e4, e3)},
-           {e5: int | ISHEIGHT(e0, e3, e5)}) | L(v) = ITE(L(t) > i, L(t), i+1) and H(v) >= H(t)}
-     *)      
- 
+val setappend: 'a -> 'a -> i: {v: int | v >= 0} -> t: RGDTREE(v, HGE0(v) and L(v) > 0) -> 
+  RGDTREE(v, L(v) = ITE(L(t) > i, L(t), i+1) and H(v) >= H(t))
 
 
 val leftmost: t: RGDTREE(v, H(v) > 0) -> 'a
@@ -93,15 +82,16 @@ val remove: i: {v: int | v >= 0} -> t: RGDTREE(v, H(v) > 0 and L(v) > i) -> RGDT
 
 val insert: i: {v: int | v >= 0} -> 'a -> t: RGDTREE(v, L(v) >= i) -> RGDTREE(v, HBTWN(v, H(t), H(t) + 1) and L(v) = L(t) + 1)
  
- (*
-(*val sub:
-  i: {v: int | v >= 0 } ->
-  j: {v: int | v >= i } ->
-  t: {v: TREE(z, R(e0, z, HGE0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
-           R(e3, z, BALW(e0, e3, 2) and HGE0(e3)), {e4: int | ISLEN(e4, e3)},
-           {e5: int | ISHEIGHT(e0, e3, e5)}) | L(v) >= 0 and L(v) > j } ->
-  {v: TREE(z, R(e0, z, HGE0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
-           R(e3, z, BALW(e0, e3, 2) and HGE0(e3)), {e4: int | ISLEN(e4, e3)},
-           {e5: int | ISHEIGHT(e0, e3, e5)}) | (H(v) <= H(t) and HGE0(v)) and L(v) = j-i }
-           *)
-*) 
+(*
+val sub: i: {v: int | v >= 0} -> j: {v: int | v >= i} ->
+    t: rgdtree(v, l(v) >= 0 and l(v) > j) -> rgdtree(v, h(v) <= h(t) and l(v) = j-i)
+
+val sub: i: int -> j: int -> 
+    t: rgdtree(v, l(v) >= 0) -> rgdtree(v, h(v) <= h(t) and l(v) = j-i)
+*)
+
+
+val iteri: (i: int -> 'a -> 'a) -> RGDTREE(v, i >= 0 and i < L(v)) -> unit
+
+
+
