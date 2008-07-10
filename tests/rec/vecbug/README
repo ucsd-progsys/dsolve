@@ -1,0 +1,23 @@
+This package is a demonstration and patch for what seems to be a minor flaw in
+the recursive balancing procedure in vec. In particular, when handed some particularly
+shaped input vectors which are internally balanced such that all subchildren are off in
+height by at most two, the recbal procedure can end up outputting a tree in which subchildren
+are off in height by as much as four.
+
+
+$ make
+$ ocaml
+        Objective Caml version 3.10.0
+
+# #load "vec.cma";;
+# # #use "client.ml";;
+...
+# # let t = mk_tree ();;
+# val t : int Vec.t = <abstr>
+# # Vec.check_balanced t;;
+# Out of balance: subtrees differ by -4
+# - : bool = false
+# # let t = mk_fixed_tree ();; (* mk_fixed_tree uses the patched recbal2 in the modified vec.ml *)
+# val t : int Vec.t = <abstr>
+# # Vec.check_balanced t;;
+# - : bool = true
