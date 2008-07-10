@@ -92,25 +92,25 @@ let bal l d r =
     | Node(_,_,_,_,_,h) -> h in
   if hl > hr + 2 then begin
     match l with
-      Empty -> assert false (*invalid_arg "Vec.bal"*)
+      Empty -> let _ = assert (1 = 0) in assert false (*invalid_arg "Vec.bal"*)
     | Node(ll, lll, ld, lr, llr, h) ->
         if height ll >= height lr then
           makenode ll ld (makenode lr d r)
         else begin
           match lr with
-            Empty -> assert false (*invalid_arg "Vec.bal"*)
+            Empty -> let _ = assert (1 = 0) in assert false (*invalid_arg "Vec.bal"*)
           | Node(lrl, llrl, lrd, lrr, llrr, h) ->
               makenode (makenode ll ld lrl) lrd (makenode lrr d r)
         end
   end else if hr > hl + 2 then begin
     match r with
-      Empty -> assert false (*invalid_arg "Vec.bal"*)
+      Empty -> let _ = assert (1 = 0) in assert false (*invalid_arg "Vec.bal"*)
     | Node(rl, lrl, rd, rr, lrr, h) ->
         if height rr >= height rl then
           makenode (makenode l d rl) rd rr
         else begin
           match rl with
-            Empty -> assert false (*invalid_arg "Vec.bal"*)
+            Empty -> let _ = assert (1 = 0) in assert false (*invalid_arg "Vec.bal"*)
           | Node(rll, lrll, rld, rlr, lrlr, h) ->
               makenode (makenode l d rll) rld (makenode rlr rd rr)
         end
@@ -130,13 +130,13 @@ let rec recbal l d r =
   let hr = match r with Empty -> 0 | Node(_,_,_,_,_,h) -> h in
   if hl > hr + 2 then begin
     match l with
-      Empty -> assert false (*invalid_arg "Vec.bal"*)
+      Empty -> let _ = assert (1 = 0) in assert false (*invalid_arg "Vec.bal"*)
     | Node(ll, _, ld, lr, _, h) ->
         if height ll >= height lr then
           bal ll ld (recbal lr d r)
         else begin
           match lr with
-            Empty -> assert false (*invalid_arg "Vec.bal"*)
+            Empty -> let _ = assert (1 = 0) in assert false (*invalid_arg "Vec.bal"*)
           | Node(lrl, _, lrd, lrr, _, h) ->
               let nr = recbal lrr d r in
                 if height nr <= height lr - 3 then
@@ -146,13 +146,13 @@ let rec recbal l d r =
         end
   end else if hr > hl + 2 then begin
     match r with
-      Empty -> assert false (*invalid_arg "Vec.bal"*)
+      Empty -> let _ = assert (1 = 0) in assert false (*invalid_arg "Vec.bal"*)
     | Node(rl, _, rd, rr, _, h) ->
         if height rr >= height rl then
             bal (recbal l d rl) rd rr
         else begin
           match rl with
-            Empty -> assert false (*invalid_arg "Vec.bal"*)
+            Empty -> let _ = assert (1 = 0) in assert false (*invalid_arg "Vec.bal"*)
           | Node(rll, _, rld, rlr, _, h) ->
               let nl = recbal l d rll in
                 if height nl <= height rl - 3 then
@@ -166,14 +166,13 @@ let rec recbal l d r =
 
 let empty = Empty
   
-(*let is_empty t = 
+let is_empty t = 
   match t with
   | Empty -> true
-  |_ -> false
-  *)
+  | Node(_, _, _, _, _, _) -> false
+
 
 let singleton d = Node (Empty, 0, d, Empty, 0, 1)
-
 
 
 let rec get i t =
@@ -189,9 +188,9 @@ let rec set i d t =
   match t with
     Empty -> let _ = assert (1 = 0) in assert false (*raise Vec_index_out_of_bounds*)
   | Node (l, cl, dd, r, cr, _) -> 
-      if i < cl then (*makenode (set i d l) dd r*) assert false  
-      else if i > cl then (*makenode l dd (set (i - cl - 1) d r)*) assert false
-      else makenode l d r 
+      if i < cl then makenode (set i d l) dd r
+      else if i > cl then makenode l dd (set (i - cl - 1) d r)
+      else makenode l d r
 
 
 let rec append d t =
@@ -199,7 +198,8 @@ let rec append d t =
     Empty -> Node (Empty, 0, d, Empty, 0, 1)
   | Node (l, ll, dd, r, lr, h) -> 
       bal l dd (append d r)
-     (* 
+
+  (*    
 (* although it's not obvious from setappend, length v > 0 due to dep on set *)
 let setappend d0 d i v =
   let l = length v in 
@@ -227,6 +227,7 @@ let rec leftmost t =
       | Empty -> d
       | Node(ll, lll, d', lr, llr, h') -> leftmost l
       
+      
 let rec remove_leftmost t =
   match t with
     Empty -> let _ = assert (1 = 0) in assert false (*invalid_arg "Vec.remove_min_elt"*)
@@ -239,11 +240,11 @@ let rec remove_leftmost t =
 (* merge uses bal, not recbal, so it only works for trees of similar height *)
 let merge t1 t2 =
   match t1 with
-  | Empty -> let h = height t2 in t2
-  | Node(l, ll, d, r, lr, h) ->
+  | Empty -> t2
+  | Node(_, _, _, _, _, _) ->
       match t2 with
       | Empty -> t1
-      | Node(l', ll', d', r', lr', h') ->
+      | Node(_, _, _, _, _, _) ->
           let d = leftmost t2 in
           bal t1 d (remove_leftmost t2)
           
@@ -252,16 +253,15 @@ let merge t1 t2 =
 (* Concat works also for t1 and t2 of very different heights *)
 let concat t1 t2 =
   match t1 with
-  | Empty -> let h = height t2 in t2
-  | Node(l, ll, d, r, lr, h) ->
+  | Empty -> t2
+  | Node(_, _, _, _, _, _) ->
       match t2 with
       | Empty -> t1
-      | Node(l', ll', d', r', lr', h') ->
-          let d = leftmost t2 in
-          recbal t1 d (remove_leftmost t2)
+      | Node(_, _, _, _, _, _) ->
+          (*let d = leftmost t2 in
+          recbal t1 d (remove_leftmost t2)*) assert false
 
-
-
+(*
 let rec pop i t =
   match t with
     Empty -> let _ = assert (1 = 0) in assert false (*raise Vec_index_out_of_bounds*)
@@ -285,7 +285,7 @@ let rec remove i t =
 	bal l d (remove (i - cl - 1) r)
       else merge l r 
 
-	  
+  
 let rec insert i d t =
   match t with
     Empty -> begin
@@ -523,4 +523,4 @@ if false then begin
   print_vec (setappend (-2) (-1) 16 (sub 4 12 v))
 
 end;;*)
-      
+     *) 
