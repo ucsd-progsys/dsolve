@@ -12,7 +12,10 @@ qualif LVARV(v) : v { * * } length ~A
 qualif LVARVV(v) : length v { * * } length ~A
 qualif LCONST(v) : length v { * * } [0, 1]
 qualif LPLUSONE(v) : length v { * * } length t {< -, + >} 1
-qualif LLL(v) : length v = (length t > i ? length t : i - 1)
+
+qualif LLL(v) : length v = (length t > i ? length t : i + 1)
+qualif LLL(v) : length v = length v + n
+
 qualif FAKEHEIGHT(v) : height v >= height t
 
 qualif LSUM(v) : length v = [0, 1] + length [t1, l] + length [t2, r]

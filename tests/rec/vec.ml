@@ -116,11 +116,12 @@ let bal l d r =
         end
   end 
   else makenode l d r
-(*
-  (* recbal as written did not balance. two "fixes" below. the first probably doesn't terminate
-   * (but it does typecheck!). the second doesn't preserve the order property. *)
 
-  (*
+  (* recbal as originally included in vec.ml did not provide a balancing guarantee. 
+   * this has been fixed below by adding at worst a small constant number of rotations per level.
+   * the fixed version also typechecks. *)
+
+  
 (* This is a recursive version of balance, which balances a tree all the way down. 
    The trees l and r can be of any height, but they need to be internally balanced.  
    Useful to implement concat. *)
@@ -128,95 +129,16 @@ let rec recbal l d r =
   let hl = match l with Empty -> 0 | Node(_,_,_,_,_,h) -> h in
   let hr = match r with Empty -> 0 | Node(_,_,_,_,_,h) -> h in
   if hl > hr + 2 then begin
-    (*match l with
-      Empty -> assert false (*invalid_arg "Vec.bal"*)
-    | Node(ll, lll, ld, lr, llr, h) ->
-        if height ll >= height lr then
-          makenode ll ld (recbal lr d r)
-        else begin
-          match lr with
-            Empty -> assert false (*invalid_arg "Vec.bal"*)
-          | Node(lrl, llrl, lrd, lrr, llrr, h) ->
-              makenode (makenode ll ld lrl) lrd (recbal lrr d r)
-        end*)
-    assert false
-  end else if hr > hl + 2 then begin
-    match r with
-      Empty -> assert false (*invalid_arg "Vec.bal"*)
-    | Node(rl, lrl, rd, rr, lrr, h) ->
-        if height rr >= height rl then
-          let nl = recbal l d rl in
-            (*if height nl >= height rr + 3 or height nl <= height rr - 3 then*)
-              recbal nl rd rr
-            (*else
-              makenode nl rd rr*)
-        else begin
-          match rl with
-            Empty -> assert false (*invalid_arg "Vec.bal"*)
-          | Node(rll, lrll, rld, rlr, lrlr, h) ->
-              let nl = recbal l d rll in
-              let nr = makenode rlr rd rr in
-                (*if height nl >= height nr + 3 or height nl <= height nr - 3 then*)
-                  recbal nl rld nr
-                (*else
-                  makenode nl rld nr*)
-        end
-  end 
-  else makenode l d r
-  *)
-*)
- 
-(*
-let rec recbal2 l d r =
-  let hl = match l with Empty -> 0 | Node(_,_,_,_,_,h) -> h in
-  let hr = match r with Empty -> 0 | Node(_,_,_,_,_,h) -> h in
-  if hl > hr + 2 then begin
-    (*match l with
-      Empty -> assert false (*invalid_arg "Vec.bal"*)
-    | Node(ll, lll, ld, lr, llr, h) ->
-        if height ll >= height lr then
-          makenode ll ld (recbal lr d r)
-        else begin
-          match lr with
-            Empty -> assert false (*invalid_arg "Vec.bal"*)
-          | Node(lrl, llrl, lrd, lrr, llrr, h) ->
-              makenode (makenode ll ld lrl) lrd (recbal lrr d r)
-        end*)
-    assert false
-  end else if hr > hl + 2 then begin
-    match r with
-      Empty -> assert false (*invalid_arg "Vec.bal"*)
-    | Node(rl, lrl, rd, rr, lrr, h) ->
-        if height rr >= height rl then
-            bal (recbal2 l d rl) rd rr
-        else begin
-          match rl with
-            Empty -> assert false (*invalid_arg "Vec.bal"*)
-          | Node(rll, lrll, rld, rlr, lrlr, h) ->
-              if height rll >= height rlr then 
-                makenode (recbal2 l d rll) rld (makenode rlr rd rr)
-              else                            (*this is the bad case*)
-                makenode (recbal2 l d rlr) rld (makenode rll rd rr)
-        end
-  end 
-  else makenode l d r
-  *)
-  
-
-let rec recbal3 l d r =
-  let hl = match l with Empty -> 0 | Node(_,_,_,_,_,h) -> h in
-  let hr = match r with Empty -> 0 | Node(_,_,_,_,_,h) -> h in
-  if hl > hr + 2 then begin
     match l with
       Empty -> assert false (*invalid_arg "Vec.bal"*)
     | Node(ll, _, ld, lr, _, h) ->
         if height ll >= height lr then
-          bal ll ld (recbal3 lr d r)
+          bal ll ld (recbal lr d r)
         else begin
           match lr with
             Empty -> assert false (*invalid_arg "Vec.bal"*)
           | Node(lrl, _, lrd, lrr, _, h) ->
-              let nr = recbal3 lrr d r in
+              let nr = recbal lrr d r in
                 if height nr <= height lr - 3 then
                   makenode ll ld (bal lrl lrd nr)
                 else
@@ -227,12 +149,12 @@ let rec recbal3 l d r =
       Empty -> assert false (*invalid_arg "Vec.bal"*)
     | Node(rl, _, rd, rr, _, h) ->
         if height rr >= height rl then
-            bal (recbal3 l d rl) rd rr
+            bal (recbal l d rl) rd rr
         else begin
           match rl with
             Empty -> assert false (*invalid_arg "Vec.bal"*)
           | Node(rll, _, rld, rlr, _, h) ->
-              let nl = recbal3 l d rll in
+              let nl = recbal l d rll in
                 if height nl <= height rl - 3 then
                   makenode (bal nl rld rlr) rd rr
                 else
@@ -241,7 +163,7 @@ let rec recbal3 l d r =
   end 
   else makenode l d r
 
-(*
+
 let empty = Empty
   
 (*let is_empty t = 
@@ -277,8 +199,8 @@ let rec append d t =
     Empty -> Node (Empty, 0, d, Empty, 0, 1)
   | Node (l, ll, dd, r, lr, h) -> 
       bal l dd (append d r)
-      
- (* 
+     (* 
+(* although it's not obvious from setappend, length v > 0 due to dep on set *)
 let setappend d0 d i v =
   let l = length v in 
   if l > i then set i d v 
@@ -294,6 +216,7 @@ let setappend d0 d i v =
     append d !vr*)
   end 
   *)
+
 
  
 let rec leftmost t =
@@ -335,7 +258,9 @@ let concat t1 t2 =
       | Empty -> t1
       | Node(l', ll', d', r', lr', h') ->
           let d = leftmost t2 in
-          recbal2 t1 d (remove_leftmost t2)
+          recbal t1 d (remove_leftmost t2)
+
+
 
 let rec pop i t =
   match t with
@@ -391,7 +316,7 @@ let rec insert i d t =
 	  (* dd straddles the interval *)
 	  let ll = sub i cl l in 
 	  let rr = sub 0 (j - cl - 1) r in 
-	  recbal2 ll dd rr 
+	  recbal ll dd rr 
 	end
       end*)
 
@@ -598,4 +523,4 @@ if false then begin
   print_vec (setappend (-2) (-1) 16 (sub 4 12 v))
 
 end;;*)
-     *) 
+      
