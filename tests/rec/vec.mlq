@@ -4,7 +4,7 @@ measure height =
 measure length =
   | Empty -> 0
   | Node (_, cl, _, _, cr, _) -> 1 + cl + cr
-val makenode:
+(*val makenode:
   l: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] [z: t . || {e0: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e0 >= 0)}, {e1: int | (e1 = length e0 and e1 >= 0)}, e2: 'a, {e3: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e3 <= height e0 + 2 and height e3 >= height e0 - 2) and (height e3 >= 0)}, {e4: int | (e4 = length e3 and e4 >= 0)}, {e5: int | ((e5 = (height e0 >= height e3 ? height e0 : height e3) + 1) and e5 >= 0)}] ->
   'a ->
   r: {v: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] [z: t . || {e0: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e0 >= 0)}, {e1: int | (e1 = length e0 and e1 >= 0)}, e2: 'a, {e3: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e3 <= height e0 + 2 and height e3 >= height e0 - 2) and (height e3 >= 0)}, {e4: int | (e4 = length e3 and e4 >= 0)}, {e5: int | ((e5 = (height e0 >= height e3 ? height e0 : height e3) + 1) and e5 >= 0)}] | (height v <= height l + 2 and height v >= height l - 2) } ->
@@ -20,6 +20,7 @@ val bal:
   {v': [[], [v: true, v: true, v: true, v: true, v: true, v: true]] [z: t . || {e0: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e0 >= 0)}, {e1: int | (e1 = length e0 and e1 >= 0)}, e2: 'a, {e3: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e3 <= height e0 + 2 and height e3 >= height e0 - 2) and (height e3 >= 0)}, {e4: int | (e4 = length e3 and e4 >= 0)}, {e5: int | ((e5 = (height e0 >= height e3 ? height e0 : height e3) + 1) and e5 >= 0)}] | (height v' <= (height l >= height r ? height l : height r) + 1 and
                                            height v' >= (height l >= height r ? height l : height r) + ((height r <= height l + 2 and height r >= height l - 2) ? 1 : 0)) and
                                            length v' = 1 + length l + length r }
+                                           *)
 (*
 val recbal:
   l: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] [z: t . || {e0: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e0 >= 0)}, {e1: int | (e1 = length e0 and e1 >= 0)}, e2: 'a, {e3: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e3 <= height e0 + 2 and height e3 >= height e0 - 2) and (height e3 >= 0)}, {e4: int | (e4 = length e3 and e4 >= 0)}, {e5: int | ((e5 = (height e0 >= height e3 ? height e0 : height e3) + 1) and e5 >= 0)}] ->
@@ -27,7 +28,6 @@ val recbal:
   r: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] [z: t . || {e0: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e0 >= 0)}, {e1: int | (e1 = length e0 and e1 >= 0)}, e2: 'a, {e3: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e3 <= height e0 + 2 and height e3 >= height e0 - 2) and (height e3 >= 0)}, {e4: int | (e4 = length e3 and e4 >= 0)}, {e5: int | ((e5 = (height e0 >= height e3 ? height e0 : height e3) + 1) and e5 >= 0)}] ->
   {v': [[], [v: true, v: true, v: true, v: true, v: true, v: true]] [z: t . || {e0: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e0 >= 0)}, {e1: int | (e1 = length e0 and e1 >= 0)}, e2: 'a, {e3: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e3 <= height e0 + 2 and height e3 >= height e0 - 2) and (height e3 >= 0)}, {e4: int | (e4 = length e3 and e4 >= 0)}, {e5: int | ((e5 = (height e0 >= height e3 ? height e0 : height e3) + 1) and e5 >= 0)}] | height v' <= (height l >= height r ? height l : height r) + 1 and
                                            height v' >= ((height r <= height l + 2 and height r >= height l - 2) ? (height l >= height r ? height l : height r) + 1 : 0) }
-                                           *)
 val recbal2:
   l: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] [z: t . || {e0: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e0 >= 0)}, {e1: int | (e1 = length e0 and e1 >= 0)}, e2: 'a, {e3: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e3 <= height e0 + 2 and height e3 >= height e0 - 2) and (height e3 >= 0)}, {e4: int | (e4 = length e3 and e4 >= 0)}, {e5: int | ((e5 = (height e0 >= height e3 ? height e0 : height e3) + 1) and e5 >= 0)}] ->
   'a ->
@@ -35,6 +35,15 @@ val recbal2:
   {v': [[], [v: true, v: true, v: true, v: true, v: true, v: true]] [z: t . || {e0: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e0 >= 0)}, {e1: int | (e1 = length e0 and e1 >= 0)}, e2: 'a, {e3: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e3 <= height e0 + 2 and height e3 >= height e0 - 2) and (height e3 >= 0)}, {e4: int | (e4 = length e3 and e4 >= 0)}, {e5: int | ((e5 = (height e0 >= height e3 ? height e0 : height e3) + 1) and e5 >= 0)}] | (height v' <= (height l >= height r ? height l : height r) + 1 and
                                            height v' >= (height l >= height r ? height l : height r) + ((height r <= height l + 2 and height r >= height l - 2) ? 1 : 0-1)) and
                                            length v' = 1 + length l + length r}
+                                           *)
+val recbal3:
+  l: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] [z: t . || {e0: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e0 >= 0)}, {e1: int | (e1 = length e0 and e1 >= 0)}, e2: 'a, {e3: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e3 <= height e0 + 2 and height e3 >= height e0 - 2) and (height e3 >= 0)}, {e4: int | (e4 = length e3 and e4 >= 0)}, {e5: int | ((e5 = (height e0 >= height e3 ? height e0 : height e3) + 1) and e5 >= 0)}] ->
+  'a ->
+  r: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] [z: t . || {e0: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e0 >= 0)}, {e1: int | (e1 = length e0 and e1 >= 0)}, e2: 'a, {e3: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e3 <= height e0 + 2 and height e3 >= height e0 - 2) and (height e3 >= 0)}, {e4: int | (e4 = length e3 and e4 >= 0)}, {e5: int | ((e5 = (height e0 >= height e3 ? height e0 : height e3) + 1) and e5 >= 0)}] ->
+  {v': [[], [v: true, v: true, v: true, v: true, v: true, v: true]] [z: t . || {e0: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e0 >= 0)}, {e1: int | (e1 = length e0 and e1 >= 0)}, e2: 'a, {e3: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e3 <= height e0 + 2 and height e3 >= height e0 - 2) and (height e3 >= 0)}, {e4: int | (e4 = length e3 and e4 >= 0)}, {e5: int | ((e5 = (height e0 >= height e3 ? height e0 : height e3) + 1) and e5 >= 0)}] | (height v' <= (height l >= height r ? height l : height r) + 1 and
+                                           height v' >= (height l >= height r ? height l : height r) + ((height r <= height l + 2 and height r >= height l - 2) ? 1 : 0-1)) and
+                                           length v' = 1 + length l + length r}
+(*
 val empty:
   {v: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] [z: t . || {e0: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e0 >= 0)}, {e1: int | (e1 = length e0 and e1 >= 0)}, e2: 'a, {e3: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e3 <= height e0 + 2 and height e3 >= height e0 - 2) and (height e3 >= 0)}, {e4: int | (e4 = length e3 and e4 >= 0)}, {e5: int | ((e5 = (height e0 >= height e3 ? height e0 : height e3) + 1) and e5 >= 0)}] | height v = 0 and length v = 0}
 val singleton:
@@ -91,8 +100,10 @@ val insert:
   'a ->
   t: {v: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] [z: t . || {e0: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e0 >= 0)}, {e1: int | (e1 = length e0 and e1 >= 0)}, e2: 'a, {e3: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e3 <= height e0 + 2 and height e3 >= height e0 - 2) and (height e3 >= 0)}, {e4: int | (e4 = length e3 and e4 >= 0)}, {e5: int | ((e5 = (height e0 >= height e3 ? height e0 : height e3) + 1) and e5 >= 0)}] | length v >= i } ->
   {v: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] [z: t . || {e0: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e0 >= 0)}, {e1: int | (e1 = length e0 and e1 >= 0)}, e2: 'a, {e3: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e3 <= height e0 + 2 and height e3 >= height e0 - 2) and (height e3 >= 0)}, {e4: int | (e4 = length e3 and e4 >= 0)}, {e5: int | ((e5 = (height e0 >= height e3 ? height e0 : height e3) + 1) and e5 >= 0)}] | (height v <= height t + 1 and height v >= height t) and length v = length t + 1}
-val sub:
+(*val sub:
   i: {v: int | v >= 0 } ->
   j: {v: int | v >= i } ->
   t: {v: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] [z: t . || {e0: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e0 >= 0)}, {e1: int | (e1 = length e0 and e1 >= 0)}, e2: 'a, {e3: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e3 <= height e0 + 2 and height e3 >= height e0 - 2) and (height e3 >= 0)}, {e4: int | (e4 = length e3 and e4 >= 0)}, {e5: int | ((e5 = (height e0 >= height e3 ? height e0 : height e3) + 1) and e5 >= 0)}] | length v >= 0 and length v > j } ->
   {v: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] [z: t . || {e0: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e0 >= 0)}, {e1: int | (e1 = length e0 and e1 >= 0)}, e2: 'a, {e3: [[], [v: true, v: true, v: true, v: true, v: true, v: true]] z | (height e3 <= height e0 + 2 and height e3 >= height e0 - 2) and (height e3 >= 0)}, {e4: int | (e4 = length e3 and e4 >= 0)}, {e5: int | ((e5 = (height e0 >= height e3 ? height e0 : height e3) + 1) and e5 >= 0)}] | (height v <= height t and (height v >= 0)) and length v = j-i }
+           *)
+*)

@@ -25,7 +25,7 @@ measure length =
   | Node (_, cl, _, _, cr, _) -> 1 + cl + cr
 
 
-val makenode:
+(*val makenode:
   l: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
           R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
           {e5: int | ISHEIGHT(e0, e3, e5)}) ->
@@ -60,6 +60,7 @@ val bal:
        {e5: int | ISHEIGHT(e0, e3, e5)}) | (H(v') <= MAXP(H(l), H(r), 1) and
                                            H(v') >= MAX(H(l), H(r)) + ITE(BALW(l, r, 2), 1, 0)) and
                                            L(v') = 1 + L(l) + L(r) }
+                                           *)
 
 (*
 val recbal:
@@ -74,7 +75,6 @@ val recbal:
        R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
        {e5: int | ISHEIGHT(e0, e3, e5)}) | H(v') <= MAXP(H(l), H(r), 1) and
                                            H(v') >= ITE(BALW(l, r, 2), MAXP(H(l), H(r), 1), 0) }
-                                           *)
 
 
 val recbal2:
@@ -90,9 +90,24 @@ val recbal2:
        {e5: int | ISHEIGHT(e0, e3, e5)}) | (H(v') <= MAXP(H(l), H(r), 1) and
                                            H(v') >= MAX(H(l), H(r)) + ITE(BALW(l, r, 2), 1, 0-1)) and
                                            L(v') = 1 + L(l) + L(r)}
+                                           *)
                                            
+val recbal3:
+  l: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
+          R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
+          {e5: int | ISHEIGHT(e0, e3, e5)}) ->
+  'a ->
+  r: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
+          R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
+          {e5: int | ISHEIGHT(e0, e3, e5)})  ->
+  {v': TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, 
+       R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
+       {e5: int | ISHEIGHT(e0, e3, e5)}) | (H(v') <= MAXP(H(l), H(r), 1) and
+                                           H(v') >= MAX(H(l), H(r)) + ITE(BALW(l, r, 2), 1, 0-1)) and
+                                           L(v') = 1 + L(l) + L(r)}
+ 
                                            
-
+(*
 val empty:
   {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
@@ -223,7 +238,7 @@ val insert:
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
            {e5: int | ISHEIGHT(e0, e3, e5)}) | (H(v) <= H(t) + 1 and H(v) >= H(t)) and L(v) = L(t) + 1}
  
-val sub:
+(*val sub:
   i: {v: int | v >= 0 } ->
   j: {v: int | v >= i } ->
   t: {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
@@ -232,4 +247,5 @@ val sub:
   {v: TREE(z, R(e0, z, HG0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a,
            R(e3, z, BALW(e0, e3, 2) and HG0(e3)), {e4: int | ISLEN(e4, e3)},
            {e5: int | ISHEIGHT(e0, e3, e5)}) | (H(v) <= H(t) and HG0(v)) and L(v) = j-i }
- 
+           *)
+*) 

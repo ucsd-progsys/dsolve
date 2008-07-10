@@ -126,6 +126,47 @@ let rec recbal l d r =
         end
   end 
   else makenode l d r 
+
+(* ****** at least one way to provide a stronger guarantee from recbal: **** *)
+let rec recbal2 l d r =
+  let hl = match l with Empty -> 0 | Node(_,_,_,_,_,h) -> h in
+  let hr = match r with Empty -> 0 | Node(_,_,_,_,_,h) -> h in
+  if hl > hr + 2 then begin
+    match l with
+      Empty -> assert false (*invalid_arg "Vec.bal"*)
+    | Node(ll, _, ld, lr, _, h) ->
+        if height ll >= height lr then
+          bal ll ld (recbal2 lr d r)
+        else begin
+          match lr with
+            Empty -> assert false (*invalid_arg "Vec.bal"*)
+          | Node(lrl, _, lrd, lrr, _, h) ->
+              let nr = recbal2 lrr d r in
+                if height nr <= height lr - 3 then
+                  makenode ll ld (bal lrl lrd nr)
+                else
+                  makenode (makenode ll ld lrl) lrd nr
+        end
+  end else if hr > hl + 2 then begin
+    match r with
+      Empty -> assert false (*invalid_arg "Vec.bal"*)
+    | Node(rl, _, rd, rr, _, h) ->
+        if height rr >= height rl then
+            bal (recbal2 l d rl) rd rr
+        else begin
+          match rl with
+            Empty -> assert false (*invalid_arg "Vec.bal"*)
+          | Node(rll, _, rld, rlr, _, h) ->
+              let nl = recbal2 l d rll in
+                if height nl <= height rl - 3 then
+                  makenode (bal nl rld rlr) rd rr
+                else
+                  makenode nl rld (makenode rlr rd rr)
+        end
+  end 
+  else makenode l d r
+(* ************************************************************************ *)
+
       
 let empty = Empty
   
@@ -190,7 +231,16 @@ let concat t1 t2 =
   | (_, _) ->
       let d = leftmost t2 in
       recbal t1 d (remove_leftmost t2)
-	
+
+(* **** Concat2 uses recbal2 ****** *)
+let concat2 t1 t2 =
+  match (t1, t2) with
+    (Empty, t) -> t
+  | (t, Empty) -> t
+  | (_, _) ->
+      let d = leftmost t2 in
+      recbal2 t1 d (remove_leftmost t2)
+
 let rec pop i = function
     Empty -> raise Vec_index_out_of_bounds
   | Node(l, cl, d, r, cr, h) ->
@@ -394,6 +444,7 @@ let rec to_array w =
 	in fill a 0 w 
       end
 
+(* **** added for error check **** *)
 let rec check_balanced v =
   match v with
   | Empty -> true
@@ -401,6 +452,7 @@ let rec check_balanced v =
       if (height l <= height r - 3) || (height l >= height r + 3) then
         (Printf.printf "Out of balance: subtrees differ by %i\n" (height l - height r); false)
       else (check_balanced r && check_balanced l)
+(* ****************************** *)
 	      
 let of_array a =
   let f accu el = append el accu in 

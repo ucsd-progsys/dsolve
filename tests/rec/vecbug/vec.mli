@@ -87,6 +87,9 @@ val setappend : 'a -> 'a -> int -> 'a t -> 'a t
 val concat : 'a t -> 'a t -> 'a t
   (** [concat v1 v2] concatenates the vecs [v1] and [v2]. *)
 
+val concat2 : 'a t -> 'a t -> 'a t
+  (** [concat v1 v2] concatenates the vecs [v1] and [v2]. *)
+
 val pop : int -> 'a t -> ('a * 'a t)
   (** [pop i v] returns (e, v'), where [e] is the element in position [i] 
       of vec [v], and [v'] is obtained by removing [e] from [v]. *)
