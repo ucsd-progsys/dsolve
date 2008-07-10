@@ -91,7 +91,7 @@ val sub: i: int -> j: int ->
 *)
 
 
-val iteri: (i: int -> 'a -> 'a) -> RGDTREE(v, i >= 0 and i < L(v)) -> unit
+val iteri: (int -> 'a -> 'a) -> RGDTREE(v, i >= 0 and i < L(v)) -> unit
 
 
 
