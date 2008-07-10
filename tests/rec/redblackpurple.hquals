@@ -1,5 +1,6 @@
+qualif FALSE(v) : 1 = 0
+
 (* Color quals *)
-qualif FALSE(v):          0 = 1
 qualif COLOR(v):          color v = [0, 1, 2, 3]
 qualif COLORNOTPURPLE(v): color v <= [0, 1, 2]
 qualif WHENPURPLE(v):     (color v <= 2) or (color ~A = 2)
@@ -7,13 +8,10 @@ qualif MAYBERED(v):       color v <= 1 or color e1 <= 1
 qualif MAYBERED(v):       color v = 2 or color e1 = 2
 
 (* Balance quals *)
-
 qualif INC(v): height v = 1 + height ~A
 qualif EQH(v): height v = height ~A
 qualif BAL(v): height v = height e1
 
 (* BST quals *)
-
-qualif FALSE(v) : 1 = 0
 qualif TCOMP(v) : v { >, < } e0
 qualif COMP(v)  : ~A { >, < } v
