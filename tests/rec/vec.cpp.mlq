@@ -94,9 +94,9 @@ val iteri: t: UGDTREE -> ({v: int | v >= 0 and v < L(t)} -> 'a -> 'b) -> unit
 val rangeiteri: i: int -> j: int -> t: UGDTREE -> ({v: int | v >= i and v <= j} -> 'a -> unit) -> unit
 
 val revrangeiteri: i: int -> j: int -> t: UGDTREE -> ({v: int | v >= i and v <= j} -> 'a -> unit) -> unit
-
+(*
 val mapi: t: UGDTREE -> ({v: int | v >= i and v <= j} -> 'a -> unit) -> unit
-
+*)
 
 
 
