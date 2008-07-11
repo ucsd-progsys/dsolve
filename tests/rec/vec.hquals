@@ -28,13 +28,12 @@ qualif H(_v)(A: 'a t): height _v { * * } height ~A
 qualif H(v)     : height v { * * } height e0
 *)
 
-(* iteri///
+(* for fold/iter etc *)
 qualif ITERI(v) : v <= length t - length t'
 qualif ITERI(v) : v + k = [i, j]
-*)
+qualif MAPI(v) : ~A <= length t - length v
 
 qualif SUB(v) : length v = j - i
-
 qualif ISEMPTY(v) : v = (height t = 0 or length t = 0 ? 1 : 0)
 qualif LVAR(_v) : length _v { * * } ~A 
 qualif LVARV(v) : v { * * } length ~A
@@ -46,7 +45,4 @@ qualif LLL(v) : length v = [n, i] {< +, - >} 1
 qualif LSUM(v) : length v = [0, 1] + length [t1, l] + length [t2, r]
 qualif E1(v): v = length e0
 qualif E4(v): v = length e3
-
-
-(* note to self: do some aggressive variable renaming at some point *)
 

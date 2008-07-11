@@ -308,14 +308,12 @@ let rec sub i j t =
 	  recbal ll dd rr
 	end
       end
-*)
 
-      (*
 let rec iter f = function
     Empty -> ()
   | Node(l, _, d, r, _, _) ->
       iter f l; f d; iter f r
-      *)
+
 
 let rec iteri t f = 
   let rec offsetiteri t' k =
@@ -326,38 +324,36 @@ let rec iteri t f =
         f (k + cl) d;
         offsetiteri r (k + cl + 1)
   in offsetiteri t 0
-  
 
-
- 
-
- (*
+*)
+(*
 let rec reviter f = function
     Empty -> ()
   | Node(l, _, d, r, _, _) ->
-      iter f r; f d; iter f l
-      
+      reviter f r; f d; reviter f l
 
-let rec rangeiter t f i j = function
+let rec rangeiter t f i j =
+  match t with
     Empty -> ()
   | Node(l, cl, d, r, cr, _) ->
       if i < j then begin 
-	if i < cl && j > 0 then rangeiter f i j l; 
-	if i <= cl && j > cl then f d;
-	if j > cl + 1 && i <= cl + cr + 1 then rangeiter f (i - cl - 1) (j - cl - 1) r
+	if i < cl && j > 0 then rangeiter l f i j else (); 
+	if i <= cl && j > cl then f d else ();
+	if j > cl + 1 && i <= cl + cr + 1 then rangeiter r f (i - cl - 1) (j - cl - 1) else ()
       end
 
-let rec revrangeiter f i j = function
+(* another bug in revrangeiter *)
+let rec revrangeiter t f i j =
+  match t with
     Empty -> ()
   | Node(l, cl, d, r, cr, _) ->
       if i < j then begin 
-	if j > cl + 1 && i <= cl + cr + 1 then rangeiter f (i - cl - 1) (j - cl - 1) r;
+	if j > cl + 1 && i <= cl + cr + 1 then revrangeiter r f (i - cl - 1) (j - cl - 1);
 	if i <= cl && j > cl then f d;
-	if i < cl && j > 0 then rangeiter f i j l
+	if i < cl && j > 0 then revrangeiter l f i j
       end
-      *)
 
-let rangeiteri i j t f = 
+let rangeiteri i j t f  = 
   let rec offsetrangeiteri k i' j' t' = 
     match t' with
       Empty -> ()
@@ -369,7 +365,6 @@ let rangeiteri i j t f =
       end else ()
   in offsetrangeiteri 0 i j t 
 
-  
 let revrangeiteri i j t f = 
   let rec offsetrevrangeiteri k i j t' =
     match t' with
@@ -383,12 +378,6 @@ let revrangeiteri i j t f =
       end else ()
   in offsetrevrangeiteri 0 i j t 
 
-  (*
-let rec map f = function
-    Empty -> Empty
-  | Node(l, cl, d, r, cr, h) -> Node(map f l, cl, f d, map f r, cr, h)
-  *)
-      
 let mapi t f = 
   let rec offsetmapi k t' =
     match t' with
@@ -396,62 +385,66 @@ let mapi t f =
     | Node(l, cl, d, r, cr, h) -> 
 	Node(offsetmapi k l, cl, f (k + cl) d, offsetmapi (k + cl + 1) r, cr, h)
   in offsetmapi 0 t
-
-  (*(*
-  (*
-let rec fold f v accu =
-  match v with
-    Empty -> accu
-  | Node(l, _, d, r, _, _) ->
-      fold f r (f d (fold f l accu))
-      *)
 	
-let foldi f v accu =
-  let rec offsetfoldi f k v accu = 
-    match v with
+let foldi t f accu =
+  let rec offsetfoldi k t' accu = 
+    match t' with
       Empty -> accu
     | Node(l, cl, d, r, _, _) ->
-	offsetfoldi f (k + cl + 1) r (f (k + cl) d (offsetfoldi f k l accu))
-  in offsetfoldi f 0 v accu
+	offsetfoldi (k + cl + 1) r (f (k + cl) d (offsetfoldi k l accu))
+  in offsetfoldi 0 t accu
 	
-let rangefoldi f i j v accu = 
-  let rec offsetrangefoldi f k i j v accu = 
-    match v with 
+*)
+
+let rangefoldi i j t f accu = 
+  let rec offsetrangefoldi k i j t' accu = 
+    match t' with 
       Empty -> accu
     | Node (l, cl, d, r, cr, _) -> 
 	if i >= j then accu
 	else begin 
-	  let al = if i < cl && j > 0 then offsetrangefoldi f k i j l accu else accu in 
+	  let al = if i < cl && j > 0 then offsetrangefoldi k i j l accu else accu in 
 	  let ad = if i <= cl && j > cl then f (cl + k) d al else al in 
 	  if j > cl + 1 && i <= cl + cr + 1
-	  then offsetrangefoldi f (k + cl + 1) (i - cl - 1) (j - cl - 1) r ad
+	  then offsetrangefoldi (k + cl + 1) (i - cl - 1) (j - cl - 1) r ad
 	  else ad
 	end
-  in offsetrangefoldi f 0 i j v accu 
+  in offsetrangefoldi 0 i j t accu 
 
-let revfoldi f v accu =
-  let rec offsetrevfoldi f k v accu = 
-    match v with
+let revfoldi t f accu =
+  let rec offsetrevfoldi k t' accu = 
+    match t' with
       Empty -> accu
     | Node(l, cl, d, r, _, _) ->
-	offsetrevfoldi f k l (f (k + cl) d (offsetrevfoldi f (k + cl + 1) r accu))
-  in offsetrevfoldi f 0 v accu
+	offsetrevfoldi k l (f (k + cl) d (offsetrevfoldi (k + cl + 1) r accu))
+  in offsetrevfoldi 0 t accu
 
-let revrangefoldi f i j v accu = 
-  let rec offsetrevrangefoldi f k i j v accu = 
-    match v with 
+let revrangefoldi i j t f accu = 
+  let rec offsetrevrangefoldi k i j t' accu = 
+    match t' with 
       Empty -> accu
     | Node (l, cl, d, r, cr, _) -> 
 	if i >= j then accu
 	else begin 
 	  let ar = if j > cl + 1 && i <= cl + cr + 1
-	  then offsetrevrangefoldi f (k + cl + 1) (i - cl - 1) (j - cl - 1) r accu
+	  then offsetrevrangefoldi (k + cl + 1) (i - cl - 1) (j - cl - 1) r accu
 	  else accu
 	  in 
 	  let ad = if i <= cl && j > cl then f (cl + k) d ar else ar in 
-	  if i < cl && j > 0 then offsetrevrangefoldi f k i j l ad else ad
+	  if i < cl && j > 0 then offsetrevrangefoldi k i j l ad else ad
 	end
-  in offsetrevrangefoldi f 0 i j v accu 
+  in offsetrevrangefoldi 0 i j t accu 
+
+(*
+let rec map f = function
+  | Empty -> Empty
+  | Node(l, cl, d, r, cr, h) -> Node(map f l, cl, f d, map f r, cr, h)
+
+let rec fold f v accu =
+  match v with
+    Empty -> accu
+  | Node(l, _, d, r, _, _) ->
+      fold f r (f d (fold f l accu))
 
 let rec of_list = function 
     [] -> Empty 
@@ -462,6 +455,7 @@ let to_list v =
       Empty -> accu 
     | Node (l, _, d, r, _, _) -> auxtolist (d :: auxtolist accu r) l 
   in auxtolist [] v;;
+*)
 
 let rec to_array w = 
   match w with 
@@ -482,13 +476,13 @@ let rec to_array w =
 	in fill a 0 w 
       end
 	      
+(*
 let of_array a =
   let f accu el = append el accu in 
   Array.fold_left f Empty a;; 
 
 (* Visitor paradigm *)
 
-(*
 (* Post-order visitor *)
 let visit_post ve vn a = 
   let rec f = function
@@ -536,5 +530,3 @@ end;;
 *)
 
 
-*)
-     *) 

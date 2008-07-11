@@ -1,0 +1,6 @@
+measure len = | E -> 0 | Bl (d, l, r, h) -> 1 + len d + len r | Br (d, l, r, h) -> 1 + len d + len r
+
+measure height = | E -> 0 | Bl (d, l, r, h) -> h | Br (d, l, r, h) -> h 
+
+val insert: 'a -> t: 'a avl -> {v : 'a avl | len v = 1 + len t}  
+
