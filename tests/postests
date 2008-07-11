@@ -8,5 +8,6 @@ tests/rec/mktree.ml    4 False
 tests/rec/quicksort.ml 4 False
 tests/null_subst.lm    4 False
 tests/rec/rjmerge.ml   4 False
+tests/rec/redblackpurple.ml 4 False
 tests/rec/map.ml       4 False
 tests/rec/redblack.ml  4 False
