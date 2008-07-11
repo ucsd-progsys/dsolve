@@ -7,6 +7,7 @@
 #define L(v) length v
 #define ITE(x, y, z) (x ? y : z)
 #define MAX(x, y) ITE(x >= y, x, y)
+#define MIN(x, y) ITE(x >= y, y, x)
 #define MAXP(x, y, n) ITE(x >= y, x, y) + n
 #define ISHEIGHT(e2, e3, v) ((v = MAXP(H(e2), H(e3), 1)) and v >= 0)
 
@@ -16,7 +17,7 @@
 #define LSUMP(v, l, r, n) (L(v) = L(l) + L(r) + n)
 #define LSUM(v, l, r) LSUMP(v, l, r, 0)
 
-#define HGE0(v) (H(v) >= 0)
+#define HGE0(v) (H(v) >= 0 and L(v) >= 0)
 #define BALW(e2, v, n) (H(v) <= H(e2) + n and H(v) >= H(e2) - n)
 
 #define RGDTREE(v, r) {v: TREE(z, R(e0, z, HGE0(e0)), {e1: int | ISLEN(e1, e0)}, e2: 'a, \
@@ -32,7 +33,7 @@ measure length =
   | Empty -> 0
   | Node (_, cl, _, _, cr, _) -> 1 + cl + cr
 
-
+(*
 val makenode: l: UGDTREE -> 'a -> r: RGDTREE(v, BALW(l, v, 2)) -> 
   RGDTREE(v, H(v) = MAXP(H(l), H(r), 1) and L(v) = 1 + L(r) + L(l))
 
@@ -81,17 +82,21 @@ val remove: i: {v: int | v >= 0} -> t: RGDTREE(v, H(v) > 0 and L(v) > i) -> RGDT
            
 
 val insert: i: {v: int | v >= 0} -> 'a -> t: RGDTREE(v, L(v) >= i) -> RGDTREE(v, HBTWN(v, H(t), H(t) + 1) and L(v) = L(t) + 1)
- 
+*) 
 (*
 val sub: i: {v: int | v >= 0} -> j: {v: int | v >= i} ->
     t: rgdtree(v, l(v) >= 0 and l(v) > j) -> rgdtree(v, h(v) <= h(t) and l(v) = j-i)
-
-val sub: i: int -> j: int -> 
-    t: rgdtree(v, l(v) >= 0) -> rgdtree(v, h(v) <= h(t) and l(v) = j-i)
 *)
+val sub: i: int -> j: int -> 
+    t: UGDTREE -> RGDTREE(v, H(v) <= H(t) and L(v) = (i > j ? 0 : MIN(j, L(t)) - MAX(i, 0)))
 
 
-val iteri: (int -> 'a -> 'a) -> RGDTREE(v, i >= 0 and i < L(v)) -> unit
+(*
+val iteri: t: UGDTREE -> ({v: int | v >= 0 and v < L(t)} -> 'a -> 'a) -> unit
+
+val rangeiteri: t: 
+
+*)
 
 
 

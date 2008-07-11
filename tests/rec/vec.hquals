@@ -37,7 +37,12 @@ qualif BAL(v)   : height v { <=, >= } height e0 {< -, + >} [1, 2, 3, 4]
 qualif H(_v)(A: 'a t): height _v { * * } height ~A
 qualif H(v)     : height v { * * } height e0
 
-qualif BALINVAR(v):
+qualif SUBINVAR(v):
+   (*length v = (i >= j ? 0 : (j < length t ? j : length t) - (i >= 0 ? i : 0))*) 
+   i < j or length v = 0
+qualif SUBINVAR(v):
+   ((i >= j or i < 0) or j >= length t) or length v = j - i
+(*qualif BALINVAR(v):
    height v { >=, <= } (height l >= height r ? height l : height r) {< +, - >} [1, 2]
 qualif BALINVAR(v):
    height v >= (height l <= height r + 2 and height l >= height r - 2 ? (height l >= height r ? height l : height r) + 1 : 0)
@@ -62,4 +67,4 @@ qualif H(v)(A: 'a t): v = height ~A
 
 qualif PhhHH(v)   : height v >= (height t1 >= height t2 ? height t1 : height t2)
 qualif PhhHH(v)   : height v <= (height t1 >= height t2 ? height t1 + 1 : height t2 + 1)
-  *)
+  *)*)
