@@ -1,5 +1,6 @@
 qualif FALSE(v) : 1 = 0
-qualif G0(v) : v { >, >= } 0
+qualif G0(v) : v {=, >, >= } 0
+qualif V(v) : v { * * } ~A
 
 (*
 qualif Ph(v): v = (height e0 >= height e3 ? height e0 : height e3) + 1
@@ -27,7 +28,10 @@ qualif H(_v)(A: 'a t): height _v { * * } height ~A
 qualif H(v)     : height v { * * } height e0
 *)
 
-
+(* iteri///
+qualif ITERI(v) : v <= length t - length t'
+qualif ITERI(v) : v + k = [i, j]
+*)
 
 qualif SUB(v) : length v = j - i
 
