@@ -162,8 +162,6 @@ let gen_preds p =
           let ts = gen_pred_rec t in
           let e1s = gen_expr_rec e1 in
           let e2s = gen_expr_rec e2 in
-          let a = List.length e1s * List.length e2s * List.length ts in
-          let _ = Format.printf "@[nasty ITE@ %i@]@." a in
             C.tflap3 (ts, e1s, e2s) (fun a b c -> Ite (a, b, c))
   and gen_pred_rec pd =
     match pd with
