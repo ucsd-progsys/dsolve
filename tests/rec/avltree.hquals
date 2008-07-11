@@ -1,1 +1,5 @@
-qualif LEN(v) : len v = len ~A + [0 , 1]
+qualif LLE(v) : len v - len ~A  {< * , + , - >} [0,1] { <=, >= } 0
+qualif LEQ(v) : v = len ~A
+qualif HEQ(v) : v = height ~A
+qualif HLE(v) : height v - height ~A  {< * , + , - >} [0,1,2,3] { <=, >= } 0
+qualif FALSE(v): 0 = 1
