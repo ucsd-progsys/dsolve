@@ -51,7 +51,8 @@ let length t =
   match t with
     Empty -> 0
   | Node (_, cl, _, _, cr, _) -> 1 + cl + cr
-(*
+
+  (*
 let makenode l d r =
   let (hl, cl) = match l with
                     Empty -> (0,0)
@@ -285,28 +286,29 @@ let rec insert i d t =
       if i < cl then bal (insert i d l) dd r 
       else if i > cl then bal l dd (insert (i - cl - 1) d r)
       else bal l d (insert 0 dd r)
-*)      
+      
+
+
 let rec sub i j t = 
   match t with 
     Empty -> Empty
   | Node (l, cl, dd, r, cr, _) -> 
       if i >= j then Empty
 	(* Important for sharing *)
-      else if i <= 0 && j >= cl + cr + 1 then (*t*) assert false 
+      else if i <= 0 && j >= cl + cr + 1 then t
       else begin 
-	(*if j <= cl then sub i j l 
+	if j <= cl then sub i j l 
 	else if j = cl + 1 then append dd (sub i cl l)
 	else if i = cl then insert 0 dd (sub 0 (j - cl - 1) r)
 	else if i > cl then sub (i - cl - 1) (j - cl - 1) r
 	else begin
 	  (* dd straddles the interval *)
-	  (*let ll = sub i cl l in 
+	  let ll = sub i cl l in 
 	  let rr = sub 0 (j - cl - 1) r in 
-	  recbal ll dd rr *)
-    assert false
-	end*) assert false
+	  recbal ll dd rr
+	end
       end
-
+*)
 
       (*
 let rec iter f = function
@@ -314,18 +316,20 @@ let rec iter f = function
   | Node(l, _, d, r, _, _) ->
       iter f l; f d; iter f r
       *)
-(*
-let rec iteri v f = 
-  let rec offsetiteri t k f =
-    match t with
+
+let rec iteri t f = 
+  let rec offsetiteri t' k =
+    match t' with
       Empty -> ()
     | Node(l, cl, d, r, _, _) ->
-        offsetiteri l k f; f (k + cl) d; offsetiteri r (k + cl + 1) f
-  in offsetiteri 0 f v
-  *)
+        offsetiteri l k;
+        f (k + cl) d;
+        offsetiteri r (k + cl + 1)
+  in offsetiteri t 0
+  
 
-(*
- (*
+
+ 
 
  (*
 let rec reviter f = function
@@ -353,30 +357,31 @@ let rec revrangeiter f i j = function
       end
       *)
 
-let rangeiteri v f i j = 
-  let rec offsetrangeiteri t f k i j =
-    match t with
+let rangeiteri i j t f = 
+  let rec offsetrangeiteri k i' j' t' = 
+    match t' with
       Empty -> ()
     | Node(l, cl, d, r, cr, _) ->
-      if i < j then begin 
-	if i < cl && j > 0 then offsetrangeiteri f k i j l; 
-	if i <= cl && j > cl then f (k + cl) d;
-	if j > cl + 1 && i <= cl + cr + 1 
-	then offsetrangeiteri f (k + cl + 1) (i - cl - 1) (j - cl - 1) r
-      end
-  in offsetrangeiteri f 0 i j v 
+      if i' < j' then begin 
+         if i' < cl && j' > 0 then offsetrangeiteri k i' j' l else (); 
+         if i' <= cl && j' > cl then f (k + cl) d else ();
+         if j' > cl + 1 && i' <= cl + cr + 1 then offsetrangeiteri (k + cl + 1) (i' - cl - 1) (j' - cl - 1) r else ()
+      end else ()
+  in offsetrangeiteri 0 i j t 
 
-let revrangeiteri f i j v = 
-  let rec offsetrevrangeiteri f k i j = function
+  
+let revrangeiteri i j t f = 
+  let rec offsetrevrangeiteri k i j t' =
+    match t' with
       Empty -> ()
     | Node(l, cl, d, r, cr, _) ->
       if i < j then begin 
 	if j > cl + 1 && i <= cl + cr + 1 
-	then offsetrevrangeiteri f (k + cl + 1) (i - cl - 1) (j - cl - 1) r;
-	if i <= cl && j > cl then f (k + cl) d;
-	if i < cl && j > 0 then offsetrevrangeiteri f k i j l
-      end
-  in offsetrevrangeiteri f 0 i j v 
+	then offsetrevrangeiteri (k + cl + 1) (i - cl - 1) (j - cl - 1) r else ();
+	if i <= cl && j > cl then f (k + cl) d else ();
+	if i < cl && j > 0 then offsetrevrangeiteri k i j l else ()
+      end else ()
+  in offsetrevrangeiteri 0 i j t 
 
   (*
 let rec map f = function
@@ -384,13 +389,15 @@ let rec map f = function
   | Node(l, cl, d, r, cr, h) -> Node(map f l, cl, f d, map f r, cr, h)
   *)
       
-let mapi f v = 
-  let rec offsetmapi f k = function 
+let mapi t f = 
+  let rec offsetmapi k t' =
+    match t' with
       Empty -> Empty
     | Node(l, cl, d, r, cr, h) -> 
-	Node(offsetmapi f k l, cl, f (k + cl) d, offsetmapi f (k + cl + 1) r, cr, h)
-  in offsetmapi f 0 v 
+	Node(offsetmapi k l, cl, f (k + cl) d, offsetmapi (k + cl + 1) r, cr, h)
+  in offsetmapi 0 t
 
+  (*(*
   (*
 let rec fold f v accu =
   match v with
