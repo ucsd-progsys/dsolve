@@ -28,10 +28,10 @@ qualif H(_v)(A: 'a t): height _v { * * } height ~A
 qualif H(v)     : height v { * * } height e0
 *)
 
-(* iteri///
+(* for fold/iter etc *)
 qualif ITERI(v) : v <= length t - length t'
 qualif ITERI(v) : v + k = [i, j]
-*)
+qualif MAPI(v) : ~A <= length t - length v
 
 qualif SUB(v) : length v = j - i
 qualif ISEMPTY(v) : v = (height t = 0 or length t = 0 ? 1 : 0)

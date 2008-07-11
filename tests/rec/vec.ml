@@ -314,6 +314,7 @@ let rec iter f = function
   | Node(l, _, d, r, _, _) ->
       iter f l; f d; iter f r
 
+
 let rec iteri t f = 
   let rec offsetiteri t' k =
     match t' with
@@ -324,18 +325,21 @@ let rec iteri t f =
         offsetiteri r (k + cl + 1)
   in offsetiteri t 0
 
+*)
+(*
 let rec reviter f = function
     Empty -> ()
   | Node(l, _, d, r, _, _) ->
-      iter f r; f d; iter f l
+      reviter f r; f d; reviter f l
 
-let rec rangeiter t f i j = function
+let rec rangeiter t f i j =
+  match t with
     Empty -> ()
   | Node(l, cl, d, r, cr, _) ->
       if i < j then begin 
-	if i < cl && j > 0 then rangeiter f i j l; 
-	if i <= cl && j > cl then f d;
-	if j > cl + 1 && i <= cl + cr + 1 then rangeiter f (i - cl - 1) (j - cl - 1) r
+	if i < cl && j > 0 then rangeiter l f i j else (); 
+	if i <= cl && j > cl then f d else ();
+	if j > cl + 1 && i <= cl + cr + 1 then rangeiter r f (i - cl - 1) (j - cl - 1) else ()
       end
 
 (* another bug in revrangeiter *)
@@ -349,8 +353,6 @@ let rec revrangeiter t f i j =
 	if i < cl && j > 0 then revrangeiter l f i j
       end
 
-*)
-
 let rangeiteri i j t f  = 
   let rec offsetrangeiteri k i' j' t' = 
     match t' with
@@ -363,7 +365,6 @@ let rangeiteri i j t f  =
       end else ()
   in offsetrangeiteri 0 i j t 
 
-  
 let revrangeiteri i j t f = 
   let rec offsetrevrangeiteri k i j t' =
     match t' with
@@ -393,6 +394,8 @@ let foldi t f accu =
 	offsetfoldi (k + cl + 1) r (f (k + cl) d (offsetfoldi k l accu))
   in offsetfoldi 0 t accu
 	
+*)
+
 let rangefoldi i j t f accu = 
   let rec offsetrangefoldi k i j t' accu = 
     match t' with 

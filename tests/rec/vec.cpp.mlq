@@ -82,15 +82,24 @@ val insert: i: {v: int | v >= 0} -> 'a -> t: RGDTREE('a, v, L(v) >= i) -> RGDTRE
 val sub: i: {v: int | v >= 0} -> j: {v: int | v >= i} ->
     t: RGDTREE('a, v, L(v) >= 0 and L(v) > j) -> RGDTREE('a, v, H(v) <= H(t) and L(v) = j-i)
 
+
 val iteri: t: UGDTREE('a) -> ({v: int | 0 <= v and v < L(t)} -> 'a -> 'b) -> unit
 
-*)
 
 val rangeiteri: i: int -> j: int -> t: UGDTREE('a) -> ({v: int | v >= i and v <= j} -> 'a -> unit) -> unit
 
+
 val revrangeiteri: i: int -> j: int -> t: UGDTREE('a) -> ({v: int | v >= i and v <= j} -> 'a -> unit) -> unit
 
-val mapi: t: UGDTREE('a) -> ({v: int | 0 <= v and v < L(t)} -> 'a -> 'b) -> UGDTREE('a)('b) 
 
+val mapi: t: UGDTREE('a) -> ({v: int | 0 <= v and v < L(t)} -> 'a -> 'b) -> UGDTREE('b) 
 
+val foldi: t: UGDTREE('a) -> ({v: int | 0 <= v and v < L(t)} -> 'a -> 'b -> 'b) -> 'b -> 'b  
 
+*)
+
+val rangefoldi: i: int -> j: int -> t: UGDTREE('a) -> ({v: int | v >= i and v <= j} -> 'a -> 'b -> 'b) -> 'b -> 'b
+
+val revfoldi: t: UGDTREE('a) -> ({v: int | 0 <= v and v < L(t)} -> 'a -> 'b -> 'b) -> 'b -> 'b  
+
+val revrangefoldi: i: int -> j: int -> t: UGDTREE('a) -> ({v: int | v >= i and v <= j} -> 'a -> 'b -> 'b) -> 'b -> 'b
