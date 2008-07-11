@@ -51,7 +51,7 @@ let length t =
   match t with
     Empty -> 0
   | Node (_, cl, _, _, cr, _) -> 1 + cl + cr
-
+(*
 let makenode l d r =
   let (hl, cl) = match l with
                     Empty -> (0,0)
@@ -285,16 +285,16 @@ let rec insert i d t =
       if i < cl then bal (insert i d l) dd r 
       else if i > cl then bal l dd (insert (i - cl - 1) d r)
       else bal l d (insert 0 dd r)
-      
-(*let rec sub i j v = 
-  match v with 
+*)      
+let rec sub i j t = 
+  match t with 
     Empty -> Empty
   | Node (l, cl, dd, r, cr, _) -> 
       if i >= j then Empty
 	(* Important for sharing *)
-      else if i <= 0 && j >= cl + cr + 1 then v 
+      else if i <= 0 && j >= cl + cr + 1 then (*t*) assert false 
       else begin 
-	if j <= cl then sub i j l 
+	(*if j <= cl then sub i j l 
 	else if j = cl + 1 then append dd (sub i cl l)
 	else if i = cl then insert 0 dd (sub 0 (j - cl - 1) r)
 	else if i > cl then sub (i - cl - 1) (j - cl - 1) r
@@ -303,17 +303,10 @@ let rec insert i d t =
 	  (*let ll = sub i cl l in 
 	  let rr = sub 0 (j - cl - 1) r in 
 	  recbal ll dd rr *)
-	end
+    assert false
+	end*) assert false
       end
 
-let sub i j v =
-  match v with
-  | Empty -> Empty
-  | Node (_, _, _, _, _, _) ->
-      if i >= j then Empty
-      else if i <= 0 && j >= cl + cr + 1 then v
-      else sub_rec i j v *)
-      
 
       (*
 let rec iter f = function
@@ -321,21 +314,27 @@ let rec iter f = function
   | Node(l, _, d, r, _, _) ->
       iter f l; f d; iter f r
       *)
+(*
+let rec iteri v f = 
+  let rec offsetiteri t k f =
+    match t with
+      Empty -> ()
+    | Node(l, cl, d, r, _, _) ->
+        offsetiteri l k f; f (k + cl) d; offsetiteri r (k + cl + 1) f
+  in offsetiteri 0 f v
+  *)
 
-let rec iteri f v = 
-  let rec offsetiteri f k = function
-    Empty -> ()
-  | Node(l, cl, d, r, _, _) ->
-      offsetiteri f k l; f (k + cl) d; offsetiteri f (k + cl + 1) r
-  in offsetiteri f 0 v
+(*
+ (*
 
-(*(*
+ (*
 let rec reviter f = function
     Empty -> ()
   | Node(l, _, d, r, _, _) ->
       iter f r; f d; iter f l
+      
 
-let rec rangeiter f i j = function
+let rec rangeiter t f i j = function
     Empty -> ()
   | Node(l, cl, d, r, cr, _) ->
       if i < j then begin 
@@ -352,9 +351,11 @@ let rec revrangeiter f i j = function
 	if i <= cl && j > cl then f d;
 	if i < cl && j > 0 then rangeiter f i j l
       end
+      *)
 
-let rangeiteri f i j v = 
-  let rec offsetrangeiteri f k i j = function
+let rangeiteri v f i j = 
+  let rec offsetrangeiteri t f k i j =
+    match t with
       Empty -> ()
     | Node(l, cl, d, r, cr, _) ->
       if i < j then begin 
@@ -377,9 +378,11 @@ let revrangeiteri f i j v =
       end
   in offsetrevrangeiteri f 0 i j v 
 
+  (*
 let rec map f = function
     Empty -> Empty
   | Node(l, cl, d, r, cr, h) -> Node(map f l, cl, f d, map f r, cr, h)
+  *)
       
 let mapi f v = 
   let rec offsetmapi f k = function 
@@ -388,11 +391,13 @@ let mapi f v =
 	Node(offsetmapi f k l, cl, f (k + cl) d, offsetmapi f (k + cl + 1) r, cr, h)
   in offsetmapi f 0 v 
 
+  (*
 let rec fold f v accu =
   match v with
     Empty -> accu
   | Node(l, _, d, r, _, _) ->
       fold f r (f d (fold f l accu))
+      *)
 	
 let foldi f v accu =
   let rec offsetfoldi f k v accu = 
@@ -476,6 +481,7 @@ let of_array a =
 
 (* Visitor paradigm *)
 
+(*
 (* Post-order visitor *)
 let visit_post ve vn a = 
   let rec f = function
@@ -519,5 +525,9 @@ if false then begin
   Printf.printf "%s\n" (revrangefoldi ff 5 13 v "");
   print_vec (setappend (-2) (-1) 16 (sub 4 12 v))
 
-end;;*)
+end;;
+*)
+
+
+*)
      *) 
