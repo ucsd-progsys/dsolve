@@ -51,7 +51,7 @@ let length t =
   match t with
     Empty -> 0
   | Node (_, cl, _, _, cr, _) -> 1 + cl + cr
-(*
+
 let makenode l d r =
   let (hl, cl) = match l with
                     Empty -> (0,0)
@@ -61,7 +61,7 @@ let makenode l d r =
                   | Node(_,rcl,_,_,rcr,h) -> (h, rcl + rcr + 1) in
   Node(l, cl, d, r, cr, (if hl >= hr then hl + 1 else hr + 1))
 
-
+(*
 let rec create d n =
     if n = 0 then Empty else
       let ml = n / 2 in 
@@ -285,26 +285,27 @@ let rec insert i d t =
       if i < cl then bal (insert i d l) dd r 
       else if i > cl then bal l dd (insert (i - cl - 1) d r)
       else bal l d (insert 0 dd r)
-*)      
+      *)
+
+
 let rec sub i j t = 
   match t with 
     Empty -> Empty
   | Node (l, cl, dd, r, cr, _) -> 
       if i >= j then Empty
 	(* Important for sharing *)
-      else if i <= 0 && j >= cl + cr + 1 then (*t*) assert false 
+      else if i <= 0 && j >= cl + cr + 1 then t
       else begin 
-	(*if j <= cl then sub i j l 
+	if j <= cl then sub i j l 
 	else if j = cl + 1 then append dd (sub i cl l)
 	else if i = cl then insert 0 dd (sub 0 (j - cl - 1) r)
 	else if i > cl then sub (i - cl - 1) (j - cl - 1) r
 	else begin
 	  (* dd straddles the interval *)
-	  (*let ll = sub i cl l in 
+	  let ll = sub i cl l in 
 	  let rr = sub 0 (j - cl - 1) r in 
-	  recbal ll dd rr *)
-    assert false
-	end*) assert false
+	  recbal ll dd rr
+	end
       end
 
 

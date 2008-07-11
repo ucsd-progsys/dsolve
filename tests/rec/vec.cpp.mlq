@@ -33,7 +33,7 @@ measure length =
   | Empty -> 0
   | Node (_, cl, _, _, cr, _) -> 1 + cl + cr
 
-(*
+
 val makenode: l: UGDTREE -> 'a -> r: RGDTREE(v, BALW(l, v, 2)) -> 
   RGDTREE(v, H(v) = MAXP(H(l), H(r), 1) and L(v) = 1 + L(r) + L(l))
 
@@ -82,13 +82,14 @@ val remove: i: {v: int | v >= 0} -> t: RGDTREE(v, H(v) > 0 and L(v) > i) -> RGDT
            
 
 val insert: i: {v: int | v >= 0} -> 'a -> t: RGDTREE(v, L(v) >= i) -> RGDTREE(v, HBTWN(v, H(t), H(t) + 1) and L(v) = L(t) + 1)
-*) 
-(*
+ 
+
 val sub: i: {v: int | v >= 0} -> j: {v: int | v >= i} ->
-    t: rgdtree(v, l(v) >= 0 and l(v) > j) -> rgdtree(v, h(v) <= h(t) and l(v) = j-i)
-*)
+    t: RGDTREE(v, L(v) >= 0 and L(v) > j) -> RGDTREE(v, H(v) <= H(t) and L(v) = j-i)
+(*
 val sub: i: int -> j: int -> 
     t: UGDTREE -> RGDTREE(v, H(v) <= H(t) and L(v) = (i > j ? 0 : MIN(j, L(t)) - MAX(i, 0)))
+    *)
 
 
 (*
