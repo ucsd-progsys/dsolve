@@ -1,18 +1,11 @@
+#define MAX(x, y) (x >= y ? x : y)
+#define HG0(v) (height(v) >= 0)
+#define BALW(e2, v, n) (height(v) <= height(e2) + n and height(v) >= height(e2) - n)
+
 #define T [[], [v: true, v: true, v: true, v: true, v: true]]
-#define LT [[], [v: v < e0, v: true, v: true, v: true, v: true]]
-#define RT [[], [v: v > e0, v: true, v: true, v: true, v: true]]
-#define R(name, rr, rec, ref) {name: rr rec | ref}
-#define U(name, rr, rec) name: rr rec
-#define TREE(rec, k, v, l, r, h) [rec: t . || k, v, l, r, h]
-
-#define H(x) height x
-#define ITE(x, y, z) (x ? y : z)
-#define MAX(x, y) ITE(x >= y, x, y)
-#define MAXP(x, y, n) ITE(x >= y, x + n, y + n)
-#define ISHEIGHT(e2, e3, v) ((v = MAXP(H(e2), H(e3), 1)) and v >= 0)
-
-#define HG0(v) (H(v) >= 0)
-#define BALW(e2, v, n) (H(v) <= H(e2) + n and H(v) >= H(e2) - n)
+#define LT {e2: [[], [v: v < e0, v: true, v: true, v: true, v: true]] z | HG0(e2)}
+#define RT {e3: [[], [v: v > e0, v: true, v: true, v: true, v: true]] z | BALW(e2, e3, 2) and HG0(e3)}
+#define TREE [z: t . || e0: 'a, e1: int, LT, RT, {e4: int | ((e4 = MAX(height(e2), height(e3)) + 1) and e4 >= 0)}]
 
 measure height =
     Empty -> 0
@@ -21,22 +14,20 @@ measure height =
 val add:
   'a ->
   int ->
-  t: T TREE(z, e0: 'a, e1: int, R(e2, LT, z, HG0(e2)), R(e3, RT, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) ->
-  {v': T TREE(z, e0: 'a, e1: int, R(e2, LT, z, HG0(e2)), R(e3, RT, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) | height v' <= height t + 1 and height v' >= height t}
+  t: T TREE ->
+  {v': T TREE | height v' <= height t + 1 and height v' >= height t}
 
 val remove_min_binding:
-  t: T TREE(z, e0: 'a, e1: int, R(e2, LT, z, HG0(e2)), R(e3, RT, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) ->
-  'a * int * {v': T TREE(z, e0: 'a, e1: int, R(e2, LT, z, HG0(e2)), R(e3, RT, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) 
-                                                                                            | height v' >= height t - 1 and height v' <= height t}
+  t: T TREE ->
+  'a * int * {v': T TREE | height v' >= height t - 1 and height v' <= height t}
 
 val merge:
   m: 'a ->
-  t1: [[], [v: v < m, v: true, v: true, v: true, v: true]] TREE(z, e0: 'a, e1: int, R(e2, LT, z, HG0(e2)), R(e3, RT, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) ->
-  t2: {t2: [[], [v: v > m, v: true, v: true, v: true, v: true]] TREE(z, e0: 'a, e1: int, R(e2, LT, z, HG0(e2)), R(e3, RT, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) | BALW(t1, t2, 2)} ->
-  {v': T TREE(z, e0: 'a, e1: int, R(e2, LT, z, HG0(e2)), R(e3, RT, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) 
-                                                                                            | H(v') <= MAXP(H(t1), H(t2), 1) and H(v') >= MAX(H(t1), H(t2)) }
+  t1: [[], [v: v < m, v: true, v: true, v: true, v: true]] TREE ->
+  t2: {t2: [[], [v: v > m, v: true, v: true, v: true, v: true]] TREE | BALW(t1, t2, 2)} ->
+  {v': T TREE | height(v') <= MAX(height(t1), height(t2)) + 1 and height(v') >= MAX(height(t1), height(t2))}
 
 val remove:
   'a ->
-  t: T TREE(z, e0: 'a, e1: int, R(e2, LT, z, HG0(e2)), R(e3, RT, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) ->
-  {v': T TREE(z, e0: 'a, e1: int, R(e2, LT, z, HG0(e2)), R(e3, RT, z, BALW(e2, e3, 2) and HG0(e3)), {e4: int | ISHEIGHT(e2, e3, e4)}) | height v' >= height t - 1 and height v' <= height t}
+  t: T TREE ->
+  {v': T TREE | height v' >= height t - 1 and height v' <= height t}
