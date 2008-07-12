@@ -1,3 +1,4 @@
+qualif FALSE(v) : (1 = 0)
 qualif COMP(v)  : ~A { * * } v 
 qualif INTLIT(v): ^ { * * } v  
 qualif HGE0(v)  : height v >= 0

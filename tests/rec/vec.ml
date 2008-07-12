@@ -1,46 +1,7 @@
-(* Vec: implementation of extensible arrays. 
-
-   Copyright Luca de Alfaro <lda@dealfaro.com>, 2007.
-
-   Version 1.1
-
-   Based on Xavier Leroy's code for Set and Map.
-
-   This library is free software; you can redistribute it and/or
-   modify it under the terms of the GNU Library General Public
-   License as published by the Free Software Foundation; either
-   version 2 of the License, or (at your option) any later version,
-   with the following special exception:
-
-   You may link, statically or dynamically, a "work that uses the
-   Library" with a publicly distributed version of the Library to
-   produce an executable file containing portions of the Library, and
-   distribute that executable file under terms of your choice, without
-   any of the additional requirements listed in clause 6 of the GNU
-   Library General Public License.  By "a publicly distributed version
-   of the Library", we mean either the unmodified Library as
-   distributed by INRIA, or a modified version of the Library that is
-   distributed under the conditions defined in clause 2 of the GNU
-   Library General Public License.  This exception does not however
-   invalidate any other reasons why the executable file might be
-   covered by the GNU Library General Public License.
-
-   This library is distributed in the hope that it will be useful, but
-   WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   Library General Public License for more details.
-
-   The GNU Library General Public License is available at
-   http://www.gnu.org/copyleft/lgpl.html; to obtain it, you can also
-   write to the Free Software Foundation, Inc., 59 Temple Place -
-   Suite 330, Boston, MA 02111-1307, USA.
- *)
 type 'a t =
     Empty
       (* meaning: node of left el, left n.els, element, right el, right n. els, heigth *)
   | Node of 'a t * int * 'a * 'a t * int * int
-
-(*exception Vec_index_out_of_bounds*)
 
 let height t =
   match t with
@@ -326,33 +287,6 @@ let rec iteri t f =
   in offsetiteri t 0
 
 
-(*
-let rec reviter f = function
-    Empty -> ()
-  | Node(l, _, d, r, _, _) ->
-      reviter f r; f d; reviter f l
-
-let rec rangeiter t f i j =
-  match t with
-    Empty -> ()
-  | Node(l, cl, d, r, cr, _) ->
-      if i < j then begin 
-	if i < cl && j > 0 then rangeiter l f i j else (); 
-	if i <= cl && j > cl then f d else ();
-	if j > cl + 1 && i <= cl + cr + 1 then rangeiter r f (i - cl - 1) (j - cl - 1) else ()
-      end
-
-(* another bug in revrangeiter *)
-let rec revrangeiter t f i j =
-  match t with
-    Empty -> ()
-  | Node(l, cl, d, r, cr, _) ->
-      if i < j then begin 
-	if j > cl + 1 && i <= cl + cr + 1 then revrangeiter r f (i - cl - 1) (j - cl - 1);
-	if i <= cl && j > cl then f d;
-	if i < cl && j > 0 then revrangeiter l f i j
-      end
-*)
 let rangeiteri i j t f  = 
   let rec offsetrangeiteri k i' j' t' = 
     match t' with
@@ -393,8 +327,6 @@ let foldi t f accu =
     | Node(l, cl, d, r, _, _) ->
 	offsetfoldi (k + cl + 1) r (f (k + cl) d (offsetfoldi k l accu))
   in offsetfoldi 0 t accu
-	
-
 
 let rangefoldi i j t f accu = 
   let rec offsetrangefoldi k i j t' accu = 
@@ -435,28 +367,6 @@ let revrangefoldi i j t f accu =
 	end
   in offsetrevrangefoldi 0 i j t accu 
 
-(*
-let rec map f = function
-  | Empty -> Empty
-  | Node(l, cl, d, r, cr, h) -> Node(map f l, cl, f d, map f r, cr, h)
-
-let rec fold f v accu =
-  match v with
-    Empty -> accu
-  | Node(l, _, d, r, _, _) ->
-      fold f r (f d (fold f l accu))
-
-let rec of_list = function 
-    [] -> Empty 
-  | d :: l -> insert 0 d (of_list l)
-
-let to_list v = 
-  let rec auxtolist accu = function 
-      Empty -> accu 
-    | Node (l, _, d, r, _, _) -> auxtolist (d :: auxtolist accu r) l 
-  in auxtolist [] v;;
-*)
-
 let rec to_array t = 
   match t with 
     Empty -> [||]
@@ -477,57 +387,5 @@ let rec to_array t =
 	in fill 0 t 
       end
 	      
-(*
-let of_array a =
-  let f accu el = append el accu in 
-  Array.fold_left f Empty a;; 
-
-(* Visitor paradigm *)
-
-(* Post-order visitor *)
-let visit_post ve vn a = 
-  let rec f = function
-      Empty -> ve
-    | Node (l, _, d, r, _, _) -> 
-	let rl = f l in 
-	let rr = f r in 
-	vn rl d rr
-  in f a;;
-
-(* In-order visitor *)
-let visit_in ve vl vr a = 
-  let rec f = function 
-      Empty -> ve
-    | Node (l, _, d, r, _, _) ->
-	let rl = vl (f l) d in 
-	vr rl (f r)
-  in f a;; 
-
-(* Unit testing *)
-
-if false then begin 
-  let print_vec v = 
-    let p i = Printf.printf " %d" i in 
-    Printf.printf "["; iter p v; Printf.printf " ]\n"
-  in
-  let v = of_list [0; 1; 2; 3; 4; 5; 6; 7; 8; 9; 10; 11; 12; 13; 14; 15; 16; 17; 18; 19] in 
-  print_vec v; 
-  print_vec (of_array (to_array v));
-  Printf.printf "%d\n" (get 5 v); 
-  let u = concat v v in
-  Printf.printf "%d\n" (length u); 
-  Printf.printf "\n"; 
-  print_vec (sub 4 9 (set 5 100 v)); 
-  print_vec (sub (-10) 43 v); 
-  print_vec (sub 30 30 v); 
-  print_vec (sub 1 11 v); 
-  let mult2 x = 2 * x in 
-  print_vec (map mult2 (sub 3 8 v));
-  let ff i d acc = (string_of_int i) ^ ":" ^ (string_of_int d) ^ ", " ^ acc in 
-  Printf.printf "%s\n" (revrangefoldi ff 5 13 v "");
-  print_vec (setappend (-2) (-1) 16 (sub 4 12 v))
-
-end;;
-*)
 
 

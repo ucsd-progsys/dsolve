@@ -1,4 +1,4 @@
-(*qualif FALSE(v) : 1 = 0*)
+qualif FALSE(v) : 1 = 0
 qualif G0(v) : v {=, >, >= } 0
 qualif V(v) : v { * * } ~A
 

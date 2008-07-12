@@ -28,18 +28,8 @@ measure length =
   | Empty -> 0
   | Node (_, cl, _, _, cr, _) -> 1 + cl + cr
 
-(*
-val makenode: l: UGDTREE('a) -> 'a -> r: RGDTREE('a, v, BALW(l, v, 2)) -> 
-  RGDTREE('a, v, H(v) = MAXP(H(l), H(r), 1) and L(v) = 1 + L(r) + L(l))
-*)
 val create: 'a -> n: {v: int | v >= 0} -> RGDTREE('a, v, L(v) = n)
-(*
-val bal: l: UGDTREE('a) -> 'a -> r: RGDTREE('a, v, BALW(l, v, 3)) ->
-  RGDTREE('a, v, (H(v) <= MAXP(H(l), H(r), 1) and H(v) >= MAX(H(l), H(r)) + ITE(BALW(l, r, 2), 1, 0)) and LSUMP(v, l, r, 1))
-                                          
-val recbal: l: UGDTREE('a) -> 'a -> r: UGDTREE('a) ->
-  RGDTREE('a, v, HBTWN(v, MAX(H(l), H(r)) + ITE(BALW(l, r, 2), 1, 0-1), MAXP(H(l), H(r), 1)) and LSUMP(v, l, r, 1))
-*)
+
 val empty: RGDTREE('a, v, H(v) = 0 and L(v) = 0)
 
 val is_empty: t: UGDTREE('a) -> {v: bool | v = (H(t) = 0 or L(t) = 0 ? 1: 0)}
@@ -56,17 +46,6 @@ val append: 'a -> t: UGDTREE('a) -> RGDTREE('a, v, (H(v) <= H(t) + 1 and H(t) >=
 val setappend: 'a -> 'a -> i: {v: int | v >= 0} -> t: RGDTREE('a, v, HGE0(v) and L(v) > 0) -> 
   RGDTREE('a, v, L(v) = ITE(L(t) > i, L(t), i+1) and H(v) >= H(t))
 
-(*
-val leftmost: t: RGDTREE('a, v, H(v) > 0) -> 'a
-  
-
-val remove_leftmost: t: RGDTREE('a, v, H(v) > 0) -> RGDTREE('a, v, HBTWN(v, H(t) - 1, H(t)) and L(v) = L(t) - 1)
-
-
-val merge: t1: UGDTREE('a) -> t2: RGDTREE('a, v, H(v) >= H(t1) - 2 and H(v) <= H(t1) + 3) -> 
-  RGDTREE('a, v, HBTWN(v, MAX(H(t1), H(t2)), MAXP(H(t1), H(t2), 1)) and LSUM(v, t1, t2))
-
-*)
 val concat: t1: UGDTREE('a) -> t2: UGDTREE('a) -> RGDTREE('a, v, HBTWN(v, MAX(H(t1), H(t2)) - 2, MAXP(H(t1), H(t2), 1)) and LSUM(v, t1, t2))
  
 
