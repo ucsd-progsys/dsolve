@@ -72,7 +72,7 @@ let get_by_name (n, env) =
 
 let get_by_name =
   let tbl = Hashtbl.create 17 in
-    fun n env -> Common.do_memo tbl get_by_name (n, env) (n, env)
+    fun n env -> Common.do_memo tbl get_by_name (n, env) n (* (n, env) is proper, but this will do when we only have measures *)
 
 let get_app_shape s env =
   try
