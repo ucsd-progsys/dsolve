@@ -1,13 +1,12 @@
 qualif FALSE(v) : 1 = 0
 qualif G0(v) : v {=, >, >= } 0
-qualif V(v) : v { * * } ~A
+qualif V(v)(A: int) : v { * * } ~A
 
 
 qualif Ph(v): v = (height [l, e0] >= height [r, e3] ? height [l, e0] : height [r, e3]) + 1
 qualif HG0(v) : height v { >, >= } 0
 
-qualif M(v) : v = height ~A
-qualif BAL(v): v { <=, >= } height ~A {< -, + >} [1, 2, 3, 4]
+
 qualif BAL(v): height v { <=, >= } height ~A {< -, + >} [1, 2, 3, 4]
 
 qualif BALINVAR(v):
@@ -15,17 +14,13 @@ qualif BALINVAR(v):
 qualif BALINVAR(v):
    height v >= (height l <= height r + 2 and height l >= height r - 2 ? (height l >= height r ? height l : height r) + 1 : 0)
 qualif BALINVAR(v):
-   height v >= (height l >= height r ? height l : height r) + (height l <= height r + 2 and height l >= height r - 2 ? 1 : 0)
-qualif BALINVAR(v):
-   height v >= (height l >= height r ? height l : height r) + (height l <= height r + 2 and height l >= height r - 2 ? 1 : 0-1)
+   height v >= (height l >= height r ? height l : height r) + (height l <= height r + 2 and height l >= height r - 2 ? 1 : [0, -1])
 
-qualif Phh(v): height v {=, <=} (height [l, ll, lrl, rll] >= height [r, lr, lrr, rlr] ? height [l, ll, lrl, rll] : height [r, lr, lrr, rlr]) + 1 
-qualif Phh(v): height v {=, >=} (height [l, ll, lrl, rll] >= height [r, lr, lrr, rlr] ? height [l, ll, lrl, rll] : height [r, lr, lrr, rlr])
+qualif PhhHH(v): height v {>=, <=} (height [l, t1] >= height [r, t2] ? height [l, t1] : height [r, t2]) {< -, + >} [0, 1]
 
-qualif PhhHH(v): height v {>=, <=} (height t1 >= height t2 ? height t1 : height t2) {< -, + >} 1
 
+qualif M(_v)(A: 'a t): _v = height ~A 
 qualif H(_v)(A: 'a t): height _v { * * } height ~A
-qualif H(v): height v { * * } height e0
 
 
 (* for fold/iter etc *)
@@ -35,9 +30,9 @@ qualif MAPI(v) : ~A <= length t - length v
 qualif TARR(v) : length t = Array.length v
 
 qualif SUB(v) : length v = j - i
-qualif LVAR(_v) : length _v { * * } ~A 
+qualif LVAR(_v)(A: int) : length _v { * * } ~A 
 qualif LVARV(v) : v { * * } length ~A
-qualif LVARVV(v) : length v { * * } length ~A
+qualif LVARVV(v)(A: 'a t) : length v { * * } length ~A
 qualif LCONST(v) : length v { * * } [0, 1]
 qualif LLL(v) : length v = [n, i] {< +, - >} 1
 qualif LSUM(v) : length v = [0, 1] + length [t1, l] + length [t2, r]
