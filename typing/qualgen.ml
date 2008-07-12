@@ -31,9 +31,12 @@ let findm tymap ty = try TM.find ty tymap with Not_found -> IS.empty
 let mk_intset il = 
   let init = (CS.add 0 (CS.add 1 CS.empty)) in
   List.fold_left (fun is i -> CS.add i is) init il
+
+  (* best/worst/best again hack ever *)
+let init_idset = List.fold_left (fun ids id -> IS.add id ids) IS.empty ["e0"; "e1"; "e2"; "e3"; "e4"; "e5"]
     
 let mk_idset pl =
-  List.fold_left (fun ids (_, id) -> IS.add (Ident.name id) ids) IS.empty pl
+  List.fold_left (fun ids (_, id) -> IS.add (Ident.name id) ids) init_idset pl
 
 let mk_tyset pl =
   List.fold_left (fun tys (ty, _) -> TS.add ty tys) TS.empty pl
