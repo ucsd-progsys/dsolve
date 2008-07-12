@@ -6,16 +6,14 @@
 #define LT {e2: [[], [v: v < e0, v: true, v: true, v: true, v: true]] z | HG0(e2)}
 #define RT {e3: [[], [v: v > e0, v: true, v: true, v: true, v: true]] z | BALW(e2, e3, 2) and HG0(e3)}
 #define TREE [z: t . || e0: 'a, e1: int, LT, RT, {e4: int | ((e4 = MAX(height(e2), height(e3)) + 1) and e4 >= 0)}]
+#define RGDTREE(v, r) {v: T TREE | HG0(v) and (r)}
+#define UGDTREE RGDTREE(v, true)
 
 measure height =
     Empty -> 0
   | Node (_, _, _, _, h) -> h
 
-val add:
-  'a ->
-  int ->
-  t: T TREE ->
-  {v': T TREE | height v' <= height t + 1 and height v' >= height t}
+val add: 'a -> int -> t: UGDTREE -> RGDTREE(v, H(v) <= H(t) + 1 and H(v) >= H(t))
 
 val remove_min_binding:
   t: T TREE ->

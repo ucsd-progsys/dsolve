@@ -7,8 +7,6 @@ let height t =
   | Empty -> 0
   | Node (_,_,_,_,h) -> h
 
-let show x = x
-
 let create x d l r =
   let hl = height l in
   let hr = height r in
@@ -33,17 +31,7 @@ let bal x d l r =
       match l with
           Empty -> assert false (* invalid_arg "Map.bal" *)
         | Node (lv, ld, ll, lr, h) ->  (* h must be defd for meas to be asserted *)
-            (*let _ = assert (height ll <= height l - 1) in
-            let _ = assert (height lr <= height l - 1) in
-            let _ = assert (height ll >= height lr - 2) in
-            let _ = assert (height ll <= height lr + 2) in
-            let _ = assert (height ll >= height r) in
-            let _ = assert (height lr >= height r) in*)
             if height ll >= height lr then
-              (*let _ = assert (height ll <= height lr + 2) in
-              let _ = show ll in
-              let _ = show lr in
-              let _ = show (height ll) in*)
               create lv ld ll (create x d lr r)
             else begin
               match lr with

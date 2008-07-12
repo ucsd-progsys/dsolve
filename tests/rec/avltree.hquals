@@ -1,8 +1,10 @@
 
-qualif FALSE(v): 0 = 1
+qualif C(v) : v { <, > } ~A
+(*qualif FALSE(v): 0 = 1
 
 qualif C(v) : height v {=, >=} 0
 qualif B(v) : len v {=, >=} 0
+
 
 qualif HLE(v) : height v - height ~A  {< + , - >} [0,1,2,3] { <=, >= } 0
 qualif LLE(v) : len v - len ~A  {< + , - >} [0,1] { <=, >= } 0
@@ -11,3 +13,4 @@ qualif LLE(v) : len v - len ~A  {< + , - >} [0,1] { <=, >= } 0
 qualif LSU(v) : len v = 1 + len ~A + len ~B
 qualif LEN(v) : v = len ~A
 qualif HEQ(v) : v = [0, 1] + height ~A
+*)
