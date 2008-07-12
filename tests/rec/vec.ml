@@ -52,7 +52,7 @@ let length t =
     Empty -> 0
   | Node (_, cl, _, _, cr, _) -> 1 + cl + cr
 
-  (*
+  
 let makenode l d r =
   let (hl, cl) = match l with
                     Empty -> (0,0)
@@ -325,7 +325,7 @@ let rec iteri t f =
         offsetiteri r (k + cl + 1)
   in offsetiteri t 0
 
-*)
+
 (*
 let rec reviter f = function
     Empty -> ()
@@ -352,7 +352,7 @@ let rec revrangeiter t f i j =
 	if i <= cl && j > cl then f d;
 	if i < cl && j > 0 then revrangeiter l f i j
       end
-
+*)
 let rangeiteri i j t f  = 
   let rec offsetrangeiteri k i' j' t' = 
     match t' with
@@ -394,7 +394,7 @@ let foldi t f accu =
 	offsetfoldi (k + cl + 1) r (f (k + cl) d (offsetfoldi k l accu))
   in offsetfoldi 0 t accu
 	
-*)
+
 
 let rangefoldi i j t f accu = 
   let rec offsetrangefoldi k i j t' accu = 
@@ -457,23 +457,24 @@ let to_list v =
   in auxtolist [] v;;
 *)
 
-let rec to_array w = 
-  match w with 
+let rec to_array t = 
+  match t with 
     Empty -> [||]
   | Node (l, cl, d, r, cr, _) -> 
       begin 
 	(* Creates the array *)
-	let n = cl + cr + 1 in 
+	let n = (cl + cr + 1) in 
 	let a = Array.make n d in 
 	(* and fills it *)
-	let rec fill a k = function 
+	let rec fill k t' =
+    match t' with
 	    Empty -> a
 	  | Node (l, cl, d, r, _, _) -> begin
-	      ignore (fill a k l); 
+	      ignore (fill k l); 
 	      Array.set a (k + cl) d; 
-	      fill a (k + cl + 1) r
+	      fill (k + cl + 1) r
 	    end
-	in fill a 0 w 
+	in fill 0 t 
       end
 	      
 (*

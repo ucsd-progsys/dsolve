@@ -55,7 +55,7 @@ let rec insert e t =
   match t with 
   | E -> Bl (e, E, E, 1)
   | Bl (e', l, r, h) ->
-      if e < e' then
+      (*if e < e' then
         let foo = len t in
         let l' = insert e l in
         let lh' = height l' in
@@ -69,9 +69,9 @@ let rec insert e t =
         let rh' = height r' in
         if rh' <= lh then Bl (e', l, r', lh+1)
         else Br (e', l, r', rh'+1)
-      else t
+      else t*) assert false
   | Br (e', l, r, h) ->
-      if e < e' then 
+      (*if e < e' then 
         let l' = insert e l in
         let lh' = height l' in
         let rh = height r in
@@ -84,9 +84,9 @@ let rec insert e t =
         if rh' <= lh then Bl (e', l, r', lh+1)
         else if rh' <= lh+1 then Br (e', l, r', rh'+1)
         else right_rotate e' l r'
-      else t 
+      else t*) assert false
 
-let rec foo n = 
+(*let rec foo n = 
   if n <= 0 then E else insert n (foo (n-1))
 
-let _ = foo 1000
+let _ = foo 1000*)

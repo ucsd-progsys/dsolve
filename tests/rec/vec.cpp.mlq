@@ -28,7 +28,7 @@ measure length =
   | Empty -> 0
   | Node (_, cl, _, _, cr, _) -> 1 + cl + cr
 
-(*
+
 val makenode: l: UGDTREE('a) -> 'a -> r: RGDTREE('a, v, BALW(l, v, 2)) -> 
   RGDTREE('a, v, H(v) = MAXP(H(l), H(r), 1) and L(v) = 1 + L(r) + L(l))
 
@@ -96,10 +96,11 @@ val mapi: t: UGDTREE('a) -> ({v: int | 0 <= v and v < L(t)} -> 'a -> 'b) -> UGDT
 
 val foldi: t: UGDTREE('a) -> ({v: int | 0 <= v and v < L(t)} -> 'a -> 'b -> 'b) -> 'b -> 'b  
 
-*)
-
 val rangefoldi: i: int -> j: int -> t: UGDTREE('a) -> ({v: int | v >= i and v <= j} -> 'a -> 'b -> 'b) -> 'b -> 'b
 
 val revfoldi: t: UGDTREE('a) -> ({v: int | 0 <= v and v < L(t)} -> 'a -> 'b -> 'b) -> 'b -> 'b  
 
 val revrangefoldi: i: int -> j: int -> t: UGDTREE('a) -> ({v: int | v >= i and v <= j} -> 'a -> 'b -> 'b) -> 'b -> 'b
+
+val to_array: t: UGDTREE('a) -> {v: 'a array | Array.length v = L(t)}
+
