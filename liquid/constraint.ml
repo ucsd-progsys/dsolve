@@ -565,10 +565,10 @@ let sat s = function
       let p1 = F.refinement_predicate (solution_map s) qual_test_expr r1 in
       let p2 = F.refinement_predicate (solution_map s) qual_test_expr (F.ref_of_simple sr2) in
       let rv = TP.implies (P.big_and [envp; gp; p1]) p2 in TP.finish ();rv
-  | WFRef (env,(subs, F.Qvar k), _) as c ->
-      let rv = refinement_well_formed env (solution_map s) (F.mk_refinement subs [] [k]) qual_test_expr in
+  | WFRef (env,(subs, F.Qvar k), _) (*as c*) ->
+      (*let rv = refinement_well_formed env (solution_map s) (F.mk_refinement subs [] [k]) qual_test_expr in
       C.asserts (Printf.sprintf "ERROR: wf is unsat! (%d)" (get_ref_id c)) rv;
-      rv 
+      rv*) true 
   | _ -> true
 
 let unsat_constraints sri s =
