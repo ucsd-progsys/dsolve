@@ -66,8 +66,7 @@ let rec remove_min_binding t = match t with
 
 let merge m t1 t2 =
   match t1 with
-  | Empty -> let h = height t2 in t2
-              (* this call to height is here because in the most insanely frustrating problem with our typing rules, we don't know that height t2 >= 0 without it *)
+  | Empty -> t2
   | Node(_, _, ll, lr, h1) -> 
       match t2 with
       | Empty -> t1

@@ -1,6 +1,5 @@
-qualif GT0(v) : v >= 0
 qualif FALSE(v) : 1 = 0
-qualif HH(v)    : v = ~A
+
 qualif TCOMP(v) : v { * * } e0 (* BST *)
 qualif COMP(v)  : ~A { * * } v (* BST *)
 qualif INTLIT(v): ^ { * * } v (* BST *) 
@@ -17,6 +16,7 @@ qualif BAL(v)   : height v { <=, >= } height e2 {< -, + >} [1, 2, 3]
 qualif H(v)(A: 'a t): height v { <=, >= } height ~A
 qualif H(v)     : height v { <=, >= } height e2
 qualif H(v)(A: 'a t): v = height ~A
+
 
 qualif Ph(v)    : v = (height l >= height r ? height l + 1 : height r + 1)
 qualif Ph(v)    : v = (height e2 >= height e3 ? height e2 + 1 : height e3 + 1)
@@ -35,3 +35,4 @@ qualif BALINVAR(v)   :
    (height l >= height r ? height l : height r)))
 
    (* this can be shortened to just hv <= max(l, r)+1 an hv >= max(l,r)+(balanced(l, r) ? 1, 0) *)
+   
