@@ -1,0 +1,3 @@
+measure len = | E -> 0 | Bl (d, l, r, h) -> 1 + len l + len r | Br (d, l, r, h) -> 1 + len l + len r
+measure height = | E -> 0 | Bl (d, l, r, h) -> h | Br (d, l, r, h) -> h
+val insert: 'a -> BSTREE -> BSTREE
