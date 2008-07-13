@@ -1,0 +1,25 @@
+
+qualif FALSE(v): 0 = 1
+
+(* balance prop *)
+
+(* not from mlq *)
+qualif HLE(v) : height v { <=, >= } height [t, l, r, e1] {< +, - >} [0,1,2]
+
+
+(* from mlq *)
+qualif LEN(v) : v = len t 
+qualif LSU(v) : len v = 1 + len l + len r
+qualif HEQ(v) : v = [0, 1] + height [t, e1, e2]
+qualif C(v) : height v { >=} 0
+qualif B(v) : len v {>=} 0
+qualif LLE(v) : len v { <=, >= } len t + [0, 1]
+
+(* bst prop *)
+
+(* from mlq *)
+qualif C(v)(A: int) : v { <, > } ~A
+qualif C(v) : v { <, > } e0
+
+
+
