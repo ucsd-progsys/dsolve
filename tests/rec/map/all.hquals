@@ -1,0 +1,13 @@
+
+qualif BAL(v)   : (height v >= (height l <= height r + 2 and height l >= height r - 2 ? 
+(height l >= height r ? height l + 1 : height r + 1) : (height l >= height r ? height l : height r)))
+qualif H(v)     : height v { <=, >= } (height [l, t1] { <=, >= } height [r, t2] ? height [l, t1] : height [r, t2]) + [0, 1]
+
+(* questionable *)
+qualif BAL(v)   : height v { <=, >= } height ~A {< -, + >} [0, 1, 2, 3]
+
+(* qualifiers from the mlq file *)
+qualif HGE0(v)  : height v >= 0
+qualif H(v)     : v = (height [l, e2] >= height [r, e3] ? height [l, e2] : height [r, e3]) + 1
+qualif COMP(v)  : ~A { * * } v 
+qualif H(v)     : v = height ~A

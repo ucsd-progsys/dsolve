@@ -1,0 +1,29 @@
+qualif FALSE(v) : 1 = 0
+
+(* from the mlq *)
+
+qualif V(v)(A: int) : v { * * } ~A
+
+qualif LVAR(_v)(A: int) : length _v { * * } ~A 
+qualif LCONST(v) : length v { * * } [0, 1]
+qualif LVARV(v) : v { * * } length ~A
+qualif LVARVV(v)(A: 'a t) : length v { * * } length ~A
+
+qualif SUB(v) : length v = j - i
+
+qualif SETAPPEND(_v) : length _v = (length v > i ? length v : i + 1)
+qualif TOARR(v) : length t = Array.length v
+
+qualif LPLUSONE(v) : length v { * * } length t {< -, + >} 1
+qualif ISEMPTY(v) : v = (height t = 0 or length t = 0 ? 1 : 0)
+
+(* not from the mlq *)
+
+(* for fold/iter etc *)
+
+qualif ITERI(v) : v <= length t - length t'
+qualif ITERI(v) : v + k = [i, j]
+qualif MAPI(v) : ~A <= length t - length v
+qualif SETAPPEND(v) : length v = n {< +, - >} 1
+
+qualif LSUM(v) : length v = [0, 1] + length [t1, l] + length [t2, r]

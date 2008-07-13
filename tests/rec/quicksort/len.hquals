@@ -1,0 +1,3 @@
+qualif LP(v): len v + len ~B = len ~A
+qualif E(v): len v = len ~A + len ~B
+qualif LP(v): len v = len ~A
