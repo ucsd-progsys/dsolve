@@ -41,6 +41,6 @@ if status != 0:
 
 trials = 3
 times  = [run(file) for i in range(0, trials)]
-avg    = reduce(lambda x, y: x + y, times) / trials
+avg    = sum(times) / trials
 
 print "\nAverage time: %f" % (avg)
