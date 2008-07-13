@@ -606,7 +606,7 @@ let instantiate_quals_in_env qs =
             let vm = List.fold_left (add_path_set aqs) C.StringMap.empty d in
               Bstats.time "instantiate_in_env" (List.fold_left (instantiate_in_env_vm vm) QSet.empty) qs in
           let els = QSet.elements q in
-          let _ = Hashtbl.add memo estr els in
+          let _ = Hashtbl.replace memo estr els in
             (els :: qsets, QSet.union q qsetall)
 
 let constraint_env (_, c) =
@@ -724,6 +724,7 @@ let solve qs cs =
   let cs = if !Cf.simpguard then List.map simplify_fc cs else cs in
   let cs = Bstats.time "splitting constraints" split cs in
   let (qs, allqs) = Bstats.time "instantiating quals" (instantiate_per_environment cs) qs in
+  let _ = Hashtbl.clear memo in
   let sri = Bstats.time "making ref index" make_ref_index cs in
   let s = Bstats.time "make initial solution" (make_initial_solution (List.combine (strip_origins cs) qs)) allqs in
   let _ = dump_solution s in
