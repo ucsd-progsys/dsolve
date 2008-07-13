@@ -85,8 +85,3 @@ let rec insert e t =
         else if rh' <= lh+1 then Br (e', l, r', rh'+1)
         else right_rotate e' l r'
       else t
-
-(*let rec foo n = 
-  if n <= 0 then E else insert n (foo (n-1))
-
-let _ = foo 1000*)
