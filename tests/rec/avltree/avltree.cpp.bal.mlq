@@ -13,31 +13,13 @@
 #define TTREE(l1,r1,h1,l2,r2,h2) \
 	TREE(TT, l1, TT, r1, h1, TT, l2, TT, r2, h2)
 
-#define STREE(l1, r1, h1, l2, r2, h2) \
-  TREE(LT, l1, GT, r1, h1, LT, l2, GT, r2, h2)
-  
 #define BALTREE \
 	TTREE(H0(e1), H0(e2) and BND(height,e2,e1), HD(e3,e1), H0(e1), H0(e2) and BND(height,e1,e2), HD(e3,e2))
-
-#define BALSTREE \
-	STREE(H0(e1), H0(e2) and BND(height,e2,e1), HD(e3,e1), H0(e1), H0(e2) and BND(height,e1,e2), HD(e3,e2))
-
-#define BSTREE \
-  TREE(LT, true, GT, true, true, LT, true, GT, true, true)
 
 measure len = | E -> 0 | Bl (d, l, r, h) -> 1 + len l + len r | Br (d, l, r, h) -> 1 + len l + len r
 
 measure height = | E -> 0 | Bl (d, l, r, h) -> h | Br (d, l, r, h) -> h 
 
-(*
 val insert: 'a -> t: BALTREE -> {v : BALTREE | BND(height,t,v) and BND(len,t,v)}
 
-
-
-val insert: 'a -> BSTREE -> BSTREE
-*)
-
-
-
-val insert: 'a -> t: BALSTREE -> {v: BALSTREE | BND(height, t, v) and BND(len, t, v)}
 

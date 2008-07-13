@@ -15,11 +15,6 @@ qualif C(v) : height v { >=} 0
 qualif B(v) : len v {>=} 0
 qualif LLE(v) : len v { <=, >= } len t + [0, 1]
 
-(* bst prop *)
-
-(* from mlq *)
-qualif C(v)(A: int) : v { <, > } ~A
-qualif C(v) : v { <, > } e0
 
 
 
