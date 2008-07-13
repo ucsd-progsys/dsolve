@@ -1,0 +1,55 @@
+#define R [[], [v: true, v: true, v: true], [v: true, v: true, v: true], [v: true, v: true, v: true]]
+
+(* Color, balance, BST interfaces *)
+
+#define DN e0: 'a, e1: R z, e2: R z
+#define N  e0: 'a, e1: R z, e2: R z
+#define PN e0: 'a, e1: R z, e2: R z
+
+#define RBT R [z: dict . || N || DN || PN]
+
+measure color =
+  | Empty -> 0
+  | Black (a, b, c) -> 1
+  | Red (a, b, c) -> 2
+  | Purple (a, b, c) -> 3
+
+#define MAX(a, b) (a > b ? a : b)
+
+measure height =
+  | Empty             -> 0
+  | Red (e, l, r)     -> MAX(height l, height r)
+  | Black (e, l, r)   -> MAX(height l, height r) + 1
+  | Purple (e, l, r) -> MAX(height l, height r)
+
+(*
+
+val restore_right: e: 'a -> l: GBT -> r: {v: RBT | height v = height l} -> GBT
+val restore_left: e: 'a -> l: RBT -> r: {v: RBT | NOP(v) and height v = height l} -> GBT
+val ins1: key: 'a -> d: GBT -> RBT
+
+*)
+
+val insert: dict: RBT -> key: 'a -> RBT
+
+(* BST interfaces
+
+#define BN e0: 'a, e1: LN(e0) z, e2: RN(e0) z
+
+#define BST [z: dict . || BN || BN || BN || BN]
+
+val restore_right:
+  e: 'a ->
+  lt: [[], LR(e), LR(e), LR(e), LR(e)] BST ->
+  r: [[], RR(e), RR(e), RR(e), RR(e)] BST ->
+  R BST
+
+val restore_left:
+  e: 'a ->
+  l: [[], LR(e), LR(e), LR(e), LR(e)] BST ->
+  rt: [[], RR(e), RR(e), RR(e), RR(e)] BST ->
+  R BST
+
+val insert: dict: R BST -> key: 'a -> R BST
+
+*)

@@ -1,0 +1,12 @@
+qualif FALSE(v) : 1 = 0
+
+(* Balance quals *)
+qualif INC(v): height v = 1 + height ~A
+
+(* Color quals *)
+qualif COLOR(v):          color v = [0, 1, 2, 3]
+
+(** From the MLQ **)
+
+(* balance quals *)
+qualif EQH(v): height v = height ~A
