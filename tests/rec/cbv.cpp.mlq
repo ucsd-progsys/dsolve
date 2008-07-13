@@ -1,0 +1,14 @@
+measure len =
+  | []      -> 0
+  | x :: xs -> 1 + len xs
+
+measure size =
+  | One          -> 0
+  | Shift e      -> size e + 1
+  | Lam e        -> size e - 1
+  | App (e1, e2) -> (size e1 > size e2 ? size e1 : size e2)
+
+#define T          [[], [v: true], [v: true], [v: true, v: true]]
+#define GOODLAMBDA [l: lamexp . || e0: T l || e0: T l || e0: T l, e1: T l]
+
+val evaluate: {v: T GOODLAMBDA | size v = 0} -> closure

@@ -1,0 +1,7 @@
+val add: 'a -> int -> [[], [v: true, v: true, v: true, v: true, v: true]] [z: t . || e0: 'a, e1: int, e2: [[], [v: v < e0, v: true, v: true, v: true, v: true]] z, e3: [[], [v: v > e0, v: true, v: true, v: true, v: true]] z, e4: int] -> [[], [v: true, v: true, v: true, v: true, v: true]] [z: t . || e0: 'a, e1: int, e2: [[], [v: v < e0, v: true, v: true, v: true, v: true]] z, e3: [[], [v: v > e0, v: true, v: true, v: true, v: true]] z, e4: int]
+(*
+val remove_min_binding: t: [[], [v: true, v: true, v: true, v: true, v: true]] [z: t . || e0: 'a, e1: int, e2: [[], [v: v < e0, v: true, v: true, v: true, v: true]] z, e3: [[], [v: v > e0, v: true, v: true, v: true, v: true]] z, e4: int] -> 'a * int * RGDTREE(v, true)
+val merge: m: 'a -> t1: RGDTREE(v, [[], [v: v < m, v: true, v: true, v: true, v: true]], true) -> t2: RGDTREE(v, [[], [v: v > m, v: true, v: true, v: true, v: true]], BALW(t1, v, 2)) ->
+  RTGDTREE(v, H(v) <= MAX(H(t1), H(t2)) + 1 and H(v) >= MAX(H(t1), H(t2)))
+*)
+val remove: 'a -> t: [[], [v: true, v: true, v: true, v: true, v: true]] [z: t . || e0: 'a, e1: int, e2: [[], [v: v < e0, v: true, v: true, v: true, v: true]] z, e3: [[], [v: v > e0, v: true, v: true, v: true, v: true]] z, e4: int] -> [[], [v: true, v: true, v: true, v: true, v: true]] [z: t . || e0: 'a, e1: int, e2: [[], [v: v < e0, v: true, v: true, v: true, v: true]] z, e3: [[], [v: v > e0, v: true, v: true, v: true, v: true]] z, e4: int]

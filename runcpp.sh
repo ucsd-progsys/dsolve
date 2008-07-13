@@ -1,3 +1,4 @@
 #/bin/sh
 
-cat $1 | tr "'" "@" | cpp -P - | tr "@" "'" > $2
+OUTPUT=`echo $1 | sed 's/\\.cpp//g'`
+cat $1 | tr "'" "@" | cpp -P - | tr "@" "'" > $OUTPUT
