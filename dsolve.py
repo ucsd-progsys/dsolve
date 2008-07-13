@@ -22,7 +22,7 @@
 import sys, os, os.path, common
 
 d_pats= "default_patterns"
-solve = "./liquid.opt -dframes".split()
+solve = "taskset -c 0 ./liquid.opt -dframes".split()
 flags = []
 tname = "/tmp/dsolve.scratch"
 null  = open("/dev/null", "w")
