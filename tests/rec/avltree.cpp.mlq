@@ -31,11 +31,13 @@ measure height = | E -> 0 | Bl (d, l, r, h) -> h | Br (d, l, r, h) -> h
 
 (*
 val insert: 'a -> t: BALTREE -> {v : BALTREE | BND(height,t,v) and BND(len,t,v)}
-*)
 
-(*
+
+
 val insert: 'a -> BSTREE -> BSTREE
 *)
 
 
-val insert: 'a -> BALSTREE -> {v: BALSTREE | BND(height, t, v) and BND(len, t, v)}
+
+val insert: 'a -> t: BALSTREE -> {v: BALSTREE | BND(height, t, v) and BND(len, t, v)}
+
