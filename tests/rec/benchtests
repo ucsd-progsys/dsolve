@@ -9,10 +9,10 @@
 # tests/rec/mergesort2/inc.ml   1  False False
 # tests/rec/mergesort2/len.ml   2  True True
 # tests/rec/ralist.ml           1  True True
-# tests/rec/map/all.ml          1  False False
-# tests/rec/map/bal.ml          1  False True
-# tests/rec/map/bst.ml          1  False False
-tests/rec/avltree.ml          1  True False
+ tests/rec/map/all.ml          1  False False
+ tests/rec/map/bal.ml          1  False True
+ tests/rec/map/bst.ml          1  False False
+# tests/rec/avltree.ml          1  True False
 
 asdfasdf
 tests/rec/avltree/bal.ml      0  True True
