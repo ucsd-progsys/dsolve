@@ -1,5 +1,3 @@
-qualif COMP(v): e0 { >=, <= } v
-qualif LEN(v): v = len ~A
 qualif D(v): len v = len ~A 
 qualif E(v): len v = len ~A + len ~B
 qualif E(v): len v + len e0 = len ~A
