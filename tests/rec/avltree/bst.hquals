@@ -1,5 +1,5 @@
 
-qualif FALSE(v): 0 = 1
+qualif FALSE(v): 1 = 0
 
 (* bst prop *)
 

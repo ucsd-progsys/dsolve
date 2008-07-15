@@ -49,12 +49,14 @@ def gen_quals(src,bare,lq, col):
   qfile.close()
   return succ
 
-def solve_quals(file,bare,quiet,flags):
+def solve_quals(file,bare,time,quiet,flags):
   bname = file[:-3]
   os.system("rm -f %s.annot" % bname)
   if quiet: out = null
   else: out = None
-  return common.logged_sys_call(solve + flags + [("%s.ml" % bname)], out)
+  if time: time = ["time"]
+  else: time = []
+  return common.logged_sys_call(time + solve + flags + [("%s.ml" % bname)], out)
 
 def main():
   argc = len(sys.argv)
@@ -66,15 +68,17 @@ def main():
     sys.exit(0)
   bare = (sys.argv[1] == "-bare")
   if bare:
-    flags = sys.argv[2:-1]
-  else:
-    flags = sys.argv[1:-1]
+    sys.argv.pop(1)
+  time = (sys.argv[1] == "-time")
+  if time:
+    sys.argv.pop(1)
+  flags = sys.argv[1:-1]
   fn = sys.argv[len(sys.argv) - 1]
   gen_succ = gen_quals(fn, bare, False, 4)
   if (gen_succ != 0):
     print "Qualifier generation failed"
     sys.exit(gen_succ)
-  sys.exit(solve_quals(fn,bare,False,flags))
+  sys.exit(solve_quals(fn,bare,time,False,flags))
 
 if __name__ == "__main__":
   main()
