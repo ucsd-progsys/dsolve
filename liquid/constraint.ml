@@ -693,7 +693,7 @@ let dump_solving qs sri s step =
        !stat_refines !stat_wf_refines !stat_simple_refines !stat_sub_refines;
      C.cprintf C.ol_solve_stats "@[Implication Queries: %d@ total;@ %d@ valid;@ %d@ match@]@.@." 
        !stat_imp_queries !stat_valid_imp_queries !stat_matches;
-     TP.print_stats ();
+     if C.ck_olev C.ol_solve_stats then TP.print_stats () else ();
      dump_solution_stats s;
      flush stdout)
 
@@ -730,7 +730,7 @@ let solve qs cs =
   let _ = dump_solution s in
   let _ = dump_solving allqs sri s 0  in 
   let _ = Bstats.time "solving wfs" (solve_wf sri) s in
-  let _ = printf "@[AFTER@ WF@]@." in
+  let _ = C.cprintf C.ol_solve "@[AFTER@ WF@]@." in
   let _ = dump_solving qs sri s 1 in
   let _ = dump_solution s in
   let w = Bstats.time "make initial worklist" make_initial_worklist sri in

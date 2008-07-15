@@ -1,3 +1,4 @@
+qualif FALSE(v) : (1=0)
 (* from the mlq *)
 
 qualif A(v) : sz l { * *} v
