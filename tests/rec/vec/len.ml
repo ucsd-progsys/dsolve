@@ -270,12 +270,6 @@ let rec sub i j t =
 	end
       end
 
-let rec iter f = function
-    Empty -> ()
-  | Node(l, _, d, r, _, _) ->
-      iter f l; f d; iter f r
-
-
 let rec iteri t f = 
   let rec offsetiteri t' k =
     match t' with

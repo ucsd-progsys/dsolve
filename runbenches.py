@@ -23,18 +23,23 @@ import common, sys, time
 import itertools as it
 import dsolve
 
-testfiles = [("tests/postests", 0), ("tests/negtests", 1)]
+testfiles = [("tests/rec/benchtests", 0)]
 
 def runtest(filep, expected_status):
   file = filep[0]
+  if file == "#": return (file, True)
   collect = int(filep[1])
   lqualifs = common.str_to_bool(filep[2])
+  no_recrefs = common.str_to_bool(filep[3])
   status = dsolve.gen_quals(file, True, lqualifs, collect)
   if status != 0: 
     print "Qualgen failed on %s" % file
     sys.exit(2)
   start = time.time()
-  status = dsolve.solve_quals(file, True, True, True, [" -v 0 "])
+  flags = ["-v", "0"]
+  if no_recrefs:
+     flags += ["-no-recrefs"]
+  status = dsolve.solve_quals(file, True, True, False, flags)
   if status == 2: sys.exit(2)
   print "%f seconds" % (time.time() - start)
 
