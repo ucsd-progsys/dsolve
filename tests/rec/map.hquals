@@ -1,7 +1,7 @@
 qualif FALSE(v) : (1 = 0)
 qualif COMP(v)  : ~A { * * } v 
 qualif INTLIT(v): ^ { * * } v  
-qualif HGE0(v)  : height v >= 0
+qualif HGE0(v)  : height v { >=, > } 0
 qualif H(v)     : v = height ~A
 qualif H(v)     : v = (height [l, e2] >= height [r, e3] ? height [l, e2] : height [r, e3]) + 1
 qualif H(v)     : height v { <=, >= } (height [l, t1] >= height [r, t2] ? height [l, t1] : height [r, t2]) + [0, 1]

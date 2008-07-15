@@ -17,10 +17,10 @@ measure height =
   | Node (_, _, _, _, h) -> h
 
 val add: 'a -> int -> t: UTGDTREE -> RTGDTREE(v, H(v) <= H(t) + 1 and H(v) >= H(t))
-
+(*
 val remove_min_binding: t: UTGDTREE -> 'a * int * RGDTREE(v, RHO(v > e0), H(v) >= H(t) - 1 and H(v) <= H(t))
 
 val merge: m: 'a -> t1: RGDTREE(v, RHO(v < m), true) -> t2: RGDTREE(v, RHO(v > m), BALW(t1, v, 2)) ->
   RTGDTREE(v, H(v) <= MAX(H(t1), H(t2)) + 1 and H(v) >= MAX(H(t1), H(t2)))
-
+*)
 val remove: 'a -> t: UTGDTREE -> RTGDTREE(v, H(v) >= H(t) - 1 and H(v) <= H(t))

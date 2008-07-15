@@ -14,25 +14,25 @@ let bal x d l r =
   let hr = height r in
     if hr > hl + 2 then
       match r with
-          Empty -> assert false (* invalid_arg "Map.bal" *)
+          Empty -> assert (0 = 1); assert false (* invalid_arg "Map.bal" *)
         | Node(rv, rd, rl, rr, h) ->
             if height rr >= height rl then
               create rv rd (create x d l rl) rr
             else begin
               match rl with
-                  Empty -> assert false (* invalid_arg "Map.bal" *)
+                  Empty -> assert (0 = 1); assert false (* invalid_arg "Map.bal" *)
                 | Node(rlv, rld, rll, rlr, h) ->
                     create rlv rld (create x d l rll) (create rv rd rlr rr)
             end
     else if hl > hr + 2 then
       match l with
-          Empty -> assert false (* invalid_arg "Map.bal" *)
+          Empty -> assert (0 = 1); assert false (* invalid_arg "Map.bal" *)
         | Node (lv, ld, ll, lr, h) ->  (* h must be defd for meas to be asserted *)
             if height ll >= height lr then
               create lv ld ll (create x d lr r)
             else begin
               match lr with
-                  Empty -> assert false (* invalid_arg "Map.bal" *)
+                  Empty -> assert (0 = 1); assert false (* invalid_arg "Map.bal" *)
                 | Node(lrv, lrd, lrl, lrr, h) ->
                     create lrv lrd (create lv ld ll lrl) (create x d lrr r)
             end
@@ -51,7 +51,7 @@ let rec add x data t =
         else
           bal v d l (add x data r)
 let rec remove_min_binding t = match t with
-    Empty -> assert false
+    Empty -> assert (0 = 1); assert false
   | Node(x, d, l, r, h) ->
       match l with
       | Empty -> (x, d, r)
