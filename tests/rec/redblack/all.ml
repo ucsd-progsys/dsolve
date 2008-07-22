@@ -1,20 +1,26 @@
+(* Adapted from an example of Dunfield, Xi, and Pfenning *)
+
 type 'a dict =
     Empty
   | Black of 'a * 'a dict * 'a dict
   | Red of 'a * 'a dict * 'a dict
   | Purple of 'a * 'a dict * 'a dict
+
 let color = function
   | Empty -> 0
   | Black (a, b, c) -> 1
   | Red (a, b, c) -> 2
   | Purple (a, b, c) -> 3
+
 let max x y =
   if x > y then x else y
+
 let rec height = function
   | Empty -> 0
   | Red (_, l, r) -> (max (height l) (height r))
   | Black (_, l, r) -> (max (height l) (height r)) + 1
   | Purple (_, l, r) -> (max (height l) (height r))
+
 let restore_right e lt r =
   match r with
   | Purple (re, rl, rr) ->
@@ -46,6 +52,7 @@ let restore_right e lt r =
       end
   | Red _   -> Black (e, lt, r)
   | Black _ -> Black (e, lt, r)
+
 let restore_left e l rt =
   match l with
   | Purple (le, ll, lr) ->
@@ -77,6 +84,7 @@ let restore_left e l rt =
       end
   | Red _   -> Black (e, l, rt)
   | Black _ -> Black (e, l, rt)
+
 let rec ins1 key d = match d with
   | Black(key1, left, right) ->
       if key = key1 then Black (key, left, right)
@@ -102,6 +110,7 @@ let rec ins1 key d = match d with
           end
   | Empty     -> Red (key, Empty, Empty)
   | Purple _ -> assert (0 = 1); assert false
+
 let insert dict key =
   let dict = ins1 key dict in
     match dict with

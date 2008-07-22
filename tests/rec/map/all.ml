@@ -1,14 +1,19 @@
+(* Adapted from OCaml's Map module by Xavier Leroy *)
+
 type 'a t =
     Empty
   | Node of 'a * int * 'a t * 'a t * int
+
 let height t =
   match t with
   | Empty -> 0
   | Node (_,_,_,_,h) -> h
+
 let create x d l r =
   let hl = height l in
   let hr = height r in
     Node (x, d, l, r, if hl >= hr then hl + 1 else hr + 1)
+
 let bal x d l r =
   let hl = height l in
   let hr = height r in
@@ -27,7 +32,7 @@ let bal x d l r =
     else if hl > hr + 2 then
       match l with
           Empty -> assert (0 = 1); assert false (* invalid_arg "Map.bal" *)
-        | Node (lv, ld, ll, lr, h) ->  (* h must be defd for meas to be asserted *)
+        | Node (lv, ld, ll, lr, h) ->
             if height ll >= height lr then
               create lv ld ll (create x d lr r)
             else begin
@@ -38,6 +43,7 @@ let bal x d l r =
             end
     else
       Node(x, d, l, r, if hl >= hr then hl + 1 else hr + 1)
+
 let rec add x data t =
   match t with
       Empty ->
@@ -50,6 +56,7 @@ let rec add x data t =
           bal v d (add x data l) r
         else
           bal v d l (add x data r)
+
 let rec remove_min_binding t = match t with
     Empty -> assert (0 = 1); assert false
   | Node(x, d, l, r, h) ->
@@ -58,6 +65,7 @@ let rec remove_min_binding t = match t with
       | Node(_, _, ll, lr, h') ->
         let (x', d', l') = remove_min_binding l in
           (x', d', bal x d l' r)
+
 let merge m t1 t2 =
   match t1 with
   | Empty -> t2
@@ -67,6 +75,7 @@ let merge m t1 t2 =
       | Node(_, _, rl, rr, h2) ->
           let (x, d, t2') = remove_min_binding t2 in
             bal x d t1 t2'
+
 let rec remove x t = match t with
     Empty ->
       Empty
