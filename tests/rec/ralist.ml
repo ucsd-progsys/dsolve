@@ -75,11 +75,11 @@ let rec lookup l i =
 let rec print_rlist l =
   match l with
       Nil -> ()
-    | One (x) -> 
+    | One (_) -> 
         let (x, _) = uncons l in print_int x; print_newline ()
-    | Even (a, b) -> 
+    | Even (_, _) -> 
         let (x, l) = uncons l in print_int x; print_rlist l
-    | Odd (a, b, c) ->
+    | Odd (_, _, _) ->
         let (x, l) = uncons l in print_int x; print_rlist l
         
 let check x n n' i =
