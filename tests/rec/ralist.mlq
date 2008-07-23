@@ -4,12 +4,6 @@ measure sz =
   | Even (l,l') -> sz l + sz l'
   | Odd  (_,l,l') -> 1 + sz l + sz l'
 
-measure nil =
-  | Nil           -> 1
-  | One (_)       -> 0
-  | Even (_, _)   -> 0
-  | Odd (_, _, _) -> 0
-
 (*
 refinement valid is ((_);(_);(_;length l = length V);(_;_;length l = length V)) 'a rlist = 
   | Nil 

@@ -13,13 +13,6 @@ let rec sz l =
     | Even (l1, l2) -> (sz l1) + (sz l2)
     | Odd (_, l1, l2) -> (1 + (sz l1) + (sz l2)) 
 
-let nil l =
-  match l with
-    | Nil           -> 1
-    | One (_)       -> 0
-    | Even (_, _)   -> 0
-    | Odd (_, _, _) -> 0
-
 let rec cons x xs =
   match xs with
     | Nil -> (One x)
@@ -32,10 +25,7 @@ let rec makelist n =
     let l = (makelist (n-1)) in
       cons n l 
 
-let show x = x
-
 let rec uncons xs =
-  let _ = show xs in
   match xs with
     | Nil -> assert (1 = 0); assert false
     | One x -> (x, Nil)
@@ -45,12 +35,12 @@ let rec uncons xs =
           begin
             match l1 with
                 Nil -> (x, One y)
-              | One _ -> (x, Odd(y, l1, l2))
-              | Even _ -> (x, Odd(y, l1, l2))
-              | Odd _ -> (x, Odd(y, l1, l2))
+              | One (_) -> (x, Odd(y, l1, l2))
+              | Even (_, _) -> (x, Odd(y, l1, l2))
+              | Odd (_, _, _) -> (x, Odd(y, l1, l2))
           end
     | Odd(x, l1, l2) -> (x, Even(l1, l2))
-(*
+
 let head_safe l =
   let (x, _) = uncons l in x
 
@@ -81,37 +71,30 @@ let rec lookup l i =
         if i = 0 then x
         else if 2 * (i / 2) = i then lookup l2 ((i - 1) / 2) 
         else lookup l1 ((i - 1) / 2)
-*)
 
 let rec print_rlist l =
   match l with
       Nil -> ()
     | One (x) -> 
-        let _ = show l in
         let (x, _) = uncons l in print_int x; print_newline ()
     | Even (a, b) -> 
-        let _ = show l in
         let (x, l) = uncons l in print_int x; print_rlist l
     | Odd (a, b, c) ->
-        let _ = show l in
-        let (x, l) = uncons (show l) in print_int x; print_rlist (show l)
-
+        let (x, l) = uncons l in print_int x; print_rlist l
+        
 let check x n n' i =
   if n > 0 then
     let xs = makelist n in
-    let _ = show xs in
     let _ = print_rlist xs in
-
-(*    let _ =
-      let ys = uncons xs in
-        assert(sz (snd ys) = sz xs - 1) in
-    let _ = head xs in
-    let _ = tail xs in
-
-    let _ = 
-      if (i < n) && (i >= 0) then 
-        let _ = lookup xs i in ()
-      else () *)
-
-      ()
+    let _ =
+      if n > 0 then
+        let ys = uncons xs in
+        let _ = assert(sz (snd ys) = sz xs - 1) in
+        let _ = head xs in
+        let _ = tail xs in
+          if (i < n) && (i >= 0) then 
+            let _ = lookup xs i in ()
+          else () 
+     else () in
+    ()
   else ()
