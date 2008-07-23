@@ -1,4 +1,6 @@
-(* Adapted from an example of Xi and Pfenning *)
+(* Adapted from an example of Xi and Pfenning
+ * http://www.cs.bu.edu/~hwxi/DML/DML/examples/avl.dml
+ *)
 
 type 'a avl = 
   | E 

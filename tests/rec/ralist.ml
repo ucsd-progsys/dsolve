@@ -1,4 +1,6 @@
-(* adapted from an example by Xi *)
+(* adapted from an example by Xi
+ * http://www.cs.bu.edu/~hwxi/DML/DML/examples/ralist.dml
+ *)
 
 type 'a rlist = 
   | Nil 
