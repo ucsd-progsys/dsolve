@@ -1,0 +1,1 @@
+../tests/rec/mergesort/all.ml
