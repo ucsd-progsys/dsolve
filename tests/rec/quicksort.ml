@@ -2,6 +2,11 @@
   | True of 'a
   | False of 'b
 
+let rec len xs = 
+  match xs with 
+  | [] -> 0
+  | x::xs' -> 1 + len xs'
+
 let rec partition f xs = 
   match xs with
   | [] -> ([], [])
