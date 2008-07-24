@@ -247,6 +247,8 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
   match (f1, f2) with
   | (f1, f2) when F.is_shape f1 && F.is_shape f2 ->
       ([], [])
+  | (f1, f2) when f1 = f2 ->
+      ([], [])
   | (F.Farrow (l1, f1, f1'), F.Farrow (l2, f2, f2')) ->
       let subs = match (l1, l2) with (Some p1, Some p2) when not (Pat.same p1 p2) -> subst_to p2 p1 | _ -> [] in
       let env' = resolve_extend_env tenv env f2 l1 l2 in
@@ -720,7 +722,7 @@ let solve_wf sri s =
   iter_ref_constraints sri 
   (function WFRef _ as c -> ignore (refine sri s c) | _ -> ())
 
-let solve qs cs = 
+let solve qs cs =
   let cs = if !Cf.simpguard then List.map simplify_fc cs else cs in
   let cs = Bstats.time "splitting constraints" split cs in
   let (qs, allqs) = Bstats.time "instantiating quals" (instantiate_per_environment cs) qs in
