@@ -713,6 +713,7 @@ let rec solve_sub sri s w =
     let (r,b,fci) = get_ref_rank sri c in
     let _ = C.cprintf C.ol_solve "@[Refining:@ %d@ in@ scc@ (%d,%b,%s):@]"
             (get_ref_id c) r b (C.io_to_string fci) in
+    let _ = C.dump_gc (Printf.sprintf "refine cycle: %i" !stat_refines) in
     let w' = if Bstats.time "refine" (refine sri s) c then push_worklist sri w' (get_ref_deps sri c) else w' in
     solve_sub sri s w'
 
@@ -721,15 +722,19 @@ let solve_wf sri s =
   (function WFRef _ as c -> ignore (refine sri s c) | _ -> ())
 
 let solve qs cs = 
+  let _ = C.dump_gc "before instantiation" in
   let cs = if !Cf.simpguard then List.map simplify_fc cs else cs in
   let cs = Bstats.time "splitting constraints" split cs in
   let (qs, allqs) = Bstats.time "instantiating quals" (instantiate_per_environment cs) qs in
+  let _ = C.dump_gc "after instantiation, before mem free" in
   let _ = Hashtbl.clear memo in
+  let _ = C.dump_gc "after instantiation, before mem free" in
   let sri = Bstats.time "making ref index" make_ref_index cs in
   let s = Bstats.time "make initial solution" (make_initial_solution (List.combine (strip_origins cs) qs)) allqs in
   let _ = dump_solution s in
   let _ = dump_solving allqs sri s 0  in 
   let _ = Bstats.time "solving wfs" (solve_wf sri) s in
+  let _ = C.dump_gc "after wf" in
   let _ = C.cprintf C.ol_solve "@[AFTER@ WF@]@." in
   let _ = dump_solving qs sri s 1 in
   let _ = dump_solution s in

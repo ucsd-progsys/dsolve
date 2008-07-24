@@ -379,3 +379,37 @@ let rec same_length l1 l2 = match l1, l2 with
   | [], []           -> true
   | _ :: xs, _ :: ys -> same_length xs ys
   | _                -> false
+
+(******************************************************************************)
+(********************************* Mem Management *****************************)
+(******************************************************************************)
+
+open Gc
+open Format
+
+let pprint_gc s =
+  (*printf "@[Gc@ Stats:@]@.";
+  printf "@[minor@ words:@ %f@]@." s.minor_words;
+  printf "@[promoted@ words:@ %f@]@." s.promoted_words;
+  printf "@[major@ words:@ %f@]@." s.major_words;*)
+  (*printf "@[total allocated:@ %fMB@]@." (floor ((s.major_words +. s.minor_words -. s.promoted_words) *. (4.0) /. (1024.0 *. 1024.0)));*)
+
+  printf "@[total allocated:@ %fMB@]@." (floor ((allocated_bytes ()) /. (1024.0 *. 1024.0)));
+  printf "@[minor@ collections:@ %i@]@." s.minor_collections;
+  printf "@[major@ collections:@ %i@]@." s.major_collections;
+  printf "@[heap@ size:@ %iMB@]@." (s.heap_words * 4 / (1024 * 1024));
+  (*printf "@[heap@ chunks:@ %i@]@." s.heap_chunks;
+  (*printf "@[live@ words:@ %i@]@." s.live_words;
+  printf "@[live@ blocks:@ %i@]@." s.live_blocks;
+  printf "@[free@ words:@ %i@]@." s.free_words;
+  printf "@[free@ blocks:@ %i@]@." s.free_blocks;
+  printf "@[largest@ free:@ %i@]@." s.largest_free;
+  printf "@[fragments:@ %i@]@." s.fragments;*)*)
+  printf "@[compactions:@ %i@]@." s.compactions;
+  (*printf "@[top@ heap@ words:@ %i@]@." s.top_heap_words*) ()
+
+let dump_gc s =
+  printf "@[%s@]@." s;
+  pprint_gc (Gc.quick_stat ())
+
+
