@@ -197,7 +197,7 @@ let append_refinement res' f =
     | Some res -> apply_refinement (res @ res') f
     | None -> f
 
-let apply_recref rr = function
+let set_recref rr = function
   | Frec (p, _, r)                -> Frec (p, rr, r)
   | Fsum (p, Some (rp, _), cs, r) -> Fsum (p, Some (rp, rr), cs, r)
   | _                             -> assert false
@@ -210,7 +210,7 @@ let merge_recrefs rr rr' =
   List.map2 (List.map2 (@)) rr rr'
 
 let append_recref rr' f = match get_recref f with
-  | Some rr -> apply_recref (merge_recrefs rr rr') f
+  | Some rr -> set_recref (merge_recrefs rr rr') f
   | None    -> f
 
 let apply_subs_map subs' (subs, qe) =
@@ -672,19 +672,21 @@ let fresh_rec fresh env (rv, rr) level t = match t.desc with
 let null_refinement =
   mk_refinement [] [] []
 
-let cstr_refinements cstr =
+let cstr_refinements freshref cstr =
   let (args, res) = Ctype.instance_constructor cstr in
   let _           = close_constructor res args in
   let (res, args) = (canonicalize res, List.map canonicalize args) in
-    List.map (fun t -> if t = res || !Clflags.no_recrefs then null_refinement else empty_refinement) args
+    List.map (fun t -> if t = res || !Clflags.no_recrefs then null_refinement else freshref) args
+
+let mk_recref freshref env t =
+  match t.desc with
+    | Tconstr (p, tyl, _) ->
+        let (_, cstrs) = List.split (Env.constructors_of_type p (Env.find_type p env)) in
+          List.map (cstr_refinements freshref) cstrs
+    | _ -> []
 
 let mk_recvar env t =
-  let rp = Path.mk_ident "t" in
-    match t.desc with
-      | Tconstr (p, tyl, _) ->
-          let (_, cstrs) = List.split (Env.constructors_of_type p (Env.find_type p env)) in
-            (rp, List.map cstr_refinements cstrs)
-      | _ -> (rp, [])
+  (Path.mk_ident "t", mk_recref empty_refinement env t)
 
 let place_freshref freshf r =
   if r == null_refinement then empty_refinement else freshf ()
@@ -698,6 +700,10 @@ let rec flip_frame_levels f =
 let rec copy_type = function
   | {desc = Tlink t} -> copy_type t (* Ensures copied types gets target's id/level, not link's *)
   | t                -> {t with desc = Btype.copy_type_desc copy_type t.desc}
+
+let kill_top_recref env t f = match f with
+  | Fsum (_, Some _, _, _) -> set_recref (mk_recref null_refinement env t) f
+  | _      -> f
 
 (* Create a fresh frame with the same shape as the type of [exp] using
    [fresh_ref_var] to create new refinement variables. *)
@@ -716,7 +722,7 @@ let fresh_with_var_fun env freshf t =
           Hashtbl.replace tbl t (Frec (rp, rr, if !Clflags.no_recvarrefs then null_refinement else empty_refinement));
           let res = fresh_rec fm env (rp, rr) level t in
             Hashtbl.replace tbl t res; res
-  in flip_frame_levels (map_refinements (place_freshref freshf) (fm t))
+  in kill_top_recref env t (flip_frame_levels (map_refinements (place_freshref freshf) (fm t)))
 
 (* Create a fresh frame with the same shape as the given type
    [ty]. Uses type environment [env] to find type declarations.
