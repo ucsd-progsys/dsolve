@@ -1,36 +1,13 @@
-qualif A(v) : sz l = v
-qualif AA(v) : sz v = ~A 
-qualif B(v) : sz v = 1 + sz ~A
-qualif C(v) : sz v = sz ~A - 1
+qualif FALSE(v) : (1=0)
+(* from the mlq *)
 
-qualif D(v) : sz v = sz e0
-qualif E(v) : sz v = sz e1
+qualif A(v) : sz l { * *} v
+qualif AA(v) : sz v = ~A
+qualif ZERO(v) : sz v { * * } 0
 
+(* not from the mlq *)
+
+qualif B(v) : sz v = sz ~A {< +, - >} [0, 1]
 qualif ZEROC(v) : v { * * } 0
 qualif N(v) : v { * * } ~A 
-qualif ZERO(v) : sz v { * * } 0
-qualif NZERO(v) : nil v { * * } [0, 1]
 
-qualif EE(v) : v { * * } e0
-
-qualif NIL(v) : v = nil ~A 
-
-qualif FALSE(v) : (1 = 0)
-
-qualif I(v) : v < sz ~A
-
-(*qualif A(v) : sz ~A { * * } v
-qualif B(v) : sz v = [0, 1, 2, 3]
-qualif C(v): sz v = 1 + sz ~A*)
-
-(*
-qualif D(v): _meas_sz v = _meas_sz x 
-qualif DD(v): _meas_sz v = _meas_sz xs 
-qualif E(v): _meas_sz v = _meas_sz xs + _meas_sz ys
-qualif EE(v): _meas_sz v + _meas_sz e0 = _meas_sz x
-qualif F(v): _meas_sz v + _meas_sz xs + _meas_sz ys = _meas_sz ixs
-qualif FF(v): _meas_sz v <= _meas_sz ixs
-qualif E(v): _meas_sz v + _meas_sz e0 = _meas_sz ixs
-qualif C(v) : __tag v = 0
-qualif D(v) : __tag v = 1
-*)

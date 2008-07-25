@@ -1,0 +1,11 @@
+
+qualif FALSE(v): 1 = 0
+
+(* bst prop *)
+
+(* from mlq *)
+qualif C(v)(A: int) : v { <, > } ~A
+qualif C(v) : v { <, > } e0
+
+
+

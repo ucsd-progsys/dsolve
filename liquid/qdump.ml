@@ -31,7 +31,7 @@ module C = Common
 
 module QS = Set.Make(struct
                        type t = string * string * P.t
-                       let compare = compare
+                       let compare (_, _, p) (_, _, p') = compare p p'
                      end)
 
 let patf = ref ""
@@ -53,5 +53,6 @@ let dump_default_qualifiers source qname =
   let prgids = Qualgen.visit_sstr str in
   let dqstrs = Pparse.file std_formatter !patf Parse.qualifier_patterns ast_impl_magic_number in
   let dqstrs = expand_quals env dqstrs prgids in
-  let qs = List.fold_left (fun qs q -> QS.add q qs) QS.empty dqstrs in
+  let initqs = QS.add ("FALSE", "_V", P.Atom(P.PInt(1), P.Eq, P.PInt(0))) QS.empty in
+  let qs = List.fold_left (fun qs q -> QS.add q qs) initqs dqstrs in
     dump_qset qf qs; pp_print_flush qf ()

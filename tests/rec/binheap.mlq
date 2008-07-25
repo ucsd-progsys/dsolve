@@ -1,0 +1,11 @@
+
+
+
+
+
+measure rank =
+  | Tempty -> 0
+  | Tcons (r, d, t, t1, t2) -> 0
+  | Node (r, d, t) -> r
+
+val link: t1: [[], [v: true, v: true, v: true, v: true]] [z: || e0: int, e1: 'a, {e2: [[], [v: true, v: true, v: true, v: true]] z | rank(e2) = e0}, {e3: [[], [v: true, v: true, v: true, v: true]] z | rank(e3) <= e0}] -> t2: {t2: [[], [v: true, v: true, v: true, v: true]] [z: || e0: int, e1: 'a, {e2: [[], [v: true, v: true, v: true, v: true]] z | rank(e2) = e0}, {e3: [[], [v: true, v: true, v: true, v: true]] z | rank(e3) <= e0}] | rank(t2) = rank(t1)} -> {v: [[], [v: true, v: true, v: true, v: true]] [z: || e0: int, e1: 'a, {e2: [[], [v: true, v: true, v: true, v: true]] z | rank(e2) = e0}, {e3: [[], [v: true, v: true, v: true, v: true]] z | rank(e3) <= e0}] | rank(v) = rank(t1) + 1}

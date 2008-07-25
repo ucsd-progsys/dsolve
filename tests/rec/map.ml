@@ -7,8 +7,6 @@ let height t =
   | Empty -> 0
   | Node (_,_,_,_,h) -> h
 
-let show x = x
-
 let create x d l r =
   let hl = height l in
   let hr = height r in
@@ -19,35 +17,25 @@ let bal x d l r =
   let hr = height r in
     if hr > hl + 2 then
       match r with
-          Empty -> assert false (* invalid_arg "Map.bal" *)
+          Empty -> assert (0 = 1); assert false (* invalid_arg "Map.bal" *)
         | Node(rv, rd, rl, rr, h) ->
             if height rr >= height rl then
               create rv rd (create x d l rl) rr
             else begin
               match rl with
-                  Empty -> assert false (* invalid_arg "Map.bal" *)
+                  Empty -> assert (0 = 1); assert false (* invalid_arg "Map.bal" *)
                 | Node(rlv, rld, rll, rlr, h) ->
                     create rlv rld (create x d l rll) (create rv rd rlr rr)
             end
     else if hl > hr + 2 then
       match l with
-          Empty -> assert false (* invalid_arg "Map.bal" *)
+          Empty -> assert (0 = 1); assert false (* invalid_arg "Map.bal" *)
         | Node (lv, ld, ll, lr, h) ->  (* h must be defd for meas to be asserted *)
-            (*let _ = assert (height ll <= height l - 1) in
-            let _ = assert (height lr <= height l - 1) in
-            let _ = assert (height ll >= height lr - 2) in
-            let _ = assert (height ll <= height lr + 2) in
-            let _ = assert (height ll >= height r) in
-            let _ = assert (height lr >= height r) in*)
             if height ll >= height lr then
-              (*let _ = assert (height ll <= height lr + 2) in
-              let _ = show ll in
-              let _ = show lr in
-              let _ = show (height ll) in*)
               create lv ld ll (create x d lr r)
             else begin
               match lr with
-                  Empty -> assert false (* invalid_arg "Map.bal" *)
+                  Empty -> assert (0 = 1); assert false (* invalid_arg "Map.bal" *)
                 | Node(lrv, lrd, lrl, lrr, h) ->
                     create lrv lrd (create lv ld ll lrl) (create x d lrr r)
             end
@@ -67,8 +55,10 @@ let rec add x data t =
         else
           bal v d l (add x data r)
 
+let show x = x
+
 let rec remove_min_binding t = match t with
-    Empty -> assert false
+    Empty -> assert (0 = 1); assert false
   | Node(x, d, l, r, h) ->
       match l with
       | Empty -> (x, d, r)
@@ -78,8 +68,7 @@ let rec remove_min_binding t = match t with
 
 let merge m t1 t2 =
   match t1 with
-  | Empty -> let h = height t2 in t2
-              (* this call to height is here because in the most insanely frustrating problem with our typing rules, we don't know that height t2 >= 0 without it *)
+  | Empty -> t2
   | Node(_, _, ll, lr, h1) -> 
       match t2 with
       | Empty -> t1
@@ -97,88 +86,3 @@ let rec remove x t = match t with
         bal v d (remove x l) r
       else
         bal v d l (remove x r)
-
-(*
-let test_remove x d x' d' =
-  let z = add x d Empty in
-  let o = add x' d' z in
-  let t = remove x o in
-    checker t*)
-
-(*
-
-
-let empty = Empty
-
-    let is_empty = function Empty -> true | _ -> false
-
-(*    let rec find x = function
-        Empty ->
-          raise Not_found
-      | Node(l, v, d, r, _) ->
-          (* let c = Ord.compare x v in *)
-          if x = v (*c = 0*) then d
-          else find x (if x < v (* c < 0 *) then l else r)
-
-    let rec mem x = function
-        Empty ->
-          false
-      | Node(l, v, d, r, _) ->
-          (* let c = Ord.compare x v in*)
-          x = v (* c = 0 *) || mem x (if x < v (* c < 0 *) then l else r)
-
-    let rec iter f = function
-        Empty -> ()
-      | Node(l, v, d, r, _) ->
-          iter f l; f v d; iter f r
-
-    let rec map f = function
-        Empty               -> Empty
-      | Node(l, v, d, r, h) -> Node(map f l, v, f d, map f r, h)
-
-    let rec mapi f = function
-        Empty               -> Empty
-      | Node(l, v, d, r, h) -> Node(mapi f l, v, f v d, mapi f r, h)
-
-    let rec fold f m accu =
-      match m with
-        Empty -> accu
-      | Node(l, v, d, r, _) ->
-          fold f r (f v d (fold f l accu))
- *)
-
-    (*****************************************************************)
-    (* 
-    type 'a enumeration = End | More of key * 'a * 'a t * 'a enumeration
-
-    let rec cons_enum m e =
-      match m with
-        Empty -> e
-      | Node(l, v, d, r, _) -> cons_enum l (More(v, d, r, e))
-
-    let compare cmp m1 m2 =
-      let rec compare_aux e1 e2 =
-          match (e1, e2) with
-          (End, End) -> 0
-        | (End, _)  -> -1
-        | (_, End) -> 1
-        | (More(v1, d1, r1, e1), More(v2, d2, r2, e2)) ->
-            let c = Ord.compare v1 v2 in
-            if c <> 0 then c else
-            let c = cmp d1 d2 in
-            if c <> 0 then c else
-            compare_aux (cons_enum r1 e1) (cons_enum r2 e2)
-      in compare_aux (cons_enum m1 End) (cons_enum m2 End)
-
-    let equal cmp m1 m2 =
-      let rec equal_aux e1 e2 =
-          match (e1, e2) with
-          (End, End) -> true
-        | (End, _)  -> false
-        | (_, End) -> false
-        | (More(v1, d1, r1, e1), More(v2, d2, r2, e2)) ->
-            Ord.compare v1 v2 = 0 && cmp d1 d2 &&
-            equal_aux (cons_enum r1 e1) (cons_enum r2 e2)
-      in equal_aux (cons_enum m1 End) (cons_enum m2 End) *)
-
-*)

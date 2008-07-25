@@ -1545,6 +1545,7 @@ qual_term:
 
 qual_intlist:
     INT                                     { [$1] }
+  | MINUS INT                               { [0-$2] }
   | INT COMMA qual_intlist                  { $1::$3 }
 
 qual_litident:

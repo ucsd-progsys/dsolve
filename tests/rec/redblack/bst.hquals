@@ -1,0 +1,6 @@
+qualif FALSE(v) : 1 = 0
+
+(** From the MLQ **)
+
+(* BST quals *)
+qualif COMP(v)  : ~A { >, < } v

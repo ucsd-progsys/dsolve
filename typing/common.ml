@@ -304,9 +304,9 @@ let dump_graph g =
  * 2. if ui -> uj then ui >= uj *)
 let scc_rank f ijs = 
   let g = G.create () in
-  let _ = List.iter (fun (i,j) -> G.add_edge g (i,(f i)) (j,(f j))) ijs in
-  let _ = dump_graph g in
-  let a = SCC.scc_array g in
+  let _ = Bstats.time "making graph" (List.iter (fun (i,j) -> G.add_edge g (i,(f i)) (j,(f j)))) ijs in
+  let _ = if !Clflags.dump_graph then dump_graph g in
+  let a = Bstats.time "scc_array" SCC.scc_array g in
   let _ = cprintf ol_scc "@[dep@ graph:@ vertices@ =@ @ %d,@ sccs@ =@ %d@ @\n@]" 
           (G.nb_vertex g) (Array.length a);
           cprintf ol_scc "@[scc@ sizes:@\n@]";
@@ -315,7 +315,7 @@ let scc_rank f ijs =
           (fun i xs -> 
           cprintf ol_scc "@[%d@ :@ %s@ @\n@]" i (xs_to_string int_s_to_string xs)) a;
           cprintf ol_scc "@[@\n@]" in
-  let sccs = array_to_index_list a in
+  let sccs = Bstats.time "array to index list" array_to_index_list a in
   flap (fun (i,vs) -> List.map (fun (j,_) -> (j,i)) vs) sccs
 
 (*

@@ -247,6 +247,8 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
   match (f1, f2) with
   | (f1, f2) when F.is_shape f1 && F.is_shape f2 ->
       ([], [])
+  | (f1, f2) when f1 = f2 ->
+      ([], [])
   | (F.Farrow (l1, f1, f1'), F.Farrow (l2, f2, f2')) ->
       let subs = match (l1, l2) with (Some p1, Some p2) when not (Pat.same p1 p2) -> subst_to p2 p1 | _ -> [] in
       let env' = resolve_extend_env tenv env f2 l1 l2 in
@@ -565,10 +567,10 @@ let sat s = function
       let p1 = F.refinement_predicate (solution_map s) qual_test_expr r1 in
       let p2 = F.refinement_predicate (solution_map s) qual_test_expr (F.ref_of_simple sr2) in
       let rv = TP.implies (P.big_and [envp; gp; p1]) p2 in TP.finish ();rv
-  | WFRef (env,(subs, F.Qvar k), _) as c ->
-      let rv = refinement_well_formed env (solution_map s) (F.mk_refinement subs [] [k]) qual_test_expr in
+  | WFRef (env,(subs, F.Qvar k), _) (*as c*) ->
+      (*let rv = refinement_well_formed env (solution_map s) (F.mk_refinement subs [] [k]) qual_test_expr in
       C.asserts (Printf.sprintf "ERROR: wf is unsat! (%d)" (get_ref_id c)) rv;
-      rv 
+      rv*) true 
   | _ -> true
 
 let unsat_constraints sri s =
@@ -606,7 +608,7 @@ let instantiate_quals_in_env qs =
             let vm = List.fold_left (add_path_set aqs) C.StringMap.empty d in
               Bstats.time "instantiate_in_env" (List.fold_left (instantiate_in_env_vm vm) QSet.empty) qs in
           let els = QSet.elements q in
-          let _ = Hashtbl.add memo estr els in
+          let _ = Hashtbl.replace memo estr els in
             (els :: qsets, QSet.union q qsetall)
 
 let constraint_env (_, c) =
@@ -693,7 +695,7 @@ let dump_solving qs sri s step =
        !stat_refines !stat_wf_refines !stat_simple_refines !stat_sub_refines;
      C.cprintf C.ol_solve_stats "@[Implication Queries: %d@ total;@ %d@ valid;@ %d@ match@]@.@." 
        !stat_imp_queries !stat_valid_imp_queries !stat_matches;
-     TP.print_stats ();
+     if C.ck_olev C.ol_solve_stats then TP.print_stats () else ();
      dump_solution_stats s;
      flush stdout)
 
@@ -720,16 +722,17 @@ let solve_wf sri s =
   iter_ref_constraints sri 
   (function WFRef _ as c -> ignore (refine sri s c) | _ -> ())
 
-let solve qs cs = 
+let solve qs cs =
   let cs = if !Cf.simpguard then List.map simplify_fc cs else cs in
   let cs = Bstats.time "splitting constraints" split cs in
   let (qs, allqs) = Bstats.time "instantiating quals" (instantiate_per_environment cs) qs in
+  let _ = Hashtbl.clear memo in
   let sri = Bstats.time "making ref index" make_ref_index cs in
   let s = Bstats.time "make initial solution" (make_initial_solution (List.combine (strip_origins cs) qs)) allqs in
   let _ = dump_solution s in
   let _ = dump_solving allqs sri s 0  in 
   let _ = Bstats.time "solving wfs" (solve_wf sri) s in
-  let _ = printf "@[AFTER@ WF@]@." in
+  let _ = C.cprintf C.ol_solve "@[AFTER@ WF@]@." in
   let _ = dump_solving qs sri s 1 in
   let _ = dump_solution s in
   let w = Bstats.time "make initial worklist" make_initial_worklist sri in

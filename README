@@ -125,10 +125,12 @@ dsolve will attempt to use the interface file
 if it exists.
 
 This Liquid interface file can be used to specify the Liquid types of
-program values.  Example Liquid interfaces can be found in examples/.
+program values as well as specify measure functions which can be
+used to prove structural properties of sum types. Example Liquid 
+interfaces can be found in examples/.
 
 
-Syntax
+Interface Syntax
 ------
 
 A Liquid interface consists of two lists, the first specifying
@@ -174,6 +176,29 @@ ADTs can be specified as follows:
 
 Note that || separates type constructors, and the first constructor,
 [], has no parameters.
+
+Measure Syntax
+--------------
+
+A measure is a function from a sum type to the integers which specifies some useful
+structural property of that type. Measures can be recursive (allowing inductive reasoning),
+but must be expressed in EUFA. Measures are defined in two parts:
+
+1) A measure definition in the liquid interface file.
+
+measure length =
+| [] -> 0
+| _ :: b -> 1 + length b
+
+Note that the set of identifiers in the pattern of each match case should be exactly the
+set of identifiers needed to express the measure value for that constructor.
+
+2) A matching function in the ml source code.
+
+let length l =
+  match l with
+  | [] -> 0
+  | _ :: b -> 1 + length b
 
 Error Messages
 --------------

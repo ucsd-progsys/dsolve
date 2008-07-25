@@ -352,9 +352,10 @@ and constrain_bindings env guard recflag bindings =
     (* We need to figure out all the frames' labels before we can properly bind them. *)
     let _ = F.begin_def () in
     let unlabeled_frames = List.map (fun e -> F.initialize_type_expr_levels e.exp_type; F.fresh e.exp_env e.exp_type) exprs in
-    let _ = F.end_def () in
     let unlabeled_env = bind_all bindings unlabeled_frames tenv env guard in
     let (label_frames, _) = constrain_subexprs unlabeled_env guard exprs in
+    let _ = F.end_def () in
+
     let binding_frames = List.map2 F.label_like unlabeled_frames label_frames in
     let binding_frames = List.map F.generalize binding_frames in
             

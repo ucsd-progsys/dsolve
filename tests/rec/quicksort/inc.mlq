@@ -1,0 +1,3 @@
+val quicksort: l:
+  [[], [v: true, v: true]] [t: list . || e0: 'a, e1: [[], [v: true, v: true]] t] ->
+  [[], [v: true, v: true]] [t: list . || e0: 'a, e1: [[], [v: e0 <= v, v: true]] t]

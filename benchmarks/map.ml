@@ -1,0 +1,1 @@
+../tests/rec/map/all.ml
