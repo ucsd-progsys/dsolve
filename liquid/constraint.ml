@@ -279,7 +279,7 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
        assert false)
 
 let split_wf_ref f c env r =
-  sref_map (fun sr -> (Cstr c, WFRef(Le.add qual_test_var f env, sr, None))) r
+  sref_map (fun sr -> (Cstr c, WFRef(Le.aliasing_add qual_test_var f env, sr, None))) r
 
 let make_wff c tenv env f =
   {lc_cstr = WFFrame (env, f); lc_tenv = tenv; lc_orig = Cstr c; lc_id = None}
@@ -585,6 +585,16 @@ let unsat_constraints sri s =
 module QSet = Set.Make(Qualifier)
 module NSet = Set.Make(String)
 
+module LEnv : Graph.Sig.COMPARABLE with type t = Frame.t Le.t =
+struct
+   type t = Frame.t Le.t
+   let compare = compare
+   let hash e = Hashtbl.hash (Le.setstring e)
+   let equal = (==)
+end
+
+module EG = Graph.Persistent.Digraph.Concrete(LEnv)
+
 let memo = Hashtbl.create 1000
 
 let add_path_set vars m path =
@@ -593,32 +603,42 @@ let add_path_set vars m path =
       let rest = try C.StringMap.find name m with Not_found -> [] in C.StringMap.add name (path :: rest) m
   | _ -> m
 
-let instantiate_in_env_vm vm qsetl q =
-  let qs = List.fold_left (fun ql q -> Bstats.time "QS add" (QSet.add q) ql) QSet.empty (Bstats.time "instantiate_about" (Qualifier.instantiate_about vm) q) in
-    QSet.union qsetl qs
+let rec find_max_containing_env envg env = match EG.succ envg (Le.unalias env) with
+  | []     -> env
+  | e :: _ -> find_max_containing_env envg e
 
-let instantiate_quals_in_env qs =
-  let aqs = List.fold_left (fun xs x -> List.rev_append (Qualifier.vars x) xs) [] qs in
-  let aqs = List.fold_left (fun xs x -> NSet.add x xs) NSet.empty aqs in
-    fun (qsets, qsetall) env ->
+let instantiate_in_vm vm q =
+  List.fold_left (C.flip QSet.add) QSet.empty (Qualifier.instantiate_about vm q)
+
+let instantiate_quals_in_env envg qs =
+  let qpaths = List.fold_left (fun xs x -> List.fold_left (C.flip NSet.add) xs (Qualifier.vars x)) NSet.empty qs in
+    fun env ->
+      let env  = find_max_containing_env envg env in
       let estr = Le.setstring env in
-        try let q = Hashtbl.find memo estr in (q :: qsets, qsetall) with Not_found ->
-          let q =
-            let d = Le.domain env in
-            let vm = List.fold_left (add_path_set aqs) C.StringMap.empty d in
-              Bstats.time "instantiate_in_env" (List.fold_left (instantiate_in_env_vm vm) QSet.empty) qs in
+        try Hashtbl.find memo estr with Not_found ->
+          let vm  = List.fold_left (add_path_set qpaths) C.StringMap.empty (Le.domain env) in
+          let q   = List.fold_left QSet.union QSet.empty (List.map (instantiate_in_vm vm) qs) in
           let els = QSet.elements q in
-          let _ = Hashtbl.replace memo estr els in
-            (els :: qsets, QSet.union q qsetall)
+          let _   = Hashtbl.replace memo estr els in
+            els
+
+let rec add_env envg (Le.Env (_, origin) as e) = match origin with
+  | Le.Parent parent -> add_env (EG.add_edge envg parent e) parent
+  | Le.Alias  alias  -> add_env envg alias
+  | Le.Nil           -> EG.add_vertex envg e
+
+let make_envg envs =
+  List.fold_left add_env EG.empty envs
 
 let constraint_env (_, c) =
-  (match c with | SubRef (_, _, _, _, _) -> Le.empty | WFRef (e, _, _) -> e)
+  match c with | SubRef (_, _, _, _, _) -> Le.empty | WFRef (e, _, _) -> e
 
 (* Make copies of all the qualifiers where the free identifiers are replaced
    by the appropriate bound identifiers from all environments. *)
 let instantiate_per_environment cs qs =
-  let (qsets, qs) = (List.fold_left (instantiate_quals_in_env qs) ([], QSet.empty) (List.rev_map constraint_env cs)) in
-    (qsets, QSet.elements qs)
+  let envs = List.rev_map constraint_env cs in
+  let envg = make_envg envs in
+    List.rev_map (instantiate_quals_in_env envg qs) envs
 
 (**************************************************************)
 (************************ Initial Solution ********************)
@@ -636,7 +656,7 @@ let strip_origins cs = snd (List.split cs)
                       
 type solmode = WFS | LHS | RHS
 
-let make_initial_solution cs qs =
+let make_initial_solution cs =
   let s = Sol.create 100 in
   let addrv qs = function
     | (F.Qconst _, _) -> ()
@@ -645,7 +665,7 @@ let make_initial_solution cs qs =
     | (F.Qvar k, _) -> if Sol.find s k != [] then Sol.replace s k qs in
   let ga (c, q) = match c with
     | SubRef (_, _, r1, (_, qe2), _) ->
-        List.iter (fun qv -> addrv [] (F.Qvar qv, LHS)) (F.refinement_qvars r1); addrv qs (qe2, RHS)
+        List.iter (fun qv -> addrv [] (F.Qvar qv, LHS)) (F.refinement_qvars r1); addrv q (qe2, RHS)
     | WFRef (_, (_, qe), _) -> addrv [] (qe, LHS); addrv q (qe, WFS) in
   let wfs = filter_wfs cs in
   let subs = filter_subs cs in
@@ -672,18 +692,15 @@ let dump_solution_stats s =
     print_flush ()
   else ()
   
-let dump_solving qs sri s step =
+let dump_solving sri s step =
   if step = 0 then 
     let cs = get_ref_constraints sri in 
-    let qn  = List.length qs in
     let kn  = Sol.length s in
     let wcn = List.length (List.filter is_wfref_constraint cs) in
     let rcn = List.length (List.filter is_subref_constraint cs) in
     let scn = List.length (List.filter is_simple_constraint cs) in
     (dump_constraints sri;
-     C.cprintf C.ol_solve_stats "@[%d@ instantiated@ qualifiers@\n@\n@]" qn; 
      C.cprintf C.ol_solve_stats "@[%d@ variables@\n@\n@]" kn;
-     C.cprintf C.ol_solve_stats "@[%d@ total@ quals@\n@\n@]" (kn * qn); 
      C.cprintf C.ol_solve_stats "@[%d@ split@ wf@ constraints@\n@\n@]" wcn;
      C.cprintf C.ol_solve_stats "@[%d@ split@ subtyping@ constraints@\n@\n@]" rcn;
      C.cprintf C.ol_solve_stats "@[%d@ simple@ subtyping@ constraints@\n@\n@]" scn;
@@ -725,19 +742,19 @@ let solve_wf sri s =
 let solve qs cs =
   let cs = if !Cf.simpguard then List.map simplify_fc cs else cs in
   let cs = Bstats.time "splitting constraints" split cs in
-  let (qs, allqs) = Bstats.time "instantiating quals" (instantiate_per_environment cs) qs in
+  let qs = Bstats.time "instantiating quals" (instantiate_per_environment cs) qs in
   let _ = Hashtbl.clear memo in
   let sri = Bstats.time "making ref index" make_ref_index cs in
-  let s = Bstats.time "make initial solution" (make_initial_solution (List.combine (strip_origins cs) qs)) allqs in
+  let s = make_initial_solution (List.combine (strip_origins cs) qs) in
   let _ = dump_solution s in
-  let _ = dump_solving allqs sri s 0  in 
+  let _ = dump_solving sri s 0 in
   let _ = Bstats.time "solving wfs" (solve_wf sri) s in
   let _ = C.cprintf C.ol_solve "@[AFTER@ WF@]@." in
-  let _ = dump_solving qs sri s 1 in
+  let _ = dump_solving sri s 1 in
   let _ = dump_solution s in
   let w = Bstats.time "make initial worklist" make_initial_worklist sri in
   let _ = Bstats.time "solving sub" (solve_sub sri s) w in
-  let _ = dump_solving qs sri s 2 in
+  let _ = dump_solving sri s 2 in
   let _ = dump_solution s in
   let _ = TP.reset () in
   let unsat = Bstats.time "testing solution" (unsat_constraints sri) s in

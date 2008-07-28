@@ -34,6 +34,9 @@ end
 
 module PathMap = Map.Make(ComparablePath)
 
+let flip f x y =
+  f y x
+
 let maybe_cons m xs = match m with
   | None -> xs
   | Some x -> x :: xs
