@@ -206,8 +206,8 @@ let rec split_sub_params c tenv env g ps1 ps2 = match (ps1, ps2) with
   | ((i, f, v)::ps1, (i', f', _)::ps2) ->
       let (pi, pi') = (TT.Tpat_var i, TT.Tpat_var i') in
       let (env', subs) = begin match v with
-        | F.Covariant | F.Invariant -> (F.env_bind tenv env pi f, subst_to pi' pi)
-        | F.Contravariant           -> (F.env_bind tenv env pi' f', subst_to pi pi')
+        | F.Covariant | F.Invariant -> (F.env_bind env pi f, subst_to pi' pi)
+        | F.Contravariant           -> (F.env_bind env pi' f', subst_to pi pi')
       end
       in lequate_cs env g c v f f' @
            split_sub_params c tenv env' g ps1 (params_apply_substitutions subs ps2)
@@ -216,7 +216,7 @@ let rec split_sub_params c tenv env g ps1 ps2 = match (ps1, ps2) with
   | _ -> assert false
 
 let resolve_extend_env tenv env f l1 l2 = match (l1, l2) with
-  | (Some p, _) | (_, Some p) -> F.env_bind tenv env p f
+  | (Some p, _) | (_, Some p) -> F.env_bind env p f
   | _ -> env
 
 let bind_tags_pr (t, f) cs r env =
@@ -307,7 +307,7 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
   | F.Fabstract (_, ps, r) ->
       (split_wf_params c tenv env ps, split_wf_ref f c env r)
   | F.Farrow (l, f, f') ->
-      let env' = match l with None -> env | Some p -> F.env_bind tenv env p f in
+      let env' = match l with None -> env | Some p -> F.env_bind env p f in
         ([make_wff c tenv env f; make_wff c tenv env' f'], [])
   | F.Fvar (_, _, r) ->
       ([], split_wf_ref f c env r)

@@ -219,11 +219,11 @@ and constrain_if (env, guard, f) e1 e2 e3 =
     [WFFrame(env, f); SubFrame(env', guard2, f2, f); SubFrame(env', guard3, f3, f)],
     cstrs1 @ cstrs2 @ cstrs3)
 
-and bind tenv env guard pat frame pexpr =
-  F.env_bind tenv env pat.pat_desc frame
+and bind env guard pat frame pexpr =
+  F.env_bind env pat.pat_desc frame
 
 and constrain_case (env, guard, f) matchf matche (pat, e) =
-  let env = bind e.exp_env env guard pat matchf matche in
+  let env = bind env guard pat matchf matche in
   let (fe, subcs) = constrain e env guard in
     (SubFrame (env, guard, fe, f), subcs)
 
@@ -249,7 +249,7 @@ and constrain_match (env, guard, f) e pexps partial =
 and constrain_function (env, guard, f) t pat e' =
   match f with
     | (F.Farrow (_, f, unlabelled_f')) ->
-      let env' = F.env_bind e'.exp_env env pat.pat_desc f in
+      let env' = F.env_bind env pat.pat_desc f in
       let (f'', cstrs) = constrain e' env' guard in
       let f' = F.label_like unlabelled_f' f'' in
       let f = F.Farrow (Some pat.pat_desc, f, f') in
@@ -335,11 +335,11 @@ and constrain_assert (env, guard, _) e =
 
 and constrain_and_bind guard (env, cstrs) (pat, e) =
   let (f, cstrs') = F.begin_def (); let r = constrain e env guard in F.end_def (); r in
-  let env = bind e.exp_env env guard pat (F.generalize f) (expression_to_pexpr e) in
+  let env = bind env guard pat (F.generalize f) (expression_to_pexpr e) in
     (env, cstrs @ cstrs')
 
 and bind_all bindings fs tenv env guard =
-  List.fold_right2 (fun (p, e, px) f env -> bind tenv env guard p f px) bindings fs env
+  List.fold_right2 (fun (p, e, px) f env -> bind env guard p f px) bindings fs env
 
 and constrain_bindings env guard recflag bindings =
   match recflag with

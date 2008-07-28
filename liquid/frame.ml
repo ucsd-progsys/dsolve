@@ -830,34 +830,34 @@ let rec translate_pframe env plist pf =
 (********************* Pattern binding ************************) 
 (**************************************************************)
 
-let rec bind env pat frame =
+let rec bind pat frame =
   let _bind = function
     | (Tpat_any, _) -> ([], [])
     | (Tpat_var x, f) -> ([], [(Path.Pident x, f)])
     | (Tpat_tuple pats, Fsum (_, _, [(_, ps)], _)) ->
-        ([], bind_params env (Pattern.pattern_descs pats) ps)
+        ([], bind_params (Pattern.pattern_descs pats) ps)
     | (Tpat_construct (cstrdesc, pats), f) ->
         begin match unfold_applying f with
           | Fsum (p, _, cfvs, _) ->
-              ([], bind_params env (Pattern.pattern_descs pats) (List.assoc cstrdesc.cstr_tag cfvs))
+              ([], bind_params (Pattern.pattern_descs pats) (List.assoc cstrdesc.cstr_tag cfvs))
           | _ -> assert false
         end
     | _ -> assert false
   in C.expand _bind [(pat, frame)] []
 
-and bind_param env (subs, binds) (i, f, _) pat =
+and bind_param (subs, binds) (i, f, _) pat =
   let f = apply_subs subs f in
   let subs =
     match pat with
       | Tpat_var x -> (Path.Pident i, Predicate.Var (Path.Pident x)) :: subs
       | _          -> subs
-  in (subs, bind env pat f @ binds)
+  in (subs, bind pat f @ binds)
 
-and bind_params env pats params  =
-  snd (List.fold_left2 (bind_param env) ([], []) params pats)
+and bind_params pats params  =
+  snd (List.fold_left2 bind_param ([], []) params pats)
 
-let env_bind tenv env pat frame =
-  Lightenv.addn (bind tenv pat frame) env
+let env_bind env pat frame =
+  Lightenv.addn (bind pat frame) env
 
 (**************************************************************)
 (******************** Logical embedding ***********************) 
