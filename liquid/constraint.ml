@@ -517,7 +517,8 @@ let qual_wf sm env subs q =
 
 let refine sri s c =
   let _ = incr stat_refines in
-  let sm = solution_map s in 
+  let _  = match c with SubRef _ -> incr stat_sub_refines | WFRef _ -> incr stat_wf_refines in
+  let sm = solution_map s in
   match c with
   | SubRef (_, _, [([], ([], [k1]))], ([], F.Qvar k2), _)
     when not (!Cf.no_simple || !Cf.verify_simple) ->
@@ -526,7 +527,6 @@ let refine sri s c =
   | SubRef (env,g,r1, (_, F.Qvar k2), _) when sm k2 = [] ->
       false
   | SubRef (env,g,r1, (sub2s, F.Qvar k2), _)  ->
-      let _ = incr stat_sub_refines in
       let qp2s = 
         List.map 
           (fun q -> (q,F.refinement_predicate sm qual_test_expr (F.mk_refinement sub2s [q] [])))
@@ -548,7 +548,6 @@ let refine sri s c =
       let _ = stat_valid_imp_queries := !stat_valid_imp_queries + (List.length q2s'') in
         not (C.same_length qp2s q2s'')
   | WFRef (env, (subs, F.Qvar k), _) ->
-      let _ = incr stat_wf_refines in
       let qs  = solution_map s k in
       let qs' = List.filter (qual_wf sm env subs) qs in
       let _   = Sol.replace s k qs' in
@@ -743,7 +742,6 @@ let solve qs cs =
   let cs = if !Cf.simpguard then List.map simplify_fc cs else cs in
   let cs = Bstats.time "splitting constraints" split cs in
   let qs = Bstats.time "instantiating quals" (instantiate_per_environment cs) qs in
-  let _ = Hashtbl.clear memo in
   let sri = Bstats.time "making ref index" make_ref_index cs in
   let s = make_initial_solution (List.combine (strip_origins cs) qs) in
   let _ = dump_solution s in
@@ -761,4 +759,4 @@ let solve qs cs =
   (if List.length unsat > 0 then 
     C.cprintf C.ol_solve_error "@[Ref_constraints@ still@ unsatisfied:@\n@]";
     List.iter (fun (c, b) -> C.cprintf C.ol_solve_error "@[%a@.@\n@]" (pprint_ref None) c) unsat);
-  (solution_map s, (List.map (fun (a, b) -> b)  unsat))
+  (solution_map s, List.map snd unsat)
