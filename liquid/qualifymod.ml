@@ -249,11 +249,17 @@ and constrain_match (env, guard, f) e pexps partial =
 and constrain_function (env, guard, f) t pat e' =
   match f with
     | (F.Farrow (_, f, unlabelled_f')) ->
-      let env' = F.env_bind env pat.pat_desc f in
-      let (f'', cstrs) = constrain e' env' guard in
-      let f' = F.label_like unlabelled_f' f'' in
-      let f = F.Farrow (Some pat.pat_desc, f, f') in
-        (f, [WFFrame (env, f); SubFrame (env', guard, f'', f')], cstrs)
+        let env' = F.env_bind env pat.pat_desc f in
+        let (f'', cstrs) = constrain e' env' guard in
+          begin match e'.exp_desc with
+            | Texp_function _ ->
+                let f = F.Farrow (Some pat.pat_desc, f, f'') in
+                  (f, [WFFrame (env, f)], cstrs)
+            | _ ->
+                let f' = F.label_like unlabelled_f' f'' in
+                let f = F.Farrow (Some pat.pat_desc, f, f') in
+                  (f, [WFFrame (env, f); SubFrame (env', guard, f'', f')], cstrs)
+          end
     | _ -> assert false
 
 and instantiate_id id f env tenv =
