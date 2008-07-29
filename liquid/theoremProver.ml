@@ -101,13 +101,9 @@ let qcachet: (string * string, bool) Hashtbl.t = Hashtbl.create 1009
 (********************************************************************************)
 
 (* API *)
-let print_stats () =
-  TheoremProverYices.Prover.print_stats ();
-  TheoremProverQprover.print_stats ();
-  C.cprintf C.ol_solve_stats 
-    "@[Prover stats:@ %d@ pushes,@ %d@ queries,@ %d@ cache@ misses,@ %d@ qprover@ misses@\n@]" 
-    !nb_push !nb_queries !nb_cache_miss !nb_qp_miss; flush stdout
-
+let print_stats ppf () =
+  C.fcprintf ppf C.ol_solve_stats "@[TP@ API@ stats:@ %d@ pushes@ %d@ queries@]@." !nb_push !nb_queries;
+  C.fcprintf ppf C.ol_solve_stats "@[Yices@ TP@ stats:@ %a@]@." TheoremProverYices.Prover.print_stats ()
 
 (* API *)
 let reset () =

@@ -497,8 +497,7 @@ let implies_match env sm r1 =
       implies_always
     else
       fun (_,p) ->
-        let rv = (not !Cf.no_simple_subs) && (p = P.True || PM.mem p lhsm) in
-        let _ = if rv then incr stat_matches in rv
+        (not !Cf.no_simple_subs) && (p = P.True || PM.mem p lhsm)
 
 let implies_tp env g sm r1 = 
   let lhs = 
@@ -532,6 +531,7 @@ let refine sri s c =
           (fun q -> (q,F.refinement_predicate sm qual_test_expr (F.mk_refinement sub2s [q] [])))
           (sm k2) in
       let (qp2s1,qp2s') = Bstats.time "match check" (List.partition (implies_match env sm r1)) qp2s in
+      let _ = stat_matches := !stat_matches + (List.length qp2s1) in
       let qp2s2 =
         if qp2s' = [] then
           []
@@ -539,13 +539,13 @@ let refine sri s c =
           let tpc = Bstats.time "implies_tp" (implies_tp env g sm) r1 in
           let (qp2s2,_)    = Bstats.time "imp check" (List.partition tpc) qp2s' in
           let _ = Bstats.time "finish" TP.finish () in
+          let _ = stat_imp_queries := !stat_imp_queries + (List.length qp2s') in
+          let _ = stat_valid_imp_queries := !stat_valid_imp_queries + (List.length qp2s2) in
             qp2s2
       in
       let q2s'' = List.map fst (qp2s1 @ qp2s2) in
       let _ = Sol.replace s k2 q2s'' in
       let _ = C.cprintf C.ol_refine "@[%d --> %d@.@]" (List.length qp2s) (List.length q2s'') in
-      let _ = stat_imp_queries := !stat_imp_queries + (List.length qp2s) in
-      let _ = stat_valid_imp_queries := !stat_valid_imp_queries + (List.length q2s'') in
         not (C.same_length qp2s q2s'')
   | WFRef (env, (subs, F.Qvar k), _) ->
       let qs  = solution_map s k in
@@ -716,9 +716,9 @@ let dump_solving sri s step =
   else if step = 2 then
     (C.cprintf C.ol_solve_stats "@[Refine Iterations: %d@ total (wf=%d,si=%d,su=%d)\n@\n@]" 
        !stat_refines !stat_wf_refines !stat_simple_refines !stat_sub_refines;
-     C.cprintf C.ol_solve_stats "@[Implication Queries: %d@ total;@ %d@ valid;@ %d@ match@]@.@." 
-       !stat_imp_queries !stat_valid_imp_queries !stat_matches;
-     if C.ck_olev C.ol_solve_stats then TP.print_stats () else ();
+     C.cprintf C.ol_solve_stats "@[Implication Queries:@ %d@ match;@ %d@ to@ TP@ (%d@ valid)@]@.@." 
+       !stat_matches !stat_imp_queries !stat_valid_imp_queries;
+     if C.ck_olev C.ol_solve_stats then TP.print_stats std_formatter () else ();
      dump_solution_stats s;
      flush stdout)
 
