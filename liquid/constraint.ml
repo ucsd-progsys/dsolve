@@ -742,7 +742,6 @@ let solve qs cs =
   let cs = if !Cf.simpguard then List.map simplify_fc cs else cs in
   let cs = Bstats.time "splitting constraints" split cs in
   let qs = Bstats.time "instantiating quals" (instantiate_per_environment cs) qs in
-  let _ = Hashtbl.clear memo in
   let sri = Bstats.time "making ref index" make_ref_index cs in
   let s = make_initial_solution (List.combine (strip_origins cs) qs) in
   let _ = dump_solution s in
@@ -760,4 +759,4 @@ let solve qs cs =
   (if List.length unsat > 0 then 
     C.cprintf C.ol_solve_error "@[Ref_constraints@ still@ unsatisfied:@\n@]";
     List.iter (fun (c, b) -> C.cprintf C.ol_solve_error "@[%a@.@\n@]" (pprint_ref None) c) unsat);
-  (solution_map s, (List.map (fun (a, b) -> b)  unsat))
+  (solution_map s, List.map snd unsat)
