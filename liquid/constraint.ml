@@ -712,7 +712,7 @@ let dump_solving sri s step =
        !stat_refines !stat_wf_refines !stat_simple_refines !stat_sub_refines;
      C.cprintf C.ol_solve_stats "@[Implication Queries: %d@ total;@ %d@ valid;@ %d@ match@]@.@." 
        !stat_imp_queries !stat_valid_imp_queries !stat_matches;
-     if C.ck_olev C.ol_solve_stats then TP.print_stats () else ();
+     if C.ck_olev C.ol_solve_stats then TP.print_stats std_formatter () else ();
      dump_solution_stats s;
      flush stdout)
 
