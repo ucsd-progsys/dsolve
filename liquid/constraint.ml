@@ -674,10 +674,17 @@ let make_initial_solution cs =
 (****************** Debug/Profile Information *****************)
 (**************************************************************)
  
-let dump_constraints sri = 
-  if !Cf.dump_constraints then
+let dump_ref_constraints sri =
+  if !Cf.dump_ref_constraints then
   (printf "@[Refinement Constraints@.@\n@]";
   iter_ref_constraints sri (fun c -> printf "@[%a@.@]" (pprint_ref None) c))
+
+let dump_constraints cs =
+  if !Cf.dump_constraints then begin
+    printf "Frame Constraints@.@.";
+    let index = ref 0 in
+    List.iter (fun {lc_cstr = c} -> incr index; printf "@[(%d) %a@]@.@." !index pprint c) cs
+  end
 
 let dump_solution_stats s = 
   if C.ck_olev C.ol_solve_stats then
@@ -698,7 +705,7 @@ let dump_solving sri s step =
     let wcn = List.length (List.filter is_wfref_constraint cs) in
     let rcn = List.length (List.filter is_subref_constraint cs) in
     let scn = List.length (List.filter is_simple_constraint cs) in
-    (dump_constraints sri;
+    (dump_ref_constraints sri;
      C.cprintf C.ol_solve_stats "@[%d@ variables@\n@\n@]" kn;
      C.cprintf C.ol_solve_stats "@[%d@ split@ wf@ constraints@\n@\n@]" wcn;
      C.cprintf C.ol_solve_stats "@[%d@ split@ subtyping@ constraints@\n@\n@]" rcn;
@@ -740,6 +747,7 @@ let solve_wf sri s =
 
 let solve qs cs =
   let cs = if !Cf.simpguard then List.map simplify_fc cs else cs in
+  let _  = dump_constraints cs in
   let cs = Bstats.time "splitting constraints" split cs in
   let qs = Bstats.time "instantiating quals" (instantiate_per_environment cs) qs in
   let sri = Bstats.time "making ref index" make_ref_index cs in
