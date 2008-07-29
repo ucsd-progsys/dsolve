@@ -35,7 +35,7 @@ def gen_quals(src,bare,lq, col):
   bname = src[:-3]
   (fname,qname,hname) = (bname+".ml", bname+".quals", bname+".hquals")
   os.system("rm -f %s" % qname)
-  if bare:
+  if bare and os.path.exists(hname):
     os.system("cp -f %s %s" % (hname, tname))
   else:
     cat_files([hname,d_pats],tname)
