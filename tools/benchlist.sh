@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FILE="/tmp/benchtree.ml"
+FILE="/tmp/benchlist.ml"
 
 cat - > $FILE <<EOF
 type 'a lst = Nil | Cons of 'a * 'a lst

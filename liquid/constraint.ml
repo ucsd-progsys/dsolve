@@ -268,10 +268,7 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
   | (F.Fsum(_, Some (_, rr1), cs1, r1), F.Fsum(_, Some (_, rr2), cs2, r2)) ->
       let (shp1, shp2) = (F.shape f1, F.shape f2) in
       let (f1, f2) = (F.replace_recvar (F.apply_recref rr1 f1) shp1, F.replace_recvar (F.apply_recref rr2 f2) shp2) in
-      let (penv, tag) = bind_tags_pr (None, f1) cs1 r1 env in
-      let subs = sum_subs cs1 cs2 tag in
-      (lequate_cs env g c F.Covariant f1 f2,
-       split_sub_ref c penv g r1 (List.map (app_subs subs) r2))
+        (lequate_cs env g c F.Covariant f1 f2, [])
   | (F.Fabstract(_, ps1, r1), F.Fabstract(_, ps2, r2)) ->
       (split_sub_params c tenv env g ps1 ps2, split_sub_ref c env g r1 r2)
   | (_,_) -> 
