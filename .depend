@@ -110,9 +110,11 @@ typing/btype.cmo: typing/types.cmi typing/path.cmi utils/misc.cmi \
 typing/btype.cmx: typing/types.cmx typing/path.cmx utils/misc.cmx \
     typing/btype.cmi 
 typing/common.cmo: typing/types.cmi typing/path.cmi typing/oprint.cmi \
-    parsing/longident.cmi typing/ident.cmi typing/env.cmi 
+    parsing/longident.cmi typing/ident.cmi typing/env.cmi utils/clflags.cmi \
+    utils/bstats.cmi 
 typing/common.cmx: typing/types.cmx typing/path.cmx typing/oprint.cmx \
-    parsing/longident.cmx typing/ident.cmx typing/env.cmx 
+    parsing/longident.cmx typing/ident.cmx typing/env.cmx utils/clflags.cmx \
+    utils/bstats.cmx 
 typing/ctype.cmo: typing/types.cmi typing/subst.cmi typing/path.cmi \
     utils/misc.cmi parsing/longident.cmi typing/ident.cmi typing/env.cmi \
     utils/clflags.cmi typing/btype.cmi parsing/asttypes.cmi typing/ctype.cmi 
@@ -453,8 +455,8 @@ liquid/theoremProverYices.cmo: typing/predicate.cmi typing/path.cmi \
 liquid/theoremProverYices.cmx: typing/predicate.cmx typing/path.cmx \
     utils/misc.cmx typing/ident.cmx utils/clflags.cmx utils/bstats.cmx 
 liquid/wellformed.cmo: typing/predicate.cmi typing/predef.cmi typing/path.cmi \
-    liquid/lightenv.cmo typing/ident.cmi liquid/frame.cmi liquid/builtins.cmo \
-    utils/bstats.cmi liquid/wellformed.cmi 
+    liquid/lightenv.cmo typing/ident.cmi liquid/frame.cmi typing/common.cmo \
+    liquid/builtins.cmo utils/bstats.cmi liquid/wellformed.cmi 
 liquid/wellformed.cmx: typing/predicate.cmx typing/predef.cmx typing/path.cmx \
-    liquid/lightenv.cmx typing/ident.cmx liquid/frame.cmx liquid/builtins.cmx \
-    utils/bstats.cmx liquid/wellformed.cmi 
+    liquid/lightenv.cmx typing/ident.cmx liquid/frame.cmx typing/common.cmx \
+    liquid/builtins.cmx utils/bstats.cmx liquid/wellformed.cmi 
