@@ -720,9 +720,9 @@ let fresh_with_var_fun env freshf t =
       else
         let (rp, rr) = mk_recvar env t in
           Hashtbl.replace tbl t (Frec (rp, rr, if !Clflags.no_recvarrefs then null_refinement else empty_refinement));
-          let res = fresh_rec fm env (rp, rr) level t in
+          let res = kill_top_recref env t (fresh_rec fm env (rp, rr) level t) in
             Hashtbl.replace tbl t res; res
-  in kill_top_recref env t (flip_frame_levels (map_refinements (place_freshref freshf) (fm t)))
+  in flip_frame_levels (map_refinements (place_freshref freshf) (fm t))
 
 (* Create a fresh frame with the same shape as the given type
    [ty]. Uses type environment [env] to find type declarations.
