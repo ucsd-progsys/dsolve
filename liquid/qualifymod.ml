@@ -132,7 +132,7 @@ let rec constrain e env guard =
       | (Texp_field (expr, label_desc), _) -> constrain_field environment expr label_desc
       | (Texp_ifthenelse (e1, e2, Some e3), _) -> constrain_if environment e1 e2 e3
       | (Texp_match (e, pexps, partial), _) -> constrain_match environment e pexps partial
-      | (Texp_function ([(pat, e')], _), t) -> constrain_function environment t pat e'
+      | (Texp_function ([(pat, e')], _), _) -> constrain_function environment pat e'
       | (Texp_ident (id, _), F.Fsum(_, _, _, _))
       | (Texp_ident (id, _), F.Fabstract(_, [], _))
       | (Texp_ident (id, _), F.Fvar _) ->
@@ -246,7 +246,7 @@ and constrain_match (env, guard, f) e pexps partial =
   let (cstrs, subcstrs) = List.split cases in
     (f, WFFrame (env, f) :: cstrs, List.concat (matchcstrs :: subcstrs))
 
-and constrain_function (env, guard, f) t pat e' =
+and constrain_function (env, guard, f) pat e' =
   match f with
     | (F.Farrow (_, f, unlabelled_f')) ->
       let env' = F.env_bind env pat.pat_desc f in
