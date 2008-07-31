@@ -359,7 +359,7 @@ let get_ref_constraint sri i =
   C.do_catch "ERROR: get_constraint" (SIM.find i) sri.cnst
 
 let lhs_ks = function WFRef _ -> assert false | SubRef (env,_,r,_,_) ->
-  Le.fold (fun _ f l -> F.qvars f @ l) env (F.refinement_qvars r)
+  Le.fold (fun _ f l -> F.top_refinement_qvars f @ l) env (F.refinement_qvars r)
 
 let rhs_k = function
   | SubRef (_,_,_,(_, F.Qvar k),_) -> Some k

@@ -222,6 +222,10 @@ let apply_subs subs f =
 let refinement_qvars r =
   C.flap (fun (_, (_, qvars)) -> qvars) r
 
+let top_refinement_qvars f = match get_refinement f with
+  | Some r -> refinement_qvars r
+  | None   -> []
+
 let qvars f =
   refinement_fold false (fun r vs -> refinement_qvars r @ vs) [] f
 
@@ -880,10 +884,9 @@ let refinement_conjuncts solution qual_expr res =
 let refinement_predicate solution qual_var refn =
   Predicate.big_and (refinement_conjuncts solution qual_var refn)
 
-let rec conjunct_fold cs solution qual_expr = function
-  | Fvar(_, _, r) | Fsum(_, _, _, r) | Fabstract(_, _, r) ->
-      refinement_conjuncts solution qual_expr r @ cs
-  | _ -> cs
+let rec conjunct_fold cs solution qual_expr f = match get_refinement f with
+  | Some r -> refinement_conjuncts solution qual_expr r @ cs
+  | None   -> cs
 
 let rec conjuncts solution qual_expr fr =
   conjunct_fold [] solution qual_expr fr
