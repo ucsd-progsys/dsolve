@@ -248,12 +248,18 @@ and constrain_match (env, guard, f) e pexps partial =
 
 and constrain_function (env, guard, f) pat e' =
   match f with
-    | (F.Farrow (_, f, unlabelled_f')) ->
-      let env' = F.env_bind env pat.pat_desc f in
-      let (f'', cstrs) = constrain e' env' guard in
-      let f' = F.label_like unlabelled_f' f'' in
-      let f = F.Farrow (Some pat.pat_desc, f, f') in
-        (f, [WFFrame (env, f); SubFrame (env', guard, f'', f')], cstrs)
+    | F.Farrow (_, f, unlabelled_f') ->
+        let env' = F.env_bind env pat.pat_desc f in
+        begin match e'.exp_desc with
+          | Texp_function ([(pat', e')], _) ->
+              let (f', cs, lcs) = constrain_function (env', guard, unlabelled_f') pat' e' in
+                (F.Farrow (Some pat.pat_desc, f, f'), cs, lcs)
+          | _ ->
+              let (f'', cstrs) = constrain e' env' guard in
+              let f' = F.label_like unlabelled_f' f'' in
+              let f = F.Farrow (Some pat.pat_desc, f, f') in
+                (f, [WFFrame (env, f); SubFrame (env', guard, f'', f')], cstrs)
+        end
     | _ -> assert false
 
 and instantiate_id id f env tenv =
@@ -292,7 +298,8 @@ and constrain_let (env, guard, f) recflag bindings body =
   let (env', cstrs1) = constrain_bindings env guard recflag bindings in
   let (body_frame, cstrs2) = constrain body env' guard in
   match body.exp_desc with
-    | Texp_let _ -> (body_frame, [WFFrame (env, body_frame)], cstrs1 @ cstrs2)
+    | Texp_let _ | Texp_function _ | Texp_ifthenelse _ | Texp_match _ ->
+        (body_frame, [WFFrame (env, body_frame)], cstrs1 @ cstrs2)
     | _ ->
       let f = F.label_like f body_frame in
         (f, [WFFrame (env, f); SubFrame (env', guard, body_frame, f)], cstrs1 @ cstrs2)
