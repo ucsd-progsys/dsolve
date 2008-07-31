@@ -256,7 +256,7 @@ let path_name p = if ck_olev ol_unique_names then Path.unique_name p else Path.n
 
 let elevate_olev l = if ck_olev l then () else verb_stack := !verbose_level :: !verb_stack; verbose_level := l
 
-let restore_olev = match !verb_stack with x :: xs -> verbose_level := x | _ -> ()
+let restore_olev = match !verb_stack with x :: xs -> verbose_level := x; verb_stack := xs | _ -> ()
 
 (****************************************************************)
 (************* SCC Ranking **************************************)

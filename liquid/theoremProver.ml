@@ -130,20 +130,20 @@ let implies p =
   let _ = incr nb_push in
   let p = fixdiv p in
   (*let lhs = p in*)
-  let lhs = C.elevate_olev C.ol_unique_names; Buffer.clear buftlhs; 
+  (*let lhs = C.elevate_olev C.ol_unique_names; Buffer.clear buftlhs; 
             Format.fprintf lhsform "%a@." P.pprint p; C.restore_olev; 
-            Buffer.contents buftlhs in
+            Buffer.contents buftlhs in*)
   let check_yi = Bstats.time "YI implies(1)" TheoremProverYices.Prover.implies p in
-  (fun q -> 
+  fun q -> 
     let q = incr nb_queries; Bstats.time "fixdiv" fixdiv q in
     (*let rhs = q in*)
-    let rhs = C.elevate_olev C.ol_unique_names; Buffer.clear buftrhs; 
+    (*let rhs = C.elevate_olev C.ol_unique_names; Buffer.clear buftrhs; 
               Format.fprintf rhsform "%a@." P.pprint q; C.restore_olev; 
               Buffer.contents buftrhs in
     try incr nb_cache_hits; Hashtbl.find qcachet (lhs, rhs)
-      with Not_found -> 
+      with Not_found ->*) 
         let rr = Bstats.time "YI implies(2)" check_yi q in 
-        (decr nb_cache_hits; incr nb_cache_misses; Hashtbl.replace qcachet (lhs, rhs) rr; rr))
+        (*(decr nb_cache_hits; incr nb_cache_misses; Hashtbl.replace qcachet (lhs, rhs) rr; rr)*) rr
 
 
 let finish () = 
