@@ -171,7 +171,8 @@ let main () =
      "-drawlambda", Arg.Set dump_rawlambda, " (undocumented)";
      "-dlambda", Arg.Set dump_lambda, " (undocumented)";
      "-dinstr", Arg.Set dump_instr, " (undocumented)";
-     "-dconstrs", Arg.Set dump_constraints, "print out constraints";
+     "-dconstrs", Arg.Set dump_constraints, "print out frame constraints";
+     "-drconstrs", Arg.Set dump_ref_constraints, "print out refinement constraints";
      "-dqexprs", Arg.Set dump_qexprs, "print out all subexpressions with their qualified types";
      "-dqualifs", Arg.String (fun s -> dump_qualifs := true; Qdump.patf := s), "<file> dump qualifiers for patterns in <file>";
      "-dqueries", Arg.Set dump_queries, "print out all theorem prover queries and their results";
@@ -210,5 +211,4 @@ let main () =
   process_sourcefile !filename
 
 let _ = 
-  Printf.printf "dsolve 0.1: © Copyright 2008 The Regents of the University of California, All rights reserved \n";
   main (); exit 0

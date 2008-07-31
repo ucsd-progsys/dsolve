@@ -92,29 +92,32 @@ let rec fixdiv p =
 
 let nb_push = ref 0
 let nb_queries = ref 0
-let nb_cache_miss = ref 0
+let nb_cache_misses = ref 0
+let nb_cache_hits = ref 0
 let nb_qp_miss = ref 0
 let qcachet: (string * string, bool) Hashtbl.t = Hashtbl.create 1009 
+let buftlhs = Buffer.create 300
+let buftrhs = Buffer.create 300
+let lhsform = Format.formatter_of_buffer buftlhs
+let rhsform = Format.formatter_of_buffer buftrhs
+(*let qcachet: (P.t * P.t, bool) Hashtbl.t = Hashtbl.create 1009*)
 
 (********************************************************************************)
 (************************************* API **************************************)
 (********************************************************************************)
 
 (* API *)
-let print_stats () =
-  TheoremProverYices.Prover.print_stats ();
-  TheoremProverQprover.print_stats ();
-  C.cprintf C.ol_solve_stats 
-    "@[Prover stats:@ %d@ pushes,@ %d@ queries,@ %d@ cache@ misses,@ %d@ qprover@ misses@\n@]" 
-    !nb_push !nb_queries !nb_cache_miss !nb_qp_miss; flush stdout
-
+let print_stats ppf () =
+  C.fcprintf ppf C.ol_solve_stats "@[TP@ API@ stats:@ %d@ pushes@ %d@ queries@ cache@ %d@ hits@ %d@ misses@]@." !nb_push !nb_queries !nb_cache_hits !nb_cache_misses;
+  C.fcprintf ppf C.ol_solve_stats "@[Yices@ TP@ stats:@ %a@]@." TheoremProverYices.Prover.print_stats ()
 
 (* API *)
 let reset () =
   Hashtbl.clear qcachet; 
   nb_push  := 0;
   nb_queries := 0; 
-  nb_cache_miss := 0;
+  nb_cache_misses := 0;
+  nb_cache_hits := 0;
   nb_qp_miss := 0
 
 (*
@@ -126,20 +129,22 @@ let imp_to_string p q =
 let implies p = 
   let _ = incr nb_push in
   let p = fixdiv p in
-  (* let check_qp = 
-    if !Cl.use_qprover 
-    then Bstats.time "QP implies" TheoremProverQprover.implies p 
-    else (fun _ -> false) in *)
+  (*let lhs = p in*)
+  (*let lhs = C.elevate_olev C.ol_unique_names; Buffer.clear buftlhs; 
+            Format.fprintf lhsform "%a@." P.pprint p; C.restore_olev; 
+            Buffer.contents buftlhs in*)
   let check_yi = Bstats.time "YI implies(1)" TheoremProverYices.Prover.implies p in
   fun q -> 
     let q = incr nb_queries; Bstats.time "fixdiv" fixdiv q in
-    Bstats.time "YI implies(2)" check_yi q 
-     (* incr nb_cache_miss;
-      if !Cl.use_qprover && Bstats.time "check_qp" check_qp q then true else 
-        let rv = Bstats.time "YI implies(2)" check_yi q in
-        (if rv then 
-          let _ = incr nb_qp_miss in
-          C.cprintf C.ol_solve "@[QP fails:@ %s @]" (imp_to_string p q)); rv *)
+    (*let rhs = q in*)
+    (*let rhs = C.elevate_olev C.ol_unique_names; Buffer.clear buftrhs; 
+              Format.fprintf rhsform "%a@." P.pprint q; C.restore_olev; 
+              Buffer.contents buftrhs in
+    try incr nb_cache_hits; Hashtbl.find qcachet (lhs, rhs)
+      with Not_found ->*) 
+        let rr = Bstats.time "YI implies(2)" check_yi q in 
+        (*(decr nb_cache_hits; incr nb_cache_misses; Hashtbl.replace qcachet (lhs, rhs) rr; rr)*) rr
+
 
 let finish () = 
   TheoremProverYices.Prover.finish ()
