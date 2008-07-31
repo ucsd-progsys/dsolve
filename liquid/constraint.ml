@@ -92,6 +92,12 @@ let is_subref_constraint = function
 let is_wfref_constraint = function 
   WFRef _ -> true | _ -> false
 
+let is_subframe_constraint = function
+  SubFrame _ -> true | _ -> false
+
+let is_wfframe_constraint = function
+  WFFrame _ -> true | _ -> false
+
 let solution_map s k = 
   C.do_catch 
     (Printf.sprintf "ERROR: solution_map couldn't find: %s" (C.path_name k))
@@ -695,6 +701,12 @@ let dump_solution_stats s =
     print_flush ()
   else ()
   
+let dump_unsplit cs =
+  let cs = if C.ck_olev C.ol_solve_stats then List.rev_map (fun c -> c.lc_cstr) cs else [] in
+  let cc f = List.length (List.filter f cs) in
+  let (wf, sub) = (cc is_wfframe_constraint, cc is_subframe_constraint) in
+  C.cprintf C.ol_solve_stats "@.@[unsplit@ constraints:@ %d@ total@ %d@ wf@ %d@ sub@]@.@." (List.length cs) wf sub
+  
 let dump_solving sri s step =
   if step = 0 then 
     let cs = get_ref_constraints sri in 
@@ -745,6 +757,7 @@ let solve_wf sri s =
 let solve qs cs =
   let cs = if !Cf.simpguard then List.map simplify_fc cs else cs in
   let _  = dump_constraints cs in
+  let _  = dump_unsplit cs in
   let cs = Bstats.time "splitting constraints" split cs in
   let qs = Bstats.time "instantiating quals" (instantiate_per_environment cs) qs in
   let sri = Bstats.time "making ref index" make_ref_index cs in

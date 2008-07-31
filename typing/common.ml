@@ -236,6 +236,7 @@ let ol_refine = 11
 let ol_scc = 12 
 
 let verbose_level = ref ol_default
+let verb_stack = ref []
 let null_formatter = F.make_formatter (fun a b c -> ()) ignore
 let nprintf a = F.fprintf null_formatter a
 let ck_olev l = l <= !verbose_level
@@ -252,6 +253,10 @@ let cprintln l s = if ck_olev l then Printf.ksprintf (F.printf "@[%s@\n@]") s el
 let ident_name i = if ck_olev ol_unique_names then Ident.unique_name i else Ident.name i
 
 let path_name p = if ck_olev ol_unique_names then Path.unique_name p else Path.name p
+
+let elevate_olev l = if ck_olev l then () else verb_stack := !verbose_level :: !verb_stack; verbose_level := l
+
+let restore_olev = match !verb_stack with x :: xs -> verbose_level := x | _ -> ()
 
 (****************************************************************)
 (************* SCC Ranking **************************************)
