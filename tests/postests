@@ -11,3 +11,4 @@ tests/rec/rjmerge.ml   4 False
 tests/rec/redblackpurple.ml 4 False
 tests/rec/map.ml       4 False
 tests/rec/redblack.ml  4 False
+tests/rec/ralist.ml    4 False
