@@ -769,7 +769,7 @@ let rec solve_sub sri s w =
     let (r,b,fci) = get_ref_rank sri c in
     let _ = C.cprintf C.ol_solve "@[Refining:@ %d@ in@ scc@ (%d,%b,%s):@]"
             (get_ref_id c) r b (C.io_to_string fci) in
-    let _ = C.dump_gc (Printf.sprintf "refine cycle: %i" !stat_refines) in
+    (*let _ = C.dump_gc (Printf.sprintf "refine cycle: %i" !stat_refines) in*)
     let w' = if Bstats.time "refine" (refine sri s) c then push_worklist sri w' (get_ref_deps sri c) else w' in
     solve_sub sri s w'
 
