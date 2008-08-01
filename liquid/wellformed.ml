@@ -76,9 +76,9 @@ let get_by_name =
 
 let get_app_shape s env =
   try
-    Bstats.time "assoc" (List.assoc s) (Lazy.force builtin_fun_app_shapes)
+    List.assoc s (Lazy.force builtin_fun_app_shapes)
   with Not_found -> 
-    app_to_fun (Bstats.time "get_by_name" (get_by_name s) env)
+    app_to_fun (get_by_name s env)
 
 exception IllFormed
 
@@ -137,6 +137,6 @@ let pred_is_well_typed env p =
 
 let refinement_well_formed env solution r qual_expr =
   try
-    Bstats.time "pred_well_typed" (pred_is_well_typed env) (Bstats.time "building refpred" (refinement_predicate solution qual_expr) r)
+    Bstats.time "pred_well_typed" (pred_is_well_typed env) (refinement_predicate solution qual_expr r)
   with IllFormed ->
     false

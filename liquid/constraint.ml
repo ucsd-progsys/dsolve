@@ -389,15 +389,15 @@ let make_rank_map om cm =
         | SubRef _ -> List.fold_left (upd id) vm (lhs_ks c))
       cm VM.empty in
   let (dm,deps) = 
-    Bstats.time "make deps" (SIM.fold
+    (SIM.fold
       (fun id c (dm,deps) -> 
         match (c, rhs_k c) with 
         | (WFRef _,_) -> (dm,deps) 
         | (_,None) -> (dm,(id,id)::deps) 
         | (_,Some k) -> 
-          let kds = Bstats.time "get" (get km) k in
-          let deps' = Bstats.time "map" (List.map (fun id' -> (id,id'))) (id::kds) in
-          (SIM.add id kds dm, (Bstats.time "revappend" (List.rev_append deps') deps)))
+          let kds = get km k in
+          let deps' = List.map (fun id' -> (id,id')) (id::kds) in
+          (SIM.add id kds dm, (List.rev_append deps' deps)))
       cm) (SIM.empty,[]) in
   let flabel i = C.io_to_string ((SIM.find i om).lc_id) in
   let rm = 
@@ -406,7 +406,7 @@ let make_rank_map om cm =
         let b = (not !Cf.psimple) || (is_simple_constraint (SIM.find id cm)) in
         let fci = (SIM.find id om).lc_id in
         SIM.add id (r,b,fci) rm)
-      SIM.empty (Bstats.time "scc rank" (C.scc_rank flabel) deps) in
+      SIM.empty (C.scc_rank flabel deps) in
   (dm,rm)
 
 let fresh_refc = 
@@ -519,9 +519,9 @@ let implies_match env sm r1 =
 
 let implies_tp env g sm r1 = 
   let lhs = 
-    let gp = Bstats.time "make guardp" (guard_predicate ()) g in
-    let envp = Bstats.time "make envp" (environment_predicate sm) env in
-    let r1p = Bstats.time "make r1p" (F.refinement_predicate sm qual_test_expr) r1 in
+    let gp   = guard_predicate () g in
+    let envp = environment_predicate sm env in
+    let r1p  = F.refinement_predicate sm qual_test_expr r1 in
     P.big_and [envp;gp;r1p] in
   let ch = Bstats.time "TP implies" TP.implies lhs in
     if ch pfalse then
@@ -540,7 +540,7 @@ let refine sri s c =
   | SubRef (_, _, [([], ([], [k1]))], ([], F.Qvar k2), _)
     when not (!Cf.no_simple || !Cf.verify_simple) ->
       let _ = incr stat_simple_refines in
-      Bstats.time "refine_simple" (refine_simple s k1) k2
+        refine_simple s k1 k2
   | SubRef (env,g,r1, (_, F.Qvar k2), _) when sm k2 = [] ->
       false
   | SubRef (env,g,r1, (sub2s, F.Qvar k2), _)  ->
@@ -579,7 +579,7 @@ let refine sri s c =
 
 let sat s = function
   | SubRef (env, g, r1, sr2, _) ->
-      let gp = Bstats.time "make guardp" (guard_predicate ()) g in
+      let gp = guard_predicate () g in
       let envp = environment_predicate (solution_map s) env in
       let p1 = F.refinement_predicate (solution_map s) qual_test_expr r1 in
       let p2 = F.refinement_predicate (solution_map s) qual_test_expr (F.ref_of_simple sr2) in
@@ -796,7 +796,7 @@ let solve qs cs =
   let _ = C.cprintf C.ol_solve "@[AFTER@ WF@]@." in
   let _ = dump_solving sri s 1 in
   let _ = dump_solution s in
-  let w = Bstats.time "make initial worklist" make_initial_worklist sri in
+  let w = make_initial_worklist sri in
   let _ = Bstats.time "solving sub" (solve_sub sri s) w in
   let _ = dump_solving sri s 2 in
   let _ = dump_solution s in

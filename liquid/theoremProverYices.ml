@@ -154,11 +154,11 @@ module YicesProver : PROVER =
     let push p =
       let _ = incr nb_yices_push in
       me.count <- me.count + 1;
-      if (Bstats.time "Yices consistency" Y.yices_inconsistent me.c) = 1 
+      if Y.yices_inconsistent me.c = 1
       then me.i <- me.i + 1 else
-        let p' = Bstats.time "Yices mk pred" (yicesPred me) p in
+        let p' = yicesPred me p in
         let _ = me.ds <- barrier :: me.ds in
-        let _ = Bstats.time "Yices stackpush" Y.yices_push me.c in
+        let _ = Y.yices_push me.c in
         Bstats.time "Yices assert" (Y.yices_assert me.c) p' 
       
     let rec vpop (cs,s) =
@@ -173,7 +173,7 @@ module YicesProver : PROVER =
         let (cs,ds') = vpop ([],me.ds) in
 	let _ = me.ds <- ds' in
 	let _ = List.iter (Hashtbl.remove me.d) cs in
-        Bstats.time "popping" Y.yices_pop me.c
+          Y.yices_pop me.c
 
     let reset () =
       Misc.repeat_fn pop me.count;

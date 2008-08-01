@@ -135,7 +135,7 @@ let implies p =
             Buffer.contents buftlhs in*)
   let check_yi = Bstats.time "YI implies(1)" TheoremProverYices.Prover.implies p in
   fun q -> 
-    let q = incr nb_queries; Bstats.time "fixdiv" fixdiv q in
+    let q = incr nb_queries; fixdiv q in
     (*let rhs = q in*)
     (*let rhs = C.elevate_olev C.ol_unique_names; Buffer.clear buftrhs; 
               Format.fprintf rhsform "%a@." P.pprint q; C.restore_olev; 
