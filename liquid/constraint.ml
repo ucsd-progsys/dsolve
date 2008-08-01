@@ -365,6 +365,21 @@ let rhs_k = function
   | SubRef (_,_,_,(_, F.Qvar k),_) -> Some k
   | _ -> None
 
+let wf_k = function
+  | WFRef (_, (_, F.Qvar k), _) -> Some k
+  | _ -> None
+
+let ref_k c =
+  match (rhs_k c, wf_k c) with
+  | (Some k, None)
+  | (None, Some k) -> Some k
+  | _ -> None
+
+let ref_id = function
+  | WFRef (_, (_, _), Some id)
+  | SubRef (_,_,_,(_, _), Some id) -> id
+  | _ -> -1
+
 let make_rank_map om cm =
   let get vm k = try VM.find k vm with Not_found -> [] in
   let upd id vm k = VM.add k (id::(get vm k)) vm in
@@ -682,6 +697,12 @@ let dump_ref_constraints sri =
   (printf "@[Refinement Constraints@.@\n@]";
   iter_ref_constraints sri (fun c -> printf "@[%a@.@]" (pprint_ref None) c))
 
+let dump_ref_vars sri =
+  if !Cf.dump_ref_vars then
+  (printf "@[Refinement Constraint Vars@.@\n@]";
+  iter_ref_constraints sri (fun c -> printf "@[(%d)@ %s@.@]" (ref_id c) 
+    (match (ref_k c) with Some k -> Path.unique_name k | None -> "None")))
+   
 let dump_constraints cs =
   if !Cf.dump_constraints then begin
     printf "Frame Constraints@.@.";
@@ -714,7 +735,8 @@ let dump_solving sri s step =
     let wcn = List.length (List.filter is_wfref_constraint cs) in
     let rcn = List.length (List.filter is_subref_constraint cs) in
     let scn = List.length (List.filter is_simple_constraint cs) in
-    (dump_ref_constraints sri;
+    (dump_ref_vars sri;
+     dump_ref_constraints sri;
      C.cprintf C.ol_solve_stats "@[%d@ variables@\n@\n@]" kn;
      C.cprintf C.ol_solve_stats "@[%d@ split@ wf@ constraints@\n@\n@]" wcn;
      C.cprintf C.ol_solve_stats "@[%d@ split@ subtyping@ constraints@\n@\n@]" rcn;

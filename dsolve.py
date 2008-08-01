@@ -81,5 +81,5 @@ def main():
   sys.exit(solve_quals(fn,bare,time,False,flags))
 
 if __name__ == "__main__":
-  print u'dsolve 0.1: Copyright \u00A9 2008 The Regents of the University of California, all rights reserved\n'
+  print "dsolve 0.1: Copyright (c) 2008 The Regents of the University of California, all rights reserved\n"
   main()

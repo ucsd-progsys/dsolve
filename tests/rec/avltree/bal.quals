@@ -1,4 +1,3 @@
-squalif FALSE1(_V) : (0 = 1)
 squalif FALSE(_V) : (1 = 0)
 squalif LEN1(_V) : (_V = (len t))
 squalif HEQ1(_V) : (_V = (0 + (height t)))
