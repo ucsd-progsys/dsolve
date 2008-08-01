@@ -7,6 +7,8 @@ type 'a t =
       (* meaning: node of left el, left n.els, element, right el, right n. els, heigth *)
   | Node of 'a t * int * 'a * 'a t * int * int
 
+let empty = Empty
+
 let height t =
   match t with
       Empty -> 0
