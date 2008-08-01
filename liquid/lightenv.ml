@@ -24,20 +24,36 @@
 (* A small environment module; provided so we (hopefully) won't have to screw
    with OCaml's env. *)
 
-module E = Map.Make(Common.ComparablePath)
-
-include E
-
+module M = Map.Make(Common.ComparablePath)
 module B = Buffer
 
-let maplist f env =
-  fold (fun k v r -> (f k v)::r) env []
+type 'a t = Env of 'a M.t * 'a origin_env
 
-let maplistfilter f env =
-  fold (fun k v r -> let c = f k v in match c with Some c -> c::r | None -> r) env []
+and 'a origin_env =
+  | Nil
+  | Parent of 'a t
+  | Alias of 'a t
 
-let primfilterlist g f env =
-  fold (fun k v r -> if f k v then (g (k, v))::r else r) env []
+let empty = Env (M.empty, Nil)
+
+let unalias (Env (_, o) as env) = match o with
+  | Nil | Parent _ -> env
+  | Alias e        -> e
+
+let add x y (Env (m, _) as parent) =
+  Env (M.add x y m, Parent parent)
+
+let aliasing_add x y (Env (m, _) as alias) =
+  Env (M.add x y m, Alias alias)
+
+let maplist f (Env (env, _)) =
+  M.fold (fun k v r -> (f k v)::r) env []
+
+let maplistfilter f (Env (env, _)) =
+  M.fold (fun k v r -> let c = f k v in match c with Some c -> c::r | None -> r) env []
+
+let primfilterlist g f (Env (env, _)) =
+  M.fold (fun k v r -> if f k v then (g (k, v))::r else r) env []
 
 let filterlist f env =
   primfilterlist snd f env
@@ -45,18 +61,29 @@ let filterlist f env =
 let filterkeylist f env =
   primfilterlist fst f env
 
-let mapfilter f env =
-  fold (fun k v r -> match f k v with Some x -> x::r | None -> r) env []
+let mapfilter f (Env (env, _)) =
+  M.fold (fun k v r -> match f k v with Some x -> x::r | None -> r) env []
 
-let addn items env =
-  List.fold_left (fun e (k, v) -> add k v e) env items
+let addn items (Env (m, _) as parent) =
+  Env (List.fold_left (fun e (k, v) -> M.add k v e) m items, Parent parent)
 
-let cardinality e = fold (fun _ _ c -> c + 1) e 0
+let find k (Env (m, _)) =
+  M.find k m
 
-let setcompare e1 e2 = compare (fun x y -> 0) e1 e2
-let compare e1 e2 = Pervasives.compare (cardinality e1) (cardinality e2)
+let iter f (Env (m, _)) =
+  M.iter f m
 
-let badstring s = s.[0] = '_' && s.[1] = '\''
-let setstring e = B.contents (fold (fun k _ s -> match Path.unique_ident_name k with Some n when String.length n <= 2 || not(badstring n) -> B.add_char s '*'; B.add_string s n; s | _ -> s) e (B.create 400))
+let mem k (Env (m, _)) =
+  M.mem k m
+
+let map f (Env (m, p)) =
+  Env (M.map f m, p)
+
+let fold f (Env (m, _)) b =
+  M.fold f m b
 
 let domain env = maplist (fun k _ -> k) env
+
+let badstring s = (s.[0] = '_' && s.[1] = '\'') || (s.[0] = 'A' && s.[1] = 'A')
+
+let setstring e = B.contents (fold (fun k _ s -> match Path.unique_ident_name k with Some n when String.length n <= 2 || not(badstring n) -> B.add_char s '*'; B.add_string s n; s | _ -> s) e (B.create 400))

@@ -1,5 +1,3 @@
-(** sorting -- from ocaml's List.ml *)
-
 let show x = x
 
 let rec split_aux lst left right = 
@@ -23,16 +21,6 @@ let rec chop k l l' =
     | _ -> assert false
   end
 
-(*
-let reverse xs = 
-  let rec rev ys rs = 
-    match ys with 
-    | [] -> rs
-    | y::ys' -> rev ys' (y::rs) in
-  rev xs []
-*)
-
-(* dec -> inc *)
 let rec rev k ys zs = 
   match ys with
   | []    -> zs
@@ -42,7 +30,6 @@ let reverse xs =
   match xs with [] -> [] 
   | x::xs' -> rev x (x::xs') [] 
 
-(* inc -> dec -> dec *)
 let rec rev_append w l1 l2 =
   match l1 with
   | [] -> l2
@@ -52,33 +39,6 @@ let rec rev_append_rev w l1 l2 =
   match l1 with
   | [] -> l2
   | a :: l -> rev_append_rev (show a) l (a :: l2)
-
-(* inc -> inc -> dec *)
-(*let rec rev_merge l1 l2 accu =
-  match l1, l2 with
-  | [], l2 -> rev_append l2 accu
-  | l1, [] -> rev_append l1 accu
-  | h1::t1, h2::t2 ->
-      if h1 <= h2 
-      then rev_merge t1 l2 (h1::accu)
-      else rev_merge l1 t2 (h2::accu)
-
-(* dec -> inc -> inc *)
-let rec rev_append_rev l1 l2 =
-  match l1 with
-  | [] -> l2
-  | a :: l -> rev_append_rev l (a :: l2)
-
-(* dec -> dec -> inc *)
-let rec rev_merge_rev w l1 l2 accu =
-  match l1, l2 with
-  | [], l2 -> rev_append_rev w l2 accu
-  | l1, [] -> rev_append_rev w l1 accu
-  | h1::t1, h2::t2 ->
-      if h1 > h2 
-      then rev_merge_rev t1 l2 (h1::accu)
-      else rev_merge_rev l1 t2 (h2::accu)
-*)
 
 let rev_merge l1 l2 =
   let rec revm w l1 l2 accu =
@@ -201,11 +161,4 @@ let check xs =
   let _ = sortcheck xs' in 
   let xs'' = stable_sort xs in
   let _ = sortcheck xs'' in 
-  (* let ys = [2;1;0] (* [4;3;2;1] *) in
-  let _ = show ys in
-  let ys' = reverse ys in
-  let ys'' = rev_append 0 [0;1;2] [] in 
-  let zs = [0;1;2] in
-  let ys''' = rev_merge zs zs in 
-  ys' *)
   ()

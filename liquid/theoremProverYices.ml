@@ -25,6 +25,8 @@
 
 open Predicate
 
+module C = Common
+
 module type PROVER = 
   sig
     (*
@@ -46,7 +48,7 @@ module type PROVER =
 
     val finish : unit -> unit
 
-    val print_stats : unit -> unit
+    val print_stats : Format.formatter -> unit -> unit
   end
 
 
@@ -66,7 +68,11 @@ module YicesProver : PROVER =
       mutable consistent: bool;
     }
 
+    (* stats *)
     let nb_yices_push = ref 0
+    let nb_yices_unsat = ref 0
+    let nb_yices_pop = ref 0
+    let nb_implies_api = ref 0
 
     let barrier = "0" 
 
@@ -146,6 +152,7 @@ module YicesProver : PROVER =
           ds = []; count = 0; i = 0; consistent = true}
 
     let push p =
+      let _ = incr nb_yices_push in
       me.count <- me.count + 1;
       if (Bstats.time "Yices consistency" Y.yices_inconsistent me.c) = 1 
       then me.i <- me.i + 1 else
@@ -160,6 +167,7 @@ module YicesProver : PROVER =
       | h::t -> vpop (h::cs,t)
 
     let pop () =
+      let _ = incr nb_yices_pop in
       me.count <- me.count - 1;
       if me.i > 0 then me.i <- me.i - 1 else
         let (cs,ds') = vpop ([],me.ds) in
@@ -179,6 +187,7 @@ module YicesProver : PROVER =
       me.i <- 0
 
     let unsat () =
+      let _ = incr nb_yices_unsat in
       let rv = (Bstats.time "Yices unsat" Y.yices_check me.c) = -1 in
       rv
 
@@ -189,7 +198,8 @@ module YicesProver : PROVER =
         let _ = pop () in rv
     
     let implies p =
-      let _ = incr nb_yices_push; Bstats.time "Yices push" push p in
+      let _ = incr nb_implies_api in
+      let _ = Bstats.time "Yices push" push p in
       fun q -> Bstats.time "Yices valid" valid q
 
     let finish () = 
@@ -205,8 +215,9 @@ module YicesProver : PROVER =
   let finish () = ()
 *)
   
-  let print_stats () = 
-    Printf.printf "Yices pushes = %d \n" !nb_yices_push
+  let print_stats ppf () = 
+          Format.fprintf ppf "@[implies(API):@ %i,@ Yices@ {pushes:@ %i,@ pops:@ %i,@ unsats:@ %i}@]"
+      !nb_implies_api !nb_yices_push !nb_yices_pop !nb_yices_unsat
 
 end
 

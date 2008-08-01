@@ -95,8 +95,8 @@ val fresh_false: Env.t -> type_expr -> t
 val fresh_with_labels: Env.t -> type_expr -> t -> t
 val instantiate: t -> t -> t
 val instantiate_qualifiers: (string * Path.t) list -> t -> t
-val bind: Env.t -> pattern_desc -> t -> (Path.t * t) list
-val env_bind: Env.t -> t Lightenv.t -> pattern_desc -> t -> t Lightenv.t
+val bind: pattern_desc -> t -> (Path.t * t) list
+val env_bind: t Lightenv.t -> pattern_desc -> t -> t Lightenv.t
 val apply_subs: substitution list -> t -> t
 val label_like: t -> t -> t
 val apply_solution: (Path.t -> Qualifier.t list) -> t -> t
@@ -109,6 +109,7 @@ val append_refinement: refinement -> t -> t
 val apply_recref_constrs: recref -> constr list -> constr list
 val apply_recref: recref -> t -> t
 val qvars: t -> qvar list
+val top_refinement_qvars: t -> qvar list
 val int_of_tag: constructor_tag -> int
 val tag_of_int: int -> constructor_tag
 val tag_function: string

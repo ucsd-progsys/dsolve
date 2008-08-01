@@ -35,7 +35,7 @@ def gen_quals(src,bare,lq, col):
   bname = src[:-3]
   (fname,qname,hname) = (bname+".ml", bname+".quals", bname+".hquals")
   os.system("rm -f %s" % qname)
-  if bare:
+  if bare and os.path.exists(hname):
     os.system("cp -f %s %s" % (hname, tname))
   else:
     cat_files([hname,d_pats],tname)
@@ -81,4 +81,5 @@ def main():
   sys.exit(solve_quals(fn,bare,time,False,flags))
 
 if __name__ == "__main__":
+  print u'dsolve 0.1: Copyright \u00A9 2008 The Regents of the University of California, all rights reserved\n'
   main()

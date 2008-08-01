@@ -1,0 +1,97 @@
+A list of the dsolve source files by directory follows.  Anything not
+listed is not source or part of the OCaml standard distribution.
+
+The top level is roughly sorted by importantance, lower levels
+alphabetically.
+
+./
+
+  dsolve.py
+    Wrapper around the liquid binary which generates qualifiers and
+    runs the analyzer.
+    Used as a library by the regression test script, regrtest.py.
+
+  regrtest.py
+    Regression test harness.
+
+liquid/
+
+  builtins.ml
+    Definitions of "built-in" values, e.g., those defined in the
+    standard library or Pervasives module.
+
+  constraint.ml
+    The constraint solver, including functions for instantiating
+    qualifiers.
+
+  frame.ml
+    Definition of and functions for manipulating type templates.
+
+  lightenv.ml
+    Environment data type; basically just a thin wrapper over Map.
+
+  liqerrors.ml
+    Error-reporting code.
+
+  liquid.ml
+    The main Liquid analyzer; entry points for qualifier generation
+    and type inference.
+
+  measure.ml
+    Translates and maintains a list of measures after parsing,
+    correlates measure definitions in mlq files with their types in
+    the ML code.
+
+  normalize.ml
+    Translates a source file's AST to a normalized form
+    (A-normalization, pattern match desugaring, etc.).
+
+  pattern.ml
+    Operations on ML patterns.
+
+  qdebug.ml
+    Pretty-printing functions useful for debugging.
+
+  qdump.ml
+    Outputs generated qualifiers from input ML AST and qualifier
+    patterns.
+
+  qualifier.ml
+    Definition of and operations on the qualifier data type.
+
+  qualifymod.ml
+    Type inference driver over an ML module; generates constraints
+    over the AST before handing it off to the solver.
+
+  theoremProver.ml
+    General theorem prover interface specification.
+
+  theoremProverYices.ml
+    Interface to the yices theorem prover.
+
+  wellformed.ml
+    Functions for checking the well-formedness of a qualifier in an
+    environment.
+
+typing/
+
+  common.ml
+    Miscellaneous utility functions.
+
+  predicate.ml
+    Functions for constructing and manipulating logical predicates.
+
+  qualdecl.ml
+    Translates qualifier declarations to qualifier data structures
+    after parsing.
+
+parsing/
+
+  parser.mly
+    The OCaml parser, which has been augmented with various
+    Liquid-related productions.
+
+utils/
+
+  misc.ml
+    Miscellaneous utility functions.

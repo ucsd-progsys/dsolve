@@ -8,7 +8,7 @@ let rec ins l x = match l with
 
 let insert_sort lst =
   List.fold_left ins [] lst
-
+(*
 let rec check l =
   match l with
     | [] -> ()
@@ -17,4 +17,4 @@ let rec check l =
         assert (x <= y); check (y :: ys)
 
 let test l =
-  check (insert_sort l)
+  check (insert_sort l) *)
