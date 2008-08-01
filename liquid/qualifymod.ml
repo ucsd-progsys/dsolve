@@ -253,7 +253,7 @@ and constrain_function (env, guard, f) pat e' =
         begin match e'.exp_desc with
           | Texp_function ([(pat', e')], _) ->
               let (f', cs, lcs) = constrain_function (env', guard, unlabelled_f') pat' e' in
-                (F.Farrow (Some pat.pat_desc, f, f'), cs, lcs)
+              let f = F.Farrow (Some pat.pat_desc, f, f') in (f, WFFrame (env, f) :: cs, lcs)
           | _ ->
               let (f'', cstrs) = constrain e' env' guard in
               let f' = F.label_like unlabelled_f' f'' in
