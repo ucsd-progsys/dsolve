@@ -332,10 +332,11 @@ let split cs =
 module WH = 
   Heap.Functional(
     struct 
-      type t = subref_id * (int * bool * fc_id) 
-      let compare (_,(i,j,k)) (_,(i',j',k')) = 
-        if i <> i' then compare i i' else 
-          if j <> j' then compare j j' else compare k' k
+      type t = subref_id * int * (int * bool * fc_id)
+      let compare (_,ts,(i,j,k)) (_,ts',(i',j',k')) =
+        if i <> i' then compare i i' else
+          if ts <> ts' then -(compare ts ts') else
+            if j <> j' then compare j j' else compare k' k
     end)
 
 type ref_index = 
@@ -447,20 +448,23 @@ let iter_ref_constraints sri f =
   SIM.iter (fun _ c -> f c) sri.cnst
 
 (* API *)
-let push_worklist sri w cs =
+let push_worklist =
+  let timestamp = ref 0 in
+  fun sri w cs ->
+    incr timestamp;
   List.fold_left 
     (fun w c -> 
       let id = get_ref_id c in
-      let _ = C.cprintf C.ol_solve "@[Pushing@ %d@\n@]" id in 
+      let _ = C.cprintf C.ol_solve "@[Pushing@ %d at %d@\n@]" id !timestamp in
       if Hashtbl.mem sri.pend id then w else 
         let _ = Hashtbl.replace sri.pend id () in
-        WH.add (id,get_ref_rank sri c) w)
+        WH.add (id,!timestamp,get_ref_rank sri c) w)
     w cs
 
 (* API *)
 let pop_worklist sri w =
   try 
-    let id = fst (WH.maximum w) in
+    let (id, _, _) = WH.maximum w in
     let _ = Hashtbl.remove sri.pend id in
     (Some (get_ref_constraint sri id), WH.remove w)
   with Heap.EmptyHeap -> (None,w) 
@@ -634,7 +638,7 @@ let instantiate_quals_in_env envg qs =
       let estr = Le.setstring env in
         try Hashtbl.find memo estr with Not_found ->
           let vm  = List.fold_left (add_path_set qpaths) C.StringMap.empty (Le.domain env) in
-          let q   = List.fold_left QSet.union QSet.empty (List.map (instantiate_in_vm vm) qs) in
+          let q   = List.fold_left (fun qset q -> QSet.union (instantiate_in_vm vm q) qset) QSet.empty qs in
           let els = QSet.elements q in
           let _   = Hashtbl.replace memo estr els in
             els
