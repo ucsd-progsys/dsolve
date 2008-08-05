@@ -116,6 +116,7 @@ and pprint_pattern ppf pat =
   match pat.ppat_desc with
     Ppat_any -> fprintf ppf "_"
   | Ppat_var x -> fprintf ppf "%s" x
+  | Ppat_alias (p, x) -> fprintf ppf "@[(%a as %s)@]" pprint_pattern p x
   | Ppat_tuple ts -> fprintf ppf "(%a)" pprint_pat_list ts
   | Ppat_constraint (p, _) -> pprint_pattern ppf p
   | Ppat_constant (Const_int n) -> fprintf ppf "%d" n
