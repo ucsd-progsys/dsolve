@@ -1,3 +1,4 @@
+tests/rec/heap.ml           4 False
 tests/depannot.ml           4 False
 tests/rec/recmlq.ml         4 False
 tests/rec/stable_sort2.ml   4 False

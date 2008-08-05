@@ -1,0 +1,16 @@
+#define R(p)   [[], [v: p, v: true, v: true], [v: p, v: true, v: true]]
+#define UR     R(true)
+#define SR     R(v <= e0)
+#define BR(b)  R(v <= e0 and v <= b)
+#define HP     UR [z: t . || e0: 'a, e1: SR z, e2: SR z || e0: 'a, e1: SR z, e2: SR z]
+#define BHP(b) UR [z: t . || e0: 'a, e1: BR(b) z, e2: BR(b) z || e0: 'a, e1: BR(b) z, e2: BR(b) z]
+
+val empty: HP
+
+val add: x: 'a -> h: HP -> HP
+val maximum: h: HP -> 'a * BHP(e0)
+val extract_last: h: HP -> 'a * HP
+val descent: x: 'a -> h: HP -> HP
+val remove: h: HP -> HP
+val iter: f: ('a -> 'b) -> h: HP -> unit
+val fold: f: ('a -> 'b -> 'b) -> h: HP -> b: 'b -> 'b
