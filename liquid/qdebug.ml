@@ -120,7 +120,6 @@ and pprint_pattern ppf pat =
   | Ppat_tuple ts -> fprintf ppf "(%a)" pprint_pat_list ts
   | Ppat_constraint (p, _) -> pprint_pattern ppf p
   | Ppat_constant (Const_int n) -> fprintf ppf "%d" n
-  | Ppat_alias (p, s) -> fprintf ppf "%a@ as@ %s" pprint_pattern p s
     (* Pat knows more about how this generalizes *)
   | Ppat_construct (id, e, _) ->
       let id = String.concat "" (Longident.flatten id) in
