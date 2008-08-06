@@ -836,9 +836,12 @@ let rec translate_pframe env plist pf =
 
 let rec bind pat frame =
   let _bind = function
-    | (Tpat_any, _) -> ([], [])
-    | (Tpat_var x, f) -> ([], [(Path.Pident x, f)])
-    | (Tpat_alias (p, x), f) -> ([(p.pat_desc, f)], [(Path.Pident x, f)])
+    | (Tpat_any, _) ->
+        ([], [])
+    | (Tpat_var x, f) ->
+        ([], [(Path.Pident x, f)])
+    | (Tpat_alias (p, x), f) ->
+        ([(p.pat_desc, f)], [(Path.Pident x, f)])
     | (Tpat_tuple pats, Fsum (_, _, [(_, ps)], _)) ->
         ([], bind_params (Pattern.pattern_descs pats) ps)
     | (Tpat_construct (cstrdesc, pats), f) ->

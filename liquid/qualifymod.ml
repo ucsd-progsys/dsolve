@@ -232,7 +232,7 @@ and maybe_measured_env mgvar env = function
 
 and constrain_case (env, guard, f) matchf matche (pat, e) =
   let env         = bind env guard pat matchf matche in
-  let mguard      = def_measured_frame (M.mk_guard matchf matche pat) in
+  let mguard      = def_measured_frame (M.mk_guard matche pat) in
   let env         = maybe_measured_env (Path.mk_ident "__measure_guardvar") env mguard in
   let (fe, subcs) = constrain e env guard in
     (SubFrame (env, guard, fe, f), subcs)

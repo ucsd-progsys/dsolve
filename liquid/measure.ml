@@ -1,5 +1,6 @@
 open Types
 open Typedtree
+open Ctype
 
 module P = Predicate
 module C = Common
@@ -37,11 +38,9 @@ let add (p, ((tag, args, ref) as r)) menv =
         failwith errmsg in
   Lightenv.add p (r :: cs) menv
 
-let sum_rows_path = function
-    F.Fsum(p, rows, _, _) -> (p, rows)
-  | _ -> failwith "constructor result is not a constructed type?"
-
-let sum_path = C.compose fst sum_rows_path
+let sum_path = function
+  | F.Fsum (p, _, _, _) -> p
+  | _                   -> assert false
 
 let rewrite_pred subs r =
     let (n, p) = r in
@@ -111,12 +110,11 @@ let mk_qual ps c =
   let v = Path.mk_ident "v" in
   (Path.mk_ident "measure", v, mk_pred_def v c ps)
 
-let mk_single_gd menv p vp tp =
-      match tp with 
-        | Some (tag, ps) -> 
-            (try Some (mk_preds vp (List.map (function Some p -> Some (P.Var p) | _ -> None) ps) (find_c p tag menv)) with 
-                Not_found -> None)
-        | None -> None
+let mk_single_gd menv p vp (tag, ps) =
+  try
+    Some (mk_preds vp (List.map (function Some p -> Some (P.Var p) | _ -> None) ps) (find_c p tag menv))
+  with Not_found ->
+    None
 
 let get_or_fail = function
     P.Var p -> p
@@ -128,17 +126,22 @@ let get_patvar p =
   | Tpat_any -> None
   | _ -> raise Not_found
 
-let mk_guard f e pat =
- let vp = get_or_fail e in
-  let rec gps pat = match pat.pat_desc with
-      Tpat_construct(cdesc, pl) -> 
-        (try Some (cdesc.cstr_tag, (List.map get_patvar pl)) with Not_found -> None)
-    | Tpat_alias (p, _) ->
-        gps p
-    | _ -> None in
-  let ps = gps pat in
-  let p = sum_path f in
-    mk_single_gd !bms p vp ps
+let constr_pat_path {pat_type = pt} = match (repr pt).desc with
+  | Tconstr (p, _, _) -> Some p
+  | _                 -> None
+
+let rec gps pat = match pat.pat_desc with
+    Tpat_construct(cdesc, pl) ->
+      (try Some (cdesc.cstr_tag, List.map get_patvar pl) with Not_found -> None)
+  | Tpat_alias (p, _) ->
+      gps p
+  | _ -> None
+
+let mk_guard e pat =
+  let vp = get_or_fail e in
+  match (constr_pat_path pat, gps pat) with
+    | (Some p, Some ps) -> mk_single_gd !bms p vp ps
+    | _                 -> None
 
 let transl_pred names (v, p) =
   (v, P.map_funs (fun x -> try List.assoc x names with Not_found -> x) p) 
