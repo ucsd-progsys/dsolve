@@ -222,28 +222,25 @@ and constrain_if (env, guard, f) e1 e2 e3 =
 and bind env guard pat frame pexpr =
   F.env_bind env pat.pat_desc frame
 
+and def_measured_frame = function
+    Some g -> Some (F.Fabstract(Path.mk_ident "", [], [([], ([(Path.mk_ident "", Path.mk_ident "", g)], []))]))
+  | None   -> None
+
+and maybe_measured_env mgvar env = function
+  | Some g -> Le.add mgvar g env
+  | None   -> env
+
 and constrain_case (env, guard, f) matchf matche (pat, e) =
-  let env = bind env guard pat matchf matche in
+  let env         = bind env guard pat matchf matche in
+  let mguard      = def_measured_frame (M.mk_guard matchf matche pat) in
+  let env         = maybe_measured_env (Path.mk_ident "__measure_guardvar") env mguard in
   let (fe, subcs) = constrain e env guard in
     (SubFrame (env, guard, fe, f), subcs)
 
-and def_measured_frame = function
-    Some g -> Some (F.Fabstract(Path.mk_ident "", [], [([], ([(Path.mk_ident "", Path.mk_ident "", g)], []))]))
-  | None -> None
-
-and maybe_measured_env (guard, f) mgvar env g =
-  match g with
-      Some g -> (Le.add mgvar g env, guard, f)
-    | None -> (env, guard, f)
-
 and constrain_match (env, guard, f) e pexps partial =
   let (matchf, matchcstrs) = constrain e env guard in
-  let subguards = M.mk_guards matchf e.exp_desc (fst (List.split pexps)) in
-  let subguards = List.map def_measured_frame subguards in
-  let mgvar = Path.mk_ident "__measure_guardvar" in
-  let environments = List.map (maybe_measured_env (guard, f) mgvar env) subguards in
-  let cases = List.map (fun (en, p) -> constrain_case en matchf (expression_to_pexpr e) p) (List.combine environments pexps) in
-  let (cstrs, subcstrs) = List.split cases in
+  let cases                = List.map (constrain_case (env, guard, f) matchf (expression_to_pexpr e)) pexps in
+  let (cstrs, subcstrs)    = List.split cases in
     (f, WFFrame (env, f) :: cstrs, List.concat (matchcstrs :: subcstrs))
 
 and constrain_function (env, guard, f) pat e' =

@@ -119,7 +119,7 @@ let mk_single_gd menv p vp tp =
         | None -> None
 
 let get_or_fail = function
-    Texp_ident (p, _) -> p
+    P.Var p -> p
   | _ -> failwith "only matching on idents supported; try normalizing"
 
 let get_patvar p = 
@@ -128,15 +128,17 @@ let get_patvar p =
   | Tpat_any -> None
   | _ -> raise Not_found
 
-let mk_guards f e pats =
+let mk_guard f e pat =
  let vp = get_or_fail e in
-  let gps pat = match pat.pat_desc with
+  let rec gps pat = match pat.pat_desc with
       Tpat_construct(cdesc, pl) -> 
         (try Some (cdesc.cstr_tag, (List.map get_patvar pl)) with Not_found -> None)
+    | Tpat_alias (p, _) ->
+        gps p
     | _ -> None in
-  let ps = List.map gps pats in
+  let ps = gps pat in
   let p = sum_path f in
-    List.map (mk_single_gd !bms p vp) ps
+    mk_single_gd !bms p vp ps
 
 let transl_pred names (v, p) =
   (v, P.map_funs (fun x -> try List.assoc x names with Not_found -> x) p) 
