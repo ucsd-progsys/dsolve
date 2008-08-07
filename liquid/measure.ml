@@ -1,5 +1,6 @@
 open Types
 open Typedtree
+open Ctype
 
 module P = Predicate
 module C = Common
@@ -37,11 +38,9 @@ let add (p, ((tag, args, ref) as r)) menv =
         failwith errmsg in
   Lightenv.add p (r :: cs) menv
 
-let sum_rows_path = function
-    F.Fsum(p, rows, _, _) -> (p, rows)
-  | _ -> failwith "constructor result is not a constructed type?"
-
-let sum_path = C.compose fst sum_rows_path
+let sum_path = function
+  | F.Fsum (p, _, _, _) -> p
+  | _                   -> assert false
 
 let rewrite_pred subs r =
     let (n, p) = r in
@@ -111,34 +110,46 @@ let mk_qual ps c =
   let v = Path.mk_ident "v" in
   (Path.mk_ident "measure", v, mk_pred_def v c ps)
 
-let mk_single_gd menv p vp tp =
-      match tp with 
-        | Some (tag, ps) -> 
-            (try Some (mk_preds vp (List.map (function Some p -> Some (P.Var p) | _ -> None) ps) (find_c p tag menv)) with 
-                Not_found -> None)
-        | None -> None
+let mk_single_gd menv (vp, p, tag, ps) =
+  try
+    Some (mk_preds vp (List.map (function Some p -> Some (P.Var p) | _ -> None) ps) (find_c p tag menv))
+  with Not_found ->
+    None
 
-let get_or_fail = function
-    P.Var p -> p
-  | _ -> failwith "only matching on idents supported; try normalizing"
+let get_patvar p = match p.pat_desc with
+  | Tpat_var p | Tpat_alias (_, p) -> Some (C.i2p p)
+  | _                              -> None
 
-let get_patvar p = 
-  match p.pat_desc with
-    Tpat_var (p) -> Some (C.i2p p)
-  | Tpat_any -> None
-  | _ -> raise Not_found
+let cstr_res_path {cstr_res = t} = match (repr t).desc with
+  | Tconstr (p, _, _) -> p
+  | _                 -> assert false
 
-let mk_guard f e pat =
- let vp = get_or_fail e in
-  let rec gps pat = match pat.pat_desc with
-      Tpat_construct(cdesc, pl) -> 
-        (try Some (cdesc.cstr_tag, (List.map get_patvar pl)) with Not_found -> None)
-    | Tpat_alias (p, _) ->
-        gps p
-    | _ -> None in
-  let ps = gps pat in
-  let p = sum_path f in
-    mk_single_gd !bms p vp ps
+let named_patterns pats =
+  List.map
+    (fun p -> match p.pat_desc with Tpat_alias (apat, av) -> (Some (Path.Pident av), apat) | _ -> (None, p))
+    pats
+
+let named_constructor_patterns cdesc pats = function
+  | Some v -> [(v, cstr_res_path cdesc, cdesc.cstr_tag, List.map get_patvar pats)]
+  | None   -> []
+
+let constructor_patterns_aux (vo, pat) = match pat.pat_desc with
+    Tpat_construct(cdesc, pl) ->
+      (named_patterns pl, named_constructor_patterns cdesc pl vo)
+  | Tpat_alias ({pat_desc = Tpat_construct(cdesc, pl)}, _) ->
+      (named_patterns [pat], named_constructor_patterns cdesc pl vo)
+  | Tpat_alias _ ->
+      (named_patterns [pat], [])
+  | Tpat_tuple (pl) ->
+      (named_patterns pl, [])
+  | _ ->
+      ([], [])
+
+let constructor_patterns expvar pat =
+  C.expand constructor_patterns_aux [(expvar, pat)] []
+
+let mk_guard vp pat =
+  P.big_and (C.map_partial (mk_single_gd !bms) (constructor_patterns (Some vp) pat))
 
 let transl_pred names (v, p) =
   (v, P.map_funs (fun x -> try List.assoc x names with Not_found -> x) p) 

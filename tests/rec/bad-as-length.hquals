@@ -1,0 +1,2 @@
+qualif LEN(v): v { * * } length ~A
+qualif LGE(v): length ~A { * * } ^

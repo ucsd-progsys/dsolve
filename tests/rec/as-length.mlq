@@ -1,0 +1,3 @@
+measure length =
+  | []      -> 0
+  | x :: xs -> 1 + length xs

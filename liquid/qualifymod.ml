@@ -222,18 +222,15 @@ and constrain_if (env, guard, f) e1 e2 e3 =
 and bind env guard pat frame pexpr =
   F.env_bind env pat.pat_desc frame
 
-and def_measured_frame = function
-    Some g -> Some (F.Fabstract(Path.mk_ident "", [], [([], ([(Path.mk_ident "", Path.mk_ident "", g)], []))]))
-  | None   -> None
-
-and maybe_measured_env mgvar env = function
-  | Some g -> Le.add mgvar g env
-  | None   -> env
+and mk_match_guarded_env env pat = function
+  | P.Var v -> Le.add (Path.mk_ident "__measure_guard")
+                      (Builtins.rUnit "" (Path.mk_ident "") (M.mk_guard v pat))
+                      env
+  | _       -> env
 
 and constrain_case (env, guard, f) matchf matche (pat, e) =
   let env         = bind env guard pat matchf matche in
-  let mguard      = def_measured_frame (M.mk_guard matchf matche pat) in
-  let env         = maybe_measured_env (Path.mk_ident "__measure_guardvar") env mguard in
+  let env         = mk_match_guarded_env env pat matche in
   let (fe, subcs) = constrain e env guard in
     (SubFrame (env, guard, fe, f), subcs)
 
