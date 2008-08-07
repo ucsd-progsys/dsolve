@@ -54,7 +54,7 @@ module type PROVER =
 
 module Y = Oyices
 
-module YicesProver : PROVER = 
+module Prover : PROVER =
   struct
     type yices_instance = { 
       mutable c : Y.yices_context;
@@ -220,5 +220,3 @@ module YicesProver : PROVER =
       !nb_implies_api !nb_yices_push !nb_yices_pop !nb_yices_unsat
 
 end
-
-module Prover = YicesProver

@@ -25,7 +25,7 @@
 module P = Predicate
 module C = Common
 module Cl = Clflags
-module Prover = TheoremProverZ3.Prover
+module Prover = TheoremProverYices.Prover
 
 (********************************************************************************)
 (************************** Rationalizing Division ******************************)
