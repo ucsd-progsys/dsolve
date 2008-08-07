@@ -11,7 +11,7 @@ DEPFLAGS=$(INCLUDES)
 COMPFLAGS=$(FLAGS) -g -dtypes -warn-error A $(INCLUDES)
 
 LINKFLAGS=$(FLAGS) -ccopt "/nologo /MT /DWIN32" ole32.lib external/libcamlidl.lib z3.cmxa \
-          -I external/yices/lib/ -I external/z3/ -I external/ocamlgraph/ -I $(QPHOME)
+          -I external/z3/ -I external/ocamlgraph/ -I $(QPHOME)
 
 INCLUDES=-I external/ocamlgraph/ -I external/z3/ -I $(QPHOME) \
          -I utils -I parsing -I typing -I liquid
@@ -55,14 +55,9 @@ LIQOBJS=$(UTILS) $(PARSING) $(TYPING) $(LIQUID)
 
 default: liquid.opt
 
-#JHALA liquid.byte: $(LIQOBJS)
-#JHALA	$(CAMLC) $(LINKFLAGS) -custom -o liquid.byte str.cma unix.cma nums.cma oyices.cma graph.cma libqp.cma $(LIQOBJS)
-
 liquid.byte: $(LIQOBJS)
 	$(CAMLC) $(LINKFLAGS) -custom -o liquid.byte str.cma unix.cma nums.cma graph.cma $(LIQOBJS)
 
-#JHALA liquid.opt: $(LIQOBJS:.cmo=.cmx)
-#JHALA	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt str.cmxa unix.cmxa nums.cmxa oyices.cmxa graph.cmxa libqp.cmxa $(LIQOBJS:.cmo=.cmx)
 
 liquid.opt: $(LIQOBJS:.cmo=.cmx)
 	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt str.cmxa unix.cmxa nums.cmxa graph.cmxa $(LIQOBJS:.cmo=.cmx)
@@ -166,8 +161,6 @@ graphlib:
 
 qplib:
 	cd $(QPHOME); $(MAKE) qp.opt; $(MAKE) all
-
-#JHALA libs: yiceslib graphlib qplib
 
 libs: graphlib 
 

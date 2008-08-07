@@ -4,8 +4,9 @@ Compiling dsolve under Cygwin
 1. Build Z3
 2. cp Z3-.../ocaml/* to external/z3
 3. cp z3.dll to dsolve/
-4. cmd /k vsvars32.bat
-5. cp Makefile.win Makefile
+4. change theoremProver.ml --> module Prover = TheoremproverZ3.Prover
+5. cmd /k vsvars32.bat
+6. ./configure && make -f Makefile.win libs && make -f Makefile.win 
 
 make etc.
 
