@@ -5,3 +5,5 @@ tests/rec/bad-pmrisort.ml  4 False
 tests/rec/bad-mktree.ml    4 False
 tests/rec/bad-quicksort.ml 4 False
 tests/rec/bad-redblack.ml  4 False
+tests/rec/bad-as-length.ml 4 False
+tests/rec/bad-tuple-length.ml 4 False

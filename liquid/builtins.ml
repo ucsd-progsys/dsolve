@@ -100,7 +100,9 @@ let mk_bigarray_layout a qs env = mk_named ["layout"; "Bigarray"] [a] qs env
 
 let mk_bigarray_type a b c qs env = mk_named ["t"; "Array2"; "Bigarray"] [a; b; c] qs env
 
-let uUnit = Fsum(Predef.path_unit, None, [(Cstr_constant 0, [])], empty_refinement)
+let mk_unit qs = Fsum(Predef.path_unit, None, [(Cstr_constant 0, [])], const_ref qs)
+let uUnit = mk_unit []
+let rUnit name v p = mk_unit [(Path.mk_ident name, v, p)]
 
 let uInt = mk_int []
 let rInt name v p = mk_int [(Path.mk_ident name, v, p)]

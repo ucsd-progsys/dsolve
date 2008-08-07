@@ -110,38 +110,46 @@ let mk_qual ps c =
   let v = Path.mk_ident "v" in
   (Path.mk_ident "measure", v, mk_pred_def v c ps)
 
-let mk_single_gd menv p vp (tag, ps) =
+let mk_single_gd menv (vp, p, tag, ps) =
   try
     Some (mk_preds vp (List.map (function Some p -> Some (P.Var p) | _ -> None) ps) (find_c p tag menv))
   with Not_found ->
     None
 
-let get_or_fail = function
-    P.Var p -> p
-  | _ -> failwith "only matching on idents supported; try normalizing"
+let get_patvar p = match p.pat_desc with
+  | Tpat_var p | Tpat_alias (_, p) -> Some (C.i2p p)
+  | _                              -> None
 
-let get_patvar p = 
-  match p.pat_desc with
-    Tpat_var (p) -> Some (C.i2p p)
-  | Tpat_any -> None
-  | _ -> raise Not_found
+let cstr_res_path {cstr_res = t} = match (repr t).desc with
+  | Tconstr (p, _, _) -> p
+  | _                 -> assert false
 
-let constr_pat_path {pat_type = pt} = match (repr pt).desc with
-  | Tconstr (p, _, _) -> Some p
-  | _                 -> None
+let named_patterns pats =
+  List.map
+    (fun p -> match p.pat_desc with Tpat_alias (apat, av) -> (Some (Path.Pident av), apat) | _ -> (None, p))
+    pats
 
-let rec gps pat = match pat.pat_desc with
+let named_constructor_patterns cdesc pats = function
+  | Some v -> [(v, cstr_res_path cdesc, cdesc.cstr_tag, List.map get_patvar pats)]
+  | None   -> []
+
+let constructor_patterns_aux (vo, pat) = match pat.pat_desc with
     Tpat_construct(cdesc, pl) ->
-      (try Some (cdesc.cstr_tag, List.map get_patvar pl) with Not_found -> None)
-  | Tpat_alias (p, _) ->
-      gps p
-  | _ -> None
+      (named_patterns pl, named_constructor_patterns cdesc pl vo)
+  | Tpat_alias ({pat_desc = Tpat_construct(cdesc, pl)}, _) ->
+      (named_patterns [pat], named_constructor_patterns cdesc pl vo)
+  | Tpat_alias _ ->
+      (named_patterns [pat], [])
+  | Tpat_tuple (pl) ->
+      (named_patterns pl, [])
+  | _ ->
+      ([], [])
 
-let mk_guard e pat =
-  let vp = get_or_fail e in
-  match (constr_pat_path pat, gps pat) with
-    | (Some p, Some ps) -> mk_single_gd !bms p vp ps
-    | _                 -> None
+let constructor_patterns expvar pat =
+  C.expand constructor_patterns_aux [(expvar, pat)] []
+
+let mk_guard vp pat =
+  P.big_and (C.map_partial (mk_single_gd !bms) (constructor_patterns (Some vp) pat))
 
 let transl_pred names (v, p) =
   (v, P.map_funs (fun x -> try List.assoc x names with Not_found -> x) p) 
