@@ -737,24 +737,16 @@ let fresh_with_var_fun env freshf t =
   in flip_frame_levels (map_refinements (place_freshref freshf) (fm t))
 
 (* Create a fresh frame with the same shape as the given type
-   [ty]. Uses type environment [env] to find type declarations.
-
-   You probably want to consider using fresh_with_labels instead of this
-   for subtype constraints. *)
+   [ty]. Uses type environment [env] to find type declarations. *)
 let fresh env ty =
   fresh_with_var_fun env fresh_refinementvar ty
 
 let fresh_false env ty =
   fresh_with_var_fun env (fun _ -> false_refinement) ty
 
-(* Create a fresh frame with the same shape as [exp]'s type and [f],
-   and the same labels as [f]. *)
 let fresh_with_labels env ty f =
   label_like (fresh env ty) f
 
-(* Create a fresh frame with the same shape as the given type [ty].
-   No refinement variables are created - all refinements are initialized
-   to true. *)
 let fresh_without_vars env ty =
   fresh_with_var_fun env (fun _ -> empty_refinement) ty
 
