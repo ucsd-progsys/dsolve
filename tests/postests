@@ -1,3 +1,5 @@
+tests/rec/as-length.ml      4 False
+tests/rec/tuple-length.ml   4 False
 tests/rec/heap.ml           4 False
 tests/depannot.ml           4 False
 tests/rec/recmlq.ml         4 False
