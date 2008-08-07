@@ -1,3 +1,14 @@
+Compiling dsolve under Cygwin
+=============================
+
+1. Build Z3
+2. cp Z3-.../ocaml/* to external/z3
+3. cp z3.dll to dsolve/
+4. cmd /k vsvars32.bat
+5. cp Makefile.win Makefile
+
+make etc.
+
 Compiling dsolve
 ================
 
@@ -222,3 +233,6 @@ the error message will have an inexplicable location.  Example:
 
   File "DML/bsearch.mlq", line 1, characters 0-1:
   {int | (V = __atmp30)} is not a subtype of {int | (v >= 0)}
+
+
+

@@ -43,11 +43,11 @@ module type PROVER =
     val print_stats : Format.formatter -> unit -> unit
   end
 
-module Z3Prover : PROVER = 
+module Prover : PROVER = 
   struct
     type z3_instance = { 
       c                 : Z3.context;
-      tint              : Z3.ast_type;
+      tint              : Z3.type_ast;
       vart              : (string,Z3.ast) Hashtbl.t;
       funt              : (string,Z3.const_decl_ast) Hashtbl.t;
       mutable vars      : string list ;
@@ -81,7 +81,7 @@ module Z3Prover : PROVER =
 
     let z3App me s zes =
       let k   = List.length zes in
-      let zes = Array.of_list zs in
+      let zes = Array.of_list zes in
       Z3.mk_app me.c (z3Fun me s k) zes 
 
     let rec isConst = function P.PInt i -> true | _ -> false
@@ -91,19 +91,20 @@ module Z3Prover : PROVER =
       | P.PInt i                -> Z3.mk_int me.c i me.tint 
       | P.Var s                 -> z3Var me (Path.unique_name s) me.tint
       | P.FunApp (f,es)         -> z3App me f (List.map (z3Exp me) es)
-      | P.Binop (e1,P.Plus,e2)  -> Z3.mk_add me.c (Array.map (z3Exp me) [|e1;e2|] 
-      | P.Binop (e1,P.Minus,e2) -> Z3.mk_sub me.c (Array.map (z3Exp me) [|e1;e2|] 
-      | P.Binop (e1,P.Times,e2) -> Z3.mk_mul me.c (Array.map (z3Exp me) [|e1;e2|] 
+      | P.Binop (e1,P.Plus,e2)  -> Z3.mk_add me.c (Array.map (z3Exp me) [|e1;e2|]) 
+      | P.Binop (e1,P.Minus,e2) -> Z3.mk_sub me.c (Array.map (z3Exp me) [|e1;e2|]) 
+      | P.Binop (e1,P.Times,e2) -> Z3.mk_mul me.c (Array.map (z3Exp me) [|e1;e2|]) 
       | P.Binop (e1,P.Div,e2)   -> z3App me "_DIV" (List.map (z3Exp me) [e1;e2])  
-      | P.Field (f, e)          -> z3App me ("SELECT_"^(Ident.unique_name f)) [z3Exp me] (** REQUIRES: disjoint intra-module field names *)
+      | P.Field (f, e)          -> z3App me ("SELECT_"^(Ident.unique_name f)) [(z3Exp me e)] 
+                                   (** REQUIRES: disjoint intra-module field names *)
       | P.Ite (e1, e2, e3)      -> Z3.mk_ite me.c (z3Pred me e1) (z3Exp me e2) (z3Exp me e3)
 
-    and yicesPred me p = 
+    and z3Pred me p = 
       match p with 
         P.True          -> Z3.mk_true me.c
-      | P.Not p' -> Z3.mk_not me.c (yicesPred me p')
+      | P.Not p' -> Z3.mk_not me.c (z3Pred me p')
       | P.And (p1,p2) -> Z3.mk_and me.c (Array.map (z3Pred me) [|p1;p2|])
-      | P.Or (p1,p2) -> Z3.mk_or me.c (Array.map (yicesPred me) [|p1;p2|])
+      | P.Or (p1,p2) -> Z3.mk_or me.c (Array.map (z3Pred me) [|p1;p2|])
       | P.Iff _ as iff -> z3Pred me (P.expand_iff iff)
    (* | P.Atom (e1,P.Lt,e2) -> z3Pred me (Atom (e1, P.Le, Binop(e2,P.Minus,PInt 1))) *)
       | P.Atom (e1,P.Eq,e2) -> Z3.mk_eq me.c (z3Exp me e1) (z3Exp me e2)
@@ -149,11 +150,11 @@ module Z3Prover : PROVER =
     
     let me = 
       let c = Z3.mk_context_x [|("MODEL", "false")|] in
-      let _ = if !Clflags.log_queries then ignore (Z3.trace_to_file "z3.log") in 
+      let _ = if !Clflags.log_queries then ignore (Z3.trace_to_file c "z3.log") in 
       let tint = Z3.mk_int_type c in
-      let vdect = Hashtbl.create 37 in
-      let fdect = Hashtbl.create 37 in
-      { c = c; tint = tint; vdect = vdect; fdect = fdect; 
+      let vart = Hashtbl.create 37 in
+      let funt = Hashtbl.create 37 in
+      { c = c; tint = tint; vart = vart ; funt= funt; 
         vars = []; count = 0; i = 0}
 
 
@@ -171,9 +172,8 @@ module Z3Prover : PROVER =
       assert (me.count = 0)
  
     let print_stats ppf () = 
-      Format.fprintf ppf "@[implies(API):@ %i,@ Yices@ {pushes:@ %i,@ pops:@ %i,@ unsats:@ %i}@]"
+      Format.fprintf ppf "@[implies(API):@ %i,@ Z3@ {pushes:@ %i,@ pops:@ %i,@ unsats:@ %i}@]"
       !nb_implies_api !nb_z3_push !nb_z3_pop !nb_z3_unsat
 
 end
 
-module Prover = Z3Prover 

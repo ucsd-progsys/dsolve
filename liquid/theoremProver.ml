@@ -25,6 +25,7 @@
 module P = Predicate
 module C = Common
 module Cl = Clflags
+module Prover = TheoremProverZ3.Prover
 
 (********************************************************************************)
 (************************** Rationalizing Division ******************************)
@@ -109,7 +110,7 @@ let rhsform = Format.formatter_of_buffer buftrhs
 (* API *)
 let print_stats ppf () =
   C.fcprintf ppf C.ol_solve_stats "@[TP@ API@ stats:@ %d@ pushes@ %d@ queries@ cache@ %d@ hits@ %d@ misses@]@." !nb_push !nb_queries !nb_cache_hits !nb_cache_misses;
-  C.fcprintf ppf C.ol_solve_stats "@[Yices@ TP@ stats:@ %a@]@." TheoremProverYices.Prover.print_stats ()
+  C.fcprintf ppf C.ol_solve_stats "@[Prover @ TP@ stats:@ %a@]@." Prover.print_stats ()
 
 (* API *)
 let reset () =
@@ -133,7 +134,7 @@ let implies p =
   (*let lhs = C.elevate_olev C.ol_unique_names; Buffer.clear buftlhs; 
             Format.fprintf lhsform "%a@." P.pprint p; C.restore_olev; 
             Buffer.contents buftlhs in*)
-  let check_yi = Bstats.time "YI implies(1)" TheoremProverYices.Prover.implies p in
+  let check_yi = Bstats.time "YI implies(1)" Prover.implies p in
   fun q -> 
     let q = incr nb_queries; fixdiv q in
     (*let rhs = q in*)
@@ -147,7 +148,7 @@ let implies p =
 
 
 let finish () = 
-  TheoremProverYices.Prover.finish ()
+  Prover.finish ()
 
 (* {{{
 

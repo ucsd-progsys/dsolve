@@ -9,10 +9,17 @@ CAMLLEX=ocamllex
 CAMLDEP=ocamldep
 DEPFLAGS=$(INCLUDES)
 COMPFLAGS=$(FLAGS) -g -dtypes -warn-error A $(INCLUDES)
-LINKFLAGS=$(FLAGS) -cclib -lstdc++ -cclib -loyices -cclib -lgmp -cclib -lyices \
-          -I external/yices/lib/ -I external/ocamlgraph/ -I $(QPHOME)
-INCLUDES=-I external/yices/lib/ -I external/ocamlgraph/ -I $(QPHOME) \
+#JHALA LINKFLAGS=$(FLAGS) -cclib -lstdc++ -cclib -loyices -cclib -lgmp -cclib -lyices \
+
+LINKFLAGS=$(FLAGS) -cclib -lstdc++ \
+          -I external/yices/lib/ -I external/z3/ -I external/ocamlgraph/ -I $(QPHOME)
+
+#INCLUDES=-I external/yices/lib/ -I external/ocamlgraph/ -I $(QPHOME) \
          -I utils -I parsing -I typing -I liquid
+
+INCLUDES=-I external/ocamlgraph/ -I external/z3/ -I $(QPHOME) \
+         -I utils -I parsing -I typing -I liquid
+
 
 UTILS=utils/misc.cmo utils/config.cmo \
   utils/clflags.cmo utils/terminfo.cmo utils/ccomp.cmo utils/warnings.cmo \
@@ -40,10 +47,8 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
 
 LIQUID=liquid/lightenv.cmo \
   liquid/qualifier.cmo liquid/pattern.cmo liquid/frame.cmo \
-  liquid/builtins.cmo liquid/wellformed.cmo liquid/message.cmo  \
-  liquid/theoremProverSimplify.cmo \
-  liquid/theoremProverYices.cmo \
-  liquid/theoremProverQprover.cmo \
+  liquid/builtins.cmo liquid/wellformed.cmo liquid/message.cmo \
+  liquid/theoremProverZ3.cmo \
   liquid/theoremProver.cmo \
   liquid/constraint.cmo liquid/measure.cmo \
   liquid/qualifymod.cmo \
@@ -55,11 +60,17 @@ LIQOBJS=$(UTILS) $(PARSING) $(TYPING) $(LIQUID)
 
 default: liquid.opt
 
+#JHALA liquid.byte: $(LIQOBJS)
+#JHALA	$(CAMLC) $(LINKFLAGS) -custom -o liquid.byte str.cma unix.cma nums.cma oyices.cma graph.cma libqp.cma $(LIQOBJS)
+
 liquid.byte: $(LIQOBJS)
-	$(CAMLC) $(LINKFLAGS) -custom -o liquid.byte str.cma unix.cma nums.cma oyices.cma graph.cma libqp.cma $(LIQOBJS)
+	$(CAMLC) $(LINKFLAGS) -custom -o liquid.byte str.cma unix.cma nums.cma graph.cma $(LIQOBJS)
+
+#JHALA liquid.opt: $(LIQOBJS:.cmo=.cmx)
+#JHALA	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt str.cmxa unix.cmxa nums.cmxa oyices.cmxa graph.cmxa libqp.cmxa $(LIQOBJS:.cmo=.cmx)
 
 liquid.opt: $(LIQOBJS:.cmo=.cmx)
-	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt str.cmxa unix.cmxa nums.cmxa oyices.cmxa graph.cmxa libqp.cmxa $(LIQOBJS:.cmo=.cmx)
+	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt str.cmxa unix.cmxa nums.cmxa graph.cmxa $(LIQOBJS:.cmo=.cmx)
 
 .PHONY: tests
 tests:
@@ -161,7 +172,9 @@ graphlib:
 qplib:
 	cd $(QPHOME); $(MAKE) qp.opt; $(MAKE) all
 
-libs: yiceslib graphlib qplib
+#JHALA libs: yiceslib graphlib qplib
+
+libs: graphlib 
 
 world: liquid.byte liquid.opt
 
