@@ -199,18 +199,18 @@ module Prover : PROVER =
       Predicate.pprint Format.str_formatter p;
       Format.flush_str_formatter ()
 
-    let z3Pred1 me p = 
+    (* let z3Pred_wrap me p = 
       let _  = force_print ("z3Pred: in = "^(p2s p)^"\n") in 
       let zp = z3Pred me p in
       let _  = force_print ("z3Pred: out = "^(z3_ast_to_string me.c zp)^"\n") in
       if not (z3_type_check me.c zp) then failwith "Dsolve-Z3 type error" else
-        zp
+        zp *)
 
     let push me p =
       let _ = incr nb_z3_push in
       let _ = me.count <- me.count + 1 in
       if unsat me then me.i <- me.i + 1 else
-        let zp = z3Pred1 me p in
+        let zp = z3Pred me p in
         let _  = me.vars <- Barrier :: me.vars in
         let _  = z3_push me.c in
         Bstats.time "Z3 assert" (z3_assert_cnstr me.c) zp 
@@ -258,12 +258,11 @@ module Prover : PROVER =
 
     let implies p =
       let _ = incr nb_implies_api in
-      let _ = (* Bstats.time "Z3 push" *) wrap "Prover.push" (push me) p in
-      fun q -> (* Bstats.time "Z3 valid" *) wrap "Prover.valid" (valid me) q
+      let _ =  Bstats.time "Z3 push" (push me) p in
+      fun q -> Bstats.time "Z3 valid" (valid me) q
 
     let finish () = 
-      (* Bstats.time "Z3 pop" *) 
-      wrap "Prover.pop" pop me; 
+      Bstats.time "Z3 pop" pop me; 
       assert (me.count = 0)
  
     let print_stats ppf () = 
