@@ -637,21 +637,22 @@ let fresh_record fresh env p fields tyformals tyactuals =
   let fields              = C.combine3 names mutas tys in
     record_of_params p (List.map (fresh_field fresh) fields) empty_refinement
 
+let fresh_constructor env fresh param_vars ty cstr =
+  let _           = Ctype.begin_def () in
+  let (args, res) = Ctype.instance_constructor cstr in
+  let _           = Ctype.end_def () in
+  let _           = List.iter Ctype.generalize args; Ctype.generalize res in
+  let _           = close_constructor res args; Ctype.unify env res ty in
+  let (res, args) = (canonicalize res, List.map canonicalize args) in
+  let ids         = Misc.mapi (fun _ i -> C.tuple_elem_id i) args in
+  let fs          = List.map fresh args in
+  let vs          = List.map (fun t -> try List.assoc t param_vars with Not_found -> Covariant) args in
+    (cstr.cstr_tag, C.combine3 ids fs vs)
+
 let fresh_sum fresh env p t tyl varis =
   let param_vars = List.combine tyl varis in
   let (_, cds)   = List.split (Env.constructors_of_type p (Env.find_type p env)) in
-  let fresh_cstr cstr =
-    let _           = Ctype.begin_def () in
-    let (args, res) = Ctype.instance_constructor cstr in
-    let _           = Ctype.end_def () in
-    let _           = List.iter Ctype.generalize args; Ctype.generalize res in
-    let _           = close_constructor res args; Ctype.unify env res t in
-    let (res, args) = (canonicalize res, List.map canonicalize args) in
-    let ids         = Misc.mapi (fun _ i -> C.tuple_elem_id i) args in
-    let fs          = List.map fresh args in
-    let vs          = List.map (fun t -> try List.assoc t param_vars with Not_found -> Covariant) args in
-      (cstr.cstr_tag, C.combine3 ids fs vs)
-  in Fsum (p, None, List.map fresh_cstr cds, empty_refinement)
+    Fsum (p, None, List.map (fresh_constructor env fresh param_vars t) cds, empty_refinement)
 
 let fresh_constr fresh env p t tyl =
   let params  = List.map fresh tyl in
