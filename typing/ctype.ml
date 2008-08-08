@@ -825,6 +825,11 @@ let instance_list schl =
   cleanup_types ();
   tyl
 
+let instance_lists schl schl' =
+  let (tyl, tyl') = (List.map copy schl, List.map copy schl') in
+  cleanup_types ();
+  (tyl, tyl')
+
 let instance_constructor cstr =
   let ty_res = copy cstr.cstr_res in
   let ty_args = List.map copy cstr.cstr_args in

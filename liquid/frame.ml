@@ -624,10 +624,18 @@ let close_arg res arg =
 let close_constructor res args =
   List.iter (fun a -> Btype.iter_type_expr (close_arg res) a; close_arg res a) args
 
-let fresh_record fresh p fields =
-  let fresh_field (name, muta, t) =
-    (Ident.create name, fresh t, mutable_variance muta)
-  in record_of_params p (List.map fresh_field fields) empty_refinement
+let fresh_field fresh (name, muta, t) =
+  (Ident.create name, fresh t, mutable_variance muta)
+
+let fresh_record fresh env p fields tyformals tyactuals =
+  let (names, mutas, tys) = C.split3 fields in
+  let _                   = Ctype.begin_def () in
+  let (tys, tyformals)    = Ctype.instance_lists tys tyformals in
+  let _                   = Ctype.end_def () in
+  let _                   = List.iter Ctype.generalize tyformals in
+  let _                   = List.iter2 (Ctype.unify env) tyformals tyactuals in
+  let fields              = C.combine3 names mutas tys in
+    record_of_params p (List.map (fresh_field fresh) fields) empty_refinement
 
 let fresh_sum fresh env p t tyl varis =
   let param_vars = List.combine tyl varis in
@@ -653,7 +661,7 @@ let fresh_constr fresh env p t tyl =
       | Type_abstract ->
           abstract_of_params p params varis empty_refinement
       | Type_record (fields, _, _) -> (* 1 *)
-          fresh_record fresh p fields
+          fresh_record fresh env p fields ty_decl.type_params tyl
       | Type_variant _ ->
           fresh_sum fresh env p t tyl varis
 
@@ -819,7 +827,7 @@ let rec translate_pframe env plist pf =
           Type_abstract ->
             abstract_of_params path params varis (transl_pref r)
         | Type_record(fields, _, _) ->
-            fresh_record (fresh_without_vars env) path fields
+            (* fresh_record (fresh_without_vars env) path fields *) assert false
         | Type_variant _ ->
             match List.split (Env.constructors_of_type path (Env.find_type path env)) with
               | (_, cstr :: _) -> fresh_without_vars env (snd (Ctype.instance_constructor cstr))
