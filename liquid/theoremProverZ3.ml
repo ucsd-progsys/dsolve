@@ -210,10 +210,10 @@ module Prover : PROVER =
       let _ = incr nb_z3_push in
       let _ = me.count <- me.count + 1 in
       if unsat me then me.i <- me.i + 1 else
-        let zp = z3Pred me p in
+        (* let zp = z3Pred me p in *)
         let _  = me.vars <- Barrier :: me.vars in
         let _  = z3_push me.c in
-        Bstats.time "Z3 assert" (z3_assert_cnstr me.c) zp 
+        Bstats.time "Z3 assert" (z3_assert_cnstr me.c) (z3Pred me p) 
 
     let rec vpop (cs,s) =
       match s with 
