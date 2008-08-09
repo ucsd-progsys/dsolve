@@ -153,8 +153,6 @@ let finish () =
 (* {{{
 
 module Cl = Clflags
-module DefaultProver = TheoremProverYices.Prover
-module BackupProver = TheoremProverYices.Prover (* shouldn't this be simplify?*)
 
 exception Provers_disagree of bool * bool
 

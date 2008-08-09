@@ -1,11 +1,23 @@
-Compiling dsolve under Cygwin
+Compiling dsolve under Cygwin w/ gcc
+=============================
+
+dsolve requires OCaml 3.10+, camlidl 1.05+
+
+1. Download and install camlidl (already done on mallorca)
+2. make -f Makefile.cyg libs
+3. ./makecyg
+
+
+
+Compiling dsolve under Cygwin w/ MSVC toolchain
 =============================
 
 1. Build Z3
 2. cp Z3-.../ocaml/* to external/z3
 3. cp z3.dll to dsolve/
-4. cmd /k vsvars32.bat
-5. cp Makefile.win Makefile
+4. change theoremProver.ml --> module Prover = TheoremproverZ3.Prover
+5. cmd /k vsvars32.bat
+6. ./configure && make -f Makefile.win libs && make -f Makefile.win 
 
 make etc.
 

@@ -624,26 +624,35 @@ let close_arg res arg =
 let close_constructor res args =
   List.iter (fun a -> Btype.iter_type_expr (close_arg res) a; close_arg res a) args
 
-let fresh_record fresh p fields =
-  let fresh_field (name, muta, t) =
-    (Ident.create name, fresh t, mutable_variance muta)
-  in record_of_params p (List.map fresh_field fields) empty_refinement
+let fresh_field fresh (name, muta, t) =
+  (Ident.create name, fresh t, mutable_variance muta)
+
+let fresh_record fresh env p fields tyformals tyactuals =
+  let (names, mutas, tys) = C.split3 fields in
+  let _                   = Ctype.begin_def () in
+  let (tys, tyformals)    = Ctype.instance_lists tys tyformals in
+  let _                   = Ctype.end_def () in
+  let _                   = List.iter Ctype.generalize tyformals in
+  let _                   = List.iter2 (Ctype.unify env) tyformals tyactuals in
+  let fields              = C.combine3 names mutas tys in
+    record_of_params p (List.map (fresh_field fresh) fields) empty_refinement
+
+let fresh_constructor env fresh param_vars ty cstr =
+  let _           = Ctype.begin_def () in
+  let (args, res) = Ctype.instance_constructor cstr in
+  let _           = Ctype.end_def () in
+  let _           = List.iter Ctype.generalize args; Ctype.generalize res in
+  let _           = close_constructor res args; Ctype.unify env res ty in
+  let (res, args) = (canonicalize res, List.map canonicalize args) in
+  let ids         = Misc.mapi (fun _ i -> C.tuple_elem_id i) args in
+  let fs          = List.map fresh args in
+  let vs          = List.map (fun t -> try List.assoc t param_vars with Not_found -> Covariant) args in
+    (cstr.cstr_tag, C.combine3 ids fs vs)
 
 let fresh_sum fresh env p t tyl varis =
   let param_vars = List.combine tyl varis in
   let (_, cds)   = List.split (Env.constructors_of_type p (Env.find_type p env)) in
-  let fresh_cstr cstr =
-    let _           = Ctype.begin_def () in
-    let (args, res) = Ctype.instance_constructor cstr in
-    let _           = Ctype.end_def () in
-    let _           = List.iter Ctype.generalize args; Ctype.generalize res in
-    let _           = close_constructor res args; Ctype.unify env res t in
-    let (res, args) = (canonicalize res, List.map canonicalize args) in
-    let ids         = Misc.mapi (fun _ i -> C.tuple_elem_id i) args in
-    let fs          = List.map fresh args in
-    let vs          = List.map (fun t -> try List.assoc t param_vars with Not_found -> Covariant) args in
-      (cstr.cstr_tag, C.combine3 ids fs vs)
-  in Fsum (p, None, List.map fresh_cstr cds, empty_refinement)
+    Fsum (p, None, List.map (fresh_constructor env fresh param_vars t) cds, empty_refinement)
 
 let fresh_constr fresh env p t tyl =
   let params  = List.map fresh tyl in
@@ -653,7 +662,7 @@ let fresh_constr fresh env p t tyl =
       | Type_abstract ->
           abstract_of_params p params varis empty_refinement
       | Type_record (fields, _, _) -> (* 1 *)
-          fresh_record fresh p fields
+          fresh_record fresh env p fields ty_decl.type_params tyl
       | Type_variant _ ->
           fresh_sum fresh env p t tyl varis
 
@@ -729,24 +738,16 @@ let fresh_with_var_fun env freshf t =
   in flip_frame_levels (map_refinements (place_freshref freshf) (fm t))
 
 (* Create a fresh frame with the same shape as the given type
-   [ty]. Uses type environment [env] to find type declarations.
-
-   You probably want to consider using fresh_with_labels instead of this
-   for subtype constraints. *)
+   [ty]. Uses type environment [env] to find type declarations. *)
 let fresh env ty =
   fresh_with_var_fun env fresh_refinementvar ty
 
 let fresh_false env ty =
   fresh_with_var_fun env (fun _ -> false_refinement) ty
 
-(* Create a fresh frame with the same shape as [exp]'s type and [f],
-   and the same labels as [f]. *)
 let fresh_with_labels env ty f =
   label_like (fresh env ty) f
 
-(* Create a fresh frame with the same shape as the given type [ty].
-   No refinement variables are created - all refinements are initialized
-   to true. *)
 let fresh_without_vars env ty =
   fresh_with_var_fun env (fun _ -> empty_refinement) ty
 
@@ -819,7 +820,7 @@ let rec translate_pframe env plist pf =
           Type_abstract ->
             abstract_of_params path params varis (transl_pref r)
         | Type_record(fields, _, _) ->
-            fresh_record (fresh_without_vars env) path fields
+            (* fresh_record (fresh_without_vars env) path fields *) assert false
         | Type_variant _ ->
             match List.split (Env.constructors_of_type path (Env.find_type path env)) with
               | (_, cstr :: _) -> fresh_without_vars env (snd (Ctype.instance_constructor cstr))

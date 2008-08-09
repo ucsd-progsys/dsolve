@@ -107,6 +107,8 @@ val instance: type_expr -> type_expr
         (* Take an instance of a type scheme *)
 val instance_list: type_expr list -> type_expr list
         (* Take an instance of a list of type schemes *)
+val instance_lists: type_expr list -> type_expr list -> (type_expr list * type_expr list)
+        (* Take an instance of TWO! lists of type schemes *)
 val instance_constructor:
         constructor_description -> type_expr list * type_expr
         (* Same, for a constructor *)

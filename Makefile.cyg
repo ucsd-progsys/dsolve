@@ -9,9 +9,11 @@ CAMLLEX=ocamllex
 CAMLDEP=ocamldep
 DEPFLAGS=$(INCLUDES)
 COMPFLAGS=$(FLAGS) -g -dtypes -warn-error A $(INCLUDES)
-LINKFLAGS=$(FLAGS) -cclib -lstdc++ -cclib -loyices -cclib -lgmp -cclib -lyices \
-          -I external/yices/lib/ -I external/ocamlgraph/ -I $(QPHOME)
-INCLUDES=-I external/yices/lib/ -I external/ocamlgraph/ -I $(QPHOME) \
+LINKFLAGS=-ccopt "-Iexternal/z3/ocaml" \
+					$(FLAGS) -cclib -lstdc++ -cclib -lz3 -cclib -lz3stubs \
+          -I external/ocamlgraph/ -I external/z3/ocaml -I external/z3/bin \
+					-I $(QPHOME)
+INCLUDES=-I external/z3/ocaml/ -I external/ocamlgraph/ -I $(QPHOME) \
          -I utils -I parsing -I typing -I liquid
 
 UTILS=utils/misc.cmo utils/config.cmo \
@@ -41,9 +43,8 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
 LIQUID=liquid/lightenv.cmo \
   liquid/qualifier.cmo liquid/pattern.cmo liquid/frame.cmo \
   liquid/builtins.cmo liquid/wellformed.cmo liquid/message.cmo  \
-  liquid/theoremProverSimplify.cmo \
-  liquid/theoremProverYices.cmo \
   liquid/theoremProverQprover.cmo \
+	liquid/theoremProverZ3.cmo \
   liquid/theoremProver.cmo \
   liquid/constraint.cmo liquid/measure.cmo \
   liquid/qualifymod.cmo \
@@ -55,11 +56,11 @@ LIQOBJS=$(UTILS) $(PARSING) $(TYPING) $(LIQUID)
 
 default: liquid.opt
 
-liquid.byte: $(LIQOBJS)
-	$(CAMLC) $(LINKFLAGS) -custom -o liquid.byte str.cma unix.cma nums.cma oyices.cma graph.cma libqp.cma $(LIQOBJS)
+#liquid.byte: $(LIQOBJS)
+#	$(CAMLC) $(LINKFLAGS) -custom -o liquid.byte str.cma unix.cma nums.cma graph.cma libqp.cma $(LIQOBJS)
 
 liquid.opt: $(LIQOBJS:.cmo=.cmx)
-	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt str.cmxa unix.cmxa nums.cmxa oyices.cmxa graph.cmxa libqp.cmxa $(LIQOBJS:.cmo=.cmx)
+	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt $(LIBDIR)/libcamlidl.a str.cmxa unix.cmxa nums.cmxa z3.cmxa graph.cmxa libqp.cmxa $(LIQOBJS:.cmo=.cmx)
 
 .PHONY: tests
 tests:
@@ -76,11 +77,21 @@ clean: partialclean
 	 done);
 	rm -f liquid.byte liquid.opt
 
+libclean: z3clean qpclean graphclean
+
+z3clean:
+	cd external/z3/ocaml; ./clean.sh
+
+qpclean:
+	cd external/qp; make clean
+
+graphclean:
+	cd external/ocamlgraph; make clean
+
 distclean: clean
 	(for d in ./ utils parsing typing tests liquid; \
 	 do rm -f $$d/*.annot $$d/*~ $$d/*.quals $$d/*.pyc $$d/*.dot; \
 	 done);
-	rm -rf .git external/yices/lib external/yices/bin external/yices/include/*.h
 
 utils/config.ml: utils/config.mlp config/Makefile
 	@rm -f utils/config.ml
@@ -152,8 +163,8 @@ beforedepend:: parsing/linenum.ml
 .ml.cmx:
 	$(CAMLOPT) $(COMPFLAGS) -c $<
 
-yiceslib:
-	mkdir -p external/yices/include/build; cd external/yices/include/build; $(MAKE) -f ../Makefile;
+z3lib:
+	cp external/z3/bin/z3.dll .; cd external/z3/ocaml; ./build.sh $(LIBDIR)
 
 graphlib:
 	cd external/ocamlgraph; ./configure; $(MAKE) all;
@@ -161,8 +172,8 @@ graphlib:
 qplib:
 	cd $(QPHOME); $(MAKE) qp.opt; $(MAKE) all
 
-libs: yiceslib graphlib qplib
+libs: z3lib graphlib qplib
 
-world: liquid.byte liquid.opt
+world: liquid.opt
 
 include .depend
