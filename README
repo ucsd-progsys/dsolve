@@ -3,9 +3,9 @@ Compiling dsolve under Cygwin w/ gcc
 
 dsolve requires OCaml 3.10+, camlidl 1.05+
 
-1. Download and install camlidl
-2. Do magical things to Z3
-3. Profit?
+1. Download and install camlidl (already done on mallorca)
+2. make -f Makefile.cyg libs
+3. ./makecyg
 
 
 
