@@ -1,0 +1,5 @@
+#!/bin/bash
+
+mv liquid/theoremProverYices.ml liquid/theoremProverYices.lm
+make -f Makefile.cyg $1
+mv liquid/theoremProverYices.lm liquid/theoremProverYices.ml

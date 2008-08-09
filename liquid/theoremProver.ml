@@ -25,7 +25,7 @@
 module P = Predicate
 module C = Common
 module Cl = Clflags
-module Prover = TheoremProverYices.Prover
+module Prover = TheoremProverZ3.Prover
 
 (********************************************************************************)
 (************************** Rationalizing Division ******************************)
@@ -153,8 +153,6 @@ let finish () =
 (* {{{
 
 module Cl = Clflags
-module DefaultProver = TheoremProverYices.Prover
-module BackupProver = TheoremProverYices.Prover (* shouldn't this be simplify?*)
 
 exception Provers_disagree of bool * bool
 

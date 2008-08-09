@@ -377,11 +377,11 @@ liquid/liquid.cmx: utils/warnings.cmx typing/types.cmx typing/typemod.cmx \
 liquid/measure.cmo: typing/types.cmi typing/typedtree.cmi \
     typing/predicate.cmi typing/path.cmi parsing/longident.cmi \
     liquid/lightenv.cmo typing/ident.cmi liquid/frame.cmi typing/env.cmi \
-    typing/common.cmo 
+    typing/ctype.cmi typing/common.cmo 
 liquid/measure.cmx: typing/types.cmx typing/typedtree.cmx \
     typing/predicate.cmx typing/path.cmx parsing/longident.cmx \
     liquid/lightenv.cmx typing/ident.cmx liquid/frame.cmx typing/env.cmx \
-    typing/common.cmx 
+    typing/ctype.cmx typing/common.cmx 
 liquid/message.cmo: liquid/message.cmi 
 liquid/message.cmx: liquid/message.cmi 
 liquid/mlqmod.cmo: typing/qualmod.cmo liquid/qualifier.cmi \
@@ -434,12 +434,10 @@ liquid/qualifymod.cmx: typing/types.cmx typing/typedtree.cmx \
     liquid/frame.cmx typing/env.cmx liquid/constraint.cmx typing/common.cmx \
     utils/clflags.cmx liquid/builtins.cmx typing/btype.cmx utils/bstats.cmx \
     parsing/asttypes.cmi liquid/qualifymod.cmi 
-liquid/theoremProver.cmo: liquid/theoremProverYices.cmo \
-    liquid/theoremProverQprover.cmo typing/predicate.cmi typing/common.cmo \
-    utils/clflags.cmi utils/bstats.cmi 
-liquid/theoremProver.cmx: liquid/theoremProverYices.cmx \
-    liquid/theoremProverQprover.cmx typing/predicate.cmx typing/common.cmx \
-    utils/clflags.cmx utils/bstats.cmx 
+liquid/theoremProver.cmo: liquid/theoremProverZ3.cmo typing/predicate.cmi \
+    typing/common.cmo utils/clflags.cmi utils/bstats.cmi 
+liquid/theoremProver.cmx: liquid/theoremProverZ3.cmx typing/predicate.cmx \
+    typing/common.cmx utils/clflags.cmx utils/bstats.cmx 
 liquid/theoremProverQprover.cmo: external/qp/qpDag.cmi external/qp/qpAst.cmi \
     external/qp/qProver.cmi typing/predicate.cmi typing/path.cmi \
     typing/ident.cmi typing/common.cmo utils/clflags.cmi 
@@ -451,9 +449,17 @@ liquid/theoremProverSimplify.cmo: typing/predicate.cmi typing/path.cmi \
 liquid/theoremProverSimplify.cmx: typing/predicate.cmx typing/path.cmx \
     utils/misc.cmx liquid/message.cmx typing/ident.cmx utils/clflags.cmx 
 liquid/theoremProverYices.cmo: typing/predicate.cmi typing/path.cmi \
-    utils/misc.cmi typing/ident.cmi utils/clflags.cmi utils/bstats.cmi 
+    utils/misc.cmi typing/ident.cmi typing/common.cmo utils/clflags.cmi \
+    utils/bstats.cmi 
 liquid/theoremProverYices.cmx: typing/predicate.cmx typing/path.cmx \
-    utils/misc.cmx typing/ident.cmx utils/clflags.cmx utils/bstats.cmx 
+    utils/misc.cmx typing/ident.cmx typing/common.cmx utils/clflags.cmx \
+    utils/bstats.cmx 
+liquid/theoremProverZ3.cmo: typing/predicate.cmi typing/path.cmi \
+    utils/misc.cmi typing/ident.cmi typing/common.cmo utils/clflags.cmi \
+    utils/bstats.cmi 
+liquid/theoremProverZ3.cmx: typing/predicate.cmx typing/path.cmx \
+    utils/misc.cmx typing/ident.cmx typing/common.cmx utils/clflags.cmx \
+    utils/bstats.cmx 
 liquid/wellformed.cmo: typing/predicate.cmi typing/predef.cmi typing/path.cmi \
     liquid/lightenv.cmo typing/ident.cmi liquid/frame.cmi typing/common.cmo \
     liquid/builtins.cmo utils/bstats.cmi liquid/wellformed.cmi 
