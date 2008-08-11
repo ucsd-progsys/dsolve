@@ -715,7 +715,7 @@ let rec copy_type = function
 
 let kill_top_recref env t f = match f with
   | Fsum (_, Some _, _, _) -> set_recref (mk_recref null_refinement env t) f
-  | _      -> f
+  | _                      -> f
 
 (* Create a fresh frame with the same shape as the type of [exp] using
    [fresh_ref_var] to create new refinement variables. *)
