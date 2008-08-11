@@ -612,6 +612,10 @@ let fresh_refinementvar () =
 let fresh_fvar level = Fvar (Path.mk_ident "a", level, empty_refinement)
 
 let rec canonicalize t =
+  begin match t.desc with
+    | Tlink t' -> t.id <- t'.id; t.level <- t'.level; t.desc <- t'.desc
+    | _        -> ()
+  end;
   let t = repr t in
     begin match t.desc with
       | Tvar -> ()
