@@ -643,7 +643,6 @@ let fresh_constructor env fresh param_vars ty cstr =
   let _           = Ctype.end_def () in
   let _           = List.iter Ctype.generalize args; Ctype.generalize res in
   let _           = close_constructor res args; Ctype.unify env res ty in
-  let (res, args) = (canonicalize res, List.map canonicalize args) in
   let ids         = Misc.mapi (fun _ i -> C.tuple_elem_id i) args in
   let fs          = List.map fresh args in
   let vs          = List.map (fun t -> try List.assoc t param_vars with Not_found -> Covariant) args in
@@ -688,7 +687,7 @@ let null_refinement =
 let cstr_refinements freshref cstr =
   let (args, res) = Ctype.instance_constructor cstr in
   let _           = close_constructor res args in
-  let (res, args) = (canonicalize res, List.map canonicalize args) in
+  let (args, res) = (List.map canonicalize args, canonicalize res) in
     List.map (fun t -> if t = res || !Clflags.no_recrefs then null_refinement else freshref) args
 
 let mk_recref freshref env t =
