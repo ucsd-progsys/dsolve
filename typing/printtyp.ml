@@ -101,7 +101,7 @@ let rec list_of_memo = function
 
 let visited = ref []
 let rec raw_type ppf ty =
-  let ty = safe_repr [] ty in
+(*  let ty = safe_repr [] ty in - pmr: this hides links from us *)
   if List.memq ty !visited then fprintf ppf "{id=%d}" ty.id else begin
     visited := ty :: !visited;
     fprintf ppf "@[<1>{id=%d;level=%d;desc=@,%a}@]" ty.id ty.level
