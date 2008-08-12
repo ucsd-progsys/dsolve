@@ -600,11 +600,11 @@ let translate_variance = function
   | (true, true, true) -> Invariant
   | (true, false, false) -> Covariant
   | (false, true, false) -> Contravariant
-  | (a, b, c) -> printf "@[(%b,@ %b,@ %b)@]@." a b c; assert false
+  | (a, b, c) -> printf "@[Got gibberish variance (%b, %b, %b)@]@." a b c; assert false
 
 let mutable_variance = function
   | Mutable -> Invariant
-  | _ -> Covariant
+  | _       -> Covariant
 
 let fresh_refinementvar () =
   mk_refinement [] [] [Path.mk_ident "k"]
@@ -641,7 +641,7 @@ let fresh_record fresh env p fields tyformals tyactuals =
   let fields              = C.combine3 names mutas tys in
     record_of_params p (List.map (fresh_field fresh) fields) empty_refinement
 
-let fresh_constructor env fresh param_vars ty cstr =
+let fresh_constructor env fresh ty cstr =
   let _           = Ctype.begin_def () in
   let (args, res) = Ctype.instance_constructor cstr in
   let _           = Ctype.end_def () in
@@ -650,25 +650,27 @@ let fresh_constructor env fresh param_vars ty cstr =
   let (res, args) = (canonicalize res, List.map canonicalize args) in
   let ids         = Misc.mapi (fun _ i -> C.tuple_elem_id i) args in
   let fs          = List.map fresh args in
-  let vs          = List.map (fun t -> try List.assoc t param_vars with Not_found -> Covariant) args in
+  let vs          = List.map (fun _ -> Covariant) fs in
     (cstr.cstr_tag, C.combine3 ids fs vs)
 
-let fresh_sum fresh env p t tyl varis =
-  let param_vars = List.combine tyl varis in
+let fresh_sum fresh env p t tyl =
   let (_, cds)   = List.split (Env.constructors_of_type p (Env.find_type p env)) in
-    Fsum (p, None, List.map (fresh_constructor env fresh param_vars t) cds, empty_refinement)
+    Fsum (p, None, List.map (fresh_constructor env fresh t) cds, empty_refinement)
+
+let verify_covariance = function
+  | (_, false, false) -> ()
+  | (a, b, c)         -> failwith "Don't support non-covariant params in concrete types"
 
 let fresh_constr fresh env p t tyl =
-  let params  = List.map fresh tyl in
   let ty_decl = Env.find_type p env in
-  let varis   = List.map translate_variance ty_decl.type_variance in
     match ty_decl.type_kind with
       | Type_abstract ->
-          abstract_of_params p params varis empty_refinement
-      | Type_record (fields, _, _) -> (* 1 *)
+          abstract_of_params p (List.map fresh tyl) (List.map translate_variance ty_decl.type_variance) empty_refinement
+      | Type_record (fields, _, _) ->
           fresh_record fresh env p fields ty_decl.type_params tyl
       | Type_variant _ ->
-          fresh_sum fresh env p t tyl varis
+          let _ = List.iter verify_covariance ty_decl.type_variance in
+            fresh_sum fresh env p t tyl
 
 let close_recf (rp, rr) = function
   | Fsum (p, _, cs, r) ->
