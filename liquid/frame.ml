@@ -622,8 +622,11 @@ let rec canonicalize t =
       | _    -> t.id <- 0
     end; Btype.iter_type_expr (fun t -> ignore (canonicalize t)) t; t
 
+let is_recursive_instance t t' =
+  t.desc = t'.desc
+
 let close_arg res arg =
-  if res.desc = arg.desc then link_type arg res
+  if is_recursive_instance res arg then link_type arg res
 
 let close_constructor res args =
   List.iter (fun a -> Btype.iter_type_expr (close_arg res) a; close_arg res a) args
@@ -691,11 +694,14 @@ let fresh_rec fresh env (rv, rr) level t = match t.desc with
 let null_refinement =
   mk_refinement [] [] []
 
+let param_refinements freshref res args =
+  List.map (fun t -> if is_recursive_instance res t || !Clflags.no_recrefs then null_refinement else freshref) args
+
 let cstr_refinements freshref cstr =
   let (args, res) = Ctype.instance_constructor cstr in
   let _           = close_constructor res args in
   let (res, args) = (canonicalize res, List.map canonicalize args) in
-    List.map (fun t -> if t = res || !Clflags.no_recrefs then null_refinement else freshref) args
+    param_refinements freshref res args
 
 let mk_recref freshref env t =
   match t.desc with
