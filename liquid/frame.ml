@@ -631,17 +631,23 @@ let close_arg res arg =
 let close_constructor res args =
   List.iter (fun a -> Btype.iter_type_expr (close_arg res) a; close_arg res a) args
 
+let instance_record field_tys param_tys =
+  let _                      = Ctype.begin_def () in
+  let (field_tys, param_tys) = Ctype.instance_lists field_tys param_tys in
+  let _                      = Ctype.end_def () in
+    (field_tys, param_tys)
+
 let fresh_field fresh (name, muta, t) =
   (Ident.create name, fresh t, mutable_variance muta)
 
-let fresh_record fresh env p fields tyformals tyactuals =
-  let (names, mutas, tys) = C.split3 fields in
-  let _                   = Ctype.begin_def () in
-  let (tys, tyformals)    = Ctype.instance_lists tys tyformals in
-  let _                   = Ctype.end_def () in
-  let _                   = List.iter Ctype.generalize tyformals in
-  let _                   = List.iter2 (Ctype.unify env) tyformals tyactuals in
-  let fields              = C.combine3 names mutas tys in
+let fresh_record fresh env p fields t formal_tys actual_tys =
+  let (names, mutas, field_tys) = C.split3 fields in
+  let (field_tys, formal_tys)   = instance_record field_tys formal_tys in
+  let _                         = List.iter Ctype.generalize formal_tys in
+  let _                         = List.iter2 (Ctype.unify env) formal_tys actual_tys in
+  let field_tys                 = List.map canonicalize field_tys in
+  let _                         = close_constructor t field_tys in
+  let fields                    = C.combine3 names mutas field_tys in
     record_of_params p (List.map (fresh_field fresh) fields) empty_refinement
 
 let fresh_constructor env fresh ty cstr =
@@ -670,7 +676,7 @@ let fresh_constr fresh env p t tyl =
       | Type_abstract ->
           abstract_of_params p (List.map fresh tyl) (List.map translate_variance ty_decl.type_variance) empty_refinement
       | Type_record (fields, _, _) ->
-          fresh_record fresh env p fields ty_decl.type_params tyl
+          fresh_record fresh env p fields t ty_decl.type_params tyl
       | Type_variant _ ->
           let _ = List.iter verify_covariance ty_decl.type_variance in
             fresh_sum fresh env p t tyl
@@ -705,9 +711,19 @@ let cstr_refinements freshref cstr =
 
 let mk_recref freshref env t =
   match t.desc with
-    | Tconstr (p, tyl, _) ->
-        let (_, cstrs) = List.split (Env.constructors_of_type p (Env.find_type p env)) in
-          List.map (cstr_refinements freshref) cstrs
+    | Tconstr (p, _, _) ->
+        let ty_decl = Env.find_type p env in
+          begin match ty_decl.type_kind with
+            | Type_record (fields, _, _) ->
+                let (_, _, field_tys)       = C.split3 fields in
+                let (field_tys, formal_tys) = instance_record field_tys ty_decl.type_params in
+                let field_tys               = List.map canonicalize field_tys in
+                let t                       = canonicalize {t with desc = Tconstr (p, formal_tys, ref Mnil)} in
+                  [param_refinements freshref t field_tys]
+            | _ ->
+                let (_, cstrs) = List.split (Env.constructors_of_type p ty_decl) in
+                  List.map (cstr_refinements freshref) cstrs
+          end
     | _ -> []
 
 let mk_recvar env t =
@@ -740,6 +756,10 @@ let fresh_with_var_fun env freshf t =
   let rec fm t =
     let level = (repr t).level in
     let t     = canonicalize t in
+    (* By freshing the parameters first, we avoid the scenario where a non-recursive type
+       erroneously becomes recursive through its instantiated parameters.
+       (e.g., a non-recursive 'a t instantiated with b, where b contains b t.) *)
+    let _     = match t.desc with Tconstr (_, param_tys, _) -> ignore (List.map fm param_tys) | _ -> () in
       if Hashtbl.mem tbl t then
         Hashtbl.find tbl t
       else

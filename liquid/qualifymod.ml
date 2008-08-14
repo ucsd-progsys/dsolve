@@ -194,12 +194,12 @@ and constrain_record (env, guard, f) labeled_exprs =
   let (fs, subexp_cs) = constrain_subexprs env guard sorted_exprs in
   let to_field (id, _, v) f = (id, f, v) in
   let field_qualifier (id, _, _) fexpr = B.field_eq_qualifier id (expression_to_pexpr fexpr) in
-  let f = F.record_of_params p (List.map2 to_field ps fs) (F.mk_refinement [] (List.map2 field_qualifier ps sorted_exprs) []) in
-    (f, [WFFrame (env, f)], subexp_cs)
+  let f' = F.record_of_params p (List.map2 to_field ps fs) (F.mk_refinement [] (List.map2 field_qualifier ps sorted_exprs) []) in
+    (constrain_fold (env, guard, f) f' F.empty_refinement F.empty_refinement [] subexp_cs)
 
 and constrain_field (env, guard, _) expr label_desc =
   let (recframe, cstrs) = constrain expr env guard in
-  let (fieldname, fieldframe) = match recframe with
+  let (fieldname, fieldframe) = match F.unfold_applying recframe with
     | F.Fsum (_, _, [(_, ps)], _) -> (match List.nth ps label_desc.lbl_pos with (i, f, _) -> (i, f))
     | _ -> assert false
   in
