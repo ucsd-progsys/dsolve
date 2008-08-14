@@ -202,10 +202,7 @@ and constrain_field (env, guard, _) expr label_desc =
   let (fieldname, fieldframe) = match F.unfold_applying recframe with
     | F.Fsum (_, _, [(_, ps)], _) -> (match List.nth ps label_desc.lbl_pos with (i, f, _) -> (i, f))
     | _ -> assert false
-  in
-  let pexpr = P.Field (fieldname, expression_to_pexpr expr) in
-  let f = F.apply_refinement (B.equality_refinement pexpr) fieldframe in
-    (f, [WFFrame (env, f)], cstrs)
+  in (fieldframe, [WFFrame (env, fieldframe)], cstrs)
 
 and constrain_if (env, guard, f) e1 e2 e3 =
   let (f1, cstrs1) = constrain e1 env guard in
