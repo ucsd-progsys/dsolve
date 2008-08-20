@@ -56,6 +56,7 @@ val dump_instr : bool ref
 val dump_constraints: bool ref
 val dump_ref_constraints: bool ref
 val dump_ref_vars: bool ref
+val print_subs: bool ref
 val dump_qexprs: bool ref
 val dump_qualifs: bool ref
 val dump_queries: bool ref
