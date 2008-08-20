@@ -390,9 +390,11 @@ let space ppf =
   fprintf ppf "@;<0 1>"
 
 let pprint_refexpr ppf (subs, (qconsts, qvars)) =
-  fprintf ppf "%a@;<1 0>%a"
+    fprintf ppf "[%a]@;<1 0>%a@;<1 0>%a"
+    pprint_subs subs
     (Oprint.print_list (fun ppf q -> Predicate.pprint ppf
-                          (Predicate.apply_substs subs (pred_of_qual q))) space) qconsts
+                          (*(Predicate.apply_substs subs (pred_of_qual q)))
+    * space)*) (pred_of_qual q)) space) qconsts
     (Oprint.print_list (fun ppf v -> fprintf ppf "%s" (C.path_name v)) space) qvars
 
 let pprint_refinement ppf res =
