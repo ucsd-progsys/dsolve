@@ -1,3 +1,14 @@
+Compiling dsolve under Linux w/ Z3
+=============================
+
+dsolve requires OCaml 3.10+, camlidl 1.05+
+
+1. Download and install camlidl
+2. ./configure
+3. make -f Makefile.z3 libs
+4. ./makez3
+
+
 Compiling dsolve under Cygwin w/ gcc
 =============================
 
