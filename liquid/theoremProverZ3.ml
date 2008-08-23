@@ -237,10 +237,10 @@ module Prover : PROVER =
         Z3.pop me.c 1 
 
     let valid me p =
-      if unsat me then true else 
-        let _  = push me (P.Not p) in
-        let rv = unsat me in
-        let _  = pop me in rv
+      (* if unsat me then true else *) 
+      let _  = push me (P.Not p) in
+      let rv = unsat me in
+      let _  = pop me in rv
     
     let me = 
       let c = Z3.mk_context_x [|("MODEL", "false")|] in

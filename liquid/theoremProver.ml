@@ -121,34 +121,36 @@ let reset () =
   nb_cache_hits := 0;
   nb_qp_miss := 0
 
-(*
-let imp_to_string p q = 
-  Printf.sprintf "%s => %s" (C.pred_to_string p) (C.pred_to_string q)
-*)
+(* API *)
+let set ps =
+  let _ = incr nb_push in 
+  let ps = List.map fixdiv ps in
+  (* C.cprintf C.ol_refine "@[TP implies: %a@ \n@]" P.pprint p *)
+  Prover.set ps
 
+(* API *)
+let valid q = 
+  incr nb_queries; 
+  let q = fixdiv q in
+  Prover.valid q
+
+(* API *)
+let finish () = 
+  Prover.finish ()
+  
+(* 
 (* API *)
 let implies p = 
   let _ = incr nb_push in
   let p = fixdiv p in
-  (*let lhs = p in*)
-  (*let lhs = C.elevate_olev C.ol_unique_names; Buffer.clear buftlhs; 
-            Format.fprintf lhsform "%a@." P.pprint p; C.restore_olev; 
-            Buffer.contents buftlhs in*)
-  let check_yi = Bstats.time "YI implies(1)" Prover.implies p in
-  fun q -> 
-    let q = incr nb_queries; fixdiv q in
-    (*let rhs = q in*)
-    (*let rhs = C.elevate_olev C.ol_unique_names; Buffer.clear buftrhs; 
-              Format.fprintf rhsform "%a@." P.pprint q; C.restore_olev; 
-              Buffer.contents buftrhs in
-    try incr nb_cache_hits; Hashtbl.find qcachet (lhs, rhs)
-      with Not_found ->*) 
-        let rr = Bstats.time "YI implies(2)" check_yi q in 
-        (*(decr nb_cache_hits; incr nb_cache_misses; Hashtbl.replace qcachet (lhs, rhs) rr; rr)*) rr
+  let _ = C.cprintf C.ol_refine "@[TP implies: %a@ \n@]" P.pprint p in
+  let check_yi = Bstats.time "TP implies(1)" Prover.implies p in
+  (fun q -> 
+    let q = fixdiv q in
+    incr nb_queries; 
+    Bstats.time "TP implies(2)" check_yi q)
+*)
 
-
-let finish () = 
-  Prover.finish ()
 
 (* {{{
 

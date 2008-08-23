@@ -1,4 +1,3 @@
-
 let rec inc x = 
   if read_int () < 0 
   then [] 

@@ -46,6 +46,9 @@ let add x y (Env (m, _) as parent) =
 let aliasing_add x y (Env (m, _) as alias) =
   Env (M.add x y m, Alias alias)
 
+let nil_add x y (Env (m, _)) =
+  Env (M.add x y m, Nil)
+
 let maplist f (Env (env, _)) =
   M.fold (fun k v r -> (f k v)::r) env []
 

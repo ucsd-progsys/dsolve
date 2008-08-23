@@ -378,7 +378,7 @@ let rec subt t1 t2 =
 (**************************************************************)
 
 let pprint_sub ppf (path, pexp) =
-  fprintf ppf "@[%s@ ->@ %a@]" (Path.name path) Predicate.pprint_pexpr pexp
+  fprintf ppf "@[(%s@ ->@ %a)@]" (Path.unique_name path) Predicate.pprint_pexpr pexp
 
 let pprint_subs ppf subs =
   Oprint.print_list pprint_sub (fun ppf -> fprintf ppf ";@ ") ppf subs
@@ -391,8 +391,9 @@ let space ppf =
 
 let pprint_refexpr ppf (subs, (qconsts, qvars)) =
   fprintf ppf "%a@;<1 0>%a"
-    (Oprint.print_list (fun ppf q -> Predicate.pprint ppf
-                          (Predicate.apply_substs subs (pred_of_qual q))) space) qconsts
+    (* (Oprint.print_list (fun ppf q -> Predicate.pprint ppf
+                          (Predicate.apply_substs subs (pred_of_qual q))) space) qconsts *)
+    (Oprint.print_list (fun ppf sub -> pprint_sub ppf sub) space) subs
     (Oprint.print_list (fun ppf v -> fprintf ppf "%s" (C.path_name v)) space) qvars
 
 let pprint_refinement ppf res =
@@ -904,29 +905,29 @@ let env_bind env pat frame =
 (******************** Logical embedding ***********************) 
 (**************************************************************)
 
-let refexpr_apply_solution solution (subs, (qconsts, qvars)) =
-  (subs, (qconsts @ C.flap solution qvars, []))
+let refexpr_apply_solution s (subs, (qconsts, qvars)) =
+  (subs, (qconsts @ C.flap s qvars, []))
 
-let apply_solution solution f =
-  map_refexprs (refexpr_apply_solution solution) f
+let apply_solution s f =
+  map_refexprs (refexpr_apply_solution s) f
 
-let refexpr_conjuncts solution qual_expr ((subs, qexprs) as r) =
-  let (_, (quals, _)) = refexpr_apply_solution solution r in
+let refexpr_conjuncts s qual_expr ((subs, qexprs) as r) =
+  let (_, (quals, _)) = refexpr_apply_solution s r in
   let unsubst = List.map (Qualifier.apply qual_expr) quals in
     List.map (Predicate.apply_substs subs) unsubst
 
-let refinement_conjuncts solution qual_expr res =
-  C.flap (refexpr_conjuncts solution qual_expr) res
+let refinement_conjuncts s qexpr res =
+  C.flap (refexpr_conjuncts s qexpr) res
 
-let refinement_predicate solution qual_var refn =
-  Predicate.big_and (refinement_conjuncts solution qual_var refn)
+let refinement_predicate s qvar refn =
+  Predicate.big_and (refinement_conjuncts s qvar refn)
 
-let rec conjunct_fold cs solution qual_expr f = match get_refinement f with
-  | Some r -> refinement_conjuncts solution qual_expr r @ cs
+let rec conjunct_fold cs s qual_expr f = match get_refinement f with
+  | Some r -> refinement_conjuncts s qual_expr r @ cs
   | None   -> cs
 
-let rec conjuncts solution qual_expr fr =
-  conjunct_fold [] solution qual_expr fr
+let rec conjuncts s qexpr fr =
+  conjunct_fold [] s qexpr fr
 
-let predicate solution qual_expr f =
-  Predicate.big_and (conjuncts solution qual_expr f)
+let predicate s qexpr fr =
+  Predicate.big_and (conjuncts s qexpr fr)
