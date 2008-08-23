@@ -149,6 +149,11 @@ module Prover : PROVER =
       let ps' = List.map (yicesPred me) ps in
       Y.yices_mk_and me.c (Array.of_list ps')
 
+    let unsat me =
+      incr nb_yices_unsat;
+      let rv = (Bstats.time "Yices unsat" Y.yices_check me.c) = -1 in
+      rv
+
     let me = 
       let c = Y.yices_mk_context () in
       let _ = if !Clflags.log_queries then Y.yices_enable_log_file "yices.log" else () in
@@ -193,23 +198,22 @@ module Prover : PROVER =
       me.count <- 0;
       me.i <- 0
 
-    let unsat () =
-      incr nb_yices_unsat;
-      let rv = (Bstats.time "Yices unsat" Y.yices_check me.c) = -1 in
-      rv
+(***************************************************************************************)
+(********************** API ************************************************************)
+(***************************************************************************************)
 
     (* API*)
     let set ps = 
       incr nb_yices_set;
       let p' = Bstats.time "mk preds" (yicesPreds me) ps in 
       Bstats.time "Yices push" push p'; 
-      unsat ()
+      unsat me 
 
     (* API *)
     let valid p =
       let np' = Bstats.time "mk pred" (yicesPred me) (Predicate.Not p) in 
       let _   = push np' in
-      let rv  = unsat () in
+      let rv  = unsat me in
       let _   = pop () in rv
     
     (* API *)

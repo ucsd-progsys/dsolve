@@ -130,10 +130,10 @@ module Prover : PROVER =
     }
 
     (* stats *)
-    let nb_z3_push = ref 0
+    let nb_z3_push  = ref 0
     let nb_z3_unsat = ref 0
-    let nb_z3_pop = ref 0
-    let nb_implies_api = ref 0
+    let nb_z3_pop   = ref 0
+    let nb_z3_set   = ref 0
 
     let fresh =
       let x = ref 0 in
@@ -189,31 +189,36 @@ module Prover : PROVER =
       | P.Atom (e1,P.Ge,e2) -> Z3.mk_ge me.c (z3Exp me e1) (z3Exp me e2)
       | P.Atom (e1,P.Lt,e2) -> Z3.mk_lt me.c (z3Exp me e1) (z3Exp me e2)
       | P.Atom (e1,P.Le,e2) -> Z3.mk_le me.c (z3Exp me e1) (z3Exp me e2)
-   
+
+    let z3Preds me ps = 
+      let ps' = List.map (z3Pred me) ps in
+      Z3.mk_and me.c (Array.of_list ps')
+
     let unsat me =
       let _ = incr nb_z3_unsat in
       let rv = (Bstats.time "Z3 unsat" Z3.check me.c) = Z3.L_FALSE in
       rv
 
+       (* 
     let p2s p = 
       Predicate.pprint Format.str_formatter p;
       Format.flush_str_formatter ()
-
-    (* let z3Pred_wrap me p = 
+ 
+    let z3Pred_wrap me p = 
       let _  = force_print ("z3Pred: in = "^(p2s p)^"\n") in 
       let zp = z3Pred me p in
       let _  = force_print ("z3Pred: out = "^(Z3.ast_to_string me.c zp)^"\n") in
       if not (Z3.type_check me.c zp) then failwith "Dsolve-Z3 type error" else
         zp *)
 
-    let push me p =
+    let push me p' =
       let _ = incr nb_z3_push in
       let _ = me.count <- me.count + 1 in
       if unsat me then me.i <- me.i + 1 else
         (* let zp = z3Pred me p in *)
         let _  = me.vars <- Barrier :: me.vars in
         let _  = Z3.push me.c in
-        Bstats.time "Z3 assert" (Z3.assert_cnstr me.c) (z3Pred me p) 
+        Bstats.time "Z3 assert" (Z3.assert_cnstr me.c) p' 
 
     let rec vpop (cs,s) =
       match s with 
@@ -236,30 +241,29 @@ module Prover : PROVER =
         let _ = List.iter (remove_decl me) cs in
         Z3.pop me.c 1 
 
-    let valid me p =
-      (* if unsat me then true else *) 
-      let _  = push me (P.Not p) in
-      let rv = unsat me in
-      let _  = pop me in rv
-    
     let me = 
       let c = Z3.mk_context_x [|("MODEL", "false")|] in
-      (* let _ = if !Clflags.log_queries then ignore (Z3.trace_to_file c "z3.log") in *) 
       let tint = Z3.mk_int_type c in
       let vart = Hashtbl.create 37 in
       let funt = Hashtbl.create 37 in
       { c = c; tint = tint; vart = vart ; funt= funt; 
         vars = []; count = 0; i = 0}
 
-
 (***************************************************************************************)
 (********************** API ************************************************************)
 (***************************************************************************************)
 
-    let implies p =
-      let _ = incr nb_implies_api in
-      let _ =  Bstats.time "Z3 push" (push me) p in
-      fun q -> Bstats.time "Z3 valid" (valid me) q
+    let set ps = 
+      incr nb_z3_set;
+      let p' = Bstats.time "mk preds" (z3Preds me) ps in 
+      Bstats.time "z3 push" push p'; 
+      unsat me 
+
+    let valid me p =
+      let np' = Bstats.time "mk pred" (z3Pred me) (P.Not p) in 
+      let _   = push me np' in
+      let rv  = unsat me in
+      let _   = pop me in rv
 
     let finish () = 
       Bstats.time "Z3 pop" pop me; 
