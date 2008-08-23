@@ -43,12 +43,16 @@ module type PROVER =
     val valid : Predicate.t -> bool
     *)
 
-    (* implies p q = true iff predicate p (provably) implies predicate q *)
-    val implies : Predicate.t -> Predicate.t -> bool
+    (* usage: set.valid*.finish *)
 
+    val set     : Predicate.t list -> bool 
+    val valid   : Predicate.t -> bool
     val finish : unit -> unit
-
     val print_stats : Format.formatter -> unit -> unit
+    
+    (* implies p q = true iff predicate p (provably) implies predicate q *)
+    (* val implies : Predicate.t -> Predicate.t -> bool *)
+
   end
 
 
@@ -69,11 +73,12 @@ module Prover : PROVER =
     }
 
     (* stats *)
-    let nb_yices_push = ref 0
-    let nb_yices_unsat = ref 0
-    let nb_yices_pop = ref 0
-    let nb_implies_api = ref 0
-
+    let nb_yices_push   = ref 0
+    let nb_yices_unsat  = ref 0
+    let nb_yices_pop    = ref 0
+    let nb_yices_set    = ref 0
+    let nb_yices_check  = ref 0
+    
     let barrier = "0" 
 
     let yicesVar me s ty =
@@ -139,7 +144,15 @@ module Prover : PROVER =
            | Predicate.Ge -> Y.yices_mk_ge me.c e1' e2'
            | Predicate.Lt -> Y.yices_mk_lt me.c e1' e2'
            | Predicate.Le -> Y.yices_mk_le me.c e1' e2')
-   
+
+    let yicesPreds me ps = 
+      let ps' = List.map (yicesPred me) ps in
+      Y.yices_mk_and me.c (Array.of_list ps')
+
+    let unsat me =
+      incr nb_yices_unsat;
+      let rv = (Bstats.time "Yices unsat" Y.yices_check me.c) = -1 in
+      rv
 
     let me = 
       let c = Y.yices_mk_context () in
@@ -151,14 +164,13 @@ module Prover : PROVER =
         { c = c; t = t; f = f; binop = binop; d = d; 
           ds = []; count = 0; i = 0; consistent = true}
 
-    let push p =
+    let push p' =
       let _ = incr nb_yices_push in
       me.count <- me.count + 1;
-      if Y.yices_inconsistent me.c = 1
+      if Bstats.time "incons" Y.yices_inconsistent me.c = 1
       then me.i <- me.i + 1 else
-        let p' = yicesPred me p in
         let _ = me.ds <- barrier :: me.ds in
-        let _ = Y.yices_push me.c in
+        let _ = Bstats.time "push" Y.yices_push me.c in
         Bstats.time "Yices assert" (Y.yices_assert me.c) p' 
       
     let rec vpop (cs,s) =
@@ -186,26 +198,35 @@ module Prover : PROVER =
       me.count <- 0;
       me.i <- 0
 
-    let unsat () =
-      let _ = incr nb_yices_unsat in
-      let rv = (Bstats.time "Yices unsat" Y.yices_check me.c) = -1 in
-      rv
+(***************************************************************************************)
+(********************** API ************************************************************)
+(***************************************************************************************)
 
+    (* API*)
+    let set ps = 
+      incr nb_yices_set;
+      let p' = Bstats.time "mk preds" (yicesPreds me) ps in 
+      Bstats.time "Yices push" push p'; 
+      unsat me 
+
+    (* API *)
     let valid p =
-      if unsat () then true else 
-        let _ = push (Predicate.Not p) in
-        let rv = unsat () in
-        let _ = pop () in rv
+      let np' = Bstats.time "mk pred" (yicesPred me) (Predicate.Not p) in 
+      let _   = push np' in
+      let rv  = unsat me in
+      let _   = pop () in rv
     
-    let implies p =
-      let _ = incr nb_implies_api in
-      let _ = Bstats.time "Yices push" push p in
-      fun q -> Bstats.time "Yices valid" valid q
-
+    (* API *)
     let finish () = 
       Bstats.time "YI pop" pop (); 
       assert (me.count = 0)
   
+    (* API *)
+    let print_stats ppf () = 
+      Format.fprintf ppf 
+      "@[implies(API):@ %i,@ Yices@ {pushes:@ %i,@ pops:@ %i,@ unsats:@ %i}@]"
+      !nb_yices_set !nb_yices_push !nb_yices_pop !nb_yices_unsat
+
 (*
   let implies p q = 
       let _ = (* Bstats.time "pushing p" *) push p in
@@ -215,8 +236,4 @@ module Prover : PROVER =
   let finish () = ()
 *)
   
-  let print_stats ppf () = 
-          Format.fprintf ppf "@[implies(API):@ %i,@ Yices@ {pushes:@ %i,@ pops:@ %i,@ unsats:@ %i}@]"
-      !nb_implies_api !nb_yices_push !nb_yices_pop !nb_yices_unsat
-
-end
+  end
