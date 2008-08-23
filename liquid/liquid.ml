@@ -174,6 +174,7 @@ let main () =
      "-dinstr", Arg.Set dump_instr, " (undocumented)";
      "-dconstrs", Arg.Set dump_constraints, "print out frame constraints";
      "-drconstrs", Arg.Set dump_ref_constraints, "print out refinement constraints";
+     "-dsubs", Arg.Set print_subs, "print subs and unsubbed predicates";
      "-drvars", Arg.Set dump_ref_vars, "print out variables associated with refinement constraints";
      "-dqexprs", Arg.Set dump_qexprs, "print out all subexpressions with their qualified types";
      "-dqualifs", Arg.String (fun s -> dump_qualifs := true; Qdump.patf := s), "<file> dump qualifiers for patterns in <file>";
