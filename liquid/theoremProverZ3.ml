@@ -98,19 +98,12 @@ let z3_mk_app c f zea =
 
 (***************************************************************)
 
-
-module type PROVER = 
+  module type PROVER = 
   sig
-    (** 
-     implies p q = true iff predicate p (provably) implies predicate q 
-     *)
-    val implies : P.t -> P.t -> bool
-    
-    (** 
-     finish () undoes any pushing 
-     *)
+    (* usage: set.valid*.finish *)
+    val set     : Predicate.t list -> bool 
+    val valid   : Predicate.t -> bool
     val finish : unit -> unit
-    
     val print_stats : Format.formatter -> unit -> unit
   end
 
@@ -259,7 +252,7 @@ module Prover : PROVER =
       Bstats.time "z3 push" (push me) p'; 
       unsat me 
 
-    let valid me p =
+    let valid p =
       let np' = Bstats.time "mk pred" (z3Pred me) (P.Not p) in 
       let _   = push me np' in
       let rv  = unsat me in
@@ -271,7 +264,7 @@ module Prover : PROVER =
  
     let print_stats ppf () = 
       Format.fprintf ppf "@[implies(API):@ %i,@ Z3@ {pushes:@ %i,@ pops:@ %i,@ unsats:@ %i}@]"
-      !nb_implies_api !nb_z3_push !nb_z3_pop !nb_z3_unsat
+      !nb_z3_set !nb_z3_push !nb_z3_pop !nb_z3_unsat
 
 end
 

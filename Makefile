@@ -9,6 +9,8 @@ CAMLLEX=ocamllex
 CAMLDEP=ocamldep
 DEPFLAGS=$(INCLUDES)
 COMPFLAGS=$(FLAGS) -g -dtypes -warn-error A $(INCLUDES)
+LIBZ3=-cclib -lz3#-gmp
+
 LINKFLAGS=$(FLAGS) -cclib -lstdc++ -cclib -loyices -cclib -lgmp -cclib -lyices \
           -I external/yices/lib/ -I external/ocamlgraph/ -I $(QPHOME)
 INCLUDES=-I external/yices/lib/ -I external/ocamlgraph/ -I $(QPHOME) \
