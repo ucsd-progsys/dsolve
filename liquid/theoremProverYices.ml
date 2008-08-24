@@ -29,30 +29,11 @@ module C = Common
 
 module type PROVER = 
   sig
-    (*
-    (* push p: tell prover to assume fact p *)
-    val push : Predicate.t -> unit 
-    
-    (* pop () : tell prover to un-assume last assumed fact *)
-    val pop : unit -> unit 
-    
-    (* reset (): tell prover to remove all assumed facts *)
-    val reset : unit -> unit 
-    
-    (* valid p : do the currently assumed facts imply p ? *)
-    val valid : Predicate.t -> bool
-    *)
-
     (* usage: set.valid*.finish *)
-
     val set     : Predicate.t list -> bool 
     val valid   : Predicate.t -> bool
     val finish : unit -> unit
     val print_stats : Format.formatter -> unit -> unit
-    
-    (* implies p q = true iff predicate p (provably) implies predicate q *)
-    (* val implies : Predicate.t -> Predicate.t -> bool *)
-
   end
 
 
