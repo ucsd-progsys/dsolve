@@ -256,7 +256,7 @@ module Prover : PROVER =
     let set ps = 
       incr nb_z3_set;
       let p' = Bstats.time "mk preds" (z3Preds me) ps in 
-      Bstats.time "z3 push" push p'; 
+      Bstats.time "z3 push" (push me) p'; 
       unsat me 
 
     let valid me p =
