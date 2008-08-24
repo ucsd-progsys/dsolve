@@ -11,9 +11,12 @@ DEPFLAGS=$(INCLUDES)
 COMPFLAGS=$(FLAGS) -g -dtypes -warn-error A $(INCLUDES)
 LIBZ3=-cclib -lz3#-gmp
 
-LINKFLAGS=$(FLAGS) -cclib -lstdc++ -cclib -loyices -cclib -lgmp -cclib -lyices \
-          -I external/yices/lib/ -I external/ocamlgraph/ -I $(QPHOME)
-INCLUDES=-I external/yices/lib/ -I external/ocamlgraph/ -I $(QPHOME) \
+LINKFLAGS= -ccopt "-Iexternal/z3/ocaml -Lexternal/z3/lib" $(FLAGS) -cclib -lstdc++ -cclib -loyices -cclib -lgmp -cclib -lyices \
+          -I external/yices/lib/ -I external/ocamlgraph/ -I $(QPHOME) \
+	  -cclib -lstdc++ $(LIBZ3) -cclib -lz3stubs \
+          -I external/ocamlgraph/ -I external/z3/ocaml -I external/z3/bin 
+
+INCLUDES=-I external/z3/ocaml/ -I external/yices/lib/ -I external/ocamlgraph/ -I $(QPHOME) \
          -I utils -I parsing -I typing -I liquid
 
 UTILS=utils/misc.cmo utils/config.cmo \
@@ -44,8 +47,7 @@ LIQUID=liquid/lightenv.cmo \
   liquid/qualifier.cmo liquid/pattern.cmo liquid/frame.cmo \
   liquid/builtins.cmo liquid/wellformed.cmo liquid/message.cmo  \
   liquid/theoremProverSimplify.cmo \
-  liquid/theoremProverYices.cmo \
-  liquid/theoremProverQprover.cmo \
+  liquid/theoremProverYices.cmo liquid/theoremProverQprover.cmo liquid/theoremProverZ3.cmo \
   liquid/theoremProver.cmo \
   liquid/constraint.cmo liquid/measure.cmo \
   liquid/qualifymod.cmo \
@@ -61,7 +63,7 @@ liquid.byte: $(LIQOBJS)
 	$(CAMLC) $(LINKFLAGS) -custom -o liquid.byte str.cma unix.cma nums.cma oyices.cma graph.cma libqp.cma $(LIQOBJS)
 
 liquid.opt: $(LIQOBJS:.cmo=.cmx)
-	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt str.cmxa unix.cmxa nums.cmxa oyices.cmxa graph.cmxa libqp.cmxa $(LIQOBJS:.cmo=.cmx)
+	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt $(LIBDIR)/libcamlidl.a str.cmxa unix.cmxa nums.cmxa oyices.cmxa z3.cmxa graph.cmxa libqp.cmxa $(LIQOBJS:.cmo=.cmx)
 
 .PHONY: tests
 tests:
@@ -77,6 +79,17 @@ clean: partialclean
 	 do rm -f $$d/*.cm* $$d/*.o; \
 	 done);
 	rm -f liquid.byte liquid.opt
+
+libclean: z3clean qpclean graphclean
+
+z3clean:
+	cd external/z3/ocaml; ./clean.sh
+
+qpclean:
+	cd external/qp; make clean
+
+graphclean:
+	cd external/ocamlgraph; make clean
 
 distclean: clean
 	(for d in ./ utils parsing typing tests liquid; \
@@ -157,13 +170,16 @@ beforedepend:: parsing/linenum.ml
 yiceslib:
 	mkdir -p external/yices/include/build; cd external/yices/include/build; $(MAKE) -f ../Makefile;
 
+z3lib:
+	cd external/z3/ocaml; ./build.sh $(LIBDIR)
+
 graphlib:
 	cd external/ocamlgraph; ./configure; $(MAKE) all;
 
 qplib:
 	cd $(QPHOME); $(MAKE) qp.opt; $(MAKE) all
 
-libs: yiceslib graphlib qplib
+libs: yiceslib z3lib graphlib qplib
 
 world: liquid.byte liquid.opt
 
