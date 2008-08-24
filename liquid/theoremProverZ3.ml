@@ -264,7 +264,7 @@ module Prover : PROVER =
  
     let print_stats ppf () = 
       Format.fprintf ppf "@[implies(API):@ %i,@ Z3@ {pushes:@ %i,@ pops:@ %i,@ unsats:@ %i}@]"
-      !nb_implies_api !nb_z3_push !nb_z3_pop !nb_z3_unsat
+      !nb_z3_set !nb_z3_push !nb_z3_pop !nb_z3_unsat
 
 end
 
