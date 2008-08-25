@@ -222,13 +222,6 @@ let apply_subs subs f =
 let refinement_qvars r =
   C.flap (fun (_, (_, qvars)) -> qvars) r
 
-let top_refinement_qvars f = match get_refinement f with
-  | Some r -> refinement_qvars r
-  | None   -> []
-
-let qvars f =
-  refinement_fold false (fun r vs -> refinement_qvars r @ vs) [] f
-
 (**************************************************************)
 (*********** Conversions to/from simple refinements ***********)
 (**************************************************************)

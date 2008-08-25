@@ -96,10 +96,5 @@ let instantiate_about vm (path, valu, pred) =
     with Not_found -> []
 
 let map_pred f (p, v, pred) = 
-  let (v', pred') = f (v, pred) 
-  in (p, v', pred')
-
-(* RJ: this should be removed from the signature *)
-let map_preds f quals =
-  List.map (map_pred f) quals 
-  
+  let (v', pred') = f (v, pred) in
+    (p, v', pred')
