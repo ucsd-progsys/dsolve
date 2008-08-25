@@ -1,3 +1,4 @@
+tests/rec/immut-linklist.ml 4 False
 tests/rec/as-length.ml      4 False
 tests/rec/tuple-length.ml   4 False
 tests/rec/heap.ml           4 False

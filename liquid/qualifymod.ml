@@ -152,9 +152,9 @@ let rec constrain e env guard =
   in log_frame e.exp_loc f; (f, (List.map (label_constraint e) cstrs) @ rec_cstrs)
 
 and constrain_constant path = function
-  | Const_int n -> (B.mk_int [B.equality_qualifier (P.PInt n)], [], [])
-  | Const_float _ -> (B.uFloat, [], [])
-  | Const_char _ -> (B.uChar, [], [])
+  | Const_int n    -> (B.mk_int [B.equality_qualifier (P.PInt n)], [], [])
+  | Const_float _  -> (B.uFloat, [], [])
+  | Const_char _   -> (B.uChar, [], [])
   | Const_string _ -> (B.uString, [], [])
   | _ -> assert false
 
@@ -162,24 +162,23 @@ and replace_params ps fs =
   List.map2 (fun (i, _, v) f -> (i, f, v)) ps fs
 
 and get_cstrrefs path tag args params =
-  let preds = List.map expression_to_pexpr args in
-  let mref = try (B.const_ref [M.mk_qual preds (path, tag)]) with
-                     Not_found -> [] in
+  let preds  = List.map expression_to_pexpr args in
+  let mref   = try (B.const_ref [M.mk_qual preds (path, tag)]) with Not_found -> [] in
   let tagref = B.tag_refinement tag in
   let lhsref = F.empty_refinement in
   let rhsref = mref @ tagref in
-  let wfref = lhsref in
+  let wfref  = lhsref in
     (lhsref, rhsref, wfref) 
 
 and constrain_constructed (env, guard, f) cstrdesc args e =
   match F.unfold (F.fresh_false e.exp_env e.exp_type) with
   | F.Fsum (path, ro, cstrs, _) ->
-      let tag = cstrdesc.cstr_tag in
-      let params = List.assoc tag cstrs in
+      let tag                     = cstrdesc.cstr_tag in
+      let params                  = List.assoc tag cstrs in
       let (lhsref, rhsref, wfref) = get_cstrrefs path tag args params in
-      let (argframes, argcs) = constrain_subexprs env guard args in
-      let cstrs = List.map (fun (t, ps) -> (t, if t = tag then replace_params ps argframes else ps)) cstrs in
-      let f' = F.Fsum (path, ro, cstrs, lhsref) in
+      let (argframes, argcs)      = constrain_subexprs env guard args in
+      let cstrs                   = List.map (fun (t, ps) -> (t, if t = tag then replace_params ps argframes else ps)) cstrs in
+      let f'                      = F.Fsum (path, ro, cstrs, lhsref) in
         (constrain_fold (env, guard, f) f' rhsref wfref [] argcs)
   | _ -> assert false
 
@@ -187,33 +186,34 @@ and constrain_fold (env, guard, f) f'' rhsref wfref cstrs subcstrs =
   let f' = F.unfold_applying f in
     (F.append_refinement rhsref f, WFFrame (env, (F.append_refinement wfref f)) :: SubFrame (env, guard, f'', f') :: cstrs, subcstrs)
 
+and compare_labels ({lbl_pos = n}, _) ({lbl_pos = m}, _) =
+  compare n m
+
 and constrain_record (env, guard, f) labeled_exprs =
-  let compare_labels ({lbl_pos = n}, _) ({lbl_pos = m}, _) = compare n m in
-  let (_, sorted_exprs) = List.split (List.sort compare_labels labeled_exprs) in
-  let (p, ps) = match f with F.Fsum(p, _, [(_, ps)], _) -> (p, ps) | _ -> assert false in
-  let (fs, subexp_cs) = constrain_subexprs env guard sorted_exprs in
-  let to_field (id, _, v) f = (id, f, v) in
+  let (_, sorted_exprs)                = List.split (List.sort compare_labels labeled_exprs) in
+  let (p, ps)                          = match f with F.Fsum(p, _, [(_, ps)], _) -> (p, ps) | _ -> assert false in
+  let (fs, subexp_cs)                  = constrain_subexprs env guard sorted_exprs in
+  let to_field (id, _, v) f            = (id, f, v) in
   let field_qualifier (id, _, _) fexpr = B.field_eq_qualifier id (expression_to_pexpr fexpr) in
-  let f = F.record_of_params p (List.map2 to_field ps fs) (F.mk_refinement [] (List.map2 field_qualifier ps sorted_exprs) []) in
-    (f, [WFFrame (env, f)], subexp_cs)
+  let params                           = List.map2 to_field ps fs in
+  let field_refs                       = F.mk_refinement [] (List.map2 field_qualifier ps sorted_exprs) [] in
+  let f'                               = F.record_of_params p params field_refs in
+    (constrain_fold (env, guard, f) f' F.empty_refinement F.empty_refinement [] subexp_cs)
 
 and constrain_field (env, guard, _) expr label_desc =
-  let (recframe, cstrs) = constrain expr env guard in
-  let (fieldname, fieldframe) = match recframe with
+  let (recframe, cstrs)       = constrain expr env guard in
+  let (fieldname, fieldframe) = match F.unfold_applying recframe with
     | F.Fsum (_, _, [(_, ps)], _) -> (match List.nth ps label_desc.lbl_pos with (i, f, _) -> (i, f))
     | _ -> assert false
-  in
-  let pexpr = P.Field (fieldname, expression_to_pexpr expr) in
-  let f = F.apply_refinement (B.equality_refinement pexpr) fieldframe in
-    (f, [WFFrame (env, f)], cstrs)
+  in (fieldframe, [WFFrame (env, fieldframe)], cstrs)
 
 and constrain_if (env, guard, f) e1 e2 e3 =
   let (f1, cstrs1) = constrain e1 env guard in
-  let guardvar = Path.mk_ident "guard" in
-  let env' = Le.add guardvar f1 env in
-  let guard2 = (guardvar, true)::guard in
+  let guardvar     = Path.mk_ident "guard" in
+  let env'         = Le.add guardvar f1 env in
+  let guard2       = (guardvar, true)::guard in
   let (f2, cstrs2) = constrain e2 env' guard2 in
-  let guard3 = (guardvar, false)::guard in
+  let guard3       = (guardvar, false)::guard in
   let (f3, cstrs3) = constrain e3 env' guard3 in
     (f,
     [WFFrame(env, f); SubFrame(env', guard2, f2, f); SubFrame(env', guard3, f3, f)],
@@ -247,11 +247,12 @@ and constrain_function (env, guard, f) pat e' =
         begin match e'.exp_desc with
           | Texp_function ([(pat', e')], _) ->
               let (f', cs, lcs) = constrain_function (env', guard, unlabelled_f') pat' e' in
-              let f = F.Farrow (Some pat.pat_desc, f, f') in (f, WFFrame (env, f) :: cs, lcs)
+              let f             = F.Farrow (Some pat.pat_desc, f, f') in
+                (f, WFFrame (env, f) :: cs, lcs)
           | _ ->
               let (f'', cstrs) = constrain e' env' guard in
-              let f' = F.label_like unlabelled_f' f'' in
-              let f = F.Farrow (Some pat.pat_desc, f, f') in
+              let f'           = F.label_like unlabelled_f' f'' in
+              let f            = F.Farrow (Some pat.pat_desc, f, f') in
                 (f, [WFFrame (env, f); SubFrame (env', guard, f'', f')], cstrs)
         end
     | _ -> assert false
@@ -285,11 +286,11 @@ and apply_once env guard (f, cstrs, subexp_cstrs) e = match (f, e) with
   | _ -> assert false
 
 and constrain_application (env, guard, _) func exps =
-  let (func_frame, func_cstrs) = constrain func env guard
-  in List.fold_left (apply_once env guard) (func_frame, [], func_cstrs) exps
+  let (func_frame, func_cstrs) = constrain func env guard in
+    List.fold_left (apply_once env guard) (func_frame, [], func_cstrs) exps
 
 and constrain_let (env, guard, f) recflag bindings body =
-  let (env', cstrs1) = constrain_bindings env guard recflag bindings in
+  let (env', cstrs1)       = constrain_bindings env guard recflag bindings in
   let (body_frame, cstrs2) = constrain body env' guard in
   match body.exp_desc with
     | Texp_let _ | Texp_function _ | Texp_ifthenelse _ | Texp_match _ ->
@@ -300,13 +301,13 @@ and constrain_let (env, guard, f) recflag bindings body =
 
 and constrain_array (env, guard, f) elements =
   let (f, fa) =
-    (match f with
+    match f with
       | F.Fabstract(p, ([(_, fa, _)] as ps), _) ->
           (F.Fabstract(p, ps, B.size_lit_refinement(List.length elements)), fa)
-      | _ -> assert false) in
+      | _ -> assert false in
   let list_rec (fs, c) e = (fun (f, cs) -> (f::fs, cs @ c)) (constrain e env guard) in
-  let (fs', sub_cs) = List.fold_left list_rec ([], []) elements in
-  let mksub b a = SubFrame(env, guard, a, b) in
+  let (fs', sub_cs)      = List.fold_left list_rec ([], []) elements in
+  let mksub b a          = SubFrame(env, guard, a, b) in
     (f, WFFrame(env, f) :: List.map (mksub fa) fs', sub_cs)
 
 and constrain_sequence (env, guard, _) e1 e2 =
@@ -318,16 +319,17 @@ and elem_qualifier fexpr n =
 
 and constrain_tuple (env, guard, _) es =
   let (fs, subexp_cs) = constrain_subexprs env guard es in
-  let f = F.tuple_of_frames fs (F.mk_refinement [] (Misc.mapi elem_qualifier es) []) in
+  let f               = F.tuple_of_frames fs (F.mk_refinement [] (Misc.mapi elem_qualifier es) []) in
     (f, [WFFrame(env, f)], subexp_cs)
 
 and constrain_assertfalse (env, _, _) tenv ty =
-  let f = F.fresh_false tenv ty in (f, [WFFrame (env, f)], [])
+  let f = F.fresh_false tenv ty in
+    (f, [WFFrame (env, f)], [])
 
 and constrain_assert (env, guard, _) e =
   let (f, cstrs) = constrain e env guard in
-  let guardvar = Path.mk_ident "assert_guard" in
-  let env = Le.add guardvar f env in
+  let guardvar   = Path.mk_ident "assert_guard" in
+  let env        = Le.add guardvar f env in
   let assert_qualifier =
     (Path.mk_ident "assertion",
      Path.mk_ident "null",
@@ -336,7 +338,7 @@ and constrain_assert (env, guard, _) e =
 
 and constrain_and_bind guard (env, cstrs) (pat, e) =
   let (f, cstrs') = F.begin_def (); let r = constrain e env guard in F.end_def (); r in
-  let env = bind env guard pat (F.generalize f) (expression_to_pexpr e) in
+  let env         = bind env guard pat (F.generalize f) (expression_to_pexpr e) in
     (env, cstrs @ cstrs')
 
 and bind_all bindings fs tenv env guard =
@@ -346,26 +348,26 @@ and constrain_bindings env guard recflag bindings =
   match recflag with
   | Default | Nonrecursive -> List.fold_left (constrain_and_bind guard) (env, []) bindings
   | Recursive ->
-    let tenv = (snd (List.hd bindings)).exp_env in
+    let tenv       = (snd (List.hd bindings)).exp_env in
     let (_, exprs) = List.split bindings in
-    let bindings = List.map (fun (p, e) -> (p, e, expression_to_pexpr e)) bindings in
+    let bindings   = List.map (fun (p, e) -> (p, e, expression_to_pexpr e)) bindings in
 
     (* We need to figure out all the frames' labels before we can properly bind them. *)
-    let _ = F.begin_def () in
-    let unlabeled_frames = List.map (fun e -> F.initialize_type_expr_levels e.exp_type; F.fresh e.exp_env e.exp_type) exprs in
-    let unlabeled_env = bind_all bindings unlabeled_frames tenv env guard in
+    let _                 = F.begin_def () in
+    let unlabeled_frames  = List.map (fun e -> F.initialize_type_expr_levels e.exp_type; F.fresh e.exp_env e.exp_type) exprs in
+    let unlabeled_env     = bind_all bindings unlabeled_frames tenv env guard in
     let (label_frames, _) = constrain_subexprs unlabeled_env guard exprs in
-    let _ = F.end_def () in
+    let _                 = F.end_def () in
 
     let binding_frames = List.map2 F.label_like unlabeled_frames label_frames in
     let binding_frames = List.map F.generalize binding_frames in
             
     (* Redo constraints now that we know what the right labels are *)
-    let bound_env = bind_all bindings binding_frames tenv env guard in
-    let _ = F.begin_def () in
+    let bound_env                    = bind_all bindings binding_frames tenv env guard in
+    let _                            = F.begin_def () in
     let (found_frames, subexp_cstrs) = constrain_subexprs bound_env guard exprs in
-    let _ = F.end_def () in
-    let found_frames = List.map F.generalize found_frames in
+    let _                            = F.end_def () in
+    let found_frames                 = List.map F.generalize found_frames in
 
     let make_cstr fc = {lc_cstr = fc; lc_tenv = tenv; lc_orig = Loc Location.none; lc_id = fresh_fc_id ()} in
     let build_found_frame_cstr_list cs found_frame binding_frame =
@@ -380,14 +382,14 @@ let constrain_structure initfenv initquals str =
   let rec constrain_rec quals fenv cstrs = function
     | [] -> (quals, fenv, cstrs)
     | (Tstr_eval exp) :: srem ->
-        let (_, cstrs') = constrain exp fenv []
-        in constrain_rec quals fenv (cstrs' @ cstrs) srem
+        let (_, cstrs') = constrain exp fenv [] in
+          constrain_rec quals fenv (cstrs' @ cstrs) srem
     | (Tstr_qualifier (name, (valu, pred))) :: srem ->
         let quals = (Path.Pident name, Path.Pident valu, pred) :: quals in
           constrain_rec quals fenv cstrs srem
     | (Tstr_value (recflag, bindings))::srem ->
-        let (fenv, cstrs') = constrain_bindings fenv [] recflag bindings
-        in constrain_rec quals fenv (cstrs @ cstrs') srem
+        let (fenv, cstrs') = constrain_bindings fenv [] recflag bindings in
+          constrain_rec quals fenv (cstrs @ cstrs') srem
     | (Tstr_type(_))::srem ->
         constrain_rec quals fenv cstrs srem
     | _ -> assert false

@@ -35,4 +35,6 @@ val instantiate: (string * Path.t) list -> t -> t option
 val vars: t -> string list
 val instantiate_about: Path.t list Common.StringMap.t -> t -> t list
 val pprint: formatter -> t -> unit
+(* RJ: this should be in .mli, not map_preds 
+ * val map_pred: (Path.t * Predicate.t -> Path.t * Predicate.t) -> t -> t *)
 val map_preds: (Path.t * Predicate.t -> Path.t * Predicate.t) -> t list -> t list

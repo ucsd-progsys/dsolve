@@ -378,7 +378,7 @@ let rec subt t1 t2 =
 (**************************************************************)
 
 let pprint_sub ppf (path, pexp) =
-  fprintf ppf "@[%s@ ->@ %a@]" (Path.name path) Predicate.pprint_pexpr pexp
+  fprintf ppf "@[(%s@ ->@ %a)@]" (Path.unique_name path) Predicate.pprint_pexpr pexp
 
 let pprint_subs ppf subs =
   Oprint.print_list pprint_sub (fun ppf -> fprintf ppf ";@ ") ppf subs
@@ -390,10 +390,16 @@ let space ppf =
   fprintf ppf "@;<0 1>"
 
 let pprint_refexpr ppf (subs, (qconsts, qvars)) =
-  fprintf ppf "%a@;<1 0>%a"
-    (Oprint.print_list (fun ppf q -> Predicate.pprint ppf
+    if !Clflags.print_subs then
+      fprintf ppf "[%a]@;<1 0>%a@;<1 0>%a"
+      pprint_subs subs
+      (Oprint.print_list (fun ppf q -> Predicate.pprint ppf (pred_of_qual q)) space) qconsts
+      (Oprint.print_list (fun ppf v -> fprintf ppf "%s" (C.path_name v)) space) qvars
+    else
+      fprintf ppf "%a@;<1 0>%a"
+      (Oprint.print_list (fun ppf q -> Predicate.pprint ppf
                           (Predicate.apply_substs subs (pred_of_qual q))) space) qconsts
-    (Oprint.print_list (fun ppf v -> fprintf ppf "%s" (C.path_name v)) space) qvars
+      (Oprint.print_list (fun ppf v -> fprintf ppf "%s" (C.path_name v)) space) qvars
 
 let pprint_refinement ppf res =
   Oprint.print_list pprint_refexpr space ppf res
@@ -600,11 +606,11 @@ let translate_variance = function
   | (true, true, true) -> Invariant
   | (true, false, false) -> Covariant
   | (false, true, false) -> Contravariant
-  | (a, b, c) -> printf "@[(%b,@ %b,@ %b)@]@." a b c; assert false
+  | (a, b, c) -> printf "@[Got gibberish variance (%b, %b, %b)@]@." a b c; assert false
 
 let mutable_variance = function
   | Mutable -> Invariant
-  | _ -> Covariant
+  | _       -> Covariant
 
 let fresh_refinementvar () =
   mk_refinement [] [] [Path.mk_ident "k"]
@@ -622,26 +628,35 @@ let rec canonicalize t =
       | _    -> t.id <- 0
     end; Btype.iter_type_expr (fun t -> ignore (canonicalize t)) t; t
 
+let is_recursive_instance t t' =
+  t.desc = t'.desc
+
 let close_arg res arg =
-  if res.desc = arg.desc then link_type arg res
+  if is_recursive_instance res arg then link_type arg res
 
 let close_constructor res args =
   List.iter (fun a -> Btype.iter_type_expr (close_arg res) a; close_arg res a) args
 
+let instance_record field_tys param_tys =
+  let _                      = Ctype.begin_def () in
+  let (field_tys, param_tys) = Ctype.instance_lists field_tys param_tys in
+  let _                      = Ctype.end_def () in
+    (field_tys, param_tys)
+
 let fresh_field fresh (name, muta, t) =
   (Ident.create name, fresh t, mutable_variance muta)
 
-let fresh_record fresh env p fields tyformals tyactuals =
-  let (names, mutas, tys) = C.split3 fields in
-  let _                   = Ctype.begin_def () in
-  let (tys, tyformals)    = Ctype.instance_lists tys tyformals in
-  let _                   = Ctype.end_def () in
-  let _                   = List.iter Ctype.generalize tyformals in
-  let _                   = List.iter2 (Ctype.unify env) tyformals tyactuals in
-  let fields              = C.combine3 names mutas tys in
+let fresh_record fresh env p fields t formal_tys actual_tys =
+  let (names, mutas, field_tys) = C.split3 fields in
+  let (field_tys, formal_tys)   = instance_record field_tys formal_tys in
+  let _                         = List.iter Ctype.generalize formal_tys in
+  let _                         = List.iter2 (Ctype.unify env) formal_tys actual_tys in
+  let field_tys                 = List.map canonicalize field_tys in
+  let _                         = close_constructor t field_tys in
+  let fields                    = C.combine3 names mutas field_tys in
     record_of_params p (List.map (fresh_field fresh) fields) empty_refinement
 
-let fresh_constructor env fresh param_vars ty cstr =
+let fresh_constructor env fresh ty cstr =
   let _           = Ctype.begin_def () in
   let (args, res) = Ctype.instance_constructor cstr in
   let _           = Ctype.end_def () in
@@ -649,25 +664,27 @@ let fresh_constructor env fresh param_vars ty cstr =
   let _           = close_constructor res args; Ctype.unify env res ty in
   let ids         = Misc.mapi (fun _ i -> C.tuple_elem_id i) args in
   let fs          = List.map fresh args in
-  let vs          = List.map (fun t -> try List.assoc t param_vars with Not_found -> Covariant) args in
+  let vs          = List.map (fun _ -> Covariant) fs in
     (cstr.cstr_tag, C.combine3 ids fs vs)
 
-let fresh_sum fresh env p t tyl varis =
-  let param_vars = List.combine tyl varis in
+let fresh_sum fresh env p t tyl =
   let (_, cds)   = List.split (Env.constructors_of_type p (Env.find_type p env)) in
-    Fsum (p, None, List.map (fresh_constructor env fresh param_vars t) cds, empty_refinement)
+    Fsum (p, None, List.map (fresh_constructor env fresh t) cds, empty_refinement)
+
+let verify_covariance = function
+  | (_, false, false) -> ()
+  | (a, b, c)         -> failwith "Don't support non-covariant params in concrete types"
 
 let fresh_constr fresh env p t tyl =
-  let params  = List.map fresh tyl in
   let ty_decl = Env.find_type p env in
-  let varis   = List.map translate_variance ty_decl.type_variance in
     match ty_decl.type_kind with
       | Type_abstract ->
-          abstract_of_params p params varis empty_refinement
-      | Type_record (fields, _, _) -> (* 1 *)
-          fresh_record fresh env p fields ty_decl.type_params tyl
+          abstract_of_params p (List.map fresh tyl) (List.map translate_variance ty_decl.type_variance) empty_refinement
+      | Type_record (fields, _, _) ->
+          fresh_record fresh env p fields t ty_decl.type_params tyl
       | Type_variant _ ->
-          fresh_sum fresh env p t tyl varis
+          let _ = List.iter verify_covariance ty_decl.type_variance in
+            fresh_sum fresh env p t tyl
 
 let close_recf (rp, rr) = function
   | Fsum (p, _, cs, r) ->
@@ -688,17 +705,30 @@ let fresh_rec fresh env (rv, rr) level t = match t.desc with
 let null_refinement =
   mk_refinement [] [] []
 
+let param_refinements freshref res args =
+  List.map (fun t -> if is_recursive_instance res t || !Clflags.no_recrefs then null_refinement else freshref) args
+
 let cstr_refinements freshref cstr =
   let (args, res) = Ctype.instance_constructor cstr in
   let _           = close_constructor res args in
   let (args, res) = (List.map canonicalize args, canonicalize res) in
-    List.map (fun t -> if t = res || !Clflags.no_recrefs then null_refinement else freshref) args
+    param_refinements freshref res args
 
 let mk_recref freshref env t =
   match t.desc with
-    | Tconstr (p, tyl, _) ->
-        let (_, cstrs) = List.split (Env.constructors_of_type p (Env.find_type p env)) in
-          List.map (cstr_refinements freshref) cstrs
+    | Tconstr (p, _, _) ->
+        let ty_decl = Env.find_type p env in
+          begin match ty_decl.type_kind with
+            | Type_record (fields, _, _) ->
+                let (_, _, field_tys)       = C.split3 fields in
+                let (field_tys, formal_tys) = instance_record field_tys ty_decl.type_params in
+                let field_tys               = List.map canonicalize field_tys in
+                let t                       = canonicalize {t with desc = Tconstr (p, formal_tys, ref Mnil)} in
+                  [param_refinements freshref t field_tys]
+            | _ ->
+                let (_, cstrs) = List.split (Env.constructors_of_type p ty_decl) in
+                  List.map (cstr_refinements freshref) cstrs
+          end
     | _ -> []
 
 let mk_recvar env t =
@@ -731,6 +761,10 @@ let fresh_with_var_fun env freshf t =
   let rec fm t =
     let level = (repr t).level in
     let t     = canonicalize t in
+    (* By freshing the parameters first, we avoid the scenario where a non-recursive type
+       erroneously becomes recursive through its instantiated parameters.
+       (e.g., a non-recursive 'a t instantiated with b, where b contains b t.) *)
+    let _     = match t.desc with Tconstr (_, param_tys, _) -> ignore (List.map fm param_tys) | _ -> () in
       if Hashtbl.mem tbl t then
         Hashtbl.find tbl t
       else
@@ -875,29 +909,29 @@ let env_bind env pat frame =
 (******************** Logical embedding ***********************) 
 (**************************************************************)
 
-let refexpr_apply_solution solution (subs, (qconsts, qvars)) =
-  (subs, (qconsts @ C.flap solution qvars, []))
+let refexpr_apply_solution s (subs, (qconsts, qvars)) =
+  (subs, (qconsts @ C.flap s qvars, []))
 
-let apply_solution solution f =
-  map_refexprs (refexpr_apply_solution solution) f
+let apply_solution s f =
+  map_refexprs (refexpr_apply_solution s) f
 
-let refexpr_conjuncts solution qual_expr ((subs, qexprs) as r) =
-  let (_, (quals, _)) = refexpr_apply_solution solution r in
+let refexpr_conjuncts s qual_expr ((subs, qexprs) as r) =
+  let (_, (quals, _)) = refexpr_apply_solution s r in
   let unsubst = List.map (Qualifier.apply qual_expr) quals in
     List.map (Predicate.apply_substs subs) unsubst
 
-let refinement_conjuncts solution qual_expr res =
-  C.flap (refexpr_conjuncts solution qual_expr) res
+let refinement_conjuncts s qexpr res =
+  C.flap (refexpr_conjuncts s qexpr) res
 
-let refinement_predicate solution qual_var refn =
-  Predicate.big_and (refinement_conjuncts solution qual_var refn)
+let refinement_predicate s qvar refn =
+  Predicate.big_and (refinement_conjuncts s qvar refn)
 
-let rec conjunct_fold cs solution qual_expr f = match get_refinement f with
-  | Some r -> refinement_conjuncts solution qual_expr r @ cs
+let rec conjunct_fold cs s qual_expr f = match get_refinement f with
+  | Some r -> refinement_conjuncts s qual_expr r @ cs
   | None   -> cs
 
-let rec conjuncts solution qual_expr fr =
-  conjunct_fold [] solution qual_expr fr
+let rec conjuncts s qexpr fr =
+  conjunct_fold [] s qexpr fr
 
-let predicate solution qual_expr f =
-  Predicate.big_and (conjuncts solution qual_expr f)
+let predicate s qexpr fr =
+  Predicate.big_and (conjuncts s qexpr fr)

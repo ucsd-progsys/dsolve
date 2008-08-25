@@ -174,6 +174,7 @@ let main () =
      "-dinstr", Arg.Set dump_instr, " (undocumented)";
      "-dconstrs", Arg.Set dump_constraints, "print out frame constraints";
      "-drconstrs", Arg.Set dump_ref_constraints, "print out refinement constraints";
+     "-dsubs", Arg.Set print_subs, "print subs and unsubbed predicates";
      "-drvars", Arg.Set dump_ref_vars, "print out variables associated with refinement constraints";
      "-dqexprs", Arg.Set dump_qexprs, "print out all subexpressions with their qualified types";
      "-dqualifs", Arg.String (fun s -> dump_qualifs := true; Qdump.patf := s), "<file> dump qualifiers for patterns in <file>";
@@ -183,6 +184,7 @@ let main () =
      "-lqueries", Arg.Set log_queries, "log queries to [prover].log";
      "-cqueries", Arg.Set check_queries, "use a backup prover to check all queries";
      "-bquals", Arg.Set brief_quals, "print out the number of refinements for a type instead of their names";
+     "-esimple", Arg.Set esimple, "simplify e-variables for rectypes";
      "-no-simple", Arg.Set no_simple, "do not propagate in simple constraints";
      "-no-simple-subs", Arg.Set no_simple_subs, "do not propagate sets when substitutions are present";
      "-verify-simple", Arg.Set verify_simple, "verify simple constraint propagation against theorem prover result";
