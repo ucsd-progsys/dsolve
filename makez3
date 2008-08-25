@@ -1,5 +1,0 @@
-#!/bin/bash
-
-mv liquid/theoremProverYices.ml liquid/theoremProverYices.lm
-make -f Makefile.z3 $1
-mv liquid/theoremProverYices.lm liquid/theoremProverYices.ml

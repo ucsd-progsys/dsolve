@@ -12,7 +12,7 @@
  tests/rec/map/all.ml          1  False False
  tests/rec/map/bal.ml          1  False True
  tests/rec/map/bst.ml          1  False False
- tests/rec/avltree.ml          1  False False
+ tests/rec/avltree/all.ml      1  False False
  tests/rec/avltree/bal.ml      1  True True
  tests/rec/avltree/bst.ml      1  False False 
  tests/rec/redblack/all.ml     1  False False

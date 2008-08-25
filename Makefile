@@ -80,16 +80,19 @@ clean: partialclean
 	 done);
 	rm -f liquid.byte liquid.opt
 
-libclean: z3clean qpclean graphclean
+libclean: z3clean qpclean graphclean yicesclean
 
 z3clean:
 	cd external/z3/ocaml; ./clean.sh
 
 qpclean:
-	cd external/qp; make clean
+	cd external/qp && make clean
 
 graphclean:
-	cd external/ocamlgraph; make clean
+	cd external/ocamlgraph && make clean
+
+yicesclean:
+	cd external/yices/include && make clean
 
 distclean: clean
 	(for d in ./ utils parsing typing tests liquid; \
@@ -181,6 +184,9 @@ qplib:
 
 libs: yiceslib z3lib graphlib qplib
 
-world: liquid.byte liquid.opt
+world: liquid.opt
+
+install:
+	cp external/z3/bin/z3.dll . && cp external/yices/lib/cygyices.dll .
 
 include .depend

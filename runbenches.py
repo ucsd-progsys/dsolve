@@ -39,7 +39,7 @@ def runtest(filep, expected_status):
   flags = ["-v", "0"]
   if no_recrefs:
      flags += ["-no-recrefs"]
-  status = dsolve.solve_quals(file, True, True, False, flags)
+  status = dsolve.solve_quals(file, True, False, False, flags)
   if status == 2: sys.exit(2)
   print "%f seconds" % (time.time() - start)
 
