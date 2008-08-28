@@ -314,6 +314,7 @@ let mktrue_record a = mkrecord a ptrue
 %token PRIVATE
 %token QUALIF
 %token SINGLE_QUALIF
+%token MODULE_DEPENDENCY
 %token PREDICATE
 %token MEASURE
 %token REFINEMENT
@@ -420,7 +421,7 @@ The precedences must be listed from low to high.
 %start use_file                         /* for the #use directive */
 %type <Parsetree.toplevel_phrase list> use_file
 %start qualifiers                       /* runtime qualifier files */
-%type <Parsetree.qualifier_declaration list> qualifiers
+%type <string list * Parsetree.qualifier_declaration list> qualifiers
 %start qualifier_patterns               /* pattern qualifier files */
 %type <Parsetree.qualifier_declaration list> qualifier_patterns
 %start liquid_interface                 /* for mlq refined interface files */
@@ -1457,9 +1458,21 @@ qualifier_list:
   | SINGLE_QUALIF qualifier_pattern_declaration qualifier_list
       { $2::$3 }
 
-qualifiers:
-    qualifier_list EOF
+dep_list_opt:
+    /* empty */
+      { [] }
+  | dep_list
       { $1 }
+
+dep_list:
+    MODULE_DEPENDENCY UIDENT
+      { [$2] }
+  | MODULE_DEPENDENCY UIDENT dep_list
+      { $2 :: $3 }
+
+qualifiers:
+    dep_list_opt qualifier_list EOF
+      { ($1, $2) }
 
 qualifier_patterns:
     qualifier_pattern_list EOF

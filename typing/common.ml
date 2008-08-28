@@ -214,6 +214,11 @@ let maybe_bool = function
 let all_defined xs =
   List.for_all maybe_bool xs
 
+let rec slow_mk_unique = function
+  x :: xs -> let xs = (slow_mk_unique xs) in
+    if List.mem x xs then xs else x :: xs
+  | [] -> []
+
 let strip_meas s =
   try if String.sub s 0 6 = "_meas_" then 
     String.sub s 6 (String.length s - 6) 

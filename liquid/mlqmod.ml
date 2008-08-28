@@ -8,7 +8,7 @@ module P = Predicate
 
 (* MLQs *)
 
-let parse ppf env fname =
+let parse ppf fname =
   if Sys.file_exists fname then Pparse.file ppf fname Parse.liquid_interface Config.ast_impl_magic_number else ([], [])
 
 let load_val env fenv (s, pf) =
@@ -44,6 +44,8 @@ let load env fenv (preds, decls) quals =
   (*let _ = Le.iter (fun p f -> printf "@[%s@;<1 2>%a@]@." (Path.unique_name p) F.pprint f) ifenv in*)
   let _ = M.mk_measures env mnsubs mcstrs in 
     (Lightenv.addn (M.mk_tys env mnames) fenv, ifenv, Qualmod.map_preds (M.transl_pred mnsubs) quals)
+
+let load_prefix fenv (preds, decls) quals =
 
 (* builtins *)
 

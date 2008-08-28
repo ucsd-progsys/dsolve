@@ -76,15 +76,23 @@ let analyze ppf sourcefile (str, env, fenv, ifenv) =
   Qualifymod.qualify_implementation sourcefile fenv ifenv env [] str
 
 let load_qualfile ppf qualfile =
-  let qs = Pparse.file ppf qualfile Parse.qualifiers ast_impl_magic_number in
-    List.map Qualmod.type_qualifier qs
+  let (deps, qs) = Pparse.file ppf qualfile Parse.qualifiers ast_impl_magic_number in
+    (deps, List.map Qualmod.type_qualifier qs)
 
 let load_mlqfile iname env fenv quals =
-  let mlq = MLQ.parse std_formatter env iname in
+  let mlq = MLQ.parse std_formatter iname in
     MLQ.load env fenv mlq quals
 
+let load_dep_mlqfiles bname deps env fenv quals mlqenv =
+  let pathname = if String.contains bname '/' then 
+          String.sub bname 0 ((String.rindex bname '/') + 1) else "" in
+  let inames = List.map (fun s -> pathname ^ (String.lowercase s) ^ ".mlq") deps in
+  let mlqs = List.map (MLQ.parse std_formatter) inames in
+  let _ = mlqs in
+    (fenv, mlqenv, quals)
+
 let load_valfile ppf env ifacefile =
-  let (preds, decls) = MLQ.parse ppf env ifacefile in
+  let (preds, decls) = MLQ.parse ppf ifacefile in
   let vals = MLQ.filter_vals decls in
     List.map (fun (s, pf) -> (s, F.translate_pframe env preds pf)) vals 
 
@@ -122,9 +130,10 @@ let process_sourcefile fname =
     then
       Qdump.dump_default_qualifiers source qname
     else
-      let quals = load_qualfile std_formatter qname in
+      let (deps, quals) = load_qualfile std_formatter qname in
       let (env, fenv) = load_builtins std_formatter env fenv in 
       let (fenv, mlqenv, quals) = load_mlqfile iname env fenv quals in
+      let (fenv, quals) = load_dep_mlqfiles bname deps env fenv quals in
       let source = (List.rev_append quals str, env, fenv, mlqenv) in
       analyze std_formatter !filename source
    with x -> (report_error std_formatter x; exit 1)

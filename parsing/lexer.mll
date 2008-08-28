@@ -73,6 +73,7 @@ let keyword_table =
     "private", PRIVATE;
     "qualif", QUALIF;
     "squalif", SINGLE_QUALIF;
+    "mdep", MODULE_DEPENDENCY;
     "predicate", PREDICATE;
     "measure", MEASURE;
     "refinement", REFINEMENT;
