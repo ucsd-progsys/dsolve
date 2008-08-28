@@ -87,7 +87,7 @@ install: default
 
 .PHONY: clean
 clean:
-	rm -f *.c *.mli *.ml *.cmo *.cmi *.cma *.a *.o
+	rm -f *.c *.mli *.ml *.cmo *.cmi *.cma *.a *.o; cd ../lib; ./clean.sh
 
 .PHONY: distclean
 distclean: clean

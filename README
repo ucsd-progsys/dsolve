@@ -1,14 +1,14 @@
-Compiling dsolve under Cygwin w/ gcc
+Compiling the multi-prover distribution under cygwin
 =============================
 
-dsolve requires OCaml 3.10+, camlidl 1.05+
-
-1. Download and install camlidl (already done on mallorca)
-2. ./configure
-2. make -f Makefile.cyg libs
-3. ./makecyg
-
-
+1. Download and install camlidl 1.05
+2. Download and install GMP from source
+3. Uninstall swig via cygwin setup
+4. Download and install swig 1.3.33+ from source
+5. ./configure
+6. make libs
+7. make
+8. make install
 
 Compiling dsolve under Cygwin w/ MSVC toolchain
 =============================

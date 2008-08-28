@@ -122,12 +122,12 @@ let do_memo t f arg key =
     let _ = Hashtbl.replace t key rv in
     rv
 
-let rec map_partial f = function 
-  | [] -> [] | x::xs -> 
-      (match f x with 
-       | None -> map_partial f xs 
-       | Some y -> y::(map_partial f xs))
-
+let rec map_partial f = function
+  | []          -> []
+  | x::xs       -> (match f x with 
+                    | None      -> map_partial f xs 
+                    | Some y    -> y::(map_partial f xs))
+  
 let mapfold f xs b = 
   let rec _mf ys b = function
     | [] -> 
@@ -311,10 +311,10 @@ module Dot = Graph.Graphviz.Dot(DotGraph)
 
 let dump_graph g = 
   let oc = open_out "constraints.dot" in
-  Dot.output_graph oc g;
+  Dot.output_graph oc g; 
   close_out oc
 
- 
+
 (* Given list [(u,v)] returns a numbering [(ui,ri)] s.t. 
  * 1. if ui,uj in same SCC then ri = rj
  * 2. if ui -> uj then ui >= uj *)
@@ -328,8 +328,9 @@ let scc_rank f ijs =
           cprintf ol_scc "@[scc@ sizes:@\n@]";
           let int_s_to_string (i,s) = Printf.sprintf "(%d,%s)" i s in
           Array.iteri 
-          (fun i xs -> 
-          cprintf ol_scc "@[%d@ :@ %s@ @\n@]" i (xs_to_string int_s_to_string xs)) a;
+            (fun i xs -> 
+               cprintf ol_scc "@[%d@ :@ %s@ @\n@]" 
+                 i (xs_to_string int_s_to_string xs)) a;
           cprintf ol_scc "@[@\n@]" in
   let sccs = array_to_index_list a in
   flap (fun (i,vs) -> List.map (fun (j,_) -> (j,i)) vs) sccs
