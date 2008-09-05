@@ -1,1 +1,1 @@
-rm *oyices*
+rm -f *oyices*
