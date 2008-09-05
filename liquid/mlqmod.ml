@@ -45,9 +45,9 @@ let load env fenv (preds, decls) quals =
   let _ = M.mk_measures env mnsubs mcstrs in 
     (Lightenv.addn (M.mk_tys env mnames) fenv, ifenv, Qualmod.map_preds (M.transl_pred mnsubs) quals)
 
-let load_prefix fenv (preds, decls) quals =
+(*let load_prefix fenv (preds, decls) quals =*)
 
 (* builtins *)
 
 let filter_vals xs =
-  C.maybe_list (List.map (function LvalDecl(x, y)  -> Some(x, y)  | _ -> None) xs)
+  C.maybe_list (List.map (function LvalDecl(x, y) -> Some(x, y)  | _ -> None) xs)

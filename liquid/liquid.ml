@@ -83,13 +83,13 @@ let load_mlqfile iname env fenv quals =
   let mlq = MLQ.parse std_formatter iname in
     MLQ.load env fenv mlq quals
 
-let load_dep_mlqfiles bname deps env fenv quals mlqenv =
+(*let load_dep_mlqfiles bname deps env fenv quals mlqenv =
   let pathname = if String.contains bname '/' then 
           String.sub bname 0 ((String.rindex bname '/') + 1) else "" in
   let inames = List.map (fun s -> pathname ^ (String.lowercase s) ^ ".mlq") deps in
   let mlqs = List.map (MLQ.parse std_formatter) inames in
   let _ = mlqs in
-    (fenv, mlqenv, quals)
+    (fenv, mlqenv, quals)*)
 
 let load_valfile ppf env ifacefile =
   let (preds, decls) = MLQ.parse ppf ifacefile in
@@ -133,7 +133,7 @@ let process_sourcefile fname =
       let (deps, quals) = load_qualfile std_formatter qname in
       let (env, fenv) = load_builtins std_formatter env fenv in 
       let (fenv, mlqenv, quals) = load_mlqfile iname env fenv quals in
-      let (fenv, quals) = load_dep_mlqfiles bname deps env fenv quals in
+      (*let (fenv, quals) = load_dep_mlqfiles bname deps env fenv quals in*)
       let source = (List.rev_append quals str, env, fenv, mlqenv) in
       analyze std_formatter !filename source
    with x -> (report_error std_formatter x; exit 1)
