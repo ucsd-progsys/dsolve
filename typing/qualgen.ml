@@ -100,6 +100,7 @@ and visit_expr n exp =
     | Texp_record (el, None) ->
         List.iter (fun (l, e) -> ve e) el
     | Texp_assert (e)
+    | Texp_assume (e)
     | Texp_field (e, _) ->
         ve e
     | Texp_sequence (e1, e2)
@@ -135,6 +136,7 @@ let visit_ids_expr f exp =
     | Texp_record (el, None) ->
         List.iter (fun (l, e) -> ve e) el
     | Texp_assert (e)
+    | Texp_assume (e)
     | Texp_field (e, _) ->
         ve e
     | Texp_sequence (e1, e2)

@@ -145,6 +145,7 @@ let rec constrain e env guard =
       | (Texp_tuple es, _) -> constrain_tuple environment es
       | (Texp_assertfalse, _) -> constrain_assertfalse environment e.exp_env e.exp_type
       | (Texp_assert e, _) -> constrain_assert environment e
+      | (Texp_assume e, _) -> constrain_assume environment e
       | (_, f) ->
         fprintf err_formatter "@[Warning: Don't know how to constrain expression,
         structure:@ %a@ location:@ %a@]@.@." F.pprint f Location.print e.exp_loc; flush stderr;
@@ -339,6 +340,18 @@ and constrain_assert (env, guard, f) e =
   in (f,
       [SubFrame (env, guard, B.mk_int [], B.mk_int [assert_qualifier]);
        SubFrame (env, guard, B.mk_unit [assert_qualifier], f)],
+      cstrs)
+
+and constrain_assume (env, guard, f) e =
+  let (af, cstrs) = constrain e env guard in
+  let guardvar    = Path.mk_ident "assume_guard" in
+  let env         = Le.add guardvar af env in
+  let assume_qualifier =
+    (Path.mk_ident "assumption",
+     Path.mk_ident "null",
+     P.equals (B.tag(P.Var guardvar), P.int_true))
+  in (f,
+      [SubFrame (env, guard, B.mk_unit [assume_qualifier], f)],
       cstrs)
 
 and constrain_and_bind guard (env, cstrs) (pat, e) =

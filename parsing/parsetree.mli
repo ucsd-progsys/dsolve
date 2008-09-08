@@ -108,6 +108,7 @@ and expression_desc =
   | Pexp_letmodule of string * module_expr * expression
   | Pexp_assert of expression
   | Pexp_assertfalse
+  | Pexp_assume of expression
   | Pexp_lazy of expression
   | Pexp_poly of expression * core_type option
   | Pexp_object of class_structure

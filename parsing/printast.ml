@@ -292,6 +292,9 @@ and expression i ppf x =
       expression i ppf e;
   | Pexp_assertfalse ->
       line i ppf "Pexp_assertfalse";
+  | Pexp_assume (e) ->
+      line i ppf "Pexp_assume";
+      expression i ppf e;
   | Pexp_lazy (e) ->
       line i ppf "Pexp_lazy";
       expression i ppf e;

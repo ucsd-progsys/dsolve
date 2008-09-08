@@ -1430,7 +1430,7 @@ let rec type_exp env sexp =
         exp_loc = sexp.pexp_loc;
         exp_type = ty;
         exp_env = env }
-  | Pexp_assert (e) ->
+ | Pexp_assert (e) ->
        let cond = type_expect env e (instance Predef.type_bool) in
        re {
          exp_desc = Texp_assert (cond);
@@ -1443,6 +1443,14 @@ let rec type_exp env sexp =
          exp_desc = Texp_assertfalse;
          exp_loc = sexp.pexp_loc;
          exp_type = newvar ();
+         exp_env = env;
+       }
+ | Pexp_assume (e) ->
+       let cond = type_expect env e (instance Predef.type_bool) in
+       re {
+         exp_desc = Texp_assume (cond);
+         exp_loc = sexp.pexp_loc;
+         exp_type = instance Predef.type_unit;
          exp_env = env;
        }
   | Pexp_lazy (e) ->

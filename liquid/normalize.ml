@@ -94,6 +94,7 @@ let mk_ifthenelse e1 e2 e3 = Pexp_ifthenelse(e1, e2, Some e3)
 let mk_field e s = Pexp_field(e, s)
 let mk_record es = Pexp_record(es, None)
 let mk_assert e = Pexp_assert(e)
+let mk_assume e = Pexp_assume(e)
 let mk_match e pel = Pexp_match(e, pel)
 let mk_construct cstrdesc e b = Pexp_construct(cstrdesc, Some e, b)
 
@@ -224,6 +225,16 @@ let normalize exp =
         in
         let init = mk_assert inner in
           rw_expr (List.fold_left (wrap Nonrecursive) init (List.tl c))
+     | Pexp_assume(e) ->
+        let c = norm_in e in
+        let (lbl, e', lo) = List.hd c in
+        let inner =
+          match e' with
+          | Some e -> e
+          | None -> mk_ident_loc lbl lo
+        in
+        let init = mk_assume inner in
+          rw_expr (List.fold_left (wrap Nonrecursive) init (List.tl c))
      | Pexp_field(e, s) ->
         let ls = norm_in e in
         let (lbl, _, lo) = List.hd ls in
@@ -258,6 +269,7 @@ let normalize exp =
     let loc = exp.pexp_loc in
 
     match exp.pexp_desc with
+     | Pexp_assume(_)
      | Pexp_assert(_)  
      | Pexp_assertfalse ->
          [(fresh_name (), Some (norm_out exp), dummy)]

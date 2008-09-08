@@ -169,6 +169,7 @@ and expression ppf tbl e =
       expression ppf tbl e;
   | Pexp_assert e -> expression ppf tbl e;
   | Pexp_assertfalse -> ()
+  | Pexp_assume e -> expression ppf tbl e;
   | Pexp_lazy e -> expression ppf tbl e;
   | Pexp_poly (e, _) -> expression ppf tbl e;
   | Pexp_object cs -> class_structure ppf tbl cs;

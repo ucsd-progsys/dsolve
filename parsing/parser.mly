@@ -235,6 +235,7 @@ let mktrue_record a = mkrecord a ptrue
 %token AND
 %token AS
 %token ASSERT
+%token ASSUME
 %token BACKQUOTE
 %token BAR
 %token BARBAR
@@ -957,6 +958,8 @@ expr:
       { mkexp(Pexp_setinstvar($1, $3)) }
   | ASSERT simple_expr %prec below_SHARP
       { mkassert $2 }
+  | ASSUME simple_expr %prec below_SHARP
+      { mkexp (Pexp_assume ($2)) }
   | LAZY simple_expr %prec below_SHARP
       { mkexp (Pexp_lazy ($2)) }
   | OBJECT class_structure END
