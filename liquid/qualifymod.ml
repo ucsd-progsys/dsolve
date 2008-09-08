@@ -326,15 +326,18 @@ and constrain_assertfalse (env, _, _) tenv ty =
   let f = F.fresh_false tenv ty in
     (f, [WFFrame (env, f)], [])
 
-and constrain_assert (env, guard, _) e =
-  let (f, cstrs) = constrain e env guard in
-  let guardvar   = Path.mk_ident "assert_guard" in
-  let env        = Le.add guardvar f env in
+and constrain_assert (env, guard, f) e =
+  let (af, cstrs) = constrain e env guard in
+  let guardvar    = Path.mk_ident "assert_guard" in
+  let env         = Le.add guardvar af env in
   let assert_qualifier =
     (Path.mk_ident "assertion",
      Path.mk_ident "null",
      P.equals (B.tag(P.Var guardvar), P.int_true))
-  in (B.uUnit, [SubFrame (env, guard, B.mk_int [], B.mk_int [assert_qualifier])], cstrs)
+  in (f,
+      [SubFrame (env, guard, B.mk_int [], B.mk_int [assert_qualifier]);
+       SubFrame (env, guard, B.mk_unit [assert_qualifier], f)],
+      cstrs)
 
 and constrain_and_bind guard (env, cstrs) (pat, e) =
   let (f, cstrs') = F.begin_def (); let r = constrain e env guard in F.end_def (); r in
