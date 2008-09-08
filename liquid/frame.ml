@@ -256,7 +256,7 @@ let tag_of_int n =
 
 let maybe_tag_qualifier (_, v, pred) =
   match pred with
-     P.Atom (P.FunApp (tag_fun, [(P.Var v)]), P.Eq, P.PInt t) when tag_fun = tag_function -> Some (tag_of_int t)
+     P.Atom (P.FunApp (tag_fun, [(P.Var v')]), P.Eq, P.PInt t) when v = v' && tag_fun = tag_function -> Some (tag_of_int t)
    | _ -> None
 
 let find_tag_single ts r =
