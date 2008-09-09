@@ -33,11 +33,11 @@ module F = Frame
 module MLQ = Mlqmod
 module C = Common
 
-let usage = "Usage: liquid <options> [source-file]\noptions are:"
+let usage = "Usage: liquid <options> [source-files]\noptions are:"
 
-let filename = ref ""
+let filenames = ref []
 
-let file_argument fname = filename := fname
+let file_argument fname = filenames := !filenames @ [fname]
 
 let init_path () =
   let dirs =
@@ -111,21 +111,18 @@ let load_builtins ppf env fenv =
   (env, fenv)
 
     
-let load_sourcefile ppf sourcefile =
-  init_path ();
-  let env = initial_env () in
-  let fenv = initial_fenv env in
+let load_sourcefile ppf env fenv sourcefile =
   let str = Pparse.file ppf sourcefile Parse.implementation ast_impl_magic_number in 
   let str = if !Clflags.no_anormal then str else Normalize.normalize_structure str in
   let str = print_if ppf Clflags.dump_parsetree Printast.implementation str in
   let (str, _, env) = type_implementation env str in
     (str, env, fenv)
 
-let process_sourcefile fname =
+let process_sourcefile env fenv fname =
   let bname = Misc.chop_extension_if_any fname in
   let (qname, iname) = (bname ^ ".quals", bname ^ ".mlq") in
   try
-    let (str, env, fenv) as source = load_sourcefile std_formatter !filename in
+    let (str, env, fenv) as source = load_sourcefile std_formatter env fenv fname in
     if !dump_qualifs
     then
       Qdump.dump_default_qualifiers source qname
@@ -135,8 +132,14 @@ let process_sourcefile fname =
       let (fenv, mlqenv, quals) = load_mlqfile iname env fenv quals in
       (*let (fenv, quals) = load_dep_mlqfiles bname deps env fenv quals in*)
       let source = (List.rev_append quals str, env, fenv, mlqenv) in
-      analyze std_formatter !filename source
+        analyze std_formatter fname source
    with x -> (report_error std_formatter x; exit 1)
+
+let process_all fnames =
+  init_path ();
+  let env = initial_env () in
+  let fenv = initial_fenv env in
+    List.iter (process_sourcefile env fenv) fnames
 
 let main () =
   Arg.parse [
@@ -222,7 +225,7 @@ let main () =
      "-collect", Arg.Int (fun c -> Qualgen.col_lev := c), "[1] number of lambdas to collect identifiers under";
      "-use-builtins", Arg.String (fun s -> builtins_file := Some s), "[None] location of extra builtins"
   ] file_argument usage;
-  process_sourcefile !filename
+  process_all !filenames
 
 let _ = 
   main (); exit 0

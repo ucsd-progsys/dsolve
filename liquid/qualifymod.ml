@@ -85,6 +85,9 @@ module FrameLog = Map.Make(struct type t = Location.t
                                   let compare = compare end)
 let flog = ref FrameLog.empty
 
+let reset_framelog () =
+  flog := FrameLog.empty
+
 let log_frame loc fr =
   if loc <> Location.none then 
     flog := FrameLog.add loc fr !flog
@@ -417,8 +420,8 @@ let constrain_structure initfenv initquals str =
 (***************************** Qualifying modules *****************************)
 (******************************************************************************)
 
-let pre_solve () = 
-  C.cprintf C.ol_solve_master "@[##solve##@\n@]"; Bstats.reset ()
+let pre_solve sourcefile =
+  C.cprintf C.ol_solve_master "@[##solve %s##@\n@]" sourcefile; Bstats.reset ()
 
 let post_solve () = 
   if C.ck_olev C.ol_timing then
@@ -437,9 +440,10 @@ let maybe_cstr_from_unlabel_frame fenv p f =
     None 
  
 let qualify_implementation sourcefile fenv ifenv env qs str =
+  let _ = reset_framelog () in
   let (qs, fenv, cs) = constrain_structure fenv qs str in
   let cs = (List.map (lbl_dummy_cstr env) (Le.maplistfilter (maybe_cstr_from_unlabel_frame fenv) ifenv)) @ cs in
-  let _ = pre_solve () in
+  let _ = pre_solve sourcefile in
   let (s,cs) = Bstats.time "solving" (solve qs) cs in
   let _ = post_solve () in
   let _ = dump_frames sourcefile (framemap_apply_solution s !flog) in
