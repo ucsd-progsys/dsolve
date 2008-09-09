@@ -91,25 +91,16 @@ let load_mlqfile iname env fenv quals =
   let _ = mlqs in
     (fenv, mlqenv, quals)*)
 
-let load_valfile ppf env ifacefile =
-  let (preds, decls) = MLQ.parse ppf ifacefile in
-  let vals = MLQ.filter_vals decls in
-    List.map (fun (s, pf) -> (s, F.translate_pframe env preds pf)) vals 
-
-let load_builtins ppf env fenv =
-  let b = match !builtins_file with 
-          | Some b -> if not(Sys.file_exists b) then failwith (sprintf "builtins: file %s does not exist" b) else b
-          | None -> "" in
-  let fenv = 
-    try
-      let kvl = load_valfile ppf env b in
-      let tag = (Path.mk_ident F.tag_function, F.Fvar(Path.mk_ident "", 0, F.empty_refinement)) in
-      let f = (fun (k, v) -> (C.lookup_path k env, F.label_like v v)) in
-      let kvl = tag :: (List.map f kvl) in
-      Lightenv.addn kvl fenv
-    with Not_found -> failwith (Printf.sprintf "builtins: val %s does not correspond to library value" b) in
-  (env, fenv)
-
+let load_valfile ppf env fenv fname =
+  try
+    let (preds, decls) = MLQ.parse ppf fname in
+    let vals = MLQ.filter_vals decls in
+    let kvl = List.map (fun (s, pf) -> (s, F.translate_pframe env preds pf)) vals in
+    let tag = (Path.mk_ident F.tag_function, F.Fvar(Path.mk_ident "", 0, F.empty_refinement)) in
+    let f = (fun (k, v) -> (C.lookup_path k env, F.label_like v v)) in
+    let kvl = tag :: (List.map f kvl) in
+      (env, Lightenv.addn kvl fenv)
+  with Not_found -> failwith (Printf.sprintf "builtins: val %s does not correspond to library value" fname)
     
 let load_sourcefile ppf env fenv sourcefile =
   let str = Pparse.file ppf sourcefile Parse.implementation ast_impl_magic_number in 
@@ -128,18 +119,21 @@ let process_sourcefile env fenv fname =
       Qdump.dump_default_qualifiers source qname
     else
       let (deps, quals) = load_qualfile std_formatter qname in
-      let (env, fenv) = load_builtins std_formatter env fenv in 
       let (fenv, mlqenv, quals) = load_mlqfile iname env fenv quals in
       (*let (fenv, quals) = load_dep_mlqfiles bname deps env fenv quals in*)
       let source = (List.rev_append quals str, env, fenv, mlqenv) in
         analyze std_formatter fname source
    with x -> (report_error std_formatter x; exit 1)
 
-let process_all fnames =
-  init_path ();
-  let env = initial_env () in
-  let fenv = initial_fenv env in
-    List.iter (process_sourcefile env fenv) fnames
+let process_file (env, fenv) fname =
+  match Misc.get_extension fname with
+    | Some "ml" ->
+        process_sourcefile env fenv fname;
+        (env, fenv)
+    | Some "mlq" ->
+        load_valfile std_formatter env fenv fname
+    | _ ->
+        failwith (sprintf "Unrecognized file type for file %s" fname)
 
 let main () =
   Arg.parse [
@@ -223,9 +217,10 @@ let main () =
                \032    13     +Dump constraint graph\n\
                \032    64     +Drowning in output";
      "-collect", Arg.Int (fun c -> Qualgen.col_lev := c), "[1] number of lambdas to collect identifiers under";
-     "-use-builtins", Arg.String (fun s -> builtins_file := Some s), "[None] location of extra builtins"
   ] file_argument usage;
-  process_all !filenames
+  init_path ();
+  let env = initial_env () in
+    ignore (List.fold_left process_file (env, initial_fenv env) !filenames)
 
 let _ = 
   main (); exit 0
