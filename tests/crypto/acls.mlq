@@ -1,0 +1,7 @@
+measure can_read =
+  | Str s -> 1
+  | Dummy -> 0
+
+measure can_write =
+  | Str s -> 2
+  | Dummy -> 0

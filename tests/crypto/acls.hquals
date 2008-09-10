@@ -1,0 +1,9 @@
+qualif CR(v): can_read ~A = 1
+qualif CR(v): can_read v = 1
+qualif CR(v): v = can_read ~A
+
+qualif CW(v): can_write ~A = 2
+qualif CW(v): can_write v = 2
+qualif CW(v): v = can_write ~A
+
+qualif RW(v): can_read v = 1 or can_write v = 2
