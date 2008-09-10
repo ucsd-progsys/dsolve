@@ -147,8 +147,9 @@ let rec constrain e env guard =
       | (Texp_sequence (e1, e2), _) -> constrain_sequence environment e1 e2
       | (Texp_tuple es, _) -> constrain_tuple environment es
       | (Texp_assertfalse, _) -> constrain_assertfalse environment e.exp_env e.exp_type
-      | (Texp_assert e, _) -> constrain_assert environment e
-      | (Texp_assume e, _) -> constrain_assume environment e
+      | ((Texp_assert e) as form, _)
+      | ((Texp_assume e) as form, _) ->
+          constrain_guard environment form e
       | (_, f) ->
         fprintf err_formatter "@[Warning: Don't know how to constrain expression,
         structure:@ %a@ location:@ %a@]@.@." F.pprint f Location.print e.exp_loc; flush stderr;
@@ -332,30 +333,18 @@ and constrain_assertfalse (env, _, _) tenv ty =
   let f = F.fresh_false tenv ty in
     (f, [WFFrame (env, f)], [])
 
-and constrain_assert (env, guard, f) e =
+and constrain_guard (env, guard, f) form e =
   let (af, cstrs) = constrain e env guard in
-  let guardvar    = Path.mk_ident "assert_guard" in
-  let env         = Le.add guardvar af env in
-  let assert_qualifier =
-    (Path.mk_ident "assertion",
-     Path.mk_ident "null",
-     P.equals (B.tag(P.Var guardvar), P.int_true))
-  in (f,
-      [SubFrame (env, guard, B.mk_int [], B.mk_int [assert_qualifier]);
-       SubFrame (env, guard, B.mk_unit [assert_qualifier], f)],
-      cstrs)
-
-and constrain_assume (env, guard, f) e =
-  let (af, cstrs) = constrain e env guard in
-  let guardvar    = Path.mk_ident "assume_guard" in
-  let env         = Le.add guardvar af env in
-  let assume_qualifier =
-    (Path.mk_ident "assumption",
-     Path.mk_ident "null",
-     P.equals (B.tag(P.Var guardvar), P.int_true))
-  in (f,
-      [SubFrame (env, guard, B.mk_unit [assume_qualifier], f)],
-      cstrs)
+  let testvar     = Path.mk_ident "test_predicate" in
+  let env'        = Le.add testvar af env in
+  let witness     = B.mk_unit [(Path.mk_ident "", Path.mk_ident "", P.equals (B.tag (P.Var testvar), P.int_true))] in
+    (f,
+      (WFFrame (env, f) :: SubFrame (env', guard, witness, f) ::
+         match form with
+           | Texp_assume _ -> []
+           | Texp_assert _ -> [SubFrame (env', guard, B.uUnit, witness)]
+           | _             -> assert false),
+     cstrs)
 
 and constrain_and_bind guard (env, cstrs) (pat, e) =
   let (f, cstrs') = F.begin_def (); let r = constrain e env guard in F.end_def (); r in
