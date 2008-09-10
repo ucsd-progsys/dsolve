@@ -66,7 +66,7 @@ let uFloat = Fabstract(Predef.path_float, [], empty_refinement)
 
 let uChar = Fsum(Predef.path_char, None, [], empty_refinement)
 
-let mk_string qs = Fsum(Predef.path_string, None, [], const_ref qs)
+let mk_string qs = Fabstract(Predef.path_string, [], const_ref qs)
 
 let uString = mk_string []
 let rString name v p = mk_string [(Path.mk_ident name, v, p)]
