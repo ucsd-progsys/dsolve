@@ -219,10 +219,37 @@ let rec slow_mk_unique = function
     if List.mem x xs then xs else x :: xs
   | [] -> []
 
-let strip_meas s =
+let sub_from_list subs s =
+  try List.assoc s subs with Not_found -> s
+
+let sub_from s c =
+  try 
+    let x = String.rindex s c in
+      String.sub s x ((String.length s) - x)
+  with Not_found -> s
+
+let sub_to_r s c =
+  let x = String.rindex s c in
+    String.sub s 0 x
+
+let strip_meas_whole s =
   try if String.sub s 0 6 = "_meas_" then 
     String.sub s 6 (String.length s - 6) 
-  else s with Invalid_argument _ -> s
+  else s with Invalid_argument _ -> s 
+
+let rw_suff f s c =
+  let suff = f (sub_from s c) in
+    try (sub_to_r s c) ^ suff with Not_found -> suff
+
+let strip_meas s =
+  rw_suff strip_meas_whole s '.'
+
+let append_pref p s =
+  (p ^ "." ^ s)
+
+let app_fst f (a, b) = (f a, b)
+let app_snd f (a, b) = (a, f b)
+let app_pr f (a, b) = (f a, f b)
 
 (****************************************************************)
 (************* Output levels ************************************)

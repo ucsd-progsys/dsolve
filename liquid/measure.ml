@@ -42,27 +42,29 @@ let sum_path = function
   | F.Fsum (p, _, _, _) -> p
   | _                   -> assert false
 
-let rewrite_pred subs r =
-    let (n, p) = r in
-      (n, P.pexp_map_funs subs p)
+let rewrite_pred_funs subf r = C.app_snd (P.pexp_map_funs subf) r
 
-let transl_desc mlenv subs (c, (ps, r)) =
+let rewrite_pred_vars subf r = C.app_snd (P.pexp_map_vars (fun p -> P.Var (subf p))) r
+
+let rewrite_pred subvars subfuns r = rewrite_pred_funs subfuns (rewrite_pred_vars subvars r)
+
+let transl_desc mlenv (c, (ps, r)) =
   try
     let _ = if not(C.is_unique (C.maybe_list ps)) then failwith "Measure args not unique" in 
     let c = (Env.lookup_constructor (Longident.parse c) mlenv) in
     let tag = c.cstr_tag in
     let _ = if List.length ps != c.cstr_arity then failwith "Wrong number of measure args" in
     let fr = F.fresh_without_vars mlenv c.cstr_res in
-    Some (sum_path fr, (tag, ps, rewrite_pred (fun x -> try List.assoc x subs with Not_found -> x) r)) 
+    Some (sum_path fr, (tag, ps, r)) 
   with Not_found -> None
 
 let bms = ref empty
-let mk_measures env subs ms = 
+let mk_measures env ms = 
   let f g e h = 
     match g h with
         Some k -> add k e 
       | None -> e in
-  bms := List.fold_left (f (transl_desc env subs)) empty ms 
+  bms := List.fold_left (f (transl_desc env)) empty ms 
 
 let mk_fun n f = 
   let funr a = 
@@ -151,5 +153,8 @@ let constructor_patterns expvar pat =
 let mk_guard vp pat =
   P.big_and (C.map_partial (mk_single_gd !bms) (constructor_patterns (Some vp) pat))
 
-let transl_pred names (v, p) =
-  (v, P.map_funs (fun x -> try List.assoc x names with Not_found -> x) p) 
+let map_pred_funs f (v, p) =
+  (v, P.map_funs f p)
+
+let transl_pred names =
+  map_pred_funs (fun x -> C.rw_suff (C.sub_from_list names) x '.')     

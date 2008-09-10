@@ -11,9 +11,9 @@ module P = Predicate
 let parse ppf fname =
   if Sys.file_exists fname then Pparse.file ppf fname Parse.liquid_interface Config.ast_impl_magic_number else ([], [])
 
-let load_val env fenv (s, pf) =
+let load_val dopt env fenv (s, pf) =
   try
-    let p = C.lookup_path s env in
+    let p = C.lookup_path (match dopt with Some d -> C.append_pref d s | None -> s) env in
     let _ = if String.contains s '.' then failwith (Printf.sprintf "mlq: val %s has invalid name" s) in
       Lightenv.add p pf fenv
   with Not_found -> failwith (Printf.sprintf "mlq: val %s does not correspond to program value" s)
@@ -31,7 +31,7 @@ let map_constructor_args env (name, mlname) (cname, args, cpred) =
 let load_measure env ((n, mn), cstrs) =
   (Mname(n, mn)) :: (List.map (map_constructor_args env (n, mn)) cstrs)  
 
-let load env fenv (preds, decls) quals =
+(*let load env fenv (preds, decls) quals =
   let load_decl (ifenv, menv) = function
       LvalDecl(s, f)  -> (load_val env ifenv (s, F.translate_pframe env preds f), menv)
     | LmeasDecl (name, cstrs) -> (ifenv, List.rev_append (load_measure env (name, cstrs)) menv)
@@ -43,9 +43,78 @@ let load env fenv (preds, decls) quals =
   let ifenv = Le.map (fun f -> F.map_refexprs (fun (a, (qs, b)) -> (a, (List.map (Qualifier.map_pred (M.transl_pred mnsubs)) qs, b))) f) ifenv in
   (*let _ = Le.iter (fun p f -> printf "@[%s@;<1 2>%a@]@." (Path.unique_name p) F.pprint f) ifenv in*)
   let _ = M.mk_measures env mnsubs mcstrs in 
-    (Lightenv.addn (M.mk_tys env mnames) fenv, ifenv, Qualmod.map_preds (M.transl_pred mnsubs) quals)
+    (Lightenv.addn (M.mk_tys env mnames) fenv, ifenv, Qualmod.map_preds (M.transl_pred mnsubs) quals)*)
 
-(*let load_prefix fenv (preds, decls) quals =*)
+let load_rw dopt rw env fenv (preds, decls) quals =
+  let load_decl (ifenv, menv) = function
+      LvalDecl(s, f)  -> (load_val dopt env ifenv (s, F.translate_pframe env preds f), menv)
+    | LmeasDecl (name, cstrs) -> (ifenv, List.rev_append (load_measure env (name, cstrs)) menv)
+    | LrecrefDecl -> (ifenv, menv) in
+  let (ifenv, menv) = List.fold_left load_decl (Lightenv.empty, []) decls in
+  let (mcstrs, mnames, qsubs, fenv, ifenv) = rw env menv fenv ifenv in
+  let fenv = Lightenv.addn (M.mk_tys env mnames) fenv in
+  let _ = M.mk_measures env mcstrs in 
+  let quals = Qualmod.map_preds (M.transl_pred qsubs) quals in
+    (fenv, ifenv, quals)
+
+let hier_lookup f1 f2 s =
+  try f1 s with Not_found -> try f2 s with Not_found -> s 
+
+let lookup f y s =
+  try f s with Not_found -> y
+
+(* assumes no subs *)
+let rewrite_refexpr f (a, (qs, b)) = (a, (List.map (Qualifier.map_pred f) qs, b))
+
+let rewrite_ref f r = List.map (rewrite_refexpr f) r
+let rewrite_recref f rr = List.map (List.map (rewrite_ref f)) rr 
+
+(*let rewrite_frame fpred fr = 
+  let rec rewrite_frame_rec = function
+      F.Fvar(p, i, r) -> F.Fvar(p, i, rewrite_ref fpred r)
+    | F.Frec(p, rr, r) -> F.Frec(p, rewrite_recref fpred rr, rewrite_ref fpred r)
+    | F.Fsum(p, ro, cs, r) -> 
+        let ro = 
+          match ro with
+            Some (p, rr) -> Some (p, rewrite_recref fpred rr)
+          | None -> None in
+        let cs = List.map (C.app_snd (rewrite_params)) cs in
+        F.Fsum(p, ro, cs, rewrite_ref fpred r)
+    | F.Fabstract(p, ps, r) -> F.Fabstract(p, rewrite_params ps, rewrite_ref fpred r)
+    | F.Farrow(po, fr1, fr2) -> F.Farrow(po, rewrite_frame_rec fr1, rewrite_frame_rec fr2)
+    | F.Funknown -> F.Funknown
+  and rewrite_params ps = List.map (fun (i, fr, v) -> (i, rewrite_frame_rec fr, v)) ps in
+  rewrite_frame_rec fr*)
+
+let load_local_sig env fenv mlq quals =
+  let f s (c, (ps, r)) = (c, (ps, M.rewrite_pred_funs (C.sub_from_list s) r)) in 
+  let rw env menv fenv ifenv =
+    let mnames = M.filter_names menv in
+    let mnsubs = C.list_assoc_flip mnames in
+    let mcstrs = List.map (f mnsubs) (M.filter_cstrs menv) in
+    let ifenv = Le.map (fun f -> F.map_refexprs (rewrite_refexpr (M.transl_pred mnsubs)) f) ifenv in
+      (mcstrs, mnames, mnsubs, fenv, ifenv) in
+  load_rw None rw env fenv mlq quals
+
+let sub_pred v f p =
+  P.map_vars (fun x -> P.Var (v x)) (P.map_funs f p)
+
+let load_dep_sigs env fenv mlqs quals =
+  let rw dname env menv fenv ifenv =
+    let modname s = C.append_pref dname s in
+    let env_lookup s = let s = modname s in C.lookup_path s env in
+    let mnames = M.filter_names menv in
+    let simplesubs = C.list_assoc_flip mnames in
+    let mnames = List.map (C.app_pr modname) mnames in
+    let lfun = hier_lookup (fun s -> modname (List.assoc s simplesubs)) (C.compose Path.name env_lookup) in
+    let f (c, (ps, r)) = 
+      let lvar = hier_lookup (fun x -> List.find (fun s -> s = x) (C.maybe_list ps)) (C.compose env_lookup Path.name) in
+        (modname c, (ps, M.rewrite_pred lvar lfun r)) in
+    let mcstrs = List.map f (M.filter_cstrs menv) in
+    let lvar s = lookup env_lookup s (Path.name s) in
+    let fenv = Le.fold (fun p fr e -> Le.add p (F.map_refexprs (rewrite_refexpr (C.app_snd (sub_pred lvar lfun))) fr) e) ifenv fenv in
+      (mcstrs, mnames, simplesubs, fenv, Le.empty) in
+  List.fold_left (fun (fenv, _, quals) (mlq, dname) -> load_rw (Some dname) (rw dname) env fenv mlq quals) (fenv, Le.empty, quals) mlqs
 
 (* builtins *)
 
