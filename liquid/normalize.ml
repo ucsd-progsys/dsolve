@@ -97,6 +97,7 @@ let mk_assert e = Pexp_assert(e)
 let mk_assume e = Pexp_assume(e)
 let mk_match e pel = Pexp_match(e, pel)
 let mk_construct cstrdesc e b = Pexp_construct(cstrdesc, Some e, b)
+let mk_constraint c1 c2 e = Pexp_constraint(e, c1, c2)
 
 let mk_dummy desc loc = {pexp_desc = desc; pexp_loc = loc}
 
@@ -155,7 +156,8 @@ let normalize exp =
          let (inex, ls) = resolve_in_exp ls in
          let init = mk_construct cstrdesc inex b in
           rw_expr (List.fold_left (wrap Nonrecursive) init ls)
-     | Pexp_constraint(_, _, _)
+     | Pexp_constraint(e, c1, c2) ->
+         rw_expr (mk_constraint c1 c2 (norm_out e))
      | Pexp_ident(_) ->
         exp
      | Pexp_function(lbl, elbl, [(arg, e)]) ->
@@ -271,9 +273,9 @@ let normalize exp =
     match exp.pexp_desc with
      | Pexp_assume(_)
      | Pexp_assert(_)  
+     | Pexp_constraint(_, _, _)
      | Pexp_assertfalse ->
          [(fresh_name (), Some (norm_out exp), dummy)]
-     | Pexp_constraint(_, _, _)
      | Pexp_constant(_) 
      | Pexp_construct(_, None, _) ->
          [(fresh_name (), Some exp, dummy)]
