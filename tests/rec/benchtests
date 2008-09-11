@@ -21,3 +21,4 @@
  tests/rec/vec/all.ml          2  False True
  tests/rec/vec/bal.ml          1  False True
  tests/rec/vec/len.ml          2  False True
+ tests/rec/stable_sort/inc.ml      4  False False
