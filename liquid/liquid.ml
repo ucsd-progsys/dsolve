@@ -32,6 +32,7 @@ open Gc
 module F = Frame
 module MLQ = Mlqmod
 module C = Common
+module Le = Lightenv
 
 let usage = "Usage: liquid <options> [source-files]\noptions are:"
 
@@ -120,6 +121,7 @@ let process_sourcefile env fenv fname =
       let (deps, quals) = load_qualfile std_formatter qname in
       let (fenv, mlqenv, quals) = load_mlqfile iname env fenv quals in
       let (fenv, mlqenv, quals) = load_dep_mlqfiles bname deps env fenv quals mlqenv in
+      (*let _ = Le.iter (fun p f -> printf "@[%s: %a@]@." (Path.name p) F.pprint f) fenv in*)
       let source = (List.rev_append quals str, env, fenv, mlqenv) in
         analyze std_formatter fname source
    with x -> (report_error std_formatter x; exit 1)
