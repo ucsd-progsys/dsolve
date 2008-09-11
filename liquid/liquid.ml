@@ -129,6 +129,7 @@ let process_sourcefile env fenv fname =
 let process_file (env, fenv) fname =
   match Misc.get_extension fname with
     | Some "ml" ->
+        (* odd things may happen if multiple files are run through here *)
         process_sourcefile env fenv fname;
         (env, fenv)
     | Some "mlq" ->
