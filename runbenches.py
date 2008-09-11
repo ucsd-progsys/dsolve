@@ -31,7 +31,7 @@ def runtest(filep, expected_status):
   collect = int(filep[1])
   lqualifs = common.str_to_bool(filep[2])
   no_recrefs = common.str_to_bool(filep[3])
-  status = dsolve.gen_quals(file, True, lqualifs, collect)
+  status = dsolve.gen_quals(file, True, lqualifs, collect, "")
   if status != 0: 
     print "Qualgen failed on %s" % file
     sys.exit(2)
