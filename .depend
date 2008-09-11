@@ -339,15 +339,17 @@ liquid/constraint.cmx: liquid/wellformed.cmx typing/types.cmx \
 liquid/frame.cmo: typing/typetexp.cmi typing/types.cmi typing/typedtree.cmi \
     liquid/qualifier.cmi typing/qualdecl.cmo typing/predicate.cmi \
     liquid/pattern.cmi typing/path.cmi parsing/parsetree.cmi \
-    typing/oprint.cmi utils/misc.cmi parsing/location.cmi liquid/lightenv.cmo \
-    typing/ident.cmi typing/env.cmi typing/ctype.cmi typing/common.cmo \
-    utils/clflags.cmi typing/btype.cmi parsing/asttypes.cmi liquid/frame.cmi 
+    typing/oprint.cmi utils/misc.cmi parsing/longident.cmi \
+    parsing/location.cmi liquid/lightenv.cmo typing/ident.cmi typing/env.cmi \
+    typing/ctype.cmi typing/common.cmo utils/clflags.cmi typing/btype.cmi \
+    parsing/asttypes.cmi liquid/frame.cmi 
 liquid/frame.cmx: typing/typetexp.cmx typing/types.cmx typing/typedtree.cmx \
     liquid/qualifier.cmx typing/qualdecl.cmx typing/predicate.cmx \
     liquid/pattern.cmx typing/path.cmx parsing/parsetree.cmi \
-    typing/oprint.cmx utils/misc.cmx parsing/location.cmx liquid/lightenv.cmx \
-    typing/ident.cmx typing/env.cmx typing/ctype.cmx typing/common.cmx \
-    utils/clflags.cmx typing/btype.cmx parsing/asttypes.cmi liquid/frame.cmi 
+    typing/oprint.cmx utils/misc.cmx parsing/longident.cmx \
+    parsing/location.cmx liquid/lightenv.cmx typing/ident.cmx typing/env.cmx \
+    typing/ctype.cmx typing/common.cmx utils/clflags.cmx typing/btype.cmx \
+    parsing/asttypes.cmi liquid/frame.cmi 
 liquid/lightenv.cmo: typing/path.cmi typing/common.cmo 
 liquid/lightenv.cmx: typing/path.cmx typing/common.cmx 
 liquid/liqerrors.cmo: typing/typetexp.cmi typing/typemod.cmi \

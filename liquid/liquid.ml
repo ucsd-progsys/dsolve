@@ -32,6 +32,7 @@ open Gc
 module F = Frame
 module MLQ = Mlqmod
 module C = Common
+module Le = Lightenv
 
 let usage = "Usage: liquid <options> [source-files]\noptions are:"
 
@@ -86,7 +87,8 @@ let load_dep_mlqfiles bname deps env fenv quals mlqenv =
   let pathname = if String.contains bname '/' then 
           String.sub bname 0 ((String.rindex bname '/') + 1) else "" in
   let inames = List.map (fun s -> (pathname ^ (String.lowercase s) ^ ".mlq", s)) deps in
-  let mlqs = List.map (fun (x, d) -> try Some (MLQ.parse std_formatter x, d) with Not_found -> None) inames in
+  (*let _ = List.iter (fun (s, t) -> Format.printf "@[%s@ %s@]@." s t) inames in*)
+  let mlqs = List.map (fun (x, d) -> if Sys.file_exists x then Some (Pparse.file std_formatter x Parse.liquid_interface Config.ast_impl_magic_number, d) else None) inames in 
   let mlqs = C.maybe_list mlqs in
     MLQ.load_dep_sigs env fenv mlqs quals
 
@@ -119,7 +121,8 @@ let process_sourcefile env fenv fname =
     else
       let (deps, quals) = load_qualfile std_formatter qname in
       let (fenv, mlqenv, quals) = load_mlqfile iname env fenv quals in
-      let (fenv, mlqenv, quals) = load_dep_mlqfiles bname deps env fenv quals mlqenv in
+      let (fenv, _, quals) = load_dep_mlqfiles bname deps env fenv quals mlqenv in
+      (*let _ = Le.iter (fun p f -> Format.printf "@[%s@ %a@]@." (Path.name p) F.pprint f) fenv in*)
       let source = (List.rev_append quals str, env, fenv, mlqenv) in
         analyze std_formatter fname source
    with x -> (report_error std_formatter x; exit 1)
