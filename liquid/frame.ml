@@ -664,10 +664,6 @@ let fresh_sum fresh env p t tyl =
   let (_, cds)   = List.split (Env.constructors_of_type p (Env.find_type p env)) in
     Fsum (p, None, List.map (fresh_constructor env fresh t) cds, empty_refinement)
 
-let verify_covariance = function
-  | (_, false, false) -> ()
-  | (a, b, c)         -> failwith "Don't support non-covariant params in concrete types"
-
 let fresh_constr fresh env p t tyl =
   let ty_decl = Env.find_type p env in
     match ty_decl.type_kind with
@@ -676,8 +672,7 @@ let fresh_constr fresh env p t tyl =
       | Type_record (fields, _, _) ->
           fresh_record fresh env p fields t ty_decl.type_params tyl
       | Type_variant _ ->
-          let _ = List.iter verify_covariance ty_decl.type_variance in
-            fresh_sum fresh env p t tyl
+          fresh_sum fresh env p t tyl
 
 let close_recf (rp, rr) = function
   | Fsum (p, _, cs, r) ->
