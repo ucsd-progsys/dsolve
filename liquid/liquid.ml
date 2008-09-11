@@ -33,11 +33,12 @@ module F = Frame
 module MLQ = Mlqmod
 module C = Common
 
-let usage = "Usage: liquid <options> [source-file]\noptions are:"
+let usage = "Usage: liquid <options> [source-files]\noptions are:"
 
-let filename = ref ""
+let filenames = ref []
 
-let file_argument fname = filename := fname
+let file_argument fname =
+  filenames := !filenames @ [fname]
 
 let init_path () =
   let dirs =
@@ -59,8 +60,6 @@ let initial_env () =
     failwith "cannot open pervasives.cmi"
 
 let initial_fenv env = Lightenv.addn (Builtins.frames env) Lightenv.empty
-
-let (++) x f = f x
 
 let print_if ppf flag printer arg =
   if !flag then fprintf ppf "%a@." printer arg;
@@ -91,52 +90,49 @@ let load_dep_mlqfiles bname deps env fenv quals mlqenv =
   let mlqs = C.maybe_list mlqs in
     MLQ.load_dep_sigs env fenv mlqs quals
 
-let load_valfile ppf env ifacefile =
-  let (preds, decls) = MLQ.parse ppf ifacefile in
-  let vals = MLQ.filter_vals decls in
-    List.map (fun (s, pf) -> (s, F.translate_pframe env preds pf)) vals 
-
-let load_builtins ppf env fenv =
-  let b = match !builtins_file with 
-          | Some b -> if not(Sys.file_exists b) then failwith (sprintf "builtins: file %s does not exist" b) else b
-          | None -> "" in
-  let fenv = 
-    try
-      let kvl = load_valfile ppf env b in
-      let tag = (Path.mk_ident F.tag_function, F.Fvar(Path.mk_ident "", 0, F.empty_refinement)) in
-      let f = (fun (k, v) -> (C.lookup_path k env, F.label_like v v)) in
-      let kvl = tag :: (List.map f kvl) in
-      Lightenv.addn kvl fenv
-    with Not_found -> failwith (Printf.sprintf "builtins: val %s does not correspond to library value" b) in
-  (env, fenv)
-
+let load_valfile ppf env fenv fname =
+  try
+    let (preds, decls) = MLQ.parse ppf fname in
+    let vals = MLQ.filter_vals decls in
+    let kvl = List.map (fun (s, pf) -> (s, F.translate_pframe env preds pf)) vals in
+    let tag = (Path.mk_ident F.tag_function, F.Fvar(Path.mk_ident "", 0, F.empty_refinement)) in
+    let f = (fun (k, v) -> (C.lookup_path k env, F.label_like v v)) in
+    let kvl = tag :: (List.map f kvl) in
+      (env, Lightenv.addn kvl fenv)
+  with Not_found -> failwith (Printf.sprintf "builtins: val %s does not correspond to library value" fname)
     
-let load_sourcefile ppf sourcefile =
-  init_path ();
-  let env = initial_env () in
-  let fenv = initial_fenv env in
+let load_sourcefile ppf env fenv sourcefile =
   let str = Pparse.file ppf sourcefile Parse.implementation ast_impl_magic_number in 
   let str = if !Clflags.no_anormal then str else Normalize.normalize_structure str in
   let str = print_if ppf Clflags.dump_parsetree Printast.implementation str in
   let (str, _, env) = type_implementation env str in
     (str, env, fenv)
 
-let process_sourcefile fname =
+let process_sourcefile env fenv fname =
   let bname = Misc.chop_extension_if_any fname in
   let (qname, iname) = (bname ^ ".quals", bname ^ ".mlq") in
   try
-    let (str, env, fenv) as source = load_sourcefile std_formatter !filename in
+    let (str, env, fenv) as source = load_sourcefile std_formatter env fenv fname in
     if !dump_qualifs
     then
       Qdump.dump_default_qualifiers source qname
     else
       let (deps, quals) = load_qualfile std_formatter qname in
-      let (env, fenv) = load_builtins std_formatter env fenv in 
       let (fenv, mlqenv, quals) = load_mlqfile iname env fenv quals in
       let (fenv, mlqenv, quals) = load_dep_mlqfiles bname deps env fenv quals mlqenv in
       let source = (List.rev_append quals str, env, fenv, mlqenv) in
-      analyze std_formatter !filename source
+        analyze std_formatter fname source
    with x -> (report_error std_formatter x; exit 1)
+
+let process_file (env, fenv) fname =
+  match Misc.get_extension fname with
+    | Some "ml" ->
+        process_sourcefile env fenv fname;
+        (env, fenv)
+    | Some "mlq" ->
+        load_valfile std_formatter env fenv fname
+    | _ ->
+        failwith (sprintf "Unrecognized file type for file %s" fname)
 
 let main () =
   Arg.parse [
@@ -220,9 +216,10 @@ let main () =
                \032    13     +Dump constraint graph\n\
                \032    64     +Drowning in output";
      "-collect", Arg.Int (fun c -> Qualgen.col_lev := c), "[1] number of lambdas to collect identifiers under";
-     "-use-builtins", Arg.String (fun s -> builtins_file := Some s), "[None] location of extra builtins"
   ] file_argument usage;
-  process_sourcefile !filename
+  init_path ();
+  let env = initial_env () in
+    ignore (List.fold_left process_file (env, initial_fenv env) !filenames)
 
 let _ = 
   main (); exit 0

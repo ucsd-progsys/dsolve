@@ -181,6 +181,13 @@ let no_overflow_lsl a = min_int asr 1 <= a && a <= max_int asr 1
 let chop_extension_if_any fname =
   try Filename.chop_extension fname with Invalid_argument _ -> fname
 
+let get_extension fname =
+  try
+    let dotpos = String.rindex fname '.' + 1 in
+      Some (String.sub fname dotpos (String.length fname - dotpos))
+  with _ ->
+    None
+
 let chop_extensions file =
   let dirname = Filename.dirname file and basename = Filename.basename file in
   try
