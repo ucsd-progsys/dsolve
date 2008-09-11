@@ -85,7 +85,7 @@ val is_shape: t -> bool
 val params_ids: param list -> Ident.t list
 val same_shape: t -> t -> bool
 val subt: t -> t -> bool
-val translate_pframe: Env.t -> (string * (string * Parsetree.predicate_pattern)) list -> Parsetree.litframe -> t
+val translate_pframe: string option -> Env.t -> (string * (string * Parsetree.predicate_pattern)) list -> Parsetree.litframe -> t
 val replace_recvar: t -> t -> t
 val unfold: t -> t
 val unfold_applying: t -> t

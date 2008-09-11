@@ -797,12 +797,17 @@ let transl_pref plist env p =
   let valu = Path.mk_ident v  in
   [([], ([(C.dummy (), valu, Qualdecl.transl_patpred_single false valu env p)], []))]
 
-let rec translate_pframe env plist pf =
+let rec translate_pframe dopt env plist pf =
   let vars = ref [] in
   let getvar a = try List.find (fun b -> Path.name b = a) !vars
                    with Not_found -> let a = Path.mk_ident a in
                    let _ = vars := a::!vars in
                      a in
+  let transl_lident l = match dopt with Some d -> Longident.parse (C.append_pref d (C.l_to_s l)) | None -> l in 
+  let lookup l = 
+    try Env.lookup_type (transl_lident l) env 
+      with Not_found -> try Env.lookup_type l env
+        with Not_found -> raise (T.Error(Location.none, T.Unbound_type_constructor l)) in
   let transl_pref = transl_pref plist env in
   let rec transl_pframe_rec pf =
     match pf with
@@ -821,12 +826,7 @@ let rec translate_pframe env plist pf =
     | PFtuple (fs, r) -> tuple_of_frames (List.map transl_pframe_rec fs) (transl_pref r)
     | PFrecord (fs, r) -> transl_record fs r
   and transl_sum l rro cs r =
-    let (path, decl) =
-      try
-        Env.lookup_type l env
-      with
-        Not_found -> raise (T.Error(Location.none, T.Unbound_type_constructor l))
-    in
+    let (path, decl) = lookup l in
     let cstrs = snd (List.split (Env.constructors_of_type path (Env.find_type path env))) in
     let rro = match rro with None -> None | Some (rvar, rr) -> Some (getvar rvar, transl_recref rr) in
       Fsum (path, rro, transl_cstrs (List.combine cs cstrs), transl_pref r)
@@ -841,8 +841,7 @@ let rec translate_pframe env plist pf =
     List.map (fun rs -> List.map transl_pref rs) rr
   and transl_constr l fs r =
     let params = List.map transl_pframe_rec fs in
-    let (path, decl) = try Env.lookup_type l env with
-      Not_found -> raise (T.Error(Location.none, T.Unbound_type_constructor l)) in
+    let (path, decl) = lookup l in
     let _ = if List.length fs != decl.type_arity then
       raise (T.Error(Location.none, T.Type_arity_mismatch(l, decl.type_arity, List.length fs))) in
     let varis   = List.map translate_variance decl.type_variance in

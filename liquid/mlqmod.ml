@@ -31,23 +31,9 @@ let map_constructor_args env (name, mlname) (cname, args, cpred) =
 let load_measure env ((n, mn), cstrs) =
   (Mname(n, mn)) :: (List.map (map_constructor_args env (n, mn)) cstrs)  
 
-(*let load env fenv (preds, decls) quals =
-  let load_decl (ifenv, menv) = function
-      LvalDecl(s, f)  -> (load_val env ifenv (s, F.translate_pframe env preds f), menv)
-    | LmeasDecl (name, cstrs) -> (ifenv, List.rev_append (load_measure env (name, cstrs)) menv)
-    | LrecrefDecl -> (ifenv, menv) in
-  let (ifenv, menv) = List.fold_left load_decl (Lightenv.empty, []) decls in
-  let mcstrs = M.filter_cstrs menv in
-  let mnames = M.filter_names menv in
-  let mnsubs = C.list_assoc_flip mnames in
-  let ifenv = Le.map (fun f -> F.map_refexprs (fun (a, (qs, b)) -> (a, (List.map (Qualifier.map_pred (M.transl_pred mnsubs)) qs, b))) f) ifenv in
-  (*let _ = Le.iter (fun p f -> printf "@[%s@;<1 2>%a@]@." (Path.unique_name p) F.pprint f) ifenv in*)
-  let _ = M.mk_measures env mnsubs mcstrs in 
-    (Lightenv.addn (M.mk_tys env mnames) fenv, ifenv, Qualmod.map_preds (M.transl_pred mnsubs) quals)*)
-
 let load_rw dopt rw env fenv (preds, decls) quals =
   let load_decl (ifenv, menv) = function
-      LvalDecl(s, f)  -> (load_val dopt env ifenv (s, F.translate_pframe env preds f), menv)
+      LvalDecl(s, f)  -> (load_val dopt env ifenv (s, F.translate_pframe dopt env preds f), menv)
     | LmeasDecl (name, cstrs) -> (ifenv, List.rev_append (load_measure env (name, cstrs)) menv)
     | LrecrefDecl -> (ifenv, menv) in
   let (ifenv, menv) = List.fold_left load_decl (Lightenv.empty, []) decls in
@@ -68,23 +54,6 @@ let rewrite_refexpr f (a, (qs, b)) = (a, (List.map (Qualifier.map_pred f) qs, b)
 
 let rewrite_ref f r = List.map (rewrite_refexpr f) r
 let rewrite_recref f rr = List.map (List.map (rewrite_ref f)) rr 
-
-(*let rewrite_frame fpred fr = 
-  let rec rewrite_frame_rec = function
-      F.Fvar(p, i, r) -> F.Fvar(p, i, rewrite_ref fpred r)
-    | F.Frec(p, rr, r) -> F.Frec(p, rewrite_recref fpred rr, rewrite_ref fpred r)
-    | F.Fsum(p, ro, cs, r) -> 
-        let ro = 
-          match ro with
-            Some (p, rr) -> Some (p, rewrite_recref fpred rr)
-          | None -> None in
-        let cs = List.map (C.app_snd (rewrite_params)) cs in
-        F.Fsum(p, ro, cs, rewrite_ref fpred r)
-    | F.Fabstract(p, ps, r) -> F.Fabstract(p, rewrite_params ps, rewrite_ref fpred r)
-    | F.Farrow(po, fr1, fr2) -> F.Farrow(po, rewrite_frame_rec fr1, rewrite_frame_rec fr2)
-    | F.Funknown -> F.Funknown
-  and rewrite_params ps = List.map (fun (i, fr, v) -> (i, rewrite_frame_rec fr, v)) ps in
-  rewrite_frame_rec fr*)
 
 let load_local_sig env fenv mlq quals =
   let f s (c, (ps, r)) = (c, (ps, M.rewrite_pred_funs (C.sub_from_list s) r)) in 
