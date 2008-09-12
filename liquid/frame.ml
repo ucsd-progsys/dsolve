@@ -173,6 +173,9 @@ let mk_refinement subs qconsts qvars =
 let empty_refinement =
   mk_refinement [] [] []
 
+let const_refinement qs =
+  mk_refinement [] qs []
+
 let refinement_is_empty qes =
   List.for_all (function (_, ([], [])) -> true | _ -> false) qes
 
@@ -775,6 +778,15 @@ let fresh_with_labels env ty f =
 
 let fresh_without_vars env ty =
   fresh_with_var_fun env (fun _ -> empty_refinement) ty
+
+let fresh_uninterpreted env ty name =
+  match fresh_without_vars env ty with
+    | Farrow (_, f, f') ->
+        let lab = Ident.create "x" in
+        let v   = Path.mk_ident "v" in
+        let q   = const_refinement [(Path.mk_ident name, v, P.Atom (P.Var v, P.Eq, P.FunApp (name, [P.Var (Path.Pident lab)])))] in  
+          Farrow (Some (Tpat_var lab), f, apply_refinement q f')
+    | _ -> failwith "cannot make uninterpreted function of non-function type"
 
 (**************************************************************)
 (********************* mlq translation ************************) 

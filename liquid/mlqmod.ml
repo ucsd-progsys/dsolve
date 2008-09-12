@@ -38,7 +38,9 @@ let load_rw dopt rw env fenv (preds, decls) quals =
     | LrecrefDecl -> (ifenv, menv) in
   let (ifenv, menv) = List.fold_left load_decl (Lightenv.empty, []) decls in
   let (mcstrs, mnames, qsubs, fenv, ifenv) = rw env menv fenv ifenv in
-  let fenv = Lightenv.addn (M.mk_tys env mnames) fenv in
+  let (measnames, mlnames) = List.split mnames in
+  let fs = List.combine (List.map Path.mk_ident measnames) (List.map2 (M.mk_uninterpreted env) measnames mlnames) in
+  let fenv = Lightenv.addn fs fenv in
   let _ = M.mk_measures env mcstrs in 
   let quals = Qualmod.map_preds (M.transl_pred qsubs) quals in
     (fenv, ifenv, quals)

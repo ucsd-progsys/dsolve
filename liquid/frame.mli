@@ -41,6 +41,7 @@ type qexpr =
 type simple_refinement = substitution list * qexpr
 
 val empty_refinement: refinement
+val const_refinement: Qualifier.t list -> refinement
 val false_refinement: refinement
 
 type t =
@@ -93,6 +94,7 @@ val fresh: Env.t -> type_expr -> t
 val fresh_without_vars: Env.t -> type_expr -> t
 val fresh_false: Env.t -> type_expr -> t
 val fresh_with_labels: Env.t -> type_expr -> t -> t
+val fresh_uninterpreted: Env.t -> type_expr -> string -> t
 val instantiate: t -> t -> t
 val instantiate_qualifiers: (string * Path.t) list -> t -> t
 val bind: pattern_desc -> t -> (Path.t * t) list
