@@ -148,6 +148,9 @@ let pprint_list sepstr pp =
   (fun ppf -> Oprint.print_list pp
      (fun ppf -> F.fprintf ppf "%s@;<1 2>" sepstr) ppf)
 
+let pprint_str ppf s =
+  Format.fprintf ppf "%s" s
+
 let rec is_unique xs =
   match xs with
       x :: xs -> if List.mem x xs then false else is_unique xs

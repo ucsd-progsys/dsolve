@@ -58,7 +58,8 @@ let rec fixdiv p =
       | P.And(p, p') -> (pred_isdiv p) || (pred_isdiv p')
       | P.Or(p, p') -> (pred_isdiv p) || (pred_isdiv p')
       | P.True -> false
-      | P.Not p -> pred_isdiv p in
+      | P.Not p -> pred_isdiv p
+      | P.Forall (_, q) | P.Exists (_, q) -> pred_isdiv q in
   let calc_cm e1 e2 =
     pull_divisor e1 * pull_divisor e2 in
   if pred_isdiv p then

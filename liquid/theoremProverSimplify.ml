@@ -190,6 +190,7 @@ let rec convert_pred p =
   | Not p -> Printf.sprintf "(NOT %s)" (convert_pred p) 
   | And (p1,p2) -> Printf.sprintf "(AND %s %s)" (convert_pred p1) (convert_pred p2)
   | Or (p1,p2) -> Printf.sprintf "(OR %s %s)" (convert_pred p1) (convert_pred p2)
+  | Forall (_, _) | Exists (_, _) -> assert false
 
 
 (********************************************************************************)

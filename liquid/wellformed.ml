@@ -133,7 +133,10 @@ let pred_is_well_typed env p =
         pred_shape_is_bool q
       else
         raise IllFormed
-  in pred_shape_is_bool p
+  | P.Exists (ps, q)
+  | P.Forall (ps, q) ->
+      pred_shape_is_bool q in
+  pred_shape_is_bool p
 
 let refinement_well_formed env solution r qual_expr =
   try

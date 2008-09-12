@@ -112,6 +112,7 @@ module Prover : PROVER =
       | Predicate.Iff _ as iff -> yicesPred me (Predicate.expand_iff iff)
       | Predicate.Atom (e1,Predicate.Lt,e2) ->
           yicesPred me (Atom (e1, Predicate.Le, Binop(e2,Predicate.Minus,PInt 1)))
+      | Predicate.Forall _ | Predicate.Exists _ -> assert false
     (* RJ: why not this ?
      * | P.Atom (e1,P.Gt,e2) -> 
           yicesPred me (Atom (e2, P.Le, Binop(e1,P.Minus,PInt 1))) *)

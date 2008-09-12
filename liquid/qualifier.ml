@@ -87,7 +87,11 @@ let expand_about vm p =
     | And (t1, t2) ->
         C.tflap2 (t_rec t1, t_rec t2) (fun a b -> And (a, b))
     | Or (t1, t2) ->
-        C.tflap2 (t_rec t1, t_rec t2) (fun a b -> Or (a, b)) in
+        C.tflap2 (t_rec t1, t_rec t2) (fun a b -> Or (a, b))
+    | Forall (p, q) ->
+        List.rev_map (fun a -> Forall (p, a)) (t_rec q)
+    | Exists (p, q) ->
+        List.rev_map (fun a -> Exists (p, a)) (t_rec q) in
   t_rec p
 
 let instantiate_about vm (path, valu, pred) = 

@@ -470,7 +470,7 @@ let find_model_example2() =
     check ctx Z3.L_TRUE;
     Z3.del_context ctx;
   end;;
-(*
+
 (**
    Prove {e x = y implies g(x) = g(y) }, and
    disprove {e x = y implies g(g(x)) = g(y) }.
@@ -1275,7 +1275,7 @@ let traverse_term_example() =
   print_term ctx [] q;
   printf "\n";
   Z3.del_context ctx
-*)
+
 let main() =
   begin
     display_version();
@@ -1283,7 +1283,7 @@ let main() =
     demorgan();
     find_model_example1();
     find_model_example2();
-    (*prove_example1();
+    prove_example1();
     prove_example2();
     push_pop_example1();
     quantifier_example1();
@@ -1304,7 +1304,7 @@ let main() =
     parser_example5();
     ite_example();
     simplifier_example();
-    traverse_term_example()*)
+    traverse_term_example()
   end;;
 
 let _ = main();;

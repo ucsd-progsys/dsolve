@@ -207,6 +207,9 @@ external mk_app : context -> const_decl_ast -> ast array -> ast
 external mk_const : context -> symbol -> type_ast -> ast
 	= "camlidl_z3_Z3_mk_const"
 
+external mk_label : context -> symbol -> bool -> ast -> ast
+	= "camlidl_z3_Z3_mk_label"
+
 external mk_fresh_func_decl : context -> string -> type_ast array -> type_ast -> const_decl_ast
 	= "camlidl_z3_Z3_mk_fresh_func_decl"
 
@@ -393,6 +396,9 @@ external mk_forall : context -> int -> pattern_ast array -> type_ast array -> sy
 external mk_exists : context -> int -> pattern_ast array -> type_ast array -> symbol array -> ast -> ast
 	= "camlidl_z3_Z3_mk_exists_bytecode" "camlidl_z3_Z3_mk_exists"
 
+external mk_quantifier : context -> bool -> int -> int -> pattern_ast -> int -> ast -> int -> type_ast -> symbol -> ast -> ast
+	= "camlidl_z3_Z3_mk_quantifier_bytecode" "camlidl_z3_Z3_mk_quantifier"
+
 external get_symbol_kind : context -> symbol -> symbol_kind
 	= "camlidl_z3_Z3_get_symbol_kind"
 
@@ -465,11 +471,17 @@ external get_decl_kind : context -> const_decl_ast -> decl_kind
 external get_numeral_ast_value : context -> ast -> string
 	= "camlidl_z3_Z3_get_numeral_ast_value"
 
+external get_numeral_ast_value_small : context -> ast -> bool * int64 * int64
+	= "camlidl_z3_Z3_get_numeral_ast_value_small"
+
 external get_index_value : context -> ast -> int
 	= "camlidl_z3_Z3_get_index_value"
 
 external is_quantifier_forall : context -> ast -> bool
 	= "camlidl_z3_Z3_is_quantifier_forall"
+
+external get_quantifier_weight : context -> ast -> int
+	= "camlidl_z3_Z3_get_quantifier_weight"
 
 external get_quantifier_num_patterns : context -> ast -> int
 	= "camlidl_z3_Z3_get_quantifier_num_patterns"
@@ -533,6 +545,21 @@ external del_model : model -> unit
 
 external simplify : context -> ast -> ast
 	= "camlidl_z3_Z3_simplify"
+
+external get_relevant_labels : context -> labels
+	= "camlidl_z3_Z3_get_relevant_labels"
+
+external del_labels : context -> labels -> unit
+	= "camlidl_z3_Z3_del_labels"
+
+external get_num_labels : context -> labels -> int
+	= "camlidl_z3_Z3_get_num_labels"
+
+external get_label_symbol : context -> labels -> int -> symbol
+	= "camlidl_z3_Z3_get_label_symbol"
+
+external disable_label : context -> labels -> int -> unit
+	= "camlidl_z3_Z3_disable_label"
 
 external block_labels : context -> labels -> unit
 	= "camlidl_z3_Z3_block_labels"
@@ -666,6 +693,8 @@ external get_version : unit -> int * int * int * int
 external type_check : context -> ast -> bool
 	= "camlidl_z3_Z3_type_check"
 
+external get_allocation_size : unit -> int
+	= "camlidl_z3_Z3_get_allocation_size"
 
 
 
@@ -804,6 +833,36 @@ type term_refined =
   | Term_quantifier of binder_type * int * ast array array * (symbol *type_ast) array * ast
   | Term_numeral    of numeral_refined * type_ast
   | Term_var        of int * type_ast
+
+let term_refine c t = 
+  match get_ast_kind c t with
+  | NUMERAL_AST -> 
+      let (is_small, n, d) = get_numeral_ast_value_small c t in
+      if is_small then 
+	Term_numeral(Numeral_small(n,d), get_type c t)
+      else
+	Term_numeral(Numeral_large(get_numeral_ast_value c t), get_type c t)
+  | CONST_AST   -> 
+      let t' = to_const_ast c t in
+      let f =  get_const_ast_decl c t' in
+      let num_args = get_const_ast_num_args c t' in
+      let args = Array.init num_args (get_const_ast_arg c t') in
+      let k = get_decl_kind c f in
+      Term_app (k, f, args)
+  | QUANTIFIER_AST -> 
+      let bt = if is_quantifier_forall c t then Forall else Exists in
+      let w = get_quantifier_weight c t                            in
+      let np = get_quantifier_num_patterns c t                     in
+      let pats = Array.init np (get_quantifier_pattern_ast c t)    in
+      let pats = Array.map (get_pattern_terms c) pats              in
+      let nb = get_quantifier_num_bound c t                        in
+      let bound = Array.init nb 
+	  (fun i -> (get_quantifier_bound_name c t i, get_quantifier_bound_type_ast c t i)) in
+      let body = get_quantifier_body c t in
+      Term_quantifier(bt, w, pats, bound, body)
+  | VAR_AST -> 
+      Term_var(get_index_value c t, get_type c t)
+  | _ -> assert false
 
 type value_refined =
   | Value_bool of bool

@@ -79,6 +79,10 @@ let z3_mk_lt c ze1 ze2 =
   wrap "mk_lt" (Z3.mk_lt c ze1) ze2
 let z3_mk_le c ze1 ze2 = 
   wrap "mk_le" (Z3.mk_le c ze1) ze2
+let z3_mk_forall c ts ns ze =
+  wrap "mk_forall" (Z3.mk_forall c 0 [||] ts ns) ze
+let z3_mk_exists c ts ns ze =
+  wrap "mk_exists" (Z3.mk_exists c 0 [||] ts ns) ze
 let z3_check c = 
   wrap "check" Z3.check c
 let z3_ast_to_string c zp = 
@@ -155,6 +159,10 @@ module Prover : PROVER =
 
     let rec isConst = function P.PInt i -> true | _ -> false
 
+    let p_to_v me p = z3Var me (Path.unique_name p)
+    let qargs me ps = Array.of_list (List.map (C.compose (Z3.mk_string_symbol me.c) Path.unique_name) ps)
+    let qtypes me ps = Array.of_list (List.map (C.compose (Z3.get_type me.c) (p_to_v me)) ps)
+
     let rec z3Exp me e =
       match e with 
       | P.PInt i                -> Z3.mk_int me.c i me.tint 
@@ -182,6 +190,8 @@ module Prover : PROVER =
       | P.Atom (e1,P.Ge,e2) -> Z3.mk_ge me.c (z3Exp me e1) (z3Exp me e2)
       | P.Atom (e1,P.Lt,e2) -> Z3.mk_lt me.c (z3Exp me e1) (z3Exp me e2)
       | P.Atom (e1,P.Le,e2) -> Z3.mk_le me.c (z3Exp me e1) (z3Exp me e2)
+      | P.Forall (ps, q) -> z3_mk_forall me.c (qtypes me ps) (qargs me ps) (z3Pred me q)
+      | P.Exists (ps, q) -> z3_mk_exists me.c (qtypes me ps) (qargs me ps) (z3Pred me q)
 
     let z3Preds me ps = 
       let ps' = List.map (z3Pred me) ps in

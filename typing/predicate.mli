@@ -68,6 +68,8 @@ and t =
   | Not of t
   | And of t * t 
   | Or of t * t 
+  | Forall of Path.t list * t
+  | Exists of Path.t list * t
 
 val pprint_rel: binrel -> string
 val pprint: formatter -> t -> unit

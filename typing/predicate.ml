@@ -73,6 +73,8 @@ and t =
   | Not of t
   | And of t * t 
   | Or of t * t
+  | Forall of Path.t list * t
+  | Exists of Path.t list * t
 
 let pprint_rel = function
     Eq -> "="
@@ -115,6 +117,12 @@ and pprint ppf = function
       fprintf ppf "@[(%a@ and@;<1 2>@;<1 2>%a)@]" pprint p pprint q
   | Or (p, q) ->
       fprintf ppf "@[(%a@ or@;<1 2>@;<1 2>%a)@]" pprint p pprint q
+  | Forall (p, q) ->
+      let p = List.map Common.path_name p in
+      fprintf ppf "@[(Forall@ (%a),@ %a)@]" (Common.pprint_list ", " (Common.pprint_str)) p pprint q
+  | Exists (p, q) ->
+      let p = List.map Common.path_name p in
+      fprintf ppf "@[(Forall@ (%a),@ %a)@]" (Common.pprint_list ", " (Common.pprint_str)) p pprint q
 
 let equals(p, q) = Atom(p, Eq, q)
 
@@ -212,6 +220,10 @@ and map f pred =
         And (map_rec p, map_rec q)
     | Or (p, q) ->
         Or (map_rec p, map_rec q)
+    | Forall (p, q) ->
+        Forall (p, map_rec q)
+    | Exists (p, q) ->
+        Exists (p, map_rec q)
   in map_rec pred
 
 let rec map_vars f pred =
@@ -234,6 +246,7 @@ let unexp f = function
   | Iff (e, q) -> ([q], f e)
   | Not p -> ([p], [])
   | And (p, q) | Or (p, q) -> ([p; q], [])
+  | Forall (p, q) | Exists (p, q) -> ([q], [])
 
 let rec exp_vars_unexp = function
   | PInt _ -> ([], [])
