@@ -222,8 +222,8 @@ let simplify_fc c =
 let make_lc c fc = {lc_cstr = fc; lc_tenv = c.lc_tenv; lc_orig = Cstr c; lc_id = c.lc_id}
 
 let lequate_cs env g c variance f1 f2 = match variance with
-  | F.Invariant -> [make_lc c (SubFrame(env,g,f1,f2)); make_lc c (SubFrame(env,g,f2,f1))]
-  | F.Covariant -> [make_lc c (SubFrame(env,g,f1,f2))]
+  | F.Invariant     -> [make_lc c (SubFrame(env,g,f1,f2)); make_lc c (SubFrame(env,g,f2,f1))]
+  | F.Covariant     -> [make_lc c (SubFrame(env,g,f1,f2))]
   | F.Contravariant -> [make_lc c (SubFrame(env,g,f2,f1))]
 
 let subst_to lfrom lto = match (lfrom, lto) with
