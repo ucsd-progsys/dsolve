@@ -29,13 +29,10 @@ let find_c p t e =
 
 let tsc (a, b, c) = (a, (b, c))
 
-let add (p, ((tag, args, ref) as r)) menv = 
-  let cs = try Le.find p menv with
-             Not_found -> [] in
-  let (nm, _) = ref in
-  let _ = if List.exists (fun (x, y, z) -> let (nm', _) = z in tag = x && nm = nm') cs then 
-      let errmsg = Printf.sprintf "measure redef %s for path %s" nm (Path.name p) in
-        failwith errmsg in
+let add (p, ((tag, args, (nm, _)) as r)) menv =
+  let cs = try Le.find p menv with Not_found -> [] in
+  let _  = if List.exists (fun (x, y, z) -> let (nm', _) = z in tag = x && nm = nm') cs then
+      failwith (Printf.sprintf "measure redef %s for path %s" nm (Path.name p)) in
   Lightenv.add p (r :: cs) menv
 
 let sum_path = function
@@ -50,13 +47,13 @@ let rewrite_pred subvars subfuns r = rewrite_pred_funs subfuns (rewrite_pred_var
 
 let transl_desc mlenv (c, (ps, r)) =
   try
-    let _ = if not(C.is_unique (C.maybe_list ps)) then failwith "Measure args not unique" in 
-    let c = (Env.lookup_constructor (Longident.parse c) mlenv) in
-    let tag = c.cstr_tag in
-    let _ = if List.length ps != c.cstr_arity then failwith "Wrong number of measure args" in
+    let _  = if not(C.is_unique (C.maybe_list ps)) then failwith "Measure args not unique" in
+    let c  = Env.lookup_constructor (Longident.parse c) mlenv in
+    let _  = if List.length ps != c.cstr_arity then failwith "Wrong number of measure args" in
     let fr = F.fresh_without_vars mlenv c.cstr_res in
-    Some (sum_path fr, (tag, ps, r)) 
-  with Not_found -> None
+      Some (sum_path fr, (c.cstr_tag, ps, r))
+  with Not_found ->
+    None
 
 let mk_uninterpreted env name mlname =
   try
@@ -66,11 +63,11 @@ let mk_uninterpreted env name mlname =
 
 let bms = ref empty
 let mk_measures env ms = 
-  let f g e h = 
-    match g h with
-        Some k -> add k e 
+  let maybe_add e h =
+    match transl_desc env h with
+        Some k -> add k e
       | None -> e in
-  bms := List.fold_left (f (transl_desc env)) empty ms 
+  bms := List.fold_left maybe_add empty ms
 
 let mk_pred v mps (_, ps, ms) =
   let maybe_fail = function Some p -> p | None -> raise Not_found in
