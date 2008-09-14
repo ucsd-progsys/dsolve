@@ -26,6 +26,8 @@ open Frame
 
 module P = Predicate
 
+exception IllFormed
+
 let abstract_app_shape paths out_shape in_shapes =
   let f i o = 
     match o with
@@ -34,7 +36,7 @@ let abstract_app_shape paths out_shape in_shapes =
       | _ -> false
   in if (List.length paths = List.length in_shapes) && 
         (List.for_all2 f paths in_shapes) 
-          then out_shape else Funknown
+          then out_shape else raise IllFormed
 
 (* ext_find_type_path isn't initialized until sometime late in ocaml startup, so
    we'll suspend this and force it when we know it's safe *)
@@ -43,7 +45,7 @@ let builtin_fun_app_shapes = lazy(
     [("Array.length", abstract_app_shape [Predef.path_array] uInt);
      ("Bigarray.Array2.dim1", abstract_app_shape [array2_path] uInt);
      ("Bigarray.Array2.dim2", abstract_app_shape [array2_path] uInt);
-     (tag_function, (function [Fsum _] -> uInt | _ -> Funknown))]
+     (tag_function, (function [Fsum _] -> uInt | _ -> raise IllFormed))]
 )
 
 let rec app_to_fun funf =
@@ -54,13 +56,13 @@ let rec app_to_fun funf =
              p :: ps ->
                (*let _ = Format.printf "@[%a@.%a@.%b@]@.@." pprint f1 pprint p
                  (subt f1 p) in *)
-               if (subt f1 p || subt (unfold f1) p) then (app_to_fun f2) ps else Funknown
-           | [] -> Funknown)
+               if (subt f1 p || subt (unfold f1) p) then (app_to_fun f2) ps else raise IllFormed
+           | [] -> raise IllFormed)
     | f -> 
         (fun ps -> 
            match ps with
              [] -> f
-           | _ -> Funknown)
+           | _ -> raise IllFormed)
 
 let get_by_name (n, env) =
   let s n' v = n = Path.name n' in
@@ -79,8 +81,6 @@ let get_app_shape s env =
     List.assoc s (Lazy.force builtin_fun_app_shapes)
   with Not_found -> 
     app_to_fun (get_by_name s env)
-
-exception IllFormed
 
 let pred_is_well_typed env p =
   let rec get_expr_shape = function
