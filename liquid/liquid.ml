@@ -115,17 +115,14 @@ let process_sourcefile env fenv fname =
   let (qname, iname) = (bname ^ ".quals", bname ^ ".mlq") in
   try
     let (str, env, fenv) as source = load_sourcefile std_formatter env fenv fname in
-    if !dump_qualifs
-    then
+    if !dump_qualifs then
       Qdump.dump_default_qualifiers source qname
     else
-      let (deps, quals) = load_qualfile std_formatter qname in
+      let (deps, quals)         = load_qualfile std_formatter qname in
       let (fenv, mlqenv, quals) = load_mlqfile iname env fenv quals in
-      let (fenv, _, quals) = load_dep_mlqfiles bname deps env fenv quals mlqenv in
-      (*let _ = Le.iter (fun p f -> Format.printf "@[%s@ %a@]@." (Path.name p) F.pprint f) fenv in*)
-      let source = (List.rev_append quals str, env, fenv, mlqenv) in
-        analyze std_formatter fname source
-   with x -> (report_error std_formatter x; exit 1)
+      let (fenv, _, quals)      = load_dep_mlqfiles bname deps env fenv quals mlqenv in
+        analyze std_formatter fname (List.rev_append quals str, env, fenv, mlqenv)
+   with x -> report_error std_formatter x; exit 1
 
 let process_file (env, fenv) fname =
   match Misc.get_extension fname with

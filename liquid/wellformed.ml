@@ -87,8 +87,7 @@ let pred_is_well_typed env p =
   | P.PInt _ -> uInt
   | P.Var x -> (try Lightenv.find x env with Not_found -> raise IllFormed)
   | P.FunApp (s, p') -> 
-      let y = ((get_app_shape s) env) (List.map get_expr_shape p') in
-        y
+      get_app_shape s env (List.map get_expr_shape p')
   | P.Binop (p1, op, p2) ->
       if same_shape (get_expr_shape p1) uInt then
         if same_shape (get_expr_shape p2) uInt then
