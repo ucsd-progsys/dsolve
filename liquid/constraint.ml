@@ -205,12 +205,7 @@ let simplify_frame gm x f =
 
 let simplify_env env g =
   let gm = List.fold_left (fun m (x,b)  -> Le.add x b m) Le.empty g in
-  Le.fold 
-    (fun x f env' ->
-      match f with | F.Fvar _ | F.Fsum _ | F.Fabstract _ ->
-        Le.add x (simplify_frame gm x f) env' 
-      | _ -> env')
-    env Le.empty
+    Le.mapi (simplify_frame gm) env
 
 let simplify_fc c =
   match c.lc_cstr with

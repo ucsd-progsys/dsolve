@@ -82,6 +82,9 @@ let mem k (Env (m, _)) =
 let map f (Env (m, p)) =
   Env (M.map f m, p)
 
+let mapi f (Env (m, p)) =
+  Env (M.mapi f m, p)
+
 let fold f (Env (m, _)) b =
   M.fold f m b
 

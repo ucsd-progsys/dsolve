@@ -70,7 +70,7 @@ let get_by_name (n, env) =
     match cs with 
       c :: [] -> c
     | c :: cs -> failwith (Printf.sprintf "too many definitions of %s" n)
-    | [] -> assert false (* this is going to break a number of fascinating things in bitv *)
+    | []      -> raise IllFormed
 
 let get_by_name =
   let tbl = Hashtbl.create 17 in
