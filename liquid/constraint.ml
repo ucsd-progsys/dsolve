@@ -205,12 +205,7 @@ let simplify_frame gm x f =
 
 let simplify_env env g =
   let gm = List.fold_left (fun m (x,b)  -> Le.add x b m) Le.empty g in
-  Le.fold 
-    (fun x f env' ->
-      match f with | F.Fvar _ | F.Fsum _ | F.Fabstract _ ->
-        Le.add x (simplify_frame gm x f) env' 
-      | _ -> env')
-    env Le.empty
+    Le.mapi (simplify_frame gm) env
 
 let simplify_fc c =
   match c.lc_cstr with
@@ -292,8 +287,6 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       ([], split_sub_ref c env g r1 r2)
   | (F.Frec _, F.Frec _) ->
       ([], [])
-  | (F.Funknown, F.Funknown) ->
-      ([],[]) 
   | (F.Fsum(_, None, cs1, r1), F.Fsum(_, None, cs2, r2)) ->
       let (penv, tag) = bind_tags_pr (None, f1) cs1 r1 env in
       let subs        = sum_subs cs1 cs2 tag in
@@ -345,8 +338,6 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
       ([], split_wf_ref f c env r)
   | F.Frec _ ->
       ([], [])
-  | F.Funknown ->
-      ([],[]) 
 
 let split cs =
   assert (List.for_all (fun c -> None <> c.lc_id) cs);

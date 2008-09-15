@@ -1,3 +1,5 @@
+tests/bad-unint.ml              1 False
+tests/bad-multi-unint.ml        1 False
 tests/rec/bad-immut-linklist.ml 4 False
 tests/rec/bad-stable_sort2.ml  4 False
 tests/rec/bad-pmrmerge.ml  4 False

@@ -15,8 +15,6 @@ let fa env m (id, ty) =
 
 let lflun = List.fold_left Qualgen.IS.union Qualgen.IS.empty 
 
-let lst s k = s::k
-
 let conflat y = String.concat "." (Longident.flatten y)
 
 let rel_star = [Ge; Le; Ne]

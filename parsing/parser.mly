@@ -341,6 +341,7 @@ let mktrue_record a = mkrecord a ptrue
 %token TYPE
 %token <string> UIDENT
 %token UNDERSCORE
+%token UNINTERPRETED
 %token VAL
 %token VIRTUAL
 %token WHEN
@@ -1605,6 +1606,7 @@ liquid_signature:
 liquid_decl:
     liquid_val_decl                     { let (name, decl) = $1 in LvalDecl(name, decl) }
   | liquid_measure_decl                 { let (name, decl) = $1 in LmeasDecl(name, decl) }
+  | liquid_uninterpreted_decl           { let (name, ty)   =  $1 in LunintDecl(name, ty) }
   | liquid_recref_decl                  { LrecrefDecl }
 
 liquid_val_decl:
@@ -1615,6 +1617,11 @@ liquid_val_decl:
 
 liquid_recref_decl:
     REFINEMENT                          { None }
+
+/* Uninterpreted functions */
+
+liquid_uninterpreted_decl:
+    UNINTERPRETED LIDENT COLON core_type { ($2, $4) }
 
 /* Measure specifications */
 

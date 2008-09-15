@@ -63,7 +63,6 @@ type t =
   | Fsum of Path.t * (Path.t * recref) option * constr list * refinement
   | Fabstract of Path.t * param list * refinement
   | Farrow of pattern_desc option * t * t
-  | Funknown
 
 and param = Ident.t * t * variance
 
@@ -94,7 +93,7 @@ let constrs_param_frames cs =
 (**************************************************************)
 
 let rec map f = function
-  | (Funknown | Fvar _ | Frec _) as fr -> f fr
+  | (Fvar _ | Frec _) as fr -> f fr
   | Fsum (p, ro, cs, r) ->
       f (Fsum (p, ro, List.map (fun (cd, ps) -> (cd, map_params f ps)) cs, r))
   | Fabstract (p, ps, r) -> f (Fabstract (p, map_params f ps, r))
@@ -172,6 +171,9 @@ let mk_refinement subs qconsts qvars =
 
 let empty_refinement =
   mk_refinement [] [] []
+
+let const_refinement qs =
+  mk_refinement [] qs []
 
 let refinement_is_empty qes =
   List.for_all (function (_, ([], [])) -> true | _ -> false) qes
@@ -292,7 +294,6 @@ let same_shape t1 t2 =
         ismapped p p'
     | (Farrow(_, i, o), Farrow(_, i', o')) ->
         sshape (i, i') && sshape (o, o')
-    (*| (Funknown, Funknown) -> true*)
     | t -> false
   and params_sshape ps qs =
     List.for_all sshape (List.combine (params_frames ps) (params_frames qs))
@@ -341,8 +342,6 @@ let rec subt t1 t2 =
           let _ = join p' q' in true in
   let rec s_rec (f1, f2) = 
     match (f1, f2) with
-    | (Funknown, _) | (_, Funknown) ->
-        false
     | (Fsum(p, ro, cs, _), Fsum(p', ro', cs', _)) ->
         Path.same p p' && p_s (constrs_params cs) (constrs_params cs') &&
        (ro = ro' || match (ro, ro') with (Some (_, _), Some(_, _)) -> true | _ -> false) 
@@ -452,8 +451,6 @@ let rec pprint ppf = function
       wrap_refined ppf (fun ppf -> fprintf ppf "@[%a@ %s@]"
                           (pprint_params ",") params
                           (C.path_name path)) r
-  | Funknown ->
-      fprintf ppf "[unknown]"
  and pprint1 ppf = function
    | (Farrow _) as f ->
        fprintf ppf "@[(%a)@]" pprint f
@@ -525,7 +522,6 @@ let instantiate fr ftemplate =
           Fsum(p, ro, List.map2 (fun (cd, ps) (_, ps') -> (cd, inst_params ps ps')) cs cs', r)
       | (Fabstract(p, ps, r), Fabstract(_, ps', _)) ->
           Fabstract(p, inst_params ps ps', r)
-      | (Funknown, Funknown) -> Funknown
       | (f1, f2) ->
           fprintf std_formatter "@[Unsupported@ types@ for@ instantiation:@;<1 2>%a@;<1 2>%a@]@."
 	    pprint f1 pprint f2;
@@ -557,7 +553,7 @@ let instantiate_qualifiers vars fr =
    must be completely unlabeled (as frames are after creation by fresh). *)
 let label_like f f' =
   let rec label vars f f' = match (f, f') with
-    | (Fvar _, Fvar _) | (Funknown, Funknown) | (Frec _, Frec _) | (Fabstract _, Fabstract _) ->
+    | (Fvar _, Fvar _) | (Frec _, Frec _) | (Fabstract _, Fabstract _) ->
         instantiate_qualifiers vars f
     | (Fsum (p, rro, cs1, r), Fsum (_, _, cs2, _)) ->
         let rro =
@@ -688,7 +684,7 @@ let fresh_rec fresh env (rv, rr) level t = match t.desc with
   | Tarrow(_, t1, t2, _) -> Farrow (None, fresh t1, fresh t2)
   | Ttuple ts            -> tuple_of_frames (List.map fresh ts) empty_refinement
   | Tconstr(p, tyl, _)   -> close_recf (rv, rr) (fresh_constr fresh env p t (List.map canonicalize tyl))
-  | _                    -> fprintf err_formatter "@[Warning: Freshing unsupported type]@."; Funknown
+  | _                    -> failwith "@[Error: Freshing unsupported type]@."
 
 let null_refinement =
   mk_refinement [] [] []
@@ -775,6 +771,21 @@ let fresh_with_labels env ty f =
 
 let fresh_without_vars env ty =
   fresh_with_var_fun env (fun _ -> empty_refinement) ty
+
+let rec build_uninterpreted name params = function
+  | Farrow (_, f, f') ->
+      let lab = Ident.create "x" in
+        Farrow (Some (Tpat_var lab), f, build_uninterpreted name (lab :: params) f')
+  | f ->
+      let args = List.rev_map (fun p -> P.Var (Path.Pident p)) params in
+      let v    = Path.mk_ident "v" in
+      let r    = const_refinement [(Path.mk_ident name,
+                                    v,
+                                    P.Atom (P.Var v, P.Eq, P.FunApp (name, args)))] in
+        apply_refinement r f
+
+let fresh_uninterpreted env ty name =
+  build_uninterpreted name [] (fresh_without_vars env ty)
 
 (**************************************************************)
 (********************* mlq translation ************************) 

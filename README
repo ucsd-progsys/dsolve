@@ -224,6 +224,25 @@ let length l =
   | [] -> 0
   | _ :: b -> 1 + length b
 
+Uninterpreted Functions
+-----------------------
+
+You can define an uninterpreted function
+
+  foo :: x: 'a -> {v: int | v = foo x}
+
+using the syntax
+
+  uninterpreted foo: 'a -> int
+
+The canonical example is
+
+  uninterpreted valid: 'a -> int
+
+  assume (valid x = 1);
+  ...
+  assert (valid x = 1);
+
 Error Messages
 --------------
 

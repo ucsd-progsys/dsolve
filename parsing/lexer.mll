@@ -86,6 +86,7 @@ let keyword_table =
     "true", TRUE;
     "try", TRY;
     "type", TYPE;
+    "uninterpreted", UNINTERPRETED;
     "val", VAL;
     "virtual", VIRTUAL;
     "when", WHEN;

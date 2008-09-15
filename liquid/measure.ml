@@ -29,13 +29,10 @@ let find_c p t e =
 
 let tsc (a, b, c) = (a, (b, c))
 
-let add (p, ((tag, args, ref) as r)) menv = 
-  let cs = try Le.find p menv with
-             Not_found -> [] in
-  let (nm, _) = ref in
-  let _ = if List.exists (fun (x, y, z) -> let (nm', _) = z in tag = x && nm = nm') cs then 
-      let errmsg = Printf.sprintf "measure redef %s for path %s" nm (Path.name p) in
-        failwith errmsg in
+let add (p, ((tag, args, (nm, _)) as r)) menv =
+  let cs = try Le.find p menv with Not_found -> [] in
+  let _  = if List.exists (fun (x, y, z) -> let (nm', _) = z in tag = x && nm = nm') cs then
+      failwith (Printf.sprintf "measure redef %s for path %s" nm (Path.name p)) in
   Lightenv.add p (r :: cs) menv
 
 let sum_path = function
@@ -50,46 +47,27 @@ let rewrite_pred subvars subfuns r = rewrite_pred_funs subfuns (rewrite_pred_var
 
 let transl_desc mlenv (c, (ps, r)) =
   try
-    let _ = if not(C.is_unique (C.maybe_list ps)) then failwith "Measure args not unique" in 
-    let c = (Env.lookup_constructor (Longident.parse c) mlenv) in
-    let tag = c.cstr_tag in
-    let _ = if List.length ps != c.cstr_arity then failwith "Wrong number of measure args" in
+    let _  = if not(C.is_unique (C.maybe_list ps)) then failwith "Measure args not unique" in
+    let c  = Env.lookup_constructor (Longident.parse c) mlenv in
+    let _  = if List.length ps != c.cstr_arity then failwith "Wrong number of measure args" in
     let fr = F.fresh_without_vars mlenv c.cstr_res in
-    Some (sum_path fr, (tag, ps, r)) 
-  with Not_found -> None
+      Some (sum_path fr, (c.cstr_tag, ps, r))
+  with Not_found ->
+    None
+
+let mk_uninterpreted env name mlname =
+  try
+    F.fresh_uninterpreted env ((snd (Env.lookup_value (Longident.parse mlname) env)).val_type) name
+  with Not_found ->
+    failwith ("Could not make uninterpreted version of undefined function: " ^ mlname)
 
 let bms = ref empty
 let mk_measures env ms = 
-  let f g e h = 
-    match g h with
-        Some k -> add k e 
+  let maybe_add e h =
+    match transl_desc env h with
+        Some k -> add k e
       | None -> e in
-  bms := List.fold_left (f (transl_desc env)) empty ms 
-
-let mk_fun n f = 
-  let funr a = 
-    let v = Path.mk_ident "v" in 
-    let a = Path.Pident a in
-    ([], ([(Path.mk_ident (String.concat "_" ["measure"; n]), v, P.Atom (P.Var v, P.Eq, P.FunApp(n, [P.Var a])))], [])) in  
-  match f with
-    F.Farrow (Some (Tpat_var a), b, f2) -> F.Farrow (Some (Tpat_var a), b, F.apply_refinement [funr a] f2)
-  | F.Farrow (None, b, f2) -> 
-      let a = Ident.create "x" in
-        F.Farrow (Some (Tpat_var a), b, F.apply_refinement [funr a] f2)
-  | _ -> failwith "not a fun in mk_fun"
-
-let find_mlenv_by_name s env =
-  let (p, v) = Env.lookup_value (Longident.parse s) env in
-  let fr = F.fresh_without_vars env v.val_type in
-    (p, fr)
-
-let mk_tys env ms =
-  let ty f (s, mls) =
-    try
-      let (p, sf) = find_mlenv_by_name mls env in
-      Some (Path.mk_ident s, mk_fun s sf) 
-        with Not_found -> f s in
-  C.maybe_list (List.map (ty (fun x -> failwith x)) ms)
+  bms := List.fold_left maybe_add empty ms
 
 let mk_pred v mps (_, ps, ms) =
   let maybe_fail = function Some p -> p | None -> raise Not_found in

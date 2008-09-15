@@ -54,29 +54,26 @@ let qrel rel x y =
 
 let mk_tyvar () = Frame.Fvar(Path.mk_ident "a", Frame.generic_level, empty_refinement)
 
-let const_ref qs =
-  mk_refinement [] qs []
-
 let mk_abstract path qs =
-  Fabstract(path, [], const_ref qs)
+  Fabstract(path, [], const_refinement qs)
 
-let mk_int qs = Fabstract(Predef.path_int, [], const_ref qs)
+let mk_int qs = Fabstract(Predef.path_int, [], const_refinement qs)
 
 let uFloat = Fabstract(Predef.path_float, [], empty_refinement)
 
 let uChar = Fsum(Predef.path_char, None, [], empty_refinement)
 
-let mk_string qs = Fabstract(Predef.path_string, [], const_ref qs)
+let mk_string qs = Fabstract(Predef.path_string, [], const_refinement qs)
 
 let uString = mk_string []
 let rString name v p = mk_string [(Path.mk_ident name, v, p)]
 
-let mk_bool qs = Fsum(Predef.path_bool, None, [(Cstr_constant 0, []); (Cstr_constant 1, [])], const_ref qs)
+let mk_bool qs = Fsum(Predef.path_bool, None, [(Cstr_constant 0, []); (Cstr_constant 1, [])], const_refinement qs)
 let uBool = mk_bool []
 let rBool name v p = mk_bool [(Path.mk_ident name, v, p)]
 
 let array_contents_id = Ident.create "contents"
-let mk_array f qs = Fabstract(Predef.path_array, [(array_contents_id, f, Invariant)], const_ref qs)
+let mk_array f qs = Fabstract(Predef.path_array, [(array_contents_id, f, Invariant)], const_refinement qs)
 
 let find_constructed_type id env =
   let path =
@@ -88,7 +85,7 @@ let find_constructed_type id env =
 let mk_named id fs qs env =
   let (path, varis) = find_constructed_type id env in
   let fresh_names = Misc.mapi (fun _ i -> Common.tuple_elem_id i) varis in
-    Fabstract(path, Common.combine3 fresh_names fs varis, const_ref qs)
+    Fabstract(path, Common.combine3 fresh_names fs varis, const_refinement qs)
 
 let ref_contents_id = Ident.create "contents"
 let mk_ref f env =
@@ -100,7 +97,7 @@ let mk_bigarray_layout a qs env = mk_named ["layout"; "Bigarray"] [a] qs env
 
 let mk_bigarray_type a b c qs env = mk_named ["t"; "Array2"; "Bigarray"] [a; b; c] qs env
 
-let mk_unit qs = Fsum(Predef.path_unit, None, [(Cstr_constant 0, [])], const_ref qs)
+let mk_unit qs = Fsum(Predef.path_unit, None, [(Cstr_constant 0, [])], const_refinement qs)
 let uUnit = mk_unit []
 let rUnit name v p = mk_unit [(Path.mk_ident name, v, p)]
 
@@ -335,18 +332,18 @@ let equality_qualifier exp =
     let expstr = Format.flush_str_formatter () in (Path.mk_ident expstr, x, pred)
 
 let equality_refinement exp =
-  const_ref [equality_qualifier exp]
+  const_refinement [equality_qualifier exp]
 
 let tag_refinement t =
   let x = Path.mk_ident "V" in
     let pred = tag (Var x) ==. PInt (int_of_tag t) in
     Predicate.pprint Format.str_formatter pred;
     let expstr = Format.flush_str_formatter () in
-      const_ref [(Path.mk_ident expstr, x, pred)]
+      const_refinement [(Path.mk_ident expstr, x, pred)]
 
 let size_lit_refinement i =
   let x = Path.mk_ident "x" in
-    const_ref
+    const_refinement
       [(Path.mk_ident "<size_lit_eq>",
         x,
         FunApp("Array.length", [Var x]) ==. PInt i)]

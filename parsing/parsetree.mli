@@ -175,7 +175,8 @@ and cstr = string * string option list * predpatexp
 
 and liquid_decl =
     LvalDecl of string * litframe
-  | LmeasDecl of (string * string) * cstr list 
+  | LmeasDecl of (string * string) * cstr list
+  | LunintDecl of string * core_type
   | LrecrefDecl
 
 and liquid_sig = predicate_alias list * liquid_decl list  
