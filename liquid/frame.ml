@@ -772,14 +772,20 @@ let fresh_with_labels env ty f =
 let fresh_without_vars env ty =
   fresh_with_var_fun env (fun _ -> empty_refinement) ty
 
+let rec build_uninterpreted name params = function
+  | Farrow (_, f, f') ->
+      let lab = Ident.create "x" in
+        Farrow (Some (Tpat_var lab), f, build_uninterpreted name (lab :: params) f')
+  | f ->
+      let args = List.rev_map (fun p -> P.Var (Path.Pident p)) params in
+      let v    = Path.mk_ident "v" in
+      let r    = const_refinement [(Path.mk_ident name,
+                                    v,
+                                    P.Atom (P.Var v, P.Eq, P.FunApp (name, args)))] in
+        apply_refinement r f
+
 let fresh_uninterpreted env ty name =
-  match fresh_without_vars env ty with
-    | Farrow (_, f, f') ->
-        let lab = Ident.create "x" in
-        let v   = Path.mk_ident "v" in
-        let q   = const_refinement [(Path.mk_ident name, v, P.Atom (P.Var v, P.Eq, P.FunApp (name, [P.Var (Path.Pident lab)])))] in  
-          Farrow (Some (Tpat_var lab), f, apply_refinement q f')
-    | _ -> failwith "cannot make uninterpreted function of non-function type"
+  build_uninterpreted name [] (fresh_without_vars env ty)
 
 (**************************************************************)
 (********************* mlq translation ************************) 
