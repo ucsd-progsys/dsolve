@@ -32,15 +32,9 @@ let map_constructor_args env (name, mlname) (cname, args, cpred) =
 let load_measure env ((n, mn), cstrs) =
   Mname(n, mn) :: List.map (map_constructor_args env (n, mn)) cstrs
 
-let mk_ptyp desc =
-  {ptyp_desc = desc; ptyp_loc = Location.none}
-
-let ptyp_uninterpreted =
-  mk_ptyp (Ptyp_arrow ("x", mk_ptyp Ptyp_any, mk_ptyp (Ptyp_constr (Longident.Lident "int", []))))
-
-let load_unint name env fenv ifenv menv =
+let load_unint name ty env fenv ifenv menv =
   let id   = Ident.create name in
-  let ty   = Typetexp.transl_type_scheme env ptyp_uninterpreted in
+  let ty   = Typetexp.transl_type_scheme env ty in
   let env  = Env.add_value id {val_type = ty; val_kind = Val_reg} env in
   let fenv = Le.add (Path.Pident id) (F.fresh_uninterpreted env ty name) fenv in
     (env, fenv, ifenv, menv)
@@ -53,7 +47,7 @@ let load_rw dopt rw env fenv (preds, decls) quals =
   let load_decl (env, fenv, ifenv, menv) = function
       LvalDecl(s, f)  -> (env, fenv, load_val dopt env ifenv (s, F.translate_pframe dopt env preds f), menv)
     | LmeasDecl (name, cstrs) -> (env, fenv, ifenv, List.rev_append (load_measure env (name, cstrs)) menv)
-    | LunintDecl (name) -> load_unint name env fenv ifenv menv
+    | LunintDecl (name, ty) -> load_unint name ty env fenv ifenv menv
     | LrecrefDecl -> (env, fenv, ifenv, menv) in
   let (env, fenv, ifenv, menv) = List.fold_left load_decl (env, fenv, Lightenv.empty, []) decls in
   let (mcstrs, mnames, qsubs, fenv, ifenv) = rw env menv fenv ifenv in

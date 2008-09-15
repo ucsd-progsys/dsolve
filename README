@@ -233,9 +233,11 @@ You can define an uninterpreted function
 
 using the syntax
 
-  uninterpreted foo
+  uninterpreted foo: 'a -> int
 
 The canonical example is
+
+  uninterpreted valid: 'a -> int
 
   assume (valid x = 1);
   ...
