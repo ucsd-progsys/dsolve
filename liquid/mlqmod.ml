@@ -1,6 +1,7 @@
 open Measure
 open Parsetree
 open Format
+open Types
 
 module F = Frame
 module M = Measure
@@ -29,21 +30,39 @@ let map_constructor_args env (name, mlname) (cname, args, cpred) =
     Mcstr(cname, (args, (name, pred)))
 
 let load_measure env ((n, mn), cstrs) =
-  (Mname(n, mn)) :: (List.map (map_constructor_args env (n, mn)) cstrs)  
+  Mname(n, mn) :: List.map (map_constructor_args env (n, mn)) cstrs
+
+let mk_ptyp desc =
+  {ptyp_desc = desc; ptyp_loc = Location.none}
+
+let ptyp_uninterpreted =
+  mk_ptyp (Ptyp_arrow ("x", mk_ptyp Ptyp_any, mk_ptyp (Ptyp_constr (Longident.Lident "int", []))))
+
+let load_unint name env fenv ifenv menv =
+  let id   = Ident.create name in
+  let ty   = Typetexp.transl_type_scheme env ptyp_uninterpreted in
+  let env  = Env.add_value id {val_type = ty; val_kind = Val_reg} env in
+  let fenv = Le.add (Path.Pident id) (F.fresh_uninterpreted env ty name) fenv in
+    (env, fenv, ifenv, menv)
+
+let is_unint_decl = function
+  | LunintDecl _ -> true
+  | _            -> false
 
 let load_rw dopt rw env fenv (preds, decls) quals =
-  let load_decl (ifenv, menv) = function
-      LvalDecl(s, f)  -> (load_val dopt env ifenv (s, F.translate_pframe dopt env preds f), menv)
-    | LmeasDecl (name, cstrs) -> (ifenv, List.rev_append (load_measure env (name, cstrs)) menv)
-    | LrecrefDecl -> (ifenv, menv) in
-  let (ifenv, menv) = List.fold_left load_decl (Lightenv.empty, []) decls in
+  let load_decl (env, fenv, ifenv, menv) = function
+      LvalDecl(s, f)  -> (env, fenv, load_val dopt env ifenv (s, F.translate_pframe dopt env preds f), menv)
+    | LmeasDecl (name, cstrs) -> (env, fenv, ifenv, List.rev_append (load_measure env (name, cstrs)) menv)
+    | LunintDecl (name) -> load_unint name env fenv ifenv menv
+    | LrecrefDecl -> (env, fenv, ifenv, menv) in
+  let (env, fenv, ifenv, menv) = List.fold_left load_decl (env, fenv, Lightenv.empty, []) decls in
   let (mcstrs, mnames, qsubs, fenv, ifenv) = rw env menv fenv ifenv in
   let (measnames, mlnames) = List.split mnames in
   let fs = List.combine (List.map Path.mk_ident measnames) (List.map2 (M.mk_uninterpreted env) measnames mlnames) in
   let fenv = Lightenv.addn fs fenv in
   let _ = M.mk_measures env mcstrs in 
   let quals = Qualmod.map_preds (M.transl_pred qsubs) quals in
-    (fenv, ifenv, quals)
+    (env, fenv, ifenv, quals)
 
 let hier_lookup f1 f2 s =
   try f1 s with Not_found -> try f2 s with Not_found -> s 
@@ -85,7 +104,7 @@ let load_dep_sigs env fenv mlqs quals =
     let lvar s = lookup env_lookup s (Path.name s) in
     let fenv = Le.fold (fun p fr e -> Le.add p (F.map_refexprs (rewrite_refexpr (C.app_snd (sub_pred lvar lfun))) fr) e) ifenv fenv in
       (mcstrs, mnames, simplesubs, fenv, Le.empty) in
-  List.fold_left (fun (fenv, _, quals) (mlq, dname) -> load_rw (Some dname) (rw dname) env fenv mlq quals) (fenv, Le.empty, quals) mlqs
+  List.fold_left (fun (env, fenv, _, quals) (mlq, dname) -> load_rw (Some dname) (rw dname) env fenv mlq quals) (env, fenv, Le.empty, quals) mlqs
 
 (* builtins *)
 

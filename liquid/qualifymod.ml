@@ -264,8 +264,10 @@ and constrain_function (env, guard, f) pat e' =
 
 and instantiate_id id f env tenv =
   let env_f =
-    try Le.find id env
-    with Not_found -> Frame.fresh_without_vars tenv ((Env.find_value id tenv).val_type)
+    try
+      Le.find id env
+    with Not_found ->
+      Frame.fresh_without_vars tenv ((Env.find_value id tenv).val_type)
   in
     F.instantiate env_f f
 

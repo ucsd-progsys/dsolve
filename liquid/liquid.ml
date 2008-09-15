@@ -79,10 +79,6 @@ let load_qualfile ppf qualfile =
   let (deps, qs) = Pparse.file ppf qualfile Parse.qualifiers ast_impl_magic_number in
     (deps, List.map Qualmod.type_qualifier qs)
 
-let load_mlqfile iname env fenv quals =
-  let mlq = MLQ.parse std_formatter iname in
-    MLQ.load_local_sig env fenv mlq quals
-
 let load_dep_mlqfiles bname deps env fenv quals mlqenv =
   let pathname = if String.contains bname '/' then 
           String.sub bname 0 ((String.rindex bname '/') + 1) else "" in
@@ -114,15 +110,20 @@ let process_sourcefile env fenv fname =
   let bname = Misc.chop_extension_if_any fname in
   let (qname, iname) = (bname ^ ".quals", bname ^ ".mlq") in
   try
-    let (str, env, fenv) as source = load_sourcefile std_formatter env fenv fname in
-    if !dump_qualifs then
-      Qdump.dump_default_qualifiers source qname
-    else
-      let (deps, quals)         = load_qualfile std_formatter qname in
-      let (fenv, mlqenv, quals) = load_mlqfile iname env fenv quals in
-      let (fenv, _, quals)      = load_dep_mlqfiles bname deps env fenv quals mlqenv in
-        analyze std_formatter fname (List.rev_append quals str, env, fenv, mlqenv)
-   with x -> report_error std_formatter x; exit 1
+    (* We need to pull out uninterpreted functions from the MLQ in order to typecheck. *)
+    let (preds, vals)         = MLQ.parse std_formatter iname in
+    let (unints, vals)        = List.partition MLQ.is_unint_decl vals in
+    let (env, fenv, _, quals) = MLQ.load_local_sig env fenv ([], unints) [] in
+    let (str, env, fenv)      = load_sourcefile std_formatter env fenv fname in
+      if !dump_qualifs then
+        Qdump.dump_default_qualifiers (str, env, fenv) qname
+      else
+        let (deps, quals)              = load_qualfile std_formatter qname in
+        let (env, fenv, mlqenv, quals) = MLQ.load_local_sig env fenv (preds, vals) quals in
+        let (env, fenv, _, quals)      = load_dep_mlqfiles bname deps env fenv quals fenv in
+          analyze std_formatter fname (List.rev_append quals str, env, fenv, mlqenv)
+   with x ->
+     report_error std_formatter x; exit 1
 
 let process_file (env, fenv) fname =
   match Misc.get_extension fname with
