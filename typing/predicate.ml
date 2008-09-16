@@ -57,6 +57,8 @@ and tpat =
   | PNot of tpat
   | PAnd of tpat * tpat
   | POr of tpat * tpat
+  | PForall of string list * tpat
+  | PExists of string list * tpat
 
 type pexpr =
     PInt of int 
@@ -119,10 +121,10 @@ and pprint ppf = function
       fprintf ppf "@[(%a@ or@;<1 2>@;<1 2>%a)@]" pprint p pprint q
   | Forall (p, q) ->
       let p = List.map Common.path_name p in
-      fprintf ppf "@[(Forall@ (%a),@ %a)@]" (Common.pprint_list ", " (Common.pprint_str)) p pprint q
+      fprintf ppf "@[(forall@ (%a.@ %a))@]" (Common.pprint_list ", " (Common.pprint_str)) p pprint q
   | Exists (p, q) ->
       let p = List.map Common.path_name p in
-      fprintf ppf "@[(Forall@ (%a),@ %a)@]" (Common.pprint_list ", " (Common.pprint_str)) p pprint q
+      fprintf ppf "@[(forall@ (%a.@ %a))@]" (Common.pprint_list ", " (Common.pprint_str)) p pprint q
 
 let equals(p, q) = Atom(p, Eq, q)
 

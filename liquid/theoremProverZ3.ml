@@ -105,6 +105,7 @@ let z3_mk_app c f zea =
   module type PROVER = 
   sig
     (* usage: set.valid*.finish *)
+    val axiom : Predicate.t -> unit
     val set     : Predicate.t list -> bool 
     val valid   : Predicate.t -> bool
     val finish : unit -> unit
@@ -214,6 +215,10 @@ module Prover : PROVER =
       if not (Z3.type_check me.c zp) then failwith "Dsolve-Z3 type error" else
         zp *)
 
+    let assert_axiom me p =
+      let _ = Bstats.time "Z3 assert" (Z3.assert_cnstr me.c) p in
+        if unsat me then failwith "Background theory is inconsistent!"
+
     let push me p' =
       let _ = incr nb_z3_push in
       let _ = me.count <- me.count + 1 in
@@ -267,6 +272,9 @@ module Prover : PROVER =
       let _   = push me np' in
       let rv  = unsat me in
       let _   = pop me in rv
+
+    let axiom p =
+      assert_axiom me (z3Pred me p)
 
     let finish () = 
       Bstats.time "Z3 pop" pop me; 

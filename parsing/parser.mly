@@ -342,6 +342,9 @@ let mktrue_record a = mkrecord a ptrue
 %token <string> UIDENT
 %token UNDERSCORE
 %token UNINTERPRETED
+%token FORALL
+%token EXISTS
+%token AXIOM
 %token VAL
 %token VIRTUAL
 %token WHEN
@@ -1494,6 +1497,10 @@ qual_ty_anno:
   | UIDENT COLON simple_core_type_or_tuple COMMA qual_ty_anno
     { ($1, $3)::$5 }
 
+quant_id_list:
+    LIDENT                      { [$1] }
+  | LIDENT COMMA quant_id_list  { $1 :: $3 }
+
 qualifier_pattern:
     TRUE                                    { mkpredpat Ppredpat_true }                    
   | qualifier_pattern AND qualifier_pattern { mkpredpat (Ppredpat_and($1, $3)) }
@@ -1502,6 +1509,9 @@ qualifier_pattern:
   | LPAREN qualifier_pattern RPAREN         { $2 }
   | qual_expr qual_rel qual_expr            
       { mkpredpat (Ppredpat_atom($1, $2, $3)) }
+  | FORALL LPAREN quant_id_list DOT qualifier_pattern RPAREN { mkpredpat (Ppredpat_forall($3, $5)) }
+  | EXISTS LPAREN quant_id_list DOT qualifier_pattern RPAREN  { mkpredpat (Ppredpat_exists($3, $5)) }
+
 
 qual_rel:
     qual_lit_rel                            { [$1] }
@@ -1606,7 +1616,8 @@ liquid_signature:
 liquid_decl:
     liquid_val_decl                     { let (name, decl) = $1 in LvalDecl(name, decl) }
   | liquid_measure_decl                 { let (name, decl) = $1 in LmeasDecl(name, decl) }
-  | liquid_uninterpreted_decl           { let (name, ty)   =  $1 in LunintDecl(name, ty) }
+  | liquid_uninterpreted_decl           { let (name, ty)   = $1 in LunintDecl(name, ty) }
+  | liquid_axiom_decl                   { let (name, pred) = $1 in LaxiomDecl(name, pred) }
   | liquid_recref_decl                  { LrecrefDecl }
 
 liquid_val_decl:
@@ -1622,6 +1633,11 @@ liquid_recref_decl:
 
 liquid_uninterpreted_decl:
     UNINTERPRETED LIDENT COLON core_type { ($2, $4) }
+
+/* Axiom declaration */
+
+liquid_axiom_decl:
+    AXIOM LIDENT COLON predicate         { ($2, $4) }
 
 /* Measure specifications */
 

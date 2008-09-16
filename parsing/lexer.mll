@@ -87,6 +87,9 @@ let keyword_table =
     "try", TRY;
     "type", TYPE;
     "uninterpreted", UNINTERPRETED;
+    "forall", FORALL;
+    "exists", EXISTS;
+    "axiom", AXIOM;
     "val", VAL;
     "virtual", VIRTUAL;
     "when", WHEN;

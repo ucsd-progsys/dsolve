@@ -1,8 +1,11 @@
+axiom seteq : forall (x, y, z. (mem z x = 1 and mem z y = 1) or (mem z y = 0) or (mem z x = 0)) 
+axiom blah : empty = 0
+
 val inter: x: 'a set -> y: 'a set -> {v: 'a set | v = inter x y}
 val union: x: 'a set -> y: 'a set -> {v: 'a set | v = union x y}
 val subset: x: 'a set -> y: 'a set -> {v: bool | v = subset x y}
 val mem: x: 'a -> y: 'a set -> {v: bool | v = mem x y}
 val card: x: 'a set -> {v: int | v = card x}
 val empty: 'a -> {v: 'a set | card v = 0}
-val is_empty: x: 'a set -> {v: bool | (v = 1 and card x = 0) or (v = 0 and -.(card x = 0)}
+val is_empty: x: 'a set -> {v: bool | (v = 1 and card x = 0) or (v = 0 and (card x = 1))}
 val singleton: x: 'a -> {v: 'a set | v = singleton x}

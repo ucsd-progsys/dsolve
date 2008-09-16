@@ -62,6 +62,14 @@ and transl_patpred_single_map f p =
           And (transl_pred_rec p1, transl_pred_rec p2)
       | Ppredpat_or (p1, p2) -> 
           Or (transl_pred_rec p1, transl_pred_rec p2)
+      | Ppredpat_forall (ps, q) ->
+          let ps = List.map (fun s -> (s, Path.mk_ident s)) ps in
+          let f p = try List.assoc (conflat p) ps with Not_found -> f p in
+          Forall (snd (List.split ps), transl_patpred_single_map f q)
+      | Ppredpat_exists (ps, q) ->
+          let ps = List.map (fun s -> (s, Path.mk_ident s)) ps in
+          let f p = try List.assoc (conflat p) ps with Not_found -> f p in
+          Exists (snd (List.split ps), transl_patpred_single_map f q)
   in transl_pred_rec p
 
 let transl_patpred_single simple valu env p =
@@ -136,6 +144,10 @@ let transl_patpred env (v, nv) (qgtymap, tyset, idset, intset) tymap p =
           PAnd (transl_pred_rec p1, transl_pred_rec p2)
       | Ppredpat_or (p1, p2) -> 
           POr (transl_pred_rec p1, transl_pred_rec p2)
+      | Ppredpat_forall (ps, q) ->
+          PForall (ps, transl_pred_rec q)
+      | Ppredpat_exists (ps, q) ->
+          PExists (ps, transl_pred_rec q)
   in transl_pred_rec p
 
 let gen_preds p =
@@ -183,6 +195,14 @@ let gen_preds p =
           let e1s = gen_expr_rec e1 in
           let p1s = gen_pred_rec p1 in
             C.tflap2 (e1s, p1s) (fun c d -> Iff (c, d))
+      | PForall (ps, q) ->
+          let ps = List.map Path.mk_ident ps in
+          let qs = gen_pred_rec q in
+            List.map (fun c -> Forall (ps, c)) qs
+      | PExists (ps, q) ->
+          let ps = List.map Path.mk_ident ps in
+          let qs = gen_pred_rec q in
+            List.map (fun c -> Exists (ps, c)) qs
   in gen_pred_rec p
 
 let ck_consistent patpred pred =
@@ -220,6 +240,8 @@ let ck_consistent patpred pred =
       | (Ppredpat_or (p1, p2), Or (pp1, pp2))
       | (Ppredpat_and (p1, p2), And (pp1, pp2)) -> 
           ck_pred_rec p1 pp1 && ck_pred_rec p2 pp2 
+      | (Ppredpat_forall (ps, q), Forall (ps', q')) ->
+          ck_pred_rec q q'
       | _ -> assert false in
     ck_pred_rec patpred pred
      

@@ -152,6 +152,8 @@ and predpat_desc =
   | Ppredpat_not of predicate_pattern
   | Ppredpat_and of predicate_pattern * predicate_pattern
   | Ppredpat_or of predicate_pattern * predicate_pattern
+  | Ppredpat_forall of string list * predicate_pattern
+  | Ppredpat_exists of string list * predicate_pattern
 
 and predpatexp =
   { ppredpatexp_desc: predpatexp_desc;
@@ -177,6 +179,7 @@ and liquid_decl =
     LvalDecl of string * litframe
   | LmeasDecl of (string * string) * cstr list
   | LunintDecl of string * core_type
+  | LaxiomDecl of string * predicate_pattern
   | LrecrefDecl
 
 and liquid_sig = predicate_alias list * liquid_decl list  

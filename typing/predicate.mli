@@ -52,6 +52,8 @@ and tpat =
   | PNot of tpat
   | PAnd of tpat * tpat
   | POr of tpat * tpat
+  | PForall of string list * tpat
+  | PExists of string list * tpat
 
 type pexpr =   
     PInt of int 
