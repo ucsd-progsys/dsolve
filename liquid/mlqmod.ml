@@ -104,7 +104,7 @@ let load_dep_sigs env fenv mlqs quals =
         (modname c, (ps, M.rewrite_pred lvar lfun r)) in
     let mcstrs = List.map f (M.filter_cstrs menv) in
     let lvar s = lookup env_lookup s (Path.name s) in
-    let fenv = Le.fold (fun p fr e -> Le.add p (F.map_refexprs (rewrite_refexpr (C.app_snd (sub_pred lvar lfun))) fr) e) ifenv fenv in
+    let fenv = Le.fold (fun p fr e -> Le.add p (F.map_refexprs (rewrite_refexpr (C.app_snd (sub_pred lvar lfun))) (F.label_like fr fr)) e) ifenv fenv in
       (mcstrs, mnames, simplesubs, fenv, Le.empty) in
   List.fold_left (fun (env, fenv, _, quals) (mlq, dname) -> load_rw (Some dname) (rw dname) env fenv mlq quals) (env, fenv, Le.empty, quals) mlqs
 
