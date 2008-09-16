@@ -212,6 +212,10 @@ let rw_frame_lit f v p =
 let ptrue = RLiteral( "", {ppredpat_desc = Ppredpat_true; 
                           ppredpat_loc = Location.none} )
 
+let mk_implies a b =
+  let pre = mkpredpat (Ppredpat_not(a)) in
+    mkpredpat (Ppredpat_or(pre, b))
+
 let mkconstr a b r = PFconstr (a, b, r)
 let mksum p rro cs r = PFsum (p, rro, cs, r)
 let mkvar a r = PFvar (a, r)
@@ -346,7 +350,6 @@ let mktrue_record a = mkrecord a ptrue
 %token EXISTS
 %token AXIOM
 %token IFF
-%token IMPLIES
 %token VAL
 %token VIRTUAL
 %token WHEN
@@ -1511,9 +1514,10 @@ qualifier_pattern:
   | LPAREN qualifier_pattern RPAREN         { $2 }
   | LPAREN qual_expr IFF qualifier_pattern RPAREN
       { mkpredpat (Ppredpat_iff($2, $4)) }
-  | LPAREN qualifier_pattern IMPLIES qualifier_pattern RPAREN
-      { let pre = mkpredpat (Ppredpat_not($2)) in
-          mkpredpat (Ppredpat_or(pre, $4)) }
+  | LPAREN qualifier_pattern IFF qualifier_pattern RPAREN
+      { mkpredpat (Ppredpat_and(mk_implies $2 $4, mk_implies $4 $2)) } 
+  | LPAREN qualifier_pattern MINUSGREATER qualifier_pattern RPAREN
+      { mk_implies $2 $4 }
   | qual_expr qual_rel qual_expr            
       { mkpredpat (Ppredpat_atom($1, $2, $3)) }
   | FORALL LPAREN quant_id_list DOT qualifier_pattern RPAREN { mkpredpat (Ppredpat_forall($3, $5)) }

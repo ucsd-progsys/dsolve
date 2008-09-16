@@ -112,7 +112,7 @@ and pprint ppf = function
   | Atom (p, rel, q) ->
       fprintf ppf "@[(%a@ %s@ %a)@]" pprint_pexpr p (pprint_rel rel) pprint_pexpr q
   | Iff (px, q) ->
-      fprintf ppf "@[(%a@ <=>@;<1 2>%a)@]" pprint_pexpr px pprint q
+      fprintf ppf "@[(%a@ iff@;<1 2>%a)@]" pprint_pexpr px pprint q
   | Not p ->
       fprintf ppf "@[(not@ %a)@]" pprint p
   | And (p, q) ->

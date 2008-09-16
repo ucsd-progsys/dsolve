@@ -121,6 +121,7 @@ let process_sourcefile env fenv fname =
         let (deps, quals)              = load_qualfile std_formatter qname in
         let (env, fenv, mlqenv, quals) = MLQ.load_local_sig env fenv (preds, vals) quals in
         let (env, fenv, _, quals)      = load_dep_mlqfiles bname deps env fenv quals fenv in
+        let _ = if C.ck_olev C.ol_dump_env then Le.iter (fun p f -> printf "@[%s@ %a@]@." (Path.name p) F.pprint f) fenv else () in
           analyze std_formatter fname (List.rev_append quals str, env, fenv, mlqenv)
    with x ->
      report_error std_formatter x; exit 1
