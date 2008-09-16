@@ -91,6 +91,7 @@ let keyword_table =
     "exists", EXISTS;
     "axiom", AXIOM;
     "<=>", IFF;
+    "->", IMPLIES;
     "val", VAL;
     "virtual", VIRTUAL;
     "when", WHEN;
