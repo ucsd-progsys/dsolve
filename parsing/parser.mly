@@ -345,6 +345,7 @@ let mktrue_record a = mkrecord a ptrue
 %token FORALL
 %token EXISTS
 %token AXIOM
+%token IFF
 %token VAL
 %token VIRTUAL
 %token WHEN
@@ -1507,6 +1508,8 @@ qualifier_pattern:
   | qualifier_pattern OR qualifier_pattern  { mkpredpat (Ppredpat_or($1, $3)) }
   | MINUSDOT qualifier_pattern              { mkpredpat (Ppredpat_not($2)) }              
   | LPAREN qualifier_pattern RPAREN         { $2 }
+  | LPAREN qual_expr IFF qualifier_pattern RPAREN
+      { mkpredpat (Ppredpat_iff($2, $4)) }
   | qual_expr qual_rel qual_expr            
       { mkpredpat (Ppredpat_atom($1, $2, $3)) }
   | FORALL LPAREN quant_id_list DOT qualifier_pattern RPAREN { mkpredpat (Ppredpat_forall($3, $5)) }

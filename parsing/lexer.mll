@@ -90,6 +90,7 @@ let keyword_table =
     "forall", FORALL;
     "exists", EXISTS;
     "axiom", AXIOM;
+    "<=>", IFF;
     "val", VAL;
     "virtual", VIRTUAL;
     "when", WHEN;

@@ -70,6 +70,8 @@ and transl_patpred_single_map f p =
           let ps = List.map (fun s -> (s, Path.mk_ident s)) ps in
           let f p = try List.assoc (conflat p) ps with Not_found -> f p in
           Exists (snd (List.split ps), transl_patpred_single_map f q)
+      | Ppredpat_iff (e, p) ->
+          Iff (transl_patpredexp_single_map f e, transl_pred_rec p)
   in transl_pred_rec p
 
 let transl_patpred_single simple valu env p =
@@ -148,6 +150,8 @@ let transl_patpred env (v, nv) (qgtymap, tyset, idset, intset) tymap p =
           PForall (ps, transl_pred_rec q)
       | Ppredpat_exists (ps, q) ->
           PExists (ps, transl_pred_rec q)
+      | Ppredpat_iff (e, p) ->
+          PIff (transl_expr_rec e, transl_pred_rec p)
   in transl_pred_rec p
 
 let gen_preds p =
@@ -242,6 +246,8 @@ let ck_consistent patpred pred =
           ck_pred_rec p1 pp1 && ck_pred_rec p2 pp2 
       | (Ppredpat_forall (ps, q), Forall (ps', q')) ->
           ck_pred_rec q q'
+      | (Ppredpat_iff (e, p), Iff (e', p')) ->
+          ck_expr_rec e e' && ck_pred_rec p p'
       | _ -> assert false in
     ck_pred_rec patpred pred
      
