@@ -296,7 +296,7 @@ let same_shape t1 t2 =
         sshape (i, i') && sshape (o, o')
     | t -> false
   and params_sshape ps qs =
-    List.for_all sshape (List.combine (params_frames ps) (params_frames qs))
+    C.same_length ps qs && List.for_all sshape (List.combine (params_frames ps) (params_frames qs))
   in sshape (t1, t2)
        
 let fid () = Path.mk_ident "p"
