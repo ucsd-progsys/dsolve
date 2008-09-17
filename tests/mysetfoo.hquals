@@ -1,1 +1,3 @@
-qualif A(x) : Myset.card x = 0
+qualif A(v) : Myset.card v = 0
+qualif B(v) : ~A = ~B
+qualif FF(v) : [0, 1] = Myset.mem ~A v

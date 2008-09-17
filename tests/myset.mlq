@@ -1,4 +1,4 @@
-axiom seteq : forall (x, y, z. (x = y and (mem z x = 1 and mem z y = 1)) or (-. x = y and (mem z y = 0) or (mem z x = 0))) 
+(*axiom seteq : forall (x, y, z. (x = y iff (mem z x = 1 iff mem z y = 1))) 
 axiom inter : forall (x, y, z. (mem z (inter x y) = 1 and (mem z x = 1 and mem z y = 1)) or (mem z (inter x y) = 0 and (mem z x = 0 or mem z y = 0)))
 axiom abeinter : forall (x, y. inter x y = inter y x)
 axiom union : forall (x, y, z. (mem z (union x y) = 1 and (mem z x = 1 or mem z y = 1)) or (mem z (union x y) = 0 and (mem z x = 0 and mem z y = 0)))
@@ -7,7 +7,8 @@ axiom noneg : forall (x. card x >= 0)
 axiom lt : forall (x, y, t. (x <= y iff (mem t x = 1 -> mem t y = 1)))
 axiom le : forall (x, y. (x < y iff (x <= y and exists (t. mem t y = 1 and mem t x = 0))))
 axiom add : forall (x, y. (mem x (add x y) = 1 and y < (add x y)) and ((mem x y = 1 -> (card (add x y) = card y + 1)) and (mem x y = 0 -> card (add x y) = card y)))
-axiom empty : exists (x. card x = 0)
+axiom empty : exists (x. card x = 0)*)
+axiom empty2 : forall (x, y. (card x = 0 -> mem y x = 0))
 
 measure setof =
     [] -> empty 0
@@ -20,6 +21,8 @@ val subset: x: 'a set -> y: 'a set -> {v: bool | v = subset x y}
 val add: x: 'a -> y: 'a set -> {v: 'a set | v = add x y}
 val mem: x: 'a -> y: 'a set -> {v: bool | v = mem x y}
 val card: x: 'a set -> {v: int | v = card x}
-val empty: 'a -> {v: 'a set | card v = 0}
+val empty: x: 'a -> {v: 'a set | card v = 0}
 val is_empty: x: 'a set -> {v: bool | (v = 1 and card x = 0) or (v = 0 and (card x = 1))}
 val singleton: x: 'a -> {v: 'a set | v = singleton x}
+
+val mul: x: int -> y: int -> {v: int | v = mul x y}

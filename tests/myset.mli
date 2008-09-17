@@ -10,3 +10,5 @@ val card: 'a set -> int
 val empty: 'a -> 'a set
 val is_empty: 'a set -> bool
 val singleton: 'a -> 'a set
+
+val mul: int -> int -> int
