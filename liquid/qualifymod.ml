@@ -433,11 +433,12 @@ let maybe_cstr_from_unlabel_frame fenv p f =
 let qualify_implementation sourcefile fenv ifenv env qs str =
   let _ = reset_framelog () in
   let (qs, fenv, cs) = constrain_structure fenv qs str in
-  let cs = (List.map (lbl_dummy_cstr env) (Le.maplistfilter (maybe_cstr_from_unlabel_frame fenv) ifenv)) @ cs in
-  let _ = pre_solve sourcefile in
-  let (s,cs) = Bstats.time "solving" (solve qs) cs in
-  let _ = post_solve () in
-  let _ = dump_frames sourcefile (framemap_apply_solution s !flog) in
-  match cs with [] -> () | _ ->
-    (Printf.printf "Errors encountered during type checking:\n\n";
-    flush stdout; raise (Errors(List.map (make_frame_error s) cs)))
+  let cs             = (List.map (lbl_dummy_cstr env) (Le.maplistfilter (maybe_cstr_from_unlabel_frame fenv) ifenv)) @ cs in
+  let _              = pre_solve sourcefile in
+  let (s,cs)         = Bstats.time "solving" (solve qs) cs in
+  let _              = post_solve () in
+  let flog           = if !Clflags.raw_frames then !flog else framemap_apply_solution s !flog in
+  let _              = dump_frames sourcefile flog in
+    match cs with [] -> () | _ ->
+      (Printf.printf "Errors encountered during type checking:\n\n";
+       flush stdout; raise (Errors(List.map (make_frame_error s) cs)))
