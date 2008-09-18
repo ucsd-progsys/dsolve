@@ -207,7 +207,7 @@ module Prover : PROVER =
     and mk_quantifier mk me ps q =
       let args = qargs me ps in
       let rv = mk me.c (qtypes me ps) args (z3Pred me q) in
-      me.bnd <- me.bnd - (List.length ps); Format.printf "@.@.@[%s@]@.@." (Z3.ast_to_string me.c rv); rv
+      me.bnd <- me.bnd - (List.length ps); (*Format.printf "@.@.@[%s@]@.@." (Z3.ast_to_string me.c rv);*) rv
 
     let z3Preds me ps = 
       let ps' = List.map (z3Pred me) ps in

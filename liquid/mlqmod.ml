@@ -43,12 +43,24 @@ let is_unint_decl = function
   | LunintDecl _ -> true
   | _            -> false
 
+let axiom_prefix = "_axiom_"
+
 let load_axiom dopt env fenv ifenv menv name pred =
   let pred = Qualdecl.transl_patpred_single false (Path.mk_ident "") env pred in
   let fr = Builtins.rUnit "" (Path.mk_ident "") pred in 
-  let add = Le.add (Path.mk_ident ("axiom_" ^ name)) fr in
+  let add = Le.add (Path.mk_ident (axiom_prefix ^ name)) fr in
   let (fenv, ifenv) = match dopt with Some _ -> (fenv, add ifenv) | None -> (add fenv, ifenv) in
     (env, fenv, ifenv, menv)
+
+let extract_pred f =
+  match F.get_refinement f with
+  | Some [([], ([(_, _, p)], []))] -> p
+  | _ -> assert false
+
+let scrub_and_push_axioms fenv =
+  Le.fold (fun p f env -> if C.has_prefix axiom_prefix (Path.name p) then 
+            (TheoremProver.push_axiom (extract_pred f); env) else
+              Le.add p f env) fenv Le.empty
 
 let load_rw dopt rw env fenv (preds, decls) quals =
   let load_decl (env, fenv, ifenv, menv) = function
@@ -64,6 +76,7 @@ let load_rw dopt rw env fenv (preds, decls) quals =
   let fenv = Lightenv.addn fs fenv in
   let _ = M.mk_measures env mcstrs in 
   let quals = Qualmod.map_preds (M.transl_pred qsubs) quals in
+  let fenv = scrub_and_push_axioms fenv in
     (env, fenv, ifenv, quals)
 
 let hier_lookup f1 f2 s =

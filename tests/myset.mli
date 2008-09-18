@@ -7,8 +7,9 @@ val subset: 'a set -> 'a set -> bool
 val mem: 'a -> 'a set -> bool
 val add: 'a -> 'a set -> 'a set
 val card: 'a set -> int
-val empty: 'a -> 'a set
 val is_empty: 'a set -> bool
 val singleton: 'a -> 'a set
+val empty: 'a set
+val eq: 'a set -> 'a set -> bool
 
 val mul: int -> int -> int

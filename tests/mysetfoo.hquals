@@ -1,3 +1,4 @@
 qualif A(v) : Myset.card v = 0
 qualif B(v) : ~A = ~B
 qualif FF(v) : [0, 1] = Myset.mem ~A v
+qualif BB(v) : v = Myset.eq ~A ~B

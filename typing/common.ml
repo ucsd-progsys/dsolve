@@ -240,6 +240,10 @@ let strip_meas_whole s =
     String.sub s 6 (String.length s - 6) 
   else s with Invalid_argument _ -> s 
 
+let has_prefix pre s =
+  try String.sub s 0 (String.length pre) = pre
+    with Invalid_argument _ -> false
+
 let rw_suff f s c =
   let suff = f (sub_from s c) in
     try (sub_to_r s c) ^ suff with Not_found -> suff

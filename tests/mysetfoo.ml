@@ -1,4 +1,3 @@
-let x = Myset.empty 1
-let y = Myset.empty 1
-let z = 1
-let _ = assert (not(Myset.mem z x))
+let x = Myset.empty
+let y = Myset.empty
+let _ = assert (Myset.eq x x)
