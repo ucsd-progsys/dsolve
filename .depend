@@ -391,13 +391,15 @@ liquid/mlqmod.cmo: typing/typetexp.cmi typing/types.cmi \
     typing/qualdecl.cmo typing/predicate.cmi parsing/pparse.cmi \
     typing/path.cmi parsing/parsetree.cmi parsing/parse.cmi \
     liquid/measure.cmo parsing/longident.cmi liquid/lightenv.cmo \
-    typing/ident.cmi liquid/frame.cmi typing/env.cmi utils/config.cmi 
+    typing/ident.cmi liquid/frame.cmi typing/env.cmi utils/config.cmi \
+    liquid/builtins.cmo 
 liquid/mlqmod.cmx: typing/typetexp.cmx typing/types.cmx \
     liquid/theoremProver.cmx typing/qualmod.cmx liquid/qualifier.cmx \
     typing/qualdecl.cmx typing/predicate.cmx parsing/pparse.cmx \
     typing/path.cmx parsing/parsetree.cmi parsing/parse.cmx \
     liquid/measure.cmx parsing/longident.cmx liquid/lightenv.cmx \
-    typing/ident.cmx liquid/frame.cmx typing/env.cmx utils/config.cmx 
+    typing/ident.cmx liquid/frame.cmx typing/env.cmx utils/config.cmx \
+    liquid/builtins.cmx 
 liquid/normalize.cmo: liquid/qdebug.cmi parsing/printast.cmi \
     parsing/parsetree.cmi parsing/longident.cmi parsing/location.cmi \
     typing/common.cmo parsing/asttypes.cmi 

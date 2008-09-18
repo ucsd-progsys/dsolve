@@ -83,7 +83,6 @@ let load_dep_mlqfiles bname deps env fenv quals mlqenv =
   let pathname = if String.contains bname '/' then 
           String.sub bname 0 ((String.rindex bname '/') + 1) else "" in
   let inames = List.map (fun s -> (pathname ^ (String.lowercase s) ^ ".mlq", s)) deps in
-  (*let _ = List.iter (fun (s, t) -> Format.printf "@[%s@ %s@]@." s t) inames in*)
   let mlqs = List.map (fun (x, d) -> if Sys.file_exists x then Some (Pparse.file std_formatter x Parse.liquid_interface Config.ast_impl_magic_number, d) else None) inames in 
   let mlqs = C.maybe_list mlqs in
     MLQ.load_dep_sigs env fenv mlqs quals
@@ -106,6 +105,8 @@ let load_sourcefile ppf env fenv sourcefile =
   let (str, _, env) = type_implementation env str in
     (str, env, fenv)
 
+let dump_env env = Le.iter (fun p f -> printf "@[%s@ ::@ %a@]@." (Path.name p) F.pprint f) env; printf "@."
+
 let process_sourcefile env fenv fname =
   let bname = Misc.chop_extension_if_any fname in
   let (qname, iname) = (bname ^ ".quals", bname ^ ".mlq") in
@@ -121,7 +122,7 @@ let process_sourcefile env fenv fname =
         let (deps, quals)              = load_qualfile std_formatter qname in
         let (env, fenv, mlqenv, quals) = MLQ.load_local_sig env fenv (preds, vals) quals in
         let (env, fenv, _, quals)      = load_dep_mlqfiles bname deps env fenv quals fenv in
-        let _ = if C.ck_olev C.ol_dump_env then Le.iter (fun p f -> printf "@[%s@ %a@]@." (Path.name p) F.pprint f) fenv else () in
+        let _ = if C.ck_olev C.ol_dump_env then (dump_env fenv; dump_env mlqenv) else () in
           analyze std_formatter fname (List.rev_append quals str, env, fenv, mlqenv)
    with x ->
      report_error std_formatter x; exit 1
