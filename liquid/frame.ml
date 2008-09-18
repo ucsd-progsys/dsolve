@@ -820,7 +820,7 @@ let rec translate_pframe dopt env plist pf =
     | PFvar (a, r) -> Fvar (getvar a, generic_level, empty_refinement)
     | PFrec (a, rr, r) -> Frec (getvar a, transl_recref rr, transl_pref r)
     | PFsum (l, rro, cs, r) -> transl_sum l rro cs r
-    | PFconstr (l, fs, r) -> printf "%a@." pprint_refinement (transl_pref r); transl_constr l fs r
+    | PFconstr (l, fs, r) -> transl_constr l fs r
     | PFarrow (v, a, b) ->
         let pat = match v with
             Some id ->
