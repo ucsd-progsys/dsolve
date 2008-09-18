@@ -189,6 +189,7 @@ let main () =
      "-dqualifs", Arg.String (fun s -> dump_qualifs := true; Qdump.patf := s), "<file> dump qualifiers for patterns in <file>";
      "-dqueries", Arg.Set dump_queries, "print out all theorem prover queries and their results";
      "-dframes", Arg.Set dump_frames, "place frames in an annotation file";
+     "-draw", Arg.Set raw_frames, "use raw frame templates in annotation file";
      "-dgraph", Arg.Set dump_graph, "dump constraints.dot";
      "-lqueries", Arg.Set log_queries, "log queries to [prover].log";
      "-cqueries", Arg.Set check_queries, "use a backup prover to check all queries";
