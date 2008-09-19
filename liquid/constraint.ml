@@ -134,8 +134,7 @@ let guard_predicate () g =
   P.big_and 
     (List.map 
       (fun (v,b) -> 
-         let p = P.equals (P.tag (P.Var v), P.PInt 1) in
-         if b then p else P.Not p) 
+         if b then B.is_true v else B.is_false v) 
       g)
 
 let refinement_preds sm qexpr r =

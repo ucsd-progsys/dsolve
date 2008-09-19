@@ -150,7 +150,7 @@ let or_frame () =
 let and_frame () =
    defun (fun x -> uBool ===>
           fun y -> uBool ==>
-          fun z -> rBool "&&" z ((tag (Var z)) <=>. ((is_true x) &&. (is_true y))))
+          fun z -> rBool "&&" z ((Var z) <=>. ((is_true x) &&. (is_true y))))
 
 let qbool_rel qname rel (x, y, z) = rBool qname z (tag (Var z) <=>. Atom (Var x, rel, Var y))
 
@@ -198,7 +198,7 @@ let _frames = [
   (["or"; "Pervasives"], or_frame ());
 
   (["not"; "Pervasives"],
-   defun (fun x -> uBool ==> fun y -> rBool "NOT" y (tag (Var y) <=>. (is_false x))));
+   defun (fun x -> uBool ==> fun y -> rBool "NOT" y ((Var y) <=>. (is_false x))));
 
   (["ignore"; "Pervasives"], defun (forall (fun a -> fun x -> a ==> fun y -> uUnit)));
 

@@ -125,8 +125,9 @@ let pred_is_well_typed env p =
       let p1_shp = get_expr_shape p1 in
       let p2_shp = get_expr_shape p2 in
         ((same_shape p1_shp p2_shp) (*&& not(same_shape p1_shp Funknown)*))
-        || ((same_shape p1_shp uBool) && (same_shape p2_shp uInt))
-        || ((same_shape p1_shp uInt) && (same_shape p2_shp uBool))
+        (*|| ((same_shape p1_shp uBool) && (same_shape p2_shp uInt))
+        || ((same_shape p1_shp uInt) && (same_shape p2_shp uBool))*)
+        (* no longer allowing int/bool compares *)
   | P.Iff (px, q) ->
       if same_shape (get_expr_shape px) uInt then
         pred_shape_is_bool q
