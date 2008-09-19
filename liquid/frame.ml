@@ -243,22 +243,9 @@ let ref_of_simple = function
 (****************************** Constructor tags ******************************)
 (******************************************************************************)
 
-let tag_function = "__tag"
-
-let int_of_tag = function
-    Cstr_constant n -> 2*n
-  | Cstr_block n -> 2*n+1
-  | Cstr_exception _-> assert false
-                       
-let tag_of_int n = 
-  if 2*(n/2) = n then
-    Cstr_constant (n/2)
-  else
-    Cstr_block ((n-1)/2)
-
 let maybe_tag_qualifier (_, v, pred) =
   match pred with
-     P.Atom (P.FunApp (tag_fun, [(P.Var v')]), P.Eq, P.PInt t) when v = v' && tag_fun = tag_function -> Some (tag_of_int t)
+     P.Atom (P.FunApp (tag_fun, [(P.Var v')]), P.Eq, P.PInt t) when v = v' && tag_fun = P.tag_function -> Some (C.tag_of_int t)
    | _ -> None
 
 let find_tag_single ts r =

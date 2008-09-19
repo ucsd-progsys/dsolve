@@ -21,3 +21,6 @@ qualif Av_rel_big2(_V)(A:('a, 'b, 'c) Bigarray.Array2.t) : Array.length _V { * *
 qualif A_rel_big1v(_V)(A:'a array) : Array.length ~A { * * } Bigarray.Array2.dim1 _V
 qualif A_rel_big2v(_V)(A:'a array) : Array.length ~A { * * } Bigarray.Array2.dim2 _V
 qualif FALSE(_V): 1 = 0
+
+qualif BTRUE(v): __tag v = 2
+qualif BFALSE(v): __tag v = 0

@@ -28,6 +28,8 @@ open Frame
 open Asttypes
 open Types
 
+module C = Common
+
 let rec mk_longid = function
   | [] -> assert false
   | [id] -> Lident id
@@ -135,20 +137,21 @@ let op_frame path qname op =
                 fun y -> uInt ==>
                 fun z -> rInt qname z (Var z ==. Binop (Var x, op, Var y))))
 
-
 let tag x = FunApp(tag_function, [x])
+let is_true x = tag (Var x) ==. int_true
+let is_false x = tag (Var x) ==. int_false
 
 let or_frame () =
    defun (fun x -> uBool ===>
           fun y -> uBool ==>
           fun z -> rBool "||" z
-            (((tag (Var z) ==. PInt 1) &&. ((tag (Var x) ==. PInt 1) ||. (tag (Var y) ==. PInt 1))) ||.
-             ((tag (Var z) ==. PInt 0) &&. (tag (Var x) ==. PInt 0) &&. (tag (Var y) ==. PInt 0))))
+            (((is_true z) &&. ((is_true x) ||. (is_true y))) ||.
+             ((is_false z) &&. (is_false x) &&. (is_false y))))
 
 let and_frame () =
    defun (fun x -> uBool ===>
           fun y -> uBool ==>
-          fun z -> rBool "&&" z (tag (Var z) <=>. ((tag (Var x) ==. PInt 1) &&. (tag (Var y) ==.  PInt 1))))
+          fun z -> rBool "&&" z ((tag (Var z)) <=>. ((is_true x) &&. (is_true y))))
 
 let qbool_rel qname rel (x, y, z) = rBool qname z (tag (Var z) <=>. Atom (Var x, rel, Var y))
 
@@ -196,7 +199,7 @@ let _frames = [
   (["or"; "Pervasives"], or_frame ());
 
   (["not"; "Pervasives"],
-   defun (fun x -> uBool ==> fun y -> rBool "NOT" y (tag (Var y) <=>. (tag (Var x) ==. PInt 0))));
+   defun (fun x -> uBool ==> fun y -> rBool "NOT" y (tag (Var y) <=>. (is_false x))));
 
   (["ignore"; "Pervasives"], defun (forall (fun a -> fun x -> a ==> fun y -> uUnit)));
 
@@ -336,7 +339,7 @@ let equality_refinement exp =
 
 let tag_refinement t =
   let x = Path.mk_ident "V" in
-    let pred = tag (Var x) ==. PInt (int_of_tag t) in
+    let pred = tag (Var x) ==. PInt (C.int_of_tag t) in
     Predicate.pprint Format.str_formatter pred;
     let expstr = Format.flush_str_formatter () in
       const_refinement [(Path.mk_ident expstr, x, pred)]

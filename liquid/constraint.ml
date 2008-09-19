@@ -902,7 +902,6 @@ let solve qs cs =
   let _ = dump_solution s in
   let _ = dump_solving sri s 0 in
   let _ = BS.time "solving wfs" (solve_wf sri) s in
-  let _ = C.dump_gc "after wf" in
   let _ = C.cprintf C.ol_solve "@[AFTER@ WF@]@." in
   let _ = dump_solving sri s 1 in
   let _ = dump_solution s in

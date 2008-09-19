@@ -365,17 +365,19 @@ liquid/liqerrors.cmx: typing/typetexp.cmx typing/typemod.cmx \
 liquid/liquid.cmo: utils/warnings.cmi typing/types.cmi typing/typemod.cmi \
     typing/typecore.cmi typing/qualmod.cmo liquid/qualifymod.cmi \
     typing/qualgen.cmo liquid/qdump.cmo parsing/printast.cmi \
-    parsing/pparse.cmi typing/path.cmi parsing/parse.cmi liquid/normalize.cmo \
-    liquid/mlqmod.cmo utils/misc.cmi liquid/liqerrors.cmi liquid/lightenv.cmo \
-    typing/ident.cmi liquid/frame.cmi typing/env.cmi utils/config.cmi \
-    typing/common.cmo utils/clflags.cmi liquid/builtins.cmo 
+    typing/predicate.cmi parsing/pparse.cmi typing/path.cmi parsing/parse.cmi \
+    liquid/normalize.cmo liquid/mlqmod.cmo utils/misc.cmi \
+    liquid/liqerrors.cmi liquid/lightenv.cmo typing/ident.cmi \
+    liquid/frame.cmi typing/env.cmi utils/config.cmi typing/common.cmo \
+    utils/clflags.cmi liquid/builtins.cmo 
 liquid/liquid.cmx: utils/warnings.cmx typing/types.cmx typing/typemod.cmx \
     typing/typecore.cmx typing/qualmod.cmx liquid/qualifymod.cmx \
     typing/qualgen.cmx liquid/qdump.cmx parsing/printast.cmx \
-    parsing/pparse.cmx typing/path.cmx parsing/parse.cmx liquid/normalize.cmx \
-    liquid/mlqmod.cmx utils/misc.cmx liquid/liqerrors.cmx liquid/lightenv.cmx \
-    typing/ident.cmx liquid/frame.cmx typing/env.cmx utils/config.cmx \
-    typing/common.cmx utils/clflags.cmx liquid/builtins.cmx 
+    typing/predicate.cmx parsing/pparse.cmx typing/path.cmx parsing/parse.cmx \
+    liquid/normalize.cmx liquid/mlqmod.cmx utils/misc.cmx \
+    liquid/liqerrors.cmx liquid/lightenv.cmx typing/ident.cmx \
+    liquid/frame.cmx typing/env.cmx utils/config.cmx typing/common.cmx \
+    utils/clflags.cmx liquid/builtins.cmx 
 liquid/measure.cmo: typing/types.cmi typing/typedtree.cmi \
     typing/predicate.cmi typing/path.cmi parsing/longident.cmi \
     liquid/lightenv.cmo liquid/frame.cmi typing/env.cmi typing/ctype.cmi \

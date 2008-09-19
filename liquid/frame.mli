@@ -110,9 +110,6 @@ val append_refinement: refinement -> t -> t
 val apply_recref_constrs: recref -> constr list -> constr list
 val apply_recref: recref -> t -> t
 val get_refinement: t -> refinement option 
-val int_of_tag: constructor_tag -> int
-val tag_of_int: int -> constructor_tag
-val tag_function: string
 val find_tag: refinement -> constructor_tag  option
 val refinement_qvars: refinement -> qvar list
 val ref_to_simples: refinement -> (simple_refinement list * simple_refinement list)

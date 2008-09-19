@@ -83,6 +83,8 @@ val pexp_map_funs: (string -> string) -> pexpr -> pexpr
 val map_vars: (Path.t -> pexpr) -> t -> t
 val map_funs: (string -> string) -> t -> t
 
+val tag_function: string
+
 val big_and: t list -> t
 val big_or: t list -> t
 val equals: (pexpr * pexpr) -> t

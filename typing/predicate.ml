@@ -160,10 +160,10 @@ let implies(p, q) = (!. p) ||. q
 
 let (=>.) p q = implies (p, q)
 
+let tag_function = "__tag"
+
 let find_const c =
-  match (Env.lookup_constructor (Longident.Lident c) Env.initial).cstr_tag with
-    |  Cstr_constant n -> n
-    | _ -> assert false
+  C.int_of_tag (Env.lookup_constructor (Longident.Lident c) Env.initial).cstr_tag
 
 let (int_true, int_false) = (PInt (find_const "true"), PInt (find_const "false"))
 

@@ -21,6 +21,8 @@
  *
  *)
 
+open Types
+
 module F = Format
 
 module StringMap = Map.Make(String)
@@ -259,6 +261,18 @@ let app_snd f (a, b) = (a, f b)
 let app_pr f (a, b) = (f a, f b)
 
 let l_to_s l = String.concat "" (Longident.flatten l)
+
+let int_of_tag = function
+    Cstr_constant n -> 2*n
+  | Cstr_block n -> 2*n+1
+  | Cstr_exception _-> assert false
+                       
+let tag_of_int n = 
+  if 2*(n/2) = n then
+    Cstr_constant (n/2)
+  else
+    Cstr_block ((n-1)/2)
+
 
 (****************************************************************)
 (************* Output levels ************************************)
