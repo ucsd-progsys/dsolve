@@ -207,7 +207,7 @@ module Prover : PROVER =
     and mk_quantifier mk me ps q =
       let args = qargs me ps in
       let rv = mk me.c (qtypes me ps) args (z3Pred me q) in
-      me.bnd <- me.bnd - (List.length ps); (*Format.printf "@.@.@[%s@]@.@." (Z3.ast_to_string me.c rv);*) rv
+      me.bnd <- me.bnd - (List.length ps); rv
 
     let z3Preds me ps = 
       let ps' = List.map (z3Pred me) ps in
@@ -232,6 +232,7 @@ module Prover : PROVER =
 
     let assert_axiom me p =
       let _ = Bstats.time "Z3 assert" (Z3.assert_cnstr me.c) p in
+      let _ = Common.cprintf Common.ol_axioms "@[%s@]@." (Z3.ast_to_string me.c p) in
         if unsat me then failwith "Background theory is inconsistent!"
 
     let push me p' =

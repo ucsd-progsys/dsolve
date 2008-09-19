@@ -293,6 +293,7 @@ let ol_solve = 10
 let ol_refine = 11 
 let ol_scc = 12 
 let ol_dump_env = 10 
+let ol_axioms = 5
 
 let verbose_level = ref ol_default
 let verb_stack = ref []
