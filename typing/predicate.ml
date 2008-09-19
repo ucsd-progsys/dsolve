@@ -161,6 +161,7 @@ let implies(p, q) = (!. p) ||. q
 let (=>.) p q = implies (p, q)
 
 let tag_function = "__tag"
+let tag x = FunApp(tag_function, [x])
 
 let find_const c =
   C.int_of_tag (Env.lookup_constructor (Longident.Lident c) Env.initial).cstr_tag
@@ -168,7 +169,7 @@ let find_const c =
 let (int_true, int_false) = (PInt (find_const "true"), PInt (find_const "false"))
 
 let expand_iff = function
-  | Iff (px, q) -> ((px ==. int_true) &&. q) ||. ((px ==. int_false) &&. (!. q))
+  | Iff (px, q) -> (((tag px) ==. int_true) &&. q) ||. (((tag px) ==. int_false) &&. (!. q))
   | _ -> assert false
 
 let big_and = function

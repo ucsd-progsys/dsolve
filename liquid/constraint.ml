@@ -134,7 +134,7 @@ let guard_predicate () g =
   P.big_and 
     (List.map 
       (fun (v,b) -> 
-         let p = P.equals (B.tag (P.Var v), P.PInt 1) in
+         let p = P.equals (P.tag (P.Var v), P.PInt 1) in
          if b then p else P.Not p) 
       g)
 
@@ -198,7 +198,7 @@ let simplify_frame gm x f =
   if not (Le.mem x gm) then f else
     let pos = Le.find x gm in
     match f with 
-    | F.Fsum (a,b,c,[(subs,([(v1,v2,P.Iff (v3,p))],[]))]) when v3 = B.tag (P.Var v2) ->
+    | F.Fsum (a,b,c,[(subs,([(v1,v2,P.Iff (v3,p))],[]))]) when v3 = P.tag (P.Var v2) ->
         let p' = if pos then p else P.Not p in
         F.Fsum (a,b,c,[(subs,([(v1,v2,p')],[]))])
     | _ -> f

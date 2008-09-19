@@ -84,6 +84,7 @@ val map_vars: (Path.t -> pexpr) -> t -> t
 val map_funs: (string -> string) -> t -> t
 
 val tag_function: string
+val tag: pexpr -> pexpr
 
 val big_and: t list -> t
 val big_or: t list -> t

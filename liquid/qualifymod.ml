@@ -339,7 +339,7 @@ and constrain_guard (env, guard, f) form e =
   let (af, cstrs) = constrain e env guard in
   let testvar     = Path.mk_ident "test_predicate" in
   let env'        = Le.add testvar af env in
-  let witness     = B.mk_unit [(Path.mk_ident "", Path.mk_ident "", P.equals (B.tag (P.Var testvar), P.int_true))] in
+  let witness     = B.mk_unit [(Path.mk_ident "", Path.mk_ident "", P.equals (P.tag (P.Var testvar), P.int_true))] in
     (f,
       (WFFrame (env, f) :: SubFrame (env', guard, witness, f) ::
          match form with

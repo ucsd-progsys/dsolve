@@ -137,7 +137,6 @@ let op_frame path qname op =
                 fun y -> uInt ==>
                 fun z -> rInt qname z (Var z ==. Binop (Var x, op, Var y))))
 
-let tag x = FunApp(tag_function, [x])
 let is_true x = tag (Var x) ==. int_true
 let is_false x = tag (Var x) ==. int_false
 
