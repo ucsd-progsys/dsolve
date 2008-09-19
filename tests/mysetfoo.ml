@@ -1,3 +1,3 @@
 let x = Myset.empty
-let y = Myset.empty
-let _ = assert (Myset.eq x x)
+let y = (fun x -> x) Myset.empty
+let _ = assert ((fun x -> x) (Myset.eq x x))
