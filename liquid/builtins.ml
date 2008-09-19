@@ -152,7 +152,7 @@ let and_frame () =
           fun y -> uBool ==>
           fun z -> rBool "&&" z ((Var z) <=>. ((is_true x) &&. (is_true y))))
 
-let qbool_rel qname rel (x, y, z) = rBool qname z (tag (Var z) <=>. Atom (Var x, rel, Var y))
+let qbool_rel qname rel (x, y, z) = rBool qname z ((Var z) <=>. Atom (Var x, rel, Var y))
 
 let poly_rel_frame path qname rel =
   (path,
