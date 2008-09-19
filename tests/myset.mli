@@ -10,6 +10,7 @@ val card: 'a set -> int
 val is_empty: 'a set -> bool
 val singleton: 'a -> 'a set
 val empty: 'a set
+val empty2: 'a set
 val eq: 'a set -> 'a set -> bool
 
 val mul: int -> int -> int
