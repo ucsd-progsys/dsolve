@@ -317,11 +317,11 @@ and constrain_array (env, guard, f) elements =
   let mksub b a          = SubFrame(env, guard, a, b) in
     (f, WFFrame(env, f) :: List.map (mksub fa) fs', sub_cs)
 
-and constrain_sequence (env, guard, _) e1 e2 =
+and constrain_sequence (env, guard, f) e1 e2 =
   let (f1, cs1) = constrain e1 env guard in
-  let env       = Le.add (Path.mk_ident "seq") f1 env in
-  let (f, cs2)  = constrain e2 env guard in
-    (f, [], cs1 @ cs2)
+  let env'      = Le.add (Path.mk_ident "seq") f1 env in
+  let (f', cs2) = constrain e2 env' guard in
+    (f, [WFFrame (env, f); SubFrame (env', guard, f', f)], cs1 @ cs2)
 
 and elem_qualifier fexpr n =
   B.proj_eq_qualifier n (expression_to_pexpr fexpr)
