@@ -1,6 +1,4 @@
 qualif A(v) : Myset.card v = 0
 qualif B(v) : ~A = ~B
-qualif FF(v) : [0, 1] = Myset.mem ~A v
-qualif BB(v) : v = Myset.eq ~A ~B
-qualif BB(v) : v = [0,1]
-qualif BB(v) : 1 = Myset.eq v v 
+qualif FF(v) : [0, 2] = __tag (Myset.mem ~A v)
+qualif BB(v) : v = __tag (Myset.eq ~A ~B)
