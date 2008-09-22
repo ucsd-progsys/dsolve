@@ -23,7 +23,8 @@
 
 (* This file is part of the Dsolve Project.*)
 
-(* open Predicate *)
+open Format
+open Predef
 
 module P = Predicate
 module C = Common
@@ -112,11 +113,14 @@ let z3_mk_app c f zea =
     val valid   : F.t Le.t -> P.t -> bool
     val finish : unit -> unit
     val print_stats : Format.formatter -> unit -> unit
+    type sort = Int | Set | Array | Bool | Unint | Func of sort list
   end
 
 module Prover : PROVER = 
   struct
-    
+
+    type sort = Int | Set | Array | Bool | Unint | Func of sort list
+
     type decl = Vbl of string | Fun of string * int | Barrier
     type var_ast = Const of Z3.ast | Bound of int
     
@@ -141,6 +145,26 @@ module Prover : PROVER =
       let x = ref 0 in
       (fun v -> incr x; (v^(string_of_int !x)))
 
+    let rec collapse t1 t2 =
+      (frame_to_type t1)
+      :: (match t2 with F.Farrow (_, t1, t2) -> collapse t1 t2 
+                                      | _ -> [frame_to_type t2])
+
+    and frame_to_type = function
+        F.Fabstract(p, _, _) -> (match p with 
+                                | p when p = path_bool -> Bool
+                                | p when p = path_int -> Int
+                                | p when match_set p -> Set
+                                | _ -> Unint)
+      | F.Farrow (_, t1, t2) -> Func (collapse t1 t2)
+      | _ -> Unint
+
+    and match_set p = (Path.name p) = "Myset.set"
+
+    let getType s env =
+      try frame_to_type (Le.find s env) 
+        with Not_found -> eprintf "Warning: type uninterpretable at TP"; Unint
+
     let z3Var_memo me s =
       Misc.do_memo me.vart
       (fun () -> 
@@ -149,7 +173,7 @@ module Prover : PROVER =
         me.vars <- (Vbl s)::me.vars; rv) 
       () (Vbl s)
 
-    let z3Var me s =
+    let z3Var me s t =
       match z3Var_memo me s with
           Const v -> v
         | Bound b -> Z3.mk_bound me.c (me.bnd - b) me.tint
@@ -176,43 +200,43 @@ module Prover : PROVER =
     let qargs me ps = Array.of_list (List.map (C.compose (z3Bind me) Path.unique_name) ps)
     let qtypes me ps = Array.make (List.length ps) me.tint
 
-    let rec z3Exp me e =
+    let rec z3Exp env me e =
       match e with 
       | P.PInt i                -> Z3.mk_int me.c i me.tint 
-      | P.Var s                 -> z3Var me (Path.unique_name s) 
-      | P.FunApp (f,es)         -> z3App me f (List.map (z3Exp me) es)
-      | P.Binop (e1,P.Plus,e2)  -> Z3.mk_add me.c (Array.map (z3Exp me) [|e1;e2|]) 
-      | P.Binop (e1,P.Minus,e2) -> Z3.mk_sub me.c (Array.map (z3Exp me) [|e1;e2|]) 
-      | P.Binop (e1,P.Times,e2) -> Z3.mk_mul me.c (Array.map (z3Exp me) [|e1;e2|]) 
-      | P.Binop (e1,P.Div,e2)   -> z3App me "_DIV" (List.map (z3Exp me) [e1;e2])  
-      | P.Field (f, e)          -> z3App me ("SELECT_"^(Ident.unique_name f)) [(z3Exp me e)] 
+      | P.Var s                 -> z3Var me (Path.unique_name s) (getType s env)
+      | P.FunApp (f,es)         -> z3App me f (List.map (z3Exp env me) es)
+      | P.Binop (e1,P.Plus,e2)  -> Z3.mk_add me.c (Array.map (z3Exp env me) [|e1;e2|]) 
+      | P.Binop (e1,P.Minus,e2) -> Z3.mk_sub me.c (Array.map (z3Exp env me) [|e1;e2|]) 
+      | P.Binop (e1,P.Times,e2) -> Z3.mk_mul me.c (Array.map (z3Exp env me) [|e1;e2|]) 
+      | P.Binop (e1,P.Div,e2)   -> z3App me "_DIV" (List.map (z3Exp env me) [e1;e2])  
+      | P.Field (f, e)          -> z3App me ("SELECT_"^(Ident.unique_name f)) [(z3Exp env me e)] 
                                    (** REQUIRES: disjoint intra-module field names *)
-      | P.Ite (e1, e2, e3)      -> Z3.mk_ite me.c (z3Pred me e1) (z3Exp me e2) (z3Exp me e3)
+      | P.Ite (e1, e2, e3)      -> Z3.mk_ite me.c (z3Pred env me e1) (z3Exp env me e2) (z3Exp env me e3)
 
-    and z3Pred me p = 
+    and z3Pred env me p = 
       match p with 
         P.True          -> Z3.mk_true me.c
-      | P.Not p' -> Z3.mk_not me.c (z3Pred me p')
-      | P.And (p1,p2) -> Z3.mk_and me.c (Array.map (z3Pred me) [|p1;p2|])
-      | P.Or (p1,p2) -> Z3.mk_or me.c (Array.map (z3Pred me) [|p1;p2|])
-      | P.Iff _ as iff -> z3Pred me (P.expand_iff iff)
+      | P.Not p' -> Z3.mk_not me.c (z3Pred env me p')
+      | P.And (p1,p2) -> Z3.mk_and me.c (Array.map (z3Pred env me) [|p1;p2|])
+      | P.Or (p1,p2) -> Z3.mk_or me.c (Array.map (z3Pred env me) [|p1;p2|])
+      | P.Iff _ as iff -> z3Pred env me (P.expand_iff iff)
    (* | P.Atom (e1,P.Lt,e2) -> z3Pred me (Atom (e1, P.Le, Binop(e2,P.Minus,PInt 1))) *)
-      | P.Atom (e1,P.Eq,e2) -> Z3.mk_eq me.c (z3Exp me e1) (z3Exp me e2)
-      | P.Atom (e1,P.Ne,e2) -> Z3.mk_distinct me.c [|z3Exp me e1; z3Exp me e2|]
-      | P.Atom (e1,P.Gt,e2) -> Z3.mk_gt me.c (z3Exp me e1) (z3Exp me e2)
-      | P.Atom (e1,P.Ge,e2) -> Z3.mk_ge me.c (z3Exp me e1) (z3Exp me e2)
-      | P.Atom (e1,P.Lt,e2) -> Z3.mk_lt me.c (z3Exp me e1) (z3Exp me e2)
-      | P.Atom (e1,P.Le,e2) -> Z3.mk_le me.c (z3Exp me e1) (z3Exp me e2)
-      | P.Forall (ps, q) -> mk_quantifier z3_mk_forall me ps q
-      | P.Exists (ps, q) -> mk_quantifier z3_mk_exists me ps q
+      | P.Atom (e1,P.Eq,e2) -> Z3.mk_eq me.c (z3Exp env me e1) (z3Exp env me e2)
+      | P.Atom (e1,P.Ne,e2) -> Z3.mk_distinct me.c [|z3Exp env me e1; z3Exp env me e2|]
+      | P.Atom (e1,P.Gt,e2) -> Z3.mk_gt me.c (z3Exp env me e1) (z3Exp env me e2)
+      | P.Atom (e1,P.Ge,e2) -> Z3.mk_ge me.c (z3Exp env me e1) (z3Exp env me e2)
+      | P.Atom (e1,P.Lt,e2) -> Z3.mk_lt me.c (z3Exp env me e1) (z3Exp env me e2)
+      | P.Atom (e1,P.Le,e2) -> Z3.mk_le me.c (z3Exp env me e1) (z3Exp env me e2)
+      | P.Forall (ps, q) -> mk_quantifier z3_mk_forall env me ps q
+      | P.Exists (ps, q) -> mk_quantifier z3_mk_exists env me ps q
 
-    and mk_quantifier mk me ps q =
+    and mk_quantifier mk env me ps q =
       let args = qargs me ps in
-      let rv = mk me.c (qtypes me ps) args (z3Pred me q) in
+      let rv = mk me.c (qtypes me ps) args (z3Pred env me q) in
       me.bnd <- me.bnd - (List.length ps); rv
 
-    let z3Preds me ps = 
-      let ps' = List.map (z3Pred me) ps in
+    let z3Preds env me ps = 
+      let ps' = List.map (z3Pred env me) ps in
       Z3.mk_and me.c (Array.of_list ps')
 
     let unsat me =
@@ -281,18 +305,18 @@ module Prover : PROVER =
 
     let set env ps = 
       incr nb_z3_set;
-      let p' = Bstats.time "mk preds" (z3Preds me) ps in 
+      let p' = Bstats.time "mk preds" (z3Preds env me) ps in 
       Bstats.time "z3 push" (push me) p'; 
       unsat me 
 
     let valid env p =
-      let np' = Bstats.time "mk pred" (z3Pred me) (P.Not p) in 
+      let np' = Bstats.time "mk pred" (z3Pred env me) (P.Not p) in 
       let _   = push me np' in
       let rv  = unsat me in
       let _   = pop me in rv
 
     let axiom p =
-      assert_axiom me (z3Pred me p)
+      assert_axiom me (z3Pred Le.empty me p)
 
     let finish () = 
       Bstats.time "Z3 pop" pop me; 

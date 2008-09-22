@@ -355,17 +355,3 @@ let field_eq_qualifier name pexp =
 
 let proj_eq_qualifier n pexp =
   let x = Path.mk_ident "x" in (Path.mk_ident "<tuple_nth_eq>", x, Field (Common.tuple_elem_id n, Var x) ==. pexp)
-
-
-(*
-let axioms = 
-  let id x = Var (Path.mk_ident x) in
-  let sid x = match x with Var x -> x | _ -> assert false in
-  let (t, u, v, w, x, y, z) = (id "t", id "u", id "v", id "w", id "x", id "y", id "z") in 
-  let ni = Longident.parse "Myset.in" in 
-  let union = Longident.parse "Myset.union" in [
-    ("equality", Forall ([sid x; sid y; sid t], ; 
-    ("union", Forall ([sid x; sid y; sid t], And (Iff (Or (Atom (FunApp (ni, [t; x]), Eq, PInt (1)), FunApp (ni, [t; y])), FunApp (ni, [t; FunApp (union, [x; y])])), 
-                                      Atom (FunApp (union, [x; y]), Eq, FunApp (union, [y; x])))))
-]
-*)
