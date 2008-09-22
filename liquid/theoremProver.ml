@@ -131,17 +131,17 @@ let reset () =
   nb_qp_miss := 0
 
 (* API *)
-let set ps =
+let set env ps =
   let _ = incr nb_push in 
   let ps = List.map fixdiv ps in
   (* C.cprintf C.ol_refine "@[TP implies: %a@ \n@]" P.pprint p *)
-  Prover.set ps
+  Prover.set env ps
 
 (* API *)
-let valid q = 
+let valid env q = 
   incr nb_queries; 
   let q = fixdiv q in
-  Prover.valid q
+  Prover.valid env q
 
 (* API *)
 let finish () = 

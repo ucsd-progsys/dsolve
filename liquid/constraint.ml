@@ -225,7 +225,7 @@ let subst_to lfrom lto = match (lfrom, lto) with
   | _ -> []
 
 let split_sub_ref c env g r1 r2 =
-  sref_map (fun sr -> (Cstr c, SubRef(env_to_refenv env, g, r1, sr, None))) r2
+  sref_map (fun sr -> (c, SubRef(env_to_refenv env, g, r1, sr, None))) r2
 
 let params_apply_substitutions subs ps =
   List.map (fun (i, f, v) -> (i, F.apply_subs subs f, v)) ps
@@ -303,7 +303,7 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
        assert false)
 
 let split_wf_ref f c env r =
-  sref_map (fun sr -> (Cstr c, WFRef(Le.aliasing_add qual_test_var f env, sr, None))) r
+  sref_map (fun sr -> (c, WFRef(Le.aliasing_add qual_test_var f env, sr, None))) r
 
 let make_wff c tenv env f =
   {lc_cstr = WFFrame (env, f); lc_tenv = tenv; lc_orig = Cstr c; lc_id = None}
@@ -454,7 +454,6 @@ let make_ref_index ocs =
   let (om,cm) = 
     List.fold_left 
       (fun (om,cm) (o,c) ->
-        let o = match o with Cstr fc -> fc | _ -> assert false in
         let i = get_ref_id c in 
         (SIM.add i o om, SIM.add i c cm))
       (SIM.empty, SIM.empty) ics in
@@ -463,6 +462,10 @@ let make_ref_index ocs =
 
 let get_ref_orig sri c = 
   C.do_catch "ERROR: get_ref_orig" (SIM.find (get_ref_id c)) sri.orig
+
+let get_ref_fenv sri c =
+  (function SubFrame (a, _, _, _) | WFFrame (a, _) -> a) (get_ref_orig sri c).lc_cstr
+
 (* API *)
 let get_ref_deps sri c =
   let is' = try SIM.find (get_ref_id c) sri.depm with Not_found -> [] in
@@ -564,15 +567,15 @@ let rhs_cands sm subs k =
       (q,F.refinement_predicate sm qual_test_expr r))
     (sm k) 
 
-let check_tp lhs_ps x2 = 
+let check_tp senv lhs_ps x2 = 
   let rv = 
-    if BS.time "tp_set" TP.set lhs_ps then (incr stat_unsat_lhs; x2) 
-    else List.filter (fun (_,p) -> BS.time "imp check" TP.valid p) x2 in
+    if BS.time "tp_set" TP.set senv lhs_ps then (incr stat_unsat_lhs; x2) 
+    else List.filter (fun (_,p) -> BS.time "imp check" TP.valid senv p) x2 in
   TP.finish (); incr stat_tp_refines;
   stat_imp_queries   := !stat_imp_queries + (List.length x2);
   stat_valid_queries := !stat_valid_queries + (List.length rv); rv
 
-let refine_tp s env g r1 sub2s k2 =
+let refine_tp senv s env g r1 sub2s k2 =
   let sm = solution_map s in
   let lhs_ps  = lhs_preds sm env g r1 in
   let rhs_qps = rhs_cands sm sub2s k2 in
@@ -584,7 +587,7 @@ let refine_tp s env g r1 sub2s k2 =
       let lhsm    = List.fold_left (fun pm p -> PM.add p true pm) PM.empty lhs_ps in
       let (x1,x2) = List.partition (fun (_,p) -> PM.mem p lhsm) rhs_qps in
       let _       = stat_matches := !stat_matches + (List.length x1) in 
-      match x2 with [] -> x1 | _ -> x1 @ (check_tp lhs_ps x2) in
+      match x2 with [] -> x1 | _ -> x1 @ (check_tp senv lhs_ps x2) in
   refine_sol_update s k2 rhs_qps (List.map fst rhs_qps') 
 
 let refine sri s c =
@@ -601,7 +604,7 @@ let refine sri s c =
   | SubRef (_, _, _, (_, F.Qvar k2), _) when sm k2 = [] ->
       false
   | SubRef (env,g,r1, (sub2s, F.Qvar k2), _)  ->
-      refine_tp s env g r1 sub2s k2 
+      refine_tp (get_ref_fenv sri c) s env g r1 sub2s k2 
   | WFRef (env, (subs, F.Qvar k), Some id) ->
       let qs  = solution_map s k in
       let qs' = BS.time "filter wf" (List.filter (qual_wf sm env subs)) qs in
@@ -613,21 +616,22 @@ let refine sri s c =
 (********************** Constraint Satisfaction ***************)
 (**************************************************************)
 
-let sat s = function
+let sat sri s c = 
+  match c with
   | SubRef (env,g,r1, (sub2s, F.Qvar k2), _)  ->
-      not (refine_tp s env g r1 sub2s k2)
-  | SubRef (env, g, r1, sr2, _) ->
+      not (refine_tp (get_ref_fenv sri c) s env g r1 sub2s k2)
+  | SubRef (env, g, r1, sr2, _) as c ->
       let sm     = solution_map s in
       let lhs_ps = lhs_preds sm env g r1 in
       let rhs    = F.refinement_predicate sm qual_test_expr (F.ref_of_simple sr2) in
-      1 = List.length (check_tp lhs_ps [(0,rhs)])
+      1 = List.length (check_tp (get_ref_fenv sri c) lhs_ps [(0,rhs)])
   | WFRef (env,(subs, F.Qvar k), _) ->
       true 
   | _ -> true
 
 let unsat_constraints sri s =
   C.map_partial
-    (fun c -> if sat s c then None else Some (c, get_ref_orig sri c))
+    (fun c -> if sat sri s c then None else Some (c, get_ref_orig sri c))
     (get_ref_constraints sri)
 
 (**************************************************************)

@@ -27,6 +27,8 @@
 
 module P = Predicate
 module C = Common
+module F = Frame
+module Le = Lightenv
 
 let force_print s = 
   print_string s; flush stdout
@@ -106,8 +108,8 @@ let z3_mk_app c f zea =
   sig
     (* usage: set.valid*.finish *)
     val axiom : Predicate.t -> unit
-    val set     : Predicate.t list -> bool 
-    val valid   : Predicate.t -> bool
+    val set     : F.t Le.t -> P.t list -> bool 
+    val valid   : F.t Le.t -> P.t -> bool
     val finish : unit -> unit
     val print_stats : Format.formatter -> unit -> unit
   end
@@ -277,13 +279,13 @@ module Prover : PROVER =
 (********************** API ************************************************************)
 (***************************************************************************************)
 
-    let set ps = 
+    let set env ps = 
       incr nb_z3_set;
       let p' = Bstats.time "mk preds" (z3Preds me) ps in 
       Bstats.time "z3 push" (push me) p'; 
       unsat me 
 
-    let valid p =
+    let valid env p =
       let np' = Bstats.time "mk pred" (z3Pred me) (P.Not p) in 
       let _   = push me np' in
       let rv  = unsat me in
