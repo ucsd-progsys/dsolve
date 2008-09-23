@@ -121,7 +121,7 @@ let def f =
   let xid = match x with
   | Path.Pident id -> id
   | _ -> assert false
-  in Farrow (Some (Tpat_var xid), f, fy y)
+  in Farrow (Tpat_var xid, f, fy y)
 
 let defun f =
   reset_idents (); def f

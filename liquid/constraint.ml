@@ -243,10 +243,6 @@ let rec split_sub_params c tenv env g ps1 ps2 = match (ps1, ps2) with
   | ([], []) -> []
   | _ -> assert false
 
-let resolve_extend_env tenv env f l1 l2 = match (l1, l2) with
-  | (Some p, _) | (_, Some p) -> F.env_bind env p f
-  | _ -> env
-
 let bind_tags_pr (t, f) cs r env =
   let is_recvar = function
       (Some (p, _), F.Frec (p', _, _)) -> p' = p
@@ -274,11 +270,11 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       ([], [])
   | (f1, f2) when f1 = f2 ->
       ([], [])
-  | (F.Farrow (l1, f1, f1'), F.Farrow (l2, f2, f2')) ->
-      let subs = match (l1, l2) with (Some p1, Some p2) when not (Pat.same p1 p2) -> subst_to p2 p1 | _ -> [] in
-      let env' = resolve_extend_env tenv env f2 l1 l2 in
+  | (F.Farrow (p1, f1, f1'), F.Farrow (p2, f2, f2')) ->
+      let subs = if not (Pat.same p1 p2) then subst_to p1 p2 else [] in
+      let env' = F.env_bind env p2 f2 in
       let f1'  = F.apply_subs subs f1' in
-      ((lequate_cs env g c F.Covariant f2 f1) @ (lequate_cs env' g c F.Covariant f1' f2'), [])
+        (lequate_cs env g c F.Covariant f2 f1 @ lequate_cs env' g c F.Covariant f1' f2', [])
   | (F.Fvar (_, _, r1), F.Fvar (_, _, r2)) ->
       ([], split_sub_ref c env g r1 r2)
   | (F.Frec _, F.Frec _) ->
@@ -327,9 +323,8 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
         ([make_wff c tenv env (F.apply_refinement F.empty_refinement f'); make_wff c tenv env f''], split_wf_ref f c (bind_tags (t, f) cs r env) r)
   | F.Fabstract (_, ps, r) ->
       (split_wf_params c tenv env ps, split_wf_ref f c env r)
-  | F.Farrow (l, f, f') ->
-      let env' = match l with None -> env | Some p -> F.env_bind env p f in
-        ([make_wff c tenv env f; make_wff c tenv env' f'], [])
+  | F.Farrow (p, f, f') ->
+      ([make_wff c tenv env f; make_wff c tenv (F.env_bind env p f) f'], [])
   | F.Fvar (_, _, r) ->
       ([], split_wf_ref f c env r)
   | F.Frec _ ->

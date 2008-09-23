@@ -252,12 +252,12 @@ and constrain_function (env, guard, f) pat e' =
         begin match e'.exp_desc with
           | Texp_function ([(pat', e')], _) ->
               let (f', cs, lcs) = constrain_function (env', guard, unlabelled_f') pat' e' in
-              let f             = F.Farrow (Some pat.pat_desc, f, f') in
+              let f             = F.Farrow (pat.pat_desc, f, f') in
                 (f, WFFrame (env, f) :: cs, lcs)
           | _ ->
               let (f'', cstrs) = constrain e' env' guard in
               let f'           = F.label_like unlabelled_f' f'' in
-              let f            = F.Farrow (Some pat.pat_desc, f, f') in
+              let f            = F.Farrow (pat.pat_desc, f, f') in
                 (f, [WFFrame (env, f); SubFrame (env', guard, f'', f')], cstrs)
         end
     | _ -> assert false
@@ -280,16 +280,10 @@ and constrain_identifier (env, guard, f) id tenv =
   let f = instantiate_id id f env tenv in (f, [WFFrame(env, f)], [])
 
 and apply_once env guard (f, cstrs, subexp_cstrs) e = match (f, e) with
-  | (F.Farrow (l, f, f'), (Some e2, _)) ->
-    let (f2, e2_cstrs) = constrain e2 env guard in
-    let f'' = match l with
-      | Some pat -> F.apply_subs (Pattern.bind_pexpr pat (expression_to_pexpr e2)) f'
-          (* pmr: The soundness of this next line is suspect,
-             must investigate (i.e., what if there's a var that might
-             somehow be substituted that isn't because of this?  How
-             does it interact w/ the None label rules for subtyping?) *)
-      | _ -> f'
-    in (f'', SubFrame (env, guard, f2, f) :: cstrs, e2_cstrs @ subexp_cstrs)
+  | (F.Farrow (p, f, f'), (Some e2, _)) ->
+      let (f2, e2_cstrs) = constrain e2 env guard in
+      let f''            = F.apply_subs (Pattern.bind_pexpr p (expression_to_pexpr e2)) f' in
+        (f'', SubFrame (env, guard, f2, f) :: cstrs, e2_cstrs @ subexp_cstrs)
   | _ -> assert false
 
 and constrain_application (env, guard, _) func exps =
