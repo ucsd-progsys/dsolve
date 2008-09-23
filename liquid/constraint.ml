@@ -224,7 +224,18 @@ let subst_to lfrom lto = match (lfrom, lto) with
   | (pfrom, pto) when not (Pat.same pfrom pto) -> Pat.substitution pfrom pto
   | _ -> []
 
+(* this is a tad ugly (or ad hoc, as it were) way to make get the e0, e1, ... and val var
+ * into the typing environment for the prover while preserving the origin *)
+let add_val_var = function
+    SubFrame(env, g, f, f') -> SubFrame(Le.aliasing_add qual_test_var f env, g, f, f') 
+  | _ -> assert false
+
+let patch_env env = function
+    SubFrame(env', g, f, f') -> SubFrame(env, g, f, f') | _ -> assert false
+
 let split_sub_ref c env g r1 r2 =
+  let c = {lc_cstr = add_val_var (patch_env env c.lc_cstr); lc_tenv = c.lc_tenv;
+           lc_orig = c.lc_orig; lc_id = c.lc_id} in
   sref_map (fun sr -> (c, SubRef(env_to_refenv env, g, r1, sr, None))) r2
 
 let params_apply_substitutions subs ps =

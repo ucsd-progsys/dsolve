@@ -138,6 +138,15 @@ module Prover : PROVER =
       mutable bnd       : int
     }
 
+    let builtins = [
+            ("__tag", Func [Int; Int]);
+            ("_DIV", Func [Int; Int; Int]);
+    ]
+
+    let is_select = C.has_prefix "SELECT_"
+    let select_type = Func [Int; Int]
+
+
     (* stats *)
     let nb_z3_push  = ref 0
     let nb_z3_unsat = ref 0
@@ -164,10 +173,10 @@ module Prover : PROVER =
 
     let z3VarType me = function
       | Int -> me.tint
-      | Bool -> me.tbool
+      | Bool -> me.tint (*me.tbool*)
       | Array _ -> assert false
       | Set -> me.tset
-      | Unint -> me.tun
+      | Unint -> me.tint (*me.tun*)
       | Func _ -> assert false 
 
     let z3FunTypes me = function 
@@ -179,10 +188,16 @@ module Prover : PROVER =
 
     let getVarType s env =
       try frame_to_type (Le.find s env) 
-      with Not_found -> eprintf "@[Warning: type uninterpretable at TP@]@."; Unint
+        with Not_found -> eprintf "@[Warning:@ type@ of@ %s@ uninterpretable@ at@ TP@]@." (Path.unique_name s); Unint
+
+    let get_by_name s env =
+      List.hd (Le.filterlist (fun p _ -> Path.name p = s) env)
 
     let getFunType s env =
-      try frame_to_type (Wellformed.get_by_name s env) with Not_found -> failwith "Could not type function in tpz3"
+      if is_select s then select_type else
+      try List.assoc s builtins
+        with Not_found -> try frame_to_type (get_by_name s env)
+          with Failure _ -> failwith (sprintf "@[Could@ not@ type@ function@ %s@ in@ tpz3@]" s)
 
     let z3Var_memo me s t =
       Misc.do_memo me.vart
@@ -314,8 +329,6 @@ module Prover : PROVER =
         let _ = me.vars <- vars' in
         let _ = List.iter (remove_decl me) cs in
         Z3.pop me.c 1 
-
-    let make_builtins = 5
 
     let me = 
       let c = Z3.mk_context_x [|("MODEL", "false"); ("PARTIAL_MODELS", "true")|] in
