@@ -268,9 +268,6 @@ let sum_subs bs cs tag =
   let (ps, qs) = (paths bs, paths cs) in
     List.map2 mk_sub ps qs
 
-let app_subs ss (oss, qks) =
-  (ss @ oss, qks)
-
 let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubFrame (env,g,f1,f2); lc_tenv = tenv} as c ->
   match (f1, f2) with
   | (f1, f2) when F.is_shape f1 && F.is_shape f2 ->
@@ -290,7 +287,7 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       let (penv, tag) = bind_tags_pr (None, f1) cs1 r1 env in
       let subs        = sum_subs cs1 cs2 tag in
       (C.flap2 (fun (_, ps1) (_, ps2) -> split_sub_params c tenv env g ps1 ps2) cs1 cs2,
-       split_sub_ref c penv g r1 (List.map (app_subs subs) r2))
+       split_sub_ref c penv g r1 (List.map (F.refexpr_apply_subs subs) r2))
   | (F.Fsum(_, Some (_, rr1), cs1, r1), F.Fsum(_, Some (_, rr2), cs2, r2)) ->
       let (shp1, shp2) = (F.shape f1, F.shape f2) in
       let (f1, f2)     = (F.replace_recvar (F.apply_recref rr1 f1) shp1, 

@@ -98,6 +98,7 @@ val instantiate: t -> t -> t
 val instantiate_qualifiers: (string * Path.t) list -> t -> t
 val bind: pattern_desc -> t -> (Path.t * t) list
 val env_bind: t Lightenv.t -> pattern_desc -> t -> t Lightenv.t
+val refexpr_apply_subs: substitution list -> refexpr -> refexpr
 val apply_subs: substitution list -> t -> t
 val label_like: t -> t -> t
 val apply_solution: (Path.t -> Qualifier.t list) -> t -> t

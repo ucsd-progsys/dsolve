@@ -215,11 +215,11 @@ let append_recref rr' f = match get_recref f with
   | Some rr -> set_recref (merge_recrefs rr rr') f
   | None    -> f
 
-let apply_subs_map subs' (subs, qe) =
+let refexpr_apply_subs subs' (subs, qe) =
   (subs' @ subs, qe)
 
 let apply_subs subs f =
-  map_refexprs (apply_subs_map subs) f
+  map_refexprs (refexpr_apply_subs subs) f
 
 let refinement_qvars r =
   C.flap (fun (_, (_, qvars)) -> qvars) r
@@ -461,7 +461,7 @@ let rec apply_refs rs ps = match (rs, ps) with
       let (ip, i') = (Path.Pident i, Ident.create (Ident.name i)) in
       let sub      = (ip, Predicate.Var (Path.Pident i')) in
       let ps       = List.map (fun (i, f, v) -> (i, apply_subs [sub] f, v)) ps in
-      let rs       = List.map (List.map (apply_subs_map [sub])) rs in
+      let rs       = List.map (List.map (refexpr_apply_subs [sub])) rs in
         (i', append_refinement r f, v) :: apply_refs rs ps
   | ([], []) -> []
   | _        -> assert false
