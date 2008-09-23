@@ -57,6 +57,9 @@ let bound_idents n pat =
       | Tpat_or(p, _, _) -> bound_idents_rec p
       | d -> Typedtree.iter_pattern_desc bound_idents_rec d in
   if ck_clev n then (bound_idents_rec pat; !pl) else []
+  
+let bound_idents_always pat =
+  bound_idents !col_lev pat
 
 let lq n p = if !Clflags.less_qualifs then [] else bound_idents n p
 
@@ -97,6 +100,7 @@ and visit_expr n exp =
     | Texp_record (el, None) ->
         List.iter (fun (l, e) -> ve e) el
     | Texp_assert (e)
+    | Texp_assume (e)
     | Texp_field (e, _) ->
         ve e
     | Texp_sequence (e1, e2)
@@ -113,20 +117,73 @@ and visit_expr n exp =
     | _ -> assert false in
   ve exp; (!pl, !il) 
   
- 
-let visit_sstr sstr = 
-  let vb (y, o) b =
-    let (t, i) = visit_binding 0 b in
-      (List.rev_append t y, List.rev_append o i) in
+let visit_ids_expr f exp =
+  let rec ve exp =
+    match exp.exp_desc with
+    | Texp_let (_, _, e2) ->
+        ve e2  
+    | Texp_function(pl, _) -> 
+        List.iter (fun (_, e) -> ve e) pl
+    | Texp_apply (e, el) ->
+        ve e; C.opt_iter ve (List.map (fun (e, _) -> e) el)
+    | Texp_match (e1, pel, _) ->
+        ve e1; List.iter (fun (_, e) -> ve e) pel 
+    | Texp_array (el) ->
+        List.iter (ve) el
+    | Texp_tuple (el) 
+    | Texp_construct (_, el) ->
+        List.iter (ve) el
+    | Texp_record (el, None) ->
+        List.iter (fun (l, e) -> ve e) el
+    | Texp_assert (e)
+    | Texp_assume (e)
+    | Texp_field (e, _) ->
+        ve e
+    | Texp_sequence (e1, e2)
+    | Texp_setfield (e1, _, e2) ->
+        ve e1; ve e2
+    | Texp_ifthenelse (e1, e2, e3) ->
+        ve e1; ve e2; C.resi_opt ve e3
+    | Texp_constant (_)
+    | Texp_assertfalse ->
+        ()
+    | Texp_ident (p, _) ->
+        f p
+    | Texp_variant (_, _) -> assert false
+    | Texp_try(_) -> assert false
+    | _ -> assert false in
+  ve exp
 
+let vids f _ (_, exp) = 
+  visit_ids_expr f exp; ([], []) 
+
+let vb (y, o) b =
+  let (t, i) = visit_binding 0 b in
+    (List.rev_append t y, List.rev_append o i)
+ 
+let visit_sstr f sstr = 
   let rec visit_sstr_rec sstr =
     match sstr with
      Tstr_value (_, bl) :: srem ->
-       List.fold_left vb (visit_sstr_rec srem) bl 
+       List.fold_left f (visit_sstr_rec srem) bl 
      | _ :: srem ->
        visit_sstr_rec srem
      | [] -> ([], []) in
-  
   let (pl, il) = visit_sstr_rec sstr in  
   (mk_tymap pl, mk_tyset pl, mk_idset pl, mk_intset il)  
 
+let bound_ids sstr =
+  visit_sstr vb sstr
+
+let all_ids sstr =
+  let ids = ref [] in
+  let f x = ids := x :: !ids in
+  ignore (visit_sstr (vids f) sstr); !ids
+
+let all_modules sstr =
+  let ismod s = (String.capitalize s = s) in
+  let cut s = if String.contains s '.' then String.sub s 0 (String.index s '.') else s in
+  let f p = 
+    let s = (Path.name p) in
+    if ismod s then Some (cut s) else None in
+  C.slow_mk_unique (C.maybe_list (List.map f (all_ids sstr)))

@@ -79,6 +79,10 @@ let z3_mk_lt c ze1 ze2 =
   wrap "mk_lt" (Z3.mk_lt c ze1) ze2
 let z3_mk_le c ze1 ze2 = 
   wrap "mk_le" (Z3.mk_le c ze1) ze2
+let z3_mk_forall c ts ns ze =
+  wrap "mk_forall" (Z3.mk_forall c 0 [||] ts ns) ze
+let z3_mk_exists c ts ns ze =
+  wrap "mk_exists" (Z3.mk_exists c 0 [||] ts ns) ze
 let z3_check c = 
   wrap "check" Z3.check c
 let z3_ast_to_string c zp = 
@@ -101,6 +105,7 @@ let z3_mk_app c f zea =
   module type PROVER = 
   sig
     (* usage: set.valid*.finish *)
+    val axiom : Predicate.t -> unit
     val set     : Predicate.t list -> bool 
     val valid   : Predicate.t -> bool
     val finish : unit -> unit
@@ -111,15 +116,17 @@ module Prover : PROVER =
   struct
     
     type decl = Vbl of string | Fun of string * int | Barrier
+    type var_ast = Const of Z3.ast | Bound of int
     
     type z3_instance = { 
       c                 : Z3.context;
       tint              : Z3.type_ast;
-      vart              : (decl, Z3.ast) Hashtbl.t;
+      vart              : (decl, var_ast) Hashtbl.t;
       funt              : (decl, Z3.const_decl_ast) Hashtbl.t;
       mutable vars      : decl list ;
       mutable count     : int;
-      mutable i         : int
+      mutable i         : int;
+      mutable bnd       : int
     }
 
     (* stats *)
@@ -132,13 +139,22 @@ module Prover : PROVER =
       let x = ref 0 in
       (fun v -> incr x; (v^(string_of_int !x)))
 
-    let z3Var me s =
+    let z3Var_memo me s =
       Misc.do_memo me.vart
       (fun () -> 
         let sym = Z3.mk_string_symbol me.c (fresh "z3v") in
-        let rv = Z3.mk_const me.c sym me.tint in
+        let rv = Const (Z3.mk_const me.c sym me.tint) in
         me.vars <- (Vbl s)::me.vars; rv) 
-      () (Vbl s) 
+      () (Vbl s)
+
+    let z3Var me s =
+      match z3Var_memo me s with
+          Const v -> v
+        | Bound b -> Z3.mk_bound me.c (me.bnd - b) me.tint
+
+    let z3Bind me s =
+      me.bnd <- me.bnd + 1; Hashtbl.replace me.vart (Vbl s) (Bound me.bnd); me.vars <- (Vbl s) :: me.vars;
+      Z3.mk_string_symbol me.c (fresh "z3b")
 
     let z3Fun me s k = 
       Misc.do_memo me.funt
@@ -154,6 +170,9 @@ module Prover : PROVER =
       Z3.mk_app me.c (z3Fun me s k) zes 
 
     let rec isConst = function P.PInt i -> true | _ -> false
+
+    let qargs me ps = Array.of_list (List.map (C.compose (z3Bind me) Path.unique_name) ps)
+    let qtypes me ps = Array.make (List.length ps) me.tint
 
     let rec z3Exp me e =
       match e with 
@@ -182,6 +201,13 @@ module Prover : PROVER =
       | P.Atom (e1,P.Ge,e2) -> Z3.mk_ge me.c (z3Exp me e1) (z3Exp me e2)
       | P.Atom (e1,P.Lt,e2) -> Z3.mk_lt me.c (z3Exp me e1) (z3Exp me e2)
       | P.Atom (e1,P.Le,e2) -> Z3.mk_le me.c (z3Exp me e1) (z3Exp me e2)
+      | P.Forall (ps, q) -> mk_quantifier z3_mk_forall me ps q
+      | P.Exists (ps, q) -> mk_quantifier z3_mk_exists me ps q
+
+    and mk_quantifier mk me ps q =
+      let args = qargs me ps in
+      let rv = mk me.c (qtypes me ps) args (z3Pred me q) in
+      me.bnd <- me.bnd - (List.length ps); rv
 
     let z3Preds me ps = 
       let ps' = List.map (z3Pred me) ps in
@@ -203,6 +229,11 @@ module Prover : PROVER =
       let _  = force_print ("z3Pred: out = "^(Z3.ast_to_string me.c zp)^"\n") in
       if not (Z3.type_check me.c zp) then failwith "Dsolve-Z3 type error" else
         zp *)
+
+    let assert_axiom me p =
+      let _ = Bstats.time "Z3 assert" (Z3.assert_cnstr me.c) p in
+      let _ = Common.cprintf Common.ol_axioms "@[%s@]@." (Z3.ast_to_string me.c p) in
+        if unsat me then failwith "Background theory is inconsistent!"
 
     let push me p' =
       let _ = incr nb_z3_push in
@@ -235,12 +266,12 @@ module Prover : PROVER =
         Z3.pop me.c 1 
 
     let me = 
-      let c = Z3.mk_context_x [|("MODEL", "false")|] in
+      let c = Z3.mk_context_x [|("MODEL", "false"); ("PARTIAL_MODELS", "true")|] in
       let tint = Z3.mk_int_type c in
       let vart = Hashtbl.create 37 in
       let funt = Hashtbl.create 37 in
       { c = c; tint = tint; vart = vart ; funt= funt; 
-        vars = []; count = 0; i = 0}
+        vars = []; count = 0; i = 0; bnd = 0} 
 
 (***************************************************************************************)
 (********************** API ************************************************************)
@@ -257,6 +288,9 @@ module Prover : PROVER =
       let _   = push me np' in
       let rv  = unsat me in
       let _   = pop me in rv
+
+    let axiom p =
+      assert_axiom me (z3Pred me p)
 
     let finish () = 
       Bstats.time "Z3 pop" pop me; 

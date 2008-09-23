@@ -58,7 +58,8 @@ let rec fixdiv p =
       | P.And(p, p') -> (pred_isdiv p) || (pred_isdiv p')
       | P.Or(p, p') -> (pred_isdiv p) || (pred_isdiv p')
       | P.True -> false
-      | P.Not p -> pred_isdiv p in
+      | P.Not p -> pred_isdiv p
+      | P.Forall (_, q) | P.Exists (_, q) -> pred_isdiv q in
   let calc_cm e1 e2 =
     pull_divisor e1 * pull_divisor e2 in
   if pred_isdiv p then
@@ -102,6 +103,14 @@ let buftrhs = Buffer.create 300
 let lhsform = Format.formatter_of_buffer buftlhs
 let rhsform = Format.formatter_of_buffer buftrhs
 (*let qcachet: (P.t * P.t, bool) Hashtbl.t = Hashtbl.create 1009*)
+
+
+(********************************************************************************)
+(************************************* AXIOMS ***********************************)
+(********************************************************************************)
+
+let push_axiom p =
+  C.cprintf C.ol_axioms "@[Pushing@ axiom:@ %a@]@." P.pprint p; Prover.axiom p
 
 (********************************************************************************)
 (************************************* API **************************************)

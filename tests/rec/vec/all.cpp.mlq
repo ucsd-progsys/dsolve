@@ -19,6 +19,9 @@
                                R(e3, z, BALW(e0, e3, 2) and HGE0(e3)), {e4: int | ISLEN(e4, e3)}, \
                                {e5: int | ISHEIGHT(e0, e3, e5)}) | (HGE0(v) and (r))}
 #define UGDTREE(ty) RGDTREE(ty, v, true)
+#define TAG(x) __tag x
+#define TRUE 2
+#define FALSE 0
 
 measure height =
   | Empty -> 0
@@ -32,7 +35,7 @@ val create: 'a -> n: {v: int | v >= 0} -> RGDTREE('a, v, L(v) = n)
 
 val empty: RGDTREE('a, v, H(v) = 0 and L(v) = 0)
 
-val is_empty: t: UGDTREE('a) -> {v: bool | v = (H(t) = 0 or L(t) = 0 ? 1: 0)}
+val is_empty: t: UGDTREE('a) -> {v: bool | TAG(v) = (H(t) = 0 or L(t) = 0 ? TRUE: FALSE)}
 
 val singleton: 'a -> RGDTREE('a, v, H(v) = 1 and L(v) = 1)
 

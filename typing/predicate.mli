@@ -52,6 +52,8 @@ and tpat =
   | PNot of tpat
   | PAnd of tpat * tpat
   | POr of tpat * tpat
+  | PForall of string list * tpat
+  | PExists of string list * tpat
 
 type pexpr =   
     PInt of int 
@@ -68,6 +70,8 @@ and t =
   | Not of t
   | And of t * t 
   | Or of t * t 
+  | Forall of Path.t list * t
+  | Exists of Path.t list * t
 
 val pprint_rel: binrel -> string
 val pprint: formatter -> t -> unit
@@ -78,6 +82,9 @@ val pexp_map_funs: (string -> string) -> pexpr -> pexpr
 
 val map_vars: (Path.t -> pexpr) -> t -> t
 val map_funs: (string -> string) -> t -> t
+
+val tag_function: string
+val tag: pexpr -> pexpr
 
 val big_and: t list -> t
 val big_or: t list -> t

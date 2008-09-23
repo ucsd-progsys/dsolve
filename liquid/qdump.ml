@@ -45,14 +45,18 @@ let expand_quals env qstrs prgids =
 let dump_qset ppf qs =
   QS.iter (fun (nm, v, q) -> fprintf ppf "@[squalif@ %s(%s)@ :@ %a@.@]" nm v P.pprint q) qs
 
+let dump_deps ppf ds =
+  List.iter (fun s -> fprintf ppf "@[mdep@ %s@]@." s) ds
+
 let dump_default_qualifiers source qname =
   let qf = formatter_of_out_channel (open_out qname) in
   let _ = pp_set_margin qf 1230912 in
   let _ = C.verbose_level := C.ol_dquals in
   let (str, env, fenv) = source in
-  let prgids = Qualgen.visit_sstr str in
+  let modules = Qualgen.all_modules str in
+  let prgids = Qualgen.bound_ids str in
   let dqstrs = Pparse.file std_formatter !patf Parse.qualifier_patterns ast_impl_magic_number in
   let dqstrs = expand_quals env dqstrs prgids in
   let initqs = QS.add ("FALSE", "_V", P.Atom(P.PInt(1), P.Eq, P.PInt(0))) QS.empty in
   let qs = List.fold_left (fun qs q -> QS.add q qs) initqs dqstrs in
-    dump_qset qf qs; pp_print_flush qf ()
+  dump_deps qf modules; dump_qset qf qs; pp_print_flush qf ()

@@ -41,6 +41,7 @@ type qexpr =
 type simple_refinement = substitution list * qexpr
 
 val empty_refinement: refinement
+val const_refinement: Qualifier.t list -> refinement
 val false_refinement: refinement
 
 type t =
@@ -48,8 +49,7 @@ type t =
   | Frec of Path.t * recref * refinement
   | Fsum of Path.t * (Path.t * recref) option * constr list * refinement
   | Fabstract of Path.t * param list * refinement
-  | Farrow of pattern_desc option * t * t
-  | Funknown
+  | Farrow of pattern_desc * t * t
 
 and param = Ident.t * t * variance
 
@@ -85,7 +85,7 @@ val is_shape: t -> bool
 val params_ids: param list -> Ident.t list
 val same_shape: t -> t -> bool
 val subt: t -> t -> bool
-val translate_pframe: Env.t -> (string * (string * Parsetree.predicate_pattern)) list -> Parsetree.litframe -> t
+val translate_pframe: string option -> Env.t -> (string * (string * Parsetree.predicate_pattern)) list -> Parsetree.litframe -> t
 val replace_recvar: t -> t -> t
 val unfold: t -> t
 val unfold_applying: t -> t
@@ -93,10 +93,12 @@ val fresh: Env.t -> type_expr -> t
 val fresh_without_vars: Env.t -> type_expr -> t
 val fresh_false: Env.t -> type_expr -> t
 val fresh_with_labels: Env.t -> type_expr -> t -> t
+val fresh_uninterpreted: Env.t -> type_expr -> string -> t
 val instantiate: t -> t -> t
 val instantiate_qualifiers: (string * Path.t) list -> t -> t
 val bind: pattern_desc -> t -> (Path.t * t) list
 val env_bind: t Lightenv.t -> pattern_desc -> t -> t Lightenv.t
+val refexpr_apply_subs: substitution list -> refexpr -> refexpr
 val apply_subs: substitution list -> t -> t
 val label_like: t -> t -> t
 val apply_solution: (Path.t -> Qualifier.t list) -> t -> t
@@ -108,11 +110,7 @@ val apply_refinement: refinement -> t -> t
 val append_refinement: refinement -> t -> t
 val apply_recref_constrs: recref -> constr list -> constr list
 val apply_recref: recref -> t -> t
-val qvars: t -> qvar list
 val get_refinement: t -> refinement option 
-val int_of_tag: constructor_tag -> int
-val tag_of_int: int -> constructor_tag
-val tag_function: string
 val find_tag: refinement -> constructor_tag  option
 val refinement_qvars: refinement -> qvar list
 val ref_to_simples: refinement -> (simple_refinement list * simple_refinement list)

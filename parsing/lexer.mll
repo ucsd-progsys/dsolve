@@ -38,6 +38,7 @@ let keyword_table =
     "and", AND;
     "as", AS;
     "assert", ASSERT;
+    "assume", ASSUME;
     "begin", BEGIN;
     "class", CLASS;
     "constraint", CONSTRAINT;
@@ -73,6 +74,7 @@ let keyword_table =
     "private", PRIVATE;
     "qualif", QUALIF;
     "squalif", SINGLE_QUALIF;
+    "mdep", MODULE_DEPENDENCY;
     "predicate", PREDICATE;
     "measure", MEASURE;
     "refinement", REFINEMENT;
@@ -84,6 +86,11 @@ let keyword_table =
     "true", TRUE;
     "try", TRY;
     "type", TYPE;
+    "uninterpreted", UNINTERPRETED;
+    "forall", FORALL;
+    "exists", EXISTS;
+    "axiom", AXIOM;
+    "iff", IFF;
     "val", VAL;
     "virtual", VIRTUAL;
     "when", WHEN;

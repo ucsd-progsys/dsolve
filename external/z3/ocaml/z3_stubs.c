@@ -871,6 +871,31 @@ value camlidl_z3_Z3_mk_const(
   return _vres;
 }
 
+value camlidl_z3_Z3_mk_label(
+	value _v_c,
+	value _v_s,
+	value _v_is_pos,
+	value _v_f)
+{
+  Z3_context c; /*in*/
+  Z3_symbol s; /*in*/
+  int is_pos; /*in*/
+  Z3_ast f; /*in*/
+  Z3_ast _res;
+  value _vres;
+
+  struct camlidl_ctx_struct _ctxs = { CAMLIDL_TRANSIENT, NULL };
+  camlidl_ctx _ctx = &_ctxs;
+  camlidl_ml2c_z3_Z3_context(_v_c, &c, _ctx);
+  camlidl_ml2c_z3_Z3_symbol(_v_s, &s, _ctx);
+  is_pos = Int_val(_v_is_pos);
+  camlidl_ml2c_z3_Z3_ast(_v_f, &f, _ctx);
+  _res = Z3_mk_label(c, s, is_pos, f);
+  _vres = camlidl_c2ml_z3_Z3_ast(&_res, _ctx);
+  camlidl_free(_ctx);
+  return _vres;
+}
+
 value camlidl_z3_Z3_mk_fresh_func_decl(
 	value _v_c,
 	value _v_prefix,
@@ -2371,7 +2396,64 @@ value camlidl_z3_Z3_mk_exists_bytecode(value * argv, int argn)
   return camlidl_z3_Z3_mk_exists(argv[0], argv[1], argv[2], argv[3], argv[4], argv[5]);
 }
 
+value camlidl_z3_Z3_mk_quantifier(
+	value _v_c,
+	value _v_is_forall,
+	value _v_weight,
+	value _v_num_patterns,
+	value _v_patterns,
+	value _v_num_no_patterns,
+	value _v_no_patterns,
+	value _v_num_decls,
+	value _v_types,
+	value _v_decl_names,
+	value _v_body)
+{
+  Z3_context c; /*in*/
+  int is_forall; /*in*/
+  unsigned int weight; /*in*/
+  unsigned int num_patterns; /*in*/
+  Z3_pattern_ast const *patterns; /*in*/
+  unsigned int num_no_patterns; /*in*/
+  Z3_ast const *no_patterns; /*in*/
+  unsigned int num_decls; /*in*/
+  Z3_type_ast const *types; /*in*/
+  Z3_symbol const *decl_names; /*in*/
+  Z3_ast body; /*in*/
+  Z3_ast _res;
+  Z3_pattern_ast _c1;
+  Z3_ast _c2;
+  Z3_type_ast _c3;
+  Z3_symbol _c4;
+  value _vres;
 
+  struct camlidl_ctx_struct _ctxs = { CAMLIDL_TRANSIENT, NULL };
+  camlidl_ctx _ctx = &_ctxs;
+  camlidl_ml2c_z3_Z3_context(_v_c, &c, _ctx);
+  is_forall = Int_val(_v_is_forall);
+  weight = Int_val(_v_weight);
+  num_patterns = Int_val(_v_num_patterns);
+  patterns = &_c1;
+  camlidl_ml2c_z3_Z3_pattern_ast(_v_patterns, &_c1, _ctx);
+  num_no_patterns = Int_val(_v_num_no_patterns);
+  no_patterns = &_c2;
+  camlidl_ml2c_z3_Z3_ast(_v_no_patterns, &_c2, _ctx);
+  num_decls = Int_val(_v_num_decls);
+  types = &_c3;
+  camlidl_ml2c_z3_Z3_type_ast(_v_types, &_c3, _ctx);
+  decl_names = &_c4;
+  camlidl_ml2c_z3_Z3_symbol(_v_decl_names, &_c4, _ctx);
+  camlidl_ml2c_z3_Z3_ast(_v_body, &body, _ctx);
+  _res = Z3_mk_quantifier(c, is_forall, weight, num_patterns, patterns, num_no_patterns, no_patterns, num_decls, types, decl_names, body);
+  _vres = camlidl_c2ml_z3_Z3_ast(&_res, _ctx);
+  camlidl_free(_ctx);
+  return _vres;
+}
+
+value camlidl_z3_Z3_mk_quantifier_bytecode(value * argv, int argn)
+{
+  return camlidl_z3_Z3_mk_quantifier(argv[0], argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], argv[7], argv[8], argv[9], argv[10]);
+}
 
 value camlidl_z3_Z3_get_symbol_kind(
 	value _v_c,
@@ -2841,6 +2923,40 @@ value camlidl_z3_Z3_get_numeral_ast_value(
   return _vres;
 }
 
+value camlidl_z3_Z3_get_numeral_ast_value_small(
+	value _v_c,
+	value _v_a)
+{
+  Z3_context c; /*in*/
+  Z3_ast a; /*in*/
+  int64 *n; /*out*/
+  int64 *d; /*out*/
+  int _res;
+  struct camlidl_ctx_struct _ctxs = { CAMLIDL_TRANSIENT, NULL };
+  camlidl_ctx _ctx = &_ctxs;
+  int64 _c1;
+  int64 _c2;
+  value _vresult;
+  value _vres[3] = { 0, 0, 0, };
+
+  camlidl_ml2c_z3_Z3_context(_v_c, &c, _ctx);
+  camlidl_ml2c_z3_Z3_ast(_v_a, &a, _ctx);
+  n = &_c1;
+  d = &_c2;
+  _res = Z3_get_numeral_ast_value_small(c, a, n, d);
+  Begin_roots_block(_vres, 3)
+    _vres[0] = Val_int(_res);
+    _vres[1] = copy_int64(*n);
+    _vres[2] = copy_int64(*d);
+    _vresult = camlidl_alloc_small(3, 0);
+    Field(_vresult, 0) = _vres[0];
+    Field(_vresult, 1) = _vres[1];
+    Field(_vresult, 2) = _vres[2];
+  End_roots()
+  camlidl_free(_ctx);
+  return _vresult;
+}
+
 value camlidl_z3_Z3_get_index_value(
 	value _v_c,
 	value _v_a)
@@ -2874,6 +2990,25 @@ value camlidl_z3_Z3_is_quantifier_forall(
   camlidl_ml2c_z3_Z3_context(_v_c, &c, _ctx);
   camlidl_ml2c_z3_Z3_ast(_v_a, &a, _ctx);
   _res = Z3_is_quantifier_forall(c, a);
+  _vres = Val_int(_res);
+  camlidl_free(_ctx);
+  return _vres;
+}
+
+value camlidl_z3_Z3_get_quantifier_weight(
+	value _v_c,
+	value _v_a)
+{
+  Z3_context c; /*in*/
+  Z3_ast a; /*in*/
+  unsigned int _res;
+  value _vres;
+
+  struct camlidl_ctx_struct _ctxs = { CAMLIDL_TRANSIENT, NULL };
+  camlidl_ctx _ctx = &_ctxs;
+  camlidl_ml2c_z3_Z3_context(_v_c, &c, _ctx);
+  camlidl_ml2c_z3_Z3_ast(_v_a, &a, _ctx);
+  _res = Z3_get_quantifier_weight(c, a);
   _vres = Val_int(_res);
   camlidl_free(_ctx);
   return _vres;
@@ -3272,6 +3407,110 @@ value camlidl_z3_Z3_simplify(
   return _vres;
 }
 
+value camlidl_z3_Z3_get_relevant_labels(
+	value _v_c)
+{
+  Z3_context c; /*in*/
+  Z3_labels _res;
+  value _vres;
+
+  struct camlidl_ctx_struct _ctxs = { CAMLIDL_TRANSIENT, NULL };
+  camlidl_ctx _ctx = &_ctxs;
+  camlidl_ml2c_z3_Z3_context(_v_c, &c, _ctx);
+  _res = Z3_get_relevant_labels(c);
+  _vres = camlidl_c2ml_z3_Z3_labels(&_res, _ctx);
+  camlidl_free(_ctx);
+  return _vres;
+}
+
+value camlidl_z3_Z3_del_labels(
+	value _v_c,
+	value _v_lbls)
+{
+  Z3_context c; /*in*/
+  Z3_labels lbls; /*in*/
+  struct camlidl_ctx_struct _ctxs = { CAMLIDL_TRANSIENT, NULL };
+  camlidl_ctx _ctx = &_ctxs;
+  camlidl_ml2c_z3_Z3_context(_v_c, &c, _ctx);
+  camlidl_ml2c_z3_Z3_labels(_v_lbls, &lbls, _ctx);
+  Z3_del_labels(c, lbls);
+  camlidl_free(_ctx);
+  return Val_unit;
+}
+
+value camlidl_z3_Z3_get_num_labels(
+	value _v_c,
+	value _v_lbls)
+{
+  Z3_context c; /*in*/
+  Z3_labels lbls; /*in*/
+  unsigned int _res;
+  value _vres;
+
+  struct camlidl_ctx_struct _ctxs = { CAMLIDL_TRANSIENT, NULL };
+  camlidl_ctx _ctx = &_ctxs;
+  camlidl_ml2c_z3_Z3_context(_v_c, &c, _ctx);
+  camlidl_ml2c_z3_Z3_labels(_v_lbls, &lbls, _ctx);
+  _res = Z3_get_num_labels(c, lbls);
+  _vres = Val_int(_res);
+  camlidl_free(_ctx);
+  return _vres;
+}
+
+value camlidl_z3_Z3_get_label_symbol(
+	value _v_c,
+	value _v_lbls,
+	value _v_idx)
+{
+  Z3_context c; /*in*/
+  Z3_labels lbls; /*in*/
+  unsigned int idx; /*in*/
+  Z3_symbol _res;
+  value _vres;
+
+  struct camlidl_ctx_struct _ctxs = { CAMLIDL_TRANSIENT, NULL };
+  camlidl_ctx _ctx = &_ctxs;
+  camlidl_ml2c_z3_Z3_context(_v_c, &c, _ctx);
+  camlidl_ml2c_z3_Z3_labels(_v_lbls, &lbls, _ctx);
+  idx = Int_val(_v_idx);
+  _res = Z3_get_label_symbol(c, lbls, idx);
+  _vres = camlidl_c2ml_z3_Z3_symbol(&_res, _ctx);
+  camlidl_free(_ctx);
+  return _vres;
+}
+
+value camlidl_z3_Z3_disable_label(
+	value _v_c,
+	value _v_lbls,
+	value _v_idx)
+{
+  Z3_context c; /*in*/
+  Z3_labels lbls; /*in*/
+  unsigned int idx; /*in*/
+  struct camlidl_ctx_struct _ctxs = { CAMLIDL_TRANSIENT, NULL };
+  camlidl_ctx _ctx = &_ctxs;
+  camlidl_ml2c_z3_Z3_context(_v_c, &c, _ctx);
+  camlidl_ml2c_z3_Z3_labels(_v_lbls, &lbls, _ctx);
+  idx = Int_val(_v_idx);
+  Z3_disable_label(c, lbls, idx);
+  camlidl_free(_ctx);
+  return Val_unit;
+}
+
+value camlidl_z3_Z3_block_labels(
+	value _v_c,
+	value _v_lbls)
+{
+  Z3_context c; /*in*/
+  Z3_labels lbls; /*in*/
+  struct camlidl_ctx_struct _ctxs = { CAMLIDL_TRANSIENT, NULL };
+  camlidl_ctx _ctx = &_ctxs;
+  camlidl_ml2c_z3_Z3_context(_v_c, &c, _ctx);
+  camlidl_ml2c_z3_Z3_labels(_v_lbls, &lbls, _ctx);
+  Z3_block_labels(c, lbls);
+  camlidl_free(_ctx);
+  return Val_unit;
+}
 
 value camlidl_z3_Z3_get_model_num_constants(
 	value _v_c,
@@ -4256,4 +4495,13 @@ value camlidl_z3_Z3_type_check(
   return _vres;
 }
 
+value camlidl_z3_Z3_get_allocation_size(value _unit)
+{
+  unsigned int _res;
+  value _vres;
+
+  _res = Z3_get_allocation_size();
+  _vres = Val_int(_res);
+  return _vres;
+}
 

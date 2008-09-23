@@ -212,6 +212,10 @@ let rw_frame_lit f v p =
 let ptrue = RLiteral( "", {ppredpat_desc = Ppredpat_true; 
                           ppredpat_loc = Location.none} )
 
+let mk_implies a b =
+  let pre = mkpredpat (Ppredpat_not(a)) in
+    mkpredpat (Ppredpat_or(pre, b))
+
 let mkconstr a b r = PFconstr (a, b, r)
 let mksum p rro cs r = PFsum (p, rro, cs, r)
 let mkvar a r = PFvar (a, r)
@@ -235,6 +239,7 @@ let mktrue_record a = mkrecord a ptrue
 %token AND
 %token AS
 %token ASSERT
+%token ASSUME
 %token BACKQUOTE
 %token BAR
 %token BARBAR
@@ -314,6 +319,7 @@ let mktrue_record a = mkrecord a ptrue
 %token PRIVATE
 %token QUALIF
 %token SINGLE_QUALIF
+%token MODULE_DEPENDENCY
 %token PREDICATE
 %token MEASURE
 %token REFINEMENT
@@ -339,6 +345,11 @@ let mktrue_record a = mkrecord a ptrue
 %token TYPE
 %token <string> UIDENT
 %token UNDERSCORE
+%token UNINTERPRETED
+%token FORALL
+%token EXISTS
+%token AXIOM
+%token IFF
 %token VAL
 %token VIRTUAL
 %token WHEN
@@ -420,7 +431,7 @@ The precedences must be listed from low to high.
 %start use_file                         /* for the #use directive */
 %type <Parsetree.toplevel_phrase list> use_file
 %start qualifiers                       /* runtime qualifier files */
-%type <Parsetree.qualifier_declaration list> qualifiers
+%type <string list * Parsetree.qualifier_declaration list> qualifiers
 %start qualifier_patterns               /* pattern qualifier files */
 %type <Parsetree.qualifier_declaration list> qualifier_patterns
 %start liquid_interface                 /* for mlq refined interface files */
@@ -956,6 +967,8 @@ expr:
       { mkexp(Pexp_setinstvar($1, $3)) }
   | ASSERT simple_expr %prec below_SHARP
       { mkassert $2 }
+  | ASSUME simple_expr %prec below_SHARP
+      { mkexp (Pexp_assume ($2)) }
   | LAZY simple_expr %prec below_SHARP
       { mkexp (Pexp_lazy ($2)) }
   | OBJECT class_structure END
@@ -1457,9 +1470,21 @@ qualifier_list:
   | SINGLE_QUALIF qualifier_pattern_declaration qualifier_list
       { $2::$3 }
 
-qualifiers:
-    qualifier_list EOF
+dep_list_opt:
+    /* empty */
+      { [] }
+  | dep_list
       { $1 }
+
+dep_list:
+    MODULE_DEPENDENCY UIDENT
+      { [$2] }
+  | MODULE_DEPENDENCY UIDENT dep_list
+      { $2 :: $3 }
+
+qualifiers:
+    dep_list_opt qualifier_list EOF
+      { ($1, $2) }
 
 qualifier_patterns:
     qualifier_pattern_list EOF
@@ -1477,14 +1502,27 @@ qual_ty_anno:
   | UIDENT COLON simple_core_type_or_tuple COMMA qual_ty_anno
     { ($1, $3)::$5 }
 
+quant_id_list:
+    LIDENT                      { [$1] }
+  | LIDENT COMMA quant_id_list  { $1 :: $3 }
+
 qualifier_pattern:
     TRUE                                    { mkpredpat Ppredpat_true }                    
   | qualifier_pattern AND qualifier_pattern { mkpredpat (Ppredpat_and($1, $3)) }
   | qualifier_pattern OR qualifier_pattern  { mkpredpat (Ppredpat_or($1, $3)) }
   | MINUSDOT qualifier_pattern              { mkpredpat (Ppredpat_not($2)) }              
   | LPAREN qualifier_pattern RPAREN         { $2 }
+  | LPAREN qual_expr IFF qualifier_pattern RPAREN
+      { mkpredpat (Ppredpat_iff($2, $4)) }
+  | LPAREN qualifier_pattern IFF qualifier_pattern RPAREN
+      { mkpredpat (Ppredpat_and(mk_implies $2 $4, mk_implies $4 $2)) } 
+  | LPAREN qualifier_pattern MINUSGREATER qualifier_pattern RPAREN
+      { mk_implies $2 $4 }
   | qual_expr qual_rel qual_expr            
       { mkpredpat (Ppredpat_atom($1, $2, $3)) }
+  | FORALL LPAREN quant_id_list DOT qualifier_pattern RPAREN { mkpredpat (Ppredpat_forall($3, $5)) }
+  | EXISTS LPAREN quant_id_list DOT qualifier_pattern RPAREN  { mkpredpat (Ppredpat_exists($3, $5)) }
+
 
 qual_rel:
     qual_lit_rel                            { [$1] }
@@ -1589,6 +1627,8 @@ liquid_signature:
 liquid_decl:
     liquid_val_decl                     { let (name, decl) = $1 in LvalDecl(name, decl) }
   | liquid_measure_decl                 { let (name, decl) = $1 in LmeasDecl(name, decl) }
+  | liquid_uninterpreted_decl           { let (name, ty)   = $1 in LunintDecl(name, ty) }
+  | liquid_axiom_decl                   { let (name, pred) = $1 in LaxiomDecl(name, pred) }
   | liquid_recref_decl                  { LrecrefDecl }
 
 liquid_val_decl:
@@ -1599,6 +1639,16 @@ liquid_val_decl:
 
 liquid_recref_decl:
     REFINEMENT                          { None }
+
+/* Uninterpreted functions */
+
+liquid_uninterpreted_decl:
+    UNINTERPRETED LIDENT COLON core_type { ($2, $4) }
+
+/* Axiom declaration */
+
+liquid_axiom_decl:
+    AXIOM LIDENT COLON predicate         { ($2, $4) }
 
 /* Measure specifications */
 

@@ -21,6 +21,8 @@
  *
  *)
 
+open Types
+
 module F = Format
 
 module StringMap = Map.Make(String)
@@ -148,6 +150,9 @@ let pprint_list sepstr pp =
   (fun ppf -> Oprint.print_list pp
      (fun ppf -> F.fprintf ppf "%s@;<1 2>" sepstr) ppf)
 
+let pprint_str ppf s =
+  Format.fprintf ppf "%s" s
+
 let rec is_unique xs =
   match xs with
       x :: xs -> if List.mem x xs then false else is_unique xs
@@ -214,10 +219,60 @@ let maybe_bool = function
 let all_defined xs =
   List.for_all maybe_bool xs
 
-let strip_meas s =
+let rec slow_mk_unique = function
+  x :: xs -> let xs = (slow_mk_unique xs) in
+    if List.mem x xs then xs else x :: xs
+  | [] -> []
+
+let sub_from_list subs s =
+  try List.assoc s subs with Not_found -> s
+
+let sub_from s c =
+  try 
+    let x = String.rindex s c in
+      String.sub s x ((String.length s) - x)
+  with Not_found -> s
+
+let sub_to_r s c =
+  let x = String.rindex s c in
+    String.sub s 0 x
+
+let strip_meas_whole s =
   try if String.sub s 0 6 = "_meas_" then 
     String.sub s 6 (String.length s - 6) 
-  else s with Invalid_argument _ -> s
+  else s with Invalid_argument _ -> s 
+
+let has_prefix pre s =
+  try String.sub s 0 (String.length pre) = pre
+    with Invalid_argument _ -> false
+
+let rw_suff f s c =
+  let suff = f (sub_from s c) in
+    try (sub_to_r s c) ^ suff with Not_found -> suff
+
+let strip_meas s =
+  rw_suff strip_meas_whole s '.'
+
+let append_pref p s =
+  (p ^ "." ^ s)
+
+let app_fst f (a, b) = (f a, b)
+let app_snd f (a, b) = (a, f b)
+let app_pr f (a, b) = (f a, f b)
+
+let l_to_s l = String.concat "" (Longident.flatten l)
+
+let int_of_tag = function
+    Cstr_constant n -> 2*n
+  | Cstr_block n -> 2*n+1
+  | Cstr_exception _-> assert false
+                       
+let tag_of_int n = 
+  if 2*(n/2) = n then
+    Cstr_constant (n/2)
+  else
+    Cstr_block ((n-1)/2)
+
 
 (****************************************************************)
 (************* Output levels ************************************)
@@ -237,6 +292,8 @@ let ol_unique_names = 9
 let ol_solve = 10 
 let ol_refine = 11 
 let ol_scc = 12 
+let ol_dump_env = 10 
+let ol_axioms = 5
 
 let verbose_level = ref ol_default
 let verb_stack = ref []

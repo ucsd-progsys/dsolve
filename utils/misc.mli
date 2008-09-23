@@ -89,6 +89,10 @@ val no_overflow_lsl: int -> bool
         (* [no_overflow_add n] returns [true] if the computation of
            [n lsl 1] does not overflow. *)
 
+val get_extension: string -> string option
+        (* Returns Some ext, where ext is the smallest suffix of the string
+           beginnning with ., or None if no such suffix exists. *)
+
 val chop_extension_if_any: string -> string
         (* Like Filename.chop_extension but returns the initial file
            name if it has no extension *)

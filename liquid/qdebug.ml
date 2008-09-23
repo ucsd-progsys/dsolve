@@ -83,6 +83,8 @@ let rec pprint_expression ppf exp =
           fprintf ppf "assert@ false"
       | Pexp_assert e ->
           fprintf ppf "assert@ %a" pprint_expression e
+      | Pexp_assume e ->
+          fprintf ppf "assume (%a)" pprint_expression e
       | Pexp_match (e, pel) ->
           fprintf ppf "match@ %a@ with@;<1 2>%a" pprint_expression e pprint_cases pel  
       | Pexp_try _ -> fprintf ppf "Pexp_try"

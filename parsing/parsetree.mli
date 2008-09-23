@@ -108,6 +108,7 @@ and expression_desc =
   | Pexp_letmodule of string * module_expr * expression
   | Pexp_assert of expression
   | Pexp_assertfalse
+  | Pexp_assume of expression
   | Pexp_lazy of expression
   | Pexp_poly of expression * core_type option
   | Pexp_object of class_structure
@@ -151,6 +152,9 @@ and predpat_desc =
   | Ppredpat_not of predicate_pattern
   | Ppredpat_and of predicate_pattern * predicate_pattern
   | Ppredpat_or of predicate_pattern * predicate_pattern
+  | Ppredpat_forall of string list * predicate_pattern
+  | Ppredpat_exists of string list * predicate_pattern
+  | Ppredpat_iff of predpatexp * predicate_pattern
 
 and predpatexp =
   { ppredpatexp_desc: predpatexp_desc;
@@ -174,7 +178,9 @@ and cstr = string * string option list * predpatexp
 
 and liquid_decl =
     LvalDecl of string * litframe
-  | LmeasDecl of (string * string) * cstr list 
+  | LmeasDecl of (string * string) * cstr list
+  | LunintDecl of string * core_type
+  | LaxiomDecl of string * predicate_pattern
   | LrecrefDecl
 
 and liquid_sig = predicate_alias list * liquid_decl list  

@@ -28,6 +28,8 @@ open Frame
 open Asttypes
 open Types
 
+module C = Common
+
 let rec mk_longid = function
   | [] -> assert false
   | [id] -> Lident id
@@ -54,29 +56,26 @@ let qrel rel x y =
 
 let mk_tyvar () = Frame.Fvar(Path.mk_ident "a", Frame.generic_level, empty_refinement)
 
-let const_ref qs =
-  mk_refinement [] qs []
-
 let mk_abstract path qs =
-  Fabstract(path, [], const_ref qs)
+  Fabstract(path, [], const_refinement qs)
 
-let mk_int qs = Fabstract(Predef.path_int, [], const_ref qs)
+let mk_int qs = Fabstract(Predef.path_int, [], const_refinement qs)
 
 let uFloat = Fabstract(Predef.path_float, [], empty_refinement)
 
 let uChar = Fsum(Predef.path_char, None, [], empty_refinement)
 
-let mk_string qs = Fsum(Predef.path_string, None, [], const_ref qs)
+let mk_string qs = Fabstract(Predef.path_string, [], const_refinement qs)
 
 let uString = mk_string []
 let rString name v p = mk_string [(Path.mk_ident name, v, p)]
 
-let mk_bool qs = Fsum(Predef.path_bool, None, [(Cstr_constant 0, []); (Cstr_constant 1, [])], const_ref qs)
+let mk_bool qs = Fsum(Predef.path_bool, None, [(Cstr_constant 0, []); (Cstr_constant 1, [])], const_refinement qs)
 let uBool = mk_bool []
 let rBool name v p = mk_bool [(Path.mk_ident name, v, p)]
 
 let array_contents_id = Ident.create "contents"
-let mk_array f qs = Fabstract(Predef.path_array, [(array_contents_id, f, Invariant)], const_ref qs)
+let mk_array f qs = Fabstract(Predef.path_array, [(array_contents_id, f, Invariant)], const_refinement qs)
 
 let find_constructed_type id env =
   let path =
@@ -88,7 +87,7 @@ let find_constructed_type id env =
 let mk_named id fs qs env =
   let (path, varis) = find_constructed_type id env in
   let fresh_names = Misc.mapi (fun _ i -> Common.tuple_elem_id i) varis in
-    Fabstract(path, Common.combine3 fresh_names fs varis, const_ref qs)
+    Fabstract(path, Common.combine3 fresh_names fs varis, const_refinement qs)
 
 let ref_contents_id = Ident.create "contents"
 let mk_ref f env =
@@ -100,7 +99,7 @@ let mk_bigarray_layout a qs env = mk_named ["layout"; "Bigarray"] [a] qs env
 
 let mk_bigarray_type a b c qs env = mk_named ["t"; "Array2"; "Bigarray"] [a; b; c] qs env
 
-let mk_unit qs = Fsum(Predef.path_unit, None, [(Cstr_constant 0, [])], const_ref qs)
+let mk_unit qs = Fsum(Predef.path_unit, None, [(Cstr_constant 0, [])], const_refinement qs)
 let uUnit = mk_unit []
 let rUnit name v p = mk_unit [(Path.mk_ident name, v, p)]
 
@@ -122,7 +121,7 @@ let def f =
   let xid = match x with
   | Path.Pident id -> id
   | _ -> assert false
-  in Farrow (Some (Tpat_var xid), f, fy y)
+  in Farrow (Tpat_var xid, f, fy y)
 
 let defun f =
   reset_idents (); def f
@@ -138,22 +137,22 @@ let op_frame path qname op =
                 fun y -> uInt ==>
                 fun z -> rInt qname z (Var z ==. Binop (Var x, op, Var y))))
 
-
-let tag x = FunApp(tag_function, [x])
+let is_true x = tag (Var x) ==. int_true
+let is_false x = tag (Var x) ==. int_false
 
 let or_frame () =
    defun (fun x -> uBool ===>
           fun y -> uBool ==>
           fun z -> rBool "||" z
-            (((tag (Var z) ==. PInt 1) &&. ((tag (Var x) ==. PInt 1) ||. (tag (Var y) ==. PInt 1))) ||.
-             ((tag (Var z) ==. PInt 0) &&. (tag (Var x) ==. PInt 0) &&. (tag (Var y) ==. PInt 0))))
+            (((is_true z) &&. ((is_true x) ||. (is_true y))) ||.
+             ((is_false z) &&. (is_false x) &&. (is_false y))))
 
 let and_frame () =
    defun (fun x -> uBool ===>
           fun y -> uBool ==>
-          fun z -> rBool "&&" z (tag (Var z) <=>. ((tag (Var x) ==. PInt 1) &&. (tag (Var y) ==.  PInt 1))))
+          fun z -> rBool "&&" z ((Var z) <=>. ((is_true x) &&. (is_true y))))
 
-let qbool_rel qname rel (x, y, z) = rBool qname z (tag (Var z) <=>. Atom (Var x, rel, Var y))
+let qbool_rel qname rel (x, y, z) = rBool qname z ((Var z) <=>. Atom (Var x, rel, Var y))
 
 let poly_rel_frame path qname rel =
   (path,
@@ -199,7 +198,7 @@ let _frames = [
   (["or"; "Pervasives"], or_frame ());
 
   (["not"; "Pervasives"],
-   defun (fun x -> uBool ==> fun y -> rBool "NOT" y (tag (Var y) <=>. (tag (Var x) ==. PInt 0))));
+   defun (fun x -> uBool ==> fun y -> rBool "NOT" y ((Var y) <=>. (is_false x))));
 
   (["ignore"; "Pervasives"], defun (forall (fun a -> fun x -> a ==> fun y -> uUnit)));
 
@@ -335,18 +334,18 @@ let equality_qualifier exp =
     let expstr = Format.flush_str_formatter () in (Path.mk_ident expstr, x, pred)
 
 let equality_refinement exp =
-  const_ref [equality_qualifier exp]
+  const_refinement [equality_qualifier exp]
 
 let tag_refinement t =
   let x = Path.mk_ident "V" in
-    let pred = tag (Var x) ==. PInt (int_of_tag t) in
+    let pred = tag (Var x) ==. PInt (C.int_of_tag t) in
     Predicate.pprint Format.str_formatter pred;
     let expstr = Format.flush_str_formatter () in
-      const_ref [(Path.mk_ident expstr, x, pred)]
+      const_refinement [(Path.mk_ident expstr, x, pred)]
 
 let size_lit_refinement i =
   let x = Path.mk_ident "x" in
-    const_ref
+    const_refinement
       [(Path.mk_ident "<size_lit_eq>",
         x,
         FunApp("Array.length", [Var x]) ==. PInt i)]
@@ -356,3 +355,17 @@ let field_eq_qualifier name pexp =
 
 let proj_eq_qualifier n pexp =
   let x = Path.mk_ident "x" in (Path.mk_ident "<tuple_nth_eq>", x, Field (Common.tuple_elem_id n, Var x) ==. pexp)
+
+
+(*
+let axioms = 
+  let id x = Var (Path.mk_ident x) in
+  let sid x = match x with Var x -> x | _ -> assert false in
+  let (t, u, v, w, x, y, z) = (id "t", id "u", id "v", id "w", id "x", id "y", id "z") in 
+  let ni = Longident.parse "Myset.in" in 
+  let union = Longident.parse "Myset.union" in [
+    ("equality", Forall ([sid x; sid y; sid t], ; 
+    ("union", Forall ([sid x; sid y; sid t], And (Iff (Or (Atom (FunApp (ni, [t; x]), Eq, PInt (1)), FunApp (ni, [t; y])), FunApp (ni, [t; FunApp (union, [x; y])])), 
+                                      Atom (FunApp (union, [x; y]), Eq, FunApp (union, [y; x])))))
+]
+*)

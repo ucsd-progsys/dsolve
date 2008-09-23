@@ -31,7 +31,7 @@ def cat_files(files,outfile):
   os.system("rm -f %s" % outfile)
   for f in files: os.system("cat %s 1>> %s 2> /dev/null" % (f,outfile))
 
-def gen_quals(src,bare,lq, col):
+def gen_quals(src,bare,lq,col,flags):
   bname = src[:-3]
   (fname,qname,hname) = (bname+".ml", bname+".quals", bname+".hquals")
   os.system("rm -f %s" % qname)
@@ -43,7 +43,7 @@ def gen_quals(src,bare,lq, col):
     lq = "-lqualifs"
   else:
     lq = ""
-  gen   = ("./liquid.opt %s -no-anormal -collect %d -dqualifs" % (lq, col)).split()
+  gen   = ("./liquid.opt %s %s -no-anormal -collect %d -dqualifs" % (lq, flags, col)).split()
   qfile = open(qname, "w")
   succ = common.logged_sys_call(gen + [tname, fname])
   qfile.close()
@@ -69,12 +69,17 @@ def main():
   bare = (sys.argv[1] == "-bare")
   if bare:
     sys.argv.pop(1)
+  include = (sys.argv[1] == "-I")
+  if include:
+    include = sys.argv[1] + " " + sys.argv[2]
+  else:
+    include = ""
   time = (sys.argv[1] == "-time")
   if time:
     sys.argv.pop(1)
   flags = sys.argv[1:-1]
   fn = sys.argv[len(sys.argv) - 1]
-  gen_succ = gen_quals(fn, bare, False, 4)
+  gen_succ = gen_quals(fn, bare, False, 4, include)
   if (gen_succ != 0):
     print "Qualifier generation failed"
     sys.exit(gen_succ)

@@ -85,6 +85,9 @@ module FrameLog = Map.Make(struct type t = Location.t
                                   let compare = compare end)
 let flog = ref FrameLog.empty
 
+let reset_framelog () =
+  flog := FrameLog.empty
+
 let log_frame loc fr =
   if loc <> Location.none then 
     flog := FrameLog.add loc fr !flog
@@ -144,7 +147,9 @@ let rec constrain e env guard =
       | (Texp_sequence (e1, e2), _) -> constrain_sequence environment e1 e2
       | (Texp_tuple es, _) -> constrain_tuple environment es
       | (Texp_assertfalse, _) -> constrain_assertfalse environment e.exp_env e.exp_type
-      | (Texp_assert e, _) -> constrain_assert environment e
+      | ((Texp_assert e) as form, _)
+      | ((Texp_assume e) as form, _) ->
+          constrain_guard environment form e
       | (_, f) ->
         fprintf err_formatter "@[Warning: Don't know how to constrain expression,
         structure:@ %a@ location:@ %a@]@.@." F.pprint f Location.print e.exp_loc; flush stderr;
@@ -163,7 +168,7 @@ and replace_params ps fs =
 
 and get_cstrrefs path tag args params =
   let preds  = List.map expression_to_pexpr args in
-  let mref   = try (B.const_ref [M.mk_qual preds (path, tag)]) with Not_found -> [] in
+  let mref   = try (F.const_refinement [M.mk_qual preds (path, tag)]) with Not_found -> [] in
   let tagref = B.tag_refinement tag in
   let lhsref = F.empty_refinement in
   let rhsref = mref @ tagref in
@@ -247,20 +252,22 @@ and constrain_function (env, guard, f) pat e' =
         begin match e'.exp_desc with
           | Texp_function ([(pat', e')], _) ->
               let (f', cs, lcs) = constrain_function (env', guard, unlabelled_f') pat' e' in
-              let f             = F.Farrow (Some pat.pat_desc, f, f') in
+              let f             = F.Farrow (pat.pat_desc, f, f') in
                 (f, WFFrame (env, f) :: cs, lcs)
           | _ ->
               let (f'', cstrs) = constrain e' env' guard in
               let f'           = F.label_like unlabelled_f' f'' in
-              let f            = F.Farrow (Some pat.pat_desc, f, f') in
+              let f            = F.Farrow (pat.pat_desc, f, f') in
                 (f, [WFFrame (env, f); SubFrame (env', guard, f'', f')], cstrs)
         end
     | _ -> assert false
 
 and instantiate_id id f env tenv =
   let env_f =
-    try Le.find id env
-    with Not_found -> Frame.fresh_without_vars tenv ((Env.find_value id tenv).val_type)
+    try
+      Le.find id env
+    with Not_found ->
+      Frame.fresh_without_vars tenv ((Env.find_value id tenv).val_type)
   in
     F.instantiate env_f f
 
@@ -273,16 +280,10 @@ and constrain_identifier (env, guard, f) id tenv =
   let f = instantiate_id id f env tenv in (f, [WFFrame(env, f)], [])
 
 and apply_once env guard (f, cstrs, subexp_cstrs) e = match (f, e) with
-  | (F.Farrow (l, f, f'), (Some e2, _)) ->
-    let (f2, e2_cstrs) = constrain e2 env guard in
-    let f'' = match l with
-      | Some pat -> F.apply_subs (Pattern.bind_pexpr pat (expression_to_pexpr e2)) f'
-          (* pmr: The soundness of this next line is suspect,
-             must investigate (i.e., what if there's a var that might
-             somehow be substituted that isn't because of this?  How
-             does it interact w/ the None label rules for subtyping?) *)
-      | _ -> f'
-    in (f'', SubFrame (env, guard, f2, f) :: cstrs, e2_cstrs @ subexp_cstrs)
+  | (F.Farrow (p, f, f'), (Some e2, _)) ->
+      let (f2, e2_cstrs) = constrain e2 env guard in
+      let f''            = F.apply_subs (Pattern.bind_pexpr p (expression_to_pexpr e2)) f' in
+        (f'', SubFrame (env, guard, f2, f) :: cstrs, e2_cstrs @ subexp_cstrs)
   | _ -> assert false
 
 and constrain_application (env, guard, _) func exps =
@@ -310,9 +311,11 @@ and constrain_array (env, guard, f) elements =
   let mksub b a          = SubFrame(env, guard, a, b) in
     (f, WFFrame(env, f) :: List.map (mksub fa) fs', sub_cs)
 
-and constrain_sequence (env, guard, _) e1 e2 =
-  let (_, cs1) = constrain e1 env guard in
-  let (f, cs2) = constrain e2 env guard in (f, [], cs1 @ cs2)
+and constrain_sequence (env, guard, f) e1 e2 =
+  let (f1, cs1) = constrain e1 env guard in
+  let env'      = Le.add (Path.mk_ident "seq") f1 env in
+  let (f', cs2) = constrain e2 env' guard in
+    (f, [WFFrame (env, f); SubFrame (env', guard, f', f)], cs1 @ cs2)
 
 and elem_qualifier fexpr n =
   B.proj_eq_qualifier n (expression_to_pexpr fexpr)
@@ -326,15 +329,18 @@ and constrain_assertfalse (env, _, _) tenv ty =
   let f = F.fresh_false tenv ty in
     (f, [WFFrame (env, f)], [])
 
-and constrain_assert (env, guard, _) e =
-  let (f, cstrs) = constrain e env guard in
-  let guardvar   = Path.mk_ident "assert_guard" in
-  let env        = Le.add guardvar f env in
-  let assert_qualifier =
-    (Path.mk_ident "assertion",
-     Path.mk_ident "null",
-     P.equals (B.tag(P.Var guardvar), P.int_true))
-  in (B.uUnit, [SubFrame (env, guard, B.mk_int [], B.mk_int [assert_qualifier])], cstrs)
+and constrain_guard (env, guard, f) form e =
+  let (af, cstrs) = constrain e env guard in
+  let testvar     = Path.mk_ident "test_predicate" in
+  let env'        = Le.add testvar af env in
+  let witness     = B.mk_unit [(Path.mk_ident "", Path.mk_ident "", P.equals (P.tag (P.Var testvar), P.int_true))] in
+    (f,
+      (WFFrame (env, f) :: SubFrame (env', guard, witness, f) ::
+         match form with
+           | Texp_assume _ -> []
+           | Texp_assert _ -> [SubFrame (env', guard, B.uUnit, witness)]
+           | _             -> assert false),
+     cstrs)
 
 and constrain_and_bind guard (env, cstrs) (pat, e) =
   let (f, cstrs') = F.begin_def (); let r = constrain e env guard in F.end_def (); r in
@@ -399,8 +405,8 @@ let constrain_structure initfenv initquals str =
 (***************************** Qualifying modules *****************************)
 (******************************************************************************)
 
-let pre_solve () = 
-  C.cprintf C.ol_solve_master "@[##solve##@\n@]"; Bstats.reset ()
+let pre_solve sourcefile =
+  C.cprintf C.ol_solve_master "@[##solve %s##@\n@]" sourcefile; Bstats.reset ()
 
 let post_solve () = 
   if C.ck_olev C.ol_timing then
@@ -419,12 +425,14 @@ let maybe_cstr_from_unlabel_frame fenv p f =
     None 
  
 let qualify_implementation sourcefile fenv ifenv env qs str =
+  let _ = reset_framelog () in
   let (qs, fenv, cs) = constrain_structure fenv qs str in
-  let cs = (List.map (lbl_dummy_cstr env) (Le.maplistfilter (maybe_cstr_from_unlabel_frame fenv) ifenv)) @ cs in
-  let _ = pre_solve () in
-  let (s,cs) = Bstats.time "solving" (solve qs) cs in
-  let _ = post_solve () in
-  let _ = dump_frames sourcefile (framemap_apply_solution s !flog) in
-  match cs with [] -> () | _ ->
-    (Printf.printf "Errors encountered during type checking:\n\n";
-    flush stdout; raise (Errors(List.map (make_frame_error s) cs)))
+  let cs             = (List.map (lbl_dummy_cstr env) (Le.maplistfilter (maybe_cstr_from_unlabel_frame fenv) ifenv)) @ cs in
+  let _              = pre_solve sourcefile in
+  let (s,cs)         = Bstats.time "solving" (solve qs) cs in
+  let _              = post_solve () in
+  let flog           = if !Clflags.raw_frames then !flog else framemap_apply_solution s !flog in
+  let _              = dump_frames sourcefile flog in
+    match cs with [] -> () | _ ->
+      (Printf.printf "Errors encountered during type checking:\n\n";
+       flush stdout; raise (Errors(List.map (make_frame_error s) cs)))

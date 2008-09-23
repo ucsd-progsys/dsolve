@@ -481,6 +481,20 @@ external mk_app : context -> const_decl_ast -> ast array -> ast
 external mk_const : context -> symbol -> type_ast -> ast
 	= "camlidl_z3_Z3_mk_const"
 
+(**
+       Summary: Create a labeled formula.
+
+       
+       
+       
+       
+
+       A label behaves as an identity function, so the truth value of the 
+       labeled formula is unchanged. Labels are used for identifying 
+       useful sub-formulas when generating counter-examples.
+    *)
+external mk_label : context -> symbol -> bool -> ast -> ast
+	= "camlidl_z3_Z3_mk_label"
 
 (**
        Summary: Declare a fresh constant or function.
@@ -1201,6 +1215,26 @@ external mk_forall : context -> int -> pattern_ast array -> type_ast array -> sy
 external mk_exists : context -> int -> pattern_ast array -> type_ast array -> symbol array -> ast -> ast
 	= "camlidl_z3_Z3_mk_exists_bytecode" "camlidl_z3_Z3_mk_exists"
 
+(**
+       Summary: Create a quantifier - universal or existential, with pattern hints.
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       - {b See also}: {!Z3.mk_pattern}
+       - {b See also}: {!Z3.mk_bound}
+       - {b See also}: {!Z3.mk_forall}
+       - {b See also}: {!Z3.mk_exists}
+    *)
+external mk_quantifier : context -> bool -> int -> int -> pattern_ast -> int -> ast -> int -> type_ast -> symbol -> ast -> ast
+	= "camlidl_z3_Z3_mk_quantifier_bytecode" "camlidl_z3_Z3_mk_quantifier"
 
 (**
        {2 {L Accessors}}
@@ -1429,6 +1463,29 @@ external get_decl_kind : context -> const_decl_ast -> decl_kind
 	= "camlidl_z3_Z3_get_decl_kind"
 
 (**
+       Summary: Return numeral value, as a string of a numeric constant term
+
+       - {b Precondition}: get_type a == NUMERAL_AST
+    *)
+external get_numeral_ast_value : context -> ast -> string
+	= "camlidl_z3_Z3_get_numeral_ast_value"
+
+(**
+       Summary: Return numeral value, as a pair of 64 bit numbers if the representation fits.
+
+       
+       
+       
+       
+       
+       Preturn TRUE if the numeral value fits in 64 bit numerals, FALSE otherwise.
+
+       - {b Precondition}: get_type a == NUMERAL_AST
+    *)
+external get_numeral_ast_value_small : context -> ast -> bool * int64 * int64
+	= "camlidl_z3_Z3_get_numeral_ast_value_small"
+
+(**
        Summary: Return index of de-Brujin bound variable.
 
        - {b Precondition}: get_type a == VAR_AST
@@ -1444,6 +1501,13 @@ external get_index_value : context -> ast -> int
 external is_quantifier_forall : context -> ast -> bool
 	= "camlidl_z3_Z3_is_quantifier_forall"
 
+(**
+       Summary: Obtain weight of quantifier.
+       
+       - {b Precondition}: get_type a == QUANTIFIER_AST
+    *)
+external get_quantifier_weight : context -> ast -> int
+	= "camlidl_z3_Z3_get_quantifier_weight"
 
 (**
        Summary: Return number of patterns used in quantifier.
@@ -1637,7 +1701,55 @@ external del_model : model -> unit
 external simplify : context -> ast -> ast
 	= "camlidl_z3_Z3_simplify"
 
+(** 
+        Summary: Retrieve the set of labels that were relevant in
+        the context of the current satisfied context.
 
+        - {b See also}: {!Z3.del_labels}
+        - {b See also}: {!Z3.get_num_labels}
+        - {b See also}: {!Z3.get_label_symbol}
+    *)
+external get_relevant_labels : context -> labels
+	= "camlidl_z3_Z3_get_relevant_labels"
+
+(**
+       Summary: Delete a labels context.
+       
+       - {b See also}: {!Z3.get_relevant_labels}
+    *)
+external del_labels : context -> labels -> unit
+	= "camlidl_z3_Z3_del_labels"
+
+(**
+       Summary: Retrieve the number of label symbols that were returned.
+       
+       - {b See also}: {!Z3.get_relevant_labels}
+    *)
+external get_num_labels : context -> labels -> int
+	= "camlidl_z3_Z3_get_num_labels"
+
+(**
+       Summary: Retrieve label symbol at idx.
+
+    *)
+external get_label_symbol : context -> labels -> int -> symbol
+	= "camlidl_z3_Z3_get_label_symbol"
+
+(**
+       Summary: Disable label.
+       
+       The disabled label is not going to be used when blocking the subsequent search.
+
+       - {b See also}: {!Z3.block_labels}
+    *)
+external disable_label : context -> labels -> int -> unit
+	= "camlidl_z3_Z3_disable_label"
+
+(**
+       Summary: Block subsequent checks using the remaining enabled labels.
+    *)
+external block_labels : context -> labels -> unit
+	= "camlidl_z3_Z3_block_labels"
 
 (**
        {2 {L Model navigation}}
@@ -2194,6 +2306,11 @@ external get_version : unit -> int * int * int * int
 external type_check : context -> ast -> bool
 	= "camlidl_z3_Z3_type_check"
 
+(**
+       Summary: Return the amount of memory allocated by Z3.
+    *)
+external get_allocation_size : unit -> int
+	= "camlidl_z3_Z3_get_allocation_size"
 
 
 
@@ -2469,6 +2586,12 @@ type term_refined =
   | Term_numeral    of numeral_refined * type_ast
   | Term_var        of int * type_ast
 
+(**
+  \[ [ term_refine c a ] \] is the refined term of [a].
+
+  - {b See also}:  {!Z3.term_refined}
+*)
+val term_refine : context -> ast -> term_refined
 
 (**
   \[ [ value_refined ] \] is the refinement of a {!Z3.value} .

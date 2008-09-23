@@ -134,8 +134,7 @@ let guard_predicate () g =
   P.big_and 
     (List.map 
       (fun (v,b) -> 
-         let p = P.equals (B.tag (P.Var v), P.PInt 1) in
-         if b then p else P.Not p) 
+         if b then B.is_true v else B.is_false v) 
       g)
 
 let refinement_preds sm qexpr r =
@@ -198,19 +197,14 @@ let simplify_frame gm x f =
   if not (Le.mem x gm) then f else
     let pos = Le.find x gm in
     match f with 
-    | F.Fsum (a,b,c,[(subs,([(v1,v2,P.Iff (v3,p))],[]))]) when v3 = B.tag (P.Var v2) ->
+    | F.Fsum (a,b,c,[(subs,([(v1,v2,P.Iff (v3,p))],[]))]) when v3 = P.tag (P.Var v2) ->
         let p' = if pos then p else P.Not p in
         F.Fsum (a,b,c,[(subs,([(v1,v2,p')],[]))])
     | _ -> f
 
 let simplify_env env g =
   let gm = List.fold_left (fun m (x,b)  -> Le.add x b m) Le.empty g in
-  Le.fold 
-    (fun x f env' ->
-      match f with | F.Fvar _ | F.Fsum _ | F.Fabstract _ ->
-        Le.add x (simplify_frame gm x f) env' 
-      | _ -> env')
-    env Le.empty
+    Le.mapi (simplify_frame gm) env
 
 let simplify_fc c =
   match c.lc_cstr with
@@ -222,8 +216,8 @@ let simplify_fc c =
 let make_lc c fc = {lc_cstr = fc; lc_tenv = c.lc_tenv; lc_orig = Cstr c; lc_id = c.lc_id}
 
 let lequate_cs env g c variance f1 f2 = match variance with
-  | F.Invariant -> [make_lc c (SubFrame(env,g,f1,f2)); make_lc c (SubFrame(env,g,f2,f1))]
-  | F.Covariant -> [make_lc c (SubFrame(env,g,f1,f2))]
+  | F.Invariant     -> [make_lc c (SubFrame(env,g,f1,f2)); make_lc c (SubFrame(env,g,f2,f1))]
+  | F.Covariant     -> [make_lc c (SubFrame(env,g,f1,f2))]
   | F.Contravariant -> [make_lc c (SubFrame(env,g,f2,f1))]
 
 let subst_to lfrom lto = match (lfrom, lto) with
@@ -249,10 +243,6 @@ let rec split_sub_params c tenv env g ps1 ps2 = match (ps1, ps2) with
   | ([], []) -> []
   | _ -> assert false
 
-let resolve_extend_env tenv env f l1 l2 = match (l1, l2) with
-  | (Some p, _) | (_, Some p) -> F.env_bind env p f
-  | _ -> env
-
 let bind_tags_pr (t, f) cs r env =
   let is_recvar = function
       (Some (p, _), F.Frec (p', _, _)) -> p' = p
@@ -274,31 +264,26 @@ let sum_subs bs cs tag =
   let (ps, qs) = (paths bs, paths cs) in
     List.map2 mk_sub ps qs
 
-let app_subs ss (oss, qks) =
-  (ss @ oss, qks)
-
 let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubFrame (env,g,f1,f2); lc_tenv = tenv} as c ->
   match (f1, f2) with
   | (f1, f2) when F.is_shape f1 && F.is_shape f2 ->
       ([], [])
   | (f1, f2) when f1 = f2 ->
       ([], [])
-  | (F.Farrow (l1, f1, f1'), F.Farrow (l2, f2, f2')) ->
-      let subs = match (l1, l2) with (Some p1, Some p2) when not (Pat.same p1 p2) -> subst_to p2 p1 | _ -> [] in
-      let env' = resolve_extend_env tenv env f2 l1 l2 in
+  | (F.Farrow (p1, f1, f1'), F.Farrow (p2, f2, f2')) ->
+      let subs = if not (Pat.same p1 p2) then subst_to p1 p2 else [] in
+      let env' = F.env_bind env p2 f2 in
       let f1'  = F.apply_subs subs f1' in
-      ((lequate_cs env g c F.Covariant f2 f1) @ (lequate_cs env' g c F.Covariant f1' f2'), [])
+        (lequate_cs env g c F.Covariant f2 f1 @ lequate_cs env' g c F.Covariant f1' f2', [])
   | (F.Fvar (_, _, r1), F.Fvar (_, _, r2)) ->
       ([], split_sub_ref c env g r1 r2)
   | (F.Frec _, F.Frec _) ->
       ([], [])
-  | (F.Funknown, F.Funknown) ->
-      ([],[]) 
   | (F.Fsum(_, None, cs1, r1), F.Fsum(_, None, cs2, r2)) ->
       let (penv, tag) = bind_tags_pr (None, f1) cs1 r1 env in
       let subs        = sum_subs cs1 cs2 tag in
       (C.flap2 (fun (_, ps1) (_, ps2) -> split_sub_params c tenv env g ps1 ps2) cs1 cs2,
-       split_sub_ref c penv g r1 (List.map (app_subs subs) r2))
+       split_sub_ref c penv g r1 (List.map (F.refexpr_apply_subs subs) r2))
   | (F.Fsum(_, Some (_, rr1), cs1, r1), F.Fsum(_, Some (_, rr2), cs2, r2)) ->
       let (shp1, shp2) = (F.shape f1, F.shape f2) in
       let (f1, f2)     = (F.replace_recvar (F.apply_recref rr1 f1) shp1, 
@@ -338,15 +323,12 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
         ([make_wff c tenv env (F.apply_refinement F.empty_refinement f'); make_wff c tenv env f''], split_wf_ref f c (bind_tags (t, f) cs r env) r)
   | F.Fabstract (_, ps, r) ->
       (split_wf_params c tenv env ps, split_wf_ref f c env r)
-  | F.Farrow (l, f, f') ->
-      let env' = match l with None -> env | Some p -> F.env_bind env p f in
-        ([make_wff c tenv env f; make_wff c tenv env' f'], [])
+  | F.Farrow (p, f, f') ->
+      ([make_wff c tenv env f; make_wff c tenv (F.env_bind env p f) f'], [])
   | F.Fvar (_, _, r) ->
       ([], split_wf_ref f c env r)
   | F.Frec _ ->
       ([], [])
-  | F.Funknown ->
-      ([],[]) 
 
 let split cs =
   assert (List.for_all (fun c -> None <> c.lc_id) cs);
@@ -911,7 +893,6 @@ let solve qs cs =
   let _ = dump_solution s in
   let _ = dump_solving sri s 0 in
   let _ = BS.time "solving wfs" (solve_wf sri) s in
-  let _ = C.dump_gc "after wf" in
   let _ = C.cprintf C.ol_solve "@[AFTER@ WF@]@." in
   let _ = dump_solving sri s 1 in
   let _ = dump_solution s in
