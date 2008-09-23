@@ -25,3 +25,5 @@ open Frame
 
 val refinement_well_formed:
   t Lightenv.t -> (Path.t -> Qualifier.t list) -> refinement -> Predicate.pexpr -> bool
+
+val get_by_name: string -> Frame.t Lightenv.t -> Frame.t

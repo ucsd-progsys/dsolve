@@ -162,68 +162,77 @@ module Prover : PROVER =
                                       | _ -> [frame_to_type t2])
     and set_path p = (Path.name p) = "Myset.set"
 
-    let z3Type me = function
+    let z3VarType me = function
       | Int -> me.tint
       | Bool -> me.tbool
       | Array _ -> assert false
       | Set -> me.tset
       | Unint -> me.tun
-      | Func _ ->  assert false
+      | Func _ -> assert false 
+
+    let z3FunTypes me = function 
+      | Func ts -> (match (List.rev_map (z3VarType me) ts) with
+                      | x :: [] -> ([], x)
+                      | x :: xs -> (List.rev xs, x)
+                      | [] -> assert false)
+      | _ -> assert false
 
     let getVarType s env =
       try frame_to_type (Le.find s env) 
       with Not_found -> eprintf "@[Warning: type uninterpretable at TP@]@."; Unint
 
-    (*let getFunType s env =
-      try Wellformed.get_by_name*) 
+    let getFunType s env =
+      try frame_to_type (Wellformed.get_by_name s env) with Not_found -> failwith "Could not type function in tpz3"
 
     let z3Var_memo me s t =
       Misc.do_memo me.vart
       (fun () -> 
         let sym = Z3.mk_string_symbol me.c (fresh "z3v") in
-        let rv = Const (Z3.mk_const me.c sym (z3Type me t)) in
+        let rv = Const (Z3.mk_const me.c sym (z3VarType me t)) in
         me.vars <- (Vbl s)::me.vars; rv) 
       () (Vbl s)
 
     let z3Var me s t =
       match z3Var_memo me s t with
           Const v -> v
-        | Bound (b, t) -> Z3.mk_bound me.c (me.bnd - b) (z3Type me t)
+        | Bound (b, t) -> Z3.mk_bound me.c (me.bnd - b) (z3VarType me t)
 
     let z3Bind me s t =
       me.bnd <- me.bnd + 1; Hashtbl.replace me.vart (Vbl s) (Bound (me.bnd, t)); me.vars <- (Vbl s) :: me.vars;
       Z3.mk_string_symbol me.c (fresh "z3b")
 
-    let z3Fun me s k = 
+    let z3Fun me s t k = 
       Misc.do_memo me.funt
       (fun () ->
         let sym = Z3.mk_string_symbol me.c (fresh "z3f") in
-        let rv  = Z3.mk_func_decl me.c sym (Array.make k me.tint) me.tint in
+        let (ts, ret) = z3FunTypes me t in
+        let rv  = Z3.mk_func_decl me.c sym (Array.of_list ts) ret in
         me.vars <- (Fun (s,k))::me.vars; rv) 
       () (Fun (s,k))
 
-    let z3App me s zes =
+    let z3App env me s zes =
+      let t   = getFunType s env in 
       let k   = List.length zes in
       let zes = Array.of_list zes in
-      Z3.mk_app me.c (z3Fun me s k) zes 
+      Z3.mk_app me.c (z3Fun me s t k) zes 
 
     let rec isConst = function P.PInt i -> true | _ -> false
 
     let qargs me ps ts = 
       Array.of_list (List.map (fun (p, t) -> z3Bind me (Path.unique_name p) t) (List.combine ps ts))
 
-    let qtypes me ts = Array.of_list (List.map (z3Type me) ts)  
+    let qtypes me ts = Array.of_list (List.map (z3VarType me) ts)  
 
     let rec z3Exp env me e =
       match e with 
       | P.PInt i                -> Z3.mk_int me.c i me.tint 
       | P.Var s                 -> z3Var me (Path.unique_name s) (getVarType s env)
-      | P.FunApp (f,es)         -> z3App me f (List.map (z3Exp env me) es)
+      | P.FunApp (f,es)         -> z3App env me f (List.map (z3Exp env me) es)
       | P.Binop (e1,P.Plus,e2)  -> Z3.mk_add me.c (Array.map (z3Exp env me) [|e1;e2|]) 
       | P.Binop (e1,P.Minus,e2) -> Z3.mk_sub me.c (Array.map (z3Exp env me) [|e1;e2|]) 
       | P.Binop (e1,P.Times,e2) -> Z3.mk_mul me.c (Array.map (z3Exp env me) [|e1;e2|]) 
-      | P.Binop (e1,P.Div,e2)   -> z3App me "_DIV" (List.map (z3Exp env me) [e1;e2])  
-      | P.Field (f, e)          -> z3App me ("SELECT_"^(Ident.unique_name f)) [(z3Exp env me e)] 
+      | P.Binop (e1,P.Div,e2)   -> z3App env me "_DIV" (List.map (z3Exp env me) [e1;e2])  
+      | P.Field (f, e)          -> z3App env me ("SELECT_"^(Ident.unique_name f)) [(z3Exp env me e)] 
                                    (** REQUIRES: disjoint intra-module field names *)
       | P.Ite (e1, e2, e3)      -> Z3.mk_ite me.c (z3Pred env me e1) (z3Exp env me e2) (z3Exp env me e3)
 
@@ -305,6 +314,8 @@ module Prover : PROVER =
         let _ = me.vars <- vars' in
         let _ = List.iter (remove_decl me) cs in
         Z3.pop me.c 1 
+
+    let make_builtins = 5
 
     let me = 
       let c = Z3.mk_context_x [|("MODEL", "false"); ("PARTIAL_MODELS", "true")|] in
