@@ -113,20 +113,23 @@ let z3_mk_app c f zea =
     val valid   : F.t Le.t -> P.t -> bool
     val finish : unit -> unit
     val print_stats : Format.formatter -> unit -> unit
-    type sort = Int | Set | Array | Bool | Unint | Func of sort list
+    type sort = Int | Set | Array of sort * sort | Bool | Unint | Func of sort list
   end
 
 module Prover : PROVER = 
   struct
 
-    type sort = Int | Set | Array | Bool | Unint | Func of sort list
+    type sort = Int | Set | Array of sort * sort | Bool | Unint | Func of sort list
 
     type decl = Vbl of string | Fun of string * int | Barrier
-    type var_ast = Const of Z3.ast | Bound of int
+    type var_ast = Const of Z3.ast | Bound of int * sort
     
     type z3_instance = { 
       c                 : Z3.context;
       tint              : Z3.type_ast;
+      tun               : Z3.type_ast;
+      tset              : Z3.type_ast;
+      tbool             : Z3.type_ast;
       vart              : (decl, var_ast) Hashtbl.t;
       funt              : (decl, Z3.const_decl_ast) Hashtbl.t;
       mutable vars      : decl list ;
@@ -145,41 +148,50 @@ module Prover : PROVER =
       let x = ref 0 in
       (fun v -> incr x; (v^(string_of_int !x)))
 
-    let rec collapse t1 t2 =
-      (frame_to_type t1)
-      :: (match t2 with F.Farrow (_, t1, t2) -> collapse t1 t2 
-                                      | _ -> [frame_to_type t2])
-
-    and frame_to_type = function
+    let rec frame_to_type = function
         F.Fabstract(p, _, _) -> (match p with 
                                 | p when p = path_bool -> Bool
                                 | p when p = path_int -> Int
-                                | p when match_set p -> Set
+                                | p when set_path p -> Set
                                 | _ -> Unint)
       | F.Farrow (_, t1, t2) -> Func (collapse t1 t2)
       | _ -> Unint
+    and collapse t1 t2 =
+      (frame_to_type t1)
+      :: (match t2 with F.Farrow (_, t1, t2) -> collapse t1 t2 
+                                      | _ -> [frame_to_type t2])
+    and set_path p = (Path.name p) = "Myset.set"
 
-    and match_set p = (Path.name p) = "Myset.set"
+    let z3Type me = function
+      | Int -> me.tint
+      | Bool -> me.tbool
+      | Array _ -> assert false
+      | Set -> me.tset
+      | Unint -> me.tun
+      | Func _ ->  assert false
 
-    let getType s env =
+    let getVarType s env =
       try frame_to_type (Le.find s env) 
-        with Not_found -> eprintf "Warning: type uninterpretable at TP"; Unint
+      with Not_found -> eprintf "@[Warning: type uninterpretable at TP@]@."; Unint
 
-    let z3Var_memo me s =
+    (*let getFunType s env =
+      try Wellformed.get_by_name*) 
+
+    let z3Var_memo me s t =
       Misc.do_memo me.vart
       (fun () -> 
         let sym = Z3.mk_string_symbol me.c (fresh "z3v") in
-        let rv = Const (Z3.mk_const me.c sym me.tint) in
+        let rv = Const (Z3.mk_const me.c sym (z3Type me t)) in
         me.vars <- (Vbl s)::me.vars; rv) 
       () (Vbl s)
 
     let z3Var me s t =
-      match z3Var_memo me s with
+      match z3Var_memo me s t with
           Const v -> v
-        | Bound b -> Z3.mk_bound me.c (me.bnd - b) me.tint
+        | Bound (b, t) -> Z3.mk_bound me.c (me.bnd - b) (z3Type me t)
 
-    let z3Bind me s =
-      me.bnd <- me.bnd + 1; Hashtbl.replace me.vart (Vbl s) (Bound me.bnd); me.vars <- (Vbl s) :: me.vars;
+    let z3Bind me s t =
+      me.bnd <- me.bnd + 1; Hashtbl.replace me.vart (Vbl s) (Bound (me.bnd, t)); me.vars <- (Vbl s) :: me.vars;
       Z3.mk_string_symbol me.c (fresh "z3b")
 
     let z3Fun me s k = 
@@ -197,13 +209,15 @@ module Prover : PROVER =
 
     let rec isConst = function P.PInt i -> true | _ -> false
 
-    let qargs me ps = Array.of_list (List.map (C.compose (z3Bind me) Path.unique_name) ps)
-    let qtypes me ps = Array.make (List.length ps) me.tint
+    let qargs me ps ts = 
+      Array.of_list (List.map (fun (p, t) -> z3Bind me (Path.unique_name p) t) (List.combine ps ts))
+
+    let qtypes me ts = Array.of_list (List.map (z3Type me) ts)  
 
     let rec z3Exp env me e =
       match e with 
       | P.PInt i                -> Z3.mk_int me.c i me.tint 
-      | P.Var s                 -> z3Var me (Path.unique_name s) (getType s env)
+      | P.Var s                 -> z3Var me (Path.unique_name s) (getVarType s env)
       | P.FunApp (f,es)         -> z3App me f (List.map (z3Exp env me) es)
       | P.Binop (e1,P.Plus,e2)  -> Z3.mk_add me.c (Array.map (z3Exp env me) [|e1;e2|]) 
       | P.Binop (e1,P.Minus,e2) -> Z3.mk_sub me.c (Array.map (z3Exp env me) [|e1;e2|]) 
@@ -227,12 +241,13 @@ module Prover : PROVER =
       | P.Atom (e1,P.Ge,e2) -> Z3.mk_ge me.c (z3Exp env me e1) (z3Exp env me e2)
       | P.Atom (e1,P.Lt,e2) -> Z3.mk_lt me.c (z3Exp env me e1) (z3Exp env me e2)
       | P.Atom (e1,P.Le,e2) -> Z3.mk_le me.c (z3Exp env me e1) (z3Exp env me e2)
-      | P.Forall (ps, q) -> mk_quantifier z3_mk_forall env me ps q
-      | P.Exists (ps, q) -> mk_quantifier z3_mk_exists env me ps q
+      | P.Forall (ps, q) -> let fs = [] in mk_quantifier z3_mk_forall env me ps fs q
+      | P.Exists (ps, q) -> let fs = [] in mk_quantifier z3_mk_exists env me ps fs q
 
-    and mk_quantifier mk env me ps q =
-      let args = qargs me ps in
-      let rv = mk me.c (qtypes me ps) args (z3Pred env me q) in
+    and mk_quantifier mk env me ps fs q =
+      let ts = List.map frame_to_type fs in 
+      let args = qargs me ps ts in
+      let rv = mk me.c (qtypes me ts) args (z3Pred env me q) in
       me.bnd <- me.bnd - (List.length ps); rv
 
     let z3Preds env me ps = 
@@ -293,11 +308,16 @@ module Prover : PROVER =
 
     let me = 
       let c = Z3.mk_context_x [|("MODEL", "false"); ("PARTIAL_MODELS", "true")|] in
+      (* types *)
       let tint = Z3.mk_int_type c in
+      let tun = Z3.mk_uninterpreted_type c (Z3.mk_string_symbol c "obj") in
+      let tset = Z3.mk_uninterpreted_type c (Z3.mk_string_symbol c "set") in
+      let tbool = Z3.mk_bool_type c in
+      (* memo tables *)
       let vart = Hashtbl.create 37 in
       let funt = Hashtbl.create 37 in
-      { c = c; tint = tint; vart = vart ; funt= funt; 
-        vars = []; count = 0; i = 0; bnd = 0} 
+      { c = c; tint = tint; tun = tun; tbool = tbool; tset = tset;
+      vart = vart; funt = funt; vars = []; count = 0; i = 0; bnd = 0} 
 
 (***************************************************************************************)
 (********************** API ************************************************************)
