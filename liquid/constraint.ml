@@ -590,10 +590,24 @@ let check_tp senv lhs_ps x2 =
   stat_imp_queries   := !stat_imp_queries + (List.length x2);
   stat_valid_queries := !stat_valid_queries + (List.length rv); rv
 
+let check_env_bindings senv lhs_ps rhs_ps =
+  let lxs = C.flap P.vars lhs_ps  in
+  let rxs = C.flap P.vars rhs_ps in
+  let chl = List.for_all (fun x -> Le.mem x senv) lxs in
+  let chr = List.for_all (fun x -> Le.mem x senv) rxs in
+  if not (chl && chr) then
+    Printf.printf "bad env bindings (l=%b, r=%b)!!! " chl chr
+    (*
+    printf "@[lhs: %a@]@.@." P.pprint (P.big_and lhs_ps);
+     printf "@[rhs: %a@]@.@." P.pprint (P.big_and rhs_ps))
+*)
+
+
 let refine_tp senv s env g r1 sub2s k2 =
   let sm = solution_map s in
   let lhs_ps  = lhs_preds sm env g r1 in
   let rhs_qps = rhs_cands sm sub2s k2 in
+  let _       = check_env_bindings senv lhs_ps (List.map snd rhs_qps) in 
   let rhs_qps' =
     if List.exists (fun p -> List.mem p falses) lhs_ps 
     then (stat_matches := !stat_matches + (List.length rhs_qps); rhs_qps) 
