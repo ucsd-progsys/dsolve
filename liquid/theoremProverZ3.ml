@@ -135,7 +135,8 @@ module Prover : PROVER =
       mutable vars      : decl list ;
       mutable count     : int;
       mutable i         : int;
-      mutable bnd       : int
+      mutable bnd       : int;
+      mutable v         : Z3.ast option;
     }
 
     let builtins = [
@@ -215,7 +216,11 @@ module Prover : PROVER =
       () (Vbl s)
 
     let z3Var me s t =
-      match z3Var_memo me s t with
+      if s = (Path.unique_name C.qual_test_var) then match me.v with 
+                                                     | Some c -> c
+                                                     | None -> let rv = (Z3.mk_const me.c (Z3.mk_string_symbol me.c (fresh s)) (z3VarType me t)) in
+                                                               me.v <- Some rv; rv 
+      else match z3Var_memo me s t with
           Const v -> v
         | Bound (b, t) -> Z3.mk_bound me.c (me.bnd - b) (z3VarType me t)
 
@@ -312,8 +317,8 @@ module Prover : PROVER =
       let _ = incr nb_z3_push in
       let _ = me.count <- me.count + 1 in
       if unsat me then me.i <- me.i + 1 else
-        let _  = me.vars <- Barrier :: me.vars in
         let p' = Bstats.time "mk preds" (mkpreds me) ps in
+        let _  = me.vars <- Barrier :: me.vars in
         let _  = Z3.push me.c in
         Bstats.time "Z3 assert" (Z3.assert_cnstr me.c) p' 
 
@@ -348,7 +353,7 @@ module Prover : PROVER =
       (* memo tables *)
       let vart = Hashtbl.create 37 in
       let funt = Hashtbl.create 37 in
-      { c = c; tint = tint; tun = tun; tbool = tbool; tset = tset;
+      { c = c; tint = tint; tun = tun; tbool = tbool; tset = tset; v = None;
       vart = vart; funt = funt; vars = []; count = 0; i = 0; bnd = 0} 
 
 (***************************************************************************************)
@@ -372,6 +377,7 @@ module Prover : PROVER =
 
     let finish () = 
       (*Bstats.time "Z3 pop"*) pop me; 
+      me.v <- None;
       assert (me.count = 0)
  
     let print_stats ppf () = 

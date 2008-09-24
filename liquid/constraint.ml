@@ -81,7 +81,7 @@ let fresh_fc_id =
 
 (* Unique variable to qualify when testing sat, applicability of qualifiers...
  * this is passed into the solver *)
-let qual_test_var = Path.mk_ident "AA"
+let qual_test_var = C.qual_test_var(*Path.mk_ident "AA"*)
 let qual_test_expr = P.Var qual_test_var
 
 let is_simple_constraint c = match c with 

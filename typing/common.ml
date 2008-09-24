@@ -36,6 +36,8 @@ end
 
 module PathMap = Map.Make(ComparablePath)
 
+let qual_test_var = Path.mk_ident "AA"
+
 let flip f x y =
   f y x
 
