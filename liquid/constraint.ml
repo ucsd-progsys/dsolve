@@ -224,14 +224,23 @@ let subst_to lfrom lto = match (lfrom, lto) with
   | (pfrom, pto) when not (Pat.same pfrom pto) -> Pat.substitution pfrom pto
   | _ -> []
 
+let frame_env = function
+    SubFrame(env, _, _, _) -> env
+  | WFFrame(env, _) -> env
+
 (* this is a tad ugly (or ad hoc, as it were) way to make get the e0, e1, ... and val var
- * into the typing environment for the prover while preserving the origin *)
+ * into the typing environment for the prover while preserving the origin. unfortunately
+ * it seems that some of these are bound in the subref env and some are bound in the
+ * origin env. i'm not completely sure why. *)
 let add_val_var = function
     SubFrame(env, g, f, f') -> SubFrame(Le.aliasing_add qual_test_var f env, g, f, f') 
   | _ -> assert false
 
+let combo_clobber e1 e2 =
+  Le.fold (fun p f e -> Le.add p f e) e1 e2
+
 let patch_env env = function
-    SubFrame(env', g, f, f') -> SubFrame(env, g, f, f') | _ -> assert false
+    SubFrame(env', g, f, f') -> SubFrame(combo_clobber env env', g, f, f') | _ -> assert false
 
 let split_sub_ref c env g r1 r2 =
   let c = {lc_cstr = add_val_var (patch_env env c.lc_cstr); lc_tenv = c.lc_tenv;
@@ -490,6 +499,9 @@ let get_ref_constraints sri =
 let iter_ref_constraints sri f = 
   SIM.iter (fun _ c -> f c) sri.cnst
 
+let iter_ref_origs sri f =
+  SIM.iter (fun i c -> f i c) sri.orig
+
 let sort_iter_ref_constraints sri f = 
   let rids  = SIM.fold (fun id (r,_,_) ac -> (id,r)::ac) sri.rank [] in
   let rids' = List.sort (fun x y -> compare (snd x) (snd y)) rids in 
@@ -744,7 +756,10 @@ let dump_ref_constraints sri =
     printf "@[Refinement Constraints@.@\n@]";
     iter_ref_constraints sri (fun c -> printf "@[%a@.@]" (pprint_ref None) c);
     printf "@[SCC Ranked Refinement Constraints@.@\n@]";
-    sort_iter_ref_constraints sri (fun c -> printf "@[%a@.@]" (pprint_ref None) c)
+    sort_iter_ref_constraints sri (fun c -> printf "@[%a@.@]" (pprint_ref None) c);
+    printf "@[Refinement Constraint Origins@.@.@]";
+    iter_ref_origs sri 
+      (fun i c -> printf "@[o(%i)@]@." i; Le.iter (fun p _ -> printf "@[%s@]@." (Path.unique_name p)) (frame_env c.lc_cstr))  
   end
 
 let dump_ref_vars sri =
@@ -892,7 +907,7 @@ let rec solve_sub sri s w =
    then C.cprintf C.ol_solve "@[num@ refines@ =@ %d@\n@]" !stat_refines);
   match pop_worklist sri w with (None,_) -> s | (Some c, w') ->
     let (r,b,fci) = get_ref_rank sri c in
-    let _ = C.cprintf C.ol_solve "\n@[Refining@ %d@ at iter@ %d in@ scc@ (%d,%b,%s):@]"
+    let _ = C.cprintf C.ol_solve "@.@[Refining@ %d@ at iter@ %d in@ scc@ (%d,%b,%s):@]@."
             (get_ref_id c) !stat_refines r b (C.io_to_string fci) in
     let w' = if BS.time "refine" (refine sri s) c 
              then push_worklist sri w' (get_ref_deps sri c) else w' in

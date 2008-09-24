@@ -188,7 +188,7 @@ module Prover : PROVER =
 
     let getVarType s env =
       try frame_to_type (Le.find s env) 
-        with Not_found -> eprintf "@[Warning:@ type@ of@ %s@ uninterpretable@ at@ TP@]@." (Path.unique_name s); Unint
+        with Not_found -> printf "@[Warning:@ type@ of@ %s@ uninterpretable@ at@ TP@]@." (Path.unique_name s); Unint
 
     let get_by_name s env =
       List.hd (Le.filterlist (fun p _ -> Path.name p = s) env)
