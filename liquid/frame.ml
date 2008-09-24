@@ -121,16 +121,15 @@ let map_refexprs f fr =
 let recref_fold f rr l =
   List.fold_right f (List.flatten rr) l
 
-let rec refinement_fold include_arrows f l = function
+let rec refinement_fold f l = function
   | Frec (_, rr, r) -> f r (recref_fold f rr l)
   | Fvar (_, _, r) -> f r l
   | Fsum (_, ro, cs, r) ->
-      f r (List.fold_left (refinement_fold include_arrows f) (match ro with Some (_, rr) -> recref_fold f rr l | None -> l) (constrs_param_frames cs))
+      f r (List.fold_left (refinement_fold f) (match ro with Some (_, rr) -> recref_fold f rr l | None -> l) (constrs_param_frames cs))
   | Fabstract (_, ps, r) ->
-      f r (List.fold_left (refinement_fold include_arrows f) l (params_frames ps))
-  | Farrow (_, f1, f2) when include_arrows ->
-      refinement_fold true f (refinement_fold true f l f1) f2
-  | _ -> l
+      f r (List.fold_left (refinement_fold f) l (params_frames ps))
+  | Farrow (_, f1, f2) ->
+      refinement_fold f (refinement_fold f l f1) f2
 
 (******************************************************************************)
 (*************************** Type level manipulation **************************)
@@ -263,7 +262,7 @@ let shape f =
   map_refinements (fun _ -> empty_refinement) f
 
 let is_shape f =
-  refinement_fold true (fun r b -> refinement_is_empty r && b) true f
+  refinement_fold (fun r b -> refinement_is_empty r && b) true f
 
 (* known bug: these don't treat constructor names properly. *)
 
