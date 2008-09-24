@@ -109,10 +109,10 @@ module Prover : PROVER =
       | Predicate.Not p' -> Y.yices_mk_not me.c (yicesPred me p')
       | Predicate.And (p1,p2) -> Y.yices_mk_and me.c (Array.map (yicesPred me) [|p1;p2|])
       | Predicate.Or (p1,p2) -> Y.yices_mk_or me.c (Array.map (yicesPred me) [|p1;p2|])
-      | Predicate.Iff _ as iff -> yicesPred me (Predicate.expand_iff iff)
+      | Predicate.Iff (p, q) -> (*yicesPred me (Predicate.expand_iff iff)*) assert false
       | Predicate.Atom (e1,Predicate.Lt,e2) ->
           yicesPred me (Atom (e1, Predicate.Le, Binop(e2,Predicate.Minus,PInt 1)))
-      | Predicate.Forall _ | Predicate.Exists _ -> assert false
+      | Predicate.Forall _ | Predicate.Exists _ | Predicate.Boolexp _ -> assert false
     (* RJ: why not this ?
      * | P.Atom (e1,P.Gt,e2) -> 
           yicesPred me (Atom (e2, P.Le, Binop(e1,P.Minus,PInt 1))) *)

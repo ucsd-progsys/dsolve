@@ -70,7 +70,7 @@ and convertPred = function
   | P.Not p -> QA.Not (convertPred p)  
   | P.And (p1,p2) -> QA.And [convertPred p1; convertPred p2] 
   | P.Or (p1,p2) -> QA.Or [convertPred p1; convertPred p2]
-  | P.Iff (_,_) as p -> convertPred (P.expand_iff p)  
+  | P.Iff (p,q) -> (*convertPred (P.expand_iff p)*) assert false
   | P.Atom (e1,br,e2) ->
       let (e1',e2') = (convertExp e1, convertExp e2) in 
       (match br with 
@@ -80,7 +80,7 @@ and convertPred = function
        | P.Ge -> QA.Leq (e2',e1')
        | P.Lt -> QA.Leq (QA.Sum [e1'; mk_const 1], e2')
        | P.Gt -> QA.Leq (QA.Sum [e2'; mk_const 1], e1'))
-  | P.Forall _ | P.Exists _ -> assert false 
+  | P.Forall _ | P.Exists _ | P.Boolexp _ -> assert false 
 
 let convertPredDag p = 
   QpDag.pred_dag_of_tree (convertPred p)

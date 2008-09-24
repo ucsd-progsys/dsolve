@@ -36,6 +36,8 @@ end
 
 module PathMap = Map.Make(ComparablePath)
 
+let qual_test_var = Path.mk_ident "AA"
+
 let flip f x y =
   f y x
 
@@ -273,7 +275,6 @@ let tag_of_int n =
   else
     Cstr_block ((n-1)/2)
 
-
 (****************************************************************)
 (************* Output levels ************************************)
 (****************************************************************)
@@ -294,6 +295,8 @@ let ol_refine = 11
 let ol_scc = 12 
 let ol_dump_env = 10 
 let ol_axioms = 5
+let ol_dump_prover = 20
+let ol_verb_constrs = 21
 
 let verbose_level = ref ol_default
 let verb_stack = ref []

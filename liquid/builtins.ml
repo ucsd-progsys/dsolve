@@ -137,22 +137,15 @@ let op_frame path qname op =
                 fun y -> uInt ==>
                 fun z -> rInt qname z (Var z ==. Binop (Var x, op, Var y))))
 
-let is_true x = tag (Var x) ==. int_true
-let is_false x = tag (Var x) ==. int_false
-
-let or_frame () =
+let bool_op_frame s op =
    defun (fun x -> uBool ===>
           fun y -> uBool ==>
-          fun z -> rBool "||" z
-            (((is_true z) &&. ((is_true x) ||. (is_true y))) ||.
-             ((is_false z) &&. (is_false x) &&. (is_false y))))
+          fun z -> rBool "||" z ((?. (Var z)) <=>. (op (?. (Var x)) (?. (Var y)))))
 
-let and_frame () =
-   defun (fun x -> uBool ===>
-          fun y -> uBool ==>
-          fun z -> rBool "&&" z ((Var z) <=>. ((is_true x) &&. (is_true y))))
+let or_frame () = bool_op_frame "||" (||.)
+let and_frame () = bool_op_frame "&&" (&&.)
 
-let qbool_rel qname rel (x, y, z) = rBool qname z ((Var z) <=>. Atom (Var x, rel, Var y))
+let qbool_rel qname rel (x, y, z) = rBool qname z ((?. (Var z)) <=>. (Atom (Var x, rel, Var y)))
 
 let poly_rel_frame path qname rel =
   (path,
@@ -198,7 +191,7 @@ let _frames = [
   (["or"; "Pervasives"], or_frame ());
 
   (["not"; "Pervasives"],
-   defun (fun x -> uBool ==> fun y -> rBool "NOT" y ((Var y) <=>. (is_false x))));
+   defun (fun x -> uBool ==> fun y -> rBool "NOT" y ((?.(Var y)) <=>. (!. (?. (Var x))))));
 
   (["ignore"; "Pervasives"], defun (forall (fun a -> fun x -> a ==> fun y -> uUnit)));
 
@@ -336,12 +329,19 @@ let equality_qualifier exp =
 let equality_refinement exp =
   const_refinement [equality_qualifier exp]
 
-let tag_refinement t =
+let int_true = 2
+let int_false = 0
+
+let tag_refinement p t =
   let x = Path.mk_ident "V" in
-    let pred = tag (Var x) ==. PInt (C.int_of_tag t) in
-    Predicate.pprint Format.str_formatter pred;
-    let expstr = Format.flush_str_formatter () in
-      const_refinement [(Path.mk_ident expstr, x, pred)]
+  let ti = C.int_of_tag t in
+  let pred = if p = Predef.path_bool then
+               let p = Boolexp (Var x) in 
+                 if ti = int_true then p else Not p
+                   else tag (Var x) ==. PInt (ti) in
+  Predicate.pprint Format.str_formatter pred;
+  let expstr = Format.flush_str_formatter () in
+    const_refinement [(Path.mk_ident expstr, x, pred)]
 
 let size_lit_refinement i =
   let x = Path.mk_ident "x" in

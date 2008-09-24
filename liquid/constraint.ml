@@ -81,7 +81,7 @@ let fresh_fc_id =
 
 (* Unique variable to qualify when testing sat, applicability of qualifiers...
  * this is passed into the solver *)
-let qual_test_var = Path.mk_ident "AA"
+let qual_test_var = C.qual_test_var(*Path.mk_ident "AA"*)
 let qual_test_expr = P.Var qual_test_var
 
 let is_simple_constraint c = match c with 
@@ -133,8 +133,8 @@ let stat_tp_refines     = ref 0
 let guard_predicate () g = 
   P.big_and 
     (List.map 
-      (fun (v,b) -> 
-         if b then B.is_true v else B.is_false v) 
+      (fun (v,b) -> let p = P.(?.) (P.Var v) in 
+         if b then p else P.Not p) 
       g)
 
 let refinement_preds sm qexpr r =
@@ -149,6 +149,9 @@ let pprint_local_binding f ppf = function
       (Path.unique_name k) f v
   | _ -> ()
 
+let pprint_fenv ppf env =
+  Le.iter (fun p f -> printf "@[%s:@ %a@]@." (C.path_name p) F.pprint f) env
+
 let pprint_fenv_pred so ppf env =
   (* match so with
   | Some s -> P.pprint ppf (P.big_and (environment_preds (solution_map s) env))
@@ -160,7 +163,8 @@ let pprint_renv_pred f so ppf env =
   | _ -> Le.iter (fun x t -> pprint_local_binding F.pprint_refinement ppf (x, t)) env
 
 let pprint ppf = function
-  | SubFrame (_,_,f1,f2) ->
+  | SubFrame (e,_,f1,f2) ->
+      C.fcprintf ppf C.ol_verb_constrs "@[(Env)@.%a@]@." pprint_fenv e;
       fprintf ppf "@[%a@ <:@;<1 2>%a@]" F.pprint f1 F.pprint f2
   | WFFrame (_,f) ->
       F.pprint ppf f
@@ -197,7 +201,7 @@ let simplify_frame gm x f =
   if not (Le.mem x gm) then f else
     let pos = Le.find x gm in
     match f with 
-    | F.Fsum (a,b,c,[(subs,([(v1,v2,P.Iff (v3,p))],[]))]) when v3 = P.tag (P.Var v2) ->
+    | F.Fsum (a,b,c,[(subs,([(v1,v2,P.Iff (v3,p))],[]))]) when v3 = P.Boolexp (P.Var v2) ->
         let p' = if pos then p else P.Not p in
         F.Fsum (a,b,c,[(subs,([(v1,v2,p')],[]))])
     | _ -> f
@@ -583,9 +587,13 @@ let rhs_cands sm subs k =
     (sm k) 
 
 let check_tp senv lhs_ps x2 = 
+  let dump s p = C.cprintf C.ol_dump_prover "@[%s:@ %a@]@." s (C.pprint_list " " P.pprint) p in
+  let _ = dump "Assert" lhs_ps in
   let rv = 
-    if BS.time "tp_set" TP.set senv lhs_ps then (incr stat_unsat_lhs; x2) 
-    else List.filter (fun (_,p) -> BS.time "imp check" TP.valid senv p) x2 in
+    try
+      if BS.time "tp_set" TP.set senv lhs_ps then (incr stat_unsat_lhs; x2) 
+      else List.filter (fun (_,p) -> dump "Ck" [p]; BS.time "imp check" TP.valid senv p) x2
+    with Failure x -> printf "%a@." pprint_fenv senv; raise (Failure x) in
   TP.finish (); incr stat_tp_refines;
   stat_imp_queries   := !stat_imp_queries + (List.length x2);
   stat_valid_queries := !stat_valid_queries + (List.length rv); rv

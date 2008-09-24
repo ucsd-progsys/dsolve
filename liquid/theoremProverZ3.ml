@@ -135,17 +135,23 @@ module Prover : PROVER =
       mutable vars      : decl list ;
       mutable count     : int;
       mutable i         : int;
-      mutable bnd       : int
+      mutable bnd       : int;
+      mutable v         : Z3.ast option;
     }
 
     let builtins = [
-            ("__tag", Func [Int; Int]);
+            ("__tag", Func [Unint; Int]);
             ("_DIV", Func [Int; Int; Int]);
     ]
 
     let is_select = C.has_prefix "SELECT_"
     let select_type = Func [Int; Int]
 
+    let pprint_sort ppf = function
+      | Bool -> fprintf ppf "Bool"
+      | Int -> fprintf ppf "Int"
+      | Unint -> fprintf ppf "Unint"
+      | _ -> assert false
 
     (* stats *)
     let nb_z3_push  = ref 0
@@ -159,11 +165,13 @@ module Prover : PROVER =
 
     let rec frame_to_type = function
         F.Fabstract(p, _, _) -> (match p with 
-                                | p when p = path_bool -> Bool
                                 | p when p = path_int -> Int
                                 | p when set_path p -> Set
                                 | _ -> Unint)
       | F.Farrow (_, t1, t2) -> Func (collapse t1 t2)
+      | F.Fsum(p, _, _, _) -> (match p with
+                                | p when p = path_bool -> Bool
+                                | _ -> Unint)
       | _ -> Unint
     and collapse t1 t2 =
       (frame_to_type t1)
@@ -173,7 +181,7 @@ module Prover : PROVER =
 
     let z3VarType me = function
       | Int -> me.tint
-      | Bool -> me.tint (*me.tbool*)
+      | Bool -> me.tbool
       | Array _ -> assert false
       | Set -> me.tset
       | Unint -> me.tint (*me.tun*)
@@ -208,7 +216,11 @@ module Prover : PROVER =
       () (Vbl s)
 
     let z3Var me s t =
-      match z3Var_memo me s t with
+      if s = (Path.unique_name C.qual_test_var) then match me.v with 
+                                                     | Some c -> c
+                                                     | None -> let rv = (Z3.mk_const me.c (Z3.mk_string_symbol me.c (fresh s)) (z3VarType me t)) in
+                                                               me.v <- Some rv; rv 
+      else match z3Var_memo me s t with
           Const v -> v
         | Bound (b, t) -> Z3.mk_bound me.c (me.bnd - b) (z3VarType me t)
 
@@ -257,7 +269,7 @@ module Prover : PROVER =
       | P.Not p' -> Z3.mk_not me.c (z3Pred env me p')
       | P.And (p1,p2) -> Z3.mk_and me.c (Array.map (z3Pred env me) [|p1;p2|])
       | P.Or (p1,p2) -> Z3.mk_or me.c (Array.map (z3Pred env me) [|p1;p2|])
-      | P.Iff _ as iff -> z3Pred env me (P.expand_iff iff)
+      | P.Iff (p, q) -> Z3.mk_iff me.c (z3Pred env me p) (z3Pred env me q)
    (* | P.Atom (e1,P.Lt,e2) -> z3Pred me (Atom (e1, P.Le, Binop(e2,P.Minus,PInt 1))) *)
       | P.Atom (e1,P.Eq,e2) -> Z3.mk_eq me.c (z3Exp env me e1) (z3Exp env me e2)
       | P.Atom (e1,P.Ne,e2) -> Z3.mk_distinct me.c [|z3Exp env me e1; z3Exp env me e2|]
@@ -267,6 +279,7 @@ module Prover : PROVER =
       | P.Atom (e1,P.Le,e2) -> Z3.mk_le me.c (z3Exp env me e1) (z3Exp env me e2)
       | P.Forall (ps, q) -> let fs = [] in mk_quantifier z3_mk_forall env me ps fs q
       | P.Exists (ps, q) -> let fs = [] in mk_quantifier z3_mk_exists env me ps fs q
+      | P.Boolexp e -> z3Exp env me e (* must be bool *)
 
     and mk_quantifier mk env me ps fs q =
       let ts = List.map frame_to_type fs in 
@@ -274,7 +287,7 @@ module Prover : PROVER =
       let rv = mk me.c (qtypes me ts) args (z3Pred env me q) in
       me.bnd <- me.bnd - (List.length ps); rv
 
-    let z3Preds env me ps = 
+    let z3Preds env me ps =
       let ps' = List.map (z3Pred env me) ps in
       Z3.mk_and me.c (Array.of_list ps')
 
@@ -300,11 +313,11 @@ module Prover : PROVER =
       let _ = Common.cprintf Common.ol_axioms "@[%s@]@." (Z3.ast_to_string me.c p) in
         if unsat me then failwith "Background theory is inconsistent!"
 
-    let push me p' =
+    let push me mkpreds ps =
       let _ = incr nb_z3_push in
       let _ = me.count <- me.count + 1 in
       if unsat me then me.i <- me.i + 1 else
-        (* let zp = z3Pred me p in *)
+        let p' = Bstats.time "mk preds" (mkpreds me) ps in
         let _  = me.vars <- Barrier :: me.vars in
         let _  = Z3.push me.c in
         Bstats.time "Z3 assert" (Z3.assert_cnstr me.c) p' 
@@ -340,7 +353,7 @@ module Prover : PROVER =
       (* memo tables *)
       let vart = Hashtbl.create 37 in
       let funt = Hashtbl.create 37 in
-      { c = c; tint = tint; tun = tun; tbool = tbool; tset = tset;
+      { c = c; tint = tint; tun = tun; tbool = tbool; tset = tset; v = None;
       vart = vart; funt = funt; vars = []; count = 0; i = 0; bnd = 0} 
 
 (***************************************************************************************)
@@ -349,13 +362,13 @@ module Prover : PROVER =
 
     let set env ps = 
       incr nb_z3_set;
-      let p' = Bstats.time "mk preds" (z3Preds env me) ps in 
-      Bstats.time "z3 push" (push me) p'; 
+      (*let p' = Bstats.time "mk preds" (z3Preds env me) ps in*)
+      Bstats.time "z3 push" (push me (z3Preds env)) ps; 
       unsat me 
 
     let valid env p =
-      let np' = Bstats.time "mk pred" (z3Pred env me) (P.Not p) in 
-      let _   = push me np' in
+      (*let np' = Bstats.time "mk pred" (z3Pred env me) (P.Not p) in*) 
+      let _   = push me (z3Pred env) (P.Not p) in
       let rv  = unsat me in
       let _   = pop me in rv
 
@@ -363,7 +376,8 @@ module Prover : PROVER =
       assert_axiom me (z3Pred Le.empty me p)
 
     let finish () = 
-      Bstats.time "Z3 pop" pop me; 
+      (*Bstats.time "Z3 pop"*) pop me; 
+      me.v <- None;
       assert (me.count = 0)
  
     let print_stats ppf () = 

@@ -54,12 +54,13 @@ let rec fixdiv p =
   in
   let rec pred_isdiv = 
     function P.Atom(e, _, e') -> (expr_isdiv e) || (expr_isdiv e')
-      | P.Iff (px, q) -> expr_isdiv px || pred_isdiv q
+      | P.Iff (p, q) -> pred_isdiv p || pred_isdiv q
       | P.And(p, p') -> (pred_isdiv p) || (pred_isdiv p')
       | P.Or(p, p') -> (pred_isdiv p) || (pred_isdiv p')
       | P.True -> false
       | P.Not p -> pred_isdiv p
-      | P.Forall (_, q) | P.Exists (_, q) -> pred_isdiv q in
+      | P.Forall (_, q) | P.Exists (_, q) -> pred_isdiv q 
+      | P.Boolexp e -> expr_isdiv e in
   let calc_cm e1 e2 =
     pull_divisor e1 * pull_divisor e2 in
   if pred_isdiv p then

@@ -81,7 +81,7 @@ let expand_about vm p =
     | Atom(e1, b, e2) -> 
         C.tflap2 (e_rec e1, e_rec e2) (fun a c -> Atom (a, b, c))
     | Iff(e, t) ->
-        C.tflap2 (e_rec e, t_rec t) (fun a b -> Iff (a, b))
+        C.tflap2 (t_rec e, t_rec t) (fun a b -> Iff (a, b))
     | Not t ->
         List.rev_map (fun a -> Not a) (t_rec t)
     | And (t1, t2) ->
@@ -91,7 +91,9 @@ let expand_about vm p =
     | Forall (p, q) ->
         List.rev_map (fun a -> Forall (p, a)) (t_rec q)
     | Exists (p, q) ->
-        List.rev_map (fun a -> Exists (p, a)) (t_rec q) in
+        List.rev_map (fun a -> Exists (p, a)) (t_rec q)
+    | Boolexp e ->
+        List.rev_map (fun a -> Boolexp a) (e_rec e) in
   t_rec p
 
 let instantiate_about vm (path, valu, pred) = 

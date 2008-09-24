@@ -53,12 +53,13 @@ type patpexpr =
 and tpat =
     PTrue
   | PAtom of patpexpr * binrel list * patpexpr
-  | PIff of patpexpr * tpat
+  | PIff of tpat * tpat
   | PNot of tpat
   | PAnd of tpat * tpat
   | POr of tpat * tpat
   | PForall of string list * tpat
   | PExists of string list * tpat
+  | PBoolexp of patpexpr
 
 type pexpr =
     PInt of int 
@@ -71,12 +72,13 @@ type pexpr =
 and t =
     True
   | Atom of pexpr * binrel * pexpr 
-  | Iff of pexpr * t
+  | Iff of t * t
   | Not of t
   | And of t * t 
   | Or of t * t
   | Forall of Path.t list * t
   | Exists of Path.t list * t
+  | Boolexp of pexpr
 
 let pprint_rel = function
     Eq -> "="
@@ -112,9 +114,9 @@ and pprint ppf = function
   | Atom (p, rel, q) ->
       fprintf ppf "@[(%a@ %s@ %a)@]" pprint_pexpr p (pprint_rel rel) pprint_pexpr q
   | Iff (px, q) ->
-      fprintf ppf "@[(%a@ iff@;<1 2>%a)@]" pprint_pexpr px pprint q
+      fprintf ppf "@[(%a@ iff@;<1 2>%a)@]" pprint px pprint q
   | Not p ->
-      fprintf ppf "@[(not@ %a)@]" pprint p
+      fprintf ppf "@[(-.@ %a)@]" pprint p
   | And (p, q) ->
       fprintf ppf "@[(%a@ and@;<1 2>@;<1 2>%a)@]" pprint p pprint q
   | Or (p, q) ->
@@ -125,6 +127,8 @@ and pprint ppf = function
   | Exists (p, q) ->
       let p = List.map Common.path_name p in
       fprintf ppf "@[(forall@ (%a.@ %a))@]" (Common.pprint_list ", " (Common.pprint_str)) p pprint q
+  | Boolexp e ->
+      fprintf ppf "@[(? (%a))@]" pprint_pexpr e
 
 let equals(p, q) = Atom(p, Eq, q)
 
@@ -160,6 +164,8 @@ let implies(p, q) = (!. p) ||. q
 
 let (=>.) p q = implies (p, q)
 
+let (?.) e = Boolexp e
+
 let tag_function = "__tag"
 let tag x = FunApp(tag_function, [x])
 
@@ -167,10 +173,6 @@ let find_const c =
   C.int_of_tag (Env.lookup_constructor (Longident.Lident c) Env.initial).cstr_tag
 
 let (int_true, int_false) = (PInt (find_const "true"), PInt (find_const "false"))
-
-let expand_iff = function
-  | Iff (px, q) -> (((tag px) ==. int_true) &&. q) ||. (((tag px) ==. int_false) &&. (!. q))
-  | _ -> assert false
 
 let big_and = function
   | c :: cs -> List.fold_left (&&.) c cs
@@ -216,7 +218,7 @@ and map f pred =
         True
     | Atom (e1, rel, e2) ->
         Atom (f e1, rel, f e2)
-    | Iff (px, q) -> Iff (f px, map_rec q)
+    | Iff (p, q) -> Iff (map_rec p, map_rec q)
     | Not p ->
         Not (map_rec p)
     | And (p, q) ->
@@ -227,6 +229,8 @@ and map f pred =
         Forall (p, map_rec q)
     | Exists (p, q) ->
         Exists (p, map_rec q)
+    | Boolexp e ->
+        Boolexp (f e)
   in map_rec pred
 
 let rec map_vars f pred =
@@ -246,10 +250,11 @@ let rec instantiate_named_vars subs pred =
 let unexp f = function
   | True -> ([], [])
   | Atom (e1, _, e2) -> ([], f e1 @ f e2)
-  | Iff (e, q) -> ([q], f e)
+  | Iff (p, q) -> ([p; q], [])
   | Not p -> ([p], [])
   | And (p, q) | Or (p, q) -> ([p; q], [])
   | Forall (p, q) | Exists (p, q) -> ([q], [])
+  | Boolexp e -> ([], f e)
 
 let rec exp_vars_unexp = function
   | PInt _ -> ([], [])
