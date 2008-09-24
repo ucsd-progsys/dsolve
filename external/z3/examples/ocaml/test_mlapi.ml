@@ -1,5 +1,4 @@
 (** Module test_mlapi - ML test and demo program for Z3.  Matches test_capi.ml - JakobL@2007-09-08 *)
-
 (*
    @name Auxiliary Functions
 *)
@@ -470,7 +469,7 @@ let find_model_example2() =
     check ctx Z3.L_TRUE;
     Z3.del_context ctx;
   end;;
-
+(*
 (**
    Prove {e x = y implies g(x) = g(y) }, and
    disprove {e x = y implies g(g(x)) = g(y) }.
@@ -1275,10 +1274,108 @@ let traverse_term_example() =
   print_term ctx [] q;
   printf "\n";
   Z3.del_context ctx
+*)
+
+
+(**********************************************************************)
+(****************** Axioms for Sets and Related Tests *****************)
+(**********************************************************************)
+
+let set_ax_str  = 
+  "(benchmark sets
+        :formula (forall (a S) (b S) 
+		        (iff (seq a b) (forall (x E) (iff (elt x a) (elt x b)))))
+        :formula (forall (x E) 
+		        (not (elt x emp)))
+        :formula (forall (x E) (a S) (b S) 
+		        (iff (elt x (cup a b)) (or  (elt x a) (elt x b))))
+        :formula (forall (x E) (a S) (b S) 
+		        (iff (elt x (cap a b)) (and (elt x a) (elt x b))))
+        :formula (forall (x E) (y E) 
+		        (iff (elt x (sng y)) (= x y)) :pats {(elt x (sng y))} ))"
+
+let set_q_str  =
+"(benchmark setqs        
+        :extrafuns  ((a1 S) (a2 S) (x1 E))
+        :formula (seq emp emp)
+        :formula (seq a1 a1)
+        :formula (seq (cap a1 a2) (cap a2 a1))
+        :formula (seq (cup a1 a2) (cup a2 a1))
+        :formula (seq (cup a1 emp) a1)
+        :formula (seq (cap a1 emp) emp)
+        :formula (seq (cap a1 a1) a1)
+        :formula (seq (cup a1 a1) a1)
+        :formula (implies (seq a1 a2) (seq (cup a1 a2) a1))
+        :formula (implies (seq a1 a2) (seq (cap a1 a2) a1))
+        :formula (implies (elt x1 a1) (seq (cup (sng x1) a1) a1))
+        :formula (implies (seq a1 a2) (seq (cup (sng x1) a1) (cup (sng x1) a2)))
+        
+        :formula (seq emp a1)
+        :formula (seq (cup a1 a2) a1)
+        :formula (seq (cap a1 a2) a1)
+        :formula (seq (cup (sng x1) a1) a1))"
+
+let rec mk_list n xs = 
+  if n < 0 then xs else mk_list (n-1) (n::xs)
+
+let sets_define_unint_type ctx s = 
+  let t_s    = Z3.mk_string_symbol ctx s in
+  let t_t    = Z3.mk_uninterpreted_type ctx t_s in
+  (t_s, t_t)
+
+let sets_define_op ctx s in_t_a out_t = 
+  let f_s       = Z3.mk_string_symbol ctx s in
+  let f_f       = Z3.mk_func_decl ctx f_s in_t_a out_t in
+  (f_s, f_f)
+
+let sets_prove ctx f = 
+  begin
+    Z3.push ctx;
+    Z3.assert_cnstr ctx (Z3.mk_not ctx f) ;
+    let out = 
+      match Z3.check_and_get_model ctx with
+      | (Z3.L_FALSE,_) -> "valid" 
+      | (Z3.L_UNDEF,m) -> "unknown"
+      | (Z3.L_TRUE,m)  -> "invalid" in
+    printf "check: %s : %s \n" (Z3.ast_to_string ctx f) out;
+    Z3.pop ctx 1
+  end
+
+let sets_setup () =
+  let ctx               = mk_context [|("PARTIAL_MODELS","true")|] in
+  let bool_t            = Z3.mk_bool_type ctx in
+  let (elem_s,elem_t)   = sets_define_unint_type ctx "E" in
+  let (set_s, set_t)    = sets_define_unint_type ctx "S" in 
+  let (elt_s, elt_f)    = sets_define_op ctx "elt" [|elem_t; set_t|] bool_t in
+  let (seq_s, seq_f)    = sets_define_op ctx "seq" [|set_t;  set_t|] bool_t in
+  let (cap_s, cap_f)    = sets_define_op ctx "cap" [|set_t;  set_t|] set_t in
+  let (cup_s, cup_f)    = sets_define_op ctx "cup" [|set_t;  set_t|] set_t in
+  let (sng_s, sng_f)    = sets_define_op ctx "sng" [|elem_t|]        set_t in
+  let (emp_s, emp_f)    = sets_define_op ctx "emp" [| |]             set_t in
+  let t_n_a             = [|elem_s; set_s|] in
+  let t_a               = [|elem_t; set_t|] in
+  let f_n_a             = [|elt_s; seq_s; cap_s; cup_s; sng_s; emp_s|] in
+  let f_a               = [|elt_f; seq_f; cap_f; cup_f; sng_f; emp_f|] in
+  let axs               = 
+    Z3.parse_smtlib_string ctx set_ax_str t_n_a t_a f_n_a f_a;
+    List.map (Z3.get_smtlib_formula ctx) (mk_list 4 []) in
+  let _                 = 
+    List.iter (fun q -> 
+                 printf "assert axiom:\n%s\n" (Z3.ast_to_string ctx q);
+                 Z3.assert_cnstr ctx q) axs in
+  let qs                =
+    Z3.parse_smtlib_string ctx set_q_str t_n_a t_a f_n_a f_a;
+    List.map (Z3.get_smtlib_formula ctx) (mk_list 15 []) in
+  List.iter (sets_prove ctx) qs
+
+
+(**********************************************************************)
 
 let main() =
   begin
     display_version();
+    sets_setup ();
+    (*
     simple_example();
     demorgan();
     find_model_example1();
@@ -1299,12 +1396,11 @@ let main() =
     error_code_example2();
     parser_example1();
     parser_example2();
-    parser_example3();
     parser_example4();
     parser_example5();
     ite_example();
     simplifier_example();
-    traverse_term_example()
+    traverse_term_example()*)
   end;;
 
 let _ = main();;

@@ -49,7 +49,7 @@ type t =
   | Frec of Path.t * recref * refinement
   | Fsum of Path.t * (Path.t * recref) option * constr list * refinement
   | Fabstract of Path.t * param list * refinement
-  | Farrow of pattern_desc option * t * t
+  | Farrow of pattern_desc * t * t
 
 and param = Ident.t * t * variance
 
@@ -98,6 +98,7 @@ val instantiate: t -> t -> t
 val instantiate_qualifiers: (string * Path.t) list -> t -> t
 val bind: pattern_desc -> t -> (Path.t * t) list
 val env_bind: t Lightenv.t -> pattern_desc -> t -> t Lightenv.t
+val refexpr_apply_subs: substitution list -> refexpr -> refexpr
 val apply_subs: substitution list -> t -> t
 val label_like: t -> t -> t
 val apply_solution: (Path.t -> Qualifier.t list) -> t -> t

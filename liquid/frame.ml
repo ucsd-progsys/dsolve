@@ -62,7 +62,7 @@ type t =
   | Frec of Path.t * recref * refinement
   | Fsum of Path.t * (Path.t * recref) option * constr list * refinement
   | Fabstract of Path.t * param list * refinement
-  | Farrow of pattern_desc option * t * t
+  | Farrow of pattern_desc * t * t
 
 and param = Ident.t * t * variance
 
@@ -215,11 +215,11 @@ let append_recref rr' f = match get_recref f with
   | Some rr -> set_recref (merge_recrefs rr rr') f
   | None    -> f
 
-let apply_subs_map subs' (subs, qe) =
+let refexpr_apply_subs subs' (subs, qe) =
   (subs' @ subs, qe)
 
 let apply_subs subs f =
-  map_refexprs (apply_subs_map subs) f
+  map_refexprs (refexpr_apply_subs subs) f
 
 let refinement_qvars r =
   C.flap (fun (_, (_, qvars)) -> qvars) r
@@ -430,9 +430,7 @@ let rec pprint ppf = function
                           (C.path_name path)
                           (Oprint.print_list pprint_constructor
                              (fun ppf -> fprintf ppf "@;<1 0>|| ")) cs) r
-  | Farrow (None, f, f') ->
-      fprintf ppf "@[%a@ ->@;<1 2>%a@]" pprint1 f pprint f'
-  | Farrow (Some pat, f, f') ->
+  | Farrow (pat, f, f') ->
       fprintf ppf "@[%a:@ %a@ ->@;<1 2>%a@]" pprint_pattern pat pprint1 f pprint f'
   | Fabstract (path, params, r) ->
       wrap_refined ppf (fun ppf -> fprintf ppf "@[%a@ %s@]"
@@ -461,7 +459,7 @@ let rec apply_refs rs ps = match (rs, ps) with
       let (ip, i') = (Path.Pident i, Ident.create (Ident.name i)) in
       let sub      = (ip, Predicate.Var (Path.Pident i')) in
       let ps       = List.map (fun (i, f, v) -> (i, apply_subs [sub] f, v)) ps in
-      let rs       = List.map (List.map (apply_subs_map [sub])) rs in
+      let rs       = List.map (List.map (refexpr_apply_subs [sub])) rs in
         (i', append_refinement r f, v) :: apply_refs rs ps
   | ([], []) -> []
   | _        -> assert false
@@ -548,11 +546,9 @@ let label_like f f' =
             | None -> None
             | Some (rv, rr) -> Some (rv, instantiate_recref_qualifiers vars rr)
         in Fsum (p, rro, label_constrs_like vars cs1 cs2, instantiate_ref_qualifiers vars r)
-    | (Farrow (None, f1, f1'), Farrow (l, f2, f2')) ->
-        Farrow (l, label vars f1 f2, label vars f1' f2')
-    | (Farrow (Some p1, f1, f1'), Farrow (Some p2, f2, f2')) ->
+    | (Farrow (p1, f1, f1'), Farrow (p2, f2, f2')) ->
         let vars' = List.map (fun (x, y) -> (Ident.name x, Path.Pident y)) (Pattern.bind_vars p1 p2) @ vars in
-          Farrow (Some p2, label vars f1 f2, label vars' f1' f2')
+          Farrow (p2, label vars f1 f2, label vars' f1' f2')
     | _ -> printf "Can't label %a like %a" pprint f pprint f'; assert false
   and label_constrs_like vars cs1 cs2 =
     List.map2 (fun (t, ps1) (_, ps2) -> (t, label_params_like vars ps1 ps2)) cs1 cs2
@@ -666,9 +662,18 @@ let close_recf (rp, rr) = function
         end
   | f -> f
 
+let first_binder = Char.code 'a' - 1
+
+let next_binder = ref first_binder
+
+let reset_binders () = next_binder := first_binder
+
+let fresh_binder () =
+  incr next_binder; Tpat_var (Ident.create (Char.escaped (Char.chr !next_binder)))
+
 let fresh_rec fresh env (rv, rr) level t = match t.desc with
   | Tvar                 -> fresh_fvar level
-  | Tarrow(_, t1, t2, _) -> Farrow (None, fresh t1, fresh t2)
+  | Tarrow(_, t1, t2, _) -> Farrow (fresh_binder (), fresh t1, fresh t2)
   | Ttuple ts            -> tuple_of_frames (List.map fresh ts) empty_refinement
   | Tconstr(p, tyl, _)   -> close_recf (rv, rr) (fresh_constr fresh env p t (List.map canonicalize tyl))
   | _                    -> failwith "@[Error: Freshing unsupported type]@."
@@ -729,6 +734,7 @@ let fresh_with_var_fun env freshf t =
   let t   = copy_type t in
   (* Negative type levels wreak havoc with the unify, etc. functions used in fresh_constr *)
   let _   = abs_type_levels t in
+  let _   = reset_binders () in
   let rec fm t =
     let level = (repr t).level in
     let t     = canonicalize t in
@@ -762,7 +768,7 @@ let fresh_without_vars env ty =
 let rec build_uninterpreted name params = function
   | Farrow (_, f, f') ->
       let lab = Ident.create "x" in
-        Farrow (Some (Tpat_var lab), f, build_uninterpreted name (lab :: params) f')
+        Farrow (Tpat_var lab, f, build_uninterpreted name (lab :: params) f')
   | f ->
       let args = List.rev_map (fun p -> P.Var (Path.Pident p)) params in
       let v    = Path.mk_ident "v" in
@@ -813,8 +819,8 @@ let rec translate_pframe dopt env plist pf =
             Some id ->
               let id = Ident.create id in
               if List.mem (Path.Pident id) !vars then failwith "Redefined variable";
-                vars := Path.Pident id :: !vars; Some (Tpat_var id)
-          | None -> None
+                vars := Path.Pident id :: !vars; Tpat_var id
+          | None -> fresh_binder ()
         in Farrow (pat, transl_pframe_rec a, transl_pframe_rec b)
     | PFtuple (fs, r) -> tuple_of_frames (List.map transl_pframe_rec fs) (transl_pref r)
     | PFrecord (fs, r) -> transl_record fs r

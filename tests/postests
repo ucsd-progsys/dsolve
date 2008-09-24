@@ -1,3 +1,4 @@
+tests/binder_subs.ml        4 False
 tests/booltest.ml           1 False
 tests/assume_scope.ml       1 False
 tests/unint.ml              1 False
