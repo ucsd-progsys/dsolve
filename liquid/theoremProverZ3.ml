@@ -146,6 +146,11 @@ module Prover : PROVER =
     let is_select = C.has_prefix "SELECT_"
     let select_type = Func [Int; Int]
 
+    let pprint_sort ppf = function
+      | Bool -> fprintf ppf "Bool"
+      | Int -> fprintf ppf "Int"
+      | Unint -> fprintf ppf "Unint"
+      | _ -> assert false
 
     (* stats *)
     let nb_z3_push  = ref 0
@@ -277,7 +282,7 @@ module Prover : PROVER =
       let rv = mk me.c (qtypes me ts) args (z3Pred env me q) in
       me.bnd <- me.bnd - (List.length ps); rv
 
-    let z3Preds env me ps = 
+    let z3Preds env me ps =
       let ps' = List.map (z3Pred env me) ps in
       Z3.mk_and me.c (Array.of_list ps')
 
@@ -303,12 +308,12 @@ module Prover : PROVER =
       let _ = Common.cprintf Common.ol_axioms "@[%s@]@." (Z3.ast_to_string me.c p) in
         if unsat me then failwith "Background theory is inconsistent!"
 
-    let push me p' =
+    let push me mkpreds ps =
       let _ = incr nb_z3_push in
       let _ = me.count <- me.count + 1 in
       if unsat me then me.i <- me.i + 1 else
-        (* let zp = z3Pred me p in *)
         let _  = me.vars <- Barrier :: me.vars in
+        let p' = Bstats.time "mk preds" (mkpreds me) ps in
         let _  = Z3.push me.c in
         Bstats.time "Z3 assert" (Z3.assert_cnstr me.c) p' 
 
@@ -352,13 +357,13 @@ module Prover : PROVER =
 
     let set env ps = 
       incr nb_z3_set;
-      let p' = Bstats.time "mk preds" (z3Preds env me) ps in 
-      Bstats.time "z3 push" (push me) p'; 
+      (*let p' = Bstats.time "mk preds" (z3Preds env me) ps in*)
+      Bstats.time "z3 push" (push me (z3Preds env)) ps; 
       unsat me 
 
     let valid env p =
-      let np' = Bstats.time "mk pred" (z3Pred env me) (P.Not p) in 
-      let _   = push me np' in
+      (*let np' = Bstats.time "mk pred" (z3Pred env me) (P.Not p) in*) 
+      let _   = push me (z3Pred env) (P.Not p) in
       let rv  = unsat me in
       let _   = pop me in rv
 
@@ -366,7 +371,7 @@ module Prover : PROVER =
       assert_axiom me (z3Pred Le.empty me p)
 
     let finish () = 
-      Bstats.time "Z3 pop" pop me; 
+      (*Bstats.time "Z3 pop"*) pop me; 
       assert (me.count = 0)
  
     let print_stats ppf () = 
