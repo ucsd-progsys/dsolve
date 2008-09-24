@@ -48,7 +48,7 @@ type patpexpr =
 and tpat =
     PTrue
   | PAtom of patpexpr * binrel list * patpexpr
-  | PIff of patpexpr * tpat
+  | PIff of tpat * tpat
   | PNot of tpat
   | PAnd of tpat * tpat
   | POr of tpat * tpat
@@ -67,7 +67,7 @@ type pexpr =
 and t =  
     True
   | Atom of pexpr * binrel * pexpr 
-  | Iff of pexpr * t
+  | Iff of t * t
   | Not of t
   | And of t * t 
   | Or of t * t 
@@ -94,7 +94,6 @@ val equals: (pexpr * pexpr) -> t
 val implies: (t * t) -> t
 val int_true: pexpr
 val int_false: pexpr
-val expand_iff: t -> t
 
 val (==.): pexpr -> pexpr -> t
 val (!=.): pexpr -> pexpr -> t
@@ -106,11 +105,12 @@ val (&&.): t -> t -> t
 val (||.): t -> t -> t
 val (!.): t -> t
 val (=>.): t -> t -> t
-val (<=>.): pexpr -> t -> t
+val (<=>.): t -> t -> t
 val (+-): pexpr -> pexpr -> pexpr
 val ( *-): pexpr -> pexpr -> pexpr
 val ( /-): pexpr -> pexpr -> pexpr
 val (--): pexpr -> pexpr -> pexpr
+val (?.): pexpr -> t
 
 val subst: pexpr -> Path.t -> t -> t
 val apply_substs: (Path.t * pexpr) list -> t -> t

@@ -70,7 +70,7 @@ and convertPred = function
   | P.Not p -> QA.Not (convertPred p)  
   | P.And (p1,p2) -> QA.And [convertPred p1; convertPred p2] 
   | P.Or (p1,p2) -> QA.Or [convertPred p1; convertPred p2]
-  | P.Iff (_,_) as p -> convertPred (P.expand_iff p)  
+  | P.Iff (p,q) -> (*convertPred (P.expand_iff p)*) assert false
   | P.Atom (e1,br,e2) ->
       let (e1',e2') = (convertExp e1, convertExp e2) in 
       (match br with 

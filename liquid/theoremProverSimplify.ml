@@ -186,7 +186,7 @@ let rec convert_pred p =
   | Atom (e1,Predicate.Lt,e2) ->
       convert_pred (Atom (e1, Predicate.Le, Binop(e2,Predicate.Minus,PInt 1)))
   | Atom (e1,r,e2) -> Printf.sprintf "(%s %s %s)" (convert_rel r) (convert_exp e1) (convert_exp e2)
-  | Iff _ as iff -> convert_pred (Predicate.expand_iff iff)
+  | Iff (p, q) -> (*convert_pred (Predicate.expand_iff iff)*) assert false
   | Not p -> Printf.sprintf "(NOT %s)" (convert_pred p) 
   | And (p1,p2) -> Printf.sprintf "(AND %s %s)" (convert_pred p1) (convert_pred p2)
   | Or (p1,p2) -> Printf.sprintf "(OR %s %s)" (convert_pred p1) (convert_pred p2)

@@ -294,6 +294,8 @@ let ol_refine = 11
 let ol_scc = 12 
 let ol_dump_env = 10 
 let ol_axioms = 5
+let ol_dump_prover = 20
+let ol_verb_constrs = 21
 
 let verbose_level = ref ol_default
 let verb_stack = ref []

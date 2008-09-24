@@ -139,7 +139,7 @@ module Prover : PROVER =
     }
 
     let builtins = [
-            ("__tag", Func [Int; Int]);
+            ("__tag", Func [Unint; Int]);
             ("_DIV", Func [Int; Int; Int]);
     ]
 
@@ -159,11 +159,13 @@ module Prover : PROVER =
 
     let rec frame_to_type = function
         F.Fabstract(p, _, _) -> (match p with 
-                                | p when p = path_bool -> Bool
                                 | p when p = path_int -> Int
                                 | p when set_path p -> Set
                                 | _ -> Unint)
       | F.Farrow (_, t1, t2) -> Func (collapse t1 t2)
+      | F.Fsum(p, _, _, _) -> (match p with
+                                | p when p = path_bool -> Bool
+                                | _ -> Unint)
       | _ -> Unint
     and collapse t1 t2 =
       (frame_to_type t1)
@@ -173,7 +175,7 @@ module Prover : PROVER =
 
     let z3VarType me = function
       | Int -> me.tint
-      | Bool -> me.tint (*me.tbool*)
+      | Bool -> me.tbool
       | Array _ -> assert false
       | Set -> me.tset
       | Unint -> me.tint (*me.tun*)
@@ -257,7 +259,7 @@ module Prover : PROVER =
       | P.Not p' -> Z3.mk_not me.c (z3Pred env me p')
       | P.And (p1,p2) -> Z3.mk_and me.c (Array.map (z3Pred env me) [|p1;p2|])
       | P.Or (p1,p2) -> Z3.mk_or me.c (Array.map (z3Pred env me) [|p1;p2|])
-      | P.Iff _ as iff -> z3Pred env me (P.expand_iff iff)
+      | P.Iff (p, q) -> Z3.mk_iff me.c (z3Pred env me p) (z3Pred env me q)
    (* | P.Atom (e1,P.Lt,e2) -> z3Pred me (Atom (e1, P.Le, Binop(e2,P.Minus,PInt 1))) *)
       | P.Atom (e1,P.Eq,e2) -> Z3.mk_eq me.c (z3Exp env me e1) (z3Exp env me e2)
       | P.Atom (e1,P.Ne,e2) -> Z3.mk_distinct me.c [|z3Exp env me e1; z3Exp env me e2|]

@@ -115,6 +115,7 @@ let pred_is_well_typed env p =
   and pred_shape_is_bool = function
   | P.True -> true
   | P.Not p -> pred_shape_is_bool p 
+  | P.Iff (p1, p2)
   | P.Or (p1, p2)  
   | P.And (p1, p2) ->
       if pred_shape_is_bool p1 then
@@ -125,16 +126,12 @@ let pred_is_well_typed env p =
       let p1_shp = get_expr_shape p1 in
       let p2_shp = get_expr_shape p2 in
         (same_shape p1_shp p2_shp)
-  | P.Iff (px, q) ->
-      if same_shape (get_expr_shape px) uInt then
-        pred_shape_is_bool q
-      else
-        raise IllFormed
   | P.Exists (ps, q)
   | P.Forall (ps, q) ->
-      pred_shape_is_bool q
+      (*pred_shape_is_bool q*) assert false (*quantifiers not wellformed atm*)
   | P.Boolexp e ->
-      same_shape (get_expr_shape e) uBool in
+      expr_shape_is_bool e
+  and expr_shape_is_bool e = same_shape (get_expr_shape e) uBool in
   pred_shape_is_bool p
 
 let refinement_well_formed env solution r qual_expr =

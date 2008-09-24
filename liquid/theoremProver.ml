@@ -54,7 +54,7 @@ let rec fixdiv p =
   in
   let rec pred_isdiv = 
     function P.Atom(e, _, e') -> (expr_isdiv e) || (expr_isdiv e')
-      | P.Iff (px, q) -> expr_isdiv px || pred_isdiv q
+      | P.Iff (p, q) -> pred_isdiv p || pred_isdiv q
       | P.And(p, p') -> (pred_isdiv p) || (pred_isdiv p')
       | P.Or(p, p') -> (pred_isdiv p) || (pred_isdiv p')
       | P.True -> false

@@ -1512,17 +1512,15 @@ qualifier_pattern:
   | qualifier_pattern OR qualifier_pattern  { mkpredpat (Ppredpat_or($1, $3)) }
   | MINUSDOT qualifier_pattern              { mkpredpat (Ppredpat_not($2)) }              
   | LPAREN qualifier_pattern RPAREN         { $2 }
-  | LPAREN qual_expr IFF qualifier_pattern RPAREN
-      { mkpredpat (Ppredpat_iff($2, $4)) }
   | LPAREN qualifier_pattern IFF qualifier_pattern RPAREN
-      { mkpredpat (Ppredpat_and(mk_implies $2 $4, mk_implies $4 $2)) } 
+      { mkpredpat (Ppredpat_iff($2, $4)) } 
   | LPAREN qualifier_pattern MINUSGREATER qualifier_pattern RPAREN
       { mk_implies $2 $4 }
   | qual_expr qual_rel qual_expr            
       { mkpredpat (Ppredpat_atom($1, $2, $3)) }
   | FORALL LPAREN quant_id_list DOT qualifier_pattern RPAREN  { mkpredpat (Ppredpat_forall($3, $5)) }
   | EXISTS LPAREN quant_id_list DOT qualifier_pattern RPAREN  { mkpredpat (Ppredpat_exists($3, $5)) }
-  | BACKQUOTE LPAREN qual_expr RPAREN                         { mkpredpat (Ppredpat_boolexp($3)) } 
+  | QUESTION qual_expr                                        { mkpredpat (Ppredpat_boolexp($2)) } 
 
 
 qual_rel:
