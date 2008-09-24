@@ -224,8 +224,9 @@ and constrain_if (env, guard, f) e1 e2 e3 =
     [WFFrame(env, f); SubFrame(env', guard2, f2, f); SubFrame(env', guard3, f3, f)],
     cstrs1 @ cstrs2 @ cstrs3)
 
-and bind env guard pat frame pexpr =
-  F.env_bind env pat.pat_desc frame
+and bind env guard p f pexpr =
+  log_frame p.pat_loc f;
+  F.env_bind env p.pat_desc f
 
 and mk_match_guarded_env env pat = function
   | P.Var v -> Le.add (Path.mk_ident "__measure_guard")
