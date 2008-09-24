@@ -590,24 +590,24 @@ let check_tp senv lhs_ps x2 =
   stat_imp_queries   := !stat_imp_queries + (List.length x2);
   stat_valid_queries := !stat_valid_queries + (List.length rv); rv
 
-let check_env_bindings senv lhs_ps rhs_ps =
-  let lxs = C.flap P.vars lhs_ps  in
-  let rxs = C.flap P.vars rhs_ps in
-  let chl = List.for_all (fun x -> Le.mem x senv) lxs in
-  let chr = List.for_all (fun x -> Le.mem x senv) rxs in
-  if not (chl && chr) then
-    Printf.printf "bad env bindings (l=%b, r=%b)!!! " chl chr
-    (*
-    printf "@[lhs: %a@]@.@." P.pprint (P.big_and lhs_ps);
-     printf "@[rhs: %a@]@.@." P.pprint (P.big_and rhs_ps))
-*)
+let bound_in_env senv p =
+  List.for_all (fun x -> Le.mem x senv) (P.vars p)
 
+(*
+let check_env_bindings senv lhs_ps rhs_ps =
+  let chl = List.for_all (bound_in_env senv) lhs_ps in
+  let chr = List.for_all (bound_in_env senv) rhs_ps in
+  if not (chl && chr) then
+    (printf "@[lhs: %a@]@.@." P.pprint (P.big_and lhs_ps);
+     printf "@[rhs: %a@]@.@." P.pprint (P.big_and rhs_ps);
+     Printf.printf "bad env bindings (l=%b, r=%b)!!! " chl chr)
+*)
 
 let refine_tp senv s env g r1 sub2s k2 =
   let sm = solution_map s in
   let lhs_ps  = lhs_preds sm env g r1 in
   let rhs_qps = rhs_cands sm sub2s k2 in
-  let _       = check_env_bindings senv lhs_ps (List.map snd rhs_qps) in 
+(*  let _       = check_env_bindings senv lhs_ps (List.map snd rhs_qps) in *)
   let rhs_qps' =
     if List.exists (fun p -> List.mem p falses) lhs_ps 
     then (stat_matches := !stat_matches + (List.length rhs_qps); rhs_qps) 
@@ -616,6 +616,7 @@ let refine_tp senv s env g r1 sub2s k2 =
       let lhsm    = List.fold_left (fun pm p -> PM.add p true pm) PM.empty lhs_ps in
       let (x1,x2) = List.partition (fun (_,p) -> PM.mem p lhsm) rhs_qps in
       let _       = stat_matches := !stat_matches + (List.length x1) in 
+      let x2      = List.filter (fun (_,p) -> bound_in_env senv p) x2 in 
       match x2 with [] -> x1 | _ -> x1 @ (check_tp senv lhs_ps x2) in
   refine_sol_update s k2 rhs_qps (List.map fst rhs_qps') 
 
