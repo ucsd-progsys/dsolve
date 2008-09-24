@@ -155,6 +155,7 @@ and predpat_desc =
   | Ppredpat_forall of string list * predicate_pattern
   | Ppredpat_exists of string list * predicate_pattern
   | Ppredpat_iff of predpatexp * predicate_pattern
+  | Ppredpat_boolexp of predpatexp
 
 and predpatexp =
   { ppredpatexp_desc: predpatexp_desc;

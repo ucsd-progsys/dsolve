@@ -59,6 +59,7 @@ and tpat =
   | POr of tpat * tpat
   | PForall of string list * tpat
   | PExists of string list * tpat
+  | PBoolexp of patpexpr
 
 type pexpr =
     PInt of int 
@@ -77,6 +78,7 @@ and t =
   | Or of t * t
   | Forall of Path.t list * t
   | Exists of Path.t list * t
+  | Boolexp of pexpr
 
 let pprint_rel = function
     Eq -> "="
@@ -125,6 +127,8 @@ and pprint ppf = function
   | Exists (p, q) ->
       let p = List.map Common.path_name p in
       fprintf ppf "@[(forall@ (%a.@ %a))@]" (Common.pprint_list ", " (Common.pprint_str)) p pprint q
+  | Boolexp e ->
+      fprintf ppf "@[(`(%a))@]" pprint_pexpr e
 
 let equals(p, q) = Atom(p, Eq, q)
 
@@ -227,6 +231,8 @@ and map f pred =
         Forall (p, map_rec q)
     | Exists (p, q) ->
         Exists (p, map_rec q)
+    | Boolexp e ->
+        Boolexp (f e)
   in map_rec pred
 
 let rec map_vars f pred =
@@ -250,6 +256,7 @@ let unexp f = function
   | Not p -> ([p], [])
   | And (p, q) | Or (p, q) -> ([p; q], [])
   | Forall (p, q) | Exists (p, q) -> ([q], [])
+  | Boolexp e -> ([], f e)
 
 let rec exp_vars_unexp = function
   | PInt _ -> ([], [])

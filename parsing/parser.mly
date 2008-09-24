@@ -1520,8 +1520,9 @@ qualifier_pattern:
       { mk_implies $2 $4 }
   | qual_expr qual_rel qual_expr            
       { mkpredpat (Ppredpat_atom($1, $2, $3)) }
-  | FORALL LPAREN quant_id_list DOT qualifier_pattern RPAREN { mkpredpat (Ppredpat_forall($3, $5)) }
+  | FORALL LPAREN quant_id_list DOT qualifier_pattern RPAREN  { mkpredpat (Ppredpat_forall($3, $5)) }
   | EXISTS LPAREN quant_id_list DOT qualifier_pattern RPAREN  { mkpredpat (Ppredpat_exists($3, $5)) }
+  | BACKQUOTE LPAREN qual_expr RPAREN                         { mkpredpat (Ppredpat_boolexp($3)) } 
 
 
 qual_rel:

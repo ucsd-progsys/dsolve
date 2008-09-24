@@ -267,6 +267,7 @@ module Prover : PROVER =
       | P.Atom (e1,P.Le,e2) -> Z3.mk_le me.c (z3Exp env me e1) (z3Exp env me e2)
       | P.Forall (ps, q) -> let fs = [] in mk_quantifier z3_mk_forall env me ps fs q
       | P.Exists (ps, q) -> let fs = [] in mk_quantifier z3_mk_exists env me ps fs q
+      | P.Boolexp e -> z3Exp env me e (* must be bool *)
 
     and mk_quantifier mk env me ps fs q =
       let ts = List.map frame_to_type fs in 

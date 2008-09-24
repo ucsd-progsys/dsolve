@@ -91,7 +91,9 @@ let expand_about vm p =
     | Forall (p, q) ->
         List.rev_map (fun a -> Forall (p, a)) (t_rec q)
     | Exists (p, q) ->
-        List.rev_map (fun a -> Exists (p, a)) (t_rec q) in
+        List.rev_map (fun a -> Exists (p, a)) (t_rec q)
+    | Boolexp e ->
+        List.rev_map (fun a -> Boolexp a) (e_rec e) in
   t_rec p
 
 let instantiate_about vm (path, valu, pred) = 

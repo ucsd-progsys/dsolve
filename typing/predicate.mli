@@ -54,6 +54,7 @@ and tpat =
   | POr of tpat * tpat
   | PForall of string list * tpat
   | PExists of string list * tpat
+  | PBoolexp of patpexpr
 
 type pexpr =   
     PInt of int 
@@ -72,6 +73,7 @@ and t =
   | Or of t * t 
   | Forall of Path.t list * t
   | Exists of Path.t list * t
+  | Boolexp of pexpr
 
 val pprint_rel: binrel -> string
 val pprint: formatter -> t -> unit

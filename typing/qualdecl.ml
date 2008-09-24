@@ -72,6 +72,8 @@ and transl_patpred_single_map f p =
           Exists (snd (List.split ps), transl_patpred_single_map f q)
       | Ppredpat_iff (e, p) ->
           Iff (transl_patpredexp_single_map f e, transl_pred_rec p)
+      | Ppredpat_boolexp e ->
+          Boolexp (transl_patpredexp_single_map f e)
   in transl_pred_rec p
 
 let transl_patpred_single simple valu env p =
@@ -152,6 +154,8 @@ let transl_patpred env (v, nv) (qgtymap, tyset, idset, intset) tymap p =
           PExists (ps, transl_pred_rec q)
       | Ppredpat_iff (e, p) ->
           PIff (transl_expr_rec e, transl_pred_rec p)
+      | Ppredpat_boolexp e ->
+          PBoolexp (transl_expr_rec e)
   in transl_pred_rec p
 
 let gen_preds p =
@@ -207,6 +211,8 @@ let gen_preds p =
           let ps = List.map Path.mk_ident ps in
           let qs = gen_pred_rec q in
             List.map (fun c -> Exists (ps, c)) qs
+      | PBoolexp e ->
+          List.map (fun c -> Boolexp c) (gen_expr_rec e)
   in gen_pred_rec p
 
 let ck_consistent patpred pred =
@@ -244,10 +250,13 @@ let ck_consistent patpred pred =
       | (Ppredpat_or (p1, p2), Or (pp1, pp2))
       | (Ppredpat_and (p1, p2), And (pp1, pp2)) -> 
           ck_pred_rec p1 pp1 && ck_pred_rec p2 pp2 
+      | (Ppredpat_exists (ps, q), Exists (ps', q'))
       | (Ppredpat_forall (ps, q), Forall (ps', q')) ->
           ck_pred_rec q q'
       | (Ppredpat_iff (e, p), Iff (e', p')) ->
           ck_expr_rec e e' && ck_pred_rec p p'
+      | (Ppredpat_boolexp e, Boolexp e') ->
+          ck_expr_rec e e'
       | _ -> assert false in
     ck_pred_rec patpred pred
      

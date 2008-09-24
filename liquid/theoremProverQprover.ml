@@ -80,7 +80,7 @@ and convertPred = function
        | P.Ge -> QA.Leq (e2',e1')
        | P.Lt -> QA.Leq (QA.Sum [e1'; mk_const 1], e2')
        | P.Gt -> QA.Leq (QA.Sum [e2'; mk_const 1], e1'))
-  | P.Forall _ | P.Exists _ -> assert false 
+  | P.Forall _ | P.Exists _ | P.Boolexp _ -> assert false 
 
 let convertPredDag p = 
   QpDag.pred_dag_of_tree (convertPred p)
