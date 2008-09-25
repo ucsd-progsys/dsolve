@@ -62,14 +62,16 @@ and transl_patpred_single_map f p =
           And (transl_pred_rec p1, transl_pred_rec p2)
       | Ppredpat_or (p1, p2) -> 
           Or (transl_pred_rec p1, transl_pred_rec p2)
-      | Ppredpat_forall (ps, q) ->
+      | Ppredpat_forall (bs, q) ->
+          let (ps, ts) = List.split bs in
           let ps = List.map (fun s -> (s, Path.mk_ident s)) ps in
           let f p = try List.assoc (conflat p) ps with Not_found -> f p in
-          Forall (snd (List.split ps), transl_patpred_single_map f q)
-      | Ppredpat_exists (ps, q) ->
+          Forall (List.combine (snd (List.split ps)) ts, transl_patpred_single_map f q)
+      | Ppredpat_exists (bs, q) ->
+          let (ps, ts) = List.split bs in
           let ps = List.map (fun s -> (s, Path.mk_ident s)) ps in
           let f p = try List.assoc (conflat p) ps with Not_found -> f p in
-          Exists (snd (List.split ps), transl_patpred_single_map f q)
+          Exists (List.combine (snd (List.split ps)) ts, transl_patpred_single_map f q)
       | Ppredpat_iff (q, p) ->
           Iff (transl_pred_rec q, transl_pred_rec p)
       | Ppredpat_boolexp e ->
@@ -204,11 +206,11 @@ let gen_preds p =
           let p1s = gen_pred_rec p1 in
             C.tflap2 (e1s, p1s) (fun c d -> Iff (c, d))
       | PForall (ps, q) ->
-          let ps = List.map Path.mk_ident ps in
+          let ps = List.map (fun (p, t) -> (Path.mk_ident p, t)) ps in
           let qs = gen_pred_rec q in
             List.map (fun c -> Forall (ps, c)) qs
       | PExists (ps, q) ->
-          let ps = List.map Path.mk_ident ps in
+          let ps = List.map (fun (p, t) -> (Path.mk_ident p, t)) ps in
           let qs = gen_pred_rec q in
             List.map (fun c -> Exists (ps, c)) qs
       | PBoolexp e ->

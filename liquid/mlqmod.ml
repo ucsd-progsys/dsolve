@@ -76,7 +76,7 @@ let load_rw dopt rw env fenv (preds, decls) quals =
   let fenv = Lightenv.addn fs fenv in
   let _ = M.mk_measures env mcstrs in 
   let quals = Qualmod.map_preds (M.transl_pred qsubs) quals in
-  let fenv = scrub_and_push_axioms fenv in
+  (*let fenv = scrub_and_push_axioms fenv in*) (*allow axioms into environment so they can be typed*)
     (env, fenv, ifenv, quals)
 
 let hier_lookup f1 f2 s =

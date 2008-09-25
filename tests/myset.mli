@@ -1,16 +1,8 @@
-type 'a set
+type set
 
-val setof: 'a list -> 'a set
-val inter: 'a set -> 'a set -> 'a set
-val union: 'a set -> 'a set -> 'a set
-val subset: 'a set -> 'a set -> bool
-val mem: 'a -> 'a set -> bool
-val add: 'a -> 'a set -> 'a set
-val card: 'a set -> int
-val is_empty: 'a set -> bool
-val singleton: 'a -> 'a set
-val empty: 'a set
-val empty2: 'a set
-val eq: 'a set -> 'a set -> bool
-
-val mul: int -> int -> int
+val cap:  set ->  set ->  set
+val cup:  set ->  set ->  set
+val mem:  int ->  set -> bool
+val sng: int ->  set
+val empty:  set
+val eq:  set ->  set -> bool

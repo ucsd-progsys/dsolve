@@ -463,11 +463,11 @@ liquid/theoremProverYices.cmx: typing/predicate.cmx typing/path.cmx \
     utils/misc.cmx typing/ident.cmx typing/common.cmx utils/clflags.cmx \
     utils/bstats.cmx 
 liquid/theoremProverZ3.cmo: external/z3/ocaml/z3.cmi typing/predicate.cmi \
-    typing/path.cmi utils/misc.cmi typing/ident.cmi typing/common.cmo \
-    utils/bstats.cmi 
+    typing/predef.cmi typing/path.cmi utils/misc.cmi liquid/lightenv.cmo \
+    typing/ident.cmi liquid/frame.cmi typing/common.cmo utils/bstats.cmi 
 liquid/theoremProverZ3.cmx: external/z3/ocaml/z3.cmx typing/predicate.cmx \
-    typing/path.cmx utils/misc.cmx typing/ident.cmx typing/common.cmx \
-    utils/bstats.cmx 
+    typing/predef.cmx typing/path.cmx utils/misc.cmx liquid/lightenv.cmx \
+    typing/ident.cmx liquid/frame.cmx typing/common.cmx utils/bstats.cmx 
 liquid/wellformed.cmo: typing/predicate.cmi typing/predef.cmi typing/path.cmi \
     liquid/lightenv.cmo typing/ident.cmi liquid/frame.cmi typing/common.cmo \
     liquid/builtins.cmo utils/bstats.cmi liquid/wellformed.cmi 
