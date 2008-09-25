@@ -1,36 +1,10 @@
-(*axiom inter : forall (x, y, z. (mem z (inter x y) = 1 and (mem z x = 1 and mem z y = 1)) or (mem z (inter x y) = 0 and (mem z x = 0 or mem z y = 0)))
-axiom abeinter : forall (x, y. inter x y = inter y x)
-axiom union : forall (x, y, z. (mem z (union x y) = 1 and (mem z x = 1 or mem z y = 1)) or (mem z (union x y) = 0 and (mem z x = 0 and mem z y = 0)))
-axiom abeunion : forall (x, y. union x y = union y x)
-axiom noneg : forall (x. card x >= 0)
-axiom lt : forall (x, y, t. (x <= y iff (mem t x = 1 -> mem t y = 1)))
-axiom le : forall (x, y. (x < y iff (x <= y and exists (t. mem t y = 1 and mem t x = 0))))
-*)
-(* equality *)
-axiom eqsym : forall (x, y. (((__tag (eq x y) = 2) iff (__tag (eq y x) = 2)) and ((__tag (eq x y) = 0) iff (__tag (eq y x) = 0))))
-axiom eqtrans : forall (x, y, z. ((__tag (eq x y) = 2) and (__tag (eq y z) = 2) -> (__tag (eq x z) = 2)))
-axiom eqref : forall (x. (__tag (eq x x) = 2))
-axiom seteq : forall (x, y, z. (eq x y iff ((((__tag (mem z x) = 2) iff (__tag (mem z y) = 2)) and ((__tag (mem z x) = 0) iff (__tag (mem z y) = 0))))))
-(* in *)
-axiom mem : forall (x, y. (card x = 0 -> (__tag (mem y x) = 0)))
-(* add *)
-axiom add : forall (x, y, z. mem z (add x y) = ((z = x or (__tag (mem z y) = 2)) ? 2 : 0))
-axiom addsz : forall (x, y. card (add x y) = ((__tag (mem x (add x y)) = 2) ? (card y) : (card y + 1)))
-(* size *)
-axiom pos : forall (x. card x >= 0)
-measure setof =
-    [] -> empty 0
-  | x :: xs -> add x (setof xs)
-val setof: x: 'a list -> {v: 'a set | v = setof x}
-val inter: x: 'a set -> y: 'a set -> {v: 'a set | v = inter x y}
-val union: x: 'a set -> y: 'a set -> {v: 'a set | v = union x y}
-val subset: x: 'a set -> y: 'a set -> {v: bool | v = subset x y}
-val add: x: 'a -> y: 'a set -> {v: 'a set | v = add x y}
-val mem: x: 'a -> y: 'a set -> {v: bool | v = mem x y}
-val card: x: 'a set -> {v: int | v = card x}
-val is_empty: x: 'a set -> {v: bool | (v = 1 and card x = 0) or (v = 0 and (card x = 1))}
-val eq: x: 'a set -> y: 'a set -> {v: bool | v = eq x y}
-val singleton: x: 'a -> {v: 'a set | v = singleton x}
-val empty: {v: 'a set | card v = 0}
-val empty2: {v: 'a set | vard v = 0}
-val mul: x: int -> y: int -> {v: int | v = mul x y}
+axiom seq : forall (x: set, y: set. ((? eq x y) iff (forall (z: int. ((? mem z x) iff (? mem z y))))))
+axiom emp : forall (x: int. -. (? mem x empty))
+axiom cup : forall (x: int, y: set, z: set. (? mem x (cup y z) iff (? mem x y or ? mem x z)))
+
+val cap: x: set -> y: set -> {v: set | v = cap x y}
+val cup: x: set -> y: set -> {v: set | v = cup x y}
+val mem: x: int -> y: set -> {v: bool | v = mem x y}
+val singleton: x: int -> {v: set | v = singleton x}
+val empty: set
+val eq: x: set -> y: set -> {v: bool | v = eq x y}

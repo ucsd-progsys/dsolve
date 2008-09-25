@@ -121,7 +121,7 @@ module Prover : PROVER =
 
     type sort = Int | Set | Array of sort * sort | Bool | Unint | Func of sort list
 
-    type decl = Vbl of string | Fun of string * int | Barrier
+    type decl = Vbl of Path.t | Fun of string * int | Barrier
     type var_ast = Const of Z3.ast | Bound of int * sort
     
     type z3_instance = { 
@@ -179,6 +179,13 @@ module Prover : PROVER =
                                       | _ -> [frame_to_type t2])
     and set_path p = (Path.name p) = "Myset.set"
 
+    let string_to_type = function
+      | p when p = "bool" -> Bool
+      | p when p = "int" -> Int
+      | p when p = "obj" -> Unint
+      | p when p = "set" -> Set
+      | _ -> assert false
+
     let z3VarType me = function
       | Int -> me.tint
       | Bool -> me.tbool
@@ -207,25 +214,27 @@ module Prover : PROVER =
         with Not_found -> try frame_to_type (get_by_name s env)
           with Failure _ -> failwith (sprintf "@[Could@ not@ type@ function@ %s@ in@ tpz3@]" s)
 
-    let z3Var_memo me s t =
+    let z3Var_memo env me s =
       Misc.do_memo me.vart
       (fun () -> 
+        let t = getVarType s env in
         let sym = Z3.mk_string_symbol me.c (fresh "z3v") in
         let rv = Const (Z3.mk_const me.c sym (z3VarType me t)) in
         me.vars <- (Vbl s)::me.vars; rv) 
       () (Vbl s)
 
-    let z3Var me s t =
-      if s = (Path.unique_name C.qual_test_var) then match me.v with 
-                                                     | Some c -> c
-                                                     | None -> let rv = (Z3.mk_const me.c (Z3.mk_string_symbol me.c (fresh s)) (z3VarType me t)) in
-                                                               me.v <- Some rv; rv 
-      else match z3Var_memo me s t with
+    let z3Var env me s =
+      if s = C.qual_test_var then match me.v with 
+                                  | Some c -> c
+                                  | None -> let rv = (Z3.mk_const me.c (Z3.mk_string_symbol me.c (fresh "AA")) 
+                                                     (z3VarType me (getVarType s env))) in
+                                              me.v <- Some rv; rv 
+      else match z3Var_memo env me s with
           Const v -> v
         | Bound (b, t) -> Z3.mk_bound me.c (me.bnd - b) (z3VarType me t)
 
-    let z3Bind me s t =
-      me.bnd <- me.bnd + 1; Hashtbl.replace me.vart (Vbl s) (Bound (me.bnd, t)); me.vars <- (Vbl s) :: me.vars;
+    let z3Bind me p t =
+      me.bnd <- me.bnd + 1; Hashtbl.replace me.vart (Vbl p) (Bound (me.bnd, t)); me.vars <- (Vbl p) :: me.vars;
       Z3.mk_string_symbol me.c (fresh "z3b")
 
     let z3Fun me s t k = 
@@ -246,14 +255,14 @@ module Prover : PROVER =
     let rec isConst = function P.PInt i -> true | _ -> false
 
     let qargs me ps ts = 
-      Array.of_list (List.map (fun (p, t) -> z3Bind me (Path.unique_name p) t) (List.combine ps ts))
+      Array.of_list (List.map (fun (p, t) -> z3Bind me p t) (List.combine ps ts))
 
     let qtypes me ts = Array.of_list (List.map (z3VarType me) ts)  
 
     let rec z3Exp env me e =
       match e with 
       | P.PInt i                -> Z3.mk_int me.c i me.tint 
-      | P.Var s                 -> z3Var me (Path.unique_name s) (getVarType s env)
+      | P.Var s                 -> z3Var env me s
       | P.FunApp (f,es)         -> z3App env me f (List.map (z3Exp env me) es)
       | P.Binop (e1,P.Plus,e2)  -> Z3.mk_add me.c (Array.map (z3Exp env me) [|e1;e2|]) 
       | P.Binop (e1,P.Minus,e2) -> Z3.mk_sub me.c (Array.map (z3Exp env me) [|e1;e2|]) 
@@ -277,12 +286,17 @@ module Prover : PROVER =
       | P.Atom (e1,P.Ge,e2) -> Z3.mk_ge me.c (z3Exp env me e1) (z3Exp env me e2)
       | P.Atom (e1,P.Lt,e2) -> Z3.mk_lt me.c (z3Exp env me e1) (z3Exp env me e2)
       | P.Atom (e1,P.Le,e2) -> Z3.mk_le me.c (z3Exp env me e1) (z3Exp env me e2)
-      | P.Forall (ps, q) -> let fs = [] in mk_quantifier z3_mk_forall env me ps fs q
-      | P.Exists (ps, q) -> let fs = [] in mk_quantifier z3_mk_exists env me ps fs q
+      | P.Forall (ps, q) -> 
+          let (ps, ss) = List.split ps in
+          let ts = List.map string_to_type ss in
+          mk_quantifier z3_mk_forall env me ps ts q
+      | P.Exists (ps, q) ->
+          let (ps, ss) = List.split ps in
+          let ts = List.map string_to_type ss in
+          mk_quantifier z3_mk_exists env me ps ts q
       | P.Boolexp e -> z3Exp env me e (* must be bool *)
 
-    and mk_quantifier mk env me ps fs q =
-      let ts = List.map frame_to_type fs in 
+    and mk_quantifier mk env me ps ts q =
       let args = qargs me ps ts in
       let rv = mk me.c (qtypes me ts) args (z3Pred env me q) in
       me.bnd <- me.bnd - (List.length ps); rv

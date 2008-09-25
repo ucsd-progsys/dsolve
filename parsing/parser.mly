@@ -1503,8 +1503,8 @@ qual_ty_anno:
     { ($1, $3)::$5 }
 
 quant_id_list:
-    LIDENT                      { [$1] }
-  | LIDENT COMMA quant_id_list  { $1 :: $3 }
+    LIDENT COLON LIDENT         { [($1, $3)] }
+  | LIDENT COLON LIDENT COMMA quant_id_list  { ($1, $3) :: $5 }
 
 qualifier_pattern:
     TRUE                                    { mkpredpat Ppredpat_true }                    
