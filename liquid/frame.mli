@@ -53,7 +53,7 @@ type t =
 
 and param = Ident.t * t * variance
 
-and constr = constructor_tag * param list
+and constr = constructor_tag * (string * param list)
 
 and variance = Covariant | Contravariant | Invariant
 
@@ -77,7 +77,8 @@ val pprint_refinement: formatter -> refinement -> unit
 val recref_is_empty: recref -> bool
 val mk_refinement: substitution list -> Qualifier.t list -> qvar list -> refinement
 val translate_variance: (bool * bool * bool) -> variance
-val constrs_params: constr list -> param list
+val constr_params: constr -> param list
+val constrs_tag_params: constructor_tag -> constr list -> param list
 val map_refexprs: (refexpr -> refexpr) -> t -> t
 val params_frames: param list -> t list
 val shape: t -> t
