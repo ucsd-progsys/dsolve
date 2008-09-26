@@ -1,3 +1,4 @@
+open Format
 open Types
 open Typedtree
 open Ctype
@@ -131,8 +132,33 @@ let constructor_patterns expvar pat =
 let mk_guard vp pat =
   P.big_and (C.map_partial (mk_single_gd !bms) (constructor_patterns (Some vp) pat))
 
+(* assumes no subs *)
+let rewrite_refexpr f (a, (qs, b)) = (a, (List.map (Qualifier.map_pred f) qs, b))
+
 let map_pred_funs f (v, p) =
   (v, P.map_funs f p)
 
+let map_exp_funs f (v, p) =
+  (v, P.pexp_map_funs f p)
+
 let transl_pred names =
-  map_pred_funs (fun x -> C.rw_suff (C.sub_from_list names) x '.')     
+  map_pred_funs (fun x -> C.sub_from_list names x)     
+
+let transl_frame names f =
+  F.map_refexprs (rewrite_refexpr (transl_pred names)) f
+
+let pprint_menv ppf menv =
+  List.iter (function | Mname(a,b) -> fprintf ppf "@[Name:@ (%s,@ %s)@]@." a b
+                      | Mcstr(c, (ps, px)) -> fprintf ppf "@[Cstr:@ (%s,@ (.,@ %a))@]@." c P.pprint_pexpr (snd px)) menv
+
+let proc_premeas env menv fenv ifenv quals =
+  let (mnames, mcstrs) = (filter_names menv, filter_cstrs menv) in
+  let subs = C.list_assoc_flip mnames in
+  let quals = Qualmod.map_preds (transl_pred subs) quals in
+  let fenv = Le.map (transl_frame subs) fenv in
+  let ifenv = Le.map (transl_frame subs) ifenv in
+  let mcstrs = List.map (fun (c, (ps, cstr)) -> (c, (ps, map_exp_funs (C.sub_from_list subs) cstr))) mcstrs in
+  let _ = C.cprintf C.ol_dump_meas "Measures:@.%a" pprint_menv ((List.map (fun (a, (b, c)) -> Mcstr(a, (b, c))) mcstrs)) in
+  let _ = mk_measures env mcstrs in
+    (fenv, ifenv, quals)
+

@@ -31,6 +31,7 @@ open Gc
 
 module F = Frame
 module MLQ = Mlqmod
+module M = Measure
 module C = Common
 module Le = Lightenv
 module P = Predicate
@@ -80,13 +81,13 @@ let load_qualfile ppf qualfile =
   let (deps, qs) = Pparse.file ppf qualfile Parse.qualifiers ast_impl_magic_number in
     (deps, List.map Qualmod.type_qualifier qs)
 
-let load_dep_mlqfiles bname deps env fenv quals mlqenv =
+let load_dep_mlqfiles bname deps env fenv mlqenv =
   let pathname = if String.contains bname '/' then 
           String.sub bname 0 ((String.rindex bname '/') + 1) else "" in
   let inames = List.map (fun s -> (pathname ^ (String.lowercase s) ^ ".mlq", s)) deps in
   let mlqs = List.map (fun (x, d) -> if Sys.file_exists x then Some (Pparse.file std_formatter x Parse.liquid_interface Config.ast_impl_magic_number, d) else None) inames in 
   let mlqs = C.maybe_list mlqs in
-    MLQ.load_dep_sigs env fenv mlqs quals
+    MLQ.load_dep_sigs env fenv mlqs
 
 let load_valfile ppf env fenv fname =
   try
@@ -115,14 +116,15 @@ let process_sourcefile env fenv fname =
     (* We need to pull out uninterpreted functions from the MLQ in order to typecheck. *)
     let (preds, vals)         = MLQ.parse std_formatter iname in
     let (unints, vals)        = List.partition MLQ.is_unint_decl vals in
-    let (env, fenv, _, quals) = MLQ.load_local_sig env fenv ([], unints) [] in
+    let (env, _, fenv, _) = MLQ.load_local_sig env fenv ([], unints) in
     let (str, env, fenv)      = load_sourcefile std_formatter env fenv fname in
       if !dump_qualifs then
         Qdump.dump_default_qualifiers (str, env, fenv) qname
       else
         let (deps, quals)              = load_qualfile std_formatter qname in
-        let (env, fenv, mlqenv, quals) = MLQ.load_local_sig env fenv (preds, vals) quals in
-        let (env, fenv, _, quals)      = load_dep_mlqfiles bname deps env fenv quals fenv in
+        let (env, menv, fenv, mlqenv) = MLQ.load_local_sig env fenv (preds, vals) in
+        let (env, menv', fenv, _)      = load_dep_mlqfiles bname deps env fenv mlqenv in
+        let (fenv, mlqenv, quals) = M.proc_premeas env (List.rev_append menv menv') fenv mlqenv quals in
         let _ = if C.ck_olev C.ol_dump_env then (dump_env fenv; dump_env mlqenv) else () in
           analyze std_formatter fname (List.rev_append quals str, env, fenv, mlqenv)
    with x ->

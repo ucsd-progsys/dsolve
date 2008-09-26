@@ -1,5 +1,6 @@
 type set
 
+val of_list: int list -> set
 val cap:  set ->  set ->  set
 val cup:  set ->  set ->  set
 val mem:  int ->  set -> bool
