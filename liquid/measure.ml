@@ -71,15 +71,14 @@ let mk_measures env ms =
   bms := List.fold_left maybe_add empty ms
 
 let mk_pred v mps (_, ps, ms) =
-  let maybe_fail = function Some p -> p | None -> raise Not_found in
   let _ = if List.length ps != List.length mps then failwith "argument arity mismatch" in
   let ps = List.combine ps mps in
-  let var_map v = maybe_fail (List.assoc (Some v) ps) in
-    try
-      let (s, e) = ms in
-      let e = P.pexp_map_vars var_map e in
+  let var_map v = (try match (List.assoc (Some v) ps) with Some s -> s | _ -> raise (Failure "") with Not_found -> P.Var v) in
+  let (s, e) = ms in
+  try 
+    let e = P.pexp_map_vars var_map e in
       P.Atom(P.FunApp(s, [P.Var v]), P.Eq, e) 
-    with Not_found -> P.True
+  with Failure _ -> P.True
     
 let mk_preds v mps mcstrs =
   P.big_and (List.map (mk_pred v mps) mcstrs)

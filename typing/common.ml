@@ -262,7 +262,7 @@ let app_fst f (a, b) = (f a, b)
 let app_snd f (a, b) = (a, f b)
 let app_pr f (a, b) = (f a, f b)
 
-let l_to_s l = String.concat "" (Longident.flatten l)
+let l_to_s l = String.concat "." (Longident.flatten l)
 
 let int_of_tag = function
     Cstr_constant n -> 2*n
@@ -298,6 +298,7 @@ let ol_axioms = 5
 let ol_dump_prover = 20
 let ol_verb_constrs = 21
 let ol_dump_meas = 30
+let ol_dump_quals = 50
 
 let verbose_level = ref ol_default
 let verb_stack = ref []

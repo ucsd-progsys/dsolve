@@ -13,10 +13,10 @@ measure of_list =
   | [] -> empty
   | x :: xs -> cup (sng x) (of_list xs)
 
-val of_list: x: int list -> {v: set | v = of_list x}
+val of_list: x: 'a list -> {v: set | v = of_list x}
 val cap: x: set -> y: set -> {v: set | v = cap x y}
 val cup: x: set -> y: set -> {v: set | v = cup x y}
-val mem: x: int -> y: set -> {v: bool | v = mem x y}
-val sng: x: int -> {v: set | v = sng x}
+val mem: x: 'a -> y: set -> {v: bool | v = mem x y}
+val sng: x: 'a -> {v: set | v = sng x}
 val empty: set
 val eq: x: set -> y: set -> {v: bool | v = eq x y}

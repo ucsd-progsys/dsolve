@@ -125,6 +125,7 @@ let process_sourcefile env fenv fname =
         let (env, menv, fenv, mlqenv) = MLQ.load_local_sig env fenv (preds, vals) in
         let (env, menv', fenv, _)      = load_dep_mlqfiles bname deps env fenv mlqenv in
         let (fenv, mlqenv, quals) = M.proc_premeas env (List.rev_append menv menv') fenv mlqenv quals in
+        let _ = if C.ck_olev C.ol_dump_quals then List.iter (function | Typedtree.Tstr_qualifier(a, (b, c)) -> printf "@[%a@]@." Qualifier.pprint (Path.Pident a, Path.Pident b, c) | _ -> assert false) quals in
         let _ = if C.ck_olev C.ol_dump_env then (dump_env fenv; dump_env mlqenv) else () in
           analyze std_formatter fname (List.rev_append quals str, env, fenv, mlqenv)
    with x ->
