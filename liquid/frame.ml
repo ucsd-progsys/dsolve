@@ -578,6 +578,17 @@ let abstract_of_params p params varis r =
 let tuple_of_frames fs r =
   record_of_params path_tuple (Misc.mapi (fun f i -> (C.tuple_elem_id i, f, Covariant)) fs) r
 
+(******************************************************************************)
+(**************************** Function application ****************************)
+(******************************************************************************)
+
+let apply_once f e = match f with
+  | Farrow (p, f, f') -> apply_subs (Pattern.bind_pexpr p e) f'
+  | _                 -> invalid_arg "apply called with non-function argument"
+
+let apply f es =
+  List.fold_left apply_once f es
+
 (**************************************************************)
 (******************* Fresh frames *****************************)
 (**************************************************************)

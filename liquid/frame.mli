@@ -88,8 +88,12 @@ val same_shape: t -> t -> bool
 val subt: t -> t -> bool
 val translate_pframe: string option -> Env.t -> (string * (string * Parsetree.predicate_pattern)) list -> Parsetree.litframe -> t
 val replace_recvar: t -> t -> t
+
 val unfold: t -> t
 val unfold_applying: t -> t
+
+val apply: t -> Predicate.pexpr list -> t
+
 val fresh: Env.t -> type_expr -> t
 val fresh_without_vars: Env.t -> type_expr -> t
 val fresh_false: Env.t -> type_expr -> t

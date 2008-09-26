@@ -281,10 +281,10 @@ and constrain_identifier (env, guard, f) id tenv =
   let f = instantiate_id id f env tenv in (f, [WFFrame(env, f)], [])
 
 and apply_once env guard (f, cstrs, subexp_cstrs) e = match (f, e) with
-  | (F.Farrow (p, f, f'), (Some e2, _)) ->
-      let (f2, e2_cstrs) = constrain e2 env guard in
-      let f''            = F.apply_subs (Pattern.bind_pexpr p (expression_to_pexpr e2)) f' in
-        (f'', SubFrame (env, guard, f2, f) :: cstrs, e2_cstrs @ subexp_cstrs)
+  | (F.Farrow (p, f1, _), (Some arg, _)) ->
+      let (farg, arg_cstrs) = constrain arg env guard in
+      let f2                = F.apply f [expression_to_pexpr arg] in
+        (f2, SubFrame (env, guard, farg, f1) :: cstrs, arg_cstrs @ subexp_cstrs)
   | _ -> assert false
 
 and constrain_application (env, guard, _) func exps =
