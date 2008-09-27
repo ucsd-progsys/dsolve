@@ -186,13 +186,13 @@ module Prover : PROVER =
       | p when p = "set" -> Set
       | _ -> assert false
 
-    let z3VarType me = function
+    let rec z3VarType me = function
       | Int -> me.tint
       | Bool -> me.tbool
       | Array _ -> assert false
       | Set -> me.tset
       | Unint -> me.tint (*me.tun*)
-      | Func _ -> assert false 
+      | Func _ -> z3VarType me Unint
 
     let z3FunTypes me = function 
       | Func ts -> (match (List.rev_map (z3VarType me) ts) with
