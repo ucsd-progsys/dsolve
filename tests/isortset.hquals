@@ -1,7 +1,7 @@
-qualif ABC(v): ? Myset.eq (Myset.of_list v) (Myset.cup (Myset.sng ~A) (Myset.of_list ~B))
-
 (* 
-qualif ABC(v): ? Myset.eq (Myset.of_list v) (Myset.of_list ~A)
-qualif ABV(v): ? Myset.eq (Myset.of_list v) (Myset.cup (Myset.of_list ~A) (Myset.of_list ~B))
-qualif BBB(v): ? Myset.eq (Myset.of_list v) (Myset.empty)
+qualif CON(v): ? Myset.eq (Myset.of_list v) (Myset.cup (Myset.sng ~A) (Myset.of_list ~B))
 *)
+qualif EQ(v):  ? Myset.eq (Myset.of_list v)  (Myset.of_list ~A)
+qualif EMP(v): ? Myset.eq (Myset.of_list v)  (Myset.empty)
+qualif PAR(v): ? Myset.eq (Myset.of_list ~A) (Myset.cup (Myset.of_list e0) (Myset.of_list v))
+qualif APP(v): ? Myset.eq (Myset.of_list v)  (Myset.cup (Myset.of_list ~A) (Myset.of_list ~B))
