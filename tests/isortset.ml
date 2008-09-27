@@ -1,5 +1,4 @@
 let ss = Myset.of_list
-let se = Myset.eq
 
 let rec ins x = function 
   | []    -> [x]
@@ -11,4 +10,4 @@ let rec insert_sort = function
 
 let test xs = 
   let ys = insert_sort xs in
-  assert (se (ss xs) (ss ys))
+  assert (Myset.eq (ss xs) (ss ys))
