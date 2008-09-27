@@ -8,6 +8,7 @@ axiom emp : forall (x: int. -. (? mem x empty))
 axiom cup : forall (x: int, y: set, z: set. (? mem x (cup y z) iff (? mem x y or ? mem x z)))
 axiom cap : forall (x: int, y: set, z: set. (? mem x (cap y z) iff (? mem x y and ? mem x z)))
 axiom elt : forall (x: int, y: int. (? mem x (sng y) iff x = y))
+axiom seq : forall (x: set, y: set. ((x = y) iff (forall (z: int. ((? mem z x) iff (? mem z y))))))
 
 measure of_list =
   | [] -> empty

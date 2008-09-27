@@ -153,6 +153,10 @@ program values as well as specify measure functions which can be
 used to prove structural properties of sum types. Example Liquid 
 interfaces can be found in examples/.
 
+Liquid Modules
+==============
+
+A source file foo.ml may depend on an external module. dsolve will try to read in a "module_name.mlq" file from the same directory as the source file if it does.
 
 Interface Syntax
 ------
@@ -214,15 +218,20 @@ measure length =
 | [] -> 0
 | _ :: b -> 1 + length b
 
-Note that the set of identifiers in the pattern of each match case should be exactly the
-set of identifiers needed to express the measure value for that constructor.
+and ONE of:
 
-2) A matching function in the ml source code.
+2a) A matching function in the ml source code.
 
 let length l =
   match l with
   | [] -> 0
   | _ :: b -> 1 + length b
+
+OR
+
+2b) An ML interface declaration in the mli file.
+
+val length: 'a list -> int
 
 Uninterpreted Functions
 -----------------------
