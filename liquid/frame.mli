@@ -53,7 +53,7 @@ type t =
 
 and param = Ident.t * t * variance
 
-and constr = constructor_tag * param list
+and constr = constructor_tag * (string * param list)
 
 and variance = Covariant | Contravariant | Invariant
 
@@ -77,7 +77,8 @@ val pprint_refinement: formatter -> refinement -> unit
 val recref_is_empty: recref -> bool
 val mk_refinement: substitution list -> Qualifier.t list -> qvar list -> refinement
 val translate_variance: (bool * bool * bool) -> variance
-val constrs_params: constr list -> param list
+val constr_params: constr -> param list
+val constrs_tag_params: constructor_tag -> constr list -> param list
 val map_refexprs: (refexpr -> refexpr) -> t -> t
 val params_frames: param list -> t list
 val shape: t -> t
@@ -87,13 +88,18 @@ val same_shape: t -> t -> bool
 val subt: t -> t -> bool
 val translate_pframe: string option -> Env.t -> (string * (string * Parsetree.predicate_pattern)) list -> Parsetree.litframe -> t
 val replace_recvar: t -> t -> t
+
 val unfold: t -> t
 val unfold_applying: t -> t
+
+val apply: t -> Predicate.pexpr list -> t
+
 val fresh: Env.t -> type_expr -> t
 val fresh_without_vars: Env.t -> type_expr -> t
 val fresh_false: Env.t -> type_expr -> t
 val fresh_with_labels: Env.t -> type_expr -> t -> t
 val fresh_uninterpreted: Env.t -> type_expr -> string -> t
+val uninterpreted_constructors: Env.t -> type_expr -> (string * t) list
 val instantiate: t -> t -> t
 val instantiate_qualifiers: (string * Path.t) list -> t -> t
 val bind: pattern_desc -> t -> (Path.t * t) list

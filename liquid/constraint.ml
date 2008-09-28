@@ -274,7 +274,7 @@ let bind_tags_pr (t, f) cs r env =
   let k (a, b, _) =
     (C.i2p a, if is_recvar (t, b) then f else b) in
   match F.find_tag r with
-      Some tag -> (Le.addn (List.map k (List.assoc tag cs)) env, Some tag)
+      Some tag -> (Le.addn (List.map k (F.constrs_tag_params tag cs)) env, Some tag)
     | None -> (env, None)
 
 let bind_tags (t, f) cs r env = 
@@ -282,7 +282,7 @@ let bind_tags (t, f) cs r env =
 
 let sum_subs bs cs tag =
   let paths xs = match tag with
-      Some tag -> List.map C.i2p (F.params_ids (List.assoc tag xs))
+      Some tag -> List.map C.i2p (F.params_ids (F.constrs_tag_params tag xs))
     | None -> [] in
   let mk_sub p1 p2 = (p1, P.Var p2) in
   let (ps, qs) = (paths bs, paths cs) in
@@ -306,7 +306,7 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
   | (F.Fsum(_, None, cs1, r1), F.Fsum(_, None, cs2, r2)) ->
       let (penv, tag) = bind_tags_pr (None, f1) cs1 r1 env in
       let subs        = sum_subs cs1 cs2 tag in
-      (C.flap2 (fun (_, ps1) (_, ps2) -> split_sub_params c tenv env g ps1 ps2) cs1 cs2,
+      (C.flap2 (split_sub_params c tenv env g) (List.map F.constr_params cs1) (List.map F.constr_params cs2),
        split_sub_ref c penv g r1 (List.map (F.refexpr_apply_subs subs) r2))
   | (F.Fsum(_, Some (_, rr1), cs1, r1), F.Fsum(_, Some (_, rr2), cs2, r2)) ->
       let (shp1, shp2) = (F.shape f1, F.shape f2) in
@@ -335,7 +335,7 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
   | f when F.is_shape f ->
       ([], [])
   | F.Fsum (_, (None as t), cs, r) ->
-      (C.flap (fun (_, ps) -> split_wf_params c tenv env ps) cs,
+      (C.flap (split_wf_params c tenv env) (List.map F.constr_params cs),
        split_wf_ref f c (bind_tags (t, f) cs r env) r)
   | F.Fsum (p, (Some (_, rr) as t), cs, r) ->
       (* This deviates from the paper's cons rule because we instantiate qualifiers using
