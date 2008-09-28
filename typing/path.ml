@@ -64,3 +64,5 @@ let rec head = function
   | Papply(p1, p2) -> assert false
 
 let mk_ident x = Pident (Ident.create x)
+
+let mk_persistent x = Pident (Ident.create_persistent x)

@@ -70,7 +70,7 @@ let mk_string qs = Fabstract(Predef.path_string, [], const_refinement qs)
 let uString = mk_string []
 let rString name v p = mk_string [(Path.mk_ident name, v, p)]
 
-let mk_bool qs = Fsum(Predef.path_bool, None, [(Cstr_constant 0, []); (Cstr_constant 1, [])], const_refinement qs)
+let mk_bool qs = Fsum(Predef.path_bool, None, [(Cstr_constant 0, ("True", [])); (Cstr_constant 1, ("False", []))], const_refinement qs)
 let uBool = mk_bool []
 let rBool name v p = mk_bool [(Path.mk_ident name, v, p)]
 
@@ -99,7 +99,7 @@ let mk_bigarray_layout a qs env = mk_named ["layout"; "Bigarray"] [a] qs env
 
 let mk_bigarray_type a b c qs env = mk_named ["t"; "Array2"; "Bigarray"] [a; b; c] qs env
 
-let mk_unit qs = Fsum(Predef.path_unit, None, [(Cstr_constant 0, [])], const_refinement qs)
+let mk_unit qs = Fsum(Predef.path_unit, None, [(Cstr_constant 0, ("()", []))], const_refinement qs)
 let uUnit = mk_unit []
 let rUnit name v p = mk_unit [(Path.mk_ident name, v, p)]
 

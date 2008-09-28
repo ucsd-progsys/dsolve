@@ -20,6 +20,7 @@ type t =
   | Papply of t * t
 
 val mk_ident: string -> t
+val mk_persistent: string -> t
 
 val same: t -> t -> bool
 val isfree: Ident.t -> t -> bool

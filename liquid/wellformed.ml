@@ -98,7 +98,7 @@ let pred_is_well_typed env p =
         raise IllFormed
   | P.Field (name, r) ->
       begin match get_expr_shape r with
-        | Fsum (_, _, [(_, fs)], _) ->
+        | Fsum (_, _, [(_, (_, fs))], _) ->
             (* pmr: maybe we need to switch to ids for this *)
             let is_referenced_field (name2, _, _) = String.compare (Ident.name name) (Ident.name name2) = 0 in
               if List.exists is_referenced_field fs then

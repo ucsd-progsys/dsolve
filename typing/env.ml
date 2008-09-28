@@ -433,6 +433,12 @@ let labels_of_type ty_path decl =
         labels rep priv
   | Type_variant _ | Type_abstract -> []
 
+(* Find all types in this module *)
+
+let types env =
+  let ids = Ident.keys env.types in
+    List.fold_left (fun ts id -> (id, snd (Ident.find_same id env.types)) :: ts) [] ids
+
 (* Given a signature and a root path, prefix all idents in the signature
    by the root path and build the corresponding substitution. *)
 
