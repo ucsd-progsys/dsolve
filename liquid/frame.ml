@@ -792,13 +792,26 @@ let rec build_uninterpreted name params = function
   | f ->
       let args = List.rev_map (fun p -> P.Var (Path.Pident p)) params in
       let v    = Path.mk_ident "v" in
-      let r    = const_refinement [(Path.mk_ident name,
-                                    v,
-                                    P.Atom (P.Var v, P.Eq, P.FunApp (name, args)))] in
+      let pexp = match args with [] -> P.Var (Path.mk_persistent name) | args -> P.FunApp (name, args) in
+      let r    = const_refinement [(Path.mk_ident name, v, P.Atom (P.Var v, P.Eq, pexp))] in
         apply_refinement r f
 
 let fresh_uninterpreted env ty name =
   build_uninterpreted name [] (fresh_without_vars env ty)
+
+(******************************************************************************)
+(**************************** Constructor embedding ***************************)
+(******************************************************************************)
+
+let mk_unint_constructor f n ps =
+  let frames = params_frames ps in
+    build_uninterpreted n [] (List.fold_right (fun f f' -> Farrow (Tpat_var (Ident.create ""), f, f')) frames f)
+
+let uninterpreted_constructors env ty =
+  let f = fresh_without_vars env ty in
+    match unfold f with
+      | Fsum (_, _, cs, _) -> List.map (fun (_, (n, ps)) -> (n, mk_unint_constructor f n ps)) cs
+      | _                  -> invalid_arg "uninterpreted_constructors called with non-sum type"
 
 (**************************************************************)
 (********************* mlq translation ************************) 

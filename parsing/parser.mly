@@ -1554,7 +1554,12 @@ qual_expr:
 
 qual_expr_1: 
     qual_litident qual_term_list 
+    { mkpredpatexp (Ppredpatexp_funapp(Longident.parse $1, $2)) }
+  | UIDENT qual_term_list
     { mkpredpatexp (Ppredpatexp_funapp(Longident.parse $1, $2)) } 
+  | UIDENT
+    { mkpredpatexp (Ppredpatexp_var([Longident.parse $1])) }
+
   | qual_term                               { $1 }
 
 qual_term:
@@ -1587,6 +1592,7 @@ qual_intlist:
 
 qual_litident:
     UIDENT DOT qual_litident                { $1 ^ "." ^ $3 }
+  | LBRACKET constr_ident RBRACKET          { $2 }
   | LIDENT                                  { $1 }
 
 qual_litident_list:
@@ -1594,7 +1600,7 @@ qual_litident_list:
   | qual_litident                           { [(Longident.parse $1)] }
 
 qual_term_list:
-    qual_term                               { [$1] }
+  | qual_term                               { [$1] }
   | qual_term qual_term_list                { $1::$2 }
 
 qual_op:
