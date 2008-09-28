@@ -1,0 +1,14 @@
+measure of_list2 =
+  | Nil2                -> Myset.empty
+  | Cons2 (xs,xss')     -> Myset.cup (Myset.of_list xs) (of_list2 xss')
+
+val flatten: x: 'a list2 -> {v: 'a list | ? Myset.eq (Myset.of_list v) (of_list2 x)}
+
+(* 
+measure of_list2 =
+  | [] 		-> Myset.empty
+  | xs :: xss' 	-> Myset.cup (Myset.of_list xs) (of_list2 xss')
+val flatten: x: 'a list list -> {v: 'a list | ? Myset.eq (Myset.of_list v) (of_list2 x)} 
+*)
+
+
