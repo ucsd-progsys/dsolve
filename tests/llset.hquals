@@ -2,6 +2,8 @@ qualif OLL(v): v = of_list2 ~A
 qualif FLA(v): ? Myset.eq (Myset.of_list v) (of_list2 ~A)
 qualif MEM(v): v = Myset.mem ~A (Myset.of_list ~B)
 qualif SEQ(v): ? Myset.eq (Myset.of_list v)  (Myset.of_list ~A) 
+
+qualif DIF(v): ? Myset.eq (Myset.of_list v)  (Myset.mns (Myset.of_list ~A) (Myset.of_list ~B))
 qualif APP(v): ? Myset.eq (Myset.of_list v)  (Myset.cup (Myset.of_list ~A) (Myset.of_list ~B))
 qualif CUP(v): ? Myset.eq (Myset.of_list ~A) (Myset.cup (Myset.of_list ~B) (Myset.of_list v))
 qualif DEL(v): ? Myset.eq (Myset.of_list v) (Myset.mns (Myset.of_list ~A) (Myset.sng ~B))
