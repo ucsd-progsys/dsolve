@@ -1,0 +1,3 @@
+qualif N(v): v = Nil
+qualif W(v): v = Wrap ^
+qualif W(v): v = Wrap ~A
