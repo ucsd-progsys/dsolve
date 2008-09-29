@@ -89,6 +89,12 @@ let load_dep_mlqfiles bname deps env fenv mlqenv =
   let mlqs = C.maybe_list mlqs in
     MLQ.load_dep_sigs env fenv mlqs
 
+let dump_qualifiers bname (str, env, menv, ifenv) qname = 
+  let deps = Qualgen.all_modules str in
+  let (env, emenv, efenv, _) = load_dep_mlqfiles bname deps env Le.empty Le.empty in
+  let (menv, fenv) = (List.rev_append menv emenv, Le.combine efenv ifenv) in
+    Qdump.dump_default_qualifiers (str, env, menv, ifenv) deps qname
+
 let load_valfile ppf env fenv fname =
   try
     let (preds, decls) = MLQ.parse ppf fname in
@@ -118,11 +124,11 @@ let process_sourcefile env fenv fname =
     let (unints, vals)        = List.partition MLQ.is_unint_decl vals in
     let (env, _, fenv, _) = MLQ.load_local_sig env fenv ([], unints) in
     let (str, env, fenv)      = load_sourcefile std_formatter env fenv fname in
+    let (env, menv, fenv, mlqenv)  = MLQ.load_local_sig env fenv (preds, vals) in
       if !dump_qualifs then
-        Qdump.dump_default_qualifiers (str, env, fenv) qname
+        dump_qualifiers bname (str, env, menv, mlqenv) qname
       else
         let (deps, quals)              = load_qualfile std_formatter qname in
-        let (env, menv, fenv, mlqenv) = MLQ.load_local_sig env fenv (preds, vals) in
         let (env, menv', fenv, _)      = load_dep_mlqfiles bname deps env fenv mlqenv in
         let (fenv, mlqenv, quals) = M.proc_premeas env (List.rev_append menv menv') fenv mlqenv quals in
         let _ = if C.ck_olev C.ol_dump_quals then List.iter (function | Typedtree.Tstr_qualifier(a, (b, c)) -> printf "@[%a@]@." Qualifier.pprint (Path.Pident a, Path.Pident b, c) | _ -> assert false) quals in

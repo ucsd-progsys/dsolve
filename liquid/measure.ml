@@ -79,9 +79,12 @@ let mk_pred v mps (_, ps, ms) =
     let e = P.pexp_map_vars var_map e in
       P.Atom(P.FunApp(s, [P.Var v]), P.Eq, e) 
   with Failure _ -> P.True
-    
+
+let mk_pred_list v mps mcstrs =
+  List.map (mk_pred v mps) mcstrs 
+
 let mk_preds v mps mcstrs =
-  P.big_and (List.map (mk_pred v mps) mcstrs)
+  P.big_and (mk_pred_list v mps mcstrs)
 
 let mk_pred_def v (path, tag) ps =
   mk_preds v (List.map (fun x -> Some x) ps) (find_c path tag !bms)

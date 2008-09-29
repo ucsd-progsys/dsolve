@@ -172,8 +172,6 @@ let tag x = FunApp(tag_function, [x])
 let find_const c =
   C.int_of_tag (Env.lookup_constructor (Longident.Lident c) Env.initial).cstr_tag
 
-let (int_true, int_false) = (PInt (find_const "true"), PInt (find_const "false"))
-
 let big_and = function
   | c :: cs -> List.fold_left (&&.) c cs
   | [] -> True
@@ -301,4 +299,10 @@ let transl_rel = function
   | Pred_lt -> Lt
   | Pred_le -> Le
  
+let conjuncts_unexp = function
+  | And (p, q) -> ([p; q], [])
+  | True -> ([], [])
+  | p -> ([], [p])
 
+let conjuncts p = 
+  C.expand conjuncts_unexp [p] []

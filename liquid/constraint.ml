@@ -232,19 +232,12 @@ let frame_env = function
     SubFrame(env, _, _, _) -> env
   | WFFrame(env, _) -> env
 
-(* this is a tad ugly (or ad hoc, as it were) way to make get the e0, e1, ... and val var
- * into the typing environment for the prover while preserving the origin. unfortunately
- * it seems that some of these are bound in the subref env and some are bound in the
- * origin env. i'm not completely sure why. *)
 let add_val_var = function
     SubFrame(env, g, f, f') -> SubFrame(Le.aliasing_add qual_test_var f env, g, f, f') 
   | _ -> assert false
 
-let combo_clobber e1 e2 =
-  Le.fold (fun p f e -> Le.add p f e) e1 e2
-
 let patch_env env = function
-    SubFrame(env', g, f, f') -> SubFrame(combo_clobber env env', g, f, f') | _ -> assert false
+    SubFrame(env', g, f, f') -> SubFrame(Le.combine env env', g, f, f') | _ -> assert false
 
 let split_sub_ref c env g r1 r2 =
   let c = {lc_cstr = add_val_var (patch_env env c.lc_cstr); lc_tenv = c.lc_tenv;
