@@ -184,11 +184,15 @@ let rec pexp_map_subexps f = function
   | FunApp (fn, es)    -> FunApp (fn, List.map f es)
   | Binop (e1, op, e2) -> Binop (f e1, op, f e2)
   | Field (fld, e)     -> Field (fld, f e)
-  | Ite (e1, e2, e3)   -> Ite (map (pexp_map f) e1, f e2, f e3)
+  | Ite (e1, e2, e3)   -> Ite (e1, f e2, f e3)
   | e                  -> e
 
+and pexp_map_subpreds f = function
+  | Ite (e1, e2, e3) -> Ite (f e1, e2, e3)
+  | p                -> p
+
 and pexp_map f e =
-  f (pexp_map_subexps (pexp_map f) e)
+  f (pexp_map_subpreds (map f) (pexp_map_subexps (pexp_map f) e))
 
 and map_subpreds f = function
   | Iff (p, q)    -> Iff (f p, f q)
@@ -205,19 +209,36 @@ and map_subexps f = function
   | p                  -> p
 
 and map f p =
-  map_subexps f (map_subpreds (map (pexp_map f)) p)
+  map_subexps (pexp_map f) (map_subpreds (map f) p)
+
+let map_var f = function
+  | Var x -> f x
+  | e     -> e
 
 let pexp_map_vars f e =
-  pexp_map (function Var x -> f x | e -> e) e
-
-let pexp_map_funs f e =
-  pexp_map (function FunApp (fn, e) -> FunApp (f fn, e) | e -> e) e
+  pexp_map (map_var f) e
 
 let map_vars f pred =
-  map (pexp_map_vars f) pred
+  map (map_var f) pred
+
+let map_fun f = function
+  | FunApp (fn, e) -> FunApp (f fn, e)
+  | e              -> e
+
+let pexp_map_funs f e =
+  pexp_map (map_fun f) e
 
 let map_funs f pred =
-  map (pexp_map_funs f) pred
+  map (map_fun f) pred
+
+let bound_vars = function
+  | Forall (vs, _) | Exists (vs, _) -> fst (List.split vs)
+  | _                               -> []
+
+let rec map_unbound_vars f p =
+  let bound = bound_vars p in
+  let f     = function x when not (List.mem x bound) -> f x | y -> Var y in
+    map_subexps (map_var f) (map_subpreds (map_unbound_vars f) p)
 
 let subst v x pred = map_vars (fun y -> if Path.same x y then v else Var y) pred
 
