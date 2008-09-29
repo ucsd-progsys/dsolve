@@ -70,7 +70,7 @@ let mk_string qs = Fabstract(Predef.path_string, [], const_refinement qs)
 let uString = mk_string []
 let rString name v p = mk_string [(Path.mk_ident name, v, p)]
 
-let mk_bool qs = Fsum(Predef.path_bool, None, [(Cstr_constant 0, ("True", [])); (Cstr_constant 1, ("False", []))], const_refinement qs)
+let mk_bool qs = Fsum(Predef.path_bool, None, [(Cstr_constant 0, ("true", [])); (Cstr_constant 1, ("false", []))], const_refinement qs)
 let uBool = mk_bool []
 let rBool name v p = mk_bool [(Path.mk_ident name, v, p)]
 
