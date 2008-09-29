@@ -121,6 +121,7 @@ val find_tag: refinement -> constructor_tag  option
 val refinement_qvars: refinement -> qvar list
 val ref_to_simples: refinement -> (simple_refinement list * simple_refinement list)
 val ref_of_simple: simple_refinement -> refinement
+val refinement_fold : (refinement -> 'a -> 'a) -> 'a -> t -> 'a
 val predicate:
   (Path.t -> Qualifier.t list) -> Predicate.pexpr -> t -> Predicate.t
 val conjuncts:

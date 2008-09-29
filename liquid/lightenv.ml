@@ -52,6 +52,9 @@ let nil_add x y (Env (m, _)) =
 let maplist f (Env (env, _)) =
   M.fold (fun k v r -> (f k v)::r) env []
 
+let flaplist f env =
+  List.flatten (maplist f env)
+
 let maplistfilter f (Env (env, _)) =
   M.fold (fun k v r -> let c = f k v in match c with Some c -> c::r | None -> r) env []
 
@@ -87,6 +90,9 @@ let mapi f (Env (m, p)) =
 
 let fold f (Env (m, _)) b =
   M.fold f m b
+
+let combine e1 e2 =
+  fold (fun p f e -> add p f e) e1 e2
 
 let domain env = maplist (fun k _ -> k) env
 

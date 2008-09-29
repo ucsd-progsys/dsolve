@@ -92,8 +92,6 @@ val big_and: t list -> t
 val big_or: t list -> t
 val equals: (pexpr * pexpr) -> t
 val implies: (t * t) -> t
-val int_true: pexpr
-val int_false: pexpr
 
 val (==.): pexpr -> pexpr -> t
 val (!=.): pexpr -> pexpr -> t
@@ -121,3 +119,5 @@ val funs: t -> string list
 val instantiate_named_vars: (string * Path.t) list -> t -> t
 val transl_op: Asttypes.predexp_op -> binop                                                             
 val transl_rel: Asttypes.pred_rel -> binrel
+
+val conjuncts: t -> t list
