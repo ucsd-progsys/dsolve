@@ -81,3 +81,8 @@ let rec diff xs ys =
   match xs with
   | []          -> []
   | x::xs'      -> if mem x ys then diff xs' ys else x::(diff xs' ys)
+
+let rec gt x ys = 
+  match ys with
+  | []          -> []
+  | y::ys'      -> if x < y then  y::(gt x ys') else gt x ys'   (* OK  *)
