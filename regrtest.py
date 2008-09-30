@@ -27,14 +27,17 @@ testfiles = [("tests/postests", 0), ("tests/negtests", 1)]
 
 def runtest(filep, expected_status):
   file = filep[0]
+  if file[0] == '#':
+    return ("", expected_status)
   collect = int(filep[1])
   lqualifs = common.str_to_bool(filep[2])
-  status = dsolve.gen_quals(file, True, lqualifs, collect, "")
+  include = filep[3]
+  status = dsolve.gen_quals(file, True, lqualifs, collect, "-I " + include)
   if status != 0: 
     print "Qualgen failed on %s" % file
     sys.exit(2)
   start = time.time()
-  status = dsolve.solve_quals(file, True, False, True, ["-v", "0"])
+  status = dsolve.solve_quals(file, True, False, True, ["-v", "0", "-I", include])
   if status == 2: sys.exit(2)
   print "%f seconds" % (time.time() - start)
 
