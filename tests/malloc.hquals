@@ -1,1 +1,3 @@
-qualif LT(v): ~A { * * } v
+qualif LT(v) : ~A { * * } v
+qualif FRE(v): (Mystore.get ~A v) = 0
+qualif USD(v): (Mystore.get ~A v) != 0
