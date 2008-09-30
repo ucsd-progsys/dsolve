@@ -12,13 +12,13 @@ let rec of_list2 xss =
   | Nil2                -> Myset.empty
   | Cons2 (xs,xss')     -> Myset.cup (Myset.of_list xs) (of_list2 xss')
 
-  (*
+  
 let rec of_list3 xss =
   match xss with
   | []                -> Myset.empty
   | xs :: xss'        -> Myset.cup (Myset.of_list xs) (of_list3 xss')
-  *)
   
+let _ = of_list3 [[]]  
 
 
 let rec flatten xss =

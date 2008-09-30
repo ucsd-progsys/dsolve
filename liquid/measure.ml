@@ -133,6 +133,7 @@ let constructor_patterns expvar pat =
 
 let mk_guard env vp pat =
   let preds = (C.map_partial (mk_single_gd !bms) (constructor_patterns (Some vp) pat)) in
+  let preds = C.flap P.conjuncts preds in
     P.big_and (List.filter (Wellformed.pred_well_formed env) preds)
 
 (* assumes no subs *)
