@@ -180,69 +180,70 @@ let big_or = function
   | c :: cs -> List.fold_left (||.) c cs
   | [] -> Not True
 
-let rec pexp_map_vars f pexp =
-  let rec map_rec = function
-      Var x -> f x
-    | FunApp (fn, e) ->
-        FunApp (fn, List.map map_rec e)
-    | Binop (e1, op, e2) ->
-        Binop (map_rec e1, op, map_rec e2)
-    | Field (f, pexp) ->
-        Field (f, map_rec pexp)
-    | Ite (t, e1, e2) ->
-        Ite (map (pexp_map_vars f) t, map_rec e1, map_rec e2)
-    | e ->
-        e
-  in map_rec pexp
+let rec pexp_map_subexps f = function
+  | FunApp (fn, es)    -> FunApp (fn, List.map f es)
+  | Binop (e1, op, e2) -> Binop (f e1, op, f e2)
+  | Field (fld, e)     -> Field (fld, f e)
+  | Ite (e1, e2, e3)   -> Ite (e1, f e2, f e3)
+  | e                  -> e
 
-and pexp_map_funs f pexp =
-  let rec map_rec = function
-      Var x -> Var x
-    | FunApp (fn, e) ->
-        FunApp (f fn, List.map map_rec e)
-    | Binop (e1, op, e2) ->
-        Binop (map_rec e1, op, map_rec e2)
-    | Field (f, pexp) ->
-        Field (f, map_rec pexp)
-    | Ite (t, e1, e2) ->
-        Ite (map (pexp_map_funs f) t, map_rec e1, map_rec e2)
-    | e ->
-        e
-  in map_rec pexp
+and pexp_map_subpreds f = function
+  | Ite (e1, e2, e3) -> Ite (f e1, e2, e3)
+  | p                -> p
 
-and map f pred =
-  let rec map_rec = function
-      True ->
-        True
-    | Atom (e1, rel, e2) ->
-        Atom (f e1, rel, f e2)
-    | Iff (p, q) -> Iff (map_rec p, map_rec q)
-    | Not p ->
-        Not (map_rec p)
-    | And (p, q) ->
-        And (map_rec p, map_rec q)
-    | Or (p, q) ->
-        Or (map_rec p, map_rec q)
-    | Forall (p, q) ->
-        Forall (p, map_rec q)
-    | Exists (p, q) ->
-        Exists (p, map_rec q)
-    | Boolexp e ->
-        Boolexp (f e)
-  in map_rec pred
+and pexp_map f e =
+  f (pexp_map_subpreds (map f) (pexp_map_subexps (pexp_map f) e))
 
-let rec map_vars f pred =
-  map (pexp_map_vars f) pred
+and map_subpreds f = function
+  | Iff (p, q)    -> Iff (f p, f q)
+  | Not (p)       -> Not (f p)
+  | And (p, q)    -> And (f p, f q)
+  | Or (p, q)     -> Or (f p, f q)
+  | Forall (p, q) -> Forall (p, f q)
+  | Exists (p, q) -> Exists (p, f q)
+  | p             -> p
 
-let rec map_funs f pred =
-  map (pexp_map_funs f) pred
+and map_subexps f = function
+  | Atom (e1, rel, e2) -> Atom (f e1, rel, f e2)
+  | Boolexp (e)        -> Boolexp (f e)
+  | p                  -> p
 
-let subst v x pred = map_vars (fun y -> if Path.same x y then v else Var y) pred
+and map f p =
+  map_subexps (pexp_map f) (map_subpreds (map f) p)
+
+let map_var f = function
+  | Var x -> f x
+  | e     -> e
+
+let pexp_map_vars f e =
+  pexp_map (map_var f) e
+
+let bound_vars = function
+  | Forall (vs, _) | Exists (vs, _) -> fst (List.split vs)
+  | _                               -> []
+
+let rec map_vars f p =
+  let bound = bound_vars p in
+  let f     = function x when not (List.mem x bound) -> f x | y -> Var y in
+    map_subexps (pexp_map (map_var f)) (map_subpreds (map_vars f) p)
+
+let map_fun f = function
+  | FunApp (fn, e) -> FunApp (f fn, e)
+  | e              -> e
+
+let pexp_map_funs f e =
+  pexp_map (map_fun f) e
+
+let map_funs f pred =
+  map (map_fun f) pred
+
+let subst v x pred =
+  map_vars (fun y -> if Path.same x y then v else Var y) pred
 
 let apply_substs subs pred =
   let substitute (x, e) p = subst e x p in List.fold_right substitute subs pred
 
-let rec instantiate_named_vars subs pred =
+let instantiate_named_vars subs pred =
   map_vars (fun y -> Var (List.assoc (Path.ident_name_crash y) subs)) pred
 
 let unexp f = function

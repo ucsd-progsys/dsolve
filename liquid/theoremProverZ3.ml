@@ -179,11 +179,13 @@ module Prover : PROVER =
                                       | _ -> [frame_to_type t2])
     and set_path p = (Path.name p) = "Myset.set"
 
+    (* THIS FUNCTION IS A SLEAZY HACK *)
     let string_to_type = function
-      | p when p = "bool" -> Bool
-      | p when p = "int" -> Int
-      | p when p = "obj" -> Unint
-      | p when p = "set" -> Set
+      | "bool" -> Bool
+      | "int"  -> Int
+      | "obj"  -> Unint
+      | "set"  -> Set
+      | "inta" -> Int (* HACK *) 
       | _ -> assert false
 
     let rec z3VarType me = function

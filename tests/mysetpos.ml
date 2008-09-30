@@ -41,5 +41,3 @@ let f z a b =
    if eq a b then
     assert (eq (Myset.cup a (Myset.sng z)) (Myset.cup b (Myset.sng z)))
    else assert false
-
-

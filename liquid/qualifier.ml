@@ -59,42 +59,47 @@ let instantiate varmap (path, valu, pred) =
 let vars (path, valu, pred) =
   C.maybe_list (List.map (fun x -> if Path.same x valu then None else Some (Path.ident_name_crash x)) (Predicate.vars pred))
 
+let fix_bound_vars vm ps =
+  let paths = fst (List.split ps) in
+  let names = List.map Path.name paths in
+    List.fold_left2 (fun vm n p -> C.StringMap.add n [p] vm) vm names paths
+
 (* in qualifier.ml to avoid an odd dependency problem that breaks the build *)
 let expand_about vm p =
-  let rec e_rec = function
+  let rec e_rec vm = function
       PInt x -> [PInt x]
     | Var p -> 
         let p = Path.ident_name_crash p in
         List.rev_map (fun x -> Var x) (C.StringMap.find p vm)
     | FunApp (s, ps) ->
-        let ess = List.map e_rec ps in
+        let ess = List.map (e_rec vm) ps in
           List.rev_map (fun x -> FunApp (s, x)) (C.lflap ess)
     | Binop (e1, b, e2) ->
-        C.tflap2 (e_rec e1, e_rec e2) (fun a c -> Binop (a, b, c))
+        C.tflap2 (e_rec vm e1, e_rec vm e2) (fun a c -> Binop (a, b, c))
     | Field (f, e1) ->
-        List.rev_map (fun e -> Field(f, e)) (e_rec e1)
+        List.rev_map (fun e -> Field(f, e)) (e_rec vm e1)
     | Ite (t, e1, e2) ->
-        C.tflap3 (t_rec t, e_rec e1, e_rec e2) (fun a b c -> Ite (a, b, c))
+        C.tflap3 (t_rec vm t, e_rec vm e1, e_rec vm e2) (fun a b c -> Ite (a, b, c))
 
-  and t_rec = function
+  and t_rec vm = function
       True -> [True]
     | Atom(e1, b, e2) -> 
-        C.tflap2 (e_rec e1, e_rec e2) (fun a c -> Atom (a, b, c))
+        C.tflap2 (e_rec vm e1, e_rec vm e2) (fun a c -> Atom (a, b, c))
     | Iff(e, t) ->
-        C.tflap2 (t_rec e, t_rec t) (fun a b -> Iff (a, b))
+        C.tflap2 (t_rec vm e, t_rec vm t) (fun a b -> Iff (a, b))
     | Not t ->
-        List.rev_map (fun a -> Not a) (t_rec t)
+        List.rev_map (fun a -> Not a) (t_rec vm t)
     | And (t1, t2) ->
-        C.tflap2 (t_rec t1, t_rec t2) (fun a b -> And (a, b))
+        C.tflap2 (t_rec vm t1, t_rec vm t2) (fun a b -> And (a, b))
     | Or (t1, t2) ->
-        C.tflap2 (t_rec t1, t_rec t2) (fun a b -> Or (a, b))
+        C.tflap2 (t_rec vm t1, t_rec vm t2) (fun a b -> Or (a, b))
     | Forall (p, q) ->
-        List.rev_map (fun a -> Forall (p, a)) (t_rec q)
+        List.rev_map (fun a -> Forall (p, a)) (t_rec (fix_bound_vars vm p) q)
     | Exists (p, q) ->
-        List.rev_map (fun a -> Exists (p, a)) (t_rec q)
+        List.rev_map (fun a -> Exists (p, a)) (t_rec (fix_bound_vars vm p) q)
     | Boolexp e ->
-        List.rev_map (fun a -> Boolexp a) (e_rec e) in
-  t_rec p
+        List.rev_map (fun a -> Boolexp a) (e_rec vm e) in
+  t_rec vm p
 
 let instantiate_about vm (path, valu, pred) = 
   let vm = C.StringMap.add (Path.ident_name_crash valu) [valu] vm in
