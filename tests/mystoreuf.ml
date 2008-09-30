@@ -1,15 +1,13 @@
 let show x = x
 
-(*
-let f (x,y) = 
-  if (x=y) then 
-    assert (x=y)
-  else ()
 
+(* UNCOMMENT THIS TO MAKE test6 pass !!
 let test0 = 
   let a = Mystore.make 10 0 in
   assert (0 = Mystore.get a 5)
+*)
 
+(*
 let test1 a = 
   let a' = Mystore.set a 0 0 in
   assert (0 = Mystore.get a' 0)
@@ -47,6 +45,7 @@ let test5 a i =
     assert (Mystore.get a i = 0)
   else 
     assert (Mystore.get a i != 0)
+*)
 
 let test6 a = 
   let rec f a = 
@@ -57,13 +56,13 @@ let test6 a =
       (assert (Mystore.get a i != 0); f a) in
   f a
 
+  (*
 let _ = test1
 let _ = test2
 let _ = test3
 let _ = test4
 let _ = test5
 let _ = test6
-*)
 
 let test7 a =
   let f a i = 
@@ -72,28 +71,5 @@ let test7 a =
   let (m,j) = f a (read_int ()) in
   assert (Mystore.get m j = 0)
 
-let check m ys = 
-  List.iter (fun p -> assert (Mystore.get m p = 0)) ys
-
-let test8 k =
-  let a = Mystore.make 10 0 in
-  let rec f xs = 
-    let x = read_int () in
-    if Mystore.get a x = 0 then f (x::xs) else xs in
-  let ys = f [] in
-(*  check a ys;*)
-  (a, ys)
-
-(* let (m, xs)     = test8 0 *)
-let _ = 
-  match test8 0 with (m, xs) ->
-  let _           = show xs in
-  let _           = check m xs in
-  ()
-
-let foo k = (k, k + 1)
-
-let (p,q) = foo 10
-let _     = show q
-let _     = assert (p < q)
+*)
 
