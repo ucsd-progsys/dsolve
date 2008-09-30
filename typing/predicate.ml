@@ -218,8 +218,14 @@ let map_var f = function
 let pexp_map_vars f e =
   pexp_map (map_var f) e
 
-let map_vars f pred =
-  map (map_var f) pred
+let bound_vars = function
+  | Forall (vs, _) | Exists (vs, _) -> fst (List.split vs)
+  | _                               -> []
+
+let rec map_vars f p =
+  let bound = bound_vars p in
+  let f     = function x when not (List.mem x bound) -> f x | y -> Var y in
+    map_subexps (pexp_map (map_var f)) (map_subpreds (map_vars f) p)
 
 let map_fun f = function
   | FunApp (fn, e) -> FunApp (f fn, e)
@@ -231,16 +237,8 @@ let pexp_map_funs f e =
 let map_funs f pred =
   map (map_fun f) pred
 
-let bound_vars = function
-  | Forall (vs, _) | Exists (vs, _) -> fst (List.split vs)
-  | _                               -> []
-
-let rec map_unbound_vars f p =
-  let bound = bound_vars p in
-  let f     = function x when not (List.mem x bound) -> f x | y -> Var y in
-    map_subexps (map_var f) (map_subpreds (map_unbound_vars f) p)
-
-let subst v x pred = map_vars (fun y -> if Path.same x y then v else Var y) pred
+let subst v x pred =
+  map_vars (fun y -> if Path.same x y then v else Var y) pred
 
 let apply_substs subs pred =
   let substitute (x, e) p = subst e x p in List.fold_right substitute subs pred
