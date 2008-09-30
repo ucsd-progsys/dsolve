@@ -234,9 +234,9 @@ and bind env guard p f pexpr =
   F.env_bind env p.pat_desc f
 
 and mk_match_guarded_env env pat = function
-  | P.Var v -> Le.add (Path.mk_ident "__measure_guard")
-                      (Builtins.rUnit "" (Path.mk_ident "") (M.mk_guard v pat))
-                      env
+  | P.Var v -> 
+      Le.add (Path.mk_ident "__measure_guard")
+        (Builtins.rUnit "" (Path.mk_ident "") (M.mk_guard env v pat)) env
   | _       -> env
 
 and constrain_case (env, guard, f) matchf matche (pat, e) =

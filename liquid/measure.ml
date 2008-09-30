@@ -131,8 +131,9 @@ let constructor_patterns_aux (vo, pat) = match pat.pat_desc with
 let constructor_patterns expvar pat =
   C.expand constructor_patterns_aux [(expvar, pat)] []
 
-let mk_guard vp pat =
-  P.big_and (C.map_partial (mk_single_gd !bms) (constructor_patterns (Some vp) pat))
+let mk_guard env vp pat =
+  let preds = (C.map_partial (mk_single_gd !bms) (constructor_patterns (Some vp) pat)) in
+    P.big_and (List.filter (Wellformed.pred_well_formed env) preds)
 
 (* assumes no subs *)
 let rewrite_refexpr f (a, (qs, b)) = (a, (List.map (Qualifier.map_pred f) qs, b))
@@ -167,5 +168,5 @@ let proc_premeas env menv fenv ifenv quals =
 let assert_constructed_expr env preds (path, tag) shp =
   let (n, v, pred) = (mk_qual preds (path, tag)) in
   let env = Le.add v shp env in
-  let preds = C.maybe_list (List.map (fun p -> if Wellformed.pred_well_formed env p then Some p else None) (P.conjuncts pred)) in
+  let preds = List.filter (Wellformed.pred_well_formed env) (P.conjuncts pred) in
     (n, v, P.big_and preds)
