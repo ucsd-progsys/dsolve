@@ -1,10 +1,39 @@
-(* type 'a t *)
-
+(* Axioms with 'a t 
 axiom make: forall (i: int, n: int, w: int.  w = get i (make n w))
 axiom get : forall (i: int, w: int, a: 'a t. w = get i (set a i w))
 axiom set : forall (i: int, j: int, w: int, a: 'a t. (i = j) or (get (set a j w) i = get a i))
+*)
 
+(* Axioms with inta *)
+axiom make: forall (i: int, n: int, w: int.  (w = get (make n w) i))
+axiom get : forall (i: int, w: int, a: inta. (w = get (set a i w) i))
+axiom set : forall (i: int, j: int, w: int, a: inta. (i = j) or (get (set a j w) i = get a i))
+
+(************************************************************************************************)
+
+(* type 'a t -- Bounds Check 
 val size: a: 'a t -> {v: int | v = size a}
 val make: n: {v : int | 0 <= v} -> w: 'a -> {v:'a t | (size v = n) and (v = make n w)} 
 val get : a: 'a t -> i: {v: int | (0 <= v) and (v < size a)} -> { v: 'a | v = get a i}
 val set : a: 'a t -> i: {v: int | (0 <= v) and (v < size a)} -> w: 'a -> {v: 'a t | v = set a i w}
+*)
+
+(* type inta -- Bounds Check  
+val size: a: inta -> {v: int | v = size a}
+val make: n: {v : int | 0 <= v} -> w: int -> {v:inta | (size v = n) and (v = make n w)} 
+val get : a: inta -> i: {v: int | (0 <= v) and (v < size a)} -> {v: int | v = get a i}
+val set : a: inta -> i: {v: int | (0 <= v) and (v < size a)} -> w: int -> {v: inta | v = set a i w}
+*)
+
+(* type 'a t  
+val size: a: 'a t -> {v: int | v = size a}
+val make: n: int -> w: 'a -> {v:'a t | v = make n w} 
+val get : a: 'a t -> i: int -> {v: 'a | v = get a i}
+val set : a: 'a t -> i: int -> w: 'a -> {v: 'a t | v = set a i w}
+*)
+
+(* type inta *) 
+val size: a: inta -> {v: int | v = size a}
+val make: n: int -> w: int -> {v:inta | v = make n w} 
+val get : a: inta -> i: int -> {v: int | v = get a i}
+val set : a: inta -> i: int -> w: int -> {v: inta | v = set a i w}
