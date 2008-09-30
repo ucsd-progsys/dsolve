@@ -166,9 +166,10 @@ and constrain_constant path = function
 and replace_params ps fs =
   List.map2 (fun (i, _, v) f -> (i, f, v)) ps fs
 
-and get_cstrrefs env path tag name args =
+and get_cstrrefs env path tag name args shp =
   let preds  = List.map expression_to_pexpr args in
-  let mref   = try (F.const_refinement [M.mk_qual preds (path, tag)]) with Not_found -> [] in
+  let mref   = try F.const_refinement 
+                [M.assert_constructed_expr env preds (path, tag) shp] with Not_found -> [] in  
   let tagref = B.tag_refinement path tag in
   let ucf    = Le.find (Path.Pident (Ident.create_persistent name)) env in
   let f      = match ucf with F.Farrow _ -> F.apply ucf (List.map expression_to_pexpr args) | _ -> ucf in
@@ -179,11 +180,12 @@ and get_cstrrefs env path tag name args =
     (lhsref, rhsref, wfref) 
 
 and constrain_constructed (env, guard, f) cstrdesc args e =
-  match F.unfold (F.fresh_false e.exp_env e.exp_type) with
+  let shp = F.fresh_false e.exp_env e.exp_type in
+  match F.unfold shp with
   | F.Fsum (path, ro, cstrs, _) ->
       let tag                     = cstrdesc.cstr_tag in
       let (name, _)               = List.assoc tag cstrs in
-      let (lhsref, rhsref, wfref) = get_cstrrefs env path tag name args in
+      let (lhsref, rhsref, wfref) = get_cstrrefs env path tag name args shp in
       let (argframes, argcs)      = constrain_subexprs env guard args in
       let cstrs                   = List.map (fun (t, (n, ps)) -> (t, (n, if t = tag then replace_params ps argframes else ps))) cstrs in
       let f'                      = F.Fsum (path, ro, cstrs, lhsref) in

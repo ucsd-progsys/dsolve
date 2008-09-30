@@ -164,3 +164,8 @@ let proc_premeas env menv fenv ifenv quals =
   let _ = mk_measures env mcstrs in
     (fenv, ifenv, quals)
 
+let assert_constructed_expr env preds (path, tag) shp =
+  let (n, v, pred) = (mk_qual preds (path, tag)) in
+  let env = Le.add v shp env in
+  let preds = C.maybe_list (List.map (fun p -> if Wellformed.pred_well_formed env p then Some p else None) (P.conjuncts pred)) in
+    (n, v, P.big_and preds)

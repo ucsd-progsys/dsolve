@@ -134,6 +134,9 @@ let pred_is_well_typed env p =
   and expr_shape_is_bool e = same_shape (get_expr_shape e) uBool in
   pred_shape_is_bool p
 
+let pred_well_formed env p =
+  try pred_is_well_typed env p with IllFormed -> false | Not_found -> false
+
 let refinement_well_formed env solution r qual_expr =
   try
     Bstats.time "pred_well_typed" (pred_is_well_typed env) (refinement_predicate solution qual_expr r)
