@@ -122,9 +122,9 @@ let process_sourcefile env fenv fname =
     (* We need to pull out uninterpreted functions from the MLQ in order to typecheck. *)
     let (preds, vals)         = MLQ.parse std_formatter iname in
     let (unints, vals)        = List.partition MLQ.is_unint_decl vals in
-    let (env, _, fenv, _) = MLQ.load_local_sig env fenv ([], unints) in
+    let (env, _, fenv, _)     = MLQ.load_local_sig env fenv ([], unints) in
     let (str, env, fenv)      = load_sourcefile std_formatter env fenv fname in
-    let (env, menv, fenv, mlqenv)  = MLQ.load_local_sig env fenv (preds, vals) in
+    let (env, menv, fenv, mlqenv) = MLQ.load_local_sig env fenv (preds, vals) in
       if !dump_qualifs then
         dump_qualifiers bname (str, env, menv, mlqenv) qname
       else

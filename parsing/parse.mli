@@ -20,4 +20,4 @@ val liquid_interface : Lexing.lexbuf -> Parsetree.liquid_sig
 val toplevel_phrase : Lexing.lexbuf -> Parsetree.toplevel_phrase
 val use_file : Lexing.lexbuf -> Parsetree.toplevel_phrase list
 val qualifiers : Lexing.lexbuf -> string list * Parsetree.qualifier_declaration list
-val qualifier_patterns : Lexing.lexbuf -> Parsetree.qualifier_declaration list
+val qualifier_patterns : Lexing.lexbuf -> string list * Parsetree.qualifier_declaration list

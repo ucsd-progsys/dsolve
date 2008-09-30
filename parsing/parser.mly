@@ -433,7 +433,7 @@ The precedences must be listed from low to high.
 %start qualifiers                       /* runtime qualifier files */
 %type <string list * Parsetree.qualifier_declaration list> qualifiers
 %start qualifier_patterns               /* pattern qualifier files */
-%type <Parsetree.qualifier_declaration list> qualifier_patterns
+%type <string list * Parsetree.qualifier_declaration list> qualifier_patterns
 %start liquid_interface                 /* for mlq refined interface files */
 %type <Parsetree.liquid_sig> liquid_interface
 
@@ -1487,8 +1487,8 @@ qualifiers:
       { ($1, $2) }
 
 qualifier_patterns:
-    qualifier_pattern_list EOF
-      { $1 }
+    dep_list_opt qualifier_pattern_list EOF
+      { ($1, $2) }
 
 qualifier_pattern_declaration:
     UIDENT LPAREN LIDENT RPAREN LPAREN qual_ty_anno RPAREN COLON qualifier_pattern  

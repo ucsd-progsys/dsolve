@@ -66,7 +66,10 @@ let dump_deps ppf ds =
 let dump_default_qualifiers (str, env, menv, ifenv) deps qname =
   let qf = formatter_of_out_channel (open_out qname) in
   let _ = pp_set_margin qf 1230912 in
+  let _ = pp_set_margin ppf 1230912 in
   let _ = C.verbose_level := C.ol_dquals in
+  let (deps', dqstrs) = Pparse.file std_formatter !patf Parse.qualifier_patterns ast_impl_magic_number in
+  let deps = deps @ deps' in
 
   let prgids = Qualgen.bound_ids str in
   let (_, _, ids, _) = prgids in
@@ -85,7 +88,6 @@ let dump_default_qualifiers (str, env, menv, ifenv) deps qname =
   let fpreds = C.flap P.conjuncts fpreds in
   let fqs = List.fold_left (fun q e -> add ("MLQ", "_V", e) q) QS.empty fpreds in
 
-  let dqstrs = Pparse.file std_formatter !patf Parse.qualifier_patterns ast_impl_magic_number in
   let dqstrs = expand_quals env dqstrs prgids in
   let initqs = add ("FALSE", "_V", P.Atom(P.PInt(1), P.Eq, P.PInt(0))) QS.empty in
   let qs = List.fold_left (fun qs q -> add q qs) initqs dqstrs in
