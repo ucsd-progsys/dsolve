@@ -1,14 +1,12 @@
-let show x = x
 let xs0 = []
 let xs1 = 10::xs0
 let xs2 =  9::xs1
 let xs3 =  8::xs2
 
-
-let _   = show xs0
-let _   = show xs1
-let _   = show xs2
-let _   = show xs3
+let _ = xs0
+let _ = xs1
+let _ = xs2
+let _ = xs3
 
 let size   = 1000
 
