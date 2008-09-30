@@ -3,18 +3,19 @@ measure of_list2 =
   | Cons2 (xs,xss')     -> Myset.cup (Myset.of_list xs) (of_list2 xss')
 
 (* 
-measure of_list2 =
+measure of_list3 =
   | [] 		-> Myset.empty
-  | xs :: xss' 	-> Myset.cup (Myset.of_list xs) (of_list2 xss')
+  | xs :: xss' 	-> Myset.cup (Myset.of_list xs) (of_list3 xss')
+
 val flatten: x: 'a list list -> {v: 'a list | ? Myset.eq (Myset.of_list v) (of_list2 x)} 
 *)
 
 val flatten: x: 'a list2 -> {v: 'a list | ? Myset.eq (Myset.of_list v) (of_list2 x)}
 val reverse:        xs: 'a list -> {v: 'a list | ? Myset.eq (Myset.of_list v) (Myset.of_list xs)}
 val reverse2:       xs: 'a list -> {v: 'a list | ? Myset.eq (Myset.of_list v) (Myset.of_list xs)}
-(* 
+ 
 val reverse3:       xs: 'a list -> {v: 'a list | ? Myset.eq (Myset.of_list v) (Myset.of_list xs)}
-*)
+
 val compact: xs: 'a list -> {v: 'a list | ? Myset.eq (Myset.of_list v) (Myset.of_list xs)}
 val sorted_compact: xs: 'a list -> {v: 'a list | ? Myset.eq (Myset.of_list v) (Myset.of_list xs)}
 val mem: x: 'a -> ys: 'a list -> {v: bool | v = Myset.mem x (Myset.of_list ys)}

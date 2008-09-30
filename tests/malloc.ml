@@ -5,12 +5,11 @@ let test0 =
   let a = Mystore.make 10 0 in
   assert (0 = Mystore.get a 5)
 
-(*
+  (*
 let xs0 = []
 let xs1 = 10::xs0
 let xs2 =  9::xs1
 let xs3 =  8::xs2
-
 
 let _   = show xs0
 let _   = show xs1

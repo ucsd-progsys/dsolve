@@ -12,6 +12,15 @@ let rec of_list2 xss =
   | Nil2                -> Myset.empty
   | Cons2 (xs,xss')     -> Myset.cup (Myset.of_list xs) (of_list2 xss')
 
+  (*
+let rec of_list3 xss =
+  match xss with
+  | []                -> Myset.empty
+  | xs :: xss'        -> Myset.cup (Myset.of_list xs) (of_list3 xss')
+  *)
+  
+
+
 let rec flatten xss =
   match xss with
   | Nil2                -> []
@@ -41,8 +50,6 @@ let reverse2 xs =
     | y::ys'    -> f ys' (y::zs) in
   f xs []
 
-(* STRANGE ERROR // assert fails in liquid/pattern.ml
-*)
 let reverse3 xs = 
   let rec f x = 
     let (ys, zs) = x in
