@@ -82,22 +82,32 @@ let get_app_shape s env =
   with Not_found -> 
     app_to_fun (get_by_name s env)
 
+let quantified_types =
+  [("int", uInt)]
+
+let bind_quantified env ps =
+  try
+    let bindings = List.map (fun (p, tn) -> (p, List.assoc tn quantified_types)) ps in
+      Lightenv.addn bindings env
+  with Not_found ->
+    raise IllFormed
+
 let pred_is_well_typed env p =
-  let rec get_expr_shape = function
+  let rec get_expr_shape env = function
   | P.PInt _ -> uInt
   | P.Var x -> (try Lightenv.find x env with Not_found -> raise IllFormed)
   | P.FunApp (s, p') -> 
-      get_app_shape s env (List.map get_expr_shape p')
+      get_app_shape s env (List.map (get_expr_shape env) p')
   | P.Binop (p1, op, p2) ->
-      if same_shape (get_expr_shape p1) uInt then
-        if same_shape (get_expr_shape p2) uInt then
+      if same_shape (get_expr_shape env p1) uInt then
+        if same_shape (get_expr_shape env p2) uInt then
           uInt
         else
           raise IllFormed
       else
         raise IllFormed
   | P.Field (name, r) ->
-      begin match get_expr_shape r with
+      begin match get_expr_shape env r with
         | Fsum (_, _, [(_, (_, fs))], _) ->
             (* pmr: maybe we need to switch to ids for this *)
             let is_referenced_field (name2, _, _) = String.compare (Ident.name name) (Ident.name name2) = 0 in
@@ -107,32 +117,32 @@ let pred_is_well_typed env p =
         | f -> raise IllFormed
       end
   | P.Ite (t, e1, e2) ->
-      if pred_shape_is_bool t then
-        let e1_shp = get_expr_shape e1 in
-          if same_shape e1_shp (get_expr_shape e2) then e1_shp else raise IllFormed
+      if pred_shape_is_bool env t then
+        let e1_shp = get_expr_shape env e1 in
+          if same_shape e1_shp (get_expr_shape env e2) then e1_shp else raise IllFormed
       else
         raise IllFormed
-  and pred_shape_is_bool = function
+  and pred_shape_is_bool env = function
   | P.True -> true
-  | P.Not p -> pred_shape_is_bool p 
+  | P.Not p -> pred_shape_is_bool env p
   | P.Iff (p1, p2)
   | P.Or (p1, p2)  
   | P.And (p1, p2) ->
-      if pred_shape_is_bool p1 then
-        pred_shape_is_bool p2
+      if pred_shape_is_bool env p1 then
+        pred_shape_is_bool env p2
       else
         raise IllFormed
   | P.Atom (p1, rel, p2) -> 
-      let p1_shp = get_expr_shape p1 in
-      let p2_shp = get_expr_shape p2 in
+      let p1_shp = get_expr_shape env p1 in
+      let p2_shp = get_expr_shape env p2 in
         (same_shape p1_shp p2_shp)
   | P.Exists (ps, q)
   | P.Forall (ps, q) ->
-      (*pred_shape_is_bool q*) assert false (*quantifiers not wellformed atm*)
+      pred_shape_is_bool (bind_quantified env ps) q
   | P.Boolexp e ->
-      expr_shape_is_bool e
-  and expr_shape_is_bool e = same_shape (get_expr_shape e) uBool in
-  pred_shape_is_bool p
+      expr_shape_is_bool env e
+  and expr_shape_is_bool env e = same_shape (get_expr_shape env e) uBool in
+    pred_shape_is_bool env p
 
 let refinement_well_formed env solution r qual_expr =
   try

@@ -1,29 +1,35 @@
-tests/embed_constr.ml       4 False
-tests/binder_subs.ml        4 False
-tests/booltest.ml           1 False
-tests/assume_scope.ml       1 False
-tests/unint.ml              1 False
-tests/multi-unint.ml        1 False
-tests/assume.ml             1 False
-tests/rec/immut-linklist.ml 4 False
-tests/rec/as-length.ml      4 False
-tests/rec/tuple-length.ml   4 False
-tests/rec/heap.ml           4 False
-tests/depannot.ml           4 False
-tests/rec/recmlq.ml         4 False
-tests/rec/stable_sort2.ml   4 False
-tests/rec/pmrmerge.ml       4 False
-tests/rec/pmrisort.ml       4 False
-tests/rec/checklist.ml      1 False
-tests/rec/mktree.ml         4 False
-tests/rec/quicksort.ml      4 False
-tests/null_subst.lm         4 False
-tests/rec/rjmerge.ml        4 False
-tests/rec/ralist.ml         4 False
-tests/rec/map/all.ml        4 False
-tests/rec/redblack/all.ml   4 False
-tests/rec/avltree/all.ml    4 False
-tests/rec/vec/all.ml        4 False
-tests/rec/mergesort2/all.ml 4 False
-tests/rec/mergesort/all.ml  4 False
-tests/rec/quicksort/all.ml  4 False
+#filename     [# of lambdas to collect idents under]  [only collect idents which name formals]  [-I directory]
+tests/mysetpos.ml           4 False tests
+tests/isortset.ml           4 False tests
+tests/llset.ml              4 False tests
+tests/treeset.ml            4 False tests
+tests/mysetlist.ml          4 False tests
+tests/embed_constr.ml       4 False tests
+tests/binder_subs.ml        4 False tests
+tests/booltest.ml           1 False tests
+tests/assume_scope.ml       1 False tests
+tests/unint.ml              1 False tests
+tests/multi-unint.ml        1 False tests
+tests/assume.ml             1 False tests
+tests/rec/immut-linklist.ml 4 False tests
+tests/rec/as-length.ml      4 False tests
+tests/rec/tuple-length.ml   4 False tests
+tests/rec/heap.ml           4 False tests
+tests/depannot.ml           4 False tests
+tests/rec/recmlq.ml         4 False tests
+tests/rec/stable_sort2.ml   4 False tests
+tests/rec/pmrmerge.ml       4 False tests
+tests/rec/pmrisort.ml       4 False tests
+tests/rec/checklist.ml      1 False tests
+tests/rec/mktree.ml         4 False tests
+tests/rec/quicksort.ml      4 False tests
+tests/null_subst.lm         4 False tests
+tests/rec/rjmerge.ml        4 False tests
+tests/rec/ralist.ml         4 False tests
+tests/rec/map/all.ml        4 False tests
+tests/rec/redblack/all.ml   4 False tests
+tests/rec/avltree/all.ml    4 False tests
+tests/rec/vec/all.ml        4 False tests
+tests/rec/mergesort2/all.ml 4 False tests
+tests/rec/mergesort/all.ml  4 False tests
+tests/rec/quicksort/all.ml  4 False tests

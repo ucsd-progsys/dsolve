@@ -42,15 +42,16 @@ let reverse2 xs =
   f xs []
 
 (* STRANGE ERROR // assert fails in liquid/pattern.ml
-
+*)
 let reverse3 xs = 
-  let rec f (ys, zs) = 
+  let rec f x = 
+    let (ys, zs) = x in
     match ys with
     | []        -> zs
     | y::ys'    -> f (ys', (y::zs)) in
   f (xs,[])
 
-*)
+
 
 let rec mem x ys = 
   match ys with
