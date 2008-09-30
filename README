@@ -151,12 +151,27 @@ if it exists.
 This Liquid interface file can be used to specify the Liquid types of
 program values as well as specify measure functions which can be
 used to prove structural properties of sum types. Example Liquid 
-interfaces can be found in examples/.
+interfaces can be found in Examples/.
+
+Liquid interfaces can also be used to specify abstract data structures like
+sets and arrays, together with their operations, axioms and dependent
+types. Examples include:
+	tests/myset.mlq
+	tests/myarray.mlq
+
+To include the interface file for an abstract data structure, ensure that:
+	1. There are .mli and .mlq files for the corresponding module,
+	2. There is a .cmi file 
+		(e.g. ocamlc tests/myset.mli) 
+	3. You include the path to the modules 
+		(e.g. ./dsolve.py -I tests foo.ml)
 
 Liquid Modules
 ==============
 
-A source file foo.ml may depend on an external module. dsolve will try to read in a "module_name.mlq" file from the same directory as the source file if it does.
+A source file foo.ml may depend on an external module. 
+dsolve will try to read in a "module_name.mlq" file 
+from the same directory as the source file if it does.
 
 Interface Syntax
 ------

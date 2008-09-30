@@ -1,0 +1,10 @@
+(* type 'a t *)
+
+axiom make: forall (i: int, n: int, w: int.  w = get i (make n w))
+axiom get : forall (i: int, w: int, a: 'a t. w = get i (set a i w))
+axiom set : forall (i: int, j: int, w: int, a: 'a t. (i = j) or (get (set a j w) i = get a i))
+
+val size: a: 'a t -> {v: int | v = size a}
+val make: n: {v : int | 0 <= v} -> w: 'a -> {v:'a t | (size v = n) and (v = make n w)} 
+val get : a: 'a t -> i: {v: int | (0 <= v) and (v < size a)} -> { v: 'a | v = get a i}
+val set : a: 'a t -> i: {v: int | (0 <= v) and (v < size a)} -> w: 'a -> {v: 'a t | v = set a i w}
