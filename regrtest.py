@@ -28,7 +28,7 @@ testfiles = [("tests/postests", 0), ("tests/negtests", 1)]
 def runtest(filep, expected_status):
   file = filep[0]
   if file[0] == '#':
-    return ("", expected_status)
+    return ("", ok)
   collect = int(filep[1])
   lqualifs = common.str_to_bool(filep[2])
   include = filep[3]
