@@ -49,7 +49,7 @@ let test6 a =
       (assert (Mystore.get a i != 0); f a) in
   f a
 
-  (*
+(*
 let _ = test1
 let _ = test2
 let _ = test3
