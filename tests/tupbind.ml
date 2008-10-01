@@ -9,7 +9,7 @@ let test1 x =
   let w = 
     let a = read_int () in
     let i = read_int () in
-    if a < i then (a, i) else assert false in
+    if a < i then show (a, i) else assert false in
   let (b,js) = show w in
   (fun j -> assert (b < j)) js
 
@@ -18,6 +18,14 @@ let test2 x =
     let a = read_int () in
     let i = read_int () in
     if a < i then (a, [i]) else assert false in
+  let (b,js) = show w in
+  List.iter (fun j -> assert (b < j)) js
+
+let test3 x =
+  let w = 
+    let a = read_int () in
+    let i = read_int () in
+    if a < i then show (a, [i]) else assert false in
   let (b,js) = show w in
   List.iter (fun j -> assert (b < j)) js
 
