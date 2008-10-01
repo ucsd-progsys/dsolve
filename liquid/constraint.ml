@@ -150,7 +150,7 @@ let pprint_local_binding f ppf = function
   | _ -> ()
 
 let pprint_fenv ppf env =
-  Le.iter (fun p f -> printf "@[%s:@ %a@]@." (C.path_name p) F.pprint f) env
+  Le.iter (fun p f -> fprintf ppf "@[%s:@ %a@]@." (C.path_name p) F.pprint f) env
 
 let pprint_fenv_pred so ppf env =
   (* match so with
@@ -164,7 +164,7 @@ let pprint_renv_pred f so ppf env =
 
 let pprint ppf = function
   | SubFrame (e,_,f1,f2) ->
-      C.fcprintf ppf C.ol_verb_constrs "@[(Env)@.%a@]@." pprint_fenv e;
+      if C.ck_olev C.ol_verb_constrs then fprintf ppf "@[(Env)@.%a@]@." pprint_fenv e;
       fprintf ppf "@[%a@ <:@;<1 2>%a@]" F.pprint f1 F.pprint f2
   | WFFrame (_,f) ->
       F.pprint ppf f
@@ -778,9 +778,10 @@ let dump_ref_vars sri =
    
 let dump_constraints cs =
   if !Cf.dump_constraints then begin
-    printf "Frame Constraints@.@.";
+    printf "******************Frame Constraints****************@.@.";
     let index = ref 0 in
-    List.iter (fun {lc_cstr = c} -> incr index; printf "@[(%d) %a@]@.@." !index pprint c) cs
+    List.iter (fun {lc_cstr = c} -> incr index; printf "@[(%d) %a@]@.@." !index pprint c) cs;
+    printf "@[*************************************************@]@.@.";
   end
 
 let dump_solution_stats s = 

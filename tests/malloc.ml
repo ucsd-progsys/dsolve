@@ -1,8 +1,3 @@
-(* to appease the Z3 gods 
-let test0 = 
-  let a = Mystore.make 10 0 in
-  assert (0 = Mystore.get a 5)
-*)
 let show x = x
 
 let xs = []
@@ -33,7 +28,6 @@ let make_shuffled n =
   shuffle (make_list n)
 
 (*************************************************************************)
-
 let rec del x ys = 
   match ys with
   | []          -> []
@@ -88,7 +82,6 @@ let _ =
                         let () = assert (Mystore.get m' u1 = 0) in
                         check (m', u2::us', u1::fs) in
   ()
-
 
 
 (*

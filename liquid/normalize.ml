@@ -204,7 +204,7 @@ let normalize exp =
         let ls = List.concat (List.rev (f::lss)) in
          rw_expr (List.fold_left (wrap Nonrecursive) init ls)  
      | Pexp_ifthenelse(e1, e2, Some e3) ->
-        let (e_b, b) = resolve_in_exp (norm_in e1) in 
+        let (e_b, b) = resolve_in_exp_never (norm_in e1) in 
         let init = mk_ifthenelse e_b (norm_out e2) (norm_out e3) in
          rw_expr (List.fold_left (wrap Nonrecursive) init b)
      | Pexp_tuple(es) ->
@@ -219,14 +219,15 @@ let normalize exp =
         exp
      | Pexp_assert(e) ->
         let c = norm_in e in 
-        let (lbl, e', lo) = List.hd c in
+        let (inner, c) = resolve_in_exp_never c in
+        (*let (lbl, e', lo) = List.hd c in
         let inner = 
           match e' with 
           | Some e -> e
           | None -> mk_ident_loc lbl lo
-        in
+        in*)
         let init = mk_assert inner in
-          rw_expr (List.fold_left (wrap Nonrecursive) init (List.tl c))
+          rw_expr (List.fold_left (wrap Nonrecursive) init c)
      | Pexp_assume(e) ->
         let c = norm_in e in
         let (lbl, e', lo) = List.hd c in
@@ -331,7 +332,7 @@ let normalize exp =
           else e_this in 
           (this, e_this, lo_this)::(List.append (List.tl ls) f)
      | Pexp_ifthenelse(e1, e2, Some e3) ->
-        let (e_b, b) = resolve_in_exp (norm_in e1) in
+        let (e_b, b) = resolve_in_exp_never (norm_in e1) in
         let (this, e_this, lo_this) = 
           (fresh_name (), mk_ifthenelse e_b (norm_out e2) (norm_out e3), dummy) in
          (this, Some (rw_expr e_this), lo_this)::b

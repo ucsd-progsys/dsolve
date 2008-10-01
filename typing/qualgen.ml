@@ -120,8 +120,8 @@ and visit_expr n exp =
 let visit_ids_expr f exp =
   let rec ve exp =
     match exp.exp_desc with
-    | Texp_let (_, _, e2) ->
-        ve e2  
+    | Texp_let (_, pl, e2) ->
+        List.iter (fun (_, e) -> ve e) pl; ve e2  
     | Texp_function(pl, _) -> 
         List.iter (fun (_, e) -> ve e) pl
     | Texp_apply (e, el) ->

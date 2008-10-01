@@ -1,12 +1,5 @@
 let show x = x
 
-
-(* UNCOMMENT THIS TO MAKE test6 pass !!
-let test0 = 
-  let a = Mystore.make 10 0 in
-  assert (0 = Mystore.get a 5)
-*)
-
 (*
 let test1 a = 
   let a' = Mystore.set a 0 0 in
@@ -56,7 +49,7 @@ let test6 a =
       (assert (Mystore.get a i != 0); f a) in
   f a
 
-  (*
+(*
 let _ = test1
 let _ = test2
 let _ = test3
