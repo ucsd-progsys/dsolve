@@ -1,14 +1,5 @@
 let show x = x
 
-let xs = []
-let xs = 4::[]
-let xs = 3::xs
-let xs = 2::xs
-let xs = 1::xs 
-
-let _  = 
-  match xs with x1::x2::_ ->  assert (x1 < x2)
-
 let make_list m =
   let rec f n xs = 
     if n >= 0 then f (n-1) (n::xs) else xs in
@@ -65,7 +56,7 @@ let _ =
   let (m, us, fs) = init 1000 in
   let _           = check (m, us, fs) in
   let (_, w)      = malloc (m, us, fs) in
-(*let _           = check w in *)
+  (*let _           = check w in*) (*uncomment this*)
   match fs with f1::f2::fs' ->
     let () = assert (f1 != f2) in
     let () = assert (Mystore.get m  f1 = 0) in
