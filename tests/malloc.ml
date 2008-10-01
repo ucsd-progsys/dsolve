@@ -19,8 +19,6 @@ let make_shuffled n =
   shuffle (make_list n)
 
 (*************************************************************************)
-let rec diverge x = diverge x
-
 let rec del x ys = 
   match ys with
   | []          -> []
@@ -49,7 +47,7 @@ let init size =
 
 let malloc (mem, us, fs) = 
   match fs with
-  | []          -> diverge ()
+  | []          -> assert false
   | f::fs'      -> let mem' = Mystore.set mem f 1 in
                    (f, (mem', f::us, fs'))
 let _ =
