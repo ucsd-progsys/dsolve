@@ -2,4 +2,5 @@ pattern binds at source toplevel
 DON'T USE SHOW (not broken just don't do it)
 nested recursives
 (possibly) measures over nested recursives
-
+-> measures and complex pattern matches (what does the shape of the matched variable look like?)
+it's probably a good idea to strip the axioms out of the environment now that quants are imped

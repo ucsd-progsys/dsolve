@@ -108,7 +108,7 @@ let z3_mk_app c f zea =
   module type PROVER = 
   sig
     (* usage: set.valid*.finish *)
-    val axiom : Predicate.t -> unit
+    val axiom : F.t Le.t -> Predicate.t -> unit
     val set     : F.t Le.t -> P.t list -> bool 
     val valid   : F.t Le.t -> P.t -> bool
     val finish : unit -> unit
@@ -388,8 +388,8 @@ module Prover : PROVER =
       let rv  = unsat me in
       let _   = pop me in rv
 
-    let axiom p =
-      assert_axiom me (z3Pred Le.empty me p)
+    let axiom env p =
+      assert_axiom me (z3Pred env me p)
 
     let finish () = 
       (*Bstats.time "Z3 pop"*) pop me; 

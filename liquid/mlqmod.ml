@@ -74,7 +74,7 @@ let extract_pred f =
 
 let scrub_and_push_axioms fenv =
   Le.fold (fun p f env -> if C.has_prefix axiom_prefix (Path.name p) then 
-            (TheoremProver.push_axiom (extract_pred f); env) else
+            (TheoremProver.push_axiom fenv (extract_pred f); env) else
               Le.add p f env) fenv Le.empty
 
 let load_rw dopt rw env menv' fenv (preds, decls) =

@@ -110,8 +110,8 @@ let rhsform = Format.formatter_of_buffer buftrhs
 (************************************* AXIOMS ***********************************)
 (********************************************************************************)
 
-let push_axiom p =
-  C.cprintf C.ol_axioms "@[Pushing@ axiom:@ %a@]@." P.pprint p; Prover.axiom p
+let push_axiom env p =
+  C.cprintf C.ol_axioms "@[Pushing@ axiom:@ %a@]@." P.pprint p; Prover.axiom env p
 
 (********************************************************************************)
 (************************************* API **************************************)
