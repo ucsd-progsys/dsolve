@@ -1,0 +1,5 @@
+pattern binds at source toplevel
+DON'T USE SHOW (not broken just don't do it)
+nested recursives
+(possibly) measures over nested recursives
+

@@ -2,11 +2,11 @@ measure of_list2 =
   | Nil2                -> Myset.empty
   | Cons2 (xs,xss')     -> Myset.cup (Myset.of_list xs) (of_list2 xss')
 
-(* 
+ 
 measure of_list3 =
   | [] 		-> Myset.empty
   | xs :: xss' 	-> Myset.cup (Myset.of_list xs) (of_list3 xss')
-
+(*
 val flatten: x: 'a list list -> {v: 'a list | ? Myset.eq (Myset.of_list v) (of_list2 x)} 
 *)
 
