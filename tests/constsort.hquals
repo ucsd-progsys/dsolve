@@ -1,2 +1,2 @@
-qualif LT(v) : ~A { * * } ^ 
+qualif LT(v) :  ^ { * * } v 
 qualif LT(v) : ~A { * * } v

@@ -38,7 +38,6 @@ let test5 a i =
     assert (Mystore.get a i = 0)
   else 
     assert (Mystore.get a i != 0)
-*)
 
 let test6 a = 
   let rec f a = 
@@ -48,6 +47,27 @@ let test6 a =
     else 
       (assert (Mystore.get a i != 0); f a) in
   f a
+
+*)
+
+let test7 x =
+  let w = 
+    let a = Mystore.make 10 0 in
+    let i = read_int () in
+    if Mystore.get a i = 0 then (a, i) else assert false in
+  let (b,js) = show w in
+  (fun j -> assert (Mystore.get b j = 0)) js
+
+let test8 x =
+  let w = 
+    let a = Mystore.make 10 0 in
+    let i = read_int () in
+    if Mystore.get a i = 0 then (a, [i]) else assert false in
+  let (b,js) = show w in
+  List.iter (fun j -> assert (Mystore.get b j = 0)) js
+
+
+
 
 (*
 let _ = test1
