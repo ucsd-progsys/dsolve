@@ -3,7 +3,16 @@ let test0 =
   let a = Mystore.make 10 0 in
   assert (0 = Mystore.get a 5)
 *)
+let show x = x
 
+let xs = []
+let xs = 4::[]
+let xs = 3::xs
+let xs = 2::xs
+let xs = 1::xs 
+
+let _  = 
+  match xs with x1::x2::_ ->  assert (x1 < x2)
 
 let make_list m =
   let rec f n xs = 
@@ -52,9 +61,16 @@ let init size =
       else (assert (Mystore.get a k != 0); f (k+1) (k::us) fs) in
   f 0 [] []
 
+let malloc (mem, us, fs) = 
+  match fs with
+  | []          -> diverge ()
+  | f::fs'      -> let mem' = Mystore.set mem f 1 in
+                   (f, (mem', f::us, fs'))
 let _ =
   let (m, us, fs) = init 1000 in
   let _           = check (m, us, fs) in
+  let (_, w)      = malloc (m, us, fs) in
+(*let _           = check w in *)
   match fs with f1::f2::fs' ->
     let () = assert (f1 != f2) in
     let () = assert (Mystore.get m  f1 = 0) in
@@ -64,12 +80,6 @@ let _ =
     check (m', f1::us, f2::fs')
 
 (*
-
-let malloc (mem, us, fs) = 
-  match fs with
-  | []          -> diverge ()
-  | f::fs'      -> let mem' = Mystore.set mem f 1 in
-                   (f, (mem', f::us, fs'))
 
 let p,(m,us,fs) = malloc w 
 let _           = show p
