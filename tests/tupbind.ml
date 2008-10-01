@@ -4,9 +4,23 @@ let _     =
   let (p,q) = foo 10 in
   let _     = show (p,q) in 
   assert (p < q) 
-(* let (a,b) = foo 10
-let _     = assert (a < b) *)
-(*
-let _     = 
-  match foo 10 with (a, b) -> let _ = b in assert (a < b)
-  *)
+
+let test1 x =
+  let w = 
+    let a = read_int () in
+    let i = read_int () in
+    if a < i then (a, i) else assert false in
+  let (b,js) = show w in
+  (fun j -> assert (b < j)) js
+
+let test2 x =
+  let w = 
+    let a = read_int () in
+    let i = read_int () in
+    if a < i then (a, [i]) else assert false in
+  let (b,js) = show w in
+  List.iter (fun j -> assert (b < j)) js
+
+
+
+

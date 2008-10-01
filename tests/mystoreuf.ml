@@ -66,9 +66,6 @@ let test8 x =
   let (b,js) = show w in
   List.iter (fun j -> assert (Mystore.get b j = 0)) js
 
-
-
-
 (*
 let _ = test1
 let _ = test2
