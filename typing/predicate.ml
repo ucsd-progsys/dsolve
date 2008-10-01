@@ -264,7 +264,9 @@ let rec exp_vars_unexp = function
   | Ite (t, e1, e2) -> ([e1; e2], vars t)
 
 and exp_vars e =
-  C.expand exp_vars_unexp [e] []
+  let vs = ref [] in
+    ignore (pexp_map_vars (fun v -> vs := v :: !vs; Var v) e);
+    !vs
 
 and exp_funs_unexp = function
   | PInt _ -> ([], [])
@@ -281,7 +283,9 @@ and var_unexp p = unexp exp_vars p
 and funs_unexp p = unexp exp_funs p
 
 and vars e =
-  C.expand var_unexp [e] []
+  let vs = ref [] in
+    ignore (map_vars (fun v -> vs := v :: !vs; Var v) e);
+    !vs
 
 and funs e =
   C.expand funs_unexp [e] []
