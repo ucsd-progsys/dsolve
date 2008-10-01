@@ -33,7 +33,6 @@ let make_shuffled n =
   shuffle (make_list n)
 
 (*************************************************************************)
-let rec diverge x = diverge x
 
 let rec del x ys = 
   match ys with
@@ -63,21 +62,34 @@ let init size =
 
 let malloc (mem, us, fs) = 
   match fs with
-  | []          -> diverge ()
+  | []          -> assert false
   | f::fs'      -> let mem' = Mystore.set mem f 1 in
-                   (f, (mem', f::us, fs'))
+                   let w'   = (mem', f::us, fs') in
+                   (* let _    = check w' in *)
+                   (f, w')
 let _ =
   let (m, us, fs) = init 1000 in
+  let _           = show (m, us, fs) in
   let _           = check (m, us, fs) in
-  let (_, w)      = malloc (m, us, fs) in
-(*let _           = check w in *)
-  match fs with f1::f2::fs' ->
-    let () = assert (f1 != f2) in
-    let () = assert (Mystore.get m  f1 = 0) in
-    let () = assert (Mystore.get m  f2 = 0) in
-    let m' = Mystore.set m f1 1 in
-    let () = assert (Mystore.get m' f2 = 0) in
-    check (m', f1::us, f2::fs')
+  let (_, w')     = malloc (m, us, fs) in
+  (* let _           = check w' in *) 
+  let _           = match fs with f1::f2::fs' ->
+                        let () = assert (f1 != f2) in
+                        let () = assert (Mystore.get m  f1 = 0) in
+                        let () = assert (Mystore.get m  f2 = 0) in
+                        let m' = Mystore.set m f1 1 in
+                        let () = assert (Mystore.get m' f2 = 0) in
+                        check (m', f1::us, f2::fs') in 
+  let _           = match us with u1::u2::us' ->
+                        let () = assert (u1 != u2) in
+                        let () = assert (Mystore.get m  u1 != 0) in
+                        let () = assert (Mystore.get m  u2 != 0) in
+                        let m' = Mystore.set m u1 0 in
+                        let () = assert (Mystore.get m' u1 = 0) in
+                        check (m', u2::us', u1::fs) in
+  ()
+
+
 
 (*
 
