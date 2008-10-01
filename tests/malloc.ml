@@ -1,8 +1,3 @@
-(* to appease the Z3 gods 
-let test0 = 
-  let a = Mystore.make 10 0 in
-  assert (0 = Mystore.get a 5)
-*)
 let show x = x
 
 let xs = []
