@@ -55,13 +55,38 @@ let malloc (mem, us, fs) =
                      let _    = check' w' in
                      let _    = show w' in
                      (f, w') in
-  (* let _ = check' w' in *)
+  let _ = check' w' in 
   (f, show w')
+
+let free (mem, us, fs) p =
+  if (Mystore.get mem p != 0) then
+    let mem' = Mystore.set mem p 0 in
+    let us'  = del (show p) (show us) in
+    (mem', us', p::fs) 
+  else (mem, us, fs)
 
 let _ =
   let (m, us, fs) = init 1000 in
-  let _           = show (m, us, fs) in
+  (* let _           = show (m, us, fs) in *)
   let _           = check (m, us, fs) in
+  let (_, w')     = malloc (m, us, fs) in
+  let _           = check w' in 
+  let w''         = free w' (read_int ()) in
+  let _           = check w'' in
+  ()
+
+let main =
+  let rec spin w = 
+    let ch = read_int () in
+    if ch = 0 then 
+      let (_,w') = malloc w in
+      spin w'
+    else 
+      let w' = free w (read_int ()) in
+      spin w' in
+  spin (init 1000)
+
+  (*
   let _(* mllc *) = match fs with f::fs' ->
                         let () = assert (Mystore.get m  f = 0) in
                         let m' = Mystore.set m f 1 in
@@ -93,10 +118,7 @@ let _ =
                         let m' = Mystore.set m u1 0 in
                         let () = assert (Mystore.get m' u1 = 0) in
                         check (m', u2::us', u1::fs) in *)
-  let (_, w')     = malloc (m, us, fs) in
-  let _           = check w' in  
-  ()
-
+*)
 
 (*
 
@@ -106,23 +128,7 @@ let _           = show m
 let _           = show us
 let _           = show fs
 
-let free (mem, us, fs) p =
-  if (Mystore.get mem p != 0) then
-    let mem' = Mystore.set mem p 0 in
-    let us'  = del (show p) (show us) in
-    (mem', us', p::fs) 
-  else (mem, us, fs)
 
-let main =
-  let rec spin w = 
-    let ch = read_int () in
-    if ch = 0 then 
-      let (_,w') = malloc w in
-      spin w'
-    else 
-      let w' = free w (read_int ()) in
-      spin w' in
-  spin (init 1000)
 
 (* For your viewing pleasure *)
 let _ = init
