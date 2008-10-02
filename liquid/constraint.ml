@@ -149,8 +149,13 @@ let pprint_local_binding f ppf = function
       (Path.unique_name k) f v
   | _ -> ()
 
+let env_ignore_list = ["Pervasives"; "Open_"; "FP_"; "false"; "true"; "Array"; "String"; "Big"; "None"; "Some"; "Random"; "[]"; "::"]
+let filter_le f e = Le.fold (fun p fr m -> if f p fr then Le.add p fr m else m) e Le.empty
+let prune_background env = 
+  filter_le (fun p _ -> List.for_all (fun pre -> not (C.has_prefix pre (C.path_name p))) env_ignore_list) env 
+
 let pprint_fenv ppf env =
-  Le.iter (fun p f -> fprintf ppf "@[%s:@ %a@]@." (C.path_name p) F.pprint f) env
+  Le.iter (fun p f -> fprintf ppf "@[%s@ ::@ %a@]@." (C.path_name p) F.pprint f) (prune_background env); fprintf ppf "==="
 
 let pprint_fenv_pred so ppf env =
   (* match so with
@@ -163,11 +168,12 @@ let pprint_renv_pred f so ppf env =
   | _ -> Le.iter (fun x t -> pprint_local_binding F.pprint_refinement ppf (x, t)) env
 
 let pprint ppf = function
-  | SubFrame (e,_,f1,f2) ->
+  | SubFrame (e,g,f1,f2) ->
       if C.ck_olev C.ol_verb_constrs then fprintf ppf "@[(Env)@.%a@]@." pprint_fenv e;
+      if C.ck_olev C.ol_verb_constrs then fprintf ppf "@[(Guard)@.%a@]@.@." P.pprint (guard_predicate () g);
       fprintf ppf "@[%a@ <:@;<1 2>%a@]" F.pprint f1 F.pprint f2
   | WFFrame (_,f) ->
-      F.pprint ppf f
+      if C.ck_olev C.ol_dump_wfs then F.pprint ppf f
 
 let pprint_io ppf = function
   | Some id -> fprintf ppf "(%d)" id
@@ -176,12 +182,14 @@ let pprint_io ppf = function
 let pprint_ref so ppf = 
   function
   | SubRef (renv,g,r1,sr2,io) ->
+      let renv = prune_background renv in
       fprintf ppf "@[%a@ Env:@ @[%a@];@;<1 2>Guard:@ %a@\n|-@;<1 2>%a@;<1 2><:@;<1 2>%a@]"
       pprint_io io (pprint_renv_pred F.pprint_refinement so) renv 
       P.pprint (guard_predicate () g) 
       F.pprint_refinement r1 F.pprint_refinement (F.ref_of_simple sr2)
   | WFRef (env,sr,io) ->
-      fprintf ppf "@[%a@ Env:@ @[%a@];@\n|-@;<1 2>%a@;<1 2>@]"
+      let env = prune_background env in
+      C.fcprintf ppf C.ol_dump_wfs "@[%a@ Env:@ @[%a@];@\n|-@;<1 2>%a@;<1 2>@]"
       pprint_io io (pprint_fenv_pred so) env 
       F.pprint_refinement (F.ref_of_simple sr)
 
@@ -207,8 +215,9 @@ let simplify_frame gm x f =
     | _ -> f
 
 let simplify_env env g =
-  let gm = List.fold_left (fun m (x,b)  -> Le.add x b m) Le.empty g in
-    Le.mapi (simplify_frame gm) env
+  env
+  (*let gm = List.fold_left (fun m (x,b)  -> Le.add x b m) Le.empty g in
+    Le.mapi (simplify_frame gm) env*)
 
 let simplify_fc c =
   match c.lc_cstr with
@@ -580,7 +589,11 @@ let rhs_cands sm subs k =
     (sm k) 
 
 let check_tp senv lhs_ps x2 = 
-  let dump s p = C.cprintf C.ol_dump_prover "@[%s:@ %a@]@." s (C.pprint_list " " P.pprint) p in
+  let dump s p = 
+    let p = List.map (fun p -> P.big_and (List.filter (function P.Atom(p, P.Eq, p') when p = p' -> false | _ -> true) (P.conjuncts p))) p in
+    let p = List.filter (function P.True -> false | _ -> true) p in
+    C.cprintf C.ol_dump_prover "@[%s:@ %a@]@." s (C.pprint_list " " P.pprint) p in
+  let dump s p = if C.ck_olev C.ol_dump_prover then dump s p else () in
   let _ = dump "Assert" lhs_ps in
   let rv = 
     try
@@ -765,9 +778,9 @@ let dump_ref_constraints sri =
     iter_ref_constraints sri (fun c -> printf "@[%a@.@]" (pprint_ref None) c);
     printf "@[SCC Ranked Refinement Constraints@.@\n@]";
     sort_iter_ref_constraints sri (fun c -> printf "@[%a@.@]" (pprint_ref None) c);
-    printf "@[Refinement Constraint Origins@.@.@]";
+    (*printf "@[Refinement Constraint Origins@.@.@]";
     iter_ref_origs sri 
-      (fun i c -> printf "@[o(%i)@]@." i; Le.iter (fun p _ -> printf "@[%s@]@." (Path.unique_name p)) (frame_env c.lc_cstr))  
+      (fun i c -> printf "@[o(%i)@]@." i; Le.iter (fun p _ -> printf "@[%s@]@." (Path.unique_name p)) (frame_env c.lc_cstr))*)  
   end
 
 let dump_ref_vars sri =

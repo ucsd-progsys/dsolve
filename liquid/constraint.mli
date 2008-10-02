@@ -41,6 +41,8 @@ and origin =
   | Assert of Location.t
   | Cstr of labeled_constraint
 
+val pprint_fenv : Format.formatter -> Frame.t Lightenv.t -> unit
+
 val fresh_fc_id : unit -> fc_id 
 
 val solve: 
