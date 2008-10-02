@@ -328,8 +328,8 @@ and elem_qualifier fexpr n =
 
 and constrain_tuple (env, guard, _) es =
   let (fs, subexp_cs) = constrain_subexprs env guard es in
-  let f               = F.tuple_of_frames fs (F.mk_refinement [] (Misc.mapi elem_qualifier es) []) in
-    (f, [WFFrame(env, f)], subexp_cs)
+  let f'               = F.tuple_of_frames fs (F.mk_refinement [] (Misc.mapi elem_qualifier es) []) in
+  (f', [WFFrame(env, f')], subexp_cs)
 
 and constrain_assertfalse (env, _, _) tenv ty =
   let f = F.fresh_false tenv ty in

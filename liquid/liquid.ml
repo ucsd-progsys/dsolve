@@ -113,7 +113,7 @@ let load_sourcefile ppf env fenv sourcefile =
   let (str, _, env) = type_implementation env str in
     (str, env, fenv)
 
-let dump_env env = Le.iter (fun p f -> printf "@[%s@ ::@ %a@]@." (Path.name p) F.pprint f) env; printf "@."
+let dump_env env = printf "(Pruned background env)@.%a@." Constraint.pprint_fenv env
 
 let process_sourcefile env fenv fname =
   let bname = Misc.chop_extension_if_any fname in
