@@ -39,13 +39,15 @@ let succs g n =
 
 (* API *)
 let choose_node g = 
-  let n = List.fold_left (fun a (k,_) -> if read_int () > 1 then Some k else a) None g  in
+  let n = List.fold_left (fun a x -> let (k, _) = x in if read_int () > 1 then Some k else a) None g  in
   match n with None -> assert false | Some n -> n
 
 (* API *)
-let check_dag (g, n) = 
+let check_dag x = 
+  let (g, n) = x in
   List.iter 
-    (fun (i,js) -> 
+    (fun x -> 
+      let (i, js) = x in
       let _ = assert (i <= n) in
       List.iter (fun j -> assert (i < j && j <= n)) js) 
     g
@@ -60,7 +62,7 @@ let rec leaves g n =
   | [] -> [n] 
   | ns -> flap (leaves g) ns
 
-let rec build_dag (g, n) =
+(*let rec build_dag (g, n) =
   let _ = check_dag (g, n) in
   match read_int () with 
   | 0 -> 
@@ -79,4 +81,4 @@ let rec build_dag (g, n) =
 
 let _ = build_dag ([],0)
 
-
+*)
