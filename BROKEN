@@ -1,6 +1,14 @@
 pattern binds at source toplevel
 DON'T USE SHOW (not broken just don't do it)
+DON'T USE diverge (use assert false)
 nested recursives
 (possibly) measures over nested recursives
 -> measures and complex pattern matches (what does the shape of the matched variable look like?)
-it's probably a good idea to strip the axioms out of the environment now that quants are imped
+
+rule from paper L_product not followed (e0... not bound in consgen)
+* solved by nosimple or adding subt in consgen for tuple or implementing paper rule (dependencies on other code?)
+
+add: type casting at z3 interface with 1-1 casting functions (by default. absent bugs, simulates polymorphism)
+add: implicitly quantified types: forall i. (j: int -> 'a [j/i]) k: int -> 'a [k/i]
+add: extension to constructed types
+
