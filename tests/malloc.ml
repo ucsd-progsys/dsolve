@@ -1,36 +1,19 @@
 let show x = x
 
-(*
-let make_list m =
-  let rec f n xs = 
-    if n >= 0 then f (n-1) (n::xs) else xs in
-  f m []
-
-let rec insert x ys = 
-  match ys with
-  | []          -> [x]
-  | y::ys'      -> if (read_int () > 0) then x::y::ys' else y::(insert x ys')
-
-let rec shuffle xs = 
-  match xs with
-  | []          -> []
-  | x::xs'      -> insert x (shuffle xs')
-
-let make_shuffled n = 
-  shuffle (make_list n)
-*)
-
-(*************************************************************************)
 let rec del x ys = 
   match ys with
   | []          -> []
-  | y::ys'      -> if x = y then del x ys' else y::(del x ys)
+  | y::ys'      -> if x = y then ys' else y::(del x ys')
+
+let rec checkdiff xs = 
+  match xs with 
+  | []          -> () 
+  | x::xs'      -> let _ = List.iter (fun x' -> assert (x != x')) xs' in
+                   checkdiff xs'
 
 let check  (m, us, fs) =
-  List.iter (fun p -> assert (Mystore.get m p != 0)) us;
-  List.iter (fun p -> assert (Mystore.get m p = 0)) fs
-
-let check' (m, us, fs) =
+  checkdiff us;
+  checkdiff fs;
   List.iter (fun p -> assert (Mystore.get m p != 0)) us;
   List.iter (fun p -> assert (Mystore.get m p = 0)) fs
 
@@ -52,10 +35,10 @@ let malloc (mem, us, fs) =
     | []          -> assert false
     | f::fs'      -> let mem' = Mystore.set mem f 1 in
                      let w'   = (mem', f::us, fs') in
-                     let _    = check' w' in
+                     let _    = check w' in
                      let _    = show w' in
                      (f, w') in
-  let _ = check' w' in 
+  let _ = check w' in 
   (f, show w')
 
 let free (mem, us, fs) p =
@@ -66,13 +49,18 @@ let free (mem, us, fs) p =
   else (mem, us, fs)
 
 let _ =
-  let (m, us, fs) = init 1000 in
-  (* let _           = show (m, us, fs) in *)
-  let _           = check (m, us, fs) in
-  let (_, w')     = malloc (m, us, fs) in
-  let _           = check w' in 
-  let w''         = free w' (read_int ()) in
-  let _           = check w'' in
+  let (m,us,fs) = init 1000 in
+  let _         = show fs in
+  let fs'       = del (read_int ()) fs in
+  ()
+
+let _ =
+  let (m,us,fs) = init 1000 in
+  let _         = check (m, us, fs) in
+  let (_, w')   = malloc (m, us, fs) in
+  let _         = check w' in 
+  let w''       = free w' (read_int ()) in
+  let _         = check w'' in
   ()
 
 let main =
@@ -85,61 +73,3 @@ let main =
       let w' = free w (read_int ()) in
       spin w' in
   spin (init 1000)
-
-  (*
-  let _(* mllc *) = match fs with f::fs' ->
-                        let () = assert (Mystore.get m  f = 0) in
-                        let m' = Mystore.set m f 1 in
-                        let () = assert (Mystore.get m' f != 0) in
-                        List.iter (fun p -> assert (Mystore.get m' p != 0)) us;
-                        List.iter (fun p -> assert (Mystore.get m' (show p) = 0)) fs';
-                        check (m', f::us, fs') in 
-  let _(* free *) = match us with u::us' ->
-                        let () = assert (Mystore.get m  u != 0) in
-                        let m' = Mystore.set m u 0 in
-                        let () = assert (Mystore.get m' u = 0) in
-                        List.iter (fun p -> assert (Mystore.get m' (show p) != 0)) us';
-                        List.iter (fun p -> assert (Mystore.get m' p = 0)) fs;
-                        check (m', us', u::fs) in
-(* let _(* mllc2 *) = match fs with f1::f2::fs' ->
-                        let () = assert (f1 != f2) in
-                        let () = assert (Mystore.get m  f1 = 0) in
-                        let () = assert (Mystore.get m  f2 = 0) in
-                        let m' = Mystore.set m f1 1 in
-                        let () = assert (Mystore.get m' f2 = 0) in
-                        let () = assert (Mystore.get m' f1 != 0) in
-                        List.iter (fun p -> assert (Mystore.get m' p != 0)) us;
-                        List.iter (fun p -> assert (Mystore.get m' (show p) = 0)) fs';
-                        check' (m', f1::us, f2::fs') in 
-  let _(* free2 *) = match us with u1::u2::us' ->
-                        let () = assert (u1 != u2) in
-                        let () = assert (Mystore.get m  u1 != 0) in
-                        let () = assert (Mystore.get m  u2 != 0) in
-                        let m' = Mystore.set m u1 0 in
-                        let () = assert (Mystore.get m' u1 = 0) in
-                        check (m', u2::us', u1::fs) in *)
-*)
-
-(*
-
-let p,(m,us,fs) = malloc w 
-let _           = show p
-let _           = show m
-let _           = show us
-let _           = show fs
-
-
-
-(* For your viewing pleasure *)
-let _ = init
-let _ = malloc
-let _ = free
-
-*)
-
-let (_,_,fs) = init 1000
-let fs'      = del 10 fs
-let fs''     = del 20 fs'
-let _        = fs''
-
-
