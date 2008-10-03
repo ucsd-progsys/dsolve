@@ -22,9 +22,12 @@
  *)
 
 open Typedtree
+open Types
 
 val pattern_descs: pattern list -> pattern_desc list
 val bind_vars: pattern_desc -> pattern_desc -> (Ident.t * Ident.t) list
 val substitution: pattern_desc -> pattern_desc -> Frame.substitution list
 val bind_pexpr: pattern_desc -> Predicate.pexpr -> Frame.substitution list
 val same: pattern_desc -> pattern_desc -> bool
+
+val constructor_patterns: Path.t -> pattern -> (Path.t * Path.t * constructor_tag * Path.t option list) list
