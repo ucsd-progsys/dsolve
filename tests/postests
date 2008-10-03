@@ -1,4 +1,5 @@
 #filename     [# of lambdas to collect idents under]  [only collect idents which name formals]  [-I directory]
+tests/mem.ml                4 False tests
 tests/mysetpos.ml           4 False tests
 tests/isortset.ml           4 False tests
 tests/llset.ml              4 False tests
