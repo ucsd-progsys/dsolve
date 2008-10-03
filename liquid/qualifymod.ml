@@ -430,16 +430,8 @@ let maybe_cstr_from_unlabel_frame fenv p f =
   else
     None 
 
-let add_uninterpreted_constructors tenv fenv (id, td) =
-  match Env.constructors_of_type (Path.Pident id) td with
-    | (_, {cstr_res = ty}) :: _ ->
-        let ucs = F.uninterpreted_constructors tenv ty in
-          Le.addn (List.map (fun (n, f) -> (Path.mk_persistent n, f)) ucs) fenv
-    | _ -> fenv
-
 let qualify_implementation sourcefile fenv ifenv env qs str =
   let _              = reset_framelog () in
-  let fenv           = List.fold_left (add_uninterpreted_constructors env) fenv (Env.types env) in
   let (qs, fenv, cs) = constrain_structure env fenv qs str in
   let cs             = (List.map (lbl_dummy_cstr env) (Le.maplistfilter (maybe_cstr_from_unlabel_frame fenv) ifenv)) @ cs in
   let _              = pre_solve sourcefile in
