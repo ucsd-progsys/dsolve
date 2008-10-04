@@ -200,6 +200,7 @@ let main () =
      "-drawlambda", Arg.Set dump_rawlambda, " (undocumented)";
      "-dlambda", Arg.Set dump_lambda, " (undocumented)";
      "-dinstr", Arg.Set dump_instr, " (undocumented)";
+     "-minsol", Arg.Set minsol, "compute minimum solutions";
      "-dconstrs", Arg.Set dump_constraints, "print out frame constraints";
      "-drconstrs", Arg.Set dump_ref_constraints, "print out refinement constraints";
      "-dsubs", Arg.Set print_subs, "print subs and unsubbed predicates";

@@ -747,27 +747,42 @@ let instantiate_per_environment cs qs =
  * know anything about its value.  For uncalled functions, this will give
  * us the type which makes the least assumptions about the input. *)
 
+let strip_origins cs = snd (List.split cs)
+
+let make_initial_solution cs =
+  let s    = Sol.create 37 in
+  let rhst = Sol.create 37 in
+  List.iter 
+    (function (SubRef (_, _, _, (_, F.Qvar k), _), _) -> 
+      Sol.replace rhst k true
+     | _ -> ()) cs;
+  List.iter
+    (function (WFRef (_, (_, F.Qvar k), _), qs) ->
+      let iqs = if Sol.mem rhst k || !Cf.minsol then qs else [] in
+      Sol.replace s k iqs
+     | _ -> ()) cs;
+  s
+
+  (*
 let filter_wfs cs = List.filter (fun (r, _) -> match r with WFRef(_, _, _) -> true | _ -> false) cs
 let filter_subs cs = List.filter (fun (r, _) -> match r with SubRef(_, _, _, _, _) -> true | _ -> false) cs
-let strip_origins cs = snd (List.split cs)
-                      
 type solmode = WFS | LHS | RHS
 
 let make_initial_solution cs =
-  let s = Sol.create 100 in
+  let s    = Sol.create 37 in
   let addrv qs = function
     | (F.Qconst _, _) -> ()
     | (F.Qvar k, LHS) -> if not (Sol.mem s k) then Sol.replace s k []
     | (F.Qvar k, RHS) -> Sol.replace s k qs
-    | (F.Qvar k, _) -> if Sol.find s k != [] then Sol.replace s k qs in
+    | (F.Qvar k, WFS) -> if Sol.find s k != [] then Sol.replace s k qs in
   let ga (c, q) = match c with
     | SubRef (_, _, r1, (_, qe2), _) ->
         List.iter (fun qv -> addrv [] (F.Qvar qv, LHS)) (F.refinement_qvars r1); addrv q (qe2, RHS)
     | WFRef (_, (_, qe), _) -> addrv [] (qe, LHS); addrv q (qe, WFS) in
-  let wfs = filter_wfs cs in
+  let wfs  = filter_wfs cs in
   let subs = filter_subs cs in
-    List.iter ga subs; List.iter ga wfs; s
-
+  List.iter ga subs; List.iter ga wfs; s
+*)
 (**************************************************************)
 (****************** Debug/Profile Information *****************)
 (**************************************************************)
