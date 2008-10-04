@@ -55,6 +55,8 @@ let new_edge g n n' =
   | None        -> assert false 
   | Some ns     -> (n, n'::ns)::g
 
+let _ = new_edge
+
 (* API *)
 let succs g n = 
   let _ = check_node g n in
@@ -68,6 +70,8 @@ let choose_node g =
   match n with None -> assert false | Some n -> n
 
 (* API *)
+let i = ()
+
 let check_dag n g = 
  List.iter 
     (fun x -> 
@@ -105,15 +109,13 @@ let rec build_dag n g =
 
 let _ = build_dag 0 []
 
-  (*
 let _ =
   let n0 = 0 in
   let g0 = [] in
   let n1 = fresh n0 in
   let g1 = new_node n1 g0 in
-  show g1
+  let _  = show g1 in
   let _  = check_dag n1 g1 in
   let n2 = fresh n1 in
   let g2 = new_node n2 g1 in
-  check_dag n2 g2
-*)
+  check_dag n2 g2 
