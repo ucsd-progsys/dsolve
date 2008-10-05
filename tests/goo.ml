@@ -1,3 +1,4 @@
 let goo x = x
 let _ = goo
-let _ = goo (1,1)
+let x = goo (1,1)
+let _ = (fun y -> y) x

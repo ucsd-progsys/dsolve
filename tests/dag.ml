@@ -69,6 +69,7 @@ let choose_node g =
   let n = List.fold_left (fun a x -> let (k, _) = x in if read_int () > 1 then Some k else a) None g  in
   match n with None -> assert false | Some n -> n
 
+
 (* API *)
 let i = ()
 
@@ -90,6 +91,7 @@ let rec leaves g n =
   | [] -> [n] 
   | ns -> flap (leaves g) ns
 
+  (*
 let rec build_dag n g =
   let _ = check_dag n g in
   let t = read_int () in
@@ -108,14 +110,45 @@ let rec build_dag n g =
     build_dag n' g''
 
 let _ = build_dag 0 []
+*)
 
-let _ =
-  let n0 = 0 in
-  let g0 = [] in
-  let n1 = fresh n0 in
-  let g1 = new_node n1 g0 in
-  let _  = show g1 in
-  let _  = check_dag n1 g1 in
-  let n2 = fresh n1 in
-  let g2 = new_node n2 g1 in
-  check_dag n2 g2 
+
+
+  let n0 = 0                    
+  let n1 = fresh n0             
+  let n2 = fresh n1
+  let _  = show n0
+  let _  = show n1
+  let _  = show n2
+  let _  = assert (n1 <= n2)
+  
+  let g0 = []                   
+  let g1 = new_node n1 g0       
+  let g1 = new_node n1 g1       
+  let _  = show g1              
+  let _  = check_dag n1 g1      
+  let _  = show n2
+  let g2 = new_node n2 g1       
+  let _  = show g2
+  let _  = check_dag n2 g2      
+  let m  = choose_node g2       
+  let _  = assert (m <= n2)     
+  let _  = show m                       
+
+  (*
+let g = []
+let g = new_node 0 g
+let g = new_node 0 g 
+let _ = show g
+let z = choose_node g
+let _ = assert (0 <= z)
+let _ = 
+  let m = read_int () in
+  let gm= [] in
+  (*let gm= new_node m gm in *)
+  let gm= new_node m gm in
+  let _ = show gm in
+  let zm= choose_node gm in
+  let _ = assert (m <= zm) in
+  ()
+  *)
