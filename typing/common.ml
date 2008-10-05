@@ -487,4 +487,11 @@ let dump_gc s =
   printf "@[%s@]@." s;
   pprint_gc (Gc.quick_stat ())
 
+let sort_and_compact xs =
+  let rec f = function 
+    | x1::(x2::_ as xs') ->
+        if x1 = x2 then (f xs') else x1::(f xs')
+    | xs' -> xs' in
+  f (List.sort compare xs)
+ 
 
