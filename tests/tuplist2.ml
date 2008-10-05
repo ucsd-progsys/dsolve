@@ -8,7 +8,6 @@ let zm = choose_node gm
 let _  = assert (m <= zm) 
 
 
-(* let m' = read_int () UNCOMMENT THIS *) 
 let _  =
   let m'  = read_int ()                 in
   let gm' = (m',[])::(m',[])::[]        in

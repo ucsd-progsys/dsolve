@@ -62,20 +62,22 @@ let bound_idents_always pat =
   bound_idents !col_lev pat
 
 let lq n p = if !Clflags.less_qualifs then [] else bound_idents n p
+let mb_lq n = function Some p -> lq n p | None -> []
 
 let rec visit_binding n (pat, expr) = 
   if is_function expr then 
     visit_expr (n+1) expr
   else
     let (pl, il) = visit_expr n expr in
-      (List.rev_append (lq n pat) pl, il)
+      (List.rev_append (mb_lq n pat) pl, il)
 
 and visit_expr n exp =
   let (pl, il) = (ref [], ref []) in
   let addi = C.add il in
   let addp = C.addl pl in
   let vb b = 
-    let (ps, is) = (visit_binding n b) in
+    let (pat, e) = b in
+    let (ps, is) = (visit_binding n (Some pat, e)) in
     let _ = addp ps in
      C.addl il is in 
   let bi p = addp (bound_idents n p) in
@@ -160,12 +162,14 @@ let vids f _ (_, exp) =
 let vb (y, o) b =
   let (t, i) = visit_binding 0 b in
     (List.rev_append t y, List.rev_append o i)
- 
+
 let visit_sstr f sstr = 
   let rec visit_sstr_rec sstr =
     match sstr with
-     Tstr_value (_, bl) :: srem ->
-       List.fold_left f (visit_sstr_rec srem) bl 
+     | Tstr_value (_, bl) :: srem ->
+       List.fold_left f (visit_sstr_rec srem) (List.map (fun (p, e) -> (Some p, e)) bl)
+     | Tstr_eval e :: srem ->
+       f (visit_sstr_rec srem) (None, e)  
      | _ :: srem ->
        visit_sstr_rec srem
      | [] -> ([], []) in
