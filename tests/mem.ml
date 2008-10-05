@@ -1,3 +1,7 @@
+let f xs = match xs with
+  | y::ys -> assert (Mylist.mem y xs)
+  | []    -> ()
+
 let xs1 = []
 
 let xs2 = 1 :: xs1

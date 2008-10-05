@@ -166,16 +166,19 @@ and constrain_constant path = function
 and replace_params ps fs =
   List.map2 (fun (i, _, v) f -> (i, f, v)) ps fs
 
+and get_unint_cstrref env name args =
+  let ucf = Le.find (Path.Pident (Ident.create_persistent name)) env in
+  let f   = match ucf with F.Farrow _ -> F.apply ucf args | _ -> ucf in
+    F.get_refinement f
+
 and get_cstrrefs env path tag name args shp =
   let preds  = List.map expression_to_pexpr args in
   let mref   = try F.const_refinement 
                 [M.assert_constructed_expr env preds (path, tag) shp] with Not_found -> [] in  
   let tagref = B.tag_refinement path tag in
-  let ucf    = Le.find (Path.Pident (Ident.create_persistent name)) env in
-  let f      = match ucf with F.Farrow _ -> F.apply ucf (List.map expression_to_pexpr args) | _ -> ucf in
   let lhsref = F.empty_refinement in
   let rhsref = mref @ tagref in
-  let rhsref = match F.get_refinement f with Some ucr -> ucr @ rhsref | None -> rhsref in
+  let rhsref = match get_unint_cstrref env name (List.map expression_to_pexpr args) with Some ucr -> ucr @ rhsref | None -> rhsref in
   let wfref  = lhsref in
     (lhsref, rhsref, wfref) 
 
@@ -233,11 +236,26 @@ and bind env guard p f pexpr =
   log_frame p.pat_loc f;
   F.env_bind env p.pat_desc f
 
+and mk_constructor_pat_guard tenv env (_, path, tag, args) =
+  try
+    let args  = List.map (function Some v -> P.Var v | None -> raise Not_found) args in
+    let cstrs = Env.constructors_of_type path (Env.find_type path tenv) in
+    let cname = fst (List.find (fun (n, c) -> c.cstr_tag = tag) cstrs) in
+      get_unint_cstrref env cname args
+  with Not_found ->
+    None
+
+and add_constructor_pattern tenv env ((v, _, _, _) as cpat) =
+  match mk_constructor_pat_guard tenv env cpat with
+    | None   -> env
+    | Some r -> Le.add v (F.append_refinement r (Le.find v env)) env
+
 and mk_match_guarded_env env pat = function
   | P.Var v ->
       let cps = Pattern.constructor_patterns v pat in
+      let env = List.fold_left (add_constructor_pattern pat.pat_env) env cps in
         Le.add (Path.mk_ident "__measure_guard") (Builtins.rUnit "" (Path.mk_ident "") (M.mk_guard env v cps)) env
-  | _       -> env
+  | _ -> env
 
 and constrain_case (env, guard, f) matchf matche (pat, e) =
   let env         = bind env guard pat matchf matche in
