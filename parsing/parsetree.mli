@@ -151,6 +151,7 @@ and predpat_desc =
   | Ppredpat_atom of predpatexp * pred_rel list * predpatexp
   | Ppredpat_not of predicate_pattern
   | Ppredpat_and of predicate_pattern * predicate_pattern
+  | Ppredpat_implies of predicate_pattern * predicate_pattern
   | Ppredpat_or of predicate_pattern * predicate_pattern
   | Ppredpat_forall of (string * string) list * predicate_pattern
   | Ppredpat_exists of (string * string) list * predicate_pattern

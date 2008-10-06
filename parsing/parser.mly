@@ -1510,6 +1510,7 @@ qualifier_pattern:
     TRUE                                    { mkpredpat Ppredpat_true }                    
   | qualifier_pattern AND qualifier_pattern { mkpredpat (Ppredpat_and($1, $3)) }
   | qualifier_pattern OR qualifier_pattern  { mkpredpat (Ppredpat_or($1, $3)) }
+  | qualifier_pattern COLONEQUAL qualifier_pattern { mkpredpat (Ppredpat_implies($1, $3)) }
   | MINUSDOT qualifier_pattern              { mkpredpat (Ppredpat_not($2)) }              
   | LPAREN qualifier_pattern RPAREN         { $2 }
   | LPAREN qualifier_pattern IFF qualifier_pattern RPAREN

@@ -52,6 +52,7 @@ and tpat =
   | PNot of tpat
   | PAnd of tpat * tpat
   | POr of tpat * tpat
+  | PImplies of tpat * tpat
   | PForall of (string * string) list * tpat
   | PExists of (string * string) list * tpat
   | PBoolexp of patpexpr
@@ -70,7 +71,8 @@ and t =
   | Iff of t * t
   | Not of t
   | And of t * t 
-  | Or of t * t 
+  | Or of t * t
+  | Implies of t * t
   | Forall of (Path.t * string) list * t
   | Exists of (Path.t * string) list * t
   | Boolexp of pexpr

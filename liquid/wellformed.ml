@@ -127,7 +127,8 @@ let pred_is_well_typed env p =
   | P.Not p -> pred_shape_is_bool env p
   | P.Iff (p1, p2)
   | P.Or (p1, p2)  
-  | P.And (p1, p2) ->
+  | P.And (p1, p2)
+  | P.Implies (p1, p2) ->
       if pred_shape_is_bool env p1 then
         pred_shape_is_bool env p2
       else

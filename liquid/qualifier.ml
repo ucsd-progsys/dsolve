@@ -90,6 +90,8 @@ let expand_about vm p =
         C.tflap2 (t_rec vm t1, t_rec vm t2) (fun a b -> And (a, b))
     | Or (t1, t2) ->
         C.tflap2 (t_rec vm t1, t_rec vm t2) (fun a b -> Or (a, b))
+    | Implies (t1, t2) ->
+        C.tflap2 (t_rec vm t1, t_rec vm t2) (fun a b -> Implies (a, b))
     | Forall (p, q) ->
         List.rev_map (fun a -> Forall (p, a)) (t_rec (fix_bound_vars vm p) q)
     | Exists (p, q) ->
