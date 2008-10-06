@@ -1,5 +1,5 @@
-axiom consmem: forall (x: obj, xs: obj, ys: obj. (? mem x (x::ys)))
-axiom weaken:  forall (x: obj, xs: obj, y: obj. (-. (? mem x xs)) or (? mem x (y::xs)))
+axiom consmem: forall (x: obj, xs: obj. (? mem x (x::xs)))
+axiom weaken:  forall (x: obj, y: obj, xs: obj. (-. (? mem x xs)) or (? mem x (y::xs)))
 
 (* the following will bring z3 to a screeching halt *)
 (* axiom deduce:  forall (x: obj, xs: obj. (-. (? mem x xs)) or (exists (y: obj, ys: obj. xs = y::ys and (x = y or (? mem x ys))))) *)
