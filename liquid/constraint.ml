@@ -750,7 +750,7 @@ let instantiate_per_environment cs qs =
 let strip_origins cs = snd (List.split cs)
 
 let make_initial_solution cs =
-  let s0   = Sol.create 37 in
+  let s    = Sol.create 37 in
   let rhst = Sol.create 37 in
   List.iter 
     (function (SubRef (_, _, _, (_, F.Qvar k), _), _) -> 
@@ -759,17 +759,11 @@ let make_initial_solution cs =
   List.iter
     (function (WFRef (_, (_, F.Qvar k), _), qs) ->
       let iqs = if Sol.mem rhst k || !Cf.minsol then qs else [] in
-      List.iter (Sol.add s0 k) iqs
+      Sol.replace s k iqs
      | _ -> ()) cs;
-  let s    = Sol.create 37 in
-  Sol.iter 
-    (fun k _ -> 
-      let qs  = Sol.find_all s0 k in
-      let qs' = C.sort_and_compact qs in
-      Sol.replace s k qs') s0;
   s
-(* *)
-(*  
+
+  (*
 let filter_wfs cs = List.filter (fun (r, _) -> match r with WFRef(_, _, _) -> true | _ -> false) cs
 let filter_subs cs = List.filter (fun (r, _) -> match r with SubRef(_, _, _, _, _) -> true | _ -> false) cs
 type solmode = WFS | LHS | RHS
