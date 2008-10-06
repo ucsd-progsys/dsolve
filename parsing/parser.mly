@@ -1557,6 +1557,8 @@ qual_expr_1:
     { mkpredpatexp (Ppredpatexp_funapp(Longident.parse $1, $2)) }
   | qual_term COLONCOLON qual_term
     { mkpredpatexp (Ppredpatexp_funapp(Longident.parse "::", [$1; $3])) }
+  | COLONCOLON qual_term qual_term
+    { mkpredpatexp (Ppredpatexp_funapp(Longident.parse "::", [$2; $3])) }
   | UIDENT qual_term_list
     { mkpredpatexp (Ppredpatexp_funapp(Longident.parse $1, $2)) } 
   | UIDENT

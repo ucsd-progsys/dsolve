@@ -1,1 +1,2 @@
 qualif MM(v): (? Mylist.mem ^ v)
+qualif CN(v): v = ~A :: ~B

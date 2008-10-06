@@ -2,6 +2,9 @@ let f xs = match xs with
   | y::ys -> assert (Mylist.mem y xs)
   | []    -> ()
 
+let cons (x: int) xs =
+  x :: xs
+
 let xs1 = []
 
 let xs2 = 1 :: xs1
