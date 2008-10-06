@@ -107,7 +107,7 @@ let is_wfframe_constraint = function
 
 let solution_map s k = 
   C.do_catch 
-    (Printf.sprintf "ERROR: solution_map couldn't find: %s" (C.path_name k))
+    (Printf.sprintf "ERROR: solution_map couldn't find: %s" (Path.unique_name k))
     (Sol.find s) k  
 
 let sref_map f r =
@@ -173,8 +173,10 @@ let pprint ppf = function
       if C.ck_olev C.ol_verb_constrs then fprintf ppf "@[(Guard)@.%a@]@.@." P.pprint (guard_predicate () g);
       fprintf ppf "@[%a@ <:@;<1 2>%a@]" F.pprint f1 F.pprint f2
   | WFFrame (e,f) ->
-      if C.ck_olev C.ol_verb_constrs then fprintf ppf "@[(Env)@.%a@]@." pprint_fenv e;
-      if C.ck_olev C.ol_dump_wfs then F.pprint ppf f
+      if C.ck_olev C.ol_dump_wfs then begin
+        if C.ck_olev C.ol_verb_constrs then fprintf ppf "@[(Env)@.%a@]@." pprint_fenv e;
+        fprintf ppf "@[|- %a@]@." F.pprint f
+      end
 
 let pprint_io ppf = function
   | Some id -> fprintf ppf "(%d)" id
@@ -751,20 +753,30 @@ let instantiate_per_environment cs qs =
 let strip_origins cs = snd (List.split cs)
 
 let make_initial_solution cs =
-  let s    = Sol.create 37 in
+  let s0   = Sol.create 37 in
+  let lhst = Sol.create 37 in
   let rhst = Sol.create 37 in
   List.iter 
-    (function (SubRef (_, _, _, (_, F.Qvar k), _), _) -> 
+    (function (SubRef (_, _, r1, (_, F.Qvar k), _), _) ->
+      List.iter (fun k' -> Sol.replace lhst k' true) (F.refinement_qvars r1);
       Sol.replace rhst k true
      | _ -> ()) cs;
   List.iter
     (function (WFRef (_, (_, F.Qvar k), _), qs) ->
       let iqs = if Sol.mem rhst k || !Cf.minsol then qs else [] in
-      Sol.replace s k iqs
+      Sol.add s0 k iqs
      | _ -> ()) cs;
+  let s    = Sol.create 37 in
+  Sol.iter 
+    (fun k _ -> 
+      let qss = Sol.find_all s0 k in
+      let qs' = C.sort_and_compact (List.flatten qss) in
+      Sol.replace s k qs') s0;
+  Sol.iter (fun k _ -> C.asserts ("missing lhs kvar: "^(Path.unique_name k))  (Sol.mem s k)) lhst;
+  Sol.iter (fun k _ -> C.asserts ("missing rhs kvar: "^(Path.unique_name k))  (Sol.mem s k)) rhst;
   s
-
-  (*
+(* *)
+(*   
 let filter_wfs cs = List.filter (fun (r, _) -> match r with WFRef(_, _, _) -> true | _ -> false) cs
 let filter_subs cs = List.filter (fun (r, _) -> match r with SubRef(_, _, _, _, _) -> true | _ -> false) cs
 type solmode = WFS | LHS | RHS
@@ -783,7 +795,7 @@ let make_initial_solution cs =
   let wfs  = filter_wfs cs in
   let subs = filter_subs cs in
   List.iter ga subs; List.iter ga wfs; s
-*)
+ *)
 (**************************************************************)
 (****************** Debug/Profile Information *****************)
 (**************************************************************)
