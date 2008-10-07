@@ -12,3 +12,4 @@ add: type casting at z3 interface with 1-1 casting functions (by default. absent
 add: implicitly quantified types: forall i. (j: int -> 'a [j/i]) k: int -> 'a [k/i]
 add: extension to constructed types
 
+fix: wellformedness should totally start using ml types (and we should guarantee an ml type for every id) to get rid of the hack for unifying functions with arguments

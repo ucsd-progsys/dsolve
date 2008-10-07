@@ -172,8 +172,11 @@ let pprint ppf = function
       if C.ck_olev C.ol_verb_constrs then fprintf ppf "@[(Env)@.%a@]@." pprint_fenv e;
       if C.ck_olev C.ol_verb_constrs then fprintf ppf "@[(Guard)@.%a@]@.@." P.pprint (guard_predicate () g);
       fprintf ppf "@[%a@ <:@;<1 2>%a@]" F.pprint f1 F.pprint f2
-  | WFFrame (_,f) ->
-      if C.ck_olev C.ol_dump_wfs then F.pprint ppf f
+  | WFFrame (e,f) ->
+      if C.ck_olev C.ol_dump_wfs then begin
+        if C.ck_olev C.ol_verb_constrs then fprintf ppf "@[(Env)@.%a@]@." pprint_fenv e;
+        fprintf ppf "@[|- %a@]@." F.pprint f
+      end
 
 let pprint_io ppf = function
   | Some id -> fprintf ppf "(%d)" id
