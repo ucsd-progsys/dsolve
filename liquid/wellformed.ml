@@ -48,20 +48,27 @@ let builtin_fun_app_shapes = lazy(
      (P.tag_function, (function [Fsum _] -> uInt | _ -> raise IllFormed))]
 )
 
-let rec app_to_fun funf =
+let check_and_inst f f1 f2 eq' inst' =
+  let (sub, eq, inst) = subt f1 f2 eq' inst' in
+    if sub then (eq, inst)
+    else let (sub, eq, inst) = subt (unfold f1) f2 eq' inst' in
+      if sub then (eq, inst) else raise IllFormed
+
+let rec app_to_fun eq inst funf =
   match funf with
       Farrow(_, f1, f2) ->
         (fun ps -> 
            match ps with
              p :: ps ->
-               (*let _ = Format.printf "@[%a@.%a@.%b@]@.@." pprint f1 pprint p
-                 (subt f1 p) in *)
-               if (subt f1 p || subt (unfold f1) p) then (app_to_fun f2) ps else raise IllFormed
+               (*let _ = Format.printf "@[%a@.%a@.%b@]@.@." pprint (shape f1) pprint (shape p)
+                 (subt f1 p) in*)
+               let (eq, inst) = check_and_inst subt f1 p eq inst in 
+               (app_to_fun eq inst f2) ps
            | [] -> raise IllFormed)
     | f -> 
         (fun ps -> 
            match ps with
-             [] -> f
+             [] -> map_inst eq inst f
            | _ -> raise IllFormed)
 
 let get_by_name (n, env) =
@@ -80,7 +87,7 @@ let get_app_shape s env =
   try
     List.assoc s (Lazy.force builtin_fun_app_shapes)
   with Not_found -> 
-    app_to_fun (get_by_name s env)
+    app_to_fun [] [] (get_by_name s env)
 
 let quantified_types =
   [("int", uInt)]

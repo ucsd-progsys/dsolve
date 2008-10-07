@@ -300,10 +300,10 @@ let maybe_assoc p l =
     Some (List.assoc p l) 
   with Not_found -> None
 
-let rec subt t1 t2 =
+let rec subt t1 t2 eq inst =
   (* yes, i inlined a union find :( *)
-  let map = ref [] in
-  let pmap = ref [] in
+  let map = ref inst in
+  let pmap = ref eq in
   let get_ind p =
     try
       List.assoc p !pmap
@@ -358,10 +358,27 @@ let rec subt t1 t2 =
     | t -> false 
   and p_s ps qs =
     List.for_all s_rec (List.combine (params_frames ps) (params_frames qs)) in
-  s_rec (t1, t2)
- 
+  (s_rec (t1, t2), !pmap, !map) (* relies on deterministic o of eval *)
+
+let subti t1 t2 =
+  subt t1 t2 [] []
+
+let map_inst eq inst f =
+  let get_ind p =
+    try List.assoc p eq with Not_found -> p in
+  let mapped p =
+    let p = get_ind p in
+    try
+      Some (List.assoc p inst)
+    with Not_found -> None in
+  let m_inst = function
+    | Fvar (p, _, _) as ofr -> (match mapped p with Some fr -> fr | None -> ofr)
+    | fr -> fr in 
+  map m_inst f
+
 (**************************************************************)
 (******************** Frame pretty printers *******************)
+
 (**************************************************************)
 
 let pprint_sub ppf (path, pexp) =
