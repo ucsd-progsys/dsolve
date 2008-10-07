@@ -75,6 +75,7 @@ let keyword_table =
     "qualif", QUALIF;
     "squalif", SINGLE_QUALIF;
     "mdep", MODULE_DEPENDENCY;
+    "embed", EMBED;
     "predicate", PREDICATE;
     "measure", MEASURE;
     "refinement", REFINEMENT;

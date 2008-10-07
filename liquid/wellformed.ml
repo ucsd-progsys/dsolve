@@ -25,6 +25,7 @@ open Builtins
 open Frame
 
 module P = Predicate
+module TP = TheoremProverZ3.Prover
 
 exception IllFormed
 
@@ -82,12 +83,9 @@ let get_app_shape s env =
   with Not_found -> 
     app_to_fun (get_by_name s env)
 
-let quantified_types =
-  [("int", uInt)]
-
 let bind_quantified env ps =
   try
-    let bindings = List.map (fun (p, tn) -> (p, List.assoc tn quantified_types)) ps in
+    let bindings = List.map (fun (p, tn) -> (p, TP.frame_of tn)) ps in
       Lightenv.addn bindings env
   with Not_found ->
     raise IllFormed

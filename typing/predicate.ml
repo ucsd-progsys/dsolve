@@ -57,8 +57,8 @@ and tpat =
   | PNot of tpat
   | PAnd of tpat * tpat
   | POr of tpat * tpat
-  | PForall of (string * string) list * tpat
-  | PExists of (string * string) list * tpat
+  | PForall of (string * Parsetree.prover_t) list * tpat
+  | PExists of (string * Parsetree.prover_t) list * tpat
   | PBoolexp of patpexpr
 
 type pexpr =
@@ -76,8 +76,8 @@ and t =
   | Not of t
   | And of t * t 
   | Or of t * t
-  | Forall of (Path.t * string) list * t
-  | Exists of (Path.t * string) list * t
+  | Forall of (Path.t * Parsetree.prover_t) list * t
+  | Exists of (Path.t * Parsetree.prover_t) list * t
   | Boolexp of pexpr
 
 let pprint_rel = function
@@ -122,10 +122,10 @@ and pprint ppf = function
   | Or (p, q) ->
       fprintf ppf "@[(%a@ or@;<1 2>@;<1 2>%a)@]" pprint p pprint q
   | Forall (p, q) ->
-      let p = List.map (fun (n, t) -> (Common.path_name n) ^ ": " ^ t) p in
+      let p = List.map (fun (n, t) -> (Common.path_name n) ^ ": " ^ (C.prover_t_to_s t)) p in
       fprintf ppf "@[(forall@ (%a.@ %a))@]" (Common.pprint_list ", " Common.pprint_str) p pprint q
   | Exists (p, q) ->
-      let p = List.map (fun (n, t) -> (Common.path_name n) ^ ": " ^ t) p in
+      let p = List.map (fun (n, t) -> (Common.path_name n) ^ ": " ^ (C.prover_t_to_s t)) p in
       fprintf ppf "@[(forall@ (%a.@ %a))@]" (Common.pprint_list ", " (Common.pprint_str)) p pprint q
   | Boolexp e ->
       fprintf ppf "@[(? (%a))@]" pprint_pexpr e

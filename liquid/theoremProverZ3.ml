@@ -31,78 +31,6 @@ module C = Common
 module F = Frame
 module Le = Lightenv
 
-let force_print s = 
-  print_string s; flush stdout
-
-let wrap s f x = f x
- (* let _ = force_print ("Z3 wrap start: "^s^"\n") in 
-    let rv = f x in
-    let _ = force_print ("Z3 wrap end: "^s^"\n") in 
-    rv *)
-
-(***************************************************************)
-(*********************** Z3 Wrappers ***************************)
-(***************************************************************)
-
-let z3_mk_int_type c = 
-  wrap "mk_int_type" (Z3.mk_int_type) c
-let z3_mk_string_symbol c s = 
-  wrap "mk_string_symbol" (Z3.mk_string_symbol c) s
-let z3_mk_const c s ty = 
-  wrap "mk_const" (Z3.mk_const c s) ty
-let z3_mk_func_decl c s d r = 
-  wrap "mk_func_decl" (Z3.mk_func_decl c s d) r
-let z3_mk_int c i ty = 
-  wrap "mk_int" (Z3.mk_int c i) ty
-let z3_mk_add c zea = 
-  wrap "mk_add" (Z3.mk_add c) zea
-let z3_mk_sub c zea = 
-  wrap "mk_sub" (Z3.mk_sub c) zea
-let z3_mk_mul c zea = 
-  wrap "mk_mul" (Z3.mk_mul c) zea
-let z3_mk_ite c ze1 ze2 ze3 = 
-  wrap "mk_ite" (Z3.mk_ite c ze1 ze2) ze3
-let z3_mk_true c = 
-  wrap "mk_true" Z3.mk_true c
-let z3_mk_not c ze  = 
-  wrap "mk_not" (Z3.mk_not c) ze
-let z3_mk_and c zea = 
-  wrap "mk_and" (Z3.mk_and c) zea
-let z3_mk_or c zea = 
-  wrap "mk_or" (Z3.mk_or c) zea
-let z3_mk_distinct c zea = 
-  wrap "mk_distinct" (Z3.mk_distinct c) zea
-let z3_mk_eq c ze1 ze2 = 
-  wrap "mk_eq" (Z3.mk_eq c ze1) ze2
-let z3_mk_gt c ze1 ze2 = 
-  wrap "mk_gt" (Z3.mk_gt c ze1) ze2
-let z3_mk_ge c ze1 ze2 = 
-  wrap "mk_ge" (Z3.mk_ge c ze1) ze2
-let z3_mk_lt c ze1 ze2 = 
-  wrap "mk_lt" (Z3.mk_lt c ze1) ze2
-let z3_mk_le c ze1 ze2 = 
-  wrap "mk_le" (Z3.mk_le c ze1) ze2
-let z3_mk_forall c ts ns ze =
-  wrap "mk_forall" (Z3.mk_forall c 0 [||] ts ns) ze
-let z3_mk_exists c ts ns ze =
-  wrap "mk_exists" (Z3.mk_exists c 0 [||] ts ns) ze
-let z3_check c = 
-  wrap "check" Z3.check c
-let z3_ast_to_string c zp = 
-  wrap "ast_to_string" (Z3.ast_to_string c) zp
-let z3_type_check c zp = 
-  wrap "type_check" (Z3.type_check c) zp
-let z3_push c = 
-  wrap "push" Z3.push c
-let z3_assert_cnstr c zp = 
-  wrap "assert_cnstr" (Z3.assert_cnstr c) zp
-let z3_pop c i = 
-  wrap "pop" (Z3.pop c) i 
-let z3_mk_context_x a = 
-  wrap "mk_context_x" Z3.mk_context_x a
-let z3_mk_app c f zea = 
-  wrap "mk_app" (Z3.mk_app c f) zea
-
 (***************************************************************)
 
   module type PROVER = 
@@ -113,13 +41,15 @@ let z3_mk_app c f zea =
     val valid   : F.t Le.t -> P.t -> bool
     val finish : unit -> unit
     val print_stats : Format.formatter -> unit -> unit
-    type sort = Int | Set | Array of sort * sort | Bool | Unint | Func of sort list
+    val embed_type : F.t * Parsetree.prover_t -> unit
+    val frame_of : Parsetree.prover_t -> F.t
+    type sort = Int | Array of sort * sort | Bool | Unint of string | Func of sort list
   end
 
 module Prover : PROVER = 
-  struct
+ struct
 
-    type sort = Int | Set | Array of sort * sort | Bool | Unint | Func of sort list
+    type sort = Int | Array of sort * sort | Bool | Unint of string | Func of sort list
 
     type decl = Vbl of Path.t | Fun of string * int | Barrier
     type var_ast = Const of Z3.ast | Bound of int * sort
@@ -127,33 +57,19 @@ module Prover : PROVER =
     type z3_instance = { 
       c                 : Z3.context;
       tint              : Z3.type_ast;
-      tun               : Z3.type_ast;
-      tset              : Z3.type_ast;
       tbool             : Z3.type_ast;
       vart              : (decl, var_ast) Hashtbl.t;
       funt              : (decl, Z3.const_decl_ast) Hashtbl.t;
+      tydeclt           : (sort, Z3.type_ast) Hashtbl.t;
       mutable vars      : decl list ;
       mutable count     : int;
       mutable i         : int;
       mutable bnd       : int;
       mutable v         : Z3.ast option;
+      mutable frtymap   : (F.t * sort) list;
     }
 
-    let builtins = [
-            ("__tag", Func [Unint; Int]);
-            ("_DIV", Func [Int; Int; Int]);
-    ]
-
-    let is_select = C.has_prefix "SELECT_"
-    let select_type = Func [Int; Int]
-
-    let pprint_sort ppf = function
-      | Bool -> fprintf ppf "Bool"
-      | Int -> fprintf ppf "Int"
-      | Unint -> fprintf ppf "Unint"
-      | _ -> assert false
-
-    (* stats *)
+   (* stats *)
     let nb_z3_push  = ref 0
     let nb_z3_unsat = ref 0
     let nb_z3_pop   = ref 0
@@ -163,74 +79,110 @@ module Prover : PROVER =
       let x = ref 0 in
       (fun v -> incr x; (v^(string_of_int !x)))
 
-    let rec frame_to_type = function
-        F.Fabstract(p, _, _) -> (match p with 
-                                | p when p = path_int -> Int
-                                | p when set_path p -> Set
-                                | _ -> Unint)
-      | F.Farrow (_, t1, t2) -> Func (collapse t1 t2)
-      | F.Fsum(p, _, _, _) -> (match p with
-                                | p when p = path_bool -> Bool
-                                | _ -> Unint)
-      | _ -> Unint
-    and collapse t1 t2 =
-      (frame_to_type t1)
-      :: (match t2 with F.Farrow (_, t1, t2) -> collapse t1 t2 
-                                      | _ -> [frame_to_type t2])
-    and set_path p = (Path.name p) = "Myset.set"
+    let get_by_name s env =
+      List.hd (Le.filterlist (fun p _ -> Path.name p = s) env)
 
-    (* THIS FUNCTION IS A SLEAZY HACK *)
-    let string_to_type = function
-      | "bool" -> Bool
-      | "int"  -> Int
-      | "obj"  -> Unint
-      | "set"  -> Set
-      | "inta" -> Int (* HACK *) 
-      | _ -> assert false
+(***************************************************************************************)
+(********************** Typing ************************************************************)
+(***************************************************************************************)
+
+    let builtins = [
+            ("__tag", Func [Unint "obj"; Int]);
+            ("_DIV", Func [Int; Int; Int]);
+            ("_IOFB", Func [Bool; Int]);
+    ]
+
+    let abs p = F.Fabstract(p, [], F.empty_refinement)
+
+    let init_frtymap = [
+      (abs Predef.path_int, Int); 
+      (abs Predef.path_bool, Bool);
+    ]
+    
+    let rec frame_to_type me = function
+      | F.Farrow (_, t1, t2) -> Func (collapse me t1 t2)
+      | fr -> snd (List.find (fun (fr', _) -> F.same_shape fr fr') me.frtymap) 
+
+    and collapse me t1 t2 =
+      (frame_to_type me t1)
+      :: (match t2 with 
+          | F.Farrow (_, t1, t2) -> collapse me t1 t2 
+          | _ -> [frame_to_type me t2])
+
+    let rec type_to_frame me = function
+      | Func (t :: []) -> type_to_frame me t
+      | Func (t :: ts) ->
+        (try
+          List.assoc t (C.list_assoc_flip me.frtymap)
+        with Not_found -> F.Farrow(F.fresh_binder (), type_to_frame me t, type_to_frame me (Func ts)))
+      | t -> List.assoc t (C.list_assoc_flip me.frtymap)
 
     let rec z3VarType me = function
       | Int -> me.tint
       | Bool -> me.tbool
       | Array _ -> assert false
-      | Set -> me.tset
-      | Unint -> me.tint (*me.tun*)
-      | Func _ -> z3VarType me Unint
+      | Unint _ -> me.tint
+      | Func _ -> z3VarType me (Unint ("fun"))
 
-    let z3FunTypes me = function 
+    let z3VarType me t =
+      C.do_memo me.tydeclt (z3VarType me) t t
+
+    let rec transl_type me = function
+      | Parsetree.Pprover_abs s ->
+          (match s with 
+          | "int" -> Int
+          | "bool" -> Bool
+          | s -> Unint s)
+      | Parsetree.Pprover_array (t, t') ->
+          Array (transl_type me t, transl_type me t')
+      | Parsetree.Pprover_fun ts ->
+          Func (List.map (transl_type me) ts)
+
+    let z3ArgTypes me = function 
       | Func ts -> (match (List.rev_map (z3VarType me) ts) with
                       | x :: [] -> ([], x)
                       | x :: xs -> (List.rev xs, x)
                       | [] -> assert false)
       | _ -> assert false
 
-    let getVarType s env =
-      try frame_to_type (Le.find s env) 
-        with Not_found -> printf "@[Warning:@ type@ of@ %s@ uninterpretable@ at@ TP@]@." (Path.unique_name s); Unint
+    let getVarType me s env =
+      try frame_to_type me (Le.find s env) 
+        with Not_found ->
+          let p = Path.unique_name s in
+          printf "@[Warning:@ type@ of@ %s@ uninterpretable@ at@ TP@]@." p; (Unint p)
 
-    let get_by_name s env =
-      List.hd (Le.filterlist (fun p _ -> Path.name p = s) env)
-
-    let getFunType s env =
-      if is_select s then select_type else
-      try List.assoc s builtins
-        with Not_found -> try frame_to_type (get_by_name s env)
+    let is_select = C.has_prefix "SELECT_"
+    let select_type = Func [Int; Int]
+ 
+    let getFunType me s env =
+      if is_select s then select_type
+      else try List.assoc s builtins
+        with Not_found -> try frame_to_type me (get_by_name s env)
           with Failure _ -> failwith (sprintf "@[Could@ not@ type@ function@ %s@ in@ tpz3@]" s)
+
+(***************************************************************************************)
+(********************** Vars ************************************************************)
+(***************************************************************************************)
 
     let z3Var_memo env me s =
       Misc.do_memo me.vart
       (fun () -> 
-        let t = getVarType s env in
+        let t = getVarType me s env in
         let sym = Z3.mk_string_symbol me.c (fresh "z3v") in
         let rv = Const (Z3.mk_const me.c sym (z3VarType me t)) in
         me.vars <- (Vbl s)::me.vars; rv) 
       () (Vbl s)
 
+    let maybe_remap_v env me s =
+      match me.v with
+      | Some c -> c
+      | None -> 
+          let rv = Z3.mk_const me.c (Z3.mk_string_symbol me.c (fresh "AA"))
+            (z3VarType me (getVarType me s env)) in
+            me.v <- Some rv; rv
+
     let z3Var env me s =
-      if s = C.qual_test_var then match me.v with 
-                                  | Some c -> c
-                                  | None -> let rv = (Z3.mk_const me.c (Z3.mk_string_symbol me.c (fresh "AA")) 
-                                                     (z3VarType me (getVarType s env))) in
-                                              me.v <- Some rv; rv 
+      if s = C.qual_test_var then maybe_remap_v env me s
       else match z3Var_memo env me s with
           Const v -> v
         | Bound (b, t) -> Z3.mk_bound me.c (me.bnd - b) (z3VarType me t)
@@ -239,27 +191,45 @@ module Prover : PROVER =
       me.bnd <- me.bnd + 1; Hashtbl.replace me.vart (Vbl p) (Bound (me.bnd, t)); me.vars <- (Vbl p) :: me.vars;
       Z3.mk_string_symbol me.c (fresh "z3b")
 
-    let z3Fun me s t k = 
+(***************************************************************************************)
+(********************** Funs ************************************************************)
+(***************************************************************************************)
+
+    let z3Fun env me s k = 
       Misc.do_memo me.funt
       (fun () ->
+        let t   = getFunType me s env in
         let sym = Z3.mk_string_symbol me.c (fresh "z3f") in
-        let (ts, ret) = z3FunTypes me t in
+        let (ts, ret) = z3ArgTypes me t in
         let rv  = Z3.mk_func_decl me.c sym (Array.of_list ts) ret in
         me.vars <- (Fun (s,k))::me.vars; rv) 
       () (Fun (s,k))
 
+    let cast me ast = function
+      (*| (me.tbool, me.tint) -> Z3.mk_app (z3FunType "_BOFI" ) *)
+      | _ -> assert false
+
+    let rec z3Cast me = function
+      | (f :: fs, a :: sa) -> 
+        let (t, t') = (Z3.get_type me.c a, z3VarType me f) in
+        let t = if t != t' then (cast me a (t, t')) else a in
+          t :: (z3Cast me (fs, sa))
+      | ([], []) -> []
+      | _ -> assert false
+
     let z3App env me s zes =
-      let t   = getFunType s env in 
       let k   = List.length zes in
       let zes = Array.of_list zes in
-      Z3.mk_app me.c (z3Fun me s t k) zes 
+      let cf  = z3Fun env me s k in
+      let rv  = Z3.mk_app me.c cf zes in
+        if Z3.type_check me.c rv then rv else
+          (*let ft = match getFunType env s with Func ts -> ts | _ -> assert false in
+          let zes = z3Cast (ft, zes) in*)
+            Z3.mk_app me.c cf zes
 
-    let rec isConst = function P.PInt i -> true | _ -> false
-
-    let qargs me ps ts = 
-      Array.of_list (List.map (fun (p, t) -> z3Bind me p t) (List.combine ps ts))
-
-    let qtypes me ts = Array.of_list (List.map (z3VarType me) ts)  
+(***************************************************************************************)
+(********************** Pred/Expr Transl ************************************************************)
+(***************************************************************************************)
 
     let rec z3Exp env me e =
       match e with 
@@ -290,39 +260,37 @@ module Prover : PROVER =
       | P.Atom (e1,P.Le,e2) -> Z3.mk_le me.c (z3Exp env me e1) (z3Exp env me e2)
       | P.Forall (ps, q) -> 
           let (ps, ss) = List.split ps in
-          let ts = List.map string_to_type ss in
-          mk_quantifier z3_mk_forall env me ps ts q
+          let ts = List.map (transl_type me) ss in
+          mk_quantifier Z3.mk_forall env me ps ts q
       | P.Exists (ps, q) ->
           let (ps, ss) = List.split ps in
-          let ts = List.map string_to_type ss in
-          mk_quantifier z3_mk_exists env me ps ts q
+          let ts = List.map (transl_type me) ss in
+          mk_quantifier Z3.mk_exists env me ps ts q
       | P.Boolexp e -> z3Exp env me e (* must be bool *)
 
     and mk_quantifier mk env me ps ts q =
       let args = qargs me ps ts in
-      let rv = mk me.c (qtypes me ts) args (z3Pred env me q) in
+      let rv = mk me.c 0 [||] (qtypes me ts) args (z3Pred env me q) in
       me.bnd <- me.bnd - (List.length ps); rv
+
+    and qargs me ps ts = 
+      Array.of_list (List.map (fun (p, t) -> z3Bind me p t) (List.combine ps ts))
+
+    and qtypes me ts = Array.of_list (List.map (z3VarType me) ts)  
 
     let z3Preds env me ps =
       let ps' = List.map (z3Pred env me) ps in
       Z3.mk_and me.c (Array.of_list ps')
 
+(***************************************************************************************)
+(********************** Low Level Interface ************************************************************)
+(***************************************************************************************)
+
+
     let unsat me =
       let _ = incr nb_z3_unsat in
       let rv = (Bstats.time "Z3 unsat" Z3.check me.c) = Z3.L_FALSE in
       rv
-
-       (* 
-    let p2s p = 
-      Predicate.pprint Format.str_formatter p;
-      Format.flush_str_formatter ()
- 
-    let z3Pred_wrap me p = 
-      let _  = force_print ("z3Pred: in = "^(p2s p)^"\n") in 
-      let zp = z3Pred me p in
-      let _  = force_print ("z3Pred: out = "^(Z3.ast_to_string me.c zp)^"\n") in
-      if not (Z3.type_check me.c zp) then failwith "Dsolve-Z3 type error" else
-        zp *)
 
     let assert_axiom me p =
       let _ = Bstats.time "Z3 assert" (Z3.assert_cnstr me.c) p in
@@ -333,44 +301,30 @@ module Prover : PROVER =
       let _ = incr nb_z3_push in
       let _ = me.count <- me.count + 1 in
       if unsat me then me.i <- me.i + 1 else
-        let p' = Bstats.time "mk preds" (mkpreds me) ps in
         let _  = me.vars <- Barrier :: me.vars in
+        let p' = Bstats.time "mk preds" (mkpreds me) ps in
         let _  = Z3.push me.c in
         Bstats.time "Z3 assert" (Z3.assert_cnstr me.c) p' 
-
-    let rec vpop (cs,s) =
-      match s with 
-      | [] -> (cs,s)
-      | Barrier :: t -> (cs,t)
-      | h :: t -> vpop (h::cs,t) 
-
-    let remove_decl me d = 
-      match d with 
-      | Barrier -> Common.asserts "TheoremProverZ3.remove_decl" false
-      | Vbl _ -> Hashtbl.remove me.vart d 
-      | Fun _ -> Hashtbl.remove me.funt d
 
     let pop me =
       let _ = incr nb_z3_pop in
       let _ = me.count <- me.count - 1 in
       if me.i > 0 then me.i <- me.i - 1 else
-        let (cs,vars') = vpop ([],me.vars) in
-        let _ = me.vars <- vars' in
-        let _ = List.iter (remove_decl me) cs in
         Z3.pop me.c 1 
 
     let me = 
       let c = Z3.mk_context_x [|("MODEL", "false"); ("PARTIAL_MODELS", "true")|] in
       (* types *)
       let tint = Z3.mk_int_type c in
-      let tun = Z3.mk_uninterpreted_type c (Z3.mk_string_symbol c "obj") in
-      let tset = Z3.mk_uninterpreted_type c (Z3.mk_string_symbol c "set") in
       let tbool = Z3.mk_bool_type c in
       (* memo tables *)
       let vart = Hashtbl.create 37 in
       let funt = Hashtbl.create 37 in
-      { c = c; tint = tint; tun = tun; tbool = tbool; tset = tset; v = None;
-      vart = vart; funt = funt; vars = []; count = 0; i = 0; bnd = 0} 
+      let tydeclt = Hashtbl.create 37 in
+      { c = c; tint = tint; tbool = tbool; v = None; tydeclt = tydeclt; frtymap = init_frtymap;
+        vart = vart; funt = funt; vars = []; count = 0; i = 0; bnd = 0}
+       
+
 
 (***************************************************************************************)
 (********************** API ************************************************************)
@@ -391,6 +345,14 @@ module Prover : PROVER =
     let axiom env p =
       assert_axiom me (z3Pred env me p)
 
+    let embed_type (fr, t) =
+      me.frtymap <- (fr, transl_type me t) :: me.frtymap
+
+    let frame_of pt =
+      try
+        type_to_frame me (transl_type me pt)
+      with Not_found -> raise (Failure (C.prover_t_to_s pt))
+
     let finish () = 
       (*Bstats.time "Z3 pop"*) pop me; 
       me.v <- None;
@@ -401,4 +363,3 @@ module Prover : PROVER =
       !nb_z3_set !nb_z3_push !nb_z3_pop !nb_z3_unsat
 
 end
-

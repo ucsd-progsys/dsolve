@@ -6,6 +6,7 @@ open Types
 module F = Frame
 module M = Measure
 module P = Predicate
+module TP = TheoremProverZ3
 
 (* MLQs *)
 
@@ -23,6 +24,9 @@ let lookup2 f1 f2 s = lu f1 (lu f2 idf) s
 let lookup f y s = lu f (fun s -> y) s 
 
 let maybe_add_pref dopt s = match dopt with None -> s | Some d -> C.append_pref d s
+
+let nativize_core_type dopt ty =
+  C.map_core_type_constrs (fun l -> Longident.parse (maybe_add_pref dopt (C.l_to_s l))) ty
 
 let load_val dopt env fenv (s, pf) =
   try
@@ -58,6 +62,11 @@ let is_unint_decl = function
   | LunintDecl _ -> true
   | _            -> false
 
+let load_embed dopt ty psort env fenv ifenv menv =
+  let ty = Typetexp.transl_type_scheme env (nativize_core_type dopt ty) in
+  let _ = TP.Prover.embed_type (F.fresh_without_vars env ty, psort) in
+    (env, fenv, ifenv, menv)
+
 let axiom_prefix = "_axiom_"
 
 let load_axiom dopt env fenv ifenv menv name pred =
@@ -82,6 +91,7 @@ let load_rw dopt rw env menv' fenv (preds, decls) =
       LvalDecl(s, f)  -> (env, fenv, load_val dopt env ifenv (s, F.translate_pframe dopt env preds f), menv)
     | LmeasDecl (name, cstrs) -> (env, fenv, ifenv, List.rev_append (load_measure dopt env (name, cstrs)) menv)
     | LunintDecl (name, ty) -> load_unint name ty env fenv ifenv menv
+    | LembedDecl (ty, psort) -> load_embed dopt ty psort env fenv ifenv menv
     | LaxiomDecl (name, pred) -> load_axiom dopt env fenv ifenv menv name pred
     | LrecrefDecl -> (env, fenv, ifenv, menv) in
   let (env, fenv, ifenv, menv) = List.fold_left load_decl (env, fenv, Lightenv.empty, []) decls in

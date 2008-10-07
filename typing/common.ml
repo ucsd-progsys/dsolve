@@ -487,4 +487,24 @@ let dump_gc s =
   printf "@[%s@]@." s;
   pprint_gc (Gc.quick_stat ())
 
+(* ************************************************************* *)
+(* ************************ core_types ************************* *)
+(* ************************************************************* *)
 
+open Parsetree
+
+let map_core_type_constrs f t = 
+  let rec map_rec t =
+    let wrap a = {ptyp_desc = a; ptyp_loc = t.ptyp_loc} in
+    match t.ptyp_desc with
+    | Ptyp_arrow (l, t, t') -> wrap (Ptyp_arrow (l, map_rec t, map_rec t'))
+    | Ptyp_tuple ts -> wrap (Ptyp_tuple (List.map map_rec ts))
+    | Ptyp_constr (l, ts) -> wrap (Ptyp_constr (f l, List.map map_rec ts))
+    | Ptyp_alias (t, s) -> wrap (Ptyp_alias (map_rec t, s))
+    | t -> wrap t in
+  map_rec t
+
+let rec prover_t_to_s = function
+    | Pprover_abs s -> s
+    | Pprover_array (s, t) -> "[ " ^ (prover_t_to_s s) ^ "; " ^ (prover_t_to_s t) ^ " ]"
+    | Pprover_fun ss -> "( " ^ (String.concat " -> " (List.map prover_t_to_s ss)) ^ " )"

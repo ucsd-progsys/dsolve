@@ -1,5 +1,5 @@
 pattern binds at source toplevel
-DON'T USE SHOW (not broken just don't do it)
+DON'T USE show (too tricky)
 DON'T USE diverge (use assert false)
 nested recursives
 (possibly) measures over nested recursives
@@ -12,3 +12,4 @@ add: type casting at z3 interface with 1-1 casting functions (by default. absent
 add: implicitly quantified types: forall i. (j: int -> 'a [j/i]) k: int -> 'a [k/i]
 add: extension to constructed types
 
+qualgen is missing some patterns (on lhs)

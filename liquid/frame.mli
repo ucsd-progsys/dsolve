@@ -94,6 +94,7 @@ val unfold_applying: t -> t
 
 val apply: t -> Predicate.pexpr list -> t
 
+val fresh_binder: unit -> pattern_desc
 val fresh: Env.t -> type_expr -> t
 val fresh_without_vars: Env.t -> type_expr -> t
 val fresh_false: Env.t -> type_expr -> t
