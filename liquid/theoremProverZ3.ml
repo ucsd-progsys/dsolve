@@ -93,22 +93,33 @@ module Prover : PROVER =
     ]
 
     let abs p = F.Fabstract(p, [], F.empty_refinement)
+    let unint = Unint "obj"
 
     let init_frtymap = [
-      (abs Predef.path_int, Int); 
-      (abs Predef.path_bool, Bool);
+      (Builtins.uInt, Int); 
+      (Builtins.uBool, Bool);
+      (Builtins.uUnit, Bool);
     ]
-    
+
+    let type_to_string t =
+      let rec t_rec = function
+        | Int -> "int"
+        | Bool -> "bool"
+        | Unint s -> s
+        | Func ts -> "(func " ^ String.concat " " (List.map t_rec ts) ^ ")"
+        | _ -> assert false in
+      t_rec t
+   
     let rec frame_to_type me = function
       | F.Farrow (_, t1, t2) -> Func (collapse me t1 t2)
-      | fr -> snd (List.find (fun (fr', _) -> F.same_shape fr fr') me.frtymap) 
+      | fr -> snd (List.find (fun (fr', _) -> F.same_shape fr fr') me.frtymap)
 
     and collapse me t1 t2 =
-      (frame_to_type me t1)
+      (try frame_to_type me t1 with Not_found -> unint)
       :: (match t2 with 
           | F.Farrow (_, t1, t2) -> collapse me t1 t2 
-          | _ -> [frame_to_type me t2])
-
+          | _ -> try [frame_to_type me t2] with Not_found -> [unint])
+                          
     let rec type_to_frame me = function
       | Func (t :: []) -> type_to_frame me t
       | Func (t :: ts) ->
@@ -149,7 +160,7 @@ module Prover : PROVER =
       try frame_to_type me (Le.find s env) 
         with Not_found ->
           let p = Path.unique_name s in
-          printf "@[Warning:@ type@ of@ %s@ uninterpretable@ at@ TP@]@." p; (Unint p)
+          printf "@[Warning:@ type@ of@ %s@ uninterpretable@ at@ TP@]@." p; unint
 
     let is_select = C.has_prefix "SELECT_"
     let select_type = Func [Int; Int]
@@ -158,7 +169,7 @@ module Prover : PROVER =
       if is_select s then select_type
       else try List.assoc s builtins
         with Not_found -> try frame_to_type me (get_by_name s env)
-          with Failure _ -> failwith (sprintf "@[Could@ not@ type@ function@ %s@ in@ tpz3@]" s)
+          with Not_found -> printf "@[Warning:@ could@ not@ type@ function@ %s@ in@ tpz3@]" s; unint
 
 (***************************************************************************************)
 (********************** Vars ************************************************************)
@@ -222,10 +233,10 @@ module Prover : PROVER =
       let zes = Array.of_list zes in
       let cf  = z3Fun env me s k in
       let rv  = Z3.mk_app me.c cf zes in
-        if Z3.type_check me.c rv then rv else
+        (*if Z3.type_check me.c rv then rv else
           (*let ft = match getFunType env s with Func ts -> ts | _ -> assert false in
           let zes = z3Cast (ft, zes) in*)
-            Z3.mk_app me.c cf zes
+            Z3.mk_app me.c cf zes*) rv
 
 (***************************************************************************************)
 (********************** Pred/Expr Transl ************************************************************)
@@ -234,7 +245,7 @@ module Prover : PROVER =
     let rec z3Exp env me e =
       match e with 
       | P.PInt i                -> Z3.mk_int me.c i me.tint 
-      | P.Var s                 -> z3Var env me s
+      | P.Var s                 -> let _ = printf "%s@." (type_to_string (getVarType me s env)) in z3Var env me s
       | P.FunApp (f,es)         -> z3App env me f (List.map (z3Exp env me) es)
       | P.Binop (e1,P.Plus,e2)  -> Z3.mk_add me.c (Array.map (z3Exp env me) [|e1;e2|]) 
       | P.Binop (e1,P.Minus,e2) -> Z3.mk_sub me.c (Array.map (z3Exp env me) [|e1;e2|]) 
@@ -248,11 +259,11 @@ module Prover : PROVER =
       match p with 
         P.True          -> Z3.mk_true me.c
       | P.Not p' -> Z3.mk_not me.c (z3Pred env me p')
-      | P.And (p1,p2) -> Z3.mk_and me.c (Array.map (z3Pred env me) [|p1;p2|])
+      | P.And (p1,p2) -> printf "and@."; Z3.mk_and me.c (Array.map (z3Pred env me) [|p1;p2|])
       | P.Or (p1,p2) -> Z3.mk_or me.c (Array.map (z3Pred env me) [|p1;p2|])
-      | P.Iff (p, q) -> Z3.mk_iff me.c (z3Pred env me p) (z3Pred env me q)
+      | P.Iff (p, q) -> printf "asdfadfasdf@."; Z3.mk_iff me.c (z3Pred env me p) (z3Pred env me q)
    (* | P.Atom (e1,P.Lt,e2) -> z3Pred me (Atom (e1, P.Le, Binop(e2,P.Minus,PInt 1))) *)
-      | P.Atom (e1,P.Eq,e2) -> Z3.mk_eq me.c (z3Exp env me e1) (z3Exp env me e2)
+      | P.Atom (e1,P.Eq,e2) -> printf "eq@."; Z3.mk_eq me.c (z3Exp env me e1) (z3Exp env me e2)
       | P.Atom (e1,P.Ne,e2) -> Z3.mk_distinct me.c [|z3Exp env me e1; z3Exp env me e2|]
       | P.Atom (e1,P.Gt,e2) -> Z3.mk_gt me.c (z3Exp env me e1) (z3Exp env me e2)
       | P.Atom (e1,P.Ge,e2) -> Z3.mk_ge me.c (z3Exp env me e1) (z3Exp env me e2)
