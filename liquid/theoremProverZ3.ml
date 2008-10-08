@@ -98,7 +98,6 @@ module Prover : PROVER =
     let init_frtymap = [
       (Builtins.uInt, Int); 
       (Builtins.uBool, Bool);
-      (Builtins.uUnit, Bool);
     ]
 
     let type_to_string t =
@@ -109,6 +108,16 @@ module Prover : PROVER =
         | Func ts -> "(func " ^ String.concat " " (List.map t_rec ts) ^ ")"
         | _ -> assert false in
       t_rec t
+
+    let dump_ast_type me a =
+      printf "@[z3%s@]@." 
+            (Z3.ast_to_string me.c (Z3.type_ast_to_ast me.c (Z3.get_type me.c a)))
+    let dump_ast me a =
+      printf "@[%s@]@." (Z3.ast_to_string me.c a)
+    let dump_decls me =
+      printf "Vars:@.";
+      List.iter (function Vbl s -> printf "%s@." (Path.unique_name s) | Barrier -> printf "----@." | _ -> ()) me.vars;
+      printf "@."
    
     let rec frame_to_type me = function
       | F.Farrow (_, t1, t2) -> Func (collapse me t1 t2)
@@ -136,7 +145,7 @@ module Prover : PROVER =
       | Func _ -> z3VarType me (Unint ("fun"))
 
     let z3VarType me t =
-      C.do_memo me.tydeclt (z3VarType me) t t
+      C.do_memo me.tydeclt (fun () -> z3VarType me t) () t
 
     let rec transl_type me = function
       | Parsetree.Pprover_abs s ->
@@ -172,17 +181,32 @@ module Prover : PROVER =
           with Not_found -> printf "@[Warning:@ could@ not@ type@ function@ %s@ in@ tpz3@]" s; unint
 
 (***************************************************************************************)
-(********************** Vars ************************************************************)
+(********************** Vars ***********************************************************)
 (***************************************************************************************)
 
     let z3Var_memo env me s =
+              (*let _ = printf "memo %s@." (Path.unique_name s) in*)
       Misc.do_memo me.vart
       (fun () -> 
+              (*let _ = printf "first time at %s@." (Path.unique_name s) in*)
         let t = getVarType me s env in
         let sym = Z3.mk_string_symbol me.c (fresh "z3v") in
         let rv = Const (Z3.mk_const me.c sym (z3VarType me t)) in
         me.vars <- (Vbl s)::me.vars; rv) 
       () (Vbl s)
+
+ (*   let z3VarForce env me s =
+      let t = getVarType me s env in
+      let sym = Z3.mk_string_symbol me.c (fresh "z3f") in
+        Z3.mk_const me.c sym (z3VarType me t)
+
+    let z3VarTest env me s =
+      let t = getVarType me s env in
+      let sym = Z3.mk_string_symbol me.c (fresh "z3v") in
+        (Z3.mk_const me.c sym (z3VarType me t))
+
+    let varx = ref []
+    let vv = ref false*)
 
     let maybe_remap_v env me s =
       match me.v with
@@ -194,6 +218,9 @@ module Prover : PROVER =
 
     let z3Var env me s =
       if s = C.qual_test_var then maybe_remap_v env me s
+(*  else if (Path.unique_name s) = "x_320" then 
+        (*(if !vv then (printf "snd@."; List.hd !varx) else (printf "fst@."; vv := true; (varx := [z3VarTest env me s]); List.hd !varx))*)
+         z3VarTest env me s*)
       else match z3Var_memo env me s with
           Const v -> v
         | Bound (b, t) -> Z3.mk_bound me.c (me.bnd - b) (z3VarType me t)
@@ -203,7 +230,7 @@ module Prover : PROVER =
       Z3.mk_string_symbol me.c (fresh "z3b")
 
 (***************************************************************************************)
-(********************** Funs ************************************************************)
+(********************** Funs ***********************************************************)
 (***************************************************************************************)
 
     let z3Fun env me s k = 
@@ -245,7 +272,7 @@ module Prover : PROVER =
     let rec z3Exp env me e =
       match e with 
       | P.PInt i                -> Z3.mk_int me.c i me.tint 
-      | P.Var s                 -> let _ = printf "%s@." (type_to_string (getVarType me s env)) in z3Var env me s
+      | P.Var s                 -> let _ = printf "@[%s@ %s@]@." (type_to_string (getVarType me s env)) (Path.unique_name s) in z3Var env me s
       | P.FunApp (f,es)         -> z3App env me f (List.map (z3Exp env me) es)
       | P.Binop (e1,P.Plus,e2)  -> Z3.mk_add me.c (Array.map (z3Exp env me) [|e1;e2|]) 
       | P.Binop (e1,P.Minus,e2) -> Z3.mk_sub me.c (Array.map (z3Exp env me) [|e1;e2|]) 
@@ -261,9 +288,19 @@ module Prover : PROVER =
       | P.Not p' -> Z3.mk_not me.c (z3Pred env me p')
       | P.And (p1,p2) -> printf "and@."; Z3.mk_and me.c (Array.map (z3Pred env me) [|p1;p2|])
       | P.Or (p1,p2) -> Z3.mk_or me.c (Array.map (z3Pred env me) [|p1;p2|])
-      | P.Iff (p, q) -> printf "asdfadfasdf@."; Z3.mk_iff me.c (z3Pred env me p) (z3Pred env me q)
+      | P.Iff (p, q) -> (*printf "asdfadfasdf@."; 
+          let rv1 = z3Pred env me p in
+          let _ = dump_ast me rv1 in
+          let rv2 = z3Pred env me q in*)
+          Z3.mk_iff me.c (z3Pred env me p) (z3Pred env me q)
    (* | P.Atom (e1,P.Lt,e2) -> z3Pred me (Atom (e1, P.Le, Binop(e2,P.Minus,PInt 1))) *)
-      | P.Atom (e1,P.Eq,e2) -> printf "eq@."; Z3.mk_eq me.c (z3Exp env me e1) (z3Exp env me e2)
+      | P.Atom (e1,P.Eq,e2) -> (*printf "eq@."; 
+          let rv1 = z3Exp env me e1 in
+          let rv2 = z3Exp env me e2 in
+          let _ = dump_ast_type me rv1; dump_ast_type me rv2 in
+          let _ = dump_ast me rv1; dump_ast me rv2 in
+          let _ = dump_decls me in*)
+          Z3.mk_eq me.c (z3Exp env me e1) (z3Exp env me e2)
       | P.Atom (e1,P.Ne,e2) -> Z3.mk_distinct me.c [|z3Exp env me e1; z3Exp env me e2|]
       | P.Atom (e1,P.Gt,e2) -> Z3.mk_gt me.c (z3Exp env me e1) (z3Exp env me e2)
       | P.Atom (e1,P.Ge,e2) -> Z3.mk_ge me.c (z3Exp env me e1) (z3Exp env me e2)
@@ -277,7 +314,7 @@ module Prover : PROVER =
           let (ps, ss) = List.split ps in
           let ts = List.map (transl_type me) ss in
           mk_quantifier Z3.mk_exists env me ps ts q
-      | P.Boolexp e -> z3Exp env me e (* must be bool *)
+      | P.Boolexp e -> printf "boolexp@."; z3Exp env me e (* must be bool *)
 
     and mk_quantifier mk env me ps ts q =
       let args = qargs me ps ts in
@@ -312,9 +349,9 @@ module Prover : PROVER =
       let _ = incr nb_z3_push in
       let _ = me.count <- me.count + 1 in
       if unsat me then me.i <- me.i + 1 else
-        let _  = me.vars <- Barrier :: me.vars in
         let p' = Bstats.time "mk preds" (mkpreds me) ps in
         let _  = Z3.push me.c in
+  (*let _  = printf "PUSHING@ %s@." (Z3.ast_to_string me.c p') in*)
         Bstats.time "Z3 assert" (Z3.assert_cnstr me.c) p' 
 
     let pop me =
@@ -322,6 +359,18 @@ module Prover : PROVER =
       let _ = me.count <- me.count - 1 in
       if me.i > 0 then me.i <- me.i - 1 else
         Z3.pop me.c 1 
+
+    let rec vpop (cs,s) =
+      match s with 
+      | [] -> (cs,s)
+      | Barrier :: t -> (cs,t)
+      | h :: t -> vpop (h::cs,t) 
+
+    let remove_decl me d = 
+      match d with 
+      | Barrier -> Common.asserts "TheoremProverZ3.remove_decl" false
+      | Vbl _ -> Hashtbl.remove me.vart d 
+      | Fun _ -> Hashtbl.remove me.funt d
 
     let me = 
       let c = Z3.mk_context_x [|("MODEL", "false"); ("PARTIAL_MODELS", "true")|] in
@@ -335,7 +384,7 @@ module Prover : PROVER =
       { c = c; tint = tint; tbool = tbool; v = None; tydeclt = tydeclt; frtymap = init_frtymap;
         vart = vart; funt = funt; vars = []; count = 0; i = 0; bnd = 0}
        
-
+     let _ = Z3.mk_uninterpreted_type me.c (Z3.mk_string_symbol me.c "asadfadsf")
 
 (***************************************************************************************)
 (********************** API ************************************************************)
@@ -343,12 +392,11 @@ module Prover : PROVER =
 
     let set env ps = 
       incr nb_z3_set;
-      (*let p' = Bstats.time "mk preds" (z3Preds env me) ps in*)
       Bstats.time "z3 push" (push me (z3Preds env)) ps; 
+      me.vars <- Barrier :: me.vars;
       unsat me 
 
     let valid env p =
-      (*let np' = Bstats.time "mk pred" (z3Pred env me) (P.Not p) in*) 
       let _   = push me (z3Pred env) (P.Not p) in
       let rv  = unsat me in
       let _   = pop me in rv
@@ -365,8 +413,11 @@ module Prover : PROVER =
       with Not_found -> raise (Failure (C.prover_t_to_s pt))
 
     let finish () = 
-      (*Bstats.time "Z3 pop"*) pop me; 
+      pop me; 
       me.v <- None;
+      let (cs,vars') = vpop ([],me.vars) in
+      let _ = me.vars <- vars' in
+      let _ = List.iter (remove_decl me) cs in
       assert (me.count = 0)
  
     let print_stats ppf () = 
