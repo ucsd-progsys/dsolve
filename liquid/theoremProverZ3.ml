@@ -90,6 +90,7 @@ module Prover : PROVER =
             ("__tag", Func [Unint "obj"; Int]);
             ("_DIV", Func [Int; Int; Int]);
             ("_IOFB", Func [Bool; Int]);
+            ("_BOFI", Func [Int; Bool]);
     ]
 
     let abs p = F.Fabstract(p, [], F.empty_refinement)
@@ -109,6 +110,8 @@ module Prover : PROVER =
         | _ -> assert false in
       t_rec t
 
+    let ast_type_to_string me a =
+      Z3.ast_to_string me.c (Z3.type_ast_to_ast me.c a)
     let dump_ast_type me a =
       printf "@[z3%s@]@." 
             (Z3.ast_to_string me.c (Z3.type_ast_to_ast me.c (Z3.get_type me.c a)))
@@ -168,8 +171,8 @@ module Prover : PROVER =
     let getVarType me s env =
       try frame_to_type me (Le.find s env) 
         with Not_found ->
-          let p = Path.unique_name s in
-          printf "@[Warning:@ type@ of@ %s@ uninterpretable@ at@ TP@]@." p; unint
+          (*let p = Path.unique_name s in
+          printf "@[Warning:@ type@ of@ %s@ uninterpretable@ at@ TP@]@." p;*) unint
 
     let is_select = C.has_prefix "SELECT_"
     let select_type = Func [Int; Int]
@@ -185,28 +188,13 @@ module Prover : PROVER =
 (***************************************************************************************)
 
     let z3Var_memo env me s =
-              (*let _ = printf "memo %s@." (Path.unique_name s) in*)
       Misc.do_memo me.vart
       (fun () -> 
-              (*let _ = printf "first time at %s@." (Path.unique_name s) in*)
         let t = getVarType me s env in
         let sym = Z3.mk_string_symbol me.c (fresh "z3v") in
         let rv = Const (Z3.mk_const me.c sym (z3VarType me t)) in
         me.vars <- (Vbl s)::me.vars; rv) 
       () (Vbl s)
-
- (*   let z3VarForce env me s =
-      let t = getVarType me s env in
-      let sym = Z3.mk_string_symbol me.c (fresh "z3f") in
-        Z3.mk_const me.c sym (z3VarType me t)
-
-    let z3VarTest env me s =
-      let t = getVarType me s env in
-      let sym = Z3.mk_string_symbol me.c (fresh "z3v") in
-        (Z3.mk_const me.c sym (z3VarType me t))
-
-    let varx = ref []
-    let vv = ref false*)
 
     let maybe_remap_v env me s =
       match me.v with
@@ -218,9 +206,6 @@ module Prover : PROVER =
 
     let z3Var env me s =
       if s = C.qual_test_var then maybe_remap_v env me s
-(*  else if (Path.unique_name s) = "x_320" then 
-        (*(if !vv then (printf "snd@."; List.hd !varx) else (printf "fst@."; vv := true; (varx := [z3VarTest env me s]); List.hd !varx))*)
-         z3VarTest env me s*)
       else match z3Var_memo env me s with
           Const v -> v
         | Bound (b, t) -> Z3.mk_bound me.c (me.bnd - b) (z3VarType me t)
@@ -243,27 +228,26 @@ module Prover : PROVER =
         me.vars <- (Fun (s,k))::me.vars; rv) 
       () (Fun (s,k))
 
-    let cast me ast = function
-      (*| (me.tbool, me.tint) -> Z3.mk_app (z3FunType "_BOFI" ) *)
-      | _ -> assert false
+    let rec cast env me ast (t, t') =
+      if (t, t') = ("bool", "int") then z3App env me "_IOFB" [ast](*Z3.mk_app me.c (z3Fun env me "_IOFB" 1) [|ast|]*) else
+      if (t, t') = ("bool", "int") then z3App env me "_BOFI" [ast](*Z3.mk_app me.c (z3Fun env me "_IOFB" 1) [|ast|]*) else
+        assert false
 
-    let rec z3Cast me = function
-      | (f :: fs, a :: sa) -> 
+    and z3Cast env me = function
+      | (a :: sa, f :: fs) -> 
         let (t, t') = (Z3.get_type me.c a, z3VarType me f) in
-        let t = if t != t' then (cast me a (t, t')) else a in
-          t :: (z3Cast me (fs, sa))
-      | ([], []) -> []
+        let (st, st') = C.app_pr (ast_type_to_string me) (t, t') in
+        let t = if st = st' then a else (cast env me a (st, st')) in
+          t :: (z3Cast env me (sa, fs))
+      | ([], x) -> []
       | _ -> assert false
 
-    let z3App env me s zes =
+    and z3App env me s zes =
       let k   = List.length zes in
-      let zes = Array.of_list zes in
       let cf  = z3Fun env me s k in
-      let rv  = Z3.mk_app me.c cf zes in
-        (*if Z3.type_check me.c rv then rv else
-          (*let ft = match getFunType env s with Func ts -> ts | _ -> assert false in
-          let zes = z3Cast (ft, zes) in*)
-            Z3.mk_app me.c cf zes*) rv
+      let ft  = match getFunType me s env with Func ts -> ts | _ -> assert false in
+      let zes = z3Cast env me (zes, ft) in
+        Z3.mk_app me.c cf (Array.of_list zes)
 
 (***************************************************************************************)
 (********************** Pred/Expr Transl ************************************************************)
@@ -272,7 +256,7 @@ module Prover : PROVER =
     let rec z3Exp env me e =
       match e with 
       | P.PInt i                -> Z3.mk_int me.c i me.tint 
-      | P.Var s                 -> let _ = printf "@[%s@ %s@]@." (type_to_string (getVarType me s env)) (Path.unique_name s) in z3Var env me s
+      | P.Var s                 -> (*let _ = printf "@[%s@ %s@]@." (type_to_string (getVarType me s env)) (Path.unique_name s) in*) z3Var env me s
       | P.FunApp (f,es)         -> z3App env me f (List.map (z3Exp env me) es)
       | P.Binop (e1,P.Plus,e2)  -> Z3.mk_add me.c (Array.map (z3Exp env me) [|e1;e2|]) 
       | P.Binop (e1,P.Minus,e2) -> Z3.mk_sub me.c (Array.map (z3Exp env me) [|e1;e2|]) 
@@ -286,20 +270,12 @@ module Prover : PROVER =
       match p with 
         P.True          -> Z3.mk_true me.c
       | P.Not p' -> Z3.mk_not me.c (z3Pred env me p')
-      | P.And (p1,p2) -> printf "and@."; Z3.mk_and me.c (Array.map (z3Pred env me) [|p1;p2|])
+      | P.And (p1,p2) -> (*printf "and@.";*) Z3.mk_and me.c (Array.map (z3Pred env me) [|p1;p2|])
       | P.Or (p1,p2) -> Z3.mk_or me.c (Array.map (z3Pred env me) [|p1;p2|])
-      | P.Iff (p, q) -> (*printf "asdfadfasdf@."; 
-          let rv1 = z3Pred env me p in
-          let _ = dump_ast me rv1 in
-          let rv2 = z3Pred env me q in*)
+      | P.Iff (p, q) ->
           Z3.mk_iff me.c (z3Pred env me p) (z3Pred env me q)
    (* | P.Atom (e1,P.Lt,e2) -> z3Pred me (Atom (e1, P.Le, Binop(e2,P.Minus,PInt 1))) *)
-      | P.Atom (e1,P.Eq,e2) -> (*printf "eq@."; 
-          let rv1 = z3Exp env me e1 in
-          let rv2 = z3Exp env me e2 in
-          let _ = dump_ast_type me rv1; dump_ast_type me rv2 in
-          let _ = dump_ast me rv1; dump_ast me rv2 in
-          let _ = dump_decls me in*)
+      | P.Atom (e1,P.Eq,e2) -> 
           Z3.mk_eq me.c (z3Exp env me e1) (z3Exp env me e2)
       | P.Atom (e1,P.Ne,e2) -> Z3.mk_distinct me.c [|z3Exp env me e1; z3Exp env me e2|]
       | P.Atom (e1,P.Gt,e2) -> Z3.mk_gt me.c (z3Exp env me e1) (z3Exp env me e2)
@@ -314,7 +290,7 @@ module Prover : PROVER =
           let (ps, ss) = List.split ps in
           let ts = List.map (transl_type me) ss in
           mk_quantifier Z3.mk_exists env me ps ts q
-      | P.Boolexp e -> printf "boolexp@."; z3Exp env me e (* must be bool *)
+      | P.Boolexp e -> (*printf "boolexp@.";*) z3Exp env me e (* must be bool *)
 
     and mk_quantifier mk env me ps ts q =
       let args = qargs me ps ts in
@@ -351,7 +327,6 @@ module Prover : PROVER =
       if unsat me then me.i <- me.i + 1 else
         let p' = Bstats.time "mk preds" (mkpreds me) ps in
         let _  = Z3.push me.c in
-  (*let _  = printf "PUSHING@ %s@." (Z3.ast_to_string me.c p') in*)
         Bstats.time "Z3 assert" (Z3.assert_cnstr me.c) p' 
 
     let pop me =
@@ -383,8 +358,6 @@ module Prover : PROVER =
       let tydeclt = Hashtbl.create 37 in
       { c = c; tint = tint; tbool = tbool; v = None; tydeclt = tydeclt; frtymap = init_frtymap;
         vart = vart; funt = funt; vars = []; count = 0; i = 0; bnd = 0}
-       
-     let _ = Z3.mk_uninterpreted_type me.c (Z3.mk_string_symbol me.c "asadfadsf")
 
 (***************************************************************************************)
 (********************** API ************************************************************)
@@ -424,4 +397,15 @@ module Prover : PROVER =
       Format.fprintf ppf "@[implies(API):@ %i,@ Z3@ {pushes:@ %i,@ pops:@ %i,@ unsats:@ %i}@]"
       !nb_z3_set !nb_z3_push !nb_z3_pop !nb_z3_unsat
 
+    let _ = 
+      let (x, y) = C.app_pr Path.mk_ident ("x", "y") in
+      let bol = Parsetree.Pprover_abs "bool" in
+      let itn = Parsetree.Pprover_abs "int" in
+      let func s x = P.FunApp(s, [P.Var x]) in
+        axiom Le.empty
+          (P.Forall ([(x, bol); (y, bol)], P.Iff(P.Atom(func "_IOFB" x, P.Eq, func "_IOFB" y), P.Atom(P.Var x, P.Eq, P.Var y))));
+        axiom Le.empty 
+          (P.Forall ([(x, itn); (y, itn)], P.Iff(P.Atom(func "_BOFI" x, P.Eq, func "_BOFI" y), P.Atom(P.Var x, P.Eq, P.Var y))));
 end
+    
+
