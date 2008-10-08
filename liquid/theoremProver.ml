@@ -89,6 +89,11 @@ let rec fixdiv p =
      | p -> p
     else p
 
+let is_not_taut = function
+  | P.Atom(e1, P.Eq, e2) -> e1 != e2
+  | P.True -> false
+  | _ -> true
+
 (********************************************************************************)
 (*********************** Memo tables and Stats Counters  ************************)
 (********************************************************************************)
@@ -131,7 +136,7 @@ let reset () =
   nb_cache_hits := 0;
   nb_qp_miss := 0
 
-(* API *)
+(*(* API *)
 let set env ps =
   let _ = incr nb_push in 
   let ps = List.map fixdiv ps in
@@ -142,11 +147,21 @@ let set env ps =
 let valid env q = 
   incr nb_queries; 
   let q = fixdiv q in
-  Prover.valid env q
+  Prover.valid env q*)
 
-(* API *)
+let set_and_filter env ps qs =
+  let _ = incr nb_push in
+  let _ = nb_queries := !nb_queries + (List.length ps) in
+  let ps = List.rev_map fixdiv ps in
+  let ps = List.filter is_not_taut ps in
+  let qs = List.rev_map (C.app_snd fixdiv) qs in
+  let (qs, qs') = List.partition (fun (_, q) -> is_not_taut q) qs in
+  List.rev_append qs' (Prover.set_and_filter env ps qs)
+
+(*(* API *)
 let finish () = 
   Prover.finish ()
+  *)
   
 (* 
 (* API *)

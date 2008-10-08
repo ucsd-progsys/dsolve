@@ -37,9 +37,10 @@ module Le = Lightenv
   sig
     (* usage: set.valid*.finish *)
     val axiom : F.t Le.t -> Predicate.t -> unit
-    val set     : F.t Le.t -> P.t list -> bool 
+    (*val set     : F.t Le.t -> P.t list -> bool 
     val valid   : F.t Le.t -> P.t -> bool
-    val finish : unit -> unit
+    val finish : unit -> unit*)
+    val set_and_filter: F.t Le.t -> P.t list -> ('a * P.t) list -> ('a * P.t) list
     val print_stats : Format.formatter -> unit -> unit
     val embed_type : F.t * Parsetree.prover_t -> unit
     val frame_of : Parsetree.prover_t -> F.t
@@ -65,7 +66,6 @@ module Prover : PROVER =
       mutable count     : int;
       mutable i         : int;
       mutable bnd       : int;
-      mutable v         : Z3.ast option;
       mutable frtymap   : (F.t * sort) list;
     }
 
@@ -196,17 +196,8 @@ module Prover : PROVER =
         me.vars <- (Vbl s)::me.vars; rv) 
       () (Vbl s)
 
-    let maybe_remap_v env me s =
-      match me.v with
-      | Some c -> c
-      | None -> 
-          let rv = Z3.mk_const me.c (Z3.mk_string_symbol me.c (fresh "AA"))
-            (z3VarType me (getVarType me s env)) in
-            me.v <- Some rv; rv
-
     let z3Var env me s =
-      if s = C.qual_test_var then maybe_remap_v env me s
-      else match z3Var_memo env me s with
+      match z3Var_memo env me s with
           Const v -> v
         | Bound (b, t) -> Z3.mk_bound me.c (me.bnd - b) (z3VarType me t)
 
@@ -272,11 +263,9 @@ module Prover : PROVER =
       | P.Not p' -> Z3.mk_not me.c (z3Pred env me p')
       | P.And (p1,p2) -> (*printf "and@.";*) Z3.mk_and me.c (Array.map (z3Pred env me) [|p1;p2|])
       | P.Or (p1,p2) -> Z3.mk_or me.c (Array.map (z3Pred env me) [|p1;p2|])
-      | P.Iff (p, q) ->
-          Z3.mk_iff me.c (z3Pred env me p) (z3Pred env me q)
+      | P.Iff (p, q) -> Z3.mk_iff me.c (z3Pred env me p) (z3Pred env me q)
    (* | P.Atom (e1,P.Lt,e2) -> z3Pred me (Atom (e1, P.Le, Binop(e2,P.Minus,PInt 1))) *)
-      | P.Atom (e1,P.Eq,e2) -> 
-          Z3.mk_eq me.c (z3Exp env me e1) (z3Exp env me e2)
+      | P.Atom (e1,P.Eq,e2) -> Z3.mk_eq me.c (z3Exp env me e1) (z3Exp env me e2)
       | P.Atom (e1,P.Ne,e2) -> Z3.mk_distinct me.c [|z3Exp env me e1; z3Exp env me e2|]
       | P.Atom (e1,P.Gt,e2) -> Z3.mk_gt me.c (z3Exp env me e1) (z3Exp env me e2)
       | P.Atom (e1,P.Ge,e2) -> Z3.mk_ge me.c (z3Exp env me e1) (z3Exp env me e2)
@@ -321,20 +310,6 @@ module Prover : PROVER =
       let _ = Common.cprintf Common.ol_axioms "@[%s@]@." (Z3.ast_to_string me.c p) in
         if unsat me then failwith "Background theory is inconsistent!"
 
-    let push me mkpreds ps =
-      let _ = incr nb_z3_push in
-      let _ = me.count <- me.count + 1 in
-      if unsat me then me.i <- me.i + 1 else
-        let p' = Bstats.time "mk preds" (mkpreds me) ps in
-        let _  = Z3.push me.c in
-        Bstats.time "Z3 assert" (Z3.assert_cnstr me.c) p' 
-
-    let pop me =
-      let _ = incr nb_z3_pop in
-      let _ = me.count <- me.count - 1 in
-      if me.i > 0 then me.i <- me.i - 1 else
-        Z3.pop me.c 1 
-
     let rec vpop (cs,s) =
       match s with 
       | [] -> (cs,s)
@@ -347,6 +322,32 @@ module Prover : PROVER =
       | Vbl _ -> Hashtbl.remove me.vart d 
       | Fun _ -> Hashtbl.remove me.funt d
 
+    let prep_preds env me ps qs =
+      let ps = List.rev_map (z3Pred env me) ps in
+      let qs = List.rev_map (fun (q, p) -> (z3Pred env me p, (q, p))) qs in
+      let _ = me.vars <- Barrier :: me.vars in
+      let _ = Z3.push me.c in
+        (ps, qs)
+
+    let push me ps =
+      let _ = incr nb_z3_push in
+      let _ = me.count <- me.count + 1 in
+      if unsat me then me.i <- me.i + 1 else
+        let _  = Z3.push me.c in
+        Bstats.time "Z3 assert" (List.iter (fun p -> Z3.assert_cnstr me.c p)) ps
+
+    let pop me =
+      let _ = incr nb_z3_pop in
+      let _ = me.count <- me.count - 1 in
+      if me.i > 0 then me.i <- me.i - 1 else
+        Z3.pop me.c 1 
+
+    let valid me p =
+      let _ = push me [(Z3.mk_not me.c p)] in
+      let rv = unsat me in
+      let _ = pop me in
+        rv
+
     let me = 
       let c = Z3.mk_context_x [|("MODEL", "false"); ("PARTIAL_MODELS", "true")|] in
       (* types *)
@@ -356,23 +357,34 @@ module Prover : PROVER =
       let vart = Hashtbl.create 37 in
       let funt = Hashtbl.create 37 in
       let tydeclt = Hashtbl.create 37 in
-      { c = c; tint = tint; tbool = tbool; v = None; tydeclt = tydeclt; frtymap = init_frtymap;
+      { c = c; tint = tint; tbool = tbool; tydeclt = tydeclt; frtymap = init_frtymap;
         vart = vart; funt = funt; vars = []; count = 0; i = 0; bnd = 0}
 
 (***************************************************************************************)
 (********************** API ************************************************************)
 (***************************************************************************************)
 
-    let set env ps = 
+(*    let set env ps = 
       incr nb_z3_set;
       Bstats.time "z3 push" (push me (z3Preds env)) ps; 
       me.vars <- Barrier :: me.vars;
       unsat me 
 
     let valid env p =
-      let _   = push me (z3Pred env) (P.Not p) in
+      let _   = push me (P.Not p) in
       let rv  = unsat me in
       let _   = pop me in rv
+      *)
+
+    let set_and_filter env lhss rhss =
+      if unsat me then rhss else
+        let _ = Hashtbl.remove me.vart (Vbl C.qual_test_var) in
+        let (lhss, rhss) = prep_preds env me lhss rhss in
+        let _ = push me lhss in
+        let rv =
+          if unsat me then rhss else
+            List.filter (fun (p, _) -> valid me p) rhss in
+        pop me; assert (me.count = 0); snd (List.split rv)
 
     let axiom env p =
       assert_axiom me (z3Pred env me p)
@@ -385,13 +397,12 @@ module Prover : PROVER =
         type_to_frame me (transl_type me pt)
       with Not_found -> raise (Failure (C.prover_t_to_s pt))
 
-    let finish () = 
+(*    let finish () = 
       pop me; 
-      me.v <- None;
       let (cs,vars') = vpop ([],me.vars) in
       let _ = me.vars <- vars' in
       let _ = List.iter (remove_decl me) cs in
-      assert (me.count = 0)
+      assert (me.count = 0)*)
  
     let print_stats ppf () = 
       Format.fprintf ppf "@[implies(API):@ %i,@ Z3@ {pushes:@ %i,@ pops:@ %i,@ unsats:@ %i}@]"

@@ -597,10 +597,9 @@ let check_tp senv lhs_ps x2 =
   let _ = dump "Assert" lhs_ps in
   let rv = 
     try
-      if BS.time "tp_set" TP.set senv lhs_ps then (incr stat_unsat_lhs; x2) 
-      else List.filter (fun (_,p) -> dump "Ck" [p]; BS.time "imp check" TP.valid senv p) x2
+      BS.time "tp_set_and_filter" TP.set_and_filter senv lhs_ps x2
     with Failure x -> printf "%a@." pprint_fenv senv; raise (Failure x) in
-  TP.finish (); incr stat_tp_refines;
+  incr stat_tp_refines;
   stat_imp_queries   := !stat_imp_queries + (List.length x2);
   stat_valid_queries := !stat_valid_queries + (List.length rv); rv
 
