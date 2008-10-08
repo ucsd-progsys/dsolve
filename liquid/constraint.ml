@@ -779,7 +779,7 @@ let make_initial_solution cs =
   let s    = Sol.create 37 in
   let addrv qs = function
     | (F.Qconst _, _) -> ()
-    | (F.Qvar k, LHS) -> if not (Sol.mem s k) then Sol.replace s k []
+    | (F.Qvar k, LHS) -> if not (Sol.mem s k) then (if !Cf.minsol then Sol.replace s k qs else Sol.replace s k [])
     | (F.Qvar k, RHS) -> Sol.replace s k qs
     | (F.Qvar k, WFS) -> if Sol.find s k != [] then Sol.replace s k qs in
   let ga (c, q) = match c with
