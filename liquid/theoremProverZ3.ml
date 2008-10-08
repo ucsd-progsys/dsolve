@@ -265,6 +265,7 @@ module Prover : PROVER =
       | P.Not p' -> Z3.mk_not me.c (z3Pred env me p')
       | P.And (p1,p2) -> Z3.mk_and me.c (Array.map (z3Pred env me) [|p1;p2|])
       | P.Or (p1,p2) -> Z3.mk_or me.c (Array.map (z3Pred env me) [|p1;p2|])
+      | P.Implies (p1, p2) -> Z3.mk_implies me.c (z3Pred env me p1) (z3Pred env me p2)
       | P.Iff (p, q) -> Z3.mk_iff me.c (z3Pred env me p) (z3Pred env me q)
    (* | P.Atom (e1,P.Lt,e2) -> z3Pred me (Atom (e1, P.Le, Binop(e2,P.Minus,PInt 1))) *)
       | P.Atom (e1,P.Eq,e2) -> Z3.mk_eq me.c (z3Exp env me e1) (z3Exp env me e2)

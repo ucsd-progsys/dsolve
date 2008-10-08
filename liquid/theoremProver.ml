@@ -57,6 +57,7 @@ let rec fixdiv p =
       | P.Iff (p, q) -> pred_isdiv p || pred_isdiv q
       | P.And(p, p') -> (pred_isdiv p) || (pred_isdiv p')
       | P.Or(p, p') -> (pred_isdiv p) || (pred_isdiv p')
+      | P.Implies (p, q) -> (pred_isdiv p) || (pred_isdiv q)
       | P.True -> false
       | P.Not p -> pred_isdiv p
       | P.Forall (_, q) | P.Exists (_, q) -> pred_isdiv q 
@@ -85,6 +86,10 @@ let rec fixdiv p =
          let p1 = if pred_isdiv p1 then fixdiv p1 else p1 in
          let p2 = if pred_isdiv p2 then fixdiv p2 else p2 in
            P.Or(p1, p2) 
+     | P.Implies(p1, p2) ->
+         let p1 = if pred_isdiv p1 then fixdiv p1 else p1 in
+         let p2 = if pred_isdiv p2 then fixdiv p2 else p2 in
+           P.Implies(p1, p2)
      | P.Not p1 -> P.Not(fixdiv p1) 
      | p -> p
     else p

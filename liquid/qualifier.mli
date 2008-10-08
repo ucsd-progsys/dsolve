@@ -29,8 +29,6 @@ val compare: t -> t -> int
 
 val apply: Predicate.pexpr -> t -> Predicate.t
 
-exception Refinement_not_closed
-
 val instantiate: (string * Path.t) list -> t -> t option
 val vars: t -> string list
 val instantiate_about: Path.t list Common.StringMap.t -> t -> t list

@@ -59,6 +59,7 @@ and tpat =
   | POr of tpat * tpat
   | PForall of (string * Parsetree.prover_t) list * tpat
   | PExists of (string * Parsetree.prover_t) list * tpat
+  | PImplies of tpat * tpat
   | PBoolexp of patpexpr
 
 type pexpr =
@@ -78,6 +79,7 @@ and t =
   | Or of t * t
   | Forall of (Path.t * Parsetree.prover_t) list * t
   | Exists of (Path.t * Parsetree.prover_t) list * t
+  | Implies of t * t
   | Boolexp of pexpr
 
 let pprint_rel = function
@@ -121,6 +123,8 @@ and pprint ppf = function
       fprintf ppf "@[(%a@ and@;<1 2>@;<1 2>%a)@]" pprint p pprint q
   | Or (p, q) ->
       fprintf ppf "@[(%a@ or@;<1 2>@;<1 2>%a)@]" pprint p pprint q
+  | Implies (p, q) ->
+      fprintf ppf "@[(%a =>@;<1 2>%a)@]" pprint p pprint q
   | Forall (p, q) ->
       let p = List.map (fun (n, t) -> (Common.path_name n) ^ ": " ^ (C.prover_t_to_s t)) p in
       fprintf ppf "@[(forall@ (%a.@ %a))@]" (Common.pprint_list ", " Common.pprint_str) p pprint q
@@ -195,13 +199,14 @@ and pexp_map f e =
   f (pexp_map_subpreds (map f) (pexp_map_subexps (pexp_map f) e))
 
 and map_subpreds f = function
-  | Iff (p, q)    -> Iff (f p, f q)
-  | Not (p)       -> Not (f p)
-  | And (p, q)    -> And (f p, f q)
-  | Or (p, q)     -> Or (f p, f q)
-  | Forall (p, q) -> Forall (p, f q)
-  | Exists (p, q) -> Exists (p, f q)
-  | p             -> p
+  | Iff (p, q)     -> Iff (f p, f q)
+  | Not (p)        -> Not (f p)
+  | And (p, q)     -> And (f p, f q)
+  | Or (p, q)      -> Or (f p, f q)
+  | Implies (p, q) -> Implies (f p, f q)
+  | Forall (p, q)  -> Forall (p, f q)
+  | Exists (p, q)  -> Exists (p, f q)
+  | p              -> p
 
 and map_subexps f = function
   | Atom (e1, rel, e2) -> Atom (f e1, rel, f e2)
@@ -251,7 +256,7 @@ let unexp f = function
   | Atom (e1, _, e2) -> ([], f e1 @ f e2)
   | Iff (p, q) -> ([p; q], [])
   | Not p -> ([p], [])
-  | And (p, q) | Or (p, q) -> ([p; q], [])
+  | And (p, q) | Or (p, q) | Implies (p, q) -> ([p; q], [])
   | Forall (p, q) | Exists (p, q) -> ([q], [])
   | Boolexp e -> ([], f e)
 

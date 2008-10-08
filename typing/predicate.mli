@@ -54,6 +54,7 @@ and tpat =
   | POr of tpat * tpat
   | PForall of (string * Parsetree.prover_t) list * tpat
   | PExists of (string * Parsetree.prover_t) list * tpat
+  | PImplies of tpat * tpat
   | PBoolexp of patpexpr
 
 type pexpr =   
@@ -73,6 +74,7 @@ and t =
   | Or of t * t 
   | Forall of (Path.t * Parsetree.prover_t) list * t
   | Exists of (Path.t * Parsetree.prover_t) list * t
+  | Implies of t * t
   | Boolexp of pexpr
 
 val pprint_rel: binrel -> string

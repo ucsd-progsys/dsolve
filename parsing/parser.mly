@@ -1510,6 +1510,7 @@ qualifier_pattern:
     TRUE                                    { mkpredpat Ppredpat_true }                    
   | qualifier_pattern AND qualifier_pattern { mkpredpat (Ppredpat_and($1, $3)) }
   | qualifier_pattern OR qualifier_pattern  { mkpredpat (Ppredpat_or($1, $3)) }
+  | qualifier_pattern COLONEQUAL qualifier_pattern { mkpredpat (Ppredpat_implies($1, $3)) }
   | MINUSDOT qualifier_pattern              { mkpredpat (Ppredpat_not($2)) }              
   | LPAREN qualifier_pattern RPAREN         { $2 }
   | LPAREN qualifier_pattern IFF qualifier_pattern RPAREN
@@ -1555,6 +1556,10 @@ qual_expr:
 qual_expr_1: 
     qual_litident qual_term_list 
     { mkpredpatexp (Ppredpatexp_funapp(Longident.parse $1, $2)) }
+  | qual_term COLONCOLON qual_term
+    { mkpredpatexp (Ppredpatexp_funapp(Longident.parse "::", [$1; $3])) }
+  | COLONCOLON qual_term qual_term
+    { mkpredpatexp (Ppredpatexp_funapp(Longident.parse "::", [$2; $3])) }
   | UIDENT qual_term_list
     { mkpredpatexp (Ppredpatexp_funapp(Longident.parse $1, $2)) } 
   | UIDENT

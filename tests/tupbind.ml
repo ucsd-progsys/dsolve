@@ -51,4 +51,23 @@ let test4 a i =
   match js with C j -> assert (b < j)
 *)
 
+let rec find n = function 
+  | [] -> None 
+  | (n':'a,v':'a list)::ns' -> if n = n' then Some v' else find n ns'
+
+let new_edge g n n' =
+  let ns = find n g in 
+  (n,[n'])::g
+
+let checkg g = 
+  List.iter 
+    (fun p -> 
+       let (n,ns) = p in 
+       List.iter (fun n' -> assert (n < n')) ns) g
+
+let test6 xs = 
+  let g0 = [] in
+  let xs = [1;2;3;4] in
+  let g  = List.fold_left (fun g m -> new_edge g m (m+1)) g0 xs in
+  g
 

@@ -115,6 +115,13 @@ let load_sourcefile ppf env fenv sourcefile =
 
 let dump_env env = printf "(Pruned background env)@.%a@." Constraint.pprint_fenv env
 
+let add_uninterpreted_constructors tenv fenv (id, td) =
+  match Env.constructors_of_type (Path.Pident id) td with
+    | (_, {cstr_res = ty}) :: _ ->
+        let ucs = F.uninterpreted_constructors tenv ty in
+          Le.addn (List.map (fun (n, f) -> (Path.mk_persistent n, f)) ucs) fenv
+    | _ -> fenv
+
 let process_sourcefile env fenv fname =
   let bname = Misc.chop_extension_if_any fname in
   let (qname, iname) = (bname ^ ".quals", bname ^ ".mlq") in
@@ -124,6 +131,7 @@ let process_sourcefile env fenv fname =
     let (unints, vals)        = List.partition MLQ.is_unint_decl vals in
     let (env, _, fenv, _)     = MLQ.load_local_sig env fenv ([], unints) in
     let (str, env, fenv)      = load_sourcefile std_formatter env fenv fname in
+    let fenv                  = List.fold_left (add_uninterpreted_constructors env) fenv (Env.types env) in
     let (env, menv, fenv, mlqenv) = MLQ.load_local_sig env fenv (preds, vals) in
       if !dump_qualifs then
         dump_qualifiers bname (str, env, menv, mlqenv) qname
@@ -192,6 +200,7 @@ let main () =
      "-drawlambda", Arg.Set dump_rawlambda, " (undocumented)";
      "-dlambda", Arg.Set dump_lambda, " (undocumented)";
      "-dinstr", Arg.Set dump_instr, " (undocumented)";
+     "-minsol", Arg.Set minsol, "compute minimum solutions";
      "-dconstrs", Arg.Set dump_constraints, "print out frame constraints";
      "-drconstrs", Arg.Set dump_ref_constraints, "print out refinement constraints";
      "-dsubs", Arg.Set print_subs, "print subs and unsubbed predicates";

@@ -62,6 +62,8 @@ and transl_patpred_single_map f p =
           And (transl_pred_rec p1, transl_pred_rec p2)
       | Ppredpat_or (p1, p2) -> 
           Or (transl_pred_rec p1, transl_pred_rec p2)
+      | Ppredpat_implies (p1, p2) ->
+          Implies (transl_pred_rec p1, transl_pred_rec p2)
       | Ppredpat_forall (bs, q) ->
           let (ps, ts) = List.split bs in
           let ps = List.map (fun s -> (s, Path.mk_ident s)) ps in
@@ -148,6 +150,8 @@ let transl_patpred env (v, nv) (qgtymap, tyset, idset, intset) tymap p =
           PNot (transl_pred_rec p)
       | Ppredpat_and (p1, p2) -> 
           PAnd (transl_pred_rec p1, transl_pred_rec p2)
+      | Ppredpat_implies (p1, p2) ->
+          PImplies (transl_pred_rec p1, transl_pred_rec p2)
       | Ppredpat_or (p1, p2) -> 
           POr (transl_pred_rec p1, transl_pred_rec p2)
       | Ppredpat_forall (ps, q) ->
@@ -197,6 +201,10 @@ let gen_preds p =
           let p1s = gen_pred_rec p1 in
           let p2s = gen_pred_rec p2 in
             C.tflap2 (p1s, p2s) (fun c d -> And (c, d))
+      | PImplies (p1, p2) ->
+          let p1s = gen_pred_rec p1 in
+          let p2s = gen_pred_rec p2 in
+            C.tflap2 (p1s, p2s) (fun c d -> Implies (c, d))
       | PAtom (e1, rels, e2) ->      
           let e1s = gen_expr_rec e1 in
           let e2s = gen_expr_rec e2 in

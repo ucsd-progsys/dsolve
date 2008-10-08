@@ -22,6 +22,8 @@
  *)
 
 open Typedtree
+open Types
+open Ctype
 
 module P = Predicate
 module C = Common
@@ -74,3 +76,35 @@ let rec same p1 p2 =
   | (Tpat_tuple pats1, Tpat_tuple pats2) ->
       List.for_all2 same (pattern_descs pats1) (pattern_descs pats2)
   | _ -> false
+
+let get_patvar p = match p.pat_desc with
+  | Tpat_var p | Tpat_alias (_, p) -> Some (C.i2p p)
+  | _                              -> None
+
+let cstr_res_path {cstr_res = t} = match (repr t).desc with
+  | Tconstr (p, _, _) -> p
+  | _                 -> assert false
+
+let named_patterns pats =
+  List.map
+    (fun p -> match p.pat_desc with Tpat_alias (apat, av) -> (Some (Path.Pident av), apat) | _ -> (None, p))
+    pats
+
+let named_constructor_patterns cdesc pats = function
+  | Some v -> [(v, cstr_res_path cdesc, cdesc.cstr_tag, List.map get_patvar pats)]
+  | None   -> []
+
+let constructor_patterns_aux (vo, pat) = match pat.pat_desc with
+    Tpat_construct(cdesc, pl) ->
+      (named_patterns pl, named_constructor_patterns cdesc pl vo)
+  | Tpat_alias ({pat_desc = Tpat_construct(cdesc, pl)}, _) ->
+      (named_patterns [pat], named_constructor_patterns cdesc pl vo)
+  | Tpat_alias _ ->
+      (named_patterns [pat], [])
+  | Tpat_tuple (pl) ->
+      (named_patterns pl, [])
+  | _ ->
+      ([], [])
+
+let constructor_patterns expvar pat =
+  C.expand constructor_patterns_aux [(Some expvar, pat)] []
