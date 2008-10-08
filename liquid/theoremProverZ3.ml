@@ -37,10 +37,9 @@ module Le = Lightenv
   sig
     (* usage: set.valid*.finish *)
     val axiom : F.t Le.t -> Predicate.t -> unit
-    (*val set     : F.t Le.t -> P.t list -> bool 
-    val valid   : F.t Le.t -> P.t -> bool
-    val finish : unit -> unit*)
-    val set_and_filter: F.t Le.t -> P.t list -> ('a * P.t) list -> ('a * P.t) list
+    val set: F.t Le.t -> P.t list -> bool
+    val filter: F.t Le.t -> ('a * P.t) list -> ('a * P.t) list
+    val finish: unit -> unit
     val print_stats : Format.formatter -> unit -> unit
     val embed_type : F.t * Parsetree.prover_t -> unit
     val frame_of : Parsetree.prover_t -> F.t
@@ -321,11 +320,11 @@ module Prover : PROVER =
       | Vbl _ -> Hashtbl.remove me.vart d 
       | Fun _ -> Hashtbl.remove me.funt d
 
-    let prep_preds env me ps qs =
+    let prep_preds env me ps =
       let ps = List.rev_map (z3Pred env me) ps in
       let _ = me.vars <- Barrier :: me.vars in
       let _ = Z3.push me.c in
-        (ps, qs)
+        ps
 
     let push me ps =
       let _ = incr nb_z3_push in
@@ -365,16 +364,22 @@ module Prover : PROVER =
       let _ = me.vars <- vars' in
       let _ = List.iter (remove_decl me) cs in ()
 
-    let set_and_filter env lhss rhss =
-      if unsat me then rhss else
-        let _ = Hashtbl.remove me.vart (Vbl C.qual_test_var) in
-        let (lhss, _) = prep_preds env me lhss [] in
-        let _ = push me lhss in
-        let rv =
-          if unsat me then None else
-            let rhss = List.rev_map (fun (q, p) -> (z3Pred env me p, (q, p))) rhss in
-            Some (List.filter (fun (p, _) -> valid me p) rhss) in
-        pop me; clean_decls (); assert (me.count = 0); match rv with Some rv -> snd (List.split rv) | None -> rhss
+    let set env ps =
+      let _   = Hashtbl.remove me.vart (Vbl C.qual_test_var) in
+      let ps  = prep_preds env me ps in
+      let _   = push me ps in
+        unsat me
+
+    let filter env ps =
+      let rv =
+        let ps = List.rev_map (fun (q, p) -> (z3Pred env me p, (q, p))) ps in
+        List.filter (fun (p, _) -> valid me p) ps in
+      let _ = pop me in
+      let _ = clean_decls () in
+        snd (List.split rv)
+
+    let finish () =
+      pop me
 
     let axiom env p =
       assert_axiom me (z3Pred env me p)
@@ -387,13 +392,6 @@ module Prover : PROVER =
         type_to_frame me (transl_type me pt)
       with Not_found -> raise (Failure (C.prover_t_to_s pt))
 
-(*    let finish () = 
-      pop me; 
-      let (cs,vars') = vpop ([],me.vars) in
-      let _ = me.vars <- vars' in
-      let _ = List.iter (remove_decl me) cs in
-      assert (me.count = 0)*)
- 
     let print_stats ppf () = 
       Format.fprintf ppf "@[implies(API):@ %i,@ Z3@ {pushes:@ %i,@ pops:@ %i,@ unsats:@ %i}@]"
       !nb_z3_set !nb_z3_push !nb_z3_pop !nb_z3_unsat

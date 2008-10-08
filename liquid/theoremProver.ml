@@ -154,9 +154,10 @@ let set_and_filter env ps qs =
   let _ = nb_queries := !nb_queries + (List.length ps) in
   let ps = List.rev_map fixdiv ps in
   let ps = List.filter is_not_taut ps in
-  let qs = List.rev_map (C.app_snd fixdiv) qs in
-  let (qs, qs') = List.partition (fun (_, q) -> is_not_taut q) qs in
-  List.rev_append qs' (Prover.set_and_filter env ps qs)
+  if Prover.set env ps then (Prover.finish (); qs) else
+      let qs = List.rev_map (C.app_snd fixdiv) qs in
+      let (qs, qs') = List.partition (fun (_, q) -> is_not_taut q) qs in
+        List.rev_append qs' (Prover.filter env qs)
 
 (*(* API *)
 let finish () = 
