@@ -215,9 +215,8 @@ let simplify_frame gm x f =
     | _ -> f
 
 let simplify_env env g =
-  env
-  (*let gm = List.fold_left (fun m (x,b)  -> Le.add x b m) Le.empty g in
-    Le.mapi (simplify_frame gm) env*)
+  let gm = List.fold_left (fun m (x,b)  -> Le.add x b m) Le.empty g in
+    Le.mapi (simplify_frame gm) env
 
 let simplify_fc c =
   match c.lc_cstr with
@@ -246,7 +245,7 @@ let add_val_var = function
   | _ -> assert false
 
 let patch_env env = function
-    SubFrame(env', g, f, f') -> SubFrame(Le.combine env env', g, f, f') | _ -> assert false
+    SubFrame(env', g, f, f') -> SubFrame(Le.combine env' env, g, f, f') | _ -> assert false
 
 let split_sub_ref c env g r1 r2 =
   let c = {lc_cstr = add_val_var (patch_env env c.lc_cstr); lc_tenv = c.lc_tenv;

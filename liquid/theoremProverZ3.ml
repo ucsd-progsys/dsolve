@@ -105,16 +105,19 @@ module Prover : PROVER =
         | Bool -> "bool"
         | Unint s -> s
         | Func ts -> "(func " ^ String.concat " " (List.map t_rec ts) ^ ")"
-        | _ -> assert false in
+        | Array (s, t) -> "[| " ^ t_rec s ^ "; " ^ t_rec t ^ " |]" in
       t_rec t
 
     let ast_type_to_string me a =
       Z3.ast_to_string me.c (Z3.type_ast_to_ast me.c a)
+
     let dump_ast_type me a =
       printf "@[z3%s@]@." 
             (Z3.ast_to_string me.c (Z3.type_ast_to_ast me.c (Z3.get_type me.c a)))
+
     let dump_ast me a =
       printf "@[%s@]@." (Z3.ast_to_string me.c a)
+
     let dump_decls me =
       printf "Vars:@.";
       List.iter (function Vbl s -> printf "%s@." (Path.unique_name s) | Barrier -> printf "----@." | _ -> ()) me.vars;
@@ -167,10 +170,11 @@ module Prover : PROVER =
       | _ -> assert false
 
     let getVarType me s env =
-      try frame_to_type me (Le.find s env) 
-        with Not_found ->
-          (*let p = Path.unique_name s in
-          printf "@[Warning:@ type@ of@ %s@ uninterpretable@ at@ TP@]@." p;*) unint
+      let fr = try (Le.find s env) with
+                 Not_found -> let p = Path.unique_name s in
+                   (eprintf "@[Warning:@ type@ of@ %s@ not@ found@ at@ TP@]@." p; Builtins.uUnit) in
+      try frame_to_type me fr
+        with Not_found -> unint
 
     let is_select = C.has_prefix "SELECT_"
     let select_type = Func [Int; Int]
@@ -218,8 +222,8 @@ module Prover : PROVER =
       () (Fun (s,k))
 
     let rec cast env me ast (t, t') =
-      if (t, t') = ("bool", "int") then z3App env me "_IOFB" [ast](*Z3.mk_app me.c (z3Fun env me "_IOFB" 1) [|ast|]*) else
-      if (t, t') = ("bool", "int") then z3App env me "_BOFI" [ast](*Z3.mk_app me.c (z3Fun env me "_IOFB" 1) [|ast|]*) else
+      if (t, t') = ("bool", "int") then z3App env me "_IOFB" [ast] else
+      if (t, t') = ("bool", "int") then z3App env me "_BOFI" [ast] else
         assert false
 
     and z3Cast env me = function
@@ -245,7 +249,7 @@ module Prover : PROVER =
     let rec z3Exp env me e =
       match e with 
       | P.PInt i                -> Z3.mk_int me.c i me.tint 
-      | P.Var s                 -> (*let _ = printf "@[%s@ %s@]@." (type_to_string (getVarType me s env)) (Path.unique_name s) in*) z3Var env me s
+      | P.Var s                 -> z3Var env me s
       | P.FunApp (f,es)         -> z3App env me f (List.map (z3Exp env me) es)
       | P.Binop (e1,P.Plus,e2)  -> Z3.mk_add me.c (Array.map (z3Exp env me) [|e1;e2|]) 
       | P.Binop (e1,P.Minus,e2) -> Z3.mk_sub me.c (Array.map (z3Exp env me) [|e1;e2|]) 
@@ -259,7 +263,7 @@ module Prover : PROVER =
       match p with 
         P.True          -> Z3.mk_true me.c
       | P.Not p' -> Z3.mk_not me.c (z3Pred env me p')
-      | P.And (p1,p2) -> (*printf "and@.";*) Z3.mk_and me.c (Array.map (z3Pred env me) [|p1;p2|])
+      | P.And (p1,p2) -> Z3.mk_and me.c (Array.map (z3Pred env me) [|p1;p2|])
       | P.Or (p1,p2) -> Z3.mk_or me.c (Array.map (z3Pred env me) [|p1;p2|])
       | P.Iff (p, q) -> Z3.mk_iff me.c (z3Pred env me p) (z3Pred env me q)
    (* | P.Atom (e1,P.Lt,e2) -> z3Pred me (Atom (e1, P.Le, Binop(e2,P.Minus,PInt 1))) *)
@@ -277,7 +281,7 @@ module Prover : PROVER =
           let (ps, ss) = List.split ps in
           let ts = List.map (transl_type me) ss in
           mk_quantifier Z3.mk_exists env me ps ts q
-      | P.Boolexp e -> (*printf "boolexp@.";*) z3Exp env me e (* must be bool *)
+      | P.Boolexp e -> z3Exp env me e
 
     and mk_quantifier mk env me ps ts q =
       let args = qargs me ps ts in
