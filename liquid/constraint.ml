@@ -749,7 +749,7 @@ let instantiate_per_environment cs qs =
  * us the type which makes the least assumptions about the input. *)
 
 let strip_origins cs = snd (List.split cs)
-
+(*
 let make_initial_solution cs =
   let s0   = Sol.create 37 in
   let rhst = Sol.create 37 in
@@ -769,8 +769,8 @@ let make_initial_solution cs =
       let qs' = C.sort_and_compact qs in
       Sol.replace s k qs') s0;
   s
-(* *)
-(*  
+*)
+  
 let filter_wfs cs = List.filter (fun (r, _) -> match r with WFRef(_, _, _) -> true | _ -> false) cs
 let filter_subs cs = List.filter (fun (r, _) -> match r with SubRef(_, _, _, _, _) -> true | _ -> false) cs
 type solmode = WFS | LHS | RHS
@@ -789,7 +789,7 @@ let make_initial_solution cs =
   let wfs  = filter_wfs cs in
   let subs = filter_subs cs in
   List.iter ga subs; List.iter ga wfs; s
-*)
+
 (**************************************************************)
 (****************** Debug/Profile Information *****************)
 (**************************************************************)
