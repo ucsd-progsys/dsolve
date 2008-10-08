@@ -64,7 +64,6 @@ module Prover : PROVER =
       tydeclt           : (sort, Z3.type_ast) Hashtbl.t;
       mutable vars      : decl list ;
       mutable count     : int;
-      mutable i         : int;
       mutable bnd       : int;
       mutable frtymap   : (F.t * sort) list;
     }
@@ -324,7 +323,6 @@ module Prover : PROVER =
 
     let prep_preds env me ps qs =
       let ps = List.rev_map (z3Pred env me) ps in
-      let qs = List.rev_map (fun (q, p) -> (z3Pred env me p, (q, p))) qs in
       let _ = me.vars <- Barrier :: me.vars in
       let _ = Z3.push me.c in
         (ps, qs)
@@ -332,14 +330,12 @@ module Prover : PROVER =
     let push me ps =
       let _ = incr nb_z3_push in
       let _ = me.count <- me.count + 1 in
-      if unsat me then me.i <- me.i + 1 else
-        let _  = Z3.push me.c in
-        Bstats.time "Z3 assert" (List.iter (fun p -> Z3.assert_cnstr me.c p)) ps
+      let _  = Z3.push me.c in
+        List.iter (fun p -> Z3.assert_cnstr me.c p) ps
 
     let pop me =
       let _ = incr nb_z3_pop in
       let _ = me.count <- me.count - 1 in
-      if me.i > 0 then me.i <- me.i - 1 else
         Z3.pop me.c 1 
 
     let valid me p =
@@ -358,33 +354,27 @@ module Prover : PROVER =
       let funt = Hashtbl.create 37 in
       let tydeclt = Hashtbl.create 37 in
       { c = c; tint = tint; tbool = tbool; tydeclt = tydeclt; frtymap = init_frtymap;
-        vart = vart; funt = funt; vars = []; count = 0; i = 0; bnd = 0}
+        vart = vart; funt = funt; vars = []; count = 0; bnd = 0}
 
 (***************************************************************************************)
 (********************** API ************************************************************)
 (***************************************************************************************)
 
-(*    let set env ps = 
-      incr nb_z3_set;
-      Bstats.time "z3 push" (push me (z3Preds env)) ps; 
-      me.vars <- Barrier :: me.vars;
-      unsat me 
-
-    let valid env p =
-      let _   = push me (P.Not p) in
-      let rv  = unsat me in
-      let _   = pop me in rv
-      *)
+    let clean_decls () =
+      let (cs,vars') = vpop ([],me.vars) in
+      let _ = me.vars <- vars' in
+      let _ = List.iter (remove_decl me) cs in ()
 
     let set_and_filter env lhss rhss =
       if unsat me then rhss else
         let _ = Hashtbl.remove me.vart (Vbl C.qual_test_var) in
-        let (lhss, rhss) = prep_preds env me lhss rhss in
+        let (lhss, _) = prep_preds env me lhss [] in
         let _ = push me lhss in
         let rv =
-          if unsat me then rhss else
-            List.filter (fun (p, _) -> valid me p) rhss in
-        pop me; assert (me.count = 0); snd (List.split rv)
+          if unsat me then None else
+            let rhss = List.rev_map (fun (q, p) -> (z3Pred env me p, (q, p))) rhss in
+            Some (List.filter (fun (p, _) -> valid me p) rhss) in
+        pop me; clean_decls (); assert (me.count = 0); match rv with Some rv -> snd (List.split rv) | None -> rhss
 
     let axiom env p =
       assert_axiom me (z3Pred env me p)
