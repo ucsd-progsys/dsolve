@@ -529,17 +529,18 @@ let unfold_applying f =
 
 type bind = Bpat of pattern_desc | Bid of Ident.t
 
-let dep_sub_to_sub binds env (s, s') =
+let dep_sub_to_sub binds scbinds env (s, s') =
   let bind = function
     | Bpat p -> begin match Pattern.get_patvar_desc p with
                     | Some p -> Some (Path.name p, p)
                     | None -> None end
     | Bid i -> Some (Ident.name i, C.i2p i) in
   let binds = C.maybe_list (List.map bind binds) in
+  let scbinds = C.maybe_list (List.map bind scbinds) in
   let c i =
      try List.assoc i binds
       with Not_found -> find_key_by_name env i in
-    try (c s', P.Var (List.assoc s binds))
+    try (c s', P.Var (List.assoc s scbinds))
       with Not_found -> failwith "Could not bind dependent substitution to paths"
 
 let apply_dep_subs subs = function
@@ -559,30 +560,30 @@ let instantiate env fr ftemplate =
   let vars = ref [] in
   let vmap p ft =
     try List.assoc p !vars with Not_found -> vars := (p, ft) :: !vars; ft in
-  let rec inst f ft =
+  let rec inst scbinds f ft =
     match (f, ft) with
       | (Fvar (p, level, s, r), _) when level = generic_level ->
           let instf = vmap p ft in 
-          let subs = List.map (dep_sub_to_sub !binds env) s in
+          let subs = List.map (dep_sub_to_sub !binds scbinds env) s in
           apply_subs subs (append_refinement r instf)
       | (Fvar _, _) | (Frec _, _) ->
           f
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
-          let nf1 = inst f1 f2 in
+          let nf1 = inst scbinds f1 f2 in
           let _ = binds := (Bpat l) :: !binds in
-          let nf2 = inst f1' f2' in
+          let nf2 = inst ((Bpat l) :: scbinds) f1' f2' in
           Farrow (l, nf1, nf2)
       | (Fsum (p, ro, cs, r), Fsum(p', _, cs', _)) ->
-          Fsum (p, ro, List.map2 (constr_app_params2 inst_params) cs cs', r)
+          Fsum (p, ro, List.map2 (constr_app_params2 (inst_params scbinds)) cs cs', r)
       | (Fabstract(p, ps, r), Fabstract(_, ps', _)) ->
-          Fabstract (p, inst_params ps ps', r)
+          Fabstract (p, inst_params scbinds ps ps', r)
       | (f1, f2) ->
           fprintf std_formatter "@[Unsupported@ types@ for@ instantiation:@;<1 2>%a@;<1 2>%a@]@."
 	    pprint f1 pprint f2;
 	    assert false
-  and inst_params ps ps' =
-    List.map2 (fun (p, f, v) (_, f', _) -> binds := (Bid p) :: !binds; (p, inst f f', v)) ps ps'
-  in inst fr ftemplate
+  and inst_params scbinds ps ps' =
+    List.map2 (fun (p, f, v) (_, f', _) -> binds := (Bid p) :: !binds; (p, inst ((Bid p) :: scbinds) f f', v)) ps ps'
+  in inst [] fr ftemplate
 
 let instantiate_refexpr_qualifiers vars (subs, (qconsts, qvars)) =
   (subs, (List.map (fun q -> match Qualifier.instantiate vars q with Some q -> q | None -> q) qconsts,
