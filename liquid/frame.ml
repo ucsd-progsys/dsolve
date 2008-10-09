@@ -527,16 +527,20 @@ let unfold_applying f =
 (********* Polymorphic and qualifier instantiation ************) 
 (**************************************************************)
 
+type bind = Bpat of pattern_desc | Bid of Ident.t
+
 let dep_sub_to_sub binds env (s, s') =
-  let binds = C.maybe_list 
-    (List.map (fun p -> match Pattern.get_patvar_desc p with
-                          Some p -> Some (Path.name p, p)
-                        | None -> None) binds) in  
+  let bind = function
+    | Bpat p -> begin match Pattern.get_patvar_desc p with
+                    | Some p -> Some (Path.name p, p)
+                    | None -> None end
+    | Bid i -> Some (Ident.name i, C.i2p i) in
+  let binds = C.maybe_list (List.map bind binds) in
   let c i =
      try List.assoc i binds
-      with Not_found -> try find_key_by_name env i
-        with Not_found -> failwith "Could not bind dependent substitution to paths" in
-    (c s, P.Var (c s'))
+      with Not_found -> find_key_by_name env i in
+    try (c s', P.Var (List.assoc s binds))
+      with Not_found -> failwith "Could not bind dependent substitution to paths"
 
 let apply_dep_subs subs = function
     Fvar (p, i, _, r) -> Fvar (p, i, subs, r)
@@ -565,7 +569,7 @@ let instantiate env fr ftemplate =
           f
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
           let nf1 = inst f1 f2 in
-          let _ = binds := l :: !binds in
+          let _ = binds := (Bpat l) :: !binds in
           let nf2 = inst f1' f2' in
           Farrow (l, nf1, nf2)
       | (Fsum (p, ro, cs, r), Fsum(p', _, cs', _)) ->
@@ -577,7 +581,7 @@ let instantiate env fr ftemplate =
 	    pprint f1 pprint f2;
 	    assert false
   and inst_params ps ps' =
-    List.map2 (fun (p, f, v) (_, f', _) -> (p, inst f f', v)) ps ps'
+    List.map2 (fun (p, f, v) (_, f', _) -> binds := (Bid p) :: !binds; (p, inst f f', v)) ps ps'
   in inst fr ftemplate
 
 let instantiate_refexpr_qualifiers vars (subs, (qconsts, qvars)) =
