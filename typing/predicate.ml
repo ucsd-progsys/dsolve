@@ -316,3 +316,8 @@ let conjuncts_unexp = function
 
 let conjuncts p = 
   C.expand conjuncts_unexp [p] []
+
+let is_taut = function
+  | Atom(e1, Eq, e2) -> e1 = e2
+  | True -> true
+  | _ -> false

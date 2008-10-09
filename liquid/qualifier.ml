@@ -108,3 +108,6 @@ let instantiate_about vm (path, valu, pred) =
 let map_pred f (p, v, pred) = 
   let (v', pred') = f (v, pred) in
     (p, v', pred')
+
+let may_not_be_tautology (p, v, pred) =
+  not (Predicate.is_taut pred)

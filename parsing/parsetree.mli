@@ -198,7 +198,7 @@ and prover_t =
 (* Parsed frames *)
 
 and litframe =
-    PFvar of string * refinement
+    PFvar of string * subs * refinement
   | PFrec of string * recref * refinement
   | PFsum of Longident.t * (string * recref) option * constr list * refinement
   | PFconstr of Longident.t * litframe list * refinement
@@ -209,6 +209,8 @@ and litframe =
 and constr = param list
 
 and param = string * litframe
+
+and subs = (string * string) list
 
 and refinement =
   | RLiteral of string * predicate_pattern

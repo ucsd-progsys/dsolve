@@ -303,7 +303,7 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       let env' = F.env_bind env p2 f2 in
       let f1'  = F.apply_subs subs f1' in
         (lequate_cs env g c F.Covariant f2 f1 @ lequate_cs env' g c F.Covariant f1' f2', [])
-  | (F.Fvar (_, _, r1), F.Fvar (_, _, r2)) ->
+  | (F.Fvar (_, _, s, r1), F.Fvar (_, _, s', r2)) ->
       ([], split_sub_ref c env g r1 r2)
   | (F.Frec _, F.Frec _) ->
       ([], [])
@@ -353,7 +353,7 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
       (split_wf_params c tenv env ps, split_wf_ref f c env r)
   | F.Farrow (p, f, f') ->
       ([make_wff c tenv env f; make_wff c tenv (F.env_bind env p f) f'], [])
-  | F.Fvar (_, _, r) ->
+  | F.Fvar (_, _, s, r) ->
       ([], split_wf_ref f c env r)
   | F.Frec _ ->
       ([], [])
@@ -898,6 +898,7 @@ let solve qs cs =
   (* let cs = if !Cf.esimple then 
                BS.time "e-simplification" (List.map esimple) cs else cs in *)
   let qs = BS.time "instantiating quals" (instantiate_per_environment cs) qs in
+  let qs = BS.time "pruning quals" (List.map (fun qs -> List.filter Qualifier.may_not_be_tautology qs)) qs in
   let _ = Hashtbl.clear memo in
   let sri = BS.time "making ref index" make_ref_index cs in
   let s = make_initial_solution (List.combine (strip_origins cs) qs) in

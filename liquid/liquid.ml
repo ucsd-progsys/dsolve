@@ -100,7 +100,7 @@ let load_valfile ppf env fenv fname =
     let (preds, decls) = MLQ.parse ppf fname in
     let vals = MLQ.filter_vals decls in
     let kvl = List.map (fun (s, pf) -> (s, F.translate_pframe None env preds pf)) vals in
-    let tag = (Path.mk_ident P.tag_function, F.Fvar(Path.mk_ident "", 0, F.empty_refinement)) in
+    let tag = (Path.mk_ident P.tag_function, F.Fvar(Path.mk_ident "", 0, [], F.empty_refinement)) in
     let f = (fun (k, v) -> (C.lookup_path k env, F.label_like v v)) in
     let kvl = tag :: (List.map f kvl) in
       (env, Lightenv.addn kvl fenv)

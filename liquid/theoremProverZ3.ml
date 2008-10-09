@@ -77,9 +77,6 @@ module Prover : PROVER =
       let x = ref 0 in
       (fun v -> incr x; (v^(string_of_int !x)))
 
-    let get_by_name s env =
-      List.hd (Le.filterlist (fun p _ -> Path.name p = s) env)
-
 (***************************************************************************************)
 (********************** Typing ************************************************************)
 (***************************************************************************************)
@@ -182,7 +179,7 @@ module Prover : PROVER =
     let getFunType me s env =
       if is_select s then select_type
       else try List.assoc s builtins
-        with Not_found -> try frame_to_type me (get_by_name s env)
+        with Not_found -> try frame_to_type me (F.find_by_name env s)
           with Not_found -> printf "@[Warning:@ could@ not@ type@ function@ %s@ in@ tpz3@]" s; unint
 
 (***************************************************************************************)

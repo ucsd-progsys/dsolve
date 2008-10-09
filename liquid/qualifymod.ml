@@ -293,7 +293,7 @@ and instantiate_id id f env tenv =
     with Not_found ->
       Frame.fresh_without_vars tenv ((Env.find_value id tenv).val_type)
   in
-    F.instantiate env_f f
+    F.instantiate env env_f f
 
 and constrain_base_identifier (env, _, f) id e =
   let refn =

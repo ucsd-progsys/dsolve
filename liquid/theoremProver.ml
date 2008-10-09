@@ -94,11 +94,6 @@ let rec fixdiv p =
      | p -> p
     else p
 
-let is_not_taut = function
-  | P.Atom(e1, P.Eq, e2) -> e1 != e2
-  | P.True -> false
-  | _ -> true
-
 (********************************************************************************)
 (*********************** Memo tables and Stats Counters  ************************)
 (********************************************************************************)
@@ -153,6 +148,9 @@ let valid env q =
   incr nb_queries; 
   let q = fixdiv q in
   Prover.valid env q*)
+
+let is_not_taut p =
+  not (P.is_taut p)
 
 let set_and_filter env ps qs =
   let _ = incr nb_push in

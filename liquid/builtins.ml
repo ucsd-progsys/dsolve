@@ -54,7 +54,7 @@ let qrel rel x y =
      x,
      Atom(Var x, rel, Var y))
 
-let mk_tyvar () = Frame.Fvar(Path.mk_ident "a", Frame.generic_level, empty_refinement)
+let mk_tyvar () = Frame.Fvar(Path.mk_ident "a", Frame.generic_level, [], empty_refinement)
 
 let mk_abstract path qs =
   Fabstract(path, [], const_refinement qs)
@@ -130,7 +130,7 @@ let (==>) x y = (x, y)
 
 let (===>) x y = x ==> fun _ -> def y
 
-let forall f = f (Frame.Fvar(Path.mk_ident "a", Frame.generic_level, empty_refinement))
+let forall f = f (mk_tyvar ())
 
 let op_frame path qname op =
   (path, defun (fun x -> uInt ===>

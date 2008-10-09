@@ -34,12 +34,14 @@ module T = Typetexp
 module Pat = Pattern
 module M = Misc
 module P = Predicate
+module Le = Lightenv
 
 (**************************************************************)
 (************** Type definitions: Refinements *****************)
 (**************************************************************)
 
 type substitution = Path.t * Predicate.pexpr
+type dep_sub = string * string
 
 type qvar = Path.t
 type refexpr = substitution list * (Qualifier.t list * qvar list)
@@ -58,7 +60,7 @@ type simple_refinement = substitution list * qexpr
 (**************************************************************)
 
 type t =
-  | Fvar of Path.t * int * refinement
+  | Fvar of Path.t * int * dep_sub list * refinement
   | Frec of Path.t * recref * refinement
   | Fsum of Path.t * (Path.t * recref) option * constr list * refinement
   | Fabstract of Path.t * param list * refinement
@@ -71,6 +73,17 @@ and constr = constructor_tag * (string * param list)
 and variance = Covariant | Contravariant | Invariant
 
 let path_tuple = Path.mk_ident "tuple"
+
+(**************************************************************)
+(**************** Type environments ***************************)
+(**************************************************************)
+
+let find_by_name env s =
+   List.hd (Le.filterlist (fun p _ -> Path.name p = s) env)
+
+let find_key_by_name env s =
+   try List.hd (Le.filterkeylist (fun p _ -> Path.name p = s) env)
+    with Failure _ -> raise Not_found
 
 (**************************************************************)
 (**************** Constructed type accessors ******************)
@@ -116,7 +129,7 @@ let map_recref f rr =
 
 let rec map_refinements_map f = function
   | Frec (p, rr, r) -> Frec (p, map_recref f rr, f r)
-  | Fvar (p, level, r) -> Fvar (p, level, f r)
+  | Fvar (p, level, s, r) -> Fvar (p, level, s, f r)
   | Fsum (p, ro, cs, r) -> Fsum (p, M.may_map (fun (p, rr) -> (p, map_recref f rr)) ro, cs, f r)
   | Fabstract (p, ps, r) -> Fabstract (p, ps, f r)
   | f -> f
@@ -132,7 +145,7 @@ let recref_fold f rr l =
 
 let rec refinement_fold f l = function
   | Frec (_, rr, r) -> f r (recref_fold f rr l)
-  | Fvar (_, _, r) -> f r l
+  | Fvar (_, _, s, r) -> f r l
   | Fsum (_, ro, cs, r) ->
       f r (List.fold_left (refinement_fold f) (match ro with Some (_, rr) -> recref_fold f rr l | None -> l) (C.flap constr_param_frames cs))
   | Fabstract (_, ps, r) ->
@@ -162,9 +175,9 @@ let end_def () =
   incr current_level
 
 let generalize_map = function
-  | Fvar (p, level, r) ->
+  | Fvar (p, level, s, r) ->
       let level = if level < !current_level then generic_level else level in
-        Fvar (p, level, r)
+        Fvar (p, level, s, r)
   | f -> f
 
 let generalize f =
@@ -193,13 +206,14 @@ let false_refinement =
   mk_refinement [] [(Path.mk_ident "false", Path.mk_ident "V", Predicate.Not (Predicate.True))] []
 
 let apply_refinement r = function
-  | Fvar (p, level, _) -> Fvar (p, level, r)
+  | Fvar (p, level, s, _) -> Fvar (p, level, s, r)
   | Fsum (p, rr, cs, _) -> Fsum (p, rr, cs, r)
   | Fabstract (p, ps, _) -> Fabstract (p, ps, r)
   | f -> f
 
+  (*need to apply subs when refinement is pulled somehow..*)
 let get_refinement = function
-  | Fvar (_, _, r) | Fsum (_, _, _, r) | Fabstract (_, _, r) -> Some r
+  | Fvar (_, _, _, r) | Fsum (_, _, _, r) | Fabstract (_, _, r) -> Some r
   | _ -> None
 
 let append_refinement res' f =
@@ -285,7 +299,7 @@ let same_shape t1 t2 =
           (ro = ro' || match (ro, ro') with (Some (rp, _), Some (rp', _)) -> ismapped rp rp' | _ -> false)
     | (Fabstract(p, ps, _), Fabstract(p', ps', _)) ->
         Path.same p p' && params_sshape ps ps'
-    | (Fvar (p, _, _), Fvar (p', _, _)) | (Frec (p, _, _), Frec (p', _, _)) ->
+    | (Fvar (p, _, _, _), Fvar (p', _, _, _)) | (Frec (p, _, _), Frec (p', _, _)) ->
         ismapped p p'
     | (Farrow(_, i, o), Farrow(_, i', o')) ->
         sshape (i, i') && sshape (o, o')
@@ -349,9 +363,9 @@ let rec subt t1 t2 eq inst =
         (* s_rec (f2, t1) *)
     | (_, Frec(_, _, _)) ->
         (*assert*) false (* assume that the LHS is folded up *)
-    | (Fvar(p1, _, _), Fvar(p2, _, _)) ->
+    | (Fvar(p1, _, _, _), Fvar(p2, _, _, _)) ->
         equiv p1 p2
-    | (Fvar(p, _, _), _) -> 
+    | (Fvar(p, _, _, _), _) -> 
         ismapped p f2
     | (Farrow(_, i, o), Farrow(_, i', o')) ->
         s_rec(i, i') && s_rec(o, o')
@@ -372,13 +386,12 @@ let map_inst eq inst f =
       Some (List.assoc p inst)
     with Not_found -> None in
   let m_inst = function
-    | Fvar (p, _, _) as ofr -> (match mapped p with Some fr -> fr | None -> ofr)
+    | Fvar (p, _, _, _) as ofr -> (match mapped p with Some fr -> fr | None -> ofr)
     | fr -> fr in 
   map m_inst f
 
 (**************************************************************)
 (******************** Frame pretty printers *******************)
-
 (**************************************************************)
 
 let pprint_sub ppf (path, pexp) =
@@ -442,11 +455,13 @@ let pprint_recopt ppf = function
   | Some (rp, rr) -> fprintf ppf "%a@;<1 0>μ%s." pprint_recref rr (C.path_name rp)
   | None          -> ()
 
+let pprint_dep_subs ppf s = C.pprint_list "" (fun ppf (s, s') -> fprintf ppf "[%s/%s]" s s') ppf s  
+
 let rec pprint ppf = function
   | Frec (path, rr, r) ->
       wrap_refined ppf (fun ppf -> fprintf ppf "@[%a@ %s@]" pprint_recref rr (C.path_name path)) r
-  | Fvar (a, level, r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "'%s%s" (C.path_name a) (if level = generic_level then "P" else "M")) r
+  | Fvar (a, level, s, r) ->
+      wrap_refined ppf (fun ppf -> fprintf ppf "'%s%s%a" (C.path_name a) (if level = generic_level then "P" else "M") pprint_dep_subs s) r
   | Fsum (path, ro, [], r) ->
       wrap_refined ppf (fun ppf -> fprintf ppf "@[%a%s@]" pprint_recopt ro (C.path_name path)) r
   | Fsum (path, ro, cs, r) ->
@@ -512,26 +527,51 @@ let unfold_applying f =
 (********* Polymorphic and qualifier instantiation ************) 
 (**************************************************************)
 
+let dep_sub_to_sub binds env (s, s') =
+  let binds = C.maybe_list 
+    (List.map (fun p -> match Pattern.get_patvar_desc p with
+                          Some p -> Some (Path.name p, p)
+                        | None -> None) binds) in  
+  let c i =
+     try List.assoc i binds
+      with Not_found -> try find_key_by_name env i
+        with Not_found -> failwith "Could not bind dependent substitution to paths" in
+    (c s, P.Var (c s'))
+
+let apply_dep_subs subs = function
+    Fvar (p, i, _, r) -> Fvar (p, i, subs, r)
+  | _ -> assert false
+
+let instantiate_dep_subs vars subs =
+  let c i =
+    try Path.name (List.assoc i vars) with Not_found -> i in
+  List.map (C.app_pr c) subs
+  
 (* Instantiate the tyvars in fr with the corresponding frames in ftemplate.
    If a variable occurs twice, it will only be instantiated with one frame; which
    one is undefined and unimportant. *)
-let instantiate fr ftemplate =
+let instantiate env fr ftemplate =
+  let binds = ref [] in
   let vars = ref [] in
   let vmap p ft =
-    try List.assoc p !vars with Not_found -> vars := (p, ft) :: !vars; ft
-  in
+    try List.assoc p !vars with Not_found -> vars := (p, ft) :: !vars; ft in
   let rec inst f ft =
     match (f, ft) with
-      | (Fvar (p, level, r), _) when level = generic_level ->
-          let instf = vmap p ft in append_refinement r instf
+      | (Fvar (p, level, s, r), _) when level = generic_level ->
+          let instf = vmap p ft in 
+          let subs = List.map (dep_sub_to_sub !binds env) s in
+          apply_subs subs (append_refinement r instf)
       | (Fvar _, _) | (Frec _, _) ->
           f
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
-          Farrow (l, inst f1 f2, inst f1' f2')
+          let nf1 = inst f1 f2 in
+          let _ = binds := l :: !binds in
+          let nf2 = inst f1' f2' in
+          Farrow (l, nf1, nf2)
       | (Fsum (p, ro, cs, r), Fsum(p', _, cs', _)) ->
-          Fsum(p, ro, List.map2 (constr_app_params2 inst_params) cs cs', r)
+          Fsum (p, ro, List.map2 (constr_app_params2 inst_params) cs cs', r)
       | (Fabstract(p, ps, r), Fabstract(_, ps', _)) ->
-          Fabstract(p, inst_params ps ps', r)
+          Fabstract (p, inst_params ps ps', r)
       | (f1, f2) ->
           fprintf std_formatter "@[Unsupported@ types@ for@ instantiation:@;<1 2>%a@;<1 2>%a@]@."
 	    pprint f1 pprint f2;
@@ -563,7 +603,9 @@ let instantiate_qualifiers vars fr =
    must be completely unlabeled (as frames are after creation by fresh). *)
 let label_like f f' =
   let rec label vars f f' = match (f, f') with
-    | (Fvar _, Fvar _) | (Frec _, Frec _) | (Fabstract _, Fabstract _) ->
+    | (Fvar _, Fvar (_, _, s, _)) ->
+        instantiate_qualifiers vars (apply_dep_subs (instantiate_dep_subs vars s) f) 
+    | (Frec _, Frec _) | (Fabstract _, Fabstract _) ->
         instantiate_qualifiers vars f
     | (Fsum (p, rro, cs1, r), Fsum (_, _, cs2, _)) ->
         let rro =
@@ -623,7 +665,7 @@ let mutable_variance = function
 let fresh_refinementvar () =
   mk_refinement [] [] [Path.mk_ident "k"]
 
-let fresh_fvar level = Fvar (Path.mk_ident "a", level, empty_refinement)
+let fresh_fvar level = Fvar (Path.mk_ident "a", level, [], empty_refinement)
 
 let rec canonicalize t =
   begin match t.desc with
@@ -754,7 +796,7 @@ let rec abs_type_levels t =
   t.level <- abs t.level; Btype.iter_type_expr abs_type_levels t
 
 let rec flip_frame_levels f =
-  map (function Fvar (p, level, r) -> Fvar (p, -level, r) | f -> f) f
+  map (function Fvar (p, level, s, r) -> Fvar (p, -level, s, r) | f -> f) f
 
 let rec copy_type = function
   | {desc = Tlink t} -> copy_type t (* Ensures copied types gets target's id/level, not link's *)
@@ -860,7 +902,7 @@ let rec translate_pframe dopt env plist pf =
   let transl_pref = transl_pref plist env in
   let rec transl_pframe_rec pf =
     match pf with
-    | PFvar (a, r) -> Fvar (getvar a, generic_level, empty_refinement)
+    | PFvar (a, subs, r) -> Fvar (getvar a, generic_level, subs, transl_pref r)
     | PFrec (a, rr, r) -> Frec (getvar a, transl_recref rr, transl_pref r)
     | PFsum (l, rro, cs, r) -> transl_sum l rro cs r
     | PFconstr (l, fs, r) -> transl_constr l fs r

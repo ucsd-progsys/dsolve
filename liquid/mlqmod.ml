@@ -13,7 +13,6 @@ module TP = TheoremProverZ3
 let parse ppf fname =
   if Sys.file_exists fname then Pparse.file ppf fname Parse.liquid_interface Config.ast_impl_magic_number else ([], [])
 
-
 let idf = (fun s -> s)
 let lu f f' s = try f s with Not_found -> f' s
 
@@ -88,7 +87,7 @@ let scrub_and_push_axioms fenv =
 
 let load_rw dopt rw env menv' fenv (preds, decls) =
   let load_decl (env, fenv, ifenv, menv) = function
-      LvalDecl(s, f)  -> (env, fenv, load_val dopt env ifenv (s, F.translate_pframe dopt env preds f), menv)
+      LvalDecl(s, f) -> (env, fenv, load_val dopt env ifenv (s, F.translate_pframe dopt env preds f), menv)
     | LmeasDecl (name, cstrs) -> (env, fenv, ifenv, List.rev_append (load_measure dopt env (name, cstrs)) menv)
     | LunintDecl (name, ty) -> load_unint name ty env fenv ifenv menv
     | LembedDecl (ty, psort) -> load_embed dopt ty psort env fenv ifenv menv

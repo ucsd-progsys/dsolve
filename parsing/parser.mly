@@ -193,7 +193,7 @@ let bigarray_set arr arg newval =
 
 let rw_frame f nr =
     match f with
-      PFvar(s, r) -> PFvar(s, nr)
+      PFvar(s, b, r) -> PFvar(s, b, nr)
     | PFrec(s, rr, _) -> PFrec(s, rr, nr)
     | PFsum(l, rro, cs, _) -> PFsum(l, rro, cs, nr)
     | PFconstr(s, f, r) -> PFconstr(s, f, nr)
@@ -218,14 +218,14 @@ let mk_implies a b =
 
 let mkconstr a b r = PFconstr (a, b, r)
 let mksum p rro cs r = PFsum (p, rro, cs, r)
-let mkvar a r = PFvar (a, r)
+let mkvar a b r = PFvar (a, b, r)
 let mkrecvar a rr r = PFrec (a, rr, r)
 let mkarrow v a b = PFarrow (v, a, b)
 let mktuple a r = PFtuple (a, r)
 let mkrecord a r = PFrecord (a, r)
 let mktrue_constr a b = mkconstr a b ptrue
 let mktrue_sum p rro cs = mksum p rro cs ptrue
-let mktrue_var a = mkvar a ptrue
+let mktrue_var a b = mkvar a b ptrue
 let mktrue_recvar a rr = mkrecvar a rr ptrue
 let mktrue_tuple a = mktuple a ptrue
 let mktrue_record a = mkrecord a ptrue
@@ -1734,9 +1734,13 @@ liquid_type1:
   | liquid_type2
       { $1 }
 
+subs_opt:
+        /* empty */                                     { [] }
+  | LBRACKET LIDENT INFIXOP3 LIDENT RBRACKET subs_opt   { ($2, $4) :: $6 }
+
 liquid_type2:
-    QUOTE LIDENT                                          /* tyvar */
-      { mktrue_var $2 }
+    QUOTE LIDENT subs_opt                                 /* tyvar */
+      { mktrue_var $2 $3 }
   | liquid_recref LIDENT                                  /* recursive tyvar */
       { mktrue_recvar $2 $1 }
   | LPAREN liquid_type_comma_list RPAREN %prec below_IDENT 
