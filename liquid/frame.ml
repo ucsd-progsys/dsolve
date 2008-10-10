@@ -481,7 +481,7 @@ let rec pprint ppf = function
   | Farrow (pat, f, f') ->
       fprintf ppf "@[%a:@ %a@ ->@;<1 2>%a@]" pprint_pattern pat pprint1 f pprint f'
   | Fabstract (path, params, r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "@[%a@ %s@]"
+      wrap_refined ppf (fun ppf -> fprintf ppf "@[(%a)@ %s@]"
                           (pprint_params ",") params
                           (C.path_name path)) r
  and pprint1 ppf = function
@@ -589,7 +589,10 @@ let instantiate env fr ftemplate =
 	    pprint f1 pprint f2;
 	    assert false
   and inst_params scbinds ps ps' =
-    List.map2 (fun (p, f, v) (_, f', _) -> binds := (Bid p) :: !binds; (p, inst ((Bid p) :: scbinds) f f', v)) ps ps'
+    let bind_param (ps, scbinds) (p, f, v) (_, f', _) =
+      binds := (Bid p) :: !binds;
+      ((ps @ [(p, inst scbinds f f', v)]), (Bid p) :: scbinds) in
+    fst (List.fold_left2 bind_param ([], scbinds) ps ps')
   in inst [] fr ftemplate
 
 let instantiate_refexpr_qualifiers vars (subs, (qconsts, qvars)) =

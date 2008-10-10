@@ -16,5 +16,7 @@ let rec store n m =
 
 let _ = store 1 g
 
+let op = Mymap.make 5 5 
+
 let f x = Mymap.sett x 5 6
 
