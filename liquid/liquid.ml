@@ -92,7 +92,7 @@ let load_dep_mlqfiles bname deps env fenv mlqenv =
 let dump_qualifiers bname (str, env, menv, ifenv) qname = 
   let deps = Qualgen.all_modules str in
   let (env, emenv, efenv, _) = load_dep_mlqfiles bname deps env Le.empty Le.empty in
-  let (menv, fenv) = (List.rev_append menv emenv, Le.combine efenv ifenv) in
+  let (menv, ifenv) = (List.rev_append menv emenv, Le.combine efenv ifenv) in
     Qdump.dump_default_qualifiers (str, env, menv, ifenv) deps qname
 
 let load_valfile ppf env fenv fname =

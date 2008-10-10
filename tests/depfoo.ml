@@ -1,9 +1,9 @@
-let i = None
-let g (x: int) = x
+(*let i = None
 let j = 5
 let b = false 
-let a = "fat"
+let a = "fat"*)
 
+let g (x: int) = x
 let y = Dep.f g
 
 let z = Dep.f

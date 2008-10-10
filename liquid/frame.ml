@@ -124,6 +124,14 @@ let rec map f = function
 and map_params f ps =
   List.map (fun (p, fr, v) -> (p, map f fr, v)) ps
 
+let rec map_labels f fr = 
+  let f' = function Farrow (x, a, b) -> Farrow (f x, a, b) | fr -> fr in
+    map f' fr
+
+let rec iter_labels f fr =
+  let f' p = f p; p in
+    ignore (map_labels f' fr)
+
 let map_recref f rr =
   List.map (fun r -> List.map f r) rr
 
@@ -530,13 +538,12 @@ let unfold_applying f =
 type bind = Bpat of pattern_desc | Bid of Ident.t
 
 let dep_sub_to_sub binds scbinds env (s, s') =
+  let i2sub i = (Ident.name i, C.i2p i) in
   let bind = function
-    | Bpat p -> begin match Pattern.get_patvar_desc p with
-                    | Some p -> Some (Path.name p, p)
-                    | None -> None end
-    | Bid i -> Some (Ident.name i, C.i2p i) in
-  let binds = C.maybe_list (List.map bind binds) in
-  let scbinds = C.maybe_list (List.map bind scbinds) in
+    | Bpat p -> List.map i2sub (Typedtree.pat_desc_bound_idents p)
+    | Bid i -> [i2sub i] in
+  let binds = C.flap bind binds in
+  let scbinds = C.flap bind scbinds in
   let c i =
      try List.assoc i binds
       with Not_found -> find_key_by_name env i in

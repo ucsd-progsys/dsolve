@@ -33,7 +33,8 @@ let mk_intset il =
   List.fold_left (fun is i -> CS.add i is) init il
 
   (* best/worst/best again hack ever *)
-let init_idset = List.fold_left (fun ids id -> IS.add id ids) IS.empty ["e0"; "e1"; "e2"; "e3"; "e4"; "e5"]
+let init_idset = List.fold_left (fun ids id -> IS.add id ids) IS.empty 
+  ["e0"; "e1"; "e2"; "e3"; "e4"; "e5"; "a"; "b"; "c"; "d"; "e"; "f"]
     
 let mk_idset pl =
   List.fold_left (fun ids (_, id) -> IS.add (Ident.name id) ids) init_idset pl

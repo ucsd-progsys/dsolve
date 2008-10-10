@@ -1,0 +1,6 @@
+
+val set: (j: int -> 'a) -> k: int -> 'a[k/j] -> (l: int -> 'a[l/j]) 
+val get: (j: int -> 'a) -> k: int -> 'a[k/j]
+
+val mem: (k: int -> 'a) -> int -> bool
+

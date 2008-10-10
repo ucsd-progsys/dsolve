@@ -82,6 +82,7 @@ val mk_refinement: substitution list -> Qualifier.t list -> qvar list -> refinem
 val translate_variance: (bool * bool * bool) -> variance
 val constr_params: constr -> param list
 val constrs_tag_params: constructor_tag -> constr list -> param list
+val iter_labels: (pattern_desc -> unit) -> t -> unit
 val map_refexprs: (refexpr -> refexpr) -> t -> t
 val params_frames: param list -> t list
 val shape: t -> t

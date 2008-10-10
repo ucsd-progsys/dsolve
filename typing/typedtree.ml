@@ -193,17 +193,19 @@ let map_pattern_desc f d =
 
 let idents = ref([]: Ident.t list)
 
-let rec bound_idents pat =
-  match pat.pat_desc with
+let rec bound_idents_desc = function
   | Tpat_var id -> idents := id :: !idents
   | Tpat_alias(p, id) -> bound_idents p; idents := id :: !idents
-  | Tpat_or(p1, _, _) ->
-      (* Invariant : both arguments binds the same variables *)
-      bound_idents p1
+  | Tpat_or(p1, _, _) -> bound_idents p1
+      (* Invariant : both arguments bind the same variables *)
   | d -> iter_pattern_desc bound_idents d
 
-let pat_bound_idents pat =
-  idents := []; bound_idents pat; let res = !idents in idents := []; res
+and bound_idents pat = bound_idents_desc pat.pat_desc
+
+let pat_desc_bound_idents pat =
+  idents := []; bound_idents_desc pat; let res = !idents in idents := []; res
+
+let pat_bound_idents pat = pat_desc_bound_idents pat.pat_desc 
 
 let rev_let_bound_idents pat_expr_list =
   idents := [];

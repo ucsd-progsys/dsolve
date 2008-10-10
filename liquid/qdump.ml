@@ -63,6 +63,13 @@ let dump_qset ppf qs =
 let dump_deps ppf ds =
   List.iter (fun s -> fprintf ppf "@[mdep@ %s@]@." s) ds
 
+let env_bound_ids env =
+  let is = ref [] in
+  Le.iter 
+    (fun _ f -> F.iter_labels 
+      (fun p -> is := List.rev_append (Typedtree.pat_desc_bound_idents p) !is) f)
+        env; !is
+
 let dump_default_qualifiers (str, env, menv, ifenv) deps qname =
   let qf = formatter_of_out_channel (open_out qname) in
   let _ = pp_set_margin qf 1230912 in
@@ -72,7 +79,9 @@ let dump_default_qualifiers (str, env, menv, ifenv) deps qname =
   let deps = deps @ deps' in
 
   let prgids = Qualgen.bound_ids str in
-  let (_, _, ids, _) = prgids in
+  let (a, b, ids, d) = prgids in
+  let ids = List.fold_left (fun s i -> Qualgen.IS.add (Ident.name i) s) ids (env_bound_ids ifenv) in
+  let prgids = (a, b, ids, d) in 
   let ids = List.rev_map Path.mk_ident (Qualgen.IS.elements ids) in
 
   let mnms = snd (List.split (M.filter_names menv)) in

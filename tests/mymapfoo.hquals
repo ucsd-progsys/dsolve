@@ -1,0 +1,3 @@
+qualif A(v): v = ~A + 1
+qualif B(v): v > ~A
+qualif C(v): v { * * } 100
