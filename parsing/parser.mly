@@ -1516,7 +1516,7 @@ qualifier_pattern:
   | LPAREN qualifier_pattern IFF qualifier_pattern RPAREN
       { mkpredpat (Ppredpat_iff($2, $4)) } 
   | LPAREN qualifier_pattern MINUSGREATER qualifier_pattern RPAREN
-      { mk_implies $2 $4 }
+      { mkpredpat (Ppredpat_implies($2, $4)) }
   | qual_expr qual_rel qual_expr            
       { mkpredpat (Ppredpat_atom($1, $2, $3)) }
   | FORALL LPAREN quant_id_list DOT qualifier_pattern RPAREN  { mkpredpat (Ppredpat_forall($3, $5)) }
