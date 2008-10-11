@@ -137,7 +137,7 @@ let rec constrain e env guard =
       | (Texp_match (e, pexps, partial), _) -> constrain_match environment e pexps partial
       | (Texp_function ([(pat, e')], _), _) -> constrain_function environment pat e'
       | (Texp_ident (id, _), F.Fsum(_, _, _, _))
-      | (Texp_ident (id, _), F.Fabstract(_, [], _))
+      | (Texp_ident (id, _), F.Fabstract(_, _, _))
       | (Texp_ident (id, _), F.Fvar _) ->
           constrain_base_identifier environment id e
       | (Texp_ident (id, _), _) -> constrain_identifier environment id e.exp_env
@@ -302,7 +302,7 @@ and constrain_base_identifier (env, _, f) id e =
   let f  = F.label_like f f' in
     (F.apply_refinement refn f', [WFFrame (env, f)], [])
 
-and constrain_identifier (env, guard, f) id tenv =
+and constrain_identifier (env, _, f) id tenv =
   let f' = instantiate_id id f env tenv in
   let f  = F.label_like f f' in
     (f', [WFFrame(env, f)], [])
