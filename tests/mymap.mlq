@@ -4,7 +4,7 @@ val get: (j: int -> 'a) -> k: int -> 'a[k/j]
 
 val sett: ('b, 'a) store -> k: 'b -> 'a[k/e0] -> ('b, 'a) store
 val gett: ('b, 'a) store -> k: 'b -> 'a[k/e0]
-val make: j: 'b -> 'a -> ('b, 'a[e0/j]) store
+val make: j: 'b -> 'a -> ('b, 'a) store
 
 val mem: (k: int -> 'a) -> int -> bool
 

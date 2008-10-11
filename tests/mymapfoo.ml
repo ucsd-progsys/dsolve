@@ -1,6 +1,6 @@
 
 
-
+(*
 let g x = x + 1
 
 let m0 = g
@@ -14,9 +14,19 @@ let rec store n m =
   let m' = Mymap.set m n (n+1) in
     store (n+1) m'
 
-let _ = store 1 g
+let mn = store 1 g
 
-let op = Mymap.make 5 5 
+let rec retr n m =
+  if n = 99 then () else
+  let n' = Mymap.get m n in
+  let _ = assert (n' > n) in
+    retr (n+1) m
 
-let f x = Mymap.sett x 5 6
+let _ = retr 1 mn
+*)
 
+let m0 = Mymap.make 5 6 
+
+let m2 = Mymap.sett m0 6 7
+
+(*let m2 = Mymap.sett m1 8 9*)
