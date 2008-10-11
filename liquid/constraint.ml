@@ -597,10 +597,12 @@ let check_tp senv lhs_ps x2 =
     C.cprintf C.ol_dump_prover "@[%s:@ %a@]@." s (C.pprint_list " " P.pprint) p in
   let dump s p = if C.ck_olev C.ol_dump_prover then dump s p else () in
   let _ = dump "Assert" lhs_ps in
+  let _ = if C.ck_olev C.ol_dump_prover then dump "Ck" (snd (List.split x2)) in
   let rv = 
     try
       BS.time "tp_set_and_filter" TP.set_and_filter senv lhs_ps x2
     with Failure x -> printf "%a@." pprint_fenv senv; raise (Failure x) in
+  let _ = if C.ck_olev C.ol_dump_prover then dump "OK" (snd (List.split rv)) in
   incr stat_tp_refines;
   stat_imp_queries   := !stat_imp_queries + (List.length x2);
   stat_valid_queries := !stat_valid_queries + (List.length rv); rv
