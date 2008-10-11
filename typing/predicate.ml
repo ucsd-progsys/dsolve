@@ -124,7 +124,7 @@ and pprint ppf = function
   | Or (p, q) ->
       fprintf ppf "@[(%a@ or@;<1 2>@;<1 2>%a)@]" pprint p pprint q
   | Implies (p, q) ->
-      fprintf ppf "@[(%a =>@;<1 2>%a)@]" pprint p pprint q
+      fprintf ppf "@[(%a ->@;<1 2>%a)@]" pprint p pprint q
   | Forall (p, q) ->
       let p = List.map (fun (n, t) -> (Common.path_name n) ^ ": " ^ (C.prover_t_to_s t)) p in
       fprintf ppf "@[(forall@ (%a.@ %a))@]" (Common.pprint_list ", " Common.pprint_str) p pprint q

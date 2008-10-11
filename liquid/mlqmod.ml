@@ -24,8 +24,10 @@ let lookup f y s = lu f (fun s -> y) s
 
 let maybe_add_pref dopt s = match dopt with None -> s | Some d -> C.append_pref d s
 
-let nativize_core_type dopt ty =
-  C.map_core_type_constrs (fun l -> Longident.parse (maybe_add_pref dopt (C.l_to_s l))) ty
+let nativize_core_type dopt env ty =
+  C.map_core_type_constrs (fun l ->
+     (lookup (fun s -> let s = Longident.parse (maybe_add_pref dopt (C.l_to_s l)) in 
+       ignore (Env.lookup_type s env); s) l l)) ty
 
 let load_val dopt env fenv (s, pf) =
   try
@@ -62,7 +64,7 @@ let is_unint_decl = function
   | _            -> false
 
 let load_embed dopt ty psort env fenv ifenv menv =
-  let ty = Typetexp.transl_type_scheme env (nativize_core_type dopt ty) in
+  let ty = Typetexp.transl_type_scheme env (nativize_core_type dopt env ty) in
   let _ = TP.Prover.embed_type (F.fresh_without_vars env ty, psort) in
     (env, fenv, ifenv, menv)
 
