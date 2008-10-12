@@ -93,6 +93,7 @@ let keyword_table =
     "axiom", AXIOM;
     "iff", IFF;
     "val", VAL;
+    "nrval", NON_REFINED_VAL;
     "virtual", VIRTUAL;
     "when", WHEN;
     "while", WHILE;

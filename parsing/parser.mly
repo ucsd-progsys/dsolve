@@ -352,6 +352,7 @@ let mktrue_record a = mkrecord a ptrue
 %token AXIOM
 %token IFF
 %token VAL
+%token NON_REFINED_VAL
 %token VIRTUAL
 %token WHEN
 %token WHILE
@@ -1636,6 +1637,7 @@ liquid_signature:
 
 liquid_decl:
     liquid_val_decl                     { let (name, decl) = $1 in LvalDecl(name, decl) }
+  | liquid_nrval_decl                   { let (name, decl) = $1 in LnrvalDecl(name, decl) }
   | liquid_measure_decl                 { let (name, decl) = $1 in LmeasDecl(name, decl) }
   | liquid_uninterpreted_decl           { let (name, ty)   = $1 in LunintDecl(name, ty) }
   | liquid_type_embedding               { let (ty, str)    = $1 in LembedDecl(ty, str) }
@@ -1645,6 +1647,11 @@ liquid_decl:
 liquid_val_decl:
     VAL val_longident COLON liquid_type           
       { (String.concat "." (Longident.flatten $2), $4) }
+
+liquid_nrval_decl:
+    NON_REFINED_VAL val_longident COLON liquid_type           
+      { (String.concat "." (Longident.flatten $2), $4) }
+
 
 /* Refinement specifications */
 

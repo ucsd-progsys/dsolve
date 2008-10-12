@@ -36,6 +36,15 @@ let load_val dopt env fenv (s, pf) =
       Lightenv.add p pf fenv
   with Not_found -> failwith (Printf.sprintf "mlq: val %s does not correspond to program value" s)
 
+let load_nrval dopt env fenv (s, pf) =
+  try
+    let p = C.lookup_path (match dopt with Some d -> C.append_pref d s | None -> s) env in
+    let pf' = F.fresh env (Env.find_value p env).val_type in
+    let pf = F.label_like pf pf' in
+    let _ = if String.contains s '.' then failwith (Printf.sprintf "mlq: val %s has invalid name" s) in
+      Lightenv.add p pf fenv
+  with Not_found -> failwith (Printf.sprintf "mlq: val %s does not correspond to program value" s)
+
 let map_constructor_args dopt env (name, mlname) (cname, args, cpred) =
   let cname = lookup (fun s -> let dc = maybe_add_pref dopt s in ignore (Env.lookup_constructor (Longident.parse dc) env); dc) cname cname in
   let dargs = C.maybe_list args in
@@ -90,6 +99,7 @@ let scrub_and_push_axioms fenv =
 let load_rw dopt rw env menv' fenv (preds, decls) =
   let load_decl (env, fenv, ifenv, menv) = function
       LvalDecl(s, f) -> (env, fenv, load_val dopt env ifenv (s, F.translate_pframe dopt env preds f), menv)
+    | LnrvalDecl(s, f) -> (env, fenv, load_nrval dopt env ifenv (s, F.translate_pframe dopt env preds f), menv)
     | LmeasDecl (name, cstrs) -> (env, fenv, ifenv, List.rev_append (load_measure dopt env (name, cstrs)) menv)
     | LunintDecl (name, ty) -> load_unint name ty env fenv ifenv menv
     | LembedDecl (ty, psort) -> load_embed dopt ty psort env fenv ifenv menv
