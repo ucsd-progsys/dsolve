@@ -813,10 +813,6 @@ let rec abs_type_levels t =
 let rec flip_frame_levels f =
   map (function Fvar (p, level, s, r) -> Fvar (p, -level, s, r) | f -> f) f
 
-let rec copy_type = function
-  | {desc = Tlink t} -> copy_type t (* Ensures copied types gets target's id/level, not link's *)
-  | t                -> {t with desc = Btype.copy_type_desc copy_type t.desc}
-
 let kill_top_recref env t f = match f with
   | Fsum (_, Some _, _, _) -> set_recref (mk_recref null_refinement env t) f
   | _                      -> f
@@ -825,7 +821,7 @@ let kill_top_recref env t f = match f with
    [fresh_ref_var] to create new refinement variables. *)
 let fresh_with_var_fun env freshf t =
   let tbl = Hashtbl.create 17 in
-  let t   = copy_type t in
+  let t   = C.copy_type t in
   (* Negative type levels wreak havoc with the unify, etc. functions used in fresh_constr *)
   let _   = abs_type_levels t in
   let _   = reset_binders () in

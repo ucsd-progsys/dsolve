@@ -93,8 +93,7 @@ let transl_patpred_single simple valu env p =
   let f l = if simple then Path.mk_ident (conflat l) else fp l in
     transl_patpred_single_map f p
 
-(* unifying does something odd with state, we'll see how this works.. *)
-let unifies env a b = try (Ct.unify env a b; true) with Ct.Unify(_) -> false
+let unifies env a b = try (Ct.unify env (C.copy_type a) (C.copy_type b); true) with Ct.Unify(_) -> false
                                                       | Ct.Tags(_, _) -> false
 
 let get_ids_by_type env qtys ptys qtymap =
