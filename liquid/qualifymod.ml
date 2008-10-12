@@ -117,6 +117,9 @@ let label_constraint exp fc =
   let org = match exp.exp_desc with Texp_assert _ -> Assert exp.exp_loc | _ -> Loc exp.exp_loc in
     {lc_cstr = fc; lc_tenv = exp.exp_env; lc_orig = org; lc_id = fresh_fc_id()}
 
+let label_dummy_constraint env fc =
+  {lc_cstr = fc; lc_tenv = env; lc_orig = Loc (Location.none); lc_id = fresh_fc_id()}
+
 let expression_to_pexpr e =
   match e.exp_desc with
     | Texp_constant (Const_int n) -> P.PInt n
@@ -452,9 +455,11 @@ let maybe_cstr_from_unlabel_frame fenv p f =
   else
     None 
 
-let qualify_implementation sourcefile fenv ifenv env qs str =
+let qualify_implementation sourcefile fenv' ifenv env qs str =
   let _              = reset_framelog () in
-  let (qs, fenv, cs) = constrain_structure env fenv qs str in
+  let (qs, fenv, cs) = constrain_structure env fenv' qs str in
+  let cs             = List.rev_append (Le.fold (fun _ f cs ->
+                         if F.has_kvars f then (label_dummy_constraint env (WFFrame (fenv, f))) :: cs else cs) fenv' cs) cs in
   let cs             = (List.map (lbl_dummy_cstr env) (Le.maplistfilter (maybe_cstr_from_unlabel_frame fenv) ifenv)) @ cs in
   let _              = pre_solve sourcefile in
   let (s,cs)         = Bstats.time "solving" (solve qs) cs in

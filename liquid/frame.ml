@@ -254,6 +254,13 @@ let apply_subs subs f =
 let refinement_qvars r =
   C.flap (fun (_, (_, qvars)) -> qvars) r
 
+exception Found
+
+let has_kvars f = 
+  try ignore (map_refinements 
+    (fun r -> if not (C.empty_list (refinement_qvars r)) then raise Found; r)
+      f); false with Found -> true
+
 (**************************************************************)
 (*********** Conversions to/from simple refinements ***********)
 (**************************************************************)
@@ -668,9 +675,9 @@ let apply f es =
 (**************************************************************)
 
 let translate_variance = function
-  | (true, true, true) -> Invariant
-  | (true, false, false) -> Covariant
-  | (false, true, false) -> Contravariant
+        | (true, true, true) -> printf "invar@."; Invariant
+        | (true, false, false) -> printf "covar@."; Covariant
+        | (false, true, false) -> printf "contravar@."; Contravariant
   | (a, b, c) -> printf "@[Got gibberish variance (%b, %b, %b)@]@." a b c; assert false
 
 let mutable_variance = function

@@ -92,7 +92,7 @@ let dump_default_qualifiers (str, env, menv, ifenv) deps qname =
   let mexprs = List.map (fun (a, (b, c)) -> (M.mk_pred vid (pv b) (a, b, c))) cstrs in
   let mqs = (List.fold_left (fun q e -> add ("Measure", "_V", e) q) QS.empty (mexprs @ mnms)) in
  
-  let conj r l = List.rev_append (F.refinement_conjuncts (fun _ -> assert false) (P.Var vid) r) l in
+  let conj r l = List.rev_append (F.refinement_conjuncts (fun _ -> []) (P.Var vid) r) l in
   let fpreds = Le.flaplist (fun _ f -> F.refinement_fold conj [] f) ifenv in
   let fpreds = C.flap P.conjuncts fpreds in
   let fqs = List.fold_left (fun q e -> add ("MLQ", "_V", e) q) QS.empty fpreds in

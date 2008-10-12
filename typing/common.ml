@@ -214,6 +214,8 @@ let rec maybe_list_from_singles = function
     x :: xs -> (match x with [a] -> Some a |  _ -> None) :: (maybe_list_from_singles xs)
   | [] -> []
 
+let empty_list = function [] -> true | _ -> false
+
 let maybe_bool = function
   Some _ -> true
   | None -> false

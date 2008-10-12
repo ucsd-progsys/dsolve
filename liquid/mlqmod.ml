@@ -40,7 +40,7 @@ let load_nrval dopt env fenv (s, pf) =
   try
     let p = C.lookup_path (match dopt with Some d -> C.append_pref d s | None -> s) env in
     let pf' = F.fresh env (Env.find_value p env).val_type in
-    let pf = F.label_like pf pf' in
+    let pf = F.label_like pf' pf in
     let _ = if String.contains s '.' then failwith (Printf.sprintf "mlq: val %s has invalid name" s) in
       Lightenv.add p pf fenv
   with Not_found -> failwith (Printf.sprintf "mlq: val %s does not correspond to program value" s)
