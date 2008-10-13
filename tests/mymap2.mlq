@@ -1,0 +1,5 @@
+val mem : (k: 'a -> 'b) -> 'a -> bool
+val set : (j: 'a -> 'b) ->  k: 'a -> 'b[k/j] -> (l: 'a -> 'b[l/j]) 
+val get : (j: 'a -> 'b) ->  k: 'a -> 'b[k/j]
+val make:  j: 'a -> 'b  -> (k: 'a -> 'b[k/j])
+val iter: (j: 'a -> 'b) -> (k: 'a -> 'b[k/j] -> unit) -> unit
