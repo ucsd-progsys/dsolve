@@ -7,6 +7,7 @@ module F = Frame
 module M = Measure
 module P = Predicate
 module TP = TheoremProverZ3
+module QF = Qualifymod
 
 (* MLQs *)
 
@@ -42,7 +43,7 @@ let load_nrval dopt env fenv (s, pf) =
     let pf' = F.fresh env (Env.find_value p env).val_type in
     let pf = F.label_like pf' pf in
     let _ = if String.contains s '.' then failwith (Printf.sprintf "mlq: val %s has invalid name" s) in
-      Lightenv.add p pf fenv
+    QF.nrframes := pf :: !QF.nrframes; Lightenv.add p pf fenv
   with Not_found -> failwith (Printf.sprintf "mlq: val %s does not correspond to program value" s)
 
 let map_constructor_args dopt env (name, mlname) (cname, args, cpred) =
