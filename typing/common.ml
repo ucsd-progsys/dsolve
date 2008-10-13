@@ -309,6 +309,7 @@ let ol_verb_constrs = 21
 let ol_dump_wfs = 22
 let ol_dump_meas = 30
 let ol_dump_quals = 50
+let ol_insane = 200
 
 let verbose_level = ref ol_default
 let verb_stack = ref []

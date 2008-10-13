@@ -2,9 +2,9 @@
 val set: (j: int -> 'a) -> k: int -> 'a[k/j] -> (l: int -> 'a[l/j]) 
 val get: (j: int -> 'a) -> k: int -> 'a[k/j]
 
-nrval sett: ('b, 'a) store -> k: 'b -> 'a[k/e0] -> ('b, 'a) store
-nrval gett: ('b, 'a) store -> k: 'b -> 'a[k/e0]
-nrval make: j: 'b -> 'a -> ('b, 'a) store
+val sett: ('b, 'a) store -> k: 'b -> 'a[k/e0] -> ('b, 'a) store
+val gett: ('b, 'a) store -> k: 'b -> 'a[k/e0]
+val make: j: 'b -> 'a -> ('b, 'a) store
 
 val mem: (k: int -> 'a) -> int -> bool
 

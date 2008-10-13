@@ -627,7 +627,7 @@ let label_like f f' =
   let rec label vars f f' = match (f, f') with
     | (Fvar _, Fvar (_, _, s, _)) ->
         instantiate_qualifiers vars (apply_dep_subs (instantiate_dep_subs vars s) f) 
-    | (Frec _, Frec _) | (Fabstract _, Fabstract _) ->
+    | (Frec _, Frec _) ->
         instantiate_qualifiers vars f
     | (Fsum (p, rro, cs1, r), Fsum (_, _, cs2, _)) ->
         let rro =
@@ -635,6 +635,8 @@ let label_like f f' =
             | None -> None
             | Some (rv, rr) -> Some (rv, instantiate_recref_qualifiers vars rr)
         in Fsum (p, rro, label_constrs_like vars cs1 cs2, instantiate_ref_qualifiers vars r)
+    | (Fabstract (p, ps, r), Fabstract (_, ps', _)) ->
+        Fabstract (p, label_params_like vars ps ps', instantiate_ref_qualifiers vars r)
     | (Farrow (p1, f1, f1'), Farrow (p2, f2, f2')) ->
         let vars' = List.map (fun (x, y) -> (Ident.name x, Path.Pident y)) (Pattern.bind_vars p1 p2) @ vars in
           Farrow (p2, label vars f1 f2, label vars' f1' f2')
@@ -675,9 +677,9 @@ let apply f es =
 (**************************************************************)
 
 let translate_variance = function
-        | (true, true, true) -> printf "invar@."; Invariant
-        | (true, false, false) -> printf "covar@."; Covariant
-        | (false, true, false) -> printf "contravar@."; Contravariant
+        | (true, true, true) -> Invariant
+        | (true, false, false) -> Covariant
+        | (false, true, false) -> Contravariant
   | (a, b, c) -> printf "@[Got gibberish variance (%b, %b, %b)@]@." a b c; assert false
 
 let mutable_variance = function
