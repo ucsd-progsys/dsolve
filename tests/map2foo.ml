@@ -1,5 +1,4 @@
-let show  x = x
-let m0 = Mymap2.make (show 0) 0
+let m0 = Mymap2.make 0 0
 let _  = m0
 let _  = Mymap2.iter m0 (fun i js -> assert (i >= 0))
 
