@@ -1,26 +1,3 @@
-let foo a b = 
-  (a,[])::b
-
-let _ = foo
-
-(*
-let _ = 
-  let n0 = 0 in
-  let l0 = [] in
-  let l1 = foo n0 l0 in
-  let n1 = n0 + 1 in
-  let l2 = foo n2 l2
-*)
-
-let rec build n xs = 
-  if read_int () > 0 then (n, xs) else
-    let n'  = n + 1  in
-    let xs' = foo n xs in
-    build n' xs'
-
-let _ = build 0 []
-
-
 let show x = x
 
 let flap f xs   = List.flatten (List.map f xs)

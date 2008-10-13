@@ -153,8 +153,8 @@ and predpat_desc =
   | Ppredpat_and of predicate_pattern * predicate_pattern
   | Ppredpat_implies of predicate_pattern * predicate_pattern
   | Ppredpat_or of predicate_pattern * predicate_pattern
-  | Ppredpat_forall of (string * string) list * predicate_pattern
-  | Ppredpat_exists of (string * string) list * predicate_pattern
+  | Ppredpat_forall of (string * prover_t) list * predicate_pattern
+  | Ppredpat_exists of (string * prover_t) list * predicate_pattern
   | Ppredpat_iff of predicate_pattern * predicate_pattern
   | Ppredpat_boolexp of predpatexp
 
@@ -182,15 +182,23 @@ and liquid_decl =
     LvalDecl of string * litframe
   | LmeasDecl of (string * string) * cstr list
   | LunintDecl of string * core_type
+  | LembedDecl of core_type * prover_t
   | LaxiomDecl of string * predicate_pattern
   | LrecrefDecl
 
 and liquid_sig = predicate_alias list * liquid_decl list  
 
+(* Prover types *)
+
+and prover_t =
+    Pprover_abs of string
+  | Pprover_array of prover_t * prover_t
+  | Pprover_fun of prover_t list
+
 (* Parsed frames *)
 
 and litframe =
-    PFvar of string * refinement
+    PFvar of string * subs * refinement
   | PFrec of string * recref * refinement
   | PFsum of Longident.t * (string * recref) option * constr list * refinement
   | PFconstr of Longident.t * litframe list * refinement
@@ -201,6 +209,8 @@ and litframe =
 and constr = param list
 
 and param = string * litframe
+
+and subs = (string * string) list
 
 and refinement =
   | RLiteral of string * predicate_pattern

@@ -31,3 +31,4 @@ val bind_pexpr: pattern_desc -> Predicate.pexpr -> Frame.substitution list
 val same: pattern_desc -> pattern_desc -> bool
 
 val constructor_patterns: Path.t -> pattern -> (Path.t * Path.t * constructor_tag * Path.t option list) list
+val get_patvar_desc: pattern_desc -> Path.t option

@@ -27,6 +27,7 @@ open Format
 open Asttypes
 
 type substitution = Path.t * Predicate.pexpr
+type dep_sub = string * string
 
 type qvar = Path.t
 type refexpr = substitution list * (Qualifier.t list * qvar list)
@@ -45,7 +46,7 @@ val const_refinement: Qualifier.t list -> refinement
 val false_refinement: refinement
 
 type t =
-  | Fvar of Path.t * int * refinement
+  | Fvar of Path.t * int * dep_sub list * refinement
   | Frec of Path.t * recref * refinement
   | Fsum of Path.t * (Path.t * recref) option * constr list * refinement
   | Fabstract of Path.t * param list * refinement
@@ -60,6 +61,8 @@ and variance = Covariant | Contravariant | Invariant
 val generic_level: int
 
 val path_tuple: Path.t
+
+val find_by_name: t Lightenv.t -> string -> t
 
 val record_of_params: Path.t -> param list -> refinement -> t
 val tuple_of_frames: t list -> refinement -> t
@@ -79,6 +82,7 @@ val mk_refinement: substitution list -> Qualifier.t list -> qvar list -> refinem
 val translate_variance: (bool * bool * bool) -> variance
 val constr_params: constr -> param list
 val constrs_tag_params: constructor_tag -> constr list -> param list
+val iter_labels: (pattern_desc -> unit) -> t -> unit
 val map_refexprs: (refexpr -> refexpr) -> t -> t
 val params_frames: param list -> t list
 val shape: t -> t
@@ -96,13 +100,14 @@ val unfold_applying: t -> t
 
 val apply: t -> Predicate.pexpr list -> t
 
+val fresh_binder: unit -> pattern_desc
 val fresh: Env.t -> type_expr -> t
 val fresh_without_vars: Env.t -> type_expr -> t
 val fresh_false: Env.t -> type_expr -> t
 val fresh_with_labels: Env.t -> type_expr -> t -> t
 val fresh_uninterpreted: Env.t -> type_expr -> string -> t
 val uninterpreted_constructors: Env.t -> type_expr -> (string * t) list
-val instantiate: t -> t -> t
+val instantiate: t Lightenv.t -> t -> t -> t
 val instantiate_qualifiers: (string * Path.t) list -> t -> t
 val bind: pattern_desc -> t -> (Path.t * t) list
 val env_bind: t Lightenv.t -> pattern_desc -> t -> t Lightenv.t

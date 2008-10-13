@@ -1,4 +1,3 @@
-let show x = x
 (*
 let foo k = (k-2, k-1)
 let _     =
@@ -10,7 +9,7 @@ let test1 x =
   let w = 
     let a = read_int () in
     let i = read_int () in
-    if a < i then show (a, i) else assert false in
+    if a < i then (a, i) else assert false in
   let (b,js) = show w in
   (fun j -> assert (b < j)) js
 
@@ -34,22 +33,23 @@ let test3 x =
 
 type foo = C of int
 
-let test4 x =
-  let w = 
-    let a = read_int () in
-    let i = read_int () in
-    if a < i then (a, C i) else assert false in
-  let (b,js) = w in
+let test4 a i = 
+  let ww = 
+    if a < i then 
+            let tt = (a, C i) in tt 
+    else assert false in
+  let (b,js) = ww in
   match js with C j -> assert (b < j)
 
-let test5 x =
+
+(*let test5 a i =
   let w = 
-    let a = read_int () in
-    let i = read_int () in
-    if a < i then show (a, C i) else assert false in
+    if a < i then let t = (a, C i) in show t 
+    else assert false in
+    (* if a < i then show (a, C i) else assert false in *)
   let (b,js) = w in
   match js with C j -> assert (b < j)
-
+*)
 
 let rec find n = function 
   | [] -> None 

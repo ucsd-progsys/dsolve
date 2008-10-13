@@ -77,9 +77,11 @@ let rec same p1 p2 =
       List.for_all2 same (pattern_descs pats1) (pattern_descs pats2)
   | _ -> false
 
-let get_patvar p = match p.pat_desc with
+let get_patvar_desc = function
   | Tpat_var p | Tpat_alias (_, p) -> Some (C.i2p p)
   | _                              -> None
+
+let get_patvar p = get_patvar_desc p.pat_desc
 
 let cstr_res_path {cstr_res = t} = match (repr t).desc with
   | Tconstr (p, _, _) -> p

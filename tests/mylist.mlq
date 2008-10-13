@@ -1,3 +1,5 @@
+embed obj for 'a list
+
 axiom consmem: forall (x: obj, xs: obj. (? mem x (x::xs)))
 axiom weaken:  forall (x: obj, y: obj, xs: obj. (? mem x xs) := (? mem x (y::xs)))
 

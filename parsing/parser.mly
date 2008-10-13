@@ -193,7 +193,7 @@ let bigarray_set arr arg newval =
 
 let rw_frame f nr =
     match f with
-      PFvar(s, r) -> PFvar(s, nr)
+      PFvar(s, b, r) -> PFvar(s, b, nr)
     | PFrec(s, rr, _) -> PFrec(s, rr, nr)
     | PFsum(l, rro, cs, _) -> PFsum(l, rro, cs, nr)
     | PFconstr(s, f, r) -> PFconstr(s, f, nr)
@@ -218,14 +218,14 @@ let mk_implies a b =
 
 let mkconstr a b r = PFconstr (a, b, r)
 let mksum p rro cs r = PFsum (p, rro, cs, r)
-let mkvar a r = PFvar (a, r)
+let mkvar a b r = PFvar (a, b, r)
 let mkrecvar a rr r = PFrec (a, rr, r)
 let mkarrow v a b = PFarrow (v, a, b)
 let mktuple a r = PFtuple (a, r)
 let mkrecord a r = PFrecord (a, r)
 let mktrue_constr a b = mkconstr a b ptrue
 let mktrue_sum p rro cs = mksum p rro cs ptrue
-let mktrue_var a = mkvar a ptrue
+let mktrue_var a b = mkvar a b ptrue
 let mktrue_recvar a rr = mkrecvar a rr ptrue
 let mktrue_tuple a = mktuple a ptrue
 let mktrue_record a = mkrecord a ptrue
@@ -320,6 +320,7 @@ let mktrue_record a = mkrecord a ptrue
 %token QUALIF
 %token SINGLE_QUALIF
 %token MODULE_DEPENDENCY
+%token EMBED
 %token PREDICATE
 %token MEASURE
 %token REFINEMENT
@@ -471,9 +472,8 @@ use_file_tail:
   | toplevel_directive use_file_tail            { $1 :: $2 }
 ;
 liquid_interface:
-    liquid_signature EOF                        { ([], $1) }
-  | predicate_alias_list liquid_signature EOF   { ($1, $2) }
-  | EOF                                         { ([], []) }
+  | predicate_alias_list_opt liquid_signature EOF   { ($1, $2) }
+  | EOF                                             { ([], []) }
 ;
 
 /* Module expressions */
@@ -1503,8 +1503,8 @@ qual_ty_anno:
     { ($1, $3)::$5 }
 
 quant_id_list:
-    LIDENT COLON LIDENT         { [($1, $3)] }
-  | LIDENT COLON LIDENT COMMA quant_id_list  { ($1, $3) :: $5 }
+    LIDENT COLON prover_type                      { [($1, $3)] }
+  | LIDENT COLON prover_type COMMA quant_id_list  { ($1, $3) :: $5 }
 
 qualifier_pattern:
     TRUE                                    { mkpredpat Ppredpat_true }                    
@@ -1516,7 +1516,7 @@ qualifier_pattern:
   | LPAREN qualifier_pattern IFF qualifier_pattern RPAREN
       { mkpredpat (Ppredpat_iff($2, $4)) } 
   | LPAREN qualifier_pattern MINUSGREATER qualifier_pattern RPAREN
-      { mk_implies $2 $4 }
+      { mkpredpat (Ppredpat_implies($2, $4)) }
   | qual_expr qual_rel qual_expr            
       { mkpredpat (Ppredpat_atom($1, $2, $3)) }
   | FORALL LPAREN quant_id_list DOT qualifier_pattern RPAREN  { mkpredpat (Ppredpat_forall($3, $5)) }
@@ -1638,6 +1638,7 @@ liquid_decl:
     liquid_val_decl                     { let (name, decl) = $1 in LvalDecl(name, decl) }
   | liquid_measure_decl                 { let (name, decl) = $1 in LmeasDecl(name, decl) }
   | liquid_uninterpreted_decl           { let (name, ty)   = $1 in LunintDecl(name, ty) }
+  | liquid_type_embedding               { let (ty, str)    = $1 in LembedDecl(ty, str) }
   | liquid_axiom_decl                   { let (name, pred) = $1 in LaxiomDecl(name, pred) }
   | liquid_recref_decl                  { LrecrefDecl }
 
@@ -1654,6 +1655,20 @@ liquid_recref_decl:
 
 liquid_uninterpreted_decl:
     UNINTERPRETED LIDENT COLON core_type { ($2, $4) }
+
+/* Type embedding directives */
+
+liquid_type_embedding:
+    EMBED prover_type FOR core_type                   { ($4, $2) }
+
+prover_type:
+    LIDENT /* unint */                                { Pprover_abs $1 }
+    | LBRACKET prover_type SEMI prover_type RBRACKET  { Pprover_array ($2, $4) }
+    | LPAREN prover_type_chain RPAREN                 { Pprover_fun   ($2) }
+
+prover_type_chain:
+    prover_type MINUSGREATER prover_type              { $1 :: [$3] }
+    | prover_type MINUSGREATER prover_type_chain      { $1 :: $3 }
 
 /* Axiom declaration */
 
@@ -1719,9 +1734,13 @@ liquid_type1:
   | liquid_type2
       { $1 }
 
+subs_opt:
+        /* empty */                                     { [] }
+  | LBRACKET LIDENT INFIXOP3 LIDENT RBRACKET subs_opt   { ($2, $4) :: $6 }
+
 liquid_type2:
-    QUOTE LIDENT                                          /* tyvar */
-      { mktrue_var $2 }
+    QUOTE LIDENT subs_opt                                 /* tyvar */
+      { mktrue_var $2 $3 }
   | liquid_recref LIDENT                                  /* recursive tyvar */
       { mktrue_recvar $2 $1 }
   | LPAREN liquid_type_comma_list RPAREN %prec below_IDENT 
@@ -1830,6 +1849,10 @@ predicate_alias:
 predicate_alias_list:
     predicate_alias predicate_alias_list    { $1 :: $2 }
   | predicate_alias                         { [$1] }
+
+predicate_alias_list_opt:
+    predicate_alias_list                    { $1 }
+  | /* empty */                             { [] }
 
 /* Constants */
 

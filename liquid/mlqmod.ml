@@ -6,12 +6,12 @@ open Types
 module F = Frame
 module M = Measure
 module P = Predicate
+module TP = TheoremProverZ3
 
 (* MLQs *)
 
 let parse ppf fname =
   if Sys.file_exists fname then Pparse.file ppf fname Parse.liquid_interface Config.ast_impl_magic_number else ([], [])
-
 
 let idf = (fun s -> s)
 let lu f f' s = try f s with Not_found -> f' s
@@ -23,6 +23,11 @@ let lookup2 f1 f2 s = lu f1 (lu f2 idf) s
 let lookup f y s = lu f (fun s -> y) s 
 
 let maybe_add_pref dopt s = match dopt with None -> s | Some d -> C.append_pref d s
+
+let nativize_core_type dopt env ty =
+  C.map_core_type_constrs (fun l ->
+     (lookup (fun s -> let s = Longident.parse (maybe_add_pref dopt (C.l_to_s l)) in 
+       ignore (Env.lookup_type s env); s) l l)) ty
 
 let load_val dopt env fenv (s, pf) =
   try
@@ -58,6 +63,11 @@ let is_unint_decl = function
   | LunintDecl _ -> true
   | _            -> false
 
+let load_embed dopt ty psort env fenv ifenv menv =
+  let ty = Typetexp.transl_type_scheme env (nativize_core_type dopt env ty) in
+  let _ = TP.Prover.embed_type (F.fresh_without_vars env ty, psort) in
+    (env, fenv, ifenv, menv)
+
 let axiom_prefix = "_axiom_"
 
 let load_axiom dopt env fenv ifenv menv name pred =
@@ -79,9 +89,10 @@ let scrub_and_push_axioms fenv =
 
 let load_rw dopt rw env menv' fenv (preds, decls) =
   let load_decl (env, fenv, ifenv, menv) = function
-      LvalDecl(s, f)  -> (env, fenv, load_val dopt env ifenv (s, F.translate_pframe dopt env preds f), menv)
+      LvalDecl(s, f) -> (env, fenv, load_val dopt env ifenv (s, F.translate_pframe dopt env preds f), menv)
     | LmeasDecl (name, cstrs) -> (env, fenv, ifenv, List.rev_append (load_measure dopt env (name, cstrs)) menv)
     | LunintDecl (name, ty) -> load_unint name ty env fenv ifenv menv
+    | LembedDecl (ty, psort) -> load_embed dopt ty psort env fenv ifenv menv
     | LaxiomDecl (name, pred) -> load_axiom dopt env fenv ifenv menv name pred
     | LrecrefDecl -> (env, fenv, ifenv, menv) in
   let (env, fenv, ifenv, menv) = List.fold_left load_decl (env, fenv, Lightenv.empty, []) decls in

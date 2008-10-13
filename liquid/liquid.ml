@@ -92,7 +92,7 @@ let load_dep_mlqfiles bname deps env fenv mlqenv =
 let dump_qualifiers bname (str, env, menv, ifenv) qname = 
   let deps = Qualgen.all_modules str in
   let (env, emenv, efenv, _) = load_dep_mlqfiles bname deps env Le.empty Le.empty in
-  let (menv, fenv) = (List.rev_append menv emenv, Le.combine efenv ifenv) in
+  let (menv, ifenv) = (List.rev_append menv emenv, Le.combine efenv ifenv) in
     Qdump.dump_default_qualifiers (str, env, menv, ifenv) deps qname
 
 let load_valfile ppf env fenv fname =
@@ -100,7 +100,7 @@ let load_valfile ppf env fenv fname =
     let (preds, decls) = MLQ.parse ppf fname in
     let vals = MLQ.filter_vals decls in
     let kvl = List.map (fun (s, pf) -> (s, F.translate_pframe None env preds pf)) vals in
-    let tag = (Path.mk_ident P.tag_function, F.Fvar(Path.mk_ident "", 0, F.empty_refinement)) in
+    let tag = (Path.mk_ident P.tag_function, F.Fvar(Path.mk_ident "", 0, [], F.empty_refinement)) in
     let f = (fun (k, v) -> (C.lookup_path k env, F.label_like v v)) in
     let kvl = tag :: (List.map f kvl) in
       (env, Lightenv.addn kvl fenv)

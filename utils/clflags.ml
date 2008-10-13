@@ -85,7 +85,7 @@ and cache_queries = ref false           (* -cqueries *)
 and psimple = ref true                  (* -psimple *)
 and no_simple_subs = ref false          (* -no-simple-subs *)
 and builtins_file = ref None              (* -use_builtins *)
-and simpguard = ref true                (* simplify guard *)
+and simpguard = ref false                (* simplify guard *)
 and no_recrefs = ref false              (* true out recursive refinements *)
 and no_recvarrefs = ref false           (* no top-level refinements on recvars *)
 

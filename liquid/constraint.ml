@@ -218,9 +218,8 @@ let simplify_frame gm x f =
     | _ -> f
 
 let simplify_env env g =
-  env
-  (*let gm = List.fold_left (fun m (x,b)  -> Le.add x b m) Le.empty g in
-    Le.mapi (simplify_frame gm) env*)
+  let gm = List.fold_left (fun m (x,b)  -> Le.add x b m) Le.empty g in
+    Le.mapi (simplify_frame gm) env
 
 let simplify_fc c =
   match c.lc_cstr with
@@ -249,7 +248,7 @@ let add_val_var = function
   | _ -> assert false
 
 let patch_env env = function
-    SubFrame(env', g, f, f') -> SubFrame(Le.combine env env', g, f, f') | _ -> assert false
+    SubFrame(env', g, f, f') -> SubFrame(Le.combine env' env, g, f, f') | _ -> assert false
 
 let split_sub_ref c env g r1 r2 =
   let c = {lc_cstr = add_val_var (patch_env env c.lc_cstr); lc_tenv = c.lc_tenv;
@@ -304,7 +303,7 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       let env' = F.env_bind env p2 f2 in
       let f1'  = F.apply_subs subs f1' in
         (lequate_cs env g c F.Covariant f2 f1 @ lequate_cs env' g c F.Covariant f1' f2', [])
-  | (F.Fvar (_, _, r1), F.Fvar (_, _, r2)) ->
+  | (F.Fvar (_, _, s, r1), F.Fvar (_, _, s', r2)) ->
       ([], split_sub_ref c env g r1 r2)
   | (F.Frec _, F.Frec _) ->
       ([], [])
@@ -354,7 +353,7 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
       (split_wf_params c tenv env ps, split_wf_ref f c env r)
   | F.Farrow (p, f, f') ->
       ([make_wff c tenv env f; make_wff c tenv (F.env_bind env p f) f'], [])
-  | F.Fvar (_, _, r) ->
+  | F.Fvar (_, _, s, r) ->
       ([], split_wf_ref f c env r)
   | F.Frec _ ->
       ([], [])
@@ -598,12 +597,13 @@ let check_tp senv lhs_ps x2 =
     C.cprintf C.ol_dump_prover "@[%s:@ %a@]@." s (C.pprint_list " " P.pprint) p in
   let dump s p = if C.ck_olev C.ol_dump_prover then dump s p else () in
   let _ = dump "Assert" lhs_ps in
+  let _ = if C.ck_olev C.ol_dump_prover then dump "Ck" (snd (List.split x2)) in
   let rv = 
     try
-      if BS.time "tp_set" TP.set senv lhs_ps then (incr stat_unsat_lhs; x2) 
-      else List.filter (fun (_,p) -> dump "Ck" [p]; BS.time "imp check" TP.valid senv p) x2
+      BS.time "tp_set_and_filter" TP.set_and_filter senv lhs_ps x2
     with Failure x -> printf "%a@." pprint_fenv senv; raise (Failure x) in
-  TP.finish (); incr stat_tp_refines;
+  let _ = if C.ck_olev C.ol_dump_prover then dump "OK" (snd (List.split rv)) in
+  incr stat_tp_refines;
   stat_imp_queries   := !stat_imp_queries + (List.length x2);
   stat_valid_queries := !stat_valid_queries + (List.length rv); rv
 
@@ -751,7 +751,7 @@ let instantiate_per_environment cs qs =
  * us the type which makes the least assumptions about the input. *)
 
 let strip_origins cs = snd (List.split cs)
-
+(*
 let make_initial_solution cs =
   let s0   = Sol.create 37 in
   let rhst = Sol.create 37 in
@@ -771,8 +771,8 @@ let make_initial_solution cs =
       let qs' = C.sort_and_compact qs in
       Sol.replace s k qs') s0;
   s
-(* *)
-(*  
+*)
+  
 let filter_wfs cs = List.filter (fun (r, _) -> match r with WFRef(_, _, _) -> true | _ -> false) cs
 let filter_subs cs = List.filter (fun (r, _) -> match r with SubRef(_, _, _, _, _) -> true | _ -> false) cs
 type solmode = WFS | LHS | RHS
@@ -781,7 +781,7 @@ let make_initial_solution cs =
   let s    = Sol.create 37 in
   let addrv qs = function
     | (F.Qconst _, _) -> ()
-    | (F.Qvar k, LHS) -> if not (Sol.mem s k) then Sol.replace s k []
+    | (F.Qvar k, LHS) -> if not (Sol.mem s k) then (if !Cf.minsol then Sol.replace s k qs else Sol.replace s k [])
     | (F.Qvar k, RHS) -> Sol.replace s k qs
     | (F.Qvar k, WFS) -> if Sol.find s k != [] then Sol.replace s k qs in
   let ga (c, q) = match c with
@@ -791,7 +791,7 @@ let make_initial_solution cs =
   let wfs  = filter_wfs cs in
   let subs = filter_subs cs in
   List.iter ga subs; List.iter ga wfs; s
-*)
+
 (**************************************************************)
 (****************** Debug/Profile Information *****************)
 (**************************************************************)
@@ -900,6 +900,7 @@ let solve qs cs =
   (* let cs = if !Cf.esimple then 
                BS.time "e-simplification" (List.map esimple) cs else cs in *)
   let qs = BS.time "instantiating quals" (instantiate_per_environment cs) qs in
+  let qs = BS.time "pruning quals" (List.map (fun qs -> List.filter Qualifier.may_not_be_tautology qs)) qs in
   let _ = Hashtbl.clear memo in
   let sri = BS.time "making ref index" make_ref_index cs in
   let s = make_initial_solution (List.combine (strip_origins cs) qs) in

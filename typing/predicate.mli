@@ -52,9 +52,9 @@ and tpat =
   | PNot of tpat
   | PAnd of tpat * tpat
   | POr of tpat * tpat
+  | PForall of (string * Parsetree.prover_t) list * tpat
+  | PExists of (string * Parsetree.prover_t) list * tpat
   | PImplies of tpat * tpat
-  | PForall of (string * string) list * tpat
-  | PExists of (string * string) list * tpat
   | PBoolexp of patpexpr
 
 type pexpr =   
@@ -71,10 +71,10 @@ and t =
   | Iff of t * t
   | Not of t
   | And of t * t 
-  | Or of t * t
+  | Or of t * t 
+  | Forall of (Path.t * Parsetree.prover_t) list * t
+  | Exists of (Path.t * Parsetree.prover_t) list * t
   | Implies of t * t
-  | Forall of (Path.t * string) list * t
-  | Exists of (Path.t * string) list * t
   | Boolexp of pexpr
 
 val pprint_rel: binrel -> string
@@ -123,3 +123,4 @@ val transl_op: Asttypes.predexp_op -> binop
 val transl_rel: Asttypes.pred_rel -> binrel
 
 val conjuncts: t -> t list
+val is_taut: t -> bool
