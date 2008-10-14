@@ -47,3 +47,7 @@ let rec retr n m =
     retr (n+1) m
 
 let _ = retr 1 mn
+
+let m0 = Mymap.make 0 0
+
+let _ = Mymap.itert m0 (fun x t -> assert (x >= 0))
