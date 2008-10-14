@@ -1,8 +1,10 @@
 let m0 = Mymap2.make 0 0
 let _  = m0
-let _  = Mymap2.iter m0 (fun i js -> assert (i >= 0))
+
+let _  = Mymap2.iter m0 (fun qq js -> assert (qq >= 0))
 
 (*
+let c  = (fun x -> x + 1) 0 
 let n2 = fresh n1
 let n3 = fresh n2
 let _  = show n0
