@@ -125,8 +125,14 @@ and map_params f ps =
   List.map (fun (p, fr, v) -> (p, map f fr, v)) ps
 
 let rec map_labels f fr = 
-  let f' = function Farrow (x, a, b) -> Farrow (f x, a, b) | fr -> fr in
+  let f' = function   Farrow (x, a, b) -> Farrow (f x, a, b)
+                    | Fabstract (p, ps, r) -> Fabstract(p, map_param_labels f ps, r)
+                    | fr -> fr in
     map f' fr
+
+and map_param_labels f ps =
+  let i2p i = Tpat_var i in
+    List.map (fun (i, fr, v) -> (List.hd (Typedtree.pat_desc_bound_idents (f (i2p i))), map_labels f fr, v)) ps  
 
 let rec iter_labels f fr =
   let f' p = f p; p in
@@ -552,7 +558,7 @@ let dep_sub_to_sub binds scbinds env (s, s') =
   let binds = C.flap bind binds in
   let scbinds = C.flap bind scbinds in
   let c i =
-     try List.assoc i binds
+    try List.assoc i binds
       with Not_found -> find_key_by_name env i in
     try (c s', P.Var (List.assoc s scbinds))
       with Not_found -> failwith "Could not bind dependent substitution to paths"
@@ -654,6 +660,9 @@ let label_like f f' =
 
 let record_of_params path ps r =
   Fsum(path, None, [(Cstr_constant 0, ("rec", ps))], r)
+
+let abstract_of_params_with_labels labels p params varis r =
+  Fabstract (p, C.combine3 labels params varis, r)
 
 let abstract_of_params p params varis r =
   Fabstract (p, C.combine3 (Misc.mapi (fun _ i -> C.tuple_elem_id i) params) params varis, r)
@@ -951,14 +960,17 @@ let rec translate_pframe dopt env plist pf =
   and transl_recref rr =
     List.map (fun rs -> List.map transl_pref rs) rr
   and transl_constr l fs r =
+    let (ls, fs) = List.split fs in
+    let ls = Misc.mapi
+      (fun l i -> match l with Some l -> Ident.create l | None -> C.tuple_elem_id i) ls in
     let params = List.map transl_pframe_rec fs in
     let (path, decl) = lookup l in
     let _ = if List.length fs != decl.type_arity then
       raise (T.Error(Location.none, T.Type_arity_mismatch(l, decl.type_arity, List.length fs))) in
-    let varis   = List.map translate_variance decl.type_variance in
+    let varis = List.map translate_variance decl.type_variance in
       match decl.type_kind with 
           Type_abstract ->
-            abstract_of_params path params varis (transl_pref r)
+            abstract_of_params_with_labels ls path params varis (transl_pref r)
         | Type_record(fields, _, _) ->
             (* fresh_record (fresh_without_vars env) path fields *) assert false
         | Type_variant _ ->
