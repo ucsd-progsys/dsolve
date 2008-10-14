@@ -196,6 +196,11 @@ let pprint_ref so ppf =
       pprint_io io (pprint_fenv_pred so) env 
       F.pprint_refinement (F.ref_of_simple sr)
 
+let pprint_orig ppf = function
+  | Loc l -> fprintf ppf "Loc@ %a" Location.print l
+  | Assert l -> fprintf ppf "Assert@ %a" Location.print l
+  | Cstr l -> match l.lc_id with Some l -> fprintf ppf "->@ %i" l | None -> fprintf ppf "->@ ?"
+
 (**************************************************************)
 (************* Constraint Simplification & Splitting **********) 
 (**************************************************************)
@@ -794,8 +799,8 @@ let make_initial_solution cs =
     | (F.Qvar k, WFS) -> if Sol.find s k != [] then Sol.replace s k qs in
   let ga (c, q) = match c with
     | SubRef (_, _, r1, (_, qe2), _) ->
-        List.iter (fun qv -> addrv [] (F.Qvar qv, LHS)) (F.refinement_qvars r1); addrv q (qe2, RHS)
-    | WFRef (_, (_, qe), _) -> addrv [] (qe, LHS); addrv q (qe, WFS) in
+        List.iter (fun qv -> addrv q (F.Qvar qv, LHS)) (F.refinement_qvars r1); addrv q (qe2, RHS)
+    | WFRef (_, (_, qe), _) -> addrv q (qe, LHS); addrv q (qe, WFS) in
   let wfs  = filter_wfs cs in
   let subs = filter_subs cs in
   List.iter ga subs; List.iter ga wfs; s
@@ -825,7 +830,7 @@ let dump_constraints cs =
   if !Cf.dump_constraints then begin
     printf "******************Frame Constraints****************@.@.";
     let index = ref 0 in
-    List.iter (fun {lc_cstr = c} -> incr index; printf "@[(%d) %a@]@.@." !index pprint c) cs;
+    List.iter (fun {lc_cstr = c; lc_orig = d} -> incr index; printf "@[(%d)(%a) %a@]@.@." !index pprint_orig d pprint c) cs;
     printf "@[*************************************************@]@.@.";
   end
 
