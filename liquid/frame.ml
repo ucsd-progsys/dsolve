@@ -125,8 +125,14 @@ and map_params f ps =
   List.map (fun (p, fr, v) -> (p, map f fr, v)) ps
 
 let rec map_labels f fr = 
-  let f' = function Farrow (x, a, b) -> Farrow (f x, a, b) | fr -> fr in
+  let f' = function   Farrow (x, a, b) -> Farrow (f x, a, b)
+                    | Fabstract (p, ps, r) -> Fabstract(p, map_param_labels f ps, r)
+                    | fr -> fr in
     map f' fr
+
+and map_param_labels f ps =
+  let i2p i = Tpat_var i in
+    List.map (fun (i, fr, v) -> (List.hd (Typedtree.pat_desc_bound_idents (f (i2p i))), map_labels f fr, v)) ps  
 
 let rec iter_labels f fr =
   let f' p = f p; p in
@@ -253,6 +259,13 @@ let apply_subs subs f =
 
 let refinement_qvars r =
   C.flap (fun (_, (_, qvars)) -> qvars) r
+
+exception Found
+
+let has_kvars f = 
+  try ignore (map_refinements 
+    (fun r -> if not (C.empty_list (refinement_qvars r)) then raise Found; r)
+      f); false with Found -> true
 
 (**************************************************************)
 (*********** Conversions to/from simple refinements ***********)
@@ -545,7 +558,7 @@ let dep_sub_to_sub binds scbinds env (s, s') =
   let binds = C.flap bind binds in
   let scbinds = C.flap bind scbinds in
   let c i =
-     try List.assoc i binds
+    try List.assoc i binds
       with Not_found -> find_key_by_name env i in
     try (c s', P.Var (List.assoc s scbinds))
       with Not_found -> failwith "Could not bind dependent substitution to paths"
@@ -620,7 +633,7 @@ let label_like f f' =
   let rec label vars f f' = match (f, f') with
     | (Fvar _, Fvar (_, _, s, _)) ->
         instantiate_qualifiers vars (apply_dep_subs (instantiate_dep_subs vars s) f) 
-    | (Frec _, Frec _) | (Fabstract _, Fabstract _) ->
+    | (Frec _, Frec _) ->
         instantiate_qualifiers vars f
     | (Fsum (p, rro, cs1, r), Fsum (_, _, cs2, _)) ->
         let rro =
@@ -628,6 +641,8 @@ let label_like f f' =
             | None -> None
             | Some (rv, rr) -> Some (rv, instantiate_recref_qualifiers vars rr)
         in Fsum (p, rro, label_constrs_like vars cs1 cs2, instantiate_ref_qualifiers vars r)
+    | (Fabstract (p, ps, r), Fabstract (_, ps', _)) ->
+        Fabstract (p, label_params_like vars ps ps', instantiate_ref_qualifiers vars r)
     | (Farrow (p1, f1, f1'), Farrow (p2, f2, f2')) ->
         let vars' = List.map (fun (x, y) -> (Ident.name x, Path.Pident y)) (Pattern.bind_vars p1 p2) @ vars in
           Farrow (p2, label vars f1 f2, label vars' f1' f2')
@@ -645,6 +660,9 @@ let label_like f f' =
 
 let record_of_params path ps r =
   Fsum(path, None, [(Cstr_constant 0, ("rec", ps))], r)
+
+let abstract_of_params_with_labels labels p params varis r =
+  Fabstract (p, C.combine3 labels params varis, r)
 
 let abstract_of_params p params varis r =
   Fabstract (p, C.combine3 (Misc.mapi (fun _ i -> C.tuple_elem_id i) params) params varis, r)
@@ -668,9 +686,9 @@ let apply f es =
 (**************************************************************)
 
 let translate_variance = function
-  | (true, true, true) -> Invariant
-  | (true, false, false) -> Covariant
-  | (false, true, false) -> Contravariant
+        | (true, true, true) -> Invariant
+        | (true, false, false) -> Covariant
+        | (false, true, false) -> Contravariant
   | (a, b, c) -> printf "@[Got gibberish variance (%b, %b, %b)@]@." a b c; assert false
 
 let mutable_variance = function
@@ -813,10 +831,6 @@ let rec abs_type_levels t =
 let rec flip_frame_levels f =
   map (function Fvar (p, level, s, r) -> Fvar (p, -level, s, r) | f -> f) f
 
-let rec copy_type = function
-  | {desc = Tlink t} -> copy_type t (* Ensures copied types gets target's id/level, not link's *)
-  | t                -> {t with desc = Btype.copy_type_desc copy_type t.desc}
-
 let kill_top_recref env t f = match f with
   | Fsum (_, Some _, _, _) -> set_recref (mk_recref null_refinement env t) f
   | _                      -> f
@@ -825,7 +839,7 @@ let kill_top_recref env t f = match f with
    [fresh_ref_var] to create new refinement variables. *)
 let fresh_with_var_fun env freshf t =
   let tbl = Hashtbl.create 17 in
-  let t   = copy_type t in
+  let t   = C.copy_type t in
   (* Negative type levels wreak havoc with the unify, etc. functions used in fresh_constr *)
   let _   = abs_type_levels t in
   let _   = reset_binders () in
@@ -946,14 +960,17 @@ let rec translate_pframe dopt env plist pf =
   and transl_recref rr =
     List.map (fun rs -> List.map transl_pref rs) rr
   and transl_constr l fs r =
+    let (ls, fs) = List.split fs in
+    let ls = Misc.mapi
+      (fun l i -> match l with Some l -> Ident.create l | None -> C.tuple_elem_id i) ls in
     let params = List.map transl_pframe_rec fs in
     let (path, decl) = lookup l in
     let _ = if List.length fs != decl.type_arity then
       raise (T.Error(Location.none, T.Type_arity_mismatch(l, decl.type_arity, List.length fs))) in
-    let varis   = List.map translate_variance decl.type_variance in
+    let varis = List.map translate_variance decl.type_variance in
       match decl.type_kind with 
           Type_abstract ->
-            abstract_of_params path params varis (transl_pref r)
+            abstract_of_params_with_labels ls path params varis (transl_pref r)
         | Type_record(fields, _, _) ->
             (* fresh_record (fresh_without_vars env) path fields *) assert false
         | Type_variant _ ->

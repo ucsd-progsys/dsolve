@@ -244,7 +244,7 @@ let frame_env = function
   | WFFrame(env, _) -> env
 
 let add_val_var = function
-    SubFrame(env, g, f, f') -> SubFrame(Le.aliasing_add qual_test_var f env, g, f, f') 
+    SubFrame(env, g, f, f') -> SubFrame(Le.aliasing_add qual_test_var (F.shape f) env, g, f, f') 
   | _ -> assert false
 
 let patch_env env = function
@@ -607,6 +607,9 @@ let check_tp senv lhs_ps x2 =
   stat_imp_queries   := !stat_imp_queries + (List.length x2);
   stat_valid_queries := !stat_valid_queries + (List.length rv); rv
 
+let check_tp senv lhs_ps x2 =
+  if C.empty_list x2 then (incr stat_tp_refines; []) else check_tp senv lhs_ps x2 
+
 let bound_in_env senv p =
   List.for_all (fun x -> Le.mem x senv) (P.vars p)
 
@@ -633,7 +636,7 @@ let refine_tp senv s env g r1 sub2s k2 =
       let lhsm    = List.fold_left (fun pm p -> PM.add p true pm) PM.empty lhs_ps in
       let (x1,x2) = List.partition (fun (_,p) -> PM.mem p lhsm) rhs_qps in
       let _       = stat_matches := !stat_matches + (List.length x1) in 
-      let x2      = List.filter (fun (_,p) -> bound_in_env senv p) x2 in 
+      let x2      = List.filter (fun (_,p) -> bound_in_env senv p) x2 in
       match x2 with [] -> x1 | _ -> x1 @ (check_tp senv lhs_ps x2) in
   refine_sol_update s k2 rhs_qps (List.map fst rhs_qps') 
 
@@ -648,13 +651,18 @@ let refine sri s c =
     when is_simple_constraint c && not (!Cf.no_simple || !Cf.verify_simple) ->
       incr stat_simple_refines; 
       refine_simple s r1 k2
-  | SubRef (_, _, _, (_, F.Qvar k2), _) when sm k2 = [] ->
+  | SubRef (_, _, _, (_, F.Qvar k2), _) when C.empty_list (sm k2) ->
       false
   | SubRef (env,g,r1, (sub2s, F.Qvar k2), _)  ->
       refine_tp (get_ref_fenv sri c) s env g r1 sub2s k2 
   | WFRef (env, (subs, F.Qvar k), Some id) ->
       let qs  = solution_map s k in
+      let _   = if C.ck_olev C.ol_dump_prover then printf "@.@.@[WF: %s@]@." (Path.unique_name k) in
+      let _   = if C.ck_olev C.ol_dump_prover then printf "@[(Env)@ %a@]@." pprint_fenv env in 
       let qs' = BS.time "filter wf" (List.filter (qual_wf sm env subs)) qs in
+      let _   = if C.ck_olev C.ol_dump_prover then List.iter (fun q -> printf "%a" Qualifier.pprint q) qs in
+      let _   = if C.ck_olev C.ol_dump_prover then printf "@.@." in
+      let _   = if C.ck_olev C.ol_dump_prover then List.iter (fun q -> printf "%a" Qualifier.pprint q) qs' in
       refine_sol_update s k qs qs'
   | _ -> false
 
@@ -884,6 +892,7 @@ let rec solve_sub sri s w =
     let (r,b,fci) = get_ref_rank sri c in
     let _ = C.cprintf C.ol_solve "@.@[Refining@ %d@ at iter@ %d in@ scc@ (%d,%b,%s):@]@."
             (get_ref_id c) !stat_refines r b (C.io_to_string fci) in
+    let _ = if C.ck_olev C.ol_insane then dump_solution s in
     let w' = if BS.time "refine" (refine sri s) c 
              then push_worklist sri w' (get_ref_deps sri c) else w' in
     solve_sub sri s w'

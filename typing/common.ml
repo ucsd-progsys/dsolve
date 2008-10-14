@@ -214,6 +214,8 @@ let rec maybe_list_from_singles = function
     x :: xs -> (match x with [a] -> Some a |  _ -> None) :: (maybe_list_from_singles xs)
   | [] -> []
 
+let empty_list = function [] -> true | _ -> false
+
 let maybe_bool = function
   Some _ -> true
   | None -> false
@@ -307,6 +309,7 @@ let ol_verb_constrs = 21
 let ol_dump_wfs = 22
 let ol_dump_meas = 30
 let ol_dump_quals = 50
+let ol_insane = 200
 
 let verbose_level = ref ol_default
 let verb_stack = ref []
@@ -491,6 +494,14 @@ let pprint_gc s =
 let dump_gc s =
   printf "@[%s@]@." s;
   pprint_gc (Gc.quick_stat ())
+
+(* ************************************************************* *)
+(* ************************ ml_types *************************** *)
+(* ************************************************************* *)
+
+let rec copy_type = function
+  | {desc = Tlink t} -> copy_type t (* Ensures copied types gets target's id/level, not link's *)
+  | t                -> {t with desc = Btype.copy_type_desc copy_type t.desc}
 
 (* ************************************************************* *)
 (* ************************ core_types ************************* *)

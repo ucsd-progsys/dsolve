@@ -452,9 +452,13 @@ let maybe_cstr_from_unlabel_frame fenv p f =
   else
     None 
 
-let qualify_implementation sourcefile fenv ifenv env qs str =
+let nrframes = ref []
+
+let qualify_implementation sourcefile fenv' ifenv env qs str =
   let _              = reset_framelog () in
-  let (qs, fenv, cs) = constrain_structure env fenv qs str in
+  let (qs, fenv, cs) = constrain_structure env fenv' qs str in
+  let nrcs           = List.rev_map (fun f -> lbl_dummy_cstr env (WFFrame (fenv', f))) !nrframes in
+  let cs             = List.rev_append nrcs cs in
   let cs             = (List.map (lbl_dummy_cstr env) (Le.maplistfilter (maybe_cstr_from_unlabel_frame fenv) ifenv)) @ cs in
   let _              = pre_solve sourcefile in
   let (s,cs)         = Bstats.time "solving" (solve qs) cs in

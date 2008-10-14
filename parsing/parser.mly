@@ -352,6 +352,7 @@ let mktrue_record a = mkrecord a ptrue
 %token AXIOM
 %token IFF
 %token VAL
+%token NON_REFINED_VAL
 %token VIRTUAL
 %token WHEN
 %token WHILE
@@ -1636,6 +1637,7 @@ liquid_signature:
 
 liquid_decl:
     liquid_val_decl                     { let (name, decl) = $1 in LvalDecl(name, decl) }
+  | liquid_nrval_decl                   { let (name, decl) = $1 in LnrvalDecl(name, decl) }
   | liquid_measure_decl                 { let (name, decl) = $1 in LmeasDecl(name, decl) }
   | liquid_uninterpreted_decl           { let (name, ty)   = $1 in LunintDecl(name, ty) }
   | liquid_type_embedding               { let (ty, str)    = $1 in LembedDecl(ty, str) }
@@ -1645,6 +1647,11 @@ liquid_decl:
 liquid_val_decl:
     VAL val_longident COLON liquid_type           
       { (String.concat "." (Longident.flatten $2), $4) }
+
+liquid_nrval_decl:
+    NON_REFINED_VAL val_longident COLON liquid_type           
+      { (String.concat "." (Longident.flatten $2), $4) }
+
 
 /* Refinement specifications */
 
@@ -1744,11 +1751,11 @@ liquid_type2:
   | liquid_recref LIDENT                                  /* recursive tyvar */
       { mktrue_recvar $2 $1 }
   | LPAREN liquid_type_comma_list RPAREN %prec below_IDENT 
-      { match $2 with [stn] -> stn | _ -> raise Parse_error } 
+      { match $2 with [stn] -> snd stn | _ -> raise Parse_error } 
   | type_longident                                       /* base_type */
       { mktrue_constr $1 [] }
   | liquid_type type_longident                           /* simple constructed */
-      { mktrue_constr $2 [$1] }
+      { mktrue_constr $2 [(None, $1)] }
   | LPAREN liquid_type_comma_list RPAREN type_longident  /* multi-param constructed */
       { mktrue_constr $4 $2 }
   | liquid_type3
@@ -1788,10 +1795,12 @@ liquid_param:
 
 liquid_type_comma_list:
     liquid_type
-      { [$1] }
+      { [(None, $1)] }
   | liquid_type COMMA liquid_type_comma_list
-      { $1 :: $3 }
-  
+      { (None, $1) :: $3 }
+  | LIDENT COLON liquid_type COMMA liquid_type_comma_list
+      { (Some $1, $3) :: $5 }
+ 
 liquid_record:
     LBRACE liquid_field_list RBRACE 
       { $2 }

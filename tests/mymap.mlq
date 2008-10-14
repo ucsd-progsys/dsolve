@@ -4,6 +4,7 @@ val get : (j: int -> 'a) -> k: int -> 'a[k/j]
 val mk  : unit -> (j: int -> 'a)
 val iter: (j: int -> 'a) -> (k: int -> 'a[k/j] -> unit) -> unit
 
-val sett: ('b, 'a) store -> k: 'b -> 'a[k/e0] -> ('b, 'a) store
+val sett: (m: 'b, 'a) store -> k: 'b -> 'a[k/m] -> (n: 'b, 'a[n/m]) store
 val gett: ('b, 'a) store -> k: 'b -> 'a[k/e0]
+val itert: ('b, 'a) store -> (k: 'b -> 'a[k/e0] -> unit) -> unit
 val make: j: 'b -> 'a -> ('b, 'a) store

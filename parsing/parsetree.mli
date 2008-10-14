@@ -180,6 +180,7 @@ and cstr = string * string option list * predpatexp
 
 and liquid_decl =
     LvalDecl of string * litframe
+  | LnrvalDecl of string * litframe
   | LmeasDecl of (string * string) * cstr list
   | LunintDecl of string * core_type
   | LembedDecl of core_type * prover_t
@@ -201,7 +202,7 @@ and litframe =
     PFvar of string * subs * refinement
   | PFrec of string * recref * refinement
   | PFsum of Longident.t * (string * recref) option * constr list * refinement
-  | PFconstr of Longident.t * litframe list * refinement
+  | PFconstr of Longident.t * (string option * litframe) list * refinement
   | PFarrow of string option * litframe * litframe
   | PFtuple of litframe list * refinement
   | PFrecord of (litframe * string * mutable_flag) list * refinement
