@@ -7,4 +7,6 @@ val iter: (j: int -> 'a) -> (k: int -> 'a[k/j] -> unit) -> unit
 val sett: (m: 'b, 'a) store -> k: 'b -> 'a[k/m] -> (n: 'b, 'a[n/m]) store
 val gett: ('b, 'a) store -> k: 'b -> 'a[k/e0]
 val itert: ('b, 'a) store -> (k: 'b -> 'a[k/e0] -> unit) -> unit
+val foldt: ('b, 'a) store -> (k: 'b -> 'a[k/e0] -> 'c -> 'c) -> 'c -> 'c
 val make: j: 'b -> 'a -> ('b, 'a) store
+val create: int -> ('b, 'a) store

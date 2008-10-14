@@ -51,3 +51,7 @@ let _ = retr 1 mn
 let m0 = Mymap.make 0 0
 
 let _ = Mymap.itert m0 (fun x t -> assert (x >= 0))
+
+
+let me = Mymap.create 7
+let _  = Mymap.itert me (fun x t -> assert (x >= 0))
