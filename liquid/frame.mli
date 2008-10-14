@@ -119,6 +119,7 @@ val refinement_conjuncts:
   (Path.t -> Qualifier.t list) -> Predicate.pexpr -> refinement -> Predicate.t list
 val refinement_predicate:
   (Path.t -> Qualifier.t list) -> Predicate.pexpr -> refinement -> Predicate.t
+val refinement_qvars: refinement -> qvar list
 val apply_refinement: refinement -> t -> t
 val append_refinement: refinement -> t -> t
 val apply_recref_constrs: recref -> constr list -> constr list
@@ -130,6 +131,7 @@ val refinement_qvars: refinement -> qvar list
 val ref_to_simples: refinement -> (simple_refinement list * simple_refinement list)
 val ref_of_simple: simple_refinement -> refinement
 val refinement_fold : (refinement -> 'a -> 'a) -> 'a -> t -> 'a
+val refinement_iter : (refinement -> unit) -> t -> unit
 val predicate:
   (Path.t -> Qualifier.t list) -> Predicate.pexpr -> t -> Predicate.t
 val conjuncts:

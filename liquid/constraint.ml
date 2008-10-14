@@ -785,6 +785,10 @@ let make_initial_solution cs =
       Sol.replace s k qs') s0;
   s
 *)
+
+let formals = ref []
+let is_formal q = List.mem q !formals
+let formals_addn qs = formals := List.rev_append qs !formals
   
 let filter_wfs cs = List.filter (fun (r, _) -> match r with WFRef(_, _, _) -> true | _ -> false) cs
 let filter_subs cs = List.filter (fun (r, _) -> match r with SubRef(_, _, _, _, _) -> true | _ -> false) cs
@@ -794,7 +798,7 @@ let make_initial_solution cs =
   let s    = Sol.create 37 in
   let addrv qs = function
     | (F.Qconst _, _) -> ()
-    | (F.Qvar k, LHS) -> if not (Sol.mem s k) then (if !Cf.minsol then Sol.replace s k qs else Sol.replace s k [])
+    | (F.Qvar k, LHS) -> if not (Sol.mem s k) then (if not (!Cf.minsol) && is_formal k then Sol.replace s k [] else Sol.replace s k qs)
     | (F.Qvar k, RHS) -> Sol.replace s k qs
     | (F.Qvar k, WFS) -> if Sol.find s k != [] then Sol.replace s k qs in
   let ga (c, q) = match c with

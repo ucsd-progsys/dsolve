@@ -37,7 +37,7 @@ def runtest(filep, expected_status):
     print "Qualgen failed on %s" % file
     sys.exit(2)
   start = time.time()
-  status = dsolve.solve_quals(file, True, False, True, ["-v", "0", "-minsol", "-no-simple", "-I", include])
+  status = dsolve.solve_quals(file, True, False, True, ["-v", "0", "-no-simple", "-I", include])
   if status == 2: sys.exit(2)
   print "%f seconds" % (time.time() - start)
 

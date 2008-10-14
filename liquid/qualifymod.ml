@@ -272,6 +272,8 @@ and constrain_match (env, guard, f) e pexps partial =
 and constrain_function (env, guard, f) pat e' =
   match f with
     | F.Farrow (_, f, unlabelled_f') ->
+        let _ = F.refinement_iter 
+          (fun r -> Constraint.formals_addn (F.refinement_qvars r)) f in
         let env' = F.env_bind env pat.pat_desc f in
         begin match e'.exp_desc with
           | Texp_function ([(pat', e')], _) ->
@@ -453,6 +455,7 @@ let maybe_cstr_from_unlabel_frame fenv p f =
     None 
 
 let nrframes = ref []
+let add_nrframe n = nrframes := n :: !nrframes 
 
 let qualify_implementation sourcefile fenv' ifenv env qs str =
   let _              = reset_framelog () in

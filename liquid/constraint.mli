@@ -48,3 +48,5 @@ val fresh_fc_id : unit -> fc_id
 val solve: 
   Qualifier.t list -> labeled_constraint list ->
     ((Common.ComparablePath.t -> Qualifier.t list) * (labeled_constraint list))
+
+val formals_addn: Frame.qvar list -> unit

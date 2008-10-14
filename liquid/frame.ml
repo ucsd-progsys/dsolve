@@ -157,6 +157,9 @@ let map_refexprs f fr =
 let recref_fold f rr l =
   List.fold_right f (List.flatten rr) l
 
+let recref_iter f rr =
+  List.iter f (List.flatten rr)
+
 let rec refinement_fold f l = function
   | Frec (_, rr, r) -> f r (recref_fold f rr l)
   | Fvar (_, _, s, r) -> f r l
@@ -166,6 +169,17 @@ let rec refinement_fold f l = function
       f r (List.fold_left (refinement_fold f) l (params_frames ps))
   | Farrow (_, f1, f2) ->
       refinement_fold f (refinement_fold f l f1) f2
+
+let rec refinement_iter f = function
+  | Frec (_, rr, r) -> recref_iter f rr; f r
+  | Fvar (_, _, s, r) -> f r
+  | Fsum (_, ro, cs, r) ->
+      (match ro with Some (_, rr) -> recref_iter f rr | None -> ()); 
+      f r; List.iter (refinement_iter f) (C.flap constr_param_frames cs)
+  | Fabstract (_, ps, r) ->
+      List.iter (refinement_iter f) (params_frames ps); f r
+  | Farrow (_, f1, f2) ->
+      refinement_iter f f1; refinement_iter f f2
 
 (******************************************************************************)
 (*************************** Type level manipulation **************************)
