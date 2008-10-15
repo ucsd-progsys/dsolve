@@ -1,6 +1,16 @@
 let show x = x
 
-(*
+let test4 god p r0 r1 x y i vv =
+  if (r1 = Mystore.set r0 x (1 + Mystore.get r0 x)) &&
+     (not (x = god)) &&
+     (god = Mystore.get p x) &&
+     (vv  = Mystore.get p i) &&
+     (vv = god || Mystore.get r0 i < Mystore.get r0 vv) 
+  then
+     assert (vv = god || Mystore.get r1 i < Mystore.get r1 vv)
+  else ()
+
+(* 
 let test1 a = 
   let a' = Mystore.set a 0 0 in
   assert (0 = Mystore.get a' 0)
@@ -23,16 +33,6 @@ let test3 a i1 i2 =
     assert (v3 = 22)
   else ()
 
-let test4 god p r0 r1 x y i vv =
-  if (r1 = Mystore.set r0 x (1 + Mystore.get r0 x)) &&
-     (not (x = god)) &&
-     (god = Mystore.get p x) &&
-     (vv  = Mystore.get p i) &&
-     (vv = god || Mystore.get r0 i < Mystore.get r0 vv) 
-  then
-     assert (vv = god || Mystore.get r1 i < Mystore.get r1 vv)
-  else ()
-
 let test5 a i = 
   if Mystore.get a i = 0 then
     assert (Mystore.get a i = 0)
@@ -48,7 +48,6 @@ let test6 a =
       (assert (Mystore.get a i != 0); f a) in
   f a
 
-*)
 
 let test7 x =
   let w = 
@@ -66,7 +65,6 @@ let test8 x =
   let (b,js) = show w in
   List.iter (fun j -> assert (Mystore.get b j = 0)) js
 
-(*
 let _ = test1
 let _ = test2
 let _ = test3
