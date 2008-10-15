@@ -4,6 +4,8 @@ axiom get : forall (i: int, w: int, a: 'a t. w = get i (set a i w))
 axiom set : forall (i: int, j: int, w: int, a: 'a t. (i = j) or (get (set a j w) i = get a i))
 *)
 
+embed inta for inta
+
 (* Axioms with inta *)
 axiom make: forall (i: int, n: int, w: int.  (w = get (make n w) i))
 axiom get : forall (i: int, w: int, a: inta. (w = get (set a i w) i))
