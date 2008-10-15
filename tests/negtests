@@ -1,5 +1,6 @@
 tests/booltestneg.ml            1 False tests
 tests/mysetneg.ml               4 False tests
+tests/bad-dag-map.ml            4 False tests
 tests/bad-unint.ml              1 False tests 
 tests/bad-multi-unint.ml        1 False tests
 tests/rec/bad-immut-linklist.ml 4 False tests
