@@ -1,0 +1,6 @@
+val mem: ('a, 'b) t -> 'a -> bool
+val set: (m: 'a, 'b) t -> k: 'a -> 'b[k/m] -> (n: 'a, 'b[n/m]) t
+val get: ('a, 'b) t -> k: 'a -> 'b[k/e0]
+val iter: (k: 'a -> 'b -> unit) -> (l: 'a, 'b[l/k]) t -> unit
+val fold:  (k: 'a -> 'b -> 'c -> 'c) -> (l: 'a, 'b[l/k]) t ->'c -> 'c
+val create: int -> ('a, 'b) t
