@@ -922,10 +922,9 @@ let solve qs cs =
   let _  = dump_constraints cs in
   let _  = dump_unsplit cs in
   let cs = BS.time "splitting constraints" split cs in
-  let max_env = BS.time "max env" (List.fold_left 
-    (fun env (v, c', c) -> match c with WFRef (e, _, _) -> Le.combine e env | SubRef _ -> Le.combine (frame_env c'.lc_cstr) env) Le.empty) cs in
-  let _ = let x = ref 0 in Le.iter (fun _ _ -> incr x) max_env; printf "%i@." !x in
-  let cs = BS.time "inject val var" (List.map (fun (v, c, cstr) -> (set_labeled_constraint_env c (make_val_env v max_env), cstr))) cs in
+  let max_env = List.fold_left 
+    (fun env (v, c', c) -> match c with WFRef (e, _, _) -> Le.combine e env | SubRef _ -> Le.combine (frame_env c'.lc_cstr) env) Le.empty cs in
+  let cs = List.map (fun (v, c, cstr) -> (set_labeled_constraint_env c (make_val_env v max_env), cstr)) cs in
   (* let cs = if !Cf.esimple then 
                BS.time "e-simplification" (List.map esimple) cs else cs in *)
   let qs = BS.time "instantiating quals" (instantiate_per_environment cs) qs in

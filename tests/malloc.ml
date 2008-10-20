@@ -11,7 +11,8 @@ let rec checkdiff xs =
   | x::xs'      -> let _ = List.iter (fun x' -> assert (x != x')) xs' in
                    checkdiff xs'
 
-let check  (m, us, fs) =
+let check x =
+  let (m, us, fs) = x in
   checkdiff us;
   checkdiff fs;
   List.iter (fun p -> assert (Mystore.get m p != 0)) us;
@@ -29,7 +30,8 @@ let init size =
   let _   = check w in
   w
 
-let malloc (mem, us, fs) = 
+let malloc x =
+  let (mem, us, fs) = x in
   let (f, w') =
     match fs with
     | []          -> assert false
@@ -41,7 +43,8 @@ let malloc (mem, us, fs) =
   let _ = check w' in 
   (f, show w')
 
-let free (mem, us, fs) p =
+let free x p =
+  let (mem, us, fs) = x in
   if (Mystore.get mem p != 0) then
     let mem' = Mystore.set mem p 0 in
     let us'  = del (show p) (show us) in
