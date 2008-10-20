@@ -1,9 +1,9 @@
 #filename     [# of lambdas to collect idents under]  [only collect idents which name formals]  [-I directory]
 tests/inc.ml                4 False tests
 tests/mem.ml                4 False tests
-tests/malloc.ml             4 False tests
-tests/dag.ml                4 False tests
-tests/dag-map.ml            4 False tests
+#tests/malloc.ml             4 False tests
+#tests/dag.ml                4 False tests
+#tests/dag-map.ml            4 False tests
 tests/mysetpos.ml           4 False tests
 tests/isortset.ml           4 False tests
 tests/llset.ml              4 False tests

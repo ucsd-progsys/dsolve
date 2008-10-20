@@ -26,6 +26,7 @@ module P = Predicate
 module C = Common
 module Cl = Clflags
 module Prover = TheoremProverZ3.Prover
+module BS = Bstats
 
 (********************************************************************************)
 (************************** Rationalizing Division ******************************)
@@ -156,11 +157,11 @@ let set_and_filter env ps qs =
   let _ = incr nb_push in
   let _ = nb_queries := !nb_queries + (List.length ps) in
   let ps = List.rev_map fixdiv ps in
-  let ps = List.filter is_not_taut ps in
-  if Prover.set env ps then (Prover.finish (); qs) else
+  let ps = BS.time "TP taut" (List.filter is_not_taut) ps in
+  if BS.time "TP set" (Prover.set env) ps then (Prover.finish (); qs) else
       let qs = List.rev_map (C.app_snd fixdiv) qs in
       let (qs, qs') = List.partition (fun (_, q) -> is_not_taut q) qs in
-        List.rev_append qs' (Prover.filter env qs)
+        List.rev_append qs' (BS.time "TP filter" (Prover.filter env) qs)
 
 (*(* API *)
 let finish () = 

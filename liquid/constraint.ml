@@ -248,17 +248,24 @@ let frame_env = function
     SubFrame(env, _, _, _) -> env
   | WFFrame(env, _) -> env
 
-let add_val_var = function
-    SubFrame(env, g, f, f') -> SubFrame(Le.aliasing_add qual_test_var (F.shape f) env, g, f, f') 
-  | _ -> assert false
+let make_val_env vf env = function
+    SubFrame(_, g, f, f') -> SubFrame(Le.nil_add qual_test_var vf env, g, f, f') 
+  | c -> c 
 
 let patch_env env = function
-    SubFrame(env', g, f, f') -> SubFrame(Le.combine env' env, g, f, f') | _ -> assert false
+    SubFrame(env', g, f, f') -> SubFrame(Le.combine env' env, g, f, f') | c -> c
+
+let set_env env = function
+    SubFrame(_, g, f, f') -> SubFrame(env, g, f, f') | c -> c
+
+let set_labeled_constraint_env c f =
+  {lc_cstr = f c.lc_cstr; lc_tenv = c.lc_tenv;
+   lc_orig = c.lc_orig; lc_id = c.lc_id}
 
 let split_sub_ref c env g r1 r2 =
-  let c = {lc_cstr = add_val_var (patch_env env c.lc_cstr); lc_tenv = c.lc_tenv;
-           lc_orig = c.lc_orig; lc_id = c.lc_id} in
-  sref_map (fun sr -> (c, SubRef(env_to_refenv env, g, r1, sr, None))) r2
+  let c = set_labeled_constraint_env c (set_env env) in
+  let v = (function SubFrame(_ , _, f, _) -> f | _ -> assert false) c.lc_cstr in
+  sref_map (fun sr -> (v, c, SubRef(env_to_refenv env, g, r1, sr, None))) r2
 
 let params_apply_substitutions subs ps =
   List.map (fun (i, f, v) -> (i, F.apply_subs subs f, v)) ps
@@ -329,7 +336,7 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
        assert false)
 
 let split_wf_ref f c env r =
-  sref_map (fun sr -> (c, WFRef(Le.aliasing_add qual_test_var f env, sr, None))) r
+  sref_map (fun sr -> (f, c, WFRef(Le.aliasing_add qual_test_var f env, sr, None))) r
 
 let make_wff c tenv env f =
   {lc_cstr = WFFrame (env, f); lc_tenv = tenv; lc_orig = Cstr c; lc_id = None}
@@ -605,7 +612,7 @@ let check_tp senv lhs_ps x2 =
   let _ = if C.ck_olev C.ol_dump_prover then dump "Ck" (snd (List.split x2)) in
   let rv = 
     try
-      BS.time "tp_set_and_filter" TP.set_and_filter senv lhs_ps x2
+      TP.set_and_filter senv lhs_ps x2
     with Failure x -> printf "%a@." pprint_fenv senv; raise (Failure x) in
   let _ = if C.ck_olev C.ol_dump_prover then dump "OK" (snd (List.split rv)) in
   incr stat_tp_refines;
@@ -613,7 +620,7 @@ let check_tp senv lhs_ps x2 =
   stat_valid_queries := !stat_valid_queries + (List.length rv); rv
 
 let check_tp senv lhs_ps x2 =
-  if C.empty_list x2 then (incr stat_tp_refines; []) else check_tp senv lhs_ps x2 
+  if C.empty_list x2 then (incr stat_tp_refines; []) else BS.time "check_tp" (check_tp senv lhs_ps) x2 
 
 let bound_in_env senv p =
   List.for_all (fun x -> Le.mem x senv) (P.vars p)
@@ -915,6 +922,10 @@ let solve qs cs =
   let _  = dump_constraints cs in
   let _  = dump_unsplit cs in
   let cs = BS.time "splitting constraints" split cs in
+  let max_env = BS.time "max env" (List.fold_left 
+    (fun env (v, c', c) -> match c with WFRef (e, _, _) -> Le.combine e env | SubRef _ -> Le.combine (frame_env c'.lc_cstr) env) Le.empty) cs in
+  let _ = let x = ref 0 in Le.iter (fun _ _ -> incr x) max_env; printf "%i@." !x in
+  let cs = BS.time "inject val var" (List.map (fun (v, c, cstr) -> (set_labeled_constraint_env c (make_val_env v max_env), cstr))) cs in
   (* let cs = if !Cf.esimple then 
                BS.time "e-simplification" (List.map esimple) cs else cs in *)
   let qs = BS.time "instantiating quals" (instantiate_per_environment cs) qs in

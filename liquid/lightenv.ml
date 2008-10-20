@@ -74,7 +74,7 @@ let addn items (Env (m, _) as parent) =
   Env (List.fold_left (fun e (k, v) -> M.add k v e) m items, Parent parent)
 
 let find k (Env (m, _)) =
-  M.find k m
+  Bstats.time "env find" (M.find k) m
 
 let iter f (Env (m, _)) =
   M.iter f m
@@ -92,7 +92,7 @@ let fold f (Env (m, _)) b =
   M.fold f m b
 
 let combine e1 e2 =
-  fold (fun p f e -> add p f e) e1 e2
+  fold (fun p f e -> nil_add p f e) e1 e2
 
 let domain env = maplist (fun k _ -> k) env
 

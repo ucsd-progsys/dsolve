@@ -78,12 +78,23 @@ let path_tuple = Path.mk_ident "tuple"
 (**************** Type environments ***************************)
 (**************************************************************)
 
+(* this is a bit shady: we memoize by string only to save the compare *)
+exception Found_by_name of t
+exception Found_key_by_name of Path.t
+let fbn_memo = Hashtbl.create 37
+let fkbn_memo = Hashtbl.create 37
+
 let find_by_name env s =
-   List.hd (Le.filterlist (fun p _ -> Path.name p = s) env)
+   try (Le.iter (fun p f -> if Path.name p = s then raise (Found_by_name f)) env; raise Not_found)
+    with Found_by_name t -> t 
+
+let find_by_name env s = C.do_memo fbn_memo (fun () -> find_by_name env s) () s
 
 let find_key_by_name env s =
-   try List.hd (Le.filterkeylist (fun p _ -> Path.name p = s) env)
-    with Failure _ -> raise Not_found
+   try (Le.iter (fun p _ -> if Path.name p = s then raise (Found_key_by_name p)) env; raise Not_found)
+    with Found_key_by_name p -> p
+
+let find_key_by_name env s = C.do_memo fkbn_memo (fun () -> find_key_by_name env s) () s
 
 (**************************************************************)
 (**************** Constructed type accessors ******************)
@@ -265,8 +276,13 @@ let append_recref rr' f = match get_recref f with
   | Some rr -> set_recref (merge_recrefs rr rr') f
   | None    -> f
 
-let refexpr_apply_subs subs' (subs, qe) =
-  (subs' @ subs, qe)
+let eager_apply subs qs =
+  List.rev_map (Qualifier.map_pred (C.app_snd (Predicate.apply_substs subs))) qs 
+
+let refexpr_apply_subs subs' (subs, qexprs) =
+  match qexprs with
+  | (qconsts, []) -> (subs, (eager_apply subs' qconsts, []))
+  | (qconsts, qvars) -> (subs' @ subs, qexprs)
 
 let apply_subs subs f =
   map_refexprs (refexpr_apply_subs subs) f
@@ -1047,8 +1063,7 @@ let apply_solution s f =
 
 let refexpr_conjuncts s qual_expr ((subs, qexprs) as r) =
   let (_, (quals, _)) = refexpr_apply_solution s r in
-  let unsubst = List.map (Qualifier.apply qual_expr) quals in
-    List.map (Predicate.apply_substs subs) unsubst
+    List.rev_map (C.compose (Predicate.apply_substs subs) (Qualifier.apply qual_expr)) quals
 
 let refinement_conjuncts s qexpr res =
   C.flap (refexpr_conjuncts s qexpr) res

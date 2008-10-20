@@ -41,6 +41,8 @@ let qual_test_var = Path.mk_ident "AA"
 let flip f x y =
   f y x
 
+let maybe = function Some x -> x | _ -> assert false
+
 let maybe_cons m xs = match m with
   | None -> xs
   | Some x -> x :: xs
