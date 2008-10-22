@@ -310,7 +310,7 @@ and constrain_base_identifier (env, _, f) id e =
 
 and constrain_identifier (env, _, f) id tenv =
   let f' = instantiate_id id f env tenv in
-  let f  = F.label_like f f' in
+  let f  = F.label_like_destructive f f' in
     (f', [WFFrame(env, f)], [])
 
 and apply_once env guard (f, cstrs, subexp_cstrs) e = match (f, e) with
