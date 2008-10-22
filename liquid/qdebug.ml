@@ -87,9 +87,10 @@ let rec pprint_expression ppf exp =
           fprintf ppf "assume (%a)" pprint_expression e
       | Pexp_match (e, pel) ->
           fprintf ppf "match@ %a@ with@;<1 2>%a" pprint_expression e pprint_cases pel  
+      | Pexp_setfield (e, l, e') ->
+          fprintf ppf "(%a).%s@ <-@ %a" pprint_expression e (print_id l) pprint_expression e'
       | Pexp_try _ -> fprintf ppf "Pexp_try"
       | Pexp_variant _ -> fprintf ppf "Pexp_variant"
-      | Pexp_setfield _ -> fprintf ppf "Pexp_setfield"
       | Pexp_when _ -> fprintf ppf "Pexp_when"
       | Pexp_send _ -> fprintf ppf "Pexp_send"
       | Pexp_lazy _ -> fprintf ppf "Pexp_lazy"

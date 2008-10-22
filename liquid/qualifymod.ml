@@ -133,6 +133,7 @@ let rec constrain e env guard =
       | (Texp_construct (cstrdesc, args), F.Fsum _) -> constrain_constructed environment cstrdesc args e
       | (Texp_record (labeled_exprs, None), _) -> constrain_record environment labeled_exprs
       | (Texp_field (expr, label_desc), _) -> constrain_field environment expr label_desc
+      | (Texp_setfield (expr, label_desc, expr'), _) -> constrain_setfield environment expr label_desc expr'
       | (Texp_ifthenelse (e1, e2, Some e3), _) -> constrain_if environment e1 e2 e3
       | (Texp_match (e, pexps, partial), _) -> constrain_match environment e pexps partial
       | (Texp_function ([(pat, e')], _), _) -> constrain_function environment pat e'
@@ -220,6 +221,10 @@ and constrain_field (env, guard, _) expr label_desc =
     | _ -> assert false
   in (fieldframe, [WFFrame (env, fieldframe)], cstrs)
 
+and constrain_setfield (env, guard, f) expr label_desc expr' =
+  let _ = assert false in
+  (B.uUnit, [], [])
+
 and constrain_if (env, guard, f) e1 e2 e3 =
   let (f1, cstrs1) = constrain e1 env guard in
   let guardvar     = Path.mk_ident "guard" in
@@ -306,7 +311,7 @@ and constrain_base_identifier (env, _, f) id e =
 
 and constrain_identifier (env, _, f) id tenv =
   let f' = instantiate_id id f env tenv in
-  let f  = F.label_like f f' in
+  let f  = F.label_like_destructive f f' in
     (f', [WFFrame(env, f)], [])
 
 and apply_once env guard (f, cstrs, subexp_cstrs) e = match (f, e) with

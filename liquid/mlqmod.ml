@@ -34,7 +34,7 @@ let load_val dopt env fenv (s, pf) =
   try
     let p = C.lookup_path (match dopt with Some d -> C.append_pref d s | None -> s) env in
     let _ = if String.contains s '.' then failwith (Printf.sprintf "mlq: val %s has invalid name" s) in
-      Lightenv.add p pf fenv
+      Lightenv.nil_add p pf fenv
   with Not_found -> failwith (Printf.sprintf "mlq: val %s does not correspond to program value" s)
 
 let load_nrval dopt env fenv (s, pf) =
@@ -43,7 +43,7 @@ let load_nrval dopt env fenv (s, pf) =
     let pf' = F.fresh env (Env.find_value p env).val_type in
     let pf = F.label_like pf' pf in
     let _ = if String.contains s '.' then failwith (Printf.sprintf "mlq: val %s has invalid name" s) in
-    QF.add_nrframe pf; Lightenv.add p pf fenv
+    QF.add_nrframe pf; Lightenv.nil_add p pf fenv
   with Not_found -> failwith (Printf.sprintf "mlq: val %s does not correspond to program value" s)
 
 let map_constructor_args dopt env (name, mlname) (cname, args, cpred) =
@@ -66,7 +66,7 @@ let load_unint name ty env fenv ifenv menv =
   let id   = Ident.create name in
   let ty   = Typetexp.transl_type_scheme env ty in
   let env  = Env.add_value id {val_type = ty; val_kind = Val_reg} env in
-  let fenv = Le.add (Path.Pident id) (F.fresh_uninterpreted env ty name) fenv in
+  let fenv = Le.nil_add (Path.Pident id) (F.fresh_uninterpreted env ty name) fenv in
     (env, fenv, ifenv, menv)
 
 let is_unint_decl = function
@@ -83,7 +83,7 @@ let axiom_prefix = "_axiom_"
 let load_axiom dopt env fenv ifenv menv name pred =
   let pred = Qualdecl.transl_patpred_single false (Path.mk_ident "") env pred in
   let fr = Builtins.rUnit "" (Path.mk_ident "") pred in 
-  let add = Le.add (Path.mk_ident (axiom_prefix ^ name)) fr in
+  let add = Le.nil_add (Path.mk_ident (axiom_prefix ^ name)) fr in
   let (fenv, ifenv) = match dopt with Some _ -> (fenv, add ifenv) | None -> (add fenv, ifenv) in
     (env, fenv, ifenv, menv)
 
@@ -95,7 +95,11 @@ let extract_pred f =
 let scrub_and_push_axioms fenv =
   Le.fold (fun p f env -> if C.has_prefix axiom_prefix (Path.name p) then 
             (TheoremProver.push_axiom fenv (extract_pred f); env) else
-              Le.add p f env) fenv Le.empty
+              Le.nil_add p f env) fenv Le.empty
+
+let scrub_axioms fenv =
+  Le.fold (fun p f env -> if C.has_prefix axiom_prefix (Path.name p) then 
+            env else Le.nil_add p f env) fenv Le.empty
 
 let load_rw dopt rw env menv' fenv (preds, decls) =
   let load_decl (env, fenv, ifenv, menv) = function
@@ -131,7 +135,7 @@ let load_dep_sigs env fenv mlqs =
     let env_lookup s = let s = modname s in C.lookup_path s env in
     let lfun s = lookup (fun s -> Path.name (env_lookup s)) s s in
     let lvar s = lookup env_lookup s (Path.name s) in
-    let fenv = Le.fold (fun p fr e -> Le.add p (F.map_refexprs (M.rewrite_refexpr (C.app_snd (sub_pred lvar lfun))) 
+    let fenv = Le.fold (fun p fr e -> Le.nil_add p (F.map_refexprs (M.rewrite_refexpr (C.app_snd (sub_pred lvar lfun))) 
                        (F.label_like fr fr)) e) ifenv fenv in
       (fenv, Le.empty) in
   List.fold_left (fun (env, menv, fenv, _) (mlq, dname) -> load_rw (Some dname) (rw dname) env menv fenv mlq) (env, [], fenv, Le.empty) mlqs

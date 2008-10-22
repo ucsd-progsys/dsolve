@@ -267,6 +267,7 @@ let app_snd f (a, b) = (a, f b)
 let app_pr f (a, b) = (f a, f b)
 
 let l_to_s l = String.concat "." (Longident.flatten l)
+let s_to_l s = Longident.parse s
 
 let int_of_tag = function
     Cstr_constant n -> 2*n
