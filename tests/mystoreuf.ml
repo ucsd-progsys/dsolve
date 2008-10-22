@@ -10,6 +10,15 @@ let test4 god p r0 r1 x y i vv =
      assert (vv = god || Mystore.get r1 i < Mystore.get r1 vv)
   else ()
 
+let test4 p r0 r1 x y i vv =
+  if (r1 = Mystore.set r0 x (1 + Mystore.get r0 x)) &&
+     (x  = Mystore.get p x) &&
+     (vv = Mystore.get p i) &&
+     (vv = i || Mystore.get r0 i < Mystore.get r0 vv) 
+  then
+     assert (vv = i || Mystore.get r1 i < Mystore.get r1 vv)
+  else ()
+
 (* 
 let test1 a = 
   let a' = Mystore.set a 0 0 in
