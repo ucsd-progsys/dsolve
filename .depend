@@ -350,8 +350,8 @@ liquid/frame.cmx: typing/typetexp.cmx typing/types.cmx typing/typedtree.cmx \
     parsing/location.cmx liquid/lightenv.cmx typing/ident.cmx typing/env.cmx \
     typing/ctype.cmx typing/common.cmx utils/clflags.cmx typing/btype.cmx \
     parsing/asttypes.cmi liquid/frame.cmi 
-liquid/lightenv.cmo: typing/path.cmi typing/common.cmo 
-liquid/lightenv.cmx: typing/path.cmx typing/common.cmx 
+liquid/lightenv.cmo: typing/path.cmi typing/common.cmo utils/bstats.cmi 
+liquid/lightenv.cmx: typing/path.cmx typing/common.cmx utils/bstats.cmx 
 liquid/liqerrors.cmo: typing/typetexp.cmi typing/typemod.cmi \
     typing/typedecl.cmi typing/typecore.cmi typing/typeclass.cmi \
     parsing/syntaxerr.cmi liquid/qualifymod.cmi parsing/pparse.cmi \
@@ -453,9 +453,9 @@ liquid/qualifymod.cmx: typing/types.cmx typing/typedtree.cmx \
     typing/common.cmx utils/clflags.cmx liquid/builtins.cmx typing/btype.cmx \
     utils/bstats.cmx parsing/asttypes.cmi liquid/qualifymod.cmi 
 liquid/theoremProver.cmo: liquid/theoremProverZ3.cmo typing/predicate.cmi \
-    typing/common.cmo utils/clflags.cmi 
+    typing/common.cmo utils/clflags.cmi utils/bstats.cmi 
 liquid/theoremProver.cmx: liquid/theoremProverZ3.cmx typing/predicate.cmx \
-    typing/common.cmx utils/clflags.cmx 
+    typing/common.cmx utils/clflags.cmx utils/bstats.cmx 
 liquid/theoremProverZ3.cmo: external/z3/ocaml/z3.cmi typing/predicate.cmi \
     typing/predef.cmi typing/path.cmi parsing/parsetree.cmi utils/misc.cmi \
     liquid/lightenv.cmo typing/ident.cmi liquid/frame.cmi typing/common.cmo \
