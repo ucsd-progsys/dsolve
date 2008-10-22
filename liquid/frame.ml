@@ -157,7 +157,7 @@ let rec map_refinements_map f = function
   | Fvar (p, level, s, r) -> Fvar (p, level, s, f r)
   | Fsum (p, ro, cs, r) -> Fsum (p, M.may_map (fun (p, rr) -> (p, map_recref f rr)) ro, cs, f r)
   | Fabstract (p, ps, r) -> Fabstract (p, ps, f r)
-  | f -> f
+  | Farrow _ as f -> f
 
 let map_refinements f fr =
   map (map_refinements_map f) fr
