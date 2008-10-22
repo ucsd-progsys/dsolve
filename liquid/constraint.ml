@@ -786,21 +786,18 @@ let app_sol s k qs =
   else Sol.replace s k qs
 
 let make_initial_solution cs =
-  let s    = Sol.create 37 in
-  let addrv qs = function
-    | (F.Qconst _, _) -> ()
-    | (F.Qvar k, LHS) -> if not (Sol.mem s k) then 
-        (if not !Cf.minsol && is_formal k then Sol.replace s k [] else Sol.replace s k qs)
-    | (F.Qvar k, RHS) -> app_sol s k qs
-    | (F.Qvar k, WFS) -> if Sol.find s k != [] then app_sol s k qs in
-  let ga (c, q) = match c with
-    | SubRef (_, _, r1, (_, qe2), _) ->
-        List.iter (fun qv -> addrv q (F.Qvar qv, LHS)) (F.refinement_qvars r1); addrv q (qe2, RHS)
-    | WFRef (_, (_, qe), _) -> addrv q (qe, LHS); addrv q (qe, WFS) in
-  let wfs  = filter_wfs cs in
-  let subs = filter_subs cs in
-  List.iter ga subs; List.iter ga wfs; s
-
+  let srhs = Sol.create 37 in
+  let slhs = Sol.create 37 in
+  let s = Sol.create 37 in
+  let _ = List.iter (function (SubRef (_, _, _, (_, F.Qvar k), _), qs) ->
+            (Sol.replace srhs k (); Sol.replace s k qs) | _ -> ()) cs in
+  let _ = List.iter (function (SubRef (_, _, r1, _, _), qs) ->
+            List.iter (fun k -> Sol.replace slhs k (); if not !Cf.minsol && is_formal k && not (Sol.mem srhs k)
+              then Sol.replace s k [] else app_sol s k qs) (F.refinement_qvars r1) | _ -> ()) cs in
+  let _ = List.iter (function (WFRef (_, (_, F.Qvar k), _), qs) ->
+            if Sol.mem srhs k || (Sol.mem slhs k && Sol.find s k != []) then app_sol s k qs else app_sol s k [] | _ -> ()) cs in
+  s
+                                         
 (**************************************************************)
 (****************** Debug/Profile Information *****************)
 (**************************************************************)
