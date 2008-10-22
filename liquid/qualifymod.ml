@@ -222,6 +222,7 @@ and constrain_field (env, guard, _) expr label_desc =
   in (fieldframe, [WFFrame (env, fieldframe)], cstrs)
 
 and constrain_setfield (env, guard, f) expr label_desc expr' =
+  let _ = assert false in
   (B.uUnit, [], [])
 
 and constrain_if (env, guard, f) e1 e2 e3 =
