@@ -76,7 +76,7 @@ let rec build_dag n g =
     let n1s = leaves g (choose_node g) in
     let n2s = leaves g (choose_node g) in
     let ns  = n1s  @ n2s  in
-    let n'  = fresh n in
+    let n'  = (*fresh*) n in
     let g'  = new_node n' g in 
     let g'' = List.fold_left (fun g m -> new_edge g (show m) (show n')) (show g') (show ns) in
     build_dag n' g''
