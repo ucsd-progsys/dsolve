@@ -6,6 +6,7 @@ tests/dag.ml                4 False tests
 tests/dag-map.ml            4 False tests
 tests/mysetpos.ml           4 False tests
 tests/isortset.ml           4 False tests
+tests/mymappos.ml           4 False tests
 tests/llset.ml              4 False tests
 tests/treeset.ml            4 False tests
 tests/mysetlist.ml          4 False tests
