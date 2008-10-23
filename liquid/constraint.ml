@@ -258,12 +258,14 @@ let patch_env env = function
 let set_env env = function
     SubFrame(_, g, f, f') -> SubFrame(env, g, f, f') | c -> c
 
-let set_labeled_constraint_env c f =
+let set_labeled_constraint c f =
   {lc_cstr = f c.lc_cstr; lc_tenv = c.lc_tenv;
    lc_orig = c.lc_orig; lc_id = c.lc_id}
 
+let set_labeled_constraint_env c env = set_labeled_constraint c (set_env env)
+
 let split_sub_ref c env g r1 r2 =
-  let c = set_labeled_constraint_env c (set_env env) in
+  let c = set_labeled_constraint_env c env in
   let v = (function SubFrame(_ , _, f, _) -> f | _ -> assert false) c.lc_cstr in
   sref_map (fun sr -> (v, c, SubRef(env_to_refenv env, g, r1, sr, None))) r2
 
@@ -906,7 +908,7 @@ let solve qs cs =
   let cs = BS.time "splitting constraints" split cs in
   let max_env = List.fold_left 
     (fun env (v, c', c) -> match c with WFRef (e, _, _) -> Le.combine e env | SubRef _ -> Le.combine (frame_env c'.lc_cstr) env) Le.empty cs in
-  let cs = List.map (fun (v, c, cstr) -> (set_labeled_constraint_env c (make_val_env v max_env), cstr)) cs in
+  let cs = List.map (fun (v, c, cstr) -> (set_labeled_constraint c (make_val_env v max_env), cstr)) cs in
   (* let cs = if !Cf.esimple then 
                BS.time "e-simplification" (List.map esimple) cs else cs in *)
   let qs = BS.time "instantiating quals" (instantiate_per_environment cs) qs in
