@@ -19,22 +19,22 @@ let find h i =
   (p', i')
   
 let union h x y =
-  let (p,_) = h in
-  let (p', rx) = find p  x in
-  let (p'',ry) = find p' y in
+  let (p, r)   = h in
+  let (p', x') = find p  x in
+  let (p'',y') = find p' y in
   (* HERE *)
-  if rx != ry then begin
-    let rxc = Pa.get h.c rx in
-    let ryc = Pa.get h.c ry in
-    if rxc > ryc then
-      { h with father = Pa.set h.father ry rx }
-    else if rxc < ryc then
-      { h with father = Pa.set h.father rx ry }
+  if x' != y' then begin
+    let rx' = Pa.get r x' in
+    let ry' = Pa.get r y' in
+    if rx' > ry' then
+      (Pa.set p'' y' x', r)
+    else if rx' < ry' then
+      (Pa.set p'' x' y', r)
     else
-      { c = Pa.set h.c rx (rxc + 1);
-	father = Pa.set h.father ry rx }
+      (Pa.set p'' y' x', 
+       Pa.set r rx' (rx' + 1))
   end else
-    h
+    (p'', r) 
 
 (*
 (* Union-Find using Tarjan's algorithm by J.C. Fillaitre *)
