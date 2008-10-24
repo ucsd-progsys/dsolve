@@ -300,13 +300,6 @@ let gapply op =
     in
     app (b1, b2)
 
-(*
-let memo cache f x = 
-  try find cache x with Not_found ->
-    let r = f x in add cache x r; r
-*)
-
-
 
 let mk_and = gapply Op_and
 let mk_or = gapply Op_or
