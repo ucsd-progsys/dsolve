@@ -258,12 +258,14 @@ let patch_env env = function
 let set_env env = function
     SubFrame(_, g, f, f') -> SubFrame(env, g, f, f') | c -> c
 
-let set_labeled_constraint_env c f =
+let set_labeled_constraint c f =
   {lc_cstr = f c.lc_cstr; lc_tenv = c.lc_tenv;
    lc_orig = c.lc_orig; lc_id = c.lc_id}
 
+let set_labeled_constraint_env c env = set_labeled_constraint c (set_env env)
+
 let split_sub_ref c env g r1 r2 =
-  let c = set_labeled_constraint_env c (set_env env) in
+  let c = set_labeled_constraint_env c env in
   let v = (function SubFrame(_ , _, f, _) -> f | _ -> assert false) c.lc_cstr in
   sref_map (fun sr -> (v, c, SubRef(env_to_refenv env, g, r1, sr, None))) r2
 
@@ -786,21 +788,18 @@ let app_sol s k qs =
   else Sol.replace s k qs
 
 let make_initial_solution cs =
-  let s    = Sol.create 37 in
-  let addrv qs = function
-    | (F.Qconst _, _) -> ()
-    | (F.Qvar k, LHS) -> if not (Sol.mem s k) then 
-        (if not !Cf.minsol && is_formal k then Sol.replace s k [] else Sol.replace s k qs)
-    | (F.Qvar k, RHS) -> app_sol s k qs
-    | (F.Qvar k, WFS) -> if Sol.find s k != [] then app_sol s k qs in
-  let ga (c, q) = match c with
-    | SubRef (_, _, r1, (_, qe2), _) ->
-        List.iter (fun qv -> addrv q (F.Qvar qv, LHS)) (F.refinement_qvars r1); addrv q (qe2, RHS)
-    | WFRef (_, (_, qe), _) -> addrv q (qe, LHS); addrv q (qe, WFS) in
-  let wfs  = filter_wfs cs in
-  let subs = filter_subs cs in
-  List.iter ga subs; List.iter ga wfs; s
-
+  let srhs = Sol.create 37 in
+  let slhs = Sol.create 37 in
+  let s = Sol.create 37 in
+  let _ = List.iter (function (SubRef (_, _, _, (_, F.Qvar k), _), qs) ->
+            (Sol.replace srhs k (); Sol.replace s k qs) | _ -> ()) cs in
+  let _ = List.iter (function (SubRef (_, _, r1, _, _), qs) ->
+            List.iter (fun k -> Sol.replace slhs k (); if not !Cf.minsol && is_formal k && not (Sol.mem srhs k)
+              then Sol.replace s k [] else app_sol s k qs) (F.refinement_qvars r1) | _ -> ()) cs in
+  let _ = List.iter (function (WFRef (_, (_, F.Qvar k), _), qs) ->
+            if Sol.mem srhs k || (Sol.mem slhs k && Sol.find s k != []) then app_sol s k qs else app_sol s k [] | _ -> ()) cs in
+  s
+                                         
 (**************************************************************)
 (****************** Debug/Profile Information *****************)
 (**************************************************************)
@@ -909,7 +908,7 @@ let solve qs cs =
   let cs = BS.time "splitting constraints" split cs in
   let max_env = List.fold_left 
     (fun env (v, c', c) -> match c with WFRef (e, _, _) -> Le.combine e env | SubRef _ -> Le.combine (frame_env c'.lc_cstr) env) Le.empty cs in
-  let cs = List.map (fun (v, c, cstr) -> (set_labeled_constraint_env c (make_val_env v max_env), cstr)) cs in
+  let cs = List.map (fun (v, c, cstr) -> (set_labeled_constraint c (make_val_env v max_env), cstr)) cs in
   (* let cs = if !Cf.esimple then 
                BS.time "e-simplification" (List.map esimple) cs else cs in *)
   let qs = BS.time "instantiating quals" (instantiate_per_environment cs) qs in

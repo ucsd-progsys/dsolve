@@ -157,7 +157,7 @@ let rec map_refinements_map f = function
   | Fvar (p, level, s, r) -> Fvar (p, level, s, f r)
   | Fsum (p, ro, cs, r) -> Fsum (p, M.may_map (fun (p, rr) -> (p, map_recref f rr)) ro, cs, f r)
   | Fabstract (p, ps, r) -> Fabstract (p, ps, f r)
-  | f -> f
+  | Farrow _ as f -> f
 
 let map_refinements f fr =
   map (map_refinements_map f) fr
@@ -674,8 +674,8 @@ let label_like_where destructive f f' =
     | (Fabstract (p, ps, r), Fabstract (_, ps', _)) ->
         Fabstract (p, label_params_like vars ps ps', instantiate_ref_qualifiers vars r)
     | (Farrow (p1, f1, f1'), Farrow (p2, f2, f2')) ->
-        let vars' = List.map (fun (x, y) -> (Ident.name x, Path.Pident y)) 
-          (if destructive then [] else Pattern.bind_vars p1 p2) @ vars in
+        let vars' = (List.map (fun (x, y) -> (Ident.name x, Path.Pident y)) 
+          (if destructive then [] else Pattern.bind_vars p1 p2)) @ vars in
           Farrow (p2, label vars f1 f2, label vars' f1' f2')
     | _ -> printf "Can't label %a like %a" pprint f pprint f'; assert false
   and label_constrs_like vars cs1 cs2 =
@@ -684,7 +684,7 @@ let label_like_where destructive f f' =
     | ([], []) -> []
     | ((i1, f1, v1) :: ps1, (i2, f2, _) :: ps2) ->
         let f1 = label vars f1 f2 in
-        let vars = if destructive then vars else (Ident.name i1, Path.Pident i2) :: vars in
+        let vars = if destructive then vars else ((Ident.name i1, Path.Pident i2) :: vars) in
           (i2, f1, v1) :: label_params_like vars ps1 ps2
     | _ -> assert false
   in label [] f f'
