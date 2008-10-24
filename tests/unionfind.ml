@@ -13,13 +13,12 @@ let rec find_aux p i =
     let p''    = Pa.set p' i i' in
     (p'', i')
       
-let find h i =
-  let (p,_)  = h in
+let find p i =
   let p',i'  = find_aux p i in 
   (p', i')
   
 let union h x y =
-  let (p, r)   = h in
+  let (r, p)   = h         in
   let (p', x') = find p  x in
   let (p'',y') = find p' y in
   (* HERE *)
@@ -27,14 +26,32 @@ let union h x y =
     let rx' = Pa.get r x' in
     let ry' = Pa.get r y' in
     if rx' > ry' then
-      (Pa.set p'' y' x', r)
+      (r, Pa.set p'' y' x')
     else if rx' < ry' then
-      (Pa.set p'' x' y', r)
+      (r, Pa.set p'' x' y')
     else
-      (Pa.set p'' y' x', 
-       Pa.set r rx' (rx' + 1))
+      (Pa.set r rx' (rx' + 1), 
+       Pa.set p'' y' x') 
   end else
-    (p'', r) 
+    (r, p'') 
+
+(*************************************************)
+
+let check h = 
+  let (r,p) = h in
+  Pa.iteri (fun i v -> assert (v=i || Pa.get r i < Pa.get r v)) p
+
+let tester h = 
+  if read_int () > 0 then h else 
+    let x  = read_int () in
+    let y  = read_int () in
+    let h' = union h x y in
+    tester h
+
+let n  = read_int ()
+let h0 = create n 
+let h  = tester n
+let _  = check h 
 
 (*
 (* Union-Find using Tarjan's algorithm by J.C. Fillaitre *)
