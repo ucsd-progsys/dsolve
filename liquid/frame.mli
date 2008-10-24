@@ -49,7 +49,7 @@ type t =
   | Fvar of Path.t * int * dep_sub list * refinement
   | Frec of Path.t * recref * refinement
   | Fsum of Path.t * (Path.t * recref) option * constr list * refinement
-  | Fabstract of Path.t * param list * refinement
+  | Fabstract of Path.t * param list * Ident.t * refinement
   | Farrow of pattern_desc * t * t
 
 and param = Ident.t * t * variance

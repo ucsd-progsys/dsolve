@@ -129,7 +129,7 @@ let rec constrain e env guard =
   let environment = (env, guard, freshf) in
   let (f, cstrs, rec_cstrs) =
     match (e.exp_desc, freshf) with
-      | (Texp_constant const_typ, F.Fabstract(path, [], _)) -> constrain_constant path const_typ
+      | (Texp_constant const_typ, F.Fabstract(path, [], _, _)) -> constrain_constant path const_typ
       | (Texp_construct (cstrdesc, args), F.Fsum _) -> constrain_constructed environment cstrdesc args e
       | (Texp_record (labeled_exprs, None), _) -> constrain_record environment labeled_exprs
       | (Texp_field (expr, label_desc), _) -> constrain_field environment expr label_desc
@@ -138,7 +138,7 @@ let rec constrain e env guard =
       | (Texp_match (e, pexps, partial), _) -> constrain_match environment e pexps partial
       | (Texp_function ([(pat, e')], _), _) -> constrain_function environment pat e'
       | (Texp_ident (id, _), F.Fsum(_, _, _, _))
-      | (Texp_ident (id, _), F.Fabstract(_, _, _))
+      | (Texp_ident (id, _), F.Fabstract(_, _, _, _))
       | (Texp_ident (id, _), F.Fvar _) ->
           constrain_base_identifier environment id e
       | (Texp_ident (id, _), _) -> constrain_identifier environment id e.exp_env
@@ -338,8 +338,8 @@ and constrain_let (env, guard, f) recflag bindings body =
 and constrain_array (env, guard, f) elements =
   let (f, fa) =
     match f with
-      | F.Fabstract(p, ([(_, fa, _)] as ps), _) ->
-          (F.Fabstract(p, ps, B.size_lit_refinement(List.length elements)), fa)
+      | F.Fabstract(p, ([(_, fa, _)] as ps), id, _) ->
+          (F.Fabstract(p, ps, id, B.size_lit_refinement(List.length elements)), fa)
       | _ -> assert false in
   let list_rec (fs, c) e = (fun (f, cs) -> (f::fs, cs @ c)) (constrain e env guard) in
   let (fs', sub_cs)      = List.fold_left list_rec ([], []) elements in

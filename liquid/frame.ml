@@ -63,7 +63,7 @@ type t =
   | Fvar of Path.t * int * dep_sub list * refinement
   | Frec of Path.t * recref * refinement
   | Fsum of Path.t * (Path.t * recref) option * constr list * refinement
-  | Fabstract of Path.t * param list * refinement
+  | Fabstract of Path.t * param list * Ident.t * refinement
   | Farrow of pattern_desc * t * t
 
 and param = Ident.t * t * variance
@@ -129,7 +129,7 @@ let rec map f = function
   | (Fvar _ | Frec _) as fr -> f fr
   | Fsum (p, ro, cs, r) ->
       f (Fsum (p, ro, List.map (constr_app_params (map_params f)) cs, r))
-  | Fabstract (p, ps, r) -> f (Fabstract (p, map_params f ps, r))
+  | Fabstract (p, ps, id, r) -> f (Fabstract (p, map_params f ps, id, r))
   | Farrow (x, f1, f2) -> f (Farrow (x, map f f1, map f f2))
 
 and map_params f ps =
@@ -137,7 +137,10 @@ and map_params f ps =
 
 let rec map_labels f fr = 
   let f' = function   Farrow (x, a, b) -> Farrow (f x, a, b)
-                    | Fabstract (p, ps, r) -> Fabstract(p, map_param_labels f ps, r)
+                    | Fabstract (p, ps, id, r) -> 
+                        let id = if C.empty_list ps then id else
+                                   (List.hd (Typedtree.pat_desc_bound_idents (f (Tpat_var id)))) in
+                        Fabstract(p, map_param_labels f ps, id, r)
                     | fr -> fr in
     map f' fr
 
@@ -156,7 +159,7 @@ let rec map_refinements_map f = function
   | Frec (p, rr, r) -> Frec (p, map_recref f rr, f r)
   | Fvar (p, level, s, r) -> Fvar (p, level, s, f r)
   | Fsum (p, ro, cs, r) -> Fsum (p, M.may_map (fun (p, rr) -> (p, map_recref f rr)) ro, cs, f r)
-  | Fabstract (p, ps, r) -> Fabstract (p, ps, f r)
+  | Fabstract (p, ps, id, r) -> Fabstract (p, ps, id, f r)
   | Farrow _ as f -> f
 
 let map_refinements f fr =
@@ -176,7 +179,7 @@ let rec refinement_fold f l = function
   | Fvar (_, _, s, r) -> f r l
   | Fsum (_, ro, cs, r) ->
       f r (List.fold_left (refinement_fold f) (match ro with Some (_, rr) -> recref_fold f rr l | None -> l) (C.flap constr_param_frames cs))
-  | Fabstract (_, ps, r) ->
+  | Fabstract (_, ps, _, r) ->
       f r (List.fold_left (refinement_fold f) l (params_frames ps))
   | Farrow (_, f1, f2) ->
       refinement_fold f (refinement_fold f l f1) f2
@@ -187,7 +190,7 @@ let rec refinement_iter f = function
   | Fsum (_, ro, cs, r) ->
       (match ro with Some (_, rr) -> recref_iter f rr | None -> ()); 
       f r; List.iter (refinement_iter f) (C.flap constr_param_frames cs)
-  | Fabstract (_, ps, r) ->
+  | Fabstract (_, ps, _, r) ->
       List.iter (refinement_iter f) (params_frames ps); f r
   | Farrow (_, f1, f2) ->
       refinement_iter f f1; refinement_iter f f2
@@ -247,12 +250,12 @@ let false_refinement =
 let apply_refinement r = function
   | Fvar (p, level, s, _) -> Fvar (p, level, s, r)
   | Fsum (p, rr, cs, _) -> Fsum (p, rr, cs, r)
-  | Fabstract (p, ps, _) -> Fabstract (p, ps, r)
+  | Fabstract (p, ps, id, _) -> Fabstract (p, ps, id, r)
   | f -> f
 
   (*need to apply subs when refinement is pulled somehow..*)
 let get_refinement = function
-  | Fvar (_, _, _, r) | Fsum (_, _, _, r) | Fabstract (_, _, r) -> Some r
+  | Fvar (_, _, _, r) | Fsum (_, _, _, r) | Fabstract (_, _, _, r) -> Some r
   | _ -> None
 
 let append_refinement res' f =
@@ -348,7 +351,7 @@ let same_shape t1 t2 =
       (Fsum(p, ro, cs, _), Fsum(p', ro', cs', _)) ->
         Path.same p p' && params_sshape (C.flap constr_params cs) (C.flap constr_params cs') &&
           (ro = ro' || match (ro, ro') with (Some (rp, _), Some (rp', _)) -> ismapped rp rp' | _ -> false)
-    | (Fabstract(p, ps, _), Fabstract(p', ps', _)) ->
+    | (Fabstract(p, ps, _, _), Fabstract(p', ps', _, _)) ->
         Path.same p p' && params_sshape ps ps'
     | (Fvar (p, _, _, _), Fvar (p', _, _, _)) | (Frec (p, _, _), Frec (p', _, _)) ->
         ismapped p p'
@@ -405,7 +408,7 @@ let rec subt t1 t2 eq inst =
     | (Fsum(p, ro, cs, _), Fsum(p', ro', cs', _)) ->
         Path.same p p' && p_s (C.flap constr_params cs) (C.flap constr_params cs') &&
        (ro = ro' || match (ro, ro') with (Some (_, _), Some(_, _)) -> true | _ -> false) 
-    | (Fabstract(p, ps, _), Fabstract(p', ps', _)) ->
+    | (Fabstract(p, ps, _, _), Fabstract(p', ps', _, _)) ->
         Path.same p p' && p_s ps ps'
     | (Frec(_, _, _), Frec(_, _, _)) ->
         true
@@ -523,8 +526,9 @@ let rec pprint ppf = function
                              (fun ppf -> fprintf ppf "@;<1 0>|| ")) cs) r
   | Farrow (pat, f, f') ->
       fprintf ppf "@[%a:@ %a@ ->@;<1 2>%a@]" pprint_pattern pat pprint1 f pprint f'
-  | Fabstract (path, params, r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "@[(%a)@ %s@]"
+  | Fabstract (path, params, id, r) ->
+      wrap_refined ppf (fun ppf -> fprintf ppf "@[%s(%a)@ %s@]"
+                          (if C.empty_list params then "" else (C.path_name (C.i2p id) ^ ": "))
                           (pprint_params ",") params
                           (C.path_name path)) r
  and pprint1 ppf = function
@@ -625,8 +629,9 @@ let instantiate env fr ftemplate =
           Farrow (l, nf1, nf2)
       | (Fsum (p, ro, cs, r), Fsum(p', _, cs', _)) ->
           Fsum (p, ro, List.map2 (constr_app_params2 (inst_params scbinds)) cs cs', r)
-      | (Fabstract(p, ps, r), Fabstract(_, ps', _)) ->
-          Fabstract (p, inst_params scbinds ps ps', r)
+      | (Fabstract(p, ps, id, r), Fabstract(_, ps', _, _)) ->
+          let _ = binds := (Bid id) :: !binds in
+          Fabstract (p, inst_params ((Bid id) :: scbinds) ps ps', id, r)
       | (f1, f2) ->
           fprintf std_formatter "@[Unsupported@ types@ for@ instantiation:@;<1 2>%a@;<1 2>%a@]@."
 	    pprint f1 pprint f2;
@@ -671,8 +676,9 @@ let label_like_where destructive f f' =
             | None -> None
             | Some (rv, rr) -> Some (rv, instantiate_recref_qualifiers vars rr)
         in Fsum (p, rro, label_constrs_like vars cs1 cs2, instantiate_ref_qualifiers vars r)
-    | (Fabstract (p, ps, r), Fabstract (_, ps', _)) ->
-        Fabstract (p, label_params_like vars ps ps', instantiate_ref_qualifiers vars r)
+    | (Fabstract (p, ps, id, r), Fabstract (_, ps', id', _)) ->
+        let vars = if destructive then vars else ((Ident.name id, Path.Pident id') :: vars) in
+        Fabstract (p, label_params_like vars ps ps', id', instantiate_ref_qualifiers vars r)
     | (Farrow (p1, f1, f1'), Farrow (p2, f2, f2')) ->
         let vars' = (List.map (fun (x, y) -> (Ident.name x, Path.Pident y)) 
           (if destructive then [] else Pattern.bind_vars p1 p2)) @ vars in
@@ -695,11 +701,12 @@ let label_like_destructive = label_like_where true
 let record_of_params path ps r =
   Fsum(path, None, [(Cstr_constant 0, ("rec", ps))], r)
 
-let abstract_of_params_with_labels labels p params varis r =
-  Fabstract (p, C.combine3 labels params varis, r)
+let abstract_of_params_with_labels labels p params varis id r =
+  Fabstract (p, C.combine3 labels params varis, id, r)
 
 let abstract_of_params p params varis r =
-  Fabstract (p, C.combine3 (Misc.mapi (fun _ i -> C.tuple_elem_id i) params) params varis, r)
+  let id = if C.empty_list params then C.dummy_id else C.abstr_elem_id () in
+  Fabstract (p, C.combine3 (Misc.mapi (fun _ i -> C.tuple_elem_id i) params) params varis, id, r)
 
 let tuple_of_frames fs r =
   record_of_params path_tuple (Misc.mapi (fun f i -> (C.tuple_elem_id i, f, Covariant)) fs) r
@@ -968,7 +975,7 @@ let rec translate_pframe dopt env plist pf =
     | PFvar (a, subs, r) -> Fvar (getvar a, generic_level, subs, transl_pref r)
     | PFrec (a, rr, r) -> Frec (getvar a, transl_recref rr, transl_pref r)
     | PFsum (l, rro, cs, r) -> transl_sum l rro cs r
-    | PFconstr (l, fs, r) -> transl_constr l fs r
+    | PFconstr (l, fs, i, r) -> transl_constr l fs i r
     | PFarrow (v, a, b) ->
         let pat = match v with
             Some id ->
@@ -993,8 +1000,9 @@ let rec translate_pframe dopt env plist pf =
     | (id, f) :: ps -> (Ident.create id, transl_pframe_rec f, Covariant) :: transl_params ps
   and transl_recref rr =
     List.map (fun rs -> List.map transl_pref rs) rr
-  and transl_constr l fs r =
+  and transl_constr l fs id r =
     let (ls, fs) = List.split fs in
+    let id = match id with Some id -> Ident.create id | None -> if C.empty_list fs then C.dummy_id else C.abstr_elem_id () in
     let ls = Misc.mapi
       (fun l i -> match l with Some l -> Ident.create l | None -> C.tuple_elem_id i) ls in
     let params = List.map transl_pframe_rec fs in
@@ -1004,7 +1012,7 @@ let rec translate_pframe dopt env plist pf =
     let varis = List.map translate_variance decl.type_variance in
       match decl.type_kind with 
           Type_abstract ->
-            abstract_of_params_with_labels ls path params varis (transl_pref r)
+            abstract_of_params_with_labels ls path params varis id (transl_pref r)
         | Type_record(fields, _, _) ->
             (* fresh_record (fresh_without_vars env) path fields *) assert false
         | Type_variant _ ->

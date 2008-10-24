@@ -37,6 +37,11 @@ end
 module PathMap = Map.Make(ComparablePath)
 
 let qual_test_var = Path.mk_ident "AA"
+let dummy_id = Ident.create ""
+
+let get_unique =
+  let cnt = ref 0 in
+  (fun () -> let rv = !cnt in incr cnt; rv)
 
 let flip f x y =
   f y x
@@ -197,6 +202,9 @@ let lookup_type p env =
 let tuple_elem_id i =
   Ident.create ("e" ^ string_of_int i)
 
+let abstr_elem_id () =
+  Ident.create "constr" (*^ string_of_int (get_unique ()))*)
+
 let compose f g a = f (g a)
 
 let int_of_bool b = if b then 1 else 0
@@ -224,11 +232,6 @@ let maybe_bool = function
 
 let all_defined xs =
   List.for_all maybe_bool xs
-
-let rec slow_mk_unique = function
-  x :: xs -> let xs = (slow_mk_unique xs) in
-    if List.mem x xs then xs else x :: xs
-  | [] -> []
 
 let sub_from_list subs s =
   try List.assoc s subs with Not_found -> s

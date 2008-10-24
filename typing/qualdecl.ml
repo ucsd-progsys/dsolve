@@ -94,7 +94,7 @@ let transl_patpred_single simple valu env p =
     transl_patpred_single_map f p
 
 let unifies env a b = try (Ct.unify env (C.copy_type a) (C.copy_type b); true) with Ct.Unify(_) -> false
-                                                      | Ct.Tags(_, _) -> false
+                                                                                  | Ct.Tags(_, _) -> false
 
 let get_ids_by_type env qtys ptys qtymap =
   let qtys = Qualgen.TS.elements qtys in

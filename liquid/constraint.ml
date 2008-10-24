@@ -331,14 +331,19 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       let (f1, f2)     = (F.replace_recvar (F.apply_recref rr1 f1) shp1, 
                           F.replace_recvar (F.apply_recref rr2 f2) shp2) in
         (lequate_cs env g c F.Covariant f1 f2, [])
-  | (F.Fabstract(_, ps1, r1), F.Fabstract(_, ps2, r2)) ->
-      (split_sub_params c tenv env g ps1 ps2, split_sub_ref c env g r1 r2)
+  | (F.Fabstract(_, ps1, id1, r1), F.Fabstract(_, ps2, id2, r2)) ->
+      let env = Le.add (Path.Pident id1) f1 env in
+      let f2 = F.apply_subs [(Path.Pident id1, P.Var (Path.Pident id2))] f2 in
+      begin match f2 with
+        F.Fabstract(_, ps2, id2, r2) ->
+          (split_sub_params c tenv env g ps1 ps2, split_sub_ref c env g r1 r2)
+        | _ -> assert false end
   | (_,_) -> 
       (printf "@[Can't@ split:@ %a@ <:@ %a@]" F.pprint f1 F.pprint f2; 
        assert false)
 
 let split_wf_ref f c env r =
-  sref_map (fun sr -> (f, c, WFRef(Le.aliasing_add qual_test_var f env, sr, None))) r
+  sref_map (fun sr -> (f, c, WFRef(Le.add qual_test_var f env, sr, None))) r
 
 let make_wff c tenv env f =
   {lc_cstr = WFFrame (env, f); lc_tenv = tenv; lc_orig = Cstr c; lc_id = None}
@@ -363,7 +368,8 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
       let shp     = F.shape f in
       let (f', f'') = (F.replace_recvar f shp, F.apply_recref rr shp) in
         ([make_wff c tenv env (F.apply_refinement F.empty_refinement f'); make_wff c tenv env f''], split_wf_ref f c (bind_tags (t, f) cs r env) r)
-  | F.Fabstract (_, ps, r) ->
+  | F.Fabstract (_, ps, id, r) ->
+      let env = Le.add (Path.Pident id) f env in
       (split_wf_params c tenv env ps, split_wf_ref f c env r)
   | F.Farrow (p, f, f') ->
       ([make_wff c tenv env f; make_wff c tenv (F.env_bind env p f) f'], [])
@@ -881,6 +887,13 @@ let dump_solution s =
               (Path.unique_name p) (Oprint.print_list Q.pprint C.space) r) s
   else ()
 
+let dump_qualifiers cqs =
+  if C.ck_olev C.ol_insane then
+    (printf "Raw@ generated@ qualifiers:@.";
+    List.iter (fun (c, qs) -> printf "%a: " (pprint_ref None) c;
+                              List.iter (fun q -> printf "%a " Qualifier.pprint q) qs;
+                              printf "@.@.") cqs)
+
 (**************************************************************)
 (******************** Iterative - Refinement  *****************)
 (**************************************************************)
@@ -912,7 +925,8 @@ let solve qs cs =
   (* let cs = if !Cf.esimple then 
                BS.time "e-simplification" (List.map esimple) cs else cs in *)
   let qs = BS.time "instantiating quals" (instantiate_per_environment cs) qs in
-  let qs = BS.time "pruning quals" (List.map (fun qs -> List.filter Qualifier.may_not_be_tautology qs)) qs in
+  let qs = List.map (fun qs -> List.filter Qualifier.may_not_be_tautology qs) qs in
+  let _ = dump_qualifiers (List.combine (strip_origins cs) qs) in
   let _ = Hashtbl.clear memo in
   let sri = BS.time "making ref index" make_ref_index cs in
   let s = make_initial_solution (List.combine (strip_origins cs) qs) in

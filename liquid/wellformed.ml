@@ -32,7 +32,7 @@ exception IllFormed
 let abstract_app_shape paths out_shape in_shapes =
   let f i o = 
     match o with
-      Fabstract(a, _, _) ->
+      Fabstract(a, _, _, _) ->
         Path.same i a 
       | _ -> false
   in if (List.length paths = List.length in_shapes) && 

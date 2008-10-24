@@ -196,10 +196,14 @@ let rw_frame f nr =
       PFvar(s, b, r) -> PFvar(s, b, nr)
     | PFrec(s, rr, _) -> PFrec(s, rr, nr)
     | PFsum(l, rro, cs, _) -> PFsum(l, rro, cs, nr)
-    | PFconstr(s, f, r) -> PFconstr(s, f, nr)
+    | PFconstr(s, f, i, r) -> PFconstr(s, f, i, nr)
     | PFarrow _ -> assert false
     | PFtuple(a, r) -> PFtuple(a, nr)
     | PFrecord(a, r) -> PFrecord(a, nr)
+
+let inj_name s = function
+    | PFconstr (a, b, _, r) -> PFconstr (a, b, Some s, r)
+    | f -> f
 
 let rw_frame_var f r =
     let r = RVar(r) in
@@ -216,7 +220,7 @@ let mk_implies a b =
   let pre = mkpredpat (Ppredpat_not(a)) in
     mkpredpat (Ppredpat_or(pre, b))
 
-let mkconstr a b r = PFconstr (a, b, r)
+let mkconstr a b r = PFconstr (a, b, None, r)
 let mksum p rro cs r = PFsum (p, rro, cs, r)
 let mkvar a b r = PFvar (a, b, r)
 let mkrecvar a rr r = PFrec (a, rr, r)
@@ -1728,6 +1732,8 @@ liquid_type:
       { mktuple ($4::$6) (RLiteral($2, $8)) }
   | LBRACE liquid_type1 STAR liquid_type_list BAR UIDENT RBRACE 
       { mktuple ($2::$4) (RVar($6)) }
+  | LBRACKET LIDENT COLON liquid_type1 RBRACKET
+      { inj_name $2 $4 }
 
 liquid_type1:
     LBRACE LIDENT COLON liquid_type2 BAR predicate RBRACE 

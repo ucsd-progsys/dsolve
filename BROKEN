@@ -8,12 +8,6 @@ nested recursives
 rule from paper L_product not followed (e0... not bound in consgen)
 * solved by nosimple or adding subt in consgen for tuple or implementing paper rule (dependencies on other code?)
 
-add: type casting at z3 interface with 1-1 casting functions (by default. absent bugs, simulates polymorphism)
-add: implicitly quantified types: forall i. (j: int -> 'a [j/i]) k: int -> 'a [k/i]
-add: extension to constructed types
+add: more general z3 type casting
 
-<<<<<<< HEAD:BROKEN
-qualgen is missing some patterns (on lhs)
-=======
-fix: wellformedness should totally start using ml types (and we should guarantee an ml type for every id) to get rid of the hack for unifying functions with arguments
->>>>>>> 52665bb93e7157c290ae04841678486d6def2255:BROKEN
+fix: wellformedness should start using ml types (and we should guarantee an ml type for every id) to get rid of the hack for unifying functions with arguments

@@ -88,7 +88,7 @@ module Prover : PROVER =
             ("_BOFI", Func [Int; Bool]);
     ]
 
-    let abs p = F.Fabstract(p, [], F.empty_refinement)
+    let abs p = F.Fabstract(p, [], Ident.create "", F.empty_refinement)
     let unint = Unint "obj"
 
     let init_frtymap = [

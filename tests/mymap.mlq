@@ -4,9 +4,9 @@ val get : (j: int -> 'a) -> k: int -> 'a[k/j]
 val mk  : unit -> (j: int -> 'a)
 val iter: (j: int -> 'a) -> (k: int -> 'a[k/j] -> unit) -> unit
 
-val sett: (m: 'b, 'a) store -> k: 'b -> 'a[k/m] -> (n: 'b, 'a[n/m]) store
+val sett: (m: 'b, 'a) store -> k: 'b -> l: 'a[k/m] -> [f: (n: 'b, {v: 'a[n/m] | v = gett f n}) store]
 val gett: ('b, 'a) store -> k: 'b -> 'a[k/e0]
 val itert: ('b, 'a) store -> (k: 'b -> 'a[k/e0] -> unit) -> unit
 val foldt: ('b, 'a) store -> (k: 'b -> 'a[k/e0] -> 'c -> 'c) -> 'c -> 'c
-val make: j: 'b -> 'a -> ('b, 'a) store
+val make: j: 'b -> k: 'a -> [f: (n: 'b, {v: 'a | v = gett f n}) store]
 val create: int -> ('b, 'a) store
