@@ -127,6 +127,13 @@ and add_index t d index =
   in
   loop 0
 
+(* simple version *)
+
+(* val hashcons_node: v: int -> l:[V > x] view -> r: [V > x] view -> { V: [V >= x] view | var V = v}  *)
+let hashcons_node v l h = 
+  (gentag (), Node (v, l, h)
+
+(* val hashcons_node: v: int -> l:[V > x] view -> r: [V > x] view -> { V: [V >= x] view | var V = v}  *)
 let hashcons_node v l h =
   let index = (hash_node v l h) mod (Array.length t.table) in
   let bucket = t.table.(index) in

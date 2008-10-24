@@ -1,29 +1,32 @@
-type bdd  = Zero | One | Node of variable * (int * bdd) (*low*) * (int * bdd) (*high*)
+type view = Zero | One | Node of int * view (*low*) * view (*high*)
 
-type view = int * bdd
+type bdd  = int * view 
 
 type operator =
   | Op_and | Op_or | Op_imp
   | Op_any of (bool -> bool -> bool)
 
-let max_var = 1000
-
-let node b = snd b
-
-let var b = match node b with
-  | Zero | One -> max_var + 1
+let var b = match b with
+  | Zero | One -> max_int 
   | Node (v, _, _) -> v
 
-let low b = match node b with
-  | Zero | One -> invalid_arg "Bdd.low"
+let utag b = match b with
+  | Zero        -> 0
+  | One         -> 1 
+  | Node (v,_,_)-> 2 
+
+let low b = match b with
+  | Zero | One -> assert (0 = 1)
   | Node (_, l, _) -> l
 
-let high b = match node b with
-  | Zero | One -> invalid_arg "Bdd.low"
+let high b = match b with
+  | Zero | One -> assert (0 = 1) 
   | Node (_, _, h) -> h
 
-let mk v low high =
-  if low = high then low else hashcons_node v low high
+let mk x low high =
+  if low = high then low else (0, Node (x, low, high)) (* hashcons_node v low high *)
+
+let cache_default_size = 7001
 
 let mk_not x = 
   let cache = H1.create cache_default_size in
@@ -31,7 +34,7 @@ let mk_not x =
     try
       H1.find cache x
     with Not_found -> 
-      let res = match node x with
+      let res = match x with
 	| Zero -> one
 	| One -> zero
 	| Node (v, l, h) -> mk v (mk_not_rec l) (mk_not_rec h)
@@ -58,40 +61,40 @@ let gapply op =
     let rec app ((u1,u2) as u12) =
       match op with
 	| Op_and ->
-	    if u1 == u2 then 
+	    if u1 = u2 then 
 	      u1
-	    else if u1 == zero || u2 == zero then
+	    else if u1 = zero || u2 = zero then
 	      zero
-	    else if u1 == one then
+	    else if u1 = one then
 	      u2
-	    else if u2 == one then
+	    else if u2 = one then
 	      u1 
 	    else
 	      app_gen u12
 	| Op_or ->
-            if u1 == u2 then
+            if u1 = u2 then
 	      u1
-	    else if u1 == one || u2 == one then
+	    else if u1 = one || u2 = one then
 	      one
-	    else if u1 == zero then
+	    else if u1 = zero then
 	      u2
-	    else if u2 == zero then
+	    else if u2 = zero then
 	      u1
 	    else 
 	      app_gen u12
 	| Op_imp -> 
-	    if u1 == zero then
+	    if u1 = zero then
 	      one
-	    else if u1 == one then
+	    else if u1 = one then
 	      u2
-	    else if u2 == one then
+	    else if u2 = one then
 	      one
 	    else
 	      app_gen u12
  	| Op_any _ ->
 	    app_gen u12
     and app_gen ((u1,u2) as u12) =
-      match (node u1, node u2) with
+      match (u1, u2) with
 	| Zero, Zero -> op_z_z
 	| Zero, One  -> op_z_o
 	| One,  Zero -> op_o_z
@@ -103,7 +106,7 @@ let gapply op =
 	      let res = 
 		let v1 = var u1 in
 		let v2 = var u2 in
-		if v1 == v2 then
+		if v1 = v2 then
 		  mk v1 (app (low u1, low u2)) (app (high u1, high u2))
 		else if v1 < v2 then
 		  mk v1 (app (low u1, u2)) (app (high u1, u2))
@@ -114,4 +117,3 @@ let gapply op =
 	      res
     in
     app (b1, b2)
-
