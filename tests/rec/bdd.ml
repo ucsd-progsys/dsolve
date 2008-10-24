@@ -127,6 +127,13 @@ and add_index t d index =
   in
   loop 0
 
+(* simple version *)
+
+(* val hashcons_node: v: int -> l:[V > x] view -> r: [V > x] view -> { V: [V >= x] view | var V = v}  *)
+let hashcons_node v l h = 
+  (gentag (), Node (v, l, h)
+
+(* val hashcons_node: v: int -> l:[V > x] view -> r: [V > x] view -> { V: [V >= x] view | var V = v}  *)
 let hashcons_node v l h =
   let index = (hash_node v l h) mod (Array.length t.table) in
   let bucket = t.table.(index) in
@@ -299,13 +306,6 @@ let gapply op =
 	      res
     in
     app (b1, b2)
-
-(*
-let memo cache f x = 
-  try find cache x with Not_found ->
-    let r = f x in add cache x r; r
-*)
-
 
 
 let mk_and = gapply Op_and
