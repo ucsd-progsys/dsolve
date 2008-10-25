@@ -1,0 +1,9 @@
+
+qualif DEC(v):  v {* *} ~A
+qualif DEC(v):  [0,1,2,3,4] {* *} v 
+qualif DEC(v):  [0,1,2,3,4] {* *} head v
+qualif HDC(v):  v {* *} head ~A
+qualif HDC(v): ~A {* *} head v
+qualif HDC(v):  head v {* *} head ~A
+
+
