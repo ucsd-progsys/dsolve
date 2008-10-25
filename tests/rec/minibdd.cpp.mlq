@@ -14,6 +14,7 @@ measure utag =
   | Node (_,_,_)-> 2
 
 val mk	  : x: VINT -> low:BDD(v>x) -> high:BDD(v>x) -> BDD(v>=x)
-(* val mk_not: x: BDD(true) -> BDD(v >= var x)
-   val gapply: operator -> x:BDD(true) -> y:BDD(true) -> BDD((v >= var x) or (v >=var y))
-   *)
+val mk_not: x: BDD(true) -> BDD(v >= var x)
+(*   
+val gapply: operator -> x:BDD(true) -> y:BDD(true) -> BDD((v >= var x) or (v >=var y)) 
+*)
