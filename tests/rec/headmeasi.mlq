@@ -1,0 +1,3 @@
+measure head =
+| Nil 		-> 0
+| Cons (h,t) 	-> h
