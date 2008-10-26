@@ -1,6 +1,4 @@
-type view = Zero | One | Node of int * view (*low*) * view (*high*)
-
-type bdd  = int * view 
+type bdd = Zero | One | Node of int * bdd (*low*) * bdd (*high*)
 
 type operator =
   | Op_and | Op_or | Op_imp
@@ -16,21 +14,21 @@ let utag b = match b with
   | Node (v,_,_)-> 2 
 
 let low b = match b with
-  | Zero | One -> assert (0 = 1)
+  | Zero | One -> (assert (0 = 1); assert false)
   | Node (_, l, _) -> l
 
 let high b = match b with
-  | Zero | One -> assert (0 = 1) 
+  | Zero | One -> (assert (0 = 1); assert false) 
   | Node (_, _, h) -> h
 
 let mk x low high =
-  if low = high then low else (0, Node (x, low, high)) (* hashcons_node v low high *)
+  if low = high then low else (Node (x, low, high)) (* hashcons_node v low high *)
 
 let cache_default_size = 7001
 
-let zero = (0, Zero) 
+let zero = (Zero) 
 
-let one  = (0, One) 
+let one  = (One) 
 
 let of_bool b = if b then one else zero
 
@@ -40,7 +38,7 @@ let mk_not x =
     if Hashtbl.mem cache x then 
       Hashtbl.find cache x
     else
-      let res = match node x with
+      let res = match x with
 	| Zero -> one
 	| One -> zero
 	| Node (v, l, h) -> mk v (mk_not_rec l) (mk_not_rec h)
@@ -50,6 +48,7 @@ let mk_not x =
   in
   mk_not_rec x
 
+  (*
 let gapply op =
   let op_z_z = of_bool (apply_op op false false) in
   let op_z_o = of_bool (apply_op op false true) in
@@ -116,6 +115,7 @@ let gapply op =
 	      res
     in
     app (b1, b2)
+*)
 
 
 (* monadized 
