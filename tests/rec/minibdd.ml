@@ -7,7 +7,7 @@ type operator =
   | Op_any of (bool -> bool -> bool)
 
 let var b = match b with
-  | Zero | One -> max_int 
+  | Zero | One -> 1000 
   | Node (v, _, _) -> v
 
 let utag b = match b with
@@ -28,21 +28,115 @@ let mk x low high =
 
 let cache_default_size = 7001
 
+let zero = (0, Zero) 
+
+let one  = (0, One) 
+
+let of_bool b = if b then one else zero
+
 let mk_not x = 
-  let cache = H1.create cache_default_size in
+  let cache = Hashtbl.create cache_default_size in
   let rec mk_not_rec x = 
-    try
-      H1.find cache x
-    with Not_found -> 
-      let res = match x with
+    if Hashtbl.mem cache x then 
+      Hashtbl.find cache x
+    else
+      let res = match node x with
 	| Zero -> one
 	| One -> zero
 	| Node (v, l, h) -> mk v (mk_not_rec l) (mk_not_rec h)
       in
-      H1.add cache x res;
+      Hashtbl.add cache x res;
       res
   in
   mk_not_rec x
+
+let gapply op =
+  let op_z_z = of_bool (apply_op op false false) in
+  let op_z_o = of_bool (apply_op op false true) in
+  let op_o_z = of_bool (apply_op op true false) in
+  let op_o_o = of_bool (apply_op op true true) in
+  fun b1 b2 ->
+    let cache = Hashtbl.create cache_default_size in
+    let rec app (u1,u2)  =
+      match op with
+	| Op_and ->
+	    if u1 == u2 then 
+	      u1
+	    else if u1 == zero || u2 == zero then
+	      zero
+	    else if u1 == one then
+	      u2
+	    else if u2 == one then
+	      u1 
+	    else
+	      app_gen (u1, u2) 
+	| Op_or ->
+            if u1 == u2 then
+	      u1
+	    else if u1 == one || u2 == one then
+	      one
+	    else if u1 == zero then
+	      u2
+	    else if u2 == zero then
+	      u1
+	    else 
+	      app_gen (u1, u2) 
+	| Op_imp -> 
+	    if u1 == zero then
+	      one
+	    else if u1 == one then
+	      u2
+	    else if u2 == one then
+	      one
+	    else
+	      app_gen (u1, u2) 
+ 	| Op_any _ ->
+	    app_gen (u1, u2) 
+    and app_gen (u1,u2) =
+      match (node u1, node u2) with
+	| Zero, Zero -> op_z_z
+	| Zero, One  -> op_z_o
+	| One,  Zero -> op_o_z
+	| One,  One  -> op_o_o
+	| _ ->
+            if Hashtbl.mem cache (u1, u2) then
+              Hashtbl.find cache (u1, u2) 
+            else 
+	      let res = 
+		let v1 = var u1 in
+		let v2 = var u2 in
+		if v1 == v2 then
+		  mk v1 (app (low u1, low u2)) (app (high u1, high u2))
+		else if v1 < v2 then
+		  mk v1 (app (low u1, u2)) (app (high u1, u2))
+		else (* v1 > v2 *)
+		  mk v2 (app (u1, low u2)) (app (u1, high u2))
+	      in
+	      Hashtbl.add cache (u1, u2) res;
+	      res
+    in
+    app (b1, b2)
+
+
+(* monadized 
+let mk_not x = 
+  let cache = Myhash.create cache_default_size in
+  let rec mk_not_rec c x = 
+    if Myhash.mem c x then (c, Myhash.get c x) else
+      let (c, res) = match x with
+	| Zero -> 
+            (c, one)
+	| One -> 
+            (c, zero)
+	| Node (v, l, h) -> 
+            let (c', l') = mk_not_rec c  l in
+            let (c'',h') = mk_not_rec c' h in
+            (c'', mk v l' h')
+      in
+      (Myhash.set c x res, res)
+  in
+  let ( _, res) = mk_not_rec cache x in
+  res
 
 let apply_op op b1 b2 = match op with
   | Op_and -> b1 && b2
@@ -57,63 +151,70 @@ let gapply op =
   let op_o_z = of_bool (apply_op op true false) in
   let op_o_o = of_bool (apply_op op true true) in
   fun b1 b2 ->
-    let cache = H2.create cache_default_size in
-    let rec app ((u1,u2) as u12) =
+    let cache = Myhash.create cache_default_size in
+    let rec app c (u1,u2) =
       match op with
 	| Op_and ->
 	    if u1 = u2 then 
-	      u1
+	      (c, u1)
 	    else if u1 = zero || u2 = zero then
-	      zero
+	      (c, zero)
 	    else if u1 = one then
-	      u2
+	      (c, u2)
 	    else if u2 = one then
-	      u1 
+	      (c, u1) 
 	    else
-	      app_gen u12
+	      app_gen c (u1, u2) 
 	| Op_or ->
             if u1 = u2 then
-	      u1
+	      (c, u1)
 	    else if u1 = one || u2 = one then
-	      one
+	      (c, one)
 	    else if u1 = zero then
-	      u2
+	      (c, u2)
 	    else if u2 = zero then
-	      u1
+	      (c, u1)
 	    else 
-	      app_gen u12
+	      app_gen c (u1, u2) 
 	| Op_imp -> 
 	    if u1 = zero then
-	      one
+	      (c, one)
 	    else if u1 = one then
-	      u2
+	      (c, u2)
 	    else if u2 = one then
-	      one
+	      (c, one)
 	    else
-	      app_gen u12
+	      app_gen (u1, u2) 
  	| Op_any _ ->
-	    app_gen u12
-    and app_gen ((u1,u2) as u12) =
+	    app_gen c (u1, u2) 
+    and app_gen c (u1,u2)  =
       match (u1, u2) with
-	| Zero, Zero -> op_z_z
-	| Zero, One  -> op_z_o
-	| One,  Zero -> op_o_z
-	| One,  One  -> op_o_o
+	| Zero, Zero -> (c, op_z_z)
+	| Zero, One  -> (c, op_z_o)
+	| One,  Zero -> (c, op_o_z)
+	| One,  One  -> (c, op_o_o)
 	| _ ->
-	    try
-	      H2.find cache u12
-	    with Not_found -> 
-	      let res = 
+            if Myhash.mem c (u1, u2) then 
+              (c, Myhash.get c (u1, u2))
+            else
+              let (c, res) = 
 		let v1 = var u1 in
 		let v2 = var u2 in
 		if v1 = v2 then
-		  mk v1 (app (low u1, low u2)) (app (high u1, high u2))
+                  let (c', l) = app c  (low u1,  low u2) in
+                  let (c'',h) = app c' (high u1, high u2) in
+                  (c'', mk v1 l h)  
 		else if v1 < v2 then
-		  mk v1 (app (low u1, u2)) (app (high u1, u2))
+                  let (c', l) = app c'  (low u1, u2) in
+                  let (c'',h) = app c'' (high u1, u2) in
+                  (c'', mk v1 l h)
 		else (* v1 > v2 *)
-		  mk v2 (app (u1, low u2)) (app (u1, high u2))
+                  let (c', l) = app c' (u1, low u2) in
+                  let (c'',h) = app c' (u1, high u2) in
+                  (c'', mk v2 l h) 
 	      in
-	      H2.add cache u12 res;
-	      res
+	      (Myhash.set c (u1, u2) res, res)
     in
-    app (b1, b2)
+    let (_, res) = app cache (b1, b2) in
+    res
+*)
