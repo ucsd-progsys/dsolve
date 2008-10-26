@@ -1,5 +1,6 @@
-#define BND    (0 <= v and v < 1000)
-#define BDD(p) [z: bdd . || || e0: {v:int | BND and p}, e1: {v:z| e0 < var v}, e2: {v:z| e0 < var v}]
+#define BND(v)    (0 <= v and v < 1000)
+#define RHOT   [[],[],[v:true,v:true,v:true]]
+#define BDD(p) RHOT [z: bdd . || || {e0:int | (BND(e0) and p)}, e1: {v: RHOT z| e0 < var v}, e2: {v: RHOT z| e0 < var v}]
 
 measure var =
   | Zero	-> 1000 

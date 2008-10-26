@@ -1,13 +1,9 @@
 
 let init n f = 
-  let m = Store.create in
-  let m = Store.set m 0 (f 0) in
+  let m = Store.set (Store.empty) 0 (f 0) in
   let rec init_rec n m =
     if n = 0 then m else init_rec (n-1) (Store.set m n (f n)) in
   init_rec n m
-
-let _ = init 10 (fun i -> 1)
-
 
 let create n = 
   (init n (fun i -> 1), (* rank *) 

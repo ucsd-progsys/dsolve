@@ -8,4 +8,4 @@ val iteri: ('a, 'b) t -> (int -> k: 'a -> 'b[k/e0] -> unit) -> unit
 
 val fold: ('a, 'b) t -> (k: 'a -> 'b[k/e0] -> 'a -> 'a) -> 'a -> 'a
 
-val create: (n: 'a, 'b) t
+val empty: (n: 'a, 'b) t
