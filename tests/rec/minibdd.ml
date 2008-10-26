@@ -36,21 +36,26 @@ let one  = One
 
 let of_bool b = if b then one else zero
 
-let mk x low high =
-  if low = high then low else (Node (x, low, high)) (* hashcons_node v low high *)
-
-
 let rec check x = 
-  match x with Zero -> () | One -> () | Node (v, l, h) -> 
-    assert (v > var l); assert (v > var h); check l; check h
+  match x with Zero -> () | One -> () | Node (v, l, h) ->
+    assert (v < var l); 
+    assert (v < var h); 
+    check l; check h
+
+let mk x low high =
+  let _ = show low in
+  let _ = show high in
+  if low = high then low else (Node (x, low, high))  
 
 let mk_not x =
   let cache = Hashtbl.create cache_default_size in
+  let _     = show x in
   let _     = check x in
   let rec mk_not_rec x = 
-(*  if Hashtbl.mem cache x then 
+    if Hashtbl.mem cache x then 
       Hashtbl.find cache x
-    else *)
+    else 
+      let _ = show x in
       let res = 
         match x with
         | Zero           -> show one
@@ -58,12 +63,15 @@ let mk_not x =
         | Node (v, l, h) -> 
             let _ = show l in
             let _ = show h in
-            zero
-            (* mk v (mk_not_rec (show l)) (mk_not_rec (show h)) *) in
+            mk v (mk_not_rec l) (mk_not_rec h)  in
       Hashtbl.add cache x res;
       res
   in
-  mk_not_rec x
+  let rv = mk_not_rec x in
+  let _  = show rv in 
+  let _  = check rv in
+  rv
+
 
 let apply_op op b1 b2 = match op with
   | Op_and -> b1 && b2
@@ -72,7 +80,6 @@ let apply_op op b1 b2 = match op with
   | Op_any f -> f b1 b2
 
 
-(* 
 
 let gapply op = assert false
   let op_z_z = of_bool (apply_op op false false) in
@@ -81,8 +88,7 @@ let gapply op = assert false
   let op_o_o = of_bool (apply_op op true true) in
   fun b1 b2 ->
     let cache = Hashtbl.create cache_default_size in
-    let rec app x  =
-      let (u1, u2) = x in
+    let rec app u1 u2  =
       match op with
 	| Op_and ->
 	    if u1 == u2 then 
@@ -94,7 +100,7 @@ let gapply op = assert false
 	    else if u2 == one then
 	      u1 
 	    else
-	      app_gen (u1, u2) 
+	      app_gen u1 u2 
 	| Op_or ->
             if u1 == u2 then
 	      u1
@@ -105,7 +111,7 @@ let gapply op = assert false
 	    else if u2 == zero then
 	      u1
 	    else 
-	      app_gen (u1, u2) 
+	      app_gen u1 u2 
 	| Op_imp -> 
 	    if u1 == zero then
 	      one
@@ -114,11 +120,10 @@ let gapply op = assert false
 	    else if u2 == one then
 	      one
 	    else
-	      app_gen (u1, u2) 
+	      app_gen u1 u2 
  	| Op_any _ ->
-	    app_gen (u1, u2) 
-    and app_gen x =
-      let (u1, u2) = x in
+	    app_gen u1 u2 
+    and app_gen u1 u2 =
       match (u1, u2) with
 	| Zero, Zero -> op_z_z
 	| Zero, One  -> op_z_o
@@ -132,17 +137,17 @@ let gapply op = assert false
 		let v1 = var u1 in
 		let v2 = var u2 in
 		if v1 == v2 then
-		  mk v1 (app (low u1, low u2)) (app (high u1, high u2))
+		  mk v1 (app (low u1) (low u2)) (app (high u1) (high u2))
 		else if v1 < v2 then
-		  mk v1 (app (low u1, u2)) (app (high u1, u2))
+		  mk v1 (app (low u1) u2) (app (high u1) u2)
 		else (* v1 > v2 *)
-		  mk v2 (app (u1, low u2)) (app (u1, high u2))
+		  mk v2 (app u1 (low u2)) (app u1 (high u2))
 	      in
 	      Hashtbl.add cache (u1, u2) res;
 	      res
     in
     app (b1, b2)
-*)
+(* *)
 
 (* monadized 
 let mk_not x = 

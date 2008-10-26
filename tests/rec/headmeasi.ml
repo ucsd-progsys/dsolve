@@ -14,6 +14,7 @@ let rec checker xs =
   | Nil -> 
       ()
   | Cons (h,t) -> 
+      let _ = show t in
       let _ = assert (h > head t) in
       checker t
 
