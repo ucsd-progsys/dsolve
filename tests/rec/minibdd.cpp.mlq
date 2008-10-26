@@ -1,7 +1,5 @@
-
-#define VINT   {v:int | 0 <= v and v < 1000} 
-#define RHO(p) [[],[],[v: p, v: true, v: true]]
-#define BDD(p) RHO(p) [z: t . || || e0: VINT, e1: RHO(v > e0) z, e2: RHO(v > e0) z]
+#define BND    (0 <= v and v < 1000)
+#define BDD(p) [z: bdd . || || e0: {v:int | BND and p}, e1: {v:z| e0 < var v}, e2: {v:z| e0 < var v}]
 
 measure var =
   | Zero	-> 1000 
@@ -14,7 +12,10 @@ measure utag =
   | Node (_,_,_)-> 2
 
 val mk	  : x: VINT -> low:BDD(v>x) -> high:BDD(v>x) -> BDD(v>=x)
+
 val mk_not: x: BDD(true) -> BDD(v >= var x)
+
 (*   
 val gapply: operator -> x:BDD(true) -> y:BDD(true) -> BDD((v >= var x) or (v >=var y)) 
 *)
+
