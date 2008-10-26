@@ -1,12 +1,17 @@
+let show x = x
+
 type bdd = Zero | One | Node of int * bdd (*low*) * bdd (*high*)
 
 type operator =
   | Op_and | Op_or | Op_imp
   | Op_any of (bool -> bool -> bool)
 
+let myfail x = (* assert (0=1); *) assert false
+
 let var b = match b with
-  | Zero | One -> 1000 
-  | Node (v, _, _) -> v
+  | Zero         -> 1000 
+  | One          -> 1000 
+  | Node (v,_,_) -> v
 
 let utag b = match b with
   | Zero        -> 0
@@ -14,49 +19,70 @@ let utag b = match b with
   | Node (v,_,_)-> 2 
 
 let low b = match b with
-  | Zero | One -> (assert (0 = 1); assert false)
+  | Zero -> myfail () 
+  | One -> myfail ()
   | Node (_, l, _) -> l
 
 let high b = match b with
-  | Zero | One -> (assert (0 = 1); assert false) 
+  | Zero -> myfail ()
+  | One -> myfail () 
   | Node (_, _, h) -> h
+
+let cache_default_size = 7001
+
+let zero = Zero 
+
+let one  = One 
+
+let of_bool b = if b then one else zero
 
 let mk x low high =
   if low = high then low else (Node (x, low, high)) (* hashcons_node v low high *)
 
-let cache_default_size = 7001
 
-let zero = (Zero) 
+let rec check x = 
+  match x with Zero -> () | One -> () | Node (v, l, h) -> 
+    assert (v > var l); assert (v > var h); check l; check h
 
-let one  = (One) 
-
-let of_bool b = if b then one else zero
-
-let mk_not x = 
+let mk_not x =
   let cache = Hashtbl.create cache_default_size in
+  let _     = check x in
   let rec mk_not_rec x = 
-    if Hashtbl.mem cache x then 
+(*  if Hashtbl.mem cache x then 
       Hashtbl.find cache x
-    else
-      let res = match x with
-	| Zero -> one
-	| One -> zero
-	| Node (v, l, h) -> mk v (mk_not_rec l) (mk_not_rec h)
-      in
+    else *)
+      let res = 
+        match x with
+        | Zero           -> show one
+        | One            -> show zero
+        | Node (v, l, h) -> 
+            let _ = show l in
+            let _ = show h in
+            zero
+            (* mk v (mk_not_rec (show l)) (mk_not_rec (show h)) *) in
       Hashtbl.add cache x res;
       res
   in
   mk_not_rec x
 
-  (*
-let gapply op =
+let apply_op op b1 b2 = match op with
+  | Op_and -> b1 && b2
+  | Op_or  -> b1 || b2
+  | Op_imp -> (not b1) || b2
+  | Op_any f -> f b1 b2
+
+
+(* 
+
+let gapply op = assert false
   let op_z_z = of_bool (apply_op op false false) in
   let op_z_o = of_bool (apply_op op false true) in
   let op_o_z = of_bool (apply_op op true false) in
   let op_o_o = of_bool (apply_op op true true) in
   fun b1 b2 ->
     let cache = Hashtbl.create cache_default_size in
-    let rec app (u1,u2)  =
+    let rec app x  =
+      let (u1, u2) = x in
       match op with
 	| Op_and ->
 	    if u1 == u2 then 
@@ -91,8 +117,9 @@ let gapply op =
 	      app_gen (u1, u2) 
  	| Op_any _ ->
 	    app_gen (u1, u2) 
-    and app_gen (u1,u2) =
-      match (node u1, node u2) with
+    and app_gen x =
+      let (u1, u2) = x in
+      match (u1, u2) with
 	| Zero, Zero -> op_z_z
 	| Zero, One  -> op_z_o
 	| One,  Zero -> op_o_z
@@ -117,7 +144,6 @@ let gapply op =
     app (b1, b2)
 *)
 
-
 (* monadized 
 let mk_not x = 
   let cache = Myhash.create cache_default_size in
@@ -137,12 +163,6 @@ let mk_not x =
   in
   let ( _, res) = mk_not_rec cache x in
   res
-
-let apply_op op b1 b2 = match op with
-  | Op_and -> b1 && b2
-  | Op_or  -> b1 || b2
-  | Op_imp -> (not b1) || b2
-  | Op_any f -> f b1 b2
 
 (* val gapply: operator -> bdd -> bdd -> bdd *)
 let gapply op =
@@ -218,3 +238,4 @@ let gapply op =
     let (_, res) = app cache (b1, b2) in
     res
 *)
+
