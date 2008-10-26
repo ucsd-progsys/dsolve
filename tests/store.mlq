@@ -1,4 +1,4 @@
-val set: (m: 'a, 'b) t -> k: 'a -> 'b[k/m] -> (n: 'a, 'b[n/m]) t
+val set: (m: 'a, 'b) t -> k: 'a -> 'b[k/m] -> (n: 'a, {v: 'b[n/m] | v = get supr n}) t
 
 val get: m: ('a, 'b) t -> k: 'a -> 'b[k/e0][m/supr]
 
@@ -8,4 +8,4 @@ val iteri: ('a, 'b) t -> (int -> k: 'a -> 'b[k/e0] -> unit) -> unit
 
 val fold: ('a, 'b) t -> (k: 'a -> 'b[k/e0] -> 'a -> 'a) -> 'a -> 'a
 
-val create: unit -> (n: 'a, {v: 'b | v = get supr n}) t
+val create: (n: 'a, 'b) t

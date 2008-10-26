@@ -157,6 +157,9 @@ let prune_background env =
 let pprint_fenv ppf env =
   Le.iter (fun p f -> fprintf ppf "@[%s@ ::@ %a@]@." (C.path_name p) F.pprint f) (prune_background env); fprintf ppf "==="
 
+let pprint_fenv_shp ppf env =
+  Le.iter (fun p f -> fprintf ppf "@[%s@ ::@ %a@]@." (C.path_name p) F.pprint (F.shape f)) (prune_background env); fprintf ppf "==="
+
 let pprint_fenv_pred so ppf env =
   (* match so with
   | Some s -> P.pprint ppf (P.big_and (environment_preds (solution_map s) env))
@@ -332,11 +335,11 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
                           F.replace_recvar (F.apply_recref rr2 f2) shp2) in
         (lequate_cs env g c F.Covariant f1 f2, [])
   | (F.Fabstract(_, ps1, id1, r1), F.Fabstract(_, ps2, id2, r2)) ->
-      let env = Le.add (Path.Pident id1) f1 env in
-      let f2 = F.apply_subs [(Path.Pident id1, P.Var (Path.Pident id2))] f2 in
+      let f2 = F.apply_subs [(Path.Pident id2, P.Var (Path.Pident id1))] f2 in (* an extra sub will be applied at the
+                                                                                * toplevel refinement, but OK *)
       begin match f2 with
         F.Fabstract(_, ps2, id2, r2) ->
-          (split_sub_params c tenv env g ps1 ps2, split_sub_ref c env g r1 r2)
+          (split_sub_params c tenv (Le.add (Path.Pident id1) f1 env) g ps1 ps2, split_sub_ref c env g r1 r2)
         | _ -> assert false end
   | (_,_) -> 
       (printf "@[Can't@ split:@ %a@ <:@ %a@]" F.pprint f1 F.pprint f2; 
@@ -369,8 +372,7 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
       let (f', f'') = (F.replace_recvar f shp, F.apply_recref rr shp) in
         ([make_wff c tenv env (F.apply_refinement F.empty_refinement f'); make_wff c tenv env f''], split_wf_ref f c (bind_tags (t, f) cs r env) r)
   | F.Fabstract (_, ps, id, r) ->
-      let env = Le.add (Path.Pident id) f env in
-      (split_wf_params c tenv env ps, split_wf_ref f c env r)
+      (split_wf_params c tenv (Le.add (Path.Pident id) f env) ps, split_wf_ref f c env r)
   | F.Farrow (p, f, f') ->
       ([make_wff c tenv env f; make_wff c tenv (F.env_bind env p f) f'], [])
   | F.Fvar (_, _, s, r) ->
@@ -678,7 +680,7 @@ let refine sri s c =
   | WFRef (env, (subs, F.Qvar k), Some id) ->
       let qs  = solution_map s k in
       let _   = if C.ck_olev C.ol_dump_prover then printf "@.@.@[WF: %s@]@." (Path.unique_name k) in
-      let _   = if C.ck_olev C.ol_dump_prover then printf "@[(Env)@ %a@]@." pprint_fenv env in 
+      let _   = if C.ck_olev C.ol_dump_prover then printf "@[(Env)@ %a@]@." pprint_fenv_shp env in 
       let qs' = BS.time "filter wf" (List.filter (qual_wf sm env subs)) qs in
       let _   = if C.ck_olev C.ol_dump_prover then List.iter (fun q -> printf "%a" Qualifier.pprint q) qs in
       let _   = if C.ck_olev C.ol_dump_prover then printf "@.@." in

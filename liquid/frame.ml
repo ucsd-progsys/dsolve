@@ -616,6 +616,10 @@ let instantiate env fr ftemplate =
     try List.assoc p !vars with Not_found -> vars := (p, ft) :: !vars; ft in
   let rec inst scbinds f ft =
     match (f, ft) with
+      (*| (Fvar (p, level, s, r), Fvar(p', level', s', r')) when p = p' ->
+          let instf = vmap p ft in
+          let subs = List.map (dep_sub_to_sub !binds scbinds env) s in
+          apply_subs subs (apply_refinement r instf)*)
       | (Fvar (p, level, s, r), _) when level = generic_level ->
           let instf = vmap p ft in 
           let subs = List.map (dep_sub_to_sub !binds scbinds env) s in
@@ -677,8 +681,8 @@ let label_like_where destructive f f' =
             | Some (rv, rr) -> Some (rv, instantiate_recref_qualifiers vars rr)
         in Fsum (p, rro, label_constrs_like vars cs1 cs2, instantiate_ref_qualifiers vars r)
     | (Fabstract (p, ps, id, r), Fabstract (_, ps', id', _)) ->
-        let vars = if destructive then vars else ((Ident.name id, Path.Pident id') :: vars) in
-        Fabstract (p, label_params_like vars ps ps', id', instantiate_ref_qualifiers vars r)
+        let vars' = if destructive then vars else ((Ident.name id, Path.Pident id') :: vars) in
+        Fabstract (p, label_params_like vars' ps ps', id', instantiate_ref_qualifiers vars r)
     | (Farrow (p1, f1, f1'), Farrow (p2, f2, f2')) ->
         let vars' = (List.map (fun (x, y) -> (Ident.name x, Path.Pident y)) 
           (if destructive then [] else Pattern.bind_vars p1 p2)) @ vars in

@@ -203,7 +203,7 @@ let tuple_elem_id i =
   Ident.create ("e" ^ string_of_int i)
 
 let abstr_elem_id () =
-  Ident.create "constr" (*^ string_of_int (get_unique ()))*)
+  Ident.create "supr" (*^ string_of_int (get_unique ()))*)
 
 let compose f g a = f (g a)
 

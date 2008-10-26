@@ -306,7 +306,7 @@ and constrain_base_identifier (env, _, f) id e =
   let refn =
     if Le.mem id env then B.equality_refinement (expression_to_pexpr e) else F.empty_refinement in
   let f' = instantiate_id id f env e.exp_env in
-  let f  = F.label_like f f' in
+  let f  = F.label_like_destructive f f' in
     (F.apply_refinement refn f', [WFFrame (env, f)], [])
 
 and constrain_identifier (env, _, f) id tenv =
