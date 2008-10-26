@@ -1,0 +1,2 @@
+qualif A(v): v >= ~A.e0
+qualif A(v): v >= ~A.e1
