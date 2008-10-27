@@ -14,13 +14,7 @@ type t    = int * view (* export *)
 let view b = snd b
 let tag  b = fst b
 let node b = snd b
-
-let equal x y = match x, y with
-  | Node (v1, lt1, l1, ht1, h1), Node (v2, lt2, l2, ht2, h2) -> 
-      v1 == v2 && lt1 == lt2 && l1 == l2 && ht1 && hh1 == h2
-  | _ ->
-      x == y
-	   
+   
 let hash_node v l h = abs (19 * (19 * (tag l) + (tag h)) + v)
 
 let hash = function
@@ -37,6 +31,23 @@ let hashcons_node v l h =
   (gentag (), Node (v, lt, lb, ht, hb))
 *)
 
+type table = {
+  mutable table : bdd Weak.t array;
+  mutable totsize : int;             (* sum of the bucket sizes *)
+  mutable limit : int;               (* max ratio totsize/table length *)
+}
+
+let create sz =
+  let sz = if sz < 7 then 7 else sz in
+  let sz = if sz > Sys.max_array_length then Sys.max_array_length else sz in
+  let emptybucket = Weak.create 0 in
+  { table = Array.create sz emptybucket;
+    totsize = 0;
+    limit = 3; }
+
+let t = create (*251*)(*7001*)(*65537*)100003 
+
+
 let hashcons_node v l h =
   let (lt, lb) = l in
   let (ht, hb) = h in
@@ -46,7 +57,7 @@ let hashcons_node v l h =
   let rec loop i =
     if i >= sz then begin
       let hnode = (gentag (), Node (v, lt, lb, ht, hb)) in
-      add_index t hnode index;
+      (* SLICE: add_index t hnode index; *)
       hnode
     end else begin
       match Weak.get_copy bucket i with
@@ -67,7 +78,7 @@ let hashcons_node v l h =
 (* zero and one allocated once and for all *)
 let zero = (gentag (), Zero) 
 let one  = (gentag (), One) 
-let _    = add t zero; add t one
+(* SLICE: let _    = add t zero; add t one *)
 
 let var b = match node b with
   | Zero -> 1000
@@ -162,8 +173,8 @@ let gapply op =
  	| Op_any _ ->
 	    app_gen u1 u2 
     and app_gen u1 u2 = 
-      match (u1, u2) with
-	| Zero, Zero -> show op_z_z
+      match (node u1, node u2) with
+	| Zero, Zero -> op_z_z
 	| Zero, One  -> op_z_o
 	| One,  Zero -> op_o_z
 	| One,  One  -> op_o_o
@@ -181,7 +192,7 @@ let gapply op =
 		else (* v1 > v2 *)
 		  mk v2 (app u1 (low u2)) (app u1 (high u2)) 
 	      in
-	      Hash2.add cache u1 u2 (show res);
+	      Hash2.add cache u1 u2 res;
 	      res 
     in 
     app b1 b2
