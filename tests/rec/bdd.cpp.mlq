@@ -3,8 +3,8 @@
 #define SUB(v)  {v:R z | (e0 < var v) and (var v <= 1000)}
 #define BDD     R [z: view. || || BND(e0), e1: true, SUB(e2) , e3: true, SUB(e4)]
 #define BDDT(p) {v:BDD | (0 <= var v and var v <= 1000) and (p) }    
-#define t        BDDT(true)
-#define variable BND(v)
+#define TT      BDDT(true)
+#define VART    BND(v)
 
 
 measure var =
