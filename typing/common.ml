@@ -103,6 +103,10 @@ let combine3 xs ys zs =
 let fast_flatten xs =
   List.fold_left (fun x xs -> List.rev_append x xs) [] xs
 
+let fast_append v v' =
+  let (v, v') = if List.length v > List.length v' then (v', v) else (v, v') in
+  List.rev_append v v'
+
 let fast_flap f xs =
   fast_flatten (List.rev_map f xs)
 
