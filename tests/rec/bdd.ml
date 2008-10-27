@@ -67,7 +67,7 @@ let hashcons_node v l h =
             | Some (t, Node(v',lt', lb', ht', hb')) -> 
                 if v==v' && lt == lt' && lb == lb' && ht == ht' && hb == hb'
                 then (t, Node(v',lt', lb', ht', hb')) else loop (i+1) (* assert false *)
-            | None -> loop (i+1)
+            | _ -> loop (i+1)
             end
           else loop (i+1)
         | _ -> loop (i+1)

@@ -1,7 +1,7 @@
 #define BND(v)  {v:int | (0 <= v) and (v < 1000)}
 #define R       [[],[],[v:true,v:true,v:true]]
 #define SUB(v)  {v:R z | (e0 < var v) and (var v <= 1000)}
-#define BDD     R [z: bdd . || || BND(e0), SUB(e1) , SUB(e2)]
+#define BDD     R [z: view. || || BND(e0), SUB(e1) , SUB(e2)]
 #define BDDT(p) {v:BDD | (0 <= var v and var v <= 1000) and (p) }    
 
 measure var =
@@ -20,8 +20,6 @@ val mk_not: x: BDDT(true) -> BDDT(var x <= var v)
 val gapply: operator -> x:BDDT(true) -> y:BDDT(true) -> BDDT((var x <= var v) or (var y <= var v)) 
 
 (*
-type variable = {v:int | 1 <= v && v <= max_var }
-
 type t
 type view = Zero | One | Node of variable * t (*low*) * t (*high*)
 
