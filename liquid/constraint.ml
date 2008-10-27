@@ -793,7 +793,7 @@ let make_initial_solution cs =
             List.iter (fun k -> Sol.replace slhs k (); if not !Cf.minsol && is_formal k && not (Sol.mem srhs k)
               then Sol.replace s k [] else Sol.replace s k qs) (F.refinement_qvars r1) | _ -> ()) cs in
   let _ = List.iter (function (WFRef (_, (_, F.Qvar k), _), qs) ->
-            if Sol.mem srhs k || (Sol.mem slhs k && Sol.find s k != []) then Sol.replace s k qs else Sol.replace s k [] | _ -> ()) cs in
+            if Sol.mem srhs k || (Sol.mem slhs k && Sol.find s k != []) then app_sol s k qs else Sol.replace s k [] | _ -> ()) cs in
   s
                                          
 (**************************************************************)
