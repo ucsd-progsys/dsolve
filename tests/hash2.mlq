@@ -1,0 +1,4 @@
+val create: int -> ('a, 'b, 'c) t
+val mem   : ('a, 'b, 'c) t -> 'a -> 'b -> bool
+val add   : (i1:'a, i2: 'b, 'c) t -> k1: 'a -> k2: 'b -> 'c[k1/i1][k2/i2] -> unit
+val find  : (i1:'a, i2: 'b, 'c) t -> k1: 'a -> k2: 'b -> 'c[k1/i1][k2/i2] 
