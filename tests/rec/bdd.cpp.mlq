@@ -1,34 +1,28 @@
 #define BND(v)  {v:int | (0 <= v) and (v < 1000)}
-#define R       [[],[],[v:true,v:true,v:true]]
+#define R       [[],[],[v:true,v:true,v:true,v:true,v:true]]
 #define SUB(v)  {v:R z | (e0 < var v) and (var v <= 1000)}
-#define BDD     R [z: view. || || BND(e0), SUB(e1) , SUB(e2)]
+#define BDD     R [z: view. || || BND(e0), e1: true, SUB(e2) , e3: true, SUB(e4)]
 #define BDDT(p) {v:BDD | (0 <= var v and var v <= 1000) and (p) }    
+#define t        BDDT(true)
+#define variable BND(v)
+
 
 measure var =
-  | Zero	-> 1000 
-  | One 	-> 1000 
-  | Node (v,_,_)-> v
- (* 
-measure utag =
-  | Zero	-> 0
-  | One		-> 1
-  | Node (_,_,_)-> 2
-*)
+  | Zero		-> 1000 
+  | One 		-> 1000 
+  | Node (v,_,_,_,_)	-> v
 
 val mk	  : x: BND(v) -> BDDT(x < var v) -> BDDT(x < var v) -> BDDT(x <= var v)
+(*
 val mk_not: x: BDDT(true) -> BDDT(var x <= var v)
 val gapply: operator -> x:BDDT(true) -> y:BDDT(true) -> BDDT((var x <= var v) or (var y <= var v)) 
-
+*)
 (*
-type t
-type view = Zero | One | Node of variable * t (*low*) * t (*high*)
-
 val var : t -> variable
 val low : t -> t
 val high: t -> t
 val zero: t
 val one : t
-
 val mk : variable -> low:t -> high:t -> t
 val mk_var : variable -> t
 val mk_not : t -> t
@@ -36,7 +30,9 @@ val mk_and : t -> t -> t
 val mk_or : t -> t -> t
 val mk_imp : t -> t -> t
 val apply : (bool -> bool -> bool) -> t -> t -> t
-
 val build : formula -> t
-
+*)
+(*
+type t
+type view = Zero | One | Node of variable * t (*low*) * t (*high*)
 *)
