@@ -1,0 +1,20 @@
+#define BND(v)  {v:int | (0 <= v) and (v < 1000)}
+#define R       [[],[],[v:true,v:true,v:true]]
+#define SUB(v)  {v:R z | (e0 < var v) and (var v <= 1000)}
+#define BDD     R [z: bdd . || || BND(e0), SUB(e1) , SUB(e2)]
+#define BDDT(p) {v:BDD | (0 <= var v and var v <= 1000) and (p) }    
+
+measure var =
+  | Zero	-> 1000 
+  | One 	-> 1000 
+  | Node (v,_,_)-> v
+ (* 
+measure utag =
+  | Zero	-> 0
+  | One		-> 1
+  | Node (_,_,_)-> 2
+*)
+
+val mk	  : x: BND(v) -> BDDT(x < var v) -> BDDT(x < var v) -> BDDT(x <= var v)
+val mk_not: x: BDDT(true) -> BDDT(var x <= var v)
+val gapply: operator -> x:BDDT(true) -> y:BDDT(true) -> BDDT((var x <= var v) or (var y <= var v)) 
