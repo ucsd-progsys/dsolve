@@ -213,7 +213,7 @@ let env_to_refenv env =
     (fun x f acc -> 
       match F.get_refinement f with 
       | None -> acc 
-      | Some r -> Le.nil_add x r acc) 
+      | Some r -> Le.add x r acc) 
     env Le.empty
 
 let simplify_frame gm x f = 
@@ -252,7 +252,7 @@ let frame_env = function
   | WFFrame(env, _) -> env
 
 let make_val_env vf env = function
-    SubFrame(_, g, f, f') -> SubFrame(Le.nil_add qual_test_var vf env, g, f, f') 
+    SubFrame(_, g, f, f') -> SubFrame(Le.add qual_test_var vf env, g, f, f') 
   | c -> c 
 
 let patch_env env = function
@@ -346,6 +346,7 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
        assert false)
 
 let split_wf_ref f c env r =
+  let c = set_labeled_constraint_env c env in
   sref_map (fun sr -> (f, c, WFRef(Le.add qual_test_var f env, sr, None))) r
 
 let make_wff c tenv env f =
@@ -715,17 +716,7 @@ let unsat_constraints sri s =
 (******************** Qualifier Instantiation *****************)
 (**************************************************************)
 
-module LEnv : Graph.Sig.COMPARABLE with type t = Frame.t Le.t =
-struct
-   type t = Frame.t Le.t
-   let compare = compare
-   let hash e = Hashtbl.hash (Le.setstring e)
-   let equal = (==)
-end
-
-module EG = Graph.Persistent.Digraph.Concrete(LEnv)
-
-let memo = Hashtbl.create 1000
+module TR = Trie.Make(Map.Make(C.ComparablePath))
 
 let add_path_set vars m path =
   match Path.ident_name path with
@@ -733,32 +724,27 @@ let add_path_set vars m path =
       let rest = try C.StringMap.find name m with Not_found -> [] in C.StringMap.add name (path :: rest) m
   | _ -> m
 
-let rec find_max_containing_env envg env = match EG.succ envg (Le.unalias env) with
-  | []     -> env
-  | e :: _ -> find_max_containing_env envg e
-
 let instantiate_in_vm vm q =
   List.fold_left (C.flip QSet.add) QSet.empty (Q.instantiate_about vm q)
 
-let instantiate_quals_in_env envg qs =
+let path_is_temp p = match Path.ident_name p with Some s -> Le.badstring s | None -> false
+
+let mk_envl env = Le.fold (fun p f l -> if Path.same p C.qual_test_var || path_is_temp p then l else p :: l) env []
+
+let instantiate_quals_in_env tr qs =
   let qpaths = List.fold_left (fun xs x -> List.fold_left (C.flip NSet.add) xs (Q.vars x)) NSet.empty qs in
-    fun env ->
-      let env  = find_max_containing_env envg env in
-      let estr = Le.setstring env in
-        try Hashtbl.find memo estr with Not_found ->
-          let vm  = List.fold_left (add_path_set qpaths) C.StringMap.empty (Le.domain env) in
-          let q   = List.fold_left (fun qset q -> QSet.union (instantiate_in_vm vm q) qset) QSet.empty qs in
-          let els = QSet.elements q in
-          let _   = Hashtbl.replace memo estr els in
-            els
-
-let rec add_env envg (Le.Env (_, origin) as e) = match origin with
-  | Le.Parent parent -> add_env (EG.add_edge envg parent e) parent
-  | Le.Alias  alias  -> add_env envg alias
-  | Le.Nil           -> EG.add_vertex envg e
-
-let make_envg envs =
-  List.fold_left add_env EG.empty envs
+    (fun (env, envl') ->
+      try 
+        let (vs, (env, envl, quoi)) = TR.find_maximal envl' tr (fun (_, _, quoi) -> C.maybe_bool !quoi) in
+        match !quoi with
+        | Some qs -> quoi := Some qs; List.iter (fun (_, _, q) -> if C.maybe_bool !q then () else q := Some qs) vs; qs
+        | None -> 
+            let vm  = List.fold_left (add_path_set qpaths) C.StringMap.empty envl in
+            let q   = List.fold_left (fun qset q -> QSet.union (instantiate_in_vm vm q) qset) QSet.empty qs in
+            let els = QSet.elements q in
+            let _ = TR.iter_path envl tr (fun (_, _, quoi) -> if C.maybe_bool !quoi then () else quoi := Some els) in
+            quoi := Some els; els
+      with Not_found -> assert false)
 
 let constraint_env (_, c) =
   match c with | SubRef (_, _, _, _, _) -> Le.empty | WFRef (e, _, _) -> e
@@ -767,8 +753,10 @@ let constraint_env (_, c) =
    by the appropriate bound identifiers from all environments. *)
 let instantiate_per_environment cs qs =
   let envs = BS.time "cenv" (List.rev_map constraint_env) cs in
-  let envg = BS.time "envg" make_envg envs in
-  BS.time "instquals" (List.rev_map (instantiate_quals_in_env envg qs)) envs
+  let envls = BS.time "envls" (List.map mk_envl) envs in 
+  let envvs = List.combine envs envls in
+  let tr = (BS.time "tr" (List.fold_left (fun t (ev, el) -> TR.add el (ev, el, ref None) t) TR.empty) envvs) in
+  BS.time "instquals" (List.rev_map (instantiate_quals_in_env tr qs)) envvs
 
 (**************************************************************)
 (************************ Initial Solution ********************)
@@ -803,9 +791,9 @@ let make_initial_solution cs =
             (Sol.replace srhs k (); Sol.replace s k qs) | _ -> ()) cs in
   let _ = List.iter (function (SubRef (_, _, r1, _, _), qs) ->
             List.iter (fun k -> Sol.replace slhs k (); if not !Cf.minsol && is_formal k && not (Sol.mem srhs k)
-              then Sol.replace s k [] else app_sol s k qs) (F.refinement_qvars r1) | _ -> ()) cs in
+              then Sol.replace s k [] else Sol.replace s k qs) (F.refinement_qvars r1) | _ -> ()) cs in
   let _ = List.iter (function (WFRef (_, (_, F.Qvar k), _), qs) ->
-            if Sol.mem srhs k || (Sol.mem slhs k && Sol.find s k != []) then app_sol s k qs else app_sol s k [] | _ -> ()) cs in
+            if Sol.mem srhs k || (Sol.mem slhs k && Sol.find s k != []) then Sol.replace s k qs else Sol.replace s k [] | _ -> ()) cs in
   s
                                          
 (**************************************************************)
@@ -922,14 +910,13 @@ let solve qs cs =
   let _  = dump_unsplit cs in
   let cs = BS.time "splitting constraints" split cs in
   let max_env = List.fold_left 
-    (fun env (v, c', c) -> match c with WFRef (e, _, _) -> Le.combine e env | SubRef _ -> Le.combine (frame_env c'.lc_cstr) env) Le.empty cs in
+    (fun env (v, c, _) -> Le.combine (frame_env c.lc_cstr) env) Le.empty cs in
   let cs = List.map (fun (v, c, cstr) -> (set_labeled_constraint c (make_val_env v max_env), cstr)) cs in
   (* let cs = if !Cf.esimple then 
                BS.time "e-simplification" (List.map esimple) cs else cs in *)
   let qs = BS.time "instantiating quals" (instantiate_per_environment cs) qs in
   let qs = List.map (fun qs -> List.filter Qualifier.may_not_be_tautology qs) qs in
   let _ = dump_qualifiers (List.combine (strip_origins cs) qs) in
-  let _ = Hashtbl.clear memo in
   let sri = BS.time "making ref index" make_ref_index cs in
   let s = make_initial_solution (List.combine (strip_origins cs) qs) in
   let _ = dump_solution s in

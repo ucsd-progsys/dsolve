@@ -27,38 +27,18 @@
 module M = Map.Make(Common.ComparablePath)
 module B = Buffer
 
-type 'a t = Env of 'a M.t * 'a origin_env
+type 'a t = 'a M.t
 
-and 'a origin_env =
-  | Nil
-  | Parent of 'a t
-  | Alias of 'a t
-
-let empty = Env (M.empty, Nil)
-
-let unalias (Env (_, o) as env) = match o with
-  | Nil | Parent _ -> env
-  | Alias e        -> e
-
-let add x y (Env (m, _) as parent) =
-  Env (M.add x y m, Parent parent)
-
-let aliasing_add x y (Env (m, _) as alias) =
-  Env (M.add x y m, Alias alias)
-
-let nil_add x y (Env (m, _)) =
-  Env (M.add x y m, Nil)
-
-let maplist f (Env (env, _)) =
+let maplist f env =
   M.fold (fun k v r -> (f k v)::r) env []
 
 let flaplist f env =
   List.flatten (maplist f env)
 
-let maplistfilter f (Env (env, _)) =
+let maplistfilter f env =
   M.fold (fun k v r -> let c = f k v in match c with Some c -> c::r | None -> r) env []
 
-let primfilterlist g f (Env (env, _)) =
+let primfilterlist g f env =
   M.fold (fun k v r -> if f k v then (g (k, v))::r else r) env []
 
 let filterlist f env =
@@ -67,32 +47,37 @@ let filterlist f env =
 let filterkeylist f env =
   primfilterlist fst f env
 
-let mapfilter f (Env (env, _)) =
+let mapfilter f env =
   M.fold (fun k v r -> match f k v with Some x -> x::r | None -> r) env []
 
-let addn items (Env (m, _) as parent) =
-  Env (List.fold_left (fun e (k, v) -> M.add k v e) m items, Parent parent)
+let add a m =
+  M.add a m
 
-let find k (Env (m, _)) =
+let empty = M.empty
+
+let addn items m =
+  List.fold_left (fun e (k, v) -> M.add k v e) m items
+
+let find k m =
   Bstats.time "env find" (M.find k) m
 
-let iter f (Env (m, _)) =
+let iter f m =
   M.iter f m
 
-let mem k (Env (m, _)) =
+let mem k m =
   M.mem k m
 
-let map f (Env (m, p)) =
-  Env (M.map f m, p)
+let map f m =
+  M.map f m
 
-let mapi f (Env (m, p)) =
-  Env (M.mapi f m, p)
+let mapi f m =
+  M.mapi f m
 
-let fold f (Env (m, _)) b =
+let fold f m b =
   M.fold f m b
 
 let combine e1 e2 =
-  fold (fun p f e -> nil_add p f e) e1 e2
+  fold (fun p f e -> add p f e) e1 e2
 
 let domain env = maplist (fun k _ -> k) env
 
