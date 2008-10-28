@@ -81,6 +81,6 @@ let combine e1 e2 =
 
 let domain env = maplist (fun k _ -> k) env
 
-let badstring s = (s.[0] = '_' && s.[1] = '\'') || (s.[0] = 'A' && s.[1] = 'A')
+let badstring s = if String.length s >= 2 then (s.[0] = '_' && s.[1] = '\'') || (s.[0] = 'A' && s.[1] = 'A') else false
 
 let setstring e = B.contents (fold (fun k _ s -> match Path.unique_ident_name k with Some n when String.length n <= 2 || not(badstring n) -> B.add_char s '*'; B.add_string s n; s | _ -> s) e (B.create 400))
