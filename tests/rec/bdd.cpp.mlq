@@ -1,7 +1,7 @@
 #define BND(v)  {v:int | (0 <= v) and (v < 1000)}
 #define RR      [[v:true],[v:true],[v:true,v:true,v:true,v:true]]
 #define SUB(v)  {v:RR z | (e0 < var v) and (var v <= 1000)}
-#define BDD     RR [z: view. || || e0: true, BND(e1), SUB(e2), SUB(e3)]
+#define BDD     RR [z: bdd. || || e0: int, BND(e1), SUB(e2), SUB(e3)]
 #define TT(p)   {v:BDD | (0 <= var v and var v <= 1000) and (p) }    
 #define VART 	BND(v)
 
@@ -10,9 +10,11 @@ measure var =
   | One  _		-> 1000 
   | Node (_,v,_,_)	-> v
 
-val mk	  : x: BND(v) -> TT(x < var v) -> TT(x < var v) -> TT(x <= var v)
+
+val skip  : TT(true) -> unit
 
 (*
+val mk	  : x: BND(v) -> TT(x < var v) -> TT(x < var v) -> TT(x <= var v)
 val mk_not: x: TT(true) -> TT(var x <= var v)
 val gapply: operator -> x:TT(true) -> y:TT(true) -> TT((var x <= var v) or (var y <= var v))
 *)

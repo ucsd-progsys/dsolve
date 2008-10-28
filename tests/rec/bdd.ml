@@ -1,7 +1,5 @@
 (* Binary Decision Diagrams, adapted from code by Jean-Christophe Filliatre *)
-
-let debug = true
-type variable = int (* 1..max_var *)
+type variable = int 
 
 let myfail s = 
   print_string s; 
@@ -9,26 +7,42 @@ let myfail s =
 
 type bdd = Zero of int | One of int | Node of int * variable * bdd * bdd
 
+let skip (x:bdd) = () 
+
 let tag  = function
-  | Zero t -> t
-  | One t  -> t
-  | Node (t,_,_,_) -> t
+  | Zero t              -> t
+  | One t               -> t
+  | Node (t,_,_,_)      -> t
 
-(* let node b = snd b *)
+let var b = match b with
+  | Zero _              -> 1000
+  | One  _              -> 1000 
+  | Node (_,v,_, _)     -> v
 
-let hash_node v l h = abs (19 * (19 * (tag l) + (tag h)) + v)
+let low b = match b with
+  | Zero _              -> myfail "Bdd.low"
+  | One  _              -> myfail "Bdd.low"
+  | Node (_,_,l,_)      -> l
+
+let high b = match b with
+  | Zero _              -> myfail "Bdd.high" 
+  | One  _              -> myfail "Bdd.high"
+  | Node (_,_,_,h)      -> h
+
+let hash_node v l h = 
+  abs (19 * (19 * (tag l) + (tag h)) + v)
 
 let hash = function
   | Zero _ -> 0
   | One  _ -> 1
   | Node (_, v, l, h) -> hash_node v l h
 
-let gentag = let r = ref (-1) in fun () -> incr r; !r
+let gentag = let r = ref (-1) in fun z -> incr r; !r
 
-(* SIMPLE VERSION
+(* SIMPLE VERSION *)
 let hashcons_node v l h = 
   Node (gentag (), v, l, h)
-*)
+
 
 type table = {
   mutable table : bdd Weak.t array;
@@ -40,12 +54,13 @@ let create sz =
   let sz = if sz < 7 then 7 else sz in
   let sz = if sz > Sys.max_array_length then Sys.max_array_length else sz in
   let emptybucket = Weak.create 0 in
-  { table = Array.create sz emptybucket;
+  { table   = Array.create sz emptybucket;
     totsize = 0;
-    limit = 3; }
+    limit   = 3; }
 
-let t = create (*251*)(*7001*)(*65537*)100003 
+let t = create 100003 
 
+let add t x = () (* SLICE *)
 
 let hashcons_node v l h =
   let index = (hash_node v l h) mod (Array.length t.table) in
@@ -58,8 +73,10 @@ let hashcons_node v l h =
       hnode
     end else begin
       match Weak.get_copy bucket i with
-        | Some (Node(_, v',l', h')) ->
-          if v==v' && l == l' && h == h' then
+      | Some x -> assert false
+      (*
+        | Some (Node(_, v',l', h')) -> assert false
+      if v==v' && l == l' && h == h' then
 	    begin match Weak.get bucket i with
             | Some (Node(t',v',l',h')) -> 
                 if v==v' && l == l' && h == h'
@@ -67,30 +84,17 @@ let hashcons_node v l h =
             | _ -> loop (i+1)
             end
           else loop (i+1)
+        *)
         | _ -> loop (i+1)
     end
   in
   loop 0
 
-(* zero and one allocated once and for all *)
+(*
 let zero = Zero (gentag ())  
 let one  = One (gentag ()) 
-(* SLICE: let _    = add t zero; add t one *)
+let _    = add t zero; add t one
 
-let var b = match b with
-  | Zero _              -> 1000
-  | One  _              -> 1000 
-  | Node (_, v, _, _)   -> v
-
-let low b = match b with
-  | Zero _              -> myfail "Bdd.low"
-  | One  _              -> myfail "Bdd.low"
-  | Node (_, _, l,_)    -> l
-
-let high b = match b with
-  | Zero _              -> myfail "Bdd.high" 
-  | One  _              -> myfail "Bdd.high"
-  | Node (_, _, _, h)   -> h
 
 let mk v low high =
   if low == high then low else hashcons_node v low high
@@ -222,3 +226,4 @@ let rec build = function
   | Fimp (f1, f2) -> mk_imp (build f1) (build f2)
   | Fiff (f1, f2) -> mk_iff (build f1) (build f2)
   | Fnot f -> mk_not (build f)
+  *)
