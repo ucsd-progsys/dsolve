@@ -39,15 +39,16 @@ let hash = function
 
 let gentag = let r = ref (-1) in fun z -> incr r; !r
 
-(* SIMPLE VERSION *)
+(* SIMPLE VERSION 
 let hashcons_node v l h =
   let _ = show l in
   let _ = show h in
   let r = Node (gentag (), v, l, h) in
   let _ = show r in
   r
+*)
 
-(* COMPLEX VERSION 
+(* COMPLEX VERSION *) 
 type table = {
   mutable table : bdd Weak.t array;
   mutable totsize : int;             (* sum of the bucket sizes *)
@@ -92,7 +93,7 @@ let hashcons_node v l h =
     end
   in
   loop 0
-*)
+(* *)
 
 let zero = Zero (gentag ())  
 let one  = One (gentag ()) 
@@ -212,35 +213,35 @@ let gapply op =
 	      res 
     in 
     app b1 b2
-
+(*
 let mk_and = gapply Op_and
 let mk_or = gapply Op_or
-let mk_imp = gapply Op_imp
-let mk_iff = gapply (Op_any (fun b1 b2 -> b1 == b2))
+let mk_imp = gapply Op_imp 
+*)
 
+let mk_and = gapply (Op_any (fun b1 b2 -> b1 && b2))
+let mk_or  = gapply (Op_any (fun b1 b2 -> b1 || b2))
+let mk_imp = gapply (Op_any (fun b1 b2 -> (not b1) || b2))
+let mk_iff = gapply (Op_any (fun b1 b2 -> b1 == b2))
 let apply f = gapply (Op_any f)
 
 (* formula -> bdd *)
-
-(*
 type formula = 
   | Ffalse 
   | Ftrue 
   | Fvar of int 
-  | Fand of formula * formula
-  | For  of formula * formula
-  | Fimp of formula * formula
-  | Fiff of formula * formula
+  | Fand of formula *  formula
+  | For  of formula *  formula
+  | Fimp of formula *  formula
+  | Fiff of formula *  formula
   | Fnot of formula
 
 let rec build = function
   | Ffalse -> zero
   | Ftrue -> one
-  | Fvar v -> if 0 <= v && v < 1000 then mk_var v else myfail "Bdd.build var"
+  | Fvar v -> if 0 <= v && v < 1000 then mk_var v else myfail "Bdd.build var" 
   | Fand (f1, f2) -> mk_and (build f1) (build f2)
   | For (f1, f2) -> mk_or (build f1) (build f2)
   | Fimp (f1, f2) -> mk_imp (build f1) (build f2)
   | Fiff (f1, f2) -> mk_iff (build f1) (build f2)
   | Fnot f -> mk_not (build f)
- 
-  *)
