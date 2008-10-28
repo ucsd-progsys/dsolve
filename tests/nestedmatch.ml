@@ -6,8 +6,7 @@ let make x =
 let check x = 
   match x with 
   | Some y -> (match y with Node z -> assert (z>0)) 
-  (* UNCOMMENT TO SEE CRASH: 
-  | Some (Node x) -> assert (x > 0) *) 
+  | Some (Node x) -> assert (x > 0)
   | _ -> ()
 
 let rec go z = 

@@ -140,19 +140,9 @@ and pprint_pattern ppf pat =
       | "[]" ->
           fprintf ppf "[]"
       | cons ->
-          begin
           match e with
-          | Some ({ppat_desc = Ppat_tuple el}) ->
-              fprintf ppf "%s (%a)" id pprint_pat_list el
-          | Some ({ppat_desc = Ppat_var v}) ->
-              fprintf ppf "%s %s" id v
-          | Some ({ppat_desc = Ppat_any}) ->
-              fprintf ppf "%s _" id
-          | None ->
-              fprintf ppf "%s " id
-          | _ ->
-              assert false
-          end
+            | None -> fprintf ppf "%s" id
+            | Some pat -> fprintf ppf "%s %a" id pprint_pattern pat
       end
   | _ -> assert false
 and pprint_and ppf = function
