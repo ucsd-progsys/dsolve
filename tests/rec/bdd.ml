@@ -1,11 +1,11 @@
 (* Binary Decision Diagrams, adapted from code by Jean-Christophe Filliatre *)
-type variable = int 
+let show x = x
 
 let myfail s = 
   print_string s; 
   assert false
 
-type bdd = Zero of int | One of int | Node of int * variable * bdd * bdd
+type bdd = Zero of int | One of int | Node of int * int * bdd * bdd
 
 let skip (x:bdd) = () 
 
@@ -40,10 +40,14 @@ let hash = function
 let gentag = let r = ref (-1) in fun z -> incr r; !r
 
 (* SIMPLE VERSION *)
-let hashcons_node v l h = 
-  Node (gentag (), v, l, h)
+let hashcons_node v l h =
+  let _ = show l in
+  let _ = show h in
+  let r = Node (gentag (), v, l, h) in
+  let _ = show r in
+  r
 
-
+(* COMPLEX VERSION 
 type table = {
   mutable table : bdd Weak.t array;
   mutable totsize : int;             (* sum of the bucket sizes *)
@@ -73,31 +77,35 @@ let hashcons_node v l h =
       hnode
     end else begin
       match Weak.get_copy bucket i with
-      | Some x -> assert false
-      (*
-        | Some (Node(_, v',l', h')) -> assert false
-      if v==v' && l == l' && h == h' then
-	    begin match Weak.get bucket i with
+        | Some zz ->
+            (match zz with Node(t', v',l', h') ->
+               if v==v' && l == l' && h == h' 
+               then Node(t', v',l', h') else loop (i+1)
+             | _ -> loop (i+1))
+	    (* begin match Weak.get bucket i with
             | Some (Node(t',v',l',h')) -> 
                 if v==v' && l == l' && h == h'
                 then Node(t', v',l', h') else loop (i+1) (* assert false *)
             | _ -> loop (i+1)
-            end
-          else loop (i+1)
-        *)
+            *)
         | _ -> loop (i+1)
     end
   in
   loop 0
+*)
 
-(*
 let zero = Zero (gentag ())  
 let one  = One (gentag ()) 
-let _    = add t zero; add t one
-
+(* SLICE let _    = add t zero; add t one *)
 
 let mk v low high =
-  if low == high then low else hashcons_node v low high
+  let _ = show low in
+  let _ = show high in
+  let r = if low == high then low else hashcons_node v low high in
+  let _ = show r in
+  r
+
+let _ = mk
 
 let mk_var v = mk v zero one
 
@@ -112,7 +120,14 @@ let mk_not x =
       let res = match x with
 	| Zero _         -> one
 	| One  _         -> zero
-	| Node (_,v,l,h) -> mk v (mk_not_rec l) (mk_not_rec h)
+	| Node (_,v,l,h) -> (* let _  = show l in
+                            let _  = show h in
+                            let l' = mk_not_rec l in
+                            let h' = mk_not_rec h in
+                            let _  = show l' in
+                            let _  = show h' in
+                            mk v l' h' *)
+                            mk v (mk_not_rec l) (mk_not_rec h) 
       in
       Hashtbl.add cache x res;
       res
@@ -207,10 +222,11 @@ let apply f = gapply (Op_any f)
 
 (* formula -> bdd *)
 
+(*
 type formula = 
   | Ffalse 
   | Ftrue 
-  | Fvar of variable 
+  | Fvar of int 
   | Fand of formula * formula
   | For  of formula * formula
   | Fimp of formula * formula
@@ -220,10 +236,11 @@ type formula =
 let rec build = function
   | Ffalse -> zero
   | Ftrue -> one
-  | Fvar v -> mk_var v
+  | Fvar v -> if 0 <= v && v < 1000 then mk_var v else myfail "Bdd.build var"
   | Fand (f1, f2) -> mk_and (build f1) (build f2)
   | For (f1, f2) -> mk_or (build f1) (build f2)
   | Fimp (f1, f2) -> mk_imp (build f1) (build f2)
   | Fiff (f1, f2) -> mk_iff (build f1) (build f2)
   | Fnot f -> mk_not (build f)
+ 
   *)
