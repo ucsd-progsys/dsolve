@@ -19,8 +19,8 @@ let rec find_aux (r: (int, int) Store.t) (p: (int, int) Store.t) (i: int) =
     (p, i)
   else
     let (p', i') = find_aux r p pi in 
-    let p''      = Store.set p' i i' in
-    (p'', i')
+    (*let p''      = Store.set p' i i' in*)
+    (p'(*'*), i')
 
 let find (r: (int, int) Store.t) (p: (int, int) Store.t) (i: int) =
   find_aux r p i 
