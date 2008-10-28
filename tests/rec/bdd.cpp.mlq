@@ -1,22 +1,22 @@
 #define BND(v)  {v:int | (0 <= v) and (v < 1000)}
-#define R       [[],[],[v:true,v:true,v:true,v:true,v:true]]
-#define SUB(v)  {v:R z | (e0 < var v) and (var v <= 1000)}
-#define BDD     R [z: view. || || BND(e0), e1: true, SUB(e2) , e3: true, SUB(e4)]
-#define BDDT(p) {v:BDD | (0 <= var v and var v <= 1000) and (p) }    
-#define t        BDDT(true)
-#define variable BND(v)
-
+#define RR      [[v:true],[v:true],[v:true,v:true,v:true,v:true]]
+#define SUB(v)  {v:RR z | (e0 < var v) and (var v <= 1000)}
+#define BDD     RR [z: view. || || e0: true, BND(e1), SUB(e2), SUB(e3)]
+#define TT(p)   {v:BDD | (0 <= var v and var v <= 1000) and (p) }    
+#define VART 	BND(v)
 
 measure var =
-  | Zero		-> 1000 
-  | One 		-> 1000 
-  | Node (v,_,_,_,_)	-> v
+  | Zero _		-> 1000 
+  | One  _		-> 1000 
+  | Node (_,v,_,_)	-> v
 
-val mk	  : x: BND(v) -> BDDT(x < var v) -> BDDT(x < var v) -> BDDT(x <= var v)
+val mk	  : x: BND(v) -> TT(x < var v) -> TT(x < var v) -> TT(x <= var v)
+
 (*
-val mk_not: x: BDDT(true) -> BDDT(var x <= var v)
-val gapply: operator -> x:BDDT(true) -> y:BDDT(true) -> BDDT((var x <= var v) or (var y <= var v)) 
+val mk_not: x: TT(true) -> TT(var x <= var v)
+val gapply: operator -> x:TT(true) -> y:TT(true) -> TT((var x <= var v) or (var y <= var v))
 *)
+
 (*
 val var : t -> variable
 val low : t -> t

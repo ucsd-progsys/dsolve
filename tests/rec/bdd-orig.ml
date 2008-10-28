@@ -7,27 +7,28 @@ let myfail s =
   print_string s; 
   assert false
 
-type bdd = Zero of int | One of int | Node of int * variable * bdd * bdd
+type view = Zero | One | Node of variable * int * view * int * view 
+type bdd  = int * view
+type t    = int * view (* export *)
 
-let tag  = function
-  | Zero t -> t
-  | One t  -> t
-  | Node (t,_,_,_) -> t
-
-(* let node b = snd b *)
-
+let view b = snd b
+let tag  b = fst b
+let node b = snd b
+   
 let hash_node v l h = abs (19 * (19 * (tag l) + (tag h)) + v)
 
 let hash = function
-  | Zero _ -> 0
-  | One  _ -> 1
-  | Node (_, v, l, h) -> hash_node v l h
+  | Zero -> 0
+  | One -> 1
+  | Node (v, lt, l, ht, h) -> hash_node v (lt, l) (ht, h)
 
 let gentag = let r = ref (-1) in fun () -> incr r; !r
 
 (* SIMPLE VERSION
 let hashcons_node v l h = 
-  Node (gentag (), v, l, h)
+  let (lt, lb) = l in
+  let (ht, hb) = h in
+  (gentag (), Node (v, lt, lb, ht, hb))
 *)
 
 type table = {
@@ -48,22 +49,24 @@ let t = create (*251*)(*7001*)(*65537*)100003
 
 
 let hashcons_node v l h =
+  let (lt, lb) = l in
+  let (ht, hb) = h in
   let index = (hash_node v l h) mod (Array.length t.table) in
   let bucket = t.table.(index) in
   let sz = Weak.length bucket in
   let rec loop i =
     if i >= sz then begin
-      let hnode = Node (gentag (), v, l, h) in
+      let hnode = (gentag (), Node (v, lt, lb, ht, hb)) in
       (* SLICE: add_index t hnode index; *)
       hnode
     end else begin
       match Weak.get_copy bucket i with
-        | Some (Node(_, v',l', h')) ->
-          if v==v' && l == l' && h == h' then
+        | Some (_,Node(v',lt', lb', ht', hb')) ->
+          if v==v' && lt == lt' && lb == lb' && ht == ht' && hb == hb' then
 	    begin match Weak.get bucket i with
-            | Some (Node(t',v',l',h')) -> 
-                if v==v' && l == l' && h == h'
-                then Node(t', v',l', h') else loop (i+1) (* assert false *)
+            | Some (t, Node(v',lt', lb', ht', hb')) -> 
+                if v==v' && lt == lt' && lb == lb' && ht == ht' && hb == hb'
+                then (t, Node(v',lt', lb', ht', hb')) else loop (i+1) (* assert false *)
             | _ -> loop (i+1)
             end
           else loop (i+1)
@@ -73,24 +76,24 @@ let hashcons_node v l h =
   loop 0
 
 (* zero and one allocated once and for all *)
-let zero = Zero (gentag ())  
-let one  = One (gentag ()) 
+let zero = (gentag (), Zero) 
+let one  = (gentag (), One) 
 (* SLICE: let _    = add t zero; add t one *)
 
-let var b = match b with
-  | Zero _              -> 1000
-  | One  _              -> 1000 
-  | Node (_, v, _, _)   -> v
+let var b = match node b with
+  | Zero -> 1000
+  | One  -> 1000 
+  | Node (v, _, _, _, _) -> v
 
-let low b = match b with
-  | Zero _              -> myfail "Bdd.low"
-  | One  _              -> myfail "Bdd.low"
-  | Node (_, _, l,_)    -> l
+let low b = match node b with
+  | Zero -> myfail "Bdd.low"
+  | One  -> myfail "Bdd.low"
+  | Node (_, lt, lb, _, _) -> (lt, lb)
 
-let high b = match b with
-  | Zero _              -> myfail "Bdd.high" 
-  | One  _              -> myfail "Bdd.high"
-  | Node (_, _, _, h)   -> h
+let high b = match node b with
+  | Zero -> myfail "Bdd.high" 
+  | One  -> myfail "Bdd.high"
+  | Node (_, _, _, ht, hb) -> (ht, hb)
 
 let mk v low high =
   if low == high then low else hashcons_node v low high
@@ -105,10 +108,10 @@ let mk_not x =
     if Hashtbl.mem cache x then
       Hashtbl.find cache x 
     else
-      let res = match x with
-	| Zero _         -> one
-	| One  _         -> zero
-	| Node (_,v,l,h) -> mk v (mk_not_rec l) (mk_not_rec h)
+      let res = match node x with
+	| Zero -> one
+	| One -> zero
+	| Node (v,_,_,_,_) -> mk v (mk_not_rec (low x)) (mk_not_rec (high x))
       in
       Hashtbl.add cache x res;
       res
@@ -170,11 +173,11 @@ let gapply op =
  	| Op_any _ ->
 	    app_gen u1 u2 
     and app_gen u1 u2 = 
-      match (u1, u2) with
-	| (Zero _), (Zero _) -> op_z_z
-	| (Zero _), (One  _) -> op_z_o
-	| (One  _), (Zero _) -> op_o_z
-	| (One  _), (One  _) -> op_o_o
+      match (node u1, node u2) with
+	| Zero, Zero -> op_z_z
+	| Zero, One  -> op_z_o
+	| One,  Zero -> op_o_z
+	| One,  One  -> op_o_o
 	| _ ->
             if Hash2.mem cache u1 u2 then
               Hash2.find cache u1 u2 
