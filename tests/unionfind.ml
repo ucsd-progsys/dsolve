@@ -1,26 +1,33 @@
+let show x = x
 
-let init n f = 
-  let m = Store.set (Store.empty) 0 (f 0) in
-  let rec init_rec n m =
-    if n = 0 then m else init_rec (n-1) (Store.set m n (f n)) in
-  init_rec n m
+let init_rank n = 
+  let rec init_rec m i =
+    if i >= n then m else init_rec (Store.set m i 1) (i+1) in
+  init_rec Store.empty 0
+
+let init_parent n = 
+  let rec init_rec m i =
+    if i >= n then m else init_rec (Store.set m i i) (i+1) in
+  init_rec Store.empty 0
 
 let create n = 
-  (init n (fun i -> 1), (* rank *) 
-   init n (fun i -> i)) (* parent *)
+  (init_rank n, init_parent n)
 
-let _ = create 10 
-
-(*let rec find_aux p i = 
+let rec find_aux r p i = 
   let pi = Store.get p i in
-  if pi == i then 
-    (p, i)
+  if pi = i then 
+    assert false (*p, show i*)
   else 
-    let (p', i') = find_aux p pi in 
+    let (p', i') = find_aux h pi in 
     let p''      = Store.set p' i i' in
     (p'', i')
+
+(*let f i =
+  let (p, ind) = create 100 in
+  if i > 0 then
+    let _ = find_aux p i in () else ()*)
       
-let find p i =
+(*let find p i =
   let (p', i')  = find_aux p i in 
   (p', i')
   
@@ -39,7 +46,7 @@ let union h x y =
       (Store.set r rx' (rx' + 1), 
        Store.set p'' y' x') 
   end else
-    (r, p'') 
+    (r, p'')
 
 (*************************************************)
 
@@ -52,11 +59,12 @@ let rec tester h =
     let x  = read_int () in
     let y  = read_int () in
     let h' = union h x y in
-    tester h*)
+    tester h
 
-(*let n  = read_int ()
+
+let n  = read_int ()
 let h0 = create n 
-let h  = tester n
+let h  = tester h0
 let _  = check h*)
 
 (*

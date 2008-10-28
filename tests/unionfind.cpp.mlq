@@ -1,0 +1,5 @@
+#define UFP(r, i) (i: 'a, {v: 'b | v = Store.get supr i and ((v = i) or (Store.get r i < Store.get r v))}) Store.t
+#define UFR ('a, {v: 'b | v = Store.get supr e0 and v >= 0}) Store.t
+
+
+val find_aux: r: UFR -> UFP(r, b) -> i: int -> UFP(r, c) * {v: int | v = i or (Store.get r i < Store.get r v)}
