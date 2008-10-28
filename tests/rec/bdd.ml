@@ -121,14 +121,7 @@ let mk_not x =
       let res = match x with
 	| Zero _         -> one
 	| One  _         -> zero
-	| Node (_,v,l,h) -> (* let _  = show l in
-                            let _  = show h in
-                            let l' = mk_not_rec l in
-                            let h' = mk_not_rec h in
-                            let _  = show l' in
-                            let _  = show h' in
-                            mk v l' h' *)
-                            mk v (mk_not_rec l) (mk_not_rec h) 
+	| Node (_,v,l,h) -> mk v (mk_not_rec l) (mk_not_rec h) 
       in
       Hashtbl.add cache x res;
       res
