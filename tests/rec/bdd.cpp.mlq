@@ -10,31 +10,17 @@ measure var =
   | One  _		-> 1000 
   | Node (_,v,_,_)	-> v
 
-val skip  : TT(true) -> unit
+(* 
+  val mk	  : x: BND(v) -> TT(x < var v) -> TT(x < var v) -> TT(x <= var v)
+  val mk_var: x: BND(v) -> TT(true)
+  val mk_not: x: TT(true) -> TT(var x <= var v) 
+  val gapply: operator -> x:TT(true) -> y:TT(true) -> TT((var x <= var v) or (var y <= var v)) 
+*)
 
-val mk	  : x: BND(v) -> TT(x < var v) -> TT(x < var v) -> TT(x <= var v)
-val mk_var: x: BND(v) -> TT(true)
-(* val mk_not: x: TT(true) -> TT(var x <= var v) *)
-val gapply: operator -> x:TT(true) -> y:TT(true) -> TT((var x <= var v) or (var y <= var v))
-val mk_not: x: TT(true) -> TT(true)
-val mk_and : TT(true) -> TT(true) -> TT(true)
-val mk_or  : TT(true) -> TT(true) -> TT(true)
-val mk_imp : TT(true) -> TT(true) -> TT(true)
-val mk_iff : TT(true) -> TT(true) -> TT(true)
+val mk_not: TT(true) -> TT(true)
+val mk_and: TT(true) -> TT(true) -> TT(true)
+val mk_or : TT(true) -> TT(true) -> TT(true)
+val mk_imp: TT(true) -> TT(true) -> TT(true) 
+val mk_iff: TT(true) -> TT(true) -> TT(true)
 val apply : (bool -> bool -> bool) -> TT(true) -> TT(true) -> TT(true)
-
-(*
-val var : t -> int
-val low : t -> t
-val high: t -> t
-val zero: t
-val one : t
-val mk : int -> low:t -> high:t -> t
-val mk_var : int -> t
-val mk_not : t -> t
-val build : formula -> t
-*)
-(*
-type t
-type view = Zero | One | Node of int * t (*low*) * t (*high*)
-*)
+val build : formula -> TT(true)
