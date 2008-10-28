@@ -11,3 +11,7 @@ rule from paper L_product not followed (e0... not bound in consgen)
 add: more general z3 type casting
 
 fix: wellformedness should start using ml types (and we should guarantee an ml type for every id) to get rid of the hack for unifying functions with arguments
+
+try: convert paths to strings w/ envls in instantiate_per_environment to time string comparison against path comparison
+
+fix: tuple/record binds don't assert v = blah.e[0, 1, ...]
