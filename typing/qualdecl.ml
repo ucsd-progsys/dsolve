@@ -266,6 +266,8 @@ let ck_consistent patpred pred =
           ck_pred_rec e e' && ck_pred_rec p p'
       | (Ppredpat_boolexp e, Boolexp e') ->
           ck_expr_rec e e'
+      | (Ppredpat_implies (a, b), Implies (a', b')) ->
+          ck_pred_rec a a' && ck_pred_rec b b' 
       | _ -> assert false in
     ck_pred_rec patpred pred
      
