@@ -1,6 +1,6 @@
 let show x = x
 
-let init_rank n = 
+(*let init_rank n = 
   let rec init_rec m i =
     if i >= n then m else init_rec (Store.set m i 1) (i+1) in
   init_rec Store.empty 0
@@ -11,45 +11,44 @@ let init_parent n =
   init_rec Store.empty 0
 
 let create n = 
-  (init_rank n, init_parent n)
+  (init_rank n, init_parent n)*)
 
-let rec find_aux r p i = 
+let rec find_aux (r: (int, int) Store.t) (p: (int, int) Store.t) (i: int) = 
   let pi = Store.get p i in
   if pi = i then 
-    assert false (*p, show i*)
-  else 
-    let (p', i') = find_aux h pi in 
-    let p''      = Store.set p' i i' in
-    (p'', i')
+    (p, i)
+  else
+    let (p', i') = find_aux r p pi in 
+    (*let p''      = Store.set p' i i' in*)
+    (p'(*'*), i')
 
-(*let f i =
-  let (p, ind) = create 100 in
-  if i > 0 then
-    let _ = find_aux p i in () else ()*)
-      
-(*let find p i =
-  let (p', i')  = find_aux p i in 
-  (p', i')
+let find (r: (int, int) Store.t) (p: (int, int) Store.t) (i: int) =
+  find_aux r p i 
   
-let union h x y =
+let union (h: (int, int) Store.t * (int, int) Store.t) (x: int) (y: int) =
   let (r, p)   = h         in
-  let (p', x') = find p  x in
-  let (p'',y') = find p' y in
+  let (p', x') = find r p x in
+  let (p'',y') = find r p' y in
+  let _ = assert (Store.get p' x' = Store.get p'' x') in
   if x' != y' then begin
     let rx' = Store.get r x' in
     let ry' = Store.get r y' in
     if rx' > ry' then
-      (r, Store.set p'' y' x')
+      (*r, Store.set p'' y' x'*) assert false
     else if rx' < ry' then
-      (r, Store.set p'' x' y')
-    else
-      (Store.set r rx' (rx' + 1), 
-       Store.set p'' y' x') 
+      (*r, Store.set p'' x' y'*) assert false
+    else 
+      let r' = Store.set r x' (rx' + 1) in
+      let _ = show x' in
+      (* let b = Store.get r' x' > Store.get r' y' in
+         let c = show b in*) 
+      let p''' = Store.set p'' y' x' in
+      (r', p''') (r, p)
   end else
-    (r, p'')
+    (*r, p''*) assert false
 
 (*************************************************)
-
+(*
 let check h = 
   let (r,p) = h in
   Store.iter p (fun i v -> assert (v=i || Store.get r i < Store.get r v))

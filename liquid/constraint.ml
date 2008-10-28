@@ -821,7 +821,8 @@ let dump_constraints cs =
   if !Cf.dump_constraints then begin
     printf "******************Frame Constraints****************@.@.";
     let index = ref 0 in
-    List.iter (fun {lc_cstr = c; lc_orig = d} -> incr index; printf "@[(%d)(%a) %a@]@.@." !index pprint_orig d pprint c) cs;
+    List.iter (fun {lc_cstr = c; lc_orig = d} -> if (not (is_wfframe_constraint c)) || C.ck_olev C.ol_dump_wfs then 
+            (incr index; printf "@[(%d)(%a) %a@]@.@." !index pprint_orig d pprint c)) cs;
     printf "@[*************************************************@]@.@.";
   end
 
