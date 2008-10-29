@@ -13,6 +13,8 @@ let init_parent n =
 let create n = 
   (init_rank n, init_parent n)
 
+let foo (p: (int, int) Store.t) = p
+
 let rec find_aux (r: (int, int) Store.t) (p: (int, int) Store.t) (i: int) = 
   let pi = Store.get p i in
   if pi = i then 
