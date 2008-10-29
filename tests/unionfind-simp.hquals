@@ -1,12 +1,4 @@
-qualif V(v): v = Store.get supr ~A
-qualif V(v): v = ~A
-qualif V(v): v = 1
-
-qualif V(v): Store.get ~A v = v 
-qualif V(v): v = [e0, b, c, n] or Store.get [r, e0] [e0, b, c, i, n] < Store.get [r, e0] v 
-qualif V(v): v = ~A or Store.get [r, r'] ~A < Store.get [r, r'] v
-qualif V(v): Store.get v x' = ry' + 1
-qualif V(v): v = Store.get ~A ~B
-qualif V(v): v = Store.set ~A ~B
-
-qualif V(v): (((Store.get ~C  ~A) = ~A) -> (V = ~A))
+qualif EQ(v)  : v = ~A					(* non - spec *)
+qualif ROOT(v): Store.get ~A v = v			(* non - spec *)
+qualif BIND(v): v = Store.get ~A ~B
+qualif PRNT(v): (v = ~B) or (Store.get ~A ~B < Store.get ~A v)
