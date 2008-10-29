@@ -40,9 +40,9 @@ let union (r: (int, int) Store.t) (p: (int, int) Store.t) (x: int) (y: int) =
     else if rx' < ry' then
       (r, Store.set p'' x' y') 
     else 
-      let r' = Store.set r x' (rx' + 1) in
+      let r = Store.set r x' (rx' + 1) in (* COMMENT TO SEE BUG *)
       let p''' = Store.set p'' y' x' in
-      (r', p''') 
+      (r, p''') 
   end else
     (r, p'') 
 
