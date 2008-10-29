@@ -30,8 +30,8 @@ let find (p: (int, int) Store.t) (i: int) =
 let union (r: (int, int) Store.t) (p: (int, int) Store.t) (x: int) (y: int) =
   let x'        = find p x in
   let y'        = find p y in
-  let _         = assert (Store.get p x' = x') in
-  let _         = assert (Store.get p y' = y') in
+  (* let _         = assert (Store.get p x' = x') in
+     let _         = assert (Store.get p y' = y') in *)
   if x' != y' then begin
     let rx' = Store.get r x' in
     let ry' = Store.get r y' in
