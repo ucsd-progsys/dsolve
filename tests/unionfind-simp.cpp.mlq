@@ -1,7 +1,10 @@
-#define UFPp(r, i, p) (i: int, {v: int | v = Store.get supr i and (((v = i) or (Store.get r i < Store.get r v)) and p)}) Store.t
-#define UFP(r, i) UFPp(r, i, true)
-#define UFPfind(r, i, p) UFPp(r, i, (Store.get p e0 = e0 -> v = e0))
-#define UFR (int, {v: int | v = Store.get supr e0 and v >= 0}) Store.t
 
-val find: r: UFR -> p: UFP(r, b) -> l: int -> UFPfind(r, c, p) * {v: int | Store.get e0 v = v and (v = l or (Store.get r l < Store.get r v))}
-val union: (UFR) * (UFP(e0, k)) -> {v: int | v >= 0} -> {v: int | v >= 0} -> (UFR) * (UFP(e0, l))
+#define RANK		(i: int, int) Store.t
+#define BIND(i,v)	(v = Store.get supr i)
+#define PRNT(r,i,v)	((v=i) or (Store.get r i < Store.get r v))
+#define PAR(p)		(i: int, {v: int | BIND(i, v) and p}) Store.t 
+#define PARR(r)		PAR(PRNT(r,i,v))
+#define ROOT(p,v)	(Store.get p v = v)
+
+val find : p: PAR(true) -> int -> {v : int | ROOT(p,v)}
+val union: r: RANK -> p: PARR(r) -> int -> int -> RANK * PARR(e0)
