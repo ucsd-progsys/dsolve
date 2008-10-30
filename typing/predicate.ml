@@ -249,7 +249,7 @@ let apply_substs subs pred =
   let substitute (x, e) p = subst e x p in List.fold_right substitute subs pred
 
 let instantiate_named_vars subs pred =
-  map_vars (fun y -> Var (List.assoc (Path.ident_name_crash y) subs)) pred
+  map_vars (fun y -> try Var (List.assoc (Path.ident_name_crash y) subs) with Not_found -> Var y) pred
 
 let unexp f = function
   | True -> ([], [])

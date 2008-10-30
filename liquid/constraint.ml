@@ -659,7 +659,7 @@ let refine_tp senv s env g r1 sub2s k2 =
       let lhsm    = List.fold_left (fun pm p -> PM.add p true pm) PM.empty lhs_ps in
       let (x1,x2) = List.partition (fun (_,p) -> PM.mem p lhsm) rhs_qps in
       let _       = stat_matches := !stat_matches + (List.length x1) in 
-      let x2      = List.filter (fun (_,p) -> bound_in_env senv p) x2 in
+      (*let x2      = List.filter (fun (_,p) -> bound_in_env senv p) x2 in*)
       match x2 with [] -> x1 | _ -> x1 @ (check_tp senv lhs_ps x2) in
   refine_sol_update s k2 rhs_qps (List.map fst rhs_qps') 
 

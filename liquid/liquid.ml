@@ -231,6 +231,7 @@ let main () =
      "-simpguard", Arg.Set simpguard, "simplify guard (remove iff)";
      "-no-recrefs", Arg.Set no_recrefs, "true out recursive refinements";
      "-no-recvarrefs", Arg.Set no_recvarrefs, "true out top-level recvar refinements";
+     "-check-mlq", Arg.Set ck_mlq, "warn about possible errors in the local mlq";
      "-vgc", Arg.Int (fun c -> (get ()).verbose <- c), "verbose garbage collector";
      "-v", Arg.Int (fun c -> Common.verbose_level := c), 
               "<level> Set degree of analyzer verbosity:\n\

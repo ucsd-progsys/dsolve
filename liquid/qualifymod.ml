@@ -38,6 +38,7 @@ module B = Builtins
 module Le = Lightenv
 module F = Frame
 module M = Measure
+module WF = Wellformed
 
 (******************************************************************************)
 (******************************* Error reporting ******************************)
@@ -459,13 +460,24 @@ let maybe_cstr_from_unlabel_frame fenv p f =
   else
     None 
 
-let nrframes = ref []
-let add_nrframe n = nrframes := n :: !nrframes 
+let nrframes = 
+  let n = ref [] in
+  ((fun i -> n := i :: !n), (fun () -> !n)) 
+let add_nrframe = fst nrframes 
+let get_nrcstrs env fenv = List.rev_map (fun f -> lbl_dummy_cstr env (WFFrame (fenv, f))) ((snd nrframes) ())
 
+let warn_invalid_mlq env p f = 
+  let s = (fun _ -> []) in     
+  let env = Le.add C.qual_test_var f env in
+  let aa = P.Var C.qual_test_var in
+  F.refinement_iter (fun r -> if not (WF.refinement_well_formed env s r aa) then
+          eprintf "@[Warning:@ %s@ ::@ [...]@ %a@ [...]@ may@ not@ be@ wf@]@." (Path.name p) F.pprint_refinement r) f
+     
 let qualify_implementation sourcefile fenv' ifenv env qs str =
+  let _              = if !Clflags.ck_mlq then Le.iter (warn_invalid_mlq fenv') ifenv in
   let _              = reset_framelog () in
   let (qs, fenv, cs) = constrain_structure env fenv' qs str in
-  let nrcs           = List.rev_map (fun f -> lbl_dummy_cstr env (WFFrame (fenv', f))) !nrframes in
+  let nrcs           = get_nrcstrs env fenv in
   let cs             = List.rev_append nrcs cs in
   let cs             = (List.map (lbl_dummy_cstr env) (Le.maplistfilter (maybe_cstr_from_unlabel_frame fenv) ifenv)) @ cs in
   let _              = pre_solve sourcefile in
