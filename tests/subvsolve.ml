@@ -1,21 +1,27 @@
 
-type ('a,'b) graph = ('a * ('b * 'a) list) list 
+let create_root g n = 
+  let _ = myassert (not (Myhash.mem g n)) in
+  Myhash.set g n []
 
-let create () = []
+let succs g n = 
+  let _  = myassert (Myhash.mem g n) in
+  Myhash.get g n
 
-let create_root g n = (n,[])::g 
-
-let rec succs g n =
-  match g with 
-  | []          -> assert false
-  | (k,v)::g'   -> if n = k then v else succs g' n 
-
-let link g n n' l' =
-  let v = succs g n in
-  (n, (l',n')::v)::g
+let link g n n' l' = 
+  let _  = myassert (Myhash.mem g n) in
+  let _  = myassert (Myhash.mem g n') in
+  let v  = succs g n in
+  Myhash.set g n ((l',n')::v)
 
 let has_child g n = 
   succs g n = []
+
+let check_dag b g = 
+ Myhash.iter 
+   (fun i js -> 
+     assert (i <= b);
+     List.iter (fun j -> assert (i < j)) js; 
+     List.iter (fun j -> assert (j <= b)) js) g
 
 (***********************************************************************)
 (****************** AST ************************************************)
@@ -25,7 +31,11 @@ type var = int
 type interval = int * int
 type indexedvar = var * interval
 type block = int                                (* id *) 
-type bvtype = block list
+type sblock = block * int
+type bvtype = sblock list
+type splitres = 
+  | A of (sblock list * sblock list)  
+  | B of sblock * int * int * sblock list
 
 type constr = 
   | Bottom of indexedvar	                (* x[i:j] = \bot *)
@@ -34,15 +44,6 @@ type constr =
 
 let size = 64
 let bot = 0
-
-(* 
-let get_new_block = 
-  let xr = ref 0 in
-  fun s -> 
-    let _ = incr xr in 
-    !xr (* ("a"^(string_of_int !xr), s) *)
-*)
-
 let get_new_block b = 
   b + 1
 
@@ -55,45 +56,19 @@ type elabel_t = Outer | Inner of (int * int) (* Inner (posn,size) *)
 type node = int
 
 type bvtyping = {
-  block_cons_map_t              : (block,constr option) Hashtbl.t;
-(*  block_prettyblock_map_t       : (block,block) Hashtbl.t; *)
   var_node_map_t                : (var,node) Hashtbl.t;
 }
 
 let new_bvtyping () = 
-  let t = 
-    { (* block_cons_map_t = Hashtbl.create 31;
-         block_prettyblock_map_t = Hashtbl.create 31; *)
-         var_node_map_t = Hashtbl.create 31}
-  in
-  let g = G.create () in
+  let t = {var_node_map_t = Hashtbl.create 31} in
+  let g = Myhash.create 17 in
   let g = G.create_root g bot in
-  (* Hashtbl.replace (t.block_node_map_t) bot bot; *)
-  (g, t)
-
-(* let cur_constraint_ref = ref None *)
+  (bot, g, t)
 
 let add_new_block b g t  =
   let b' = get_new_block b in
   let g' = G.create_root g b' in
-  (* Hashtbl.replace (t.block_node_map_t) b n; 
-     Hashtbl.replace (t.block_cons_map_t) b' (!cur_constraint_ref); *)
   (b', g')
-
-(* 
-let get_block_node t b = 
-  try Hashtbl.find (t.block_node_map_t) b 
-  with Not_found -> failwith ("block not in table")
-
-let get_block_constraint t b = 
-  if Hashtbl.mem (t.block_cons_map_t) then 
-    Hashtbl.find (t.block_cons_map_t) b
-  else None
-
-let get_prettyblock t (n,s) = 
-  try (fst (Hashtbl.find (t.block_prettyblock_map_t) (n,size)),s) 
-  with Not_found -> (n,s)
-*)
 
 let add_new_var b g t v =
   let (b',g') = add_new_block b g t in
@@ -159,112 +134,124 @@ let get_bvtype g t x =
 
 (***********************************************************************)
 
-exception BreakExn of (block * int * int * (block list))
-
 let rec twosplit pre post d = 
   if d = 0 then 
-    (List.rev pre, post)
-  else 
-    (match post with
-     | [] -> myfail "error in twosplit"
+    A (List.rev pre, post)
+  else begin
+    match post with
+     | [] -> 
+         myfail "error in twosplit"
      | (name,s)::post' -> 
-        if d >= s then twosplit ((name,s)::pre) post' (d-s)
-        else raise (BreakExn ((name,s),d,s-d,post')))   
-  
+        if d >= s then 
+          twosplit ((name,s)::pre) post' (d-s)
+        else 
+          B ((name,s),d,s-d,post')
+  end
+
 let _break b g t x d = 
   let bvt = get_bvtype g t x in
-  try ignore(twosplit [] bvt d) 
-  with BreakExn(n,s1,s2,_) -> 
+  match twosplit [] bvt d with 
+  | A _ -> 
+      (b, g) 
+  | B ((n,_), s1, s2, _) -> 
     let (b1, g1) = add_new_block b  g  t  in
     let (b2, g2) = add_new_block b1 g1 t  in
     let g3       = substitute g2 n [b1;b2] [s2] in
     (b2, g3)
 
 let break b g t x (i,j) = 
-  let (b1, g1)   = breaker b g t x (size-i-1) in
-  let (b2, g2)   = breaker b1 g1 t x (size-j) in
+  let (b1, g1)   = _break b  g  t x (size-i-1) in
+  let (b2, g2)   = _break b1 g1 t x (size-j) in
   (b2, g2)
 
-
-HEREHEREHEREHERE
-
 (* INV: x broken at j *)
-let project t x (i,j) =
-  let bvt = get_bvtype t x in
+let project g t x (i,j) =
+  let bvt = get_bvtype g t x in
   let post = 
-    try snd(twosplit [] bvt (size-i-1)) 
-    with BreakExn((n,_),_,s,post') -> ((n,s)::post')
+    match twosplit [] bvt (size-i-1) with
+    | A (_,x)             -> x
+    | B ((n,_),_,s,post') -> ((n,s)::post')
   in 
   fst (twosplit [] post (i-j+1))
+  match (twosplit [] post (i-j+1)) with
+  | A (x,_) -> x
+  | _       -> myfail "x not broken at j"
 
 let rec clone e i = if i <= 0 then [] else (e::(clone e (i-1)))
 
 (* From constraint: x[i:j] <= x'[i',j'] *)
 (* INV: x broken at ij, x' broken at j' *)
-let rec subalign t (x,(i,j)) (x',(i',j')) =
-  if (i>=j) then 
-  let bv  = project t x (i,j) in
-  let bv' = project t x' (i',j') in
-   match (bv,bv') with
-    (h::l,h'::l') when (h=bot && h'=bot) -> subalign t (x,(i-1,j)) (x',(i'-1,j'))
-  | (_,h'::_) when (h' = bot) -> failwith "assert-fail: phase1 invariant nonzero-flow broken"
-  | (h::l,_) when (h=bot) -> subalign t (x,(i-1,j)) (x',(i'-1,j'))
-  | (b::l, b'::l') ->
-      (* neither is bot, flip so that b' is the larger block *)
-      let (b,b') = if (snd b) > (snd b') then (b',b) else (b,b') in 
-      let ((n,s),(n',s')) = (b,b') in
-      if (s = s') then
-        let _ = 
-          if n = n' then () else 
-            let b0 = add_new_block t in
-            let _  = substitute t b  [b0] [] in 
-            let _  = substitute t b' [b0] [] in () in
-        subalign t (x,(i-s,j)) (x',(i'-s,j')) 
-        (* (if (n <> n') then substitute t b [b'] [];
-        subalign t (x,(i-s,j)) (x',(i'-s,j'))) *)
-      else 
-        (assert (s < s'); 
-         let _ =  
-           if n = n' then 
-             let b0 = add_new_block t in 
-             substitute t b' [b0;b0] [s'-s]
-           else
-             let b0 = add_new_block t in
-             let b1 = add_new_block t in
-             substitute t b  [b1]    [];
-             substitute t b' [b1;b0] [s'-s] in
-         (* let b1 = if (n <> n') then b else b0 in 
-            substitute t b' [b1;b0] [s'-s]; *)
-         subalign t (x,(i,j)) (x',(i',j')))
-  | _ -> failwith "assert-fail: error in subalign" 
+let rec subalign b g t (x,(i,j)) (x',(i',j')) =
+  if i < j then (b, g) else 
+    let bv  = project g t x  (i,j)   in
+    let bv' = project g t x' (i',j') in
+    match (bv, bv') with
+    | ((n,s)::l,(n',s')::l') ->
+        if (n = bot && n' = bot) then 
+          subalign b g t (x,(i-1,j)) (x',(i'-1,j'))
+        else if n' = bot then
+          myfail "phase1 invariant nonzero-flow broken"
+        else if n  = bot then
+          subalign b g t (x,(i-1,j)) (x',(i'-1,j'))
+        else 
+          let ((n,s), (n',s')) = 
+            if s > s' then ((n',s'), (n,s)) else ((n,s), (n',s')) in
+          if s = s' then
+            if n = n' then 
+              subalign b g t (x,(i-s,j)) (x',(i'-s,j')) 
+            else 
+              let (b1, g1) = add_new_block b g t      in
+              let g2       = substitute g1 n  [b1] [] in 
+              let g3       = substitute g2 n' [b1] [] in 
+              subalign b1 g3 t (x,(i-s,j)) (x',(i'-s,j'))
+          else 
+            let _ = myassert (s < s') in 
+            if n = n' then 
+              let (b1, g1) = add_new_block b g t in 
+              let g2       = substitute g1 t n' [b1;b1] [s'-s] in
+              subalign b1 g2 t (x,(i,j)) (x',(i',j'))
+            else
+              let (b1, g1) = add_new_block b  g  t in
+              let (b2, g2) = add_new_block b1 g1 t in
+              let g3       = substitute g2 t n  [b2]    [] in
+              let g4       = substitute g3 t n' [b2;b1] [s'-s] in
+              subalign b2 g4 t (x,(i,j)) (x',(i',j'))
+            (* if (n = n') then substitute t b' [b1;b1] [s'-s]
+               else substitute t b' [b;b1] [s'-s] *)
+  | _ -> 
+      myfail "assert-fail: error in subalign" 
 
-let refine vmap t c = 
-  (* cur_constraint_ref := Some c; *)
+let refine b g t c = 
   match c with
-  | Bottom (x,ij) -> ()
+  | Bottom (x,ij) -> (b, g) 
   | IndexedEq ((x,(i,j)),(x',(i',j'))) ->
-      begin
-        assert (size > i && i >= j && j >= 0);
-        assert (size > i' && i' >= j' && j' >= 0);
-        assert (i-j = i'-j');
-        break t x (i,j); 
-        break t x'(i',j');
-        (* align t (x,(i,j)) (x',(i',j')); *)
-        subalign t (x,(i,j)) (x',(i',j'));
-        subalign t (x',(i',j')) (x,(i,j));
-      end
+      let _        = myassert (size > i && i >= j && j >= 0) in
+      let _        = myassert (size > i' && i' >= j' && j' >= 0) in
+      let _        = myassert (i-j = i'-j') in
+      let (b1, g1) = break b g   t x (i ,j)  in 
+      let (b2, g2) = break g1 g1 t x'(i',j') in
+      let (b3, g3) = subalign b2 g2 t (x,(i,j)) (x',(i',j')) in
+      let (b4, g4) = subalign b3 g3 t (x',(i',j')) (x,(i,j)) in
+      (b4, g4)
  | IndexedLeq ((x,(i,j)),(x',(i',j'))) ->
-      begin
-        assert (size > i && i >= j && j >= 0);
-        assert (size > i' && i' >= j' && j' >= 0);
-        assert (i-j = i'-j');
-        break t x (i,j); 
-        break t x'(i',j');
-        subalign t (x,(i,j)) (x',(i',j'));
-      end
-  | _ -> failwith "Not handled"
+      let _        = assert (size > i && i >= j && j >= 0) in
+      let _        = assert (size > i' && i' >= j' && j' >= 0) in
+      let _        = assert (i-j = i'-j') in
+      let (b1, g1) = break b  g  t x  (i,j) in
+      let (b2, g2) = break b1 g1 t x' (i',j') in
+      let (b3, g3) = subalign b2 g2 t (x,(i,j)) (x',(i',j')) in
+      (b3, g3)
+  | _ -> 
+      myfail "Not handled"
 
-let solve vmap cs = 
-  let t = new_bvtyping () in
-  let _ = List.iter (refine vmap t) cs in
-  t
+let rec solver b g t cs = 
+  match cs with
+  | [] -> 
+      (b,g,t)
+  | c::cs' ->
+      let (b1,g1) = refine b g t c in
+      solver b1 g1 t cs'
+
+let solve cs = 
+  let (b, g, t) = new_bvtyping () in
+  solver b g t cs  
