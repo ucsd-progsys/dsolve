@@ -113,7 +113,7 @@ let page_incref pm pr spm ps pg envs pp =
   let p' = match aux with Env id -> id | Vp _ -> 0 in
   let ps = Store.set ps pp ((Store.get ps pp) - 1) in
   let pr = Store.set pr pp p' in
-  (pm, pr, spm, ps, pg)
+  (pm, pr, spm, ps, pg, envs)
   (*let v = mem.(pp) in
   let p' = match aux with Env id -> id | Vp _ -> 0 in
   Array.set mem pp {pages = v.pages + 1; 
@@ -121,17 +121,36 @@ let page_incref pm pr spm ps pg envs pp =
                     aux_vps = Dsolve.Set.add aux v.aux_vps};
                     *)
 
-let env_check env =
-  assert (Hashtbl.mem envs env.id); 
+let env_check pm pr spm ps pg envs env =
+  assert (Store.get envs env);
+  assert (is_page_protected pm pr spm ps pg envs env);
+  Store.iter (fun vp pp ->
+                if pp >= 0 then
+                  assert (not (is_page_protected pm pr spm ps pg envs pp
+                          || is_page_free pm pr spm ps pg envs pp))) pg
+  (*assert (Hashtbl.mem envs env.id); 
   assert (is_page_protected env.env_mypp);
   Array.iteri
     (fun vp pp -> 
       if pp >= 0 then
         assert (not (is_page_protected pp || is_page_free pp)))
     env.env_pgdir
+    *)
 
-let mem_check () = 
-  let lpages = Array.make nppages 0 in
+let mem_check pm pr spm ps pg envs = 
+  let lpages = Store.init nppages (fun x -> 0) in
+  Store.fold
+    (fun lpages env b ->
+      if b then begin
+        env_check env;
+        Store.set lpages env ((Store.get pm env) + 1);
+        Store.iter
+          (fun pp _ -> Store.set lpages pp ((Store.get lpages pp) + 1)) pg
+      end)
+    envs;
+  Store.iteri
+    (fun pp 
+  (*let lpages = Array.make nppages 0 in
   Hashtbl.iter 
     (fun _ env -> 
        env_check env;
@@ -143,6 +162,7 @@ let mem_check () =
   Array.iteri 
     (fun pp v -> check_pp pp; assert (v.pages = lpages.(pp)))
     mem
+    *)
 
 let rec page_getfree () =
   let i = Random.int nppages in
