@@ -680,12 +680,12 @@ let refine sri s c =
       refine_tp (get_ref_fenv sri c) s env g r1 sub2s k2 
   | WFRef (env, (subs, F.Qvar k), Some id) ->
       let qs  = solution_map s k in
-      let _   = if C.ck_olev C.ol_dump_prover then printf "@.@.@[WF: %s@]@." (Path.unique_name k) in
-      let _   = if C.ck_olev C.ol_dump_prover then printf "@[(Env)@ %a@]@." pprint_fenv_shp env in 
+      let _   = if C.ck_olev C.ol_dump_wfs then printf "@.@.@[WF: %s@]@." (Path.unique_name k) in
+      let _   = if C.ck_olev C.ol_dump_wfs then printf "@[(Env)@ %a@]@." pprint_fenv_shp env in 
       let qs' = BS.time "filter wf" (List.filter (qual_wf sm env subs)) qs in
-      let _   = if C.ck_olev C.ol_dump_prover then List.iter (fun q -> printf "%a" Qualifier.pprint q) qs in
-      let _   = if C.ck_olev C.ol_dump_prover then printf "@.@." in
-      let _   = if C.ck_olev C.ol_dump_prover then List.iter (fun q -> printf "%a" Qualifier.pprint q) qs' in
+      let _   = if C.ck_olev C.ol_dump_wfs then List.iter (fun q -> printf "%a" Qualifier.pprint q) qs in
+      let _   = if C.ck_olev C.ol_dump_wfs then printf "@.@." in
+      let _   = if C.ck_olev C.ol_dump_wfs then List.iter (fun q -> printf "%a" Qualifier.pprint q) qs' in
       refine_sol_update s k qs qs'
   | _ -> false
 
