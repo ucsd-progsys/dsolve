@@ -26,6 +26,7 @@ let link g n n' l' =
 let has_child g n = 
   succs g n = []
 
+
 let check_dag b g = 
  Myhash.iter 
    (fun i js -> 
