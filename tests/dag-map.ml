@@ -15,9 +15,11 @@ let flap f xs   = List.flatten (List.map f xs)
 (**************************************************************)
 
 (* API *)
-let new_node n g = 
+let new_node g n = 
   let _ = hassert (not (Myhash.mem g n)) in 
   Myhash.set g n []
+
+let _ = new_node
 
 (* API *)
 let new_edge g n n' = 
@@ -70,20 +72,21 @@ let rec build_dag n g =
     (n, g)
   else if t = 1 then
     let n' = fresh n in
-    let g' = new_node n' g in
+    let g' = new_node g n'  in
     build_dag n' g'
   else 
     let n1s = leaves g (choose_node g) in
     let n2s = leaves g (choose_node g) in
     let ns  = n1s  @ n2s  in
     let n'  = fresh n in
-    let g'  = new_node n' g in 
+    let g'  = new_node g n'  in 
     let g'' = List.fold_left (fun g m -> new_edge g (show m) (show n')) (show g') (show ns) in
     build_dag n' g''
 
 let n0     = 0            
 let g0     = Myhash.create 17 (* n0 [] *)
-let (n,g)  = build_dag n0 g0
+let g1     = new_node g0 n0 
+let (n,g)  = build_dag n0 g1
 let _      = show g
 let _      = check_dag n g
 
