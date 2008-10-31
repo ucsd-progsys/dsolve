@@ -11,11 +11,11 @@ let show x = x
 (****************** Graph API ******************************************)
 (***********************************************************************)
 
-let new_node g n = 
+let new_node g (n : 'a) = 
   let _ = myassert (not (Myhash.mem g n)) in
-  Myhash.set g n []
+  Myhash.set g n ([] : ('b * 'a) list)
 
-let succs g n = 
+let succs g (n : 'a) : ('b * 'a) list = 
   let _  = myassert (Myhash.mem g n) in
   Myhash.get g n
 
@@ -24,9 +24,6 @@ let link g n n' l' =
   let _  = myassert (Myhash.mem g n') in
   let v  = succs g n in
   Myhash.set g n ((l',n')::v)
-
-let has_child g n = 
-  succs g n = []
 
 let check_dag g =
   Myhash.iter 
