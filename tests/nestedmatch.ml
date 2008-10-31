@@ -1,4 +1,11 @@
 type t = Node of int
+type tt = Pode of (int * int) * (int * int)
+
+let printer z = 
+  match z with Pode (z,z') -> 
+    let (x,y) = z in
+    let (x',y') = z' in
+    x + y + x' + y'
 
 let make x = 
   match x with None -> None | Some x -> Some (Node x)

@@ -39,8 +39,8 @@ let check_dag b g t =
 (****************** AST ************************************************)
 (***********************************************************************)
 
-type var = int 
-type indexedvar = var * (int * int) 
+type var = string 
+type indexedvar = var * int * int 
 
 (* type block = int                                (* id *) 
 type sblock = int * int
@@ -141,7 +141,6 @@ let substitute g n ns' ss' =
  *)
  
 
-(*
 (* INV: Graph is acyclic *)
 let rec desc g n s = 
   if s <= 0 then 
@@ -218,7 +217,9 @@ let project b g t x (i,j) =
 
 (* From constraint: x[i:j] <= x'[i',j'] *)
 (* INV: x broken at ij, x' broken at j' *)
-let rec subalign b0 g0 t0 (x,(i,j)) (x',(i',j')) =
+let rec subalign b0 g0 t0 z z' =
+  let (x, i, j ) = z  in
+  let (x',i',j') = z' in
   if i < j then (b0, g0, t0) else 
     let (b1, g1, t1, bv)  = project b0 g0 t0 x  (i,j)   in
     let (b2, g2, t2, bv') = project b1 g1 t1 x' (i',j') in
@@ -228,58 +229,66 @@ let rec subalign b0 g0 t0 (x,(i,j)) (x',(i',j')) =
     match (bv, bv') with
     | ((n,s)::l,(n',s')::l') ->
         if (n = bot && n' = bot) then 
-          subalign b g t (x,(i-1,j)) (x',(i'-1,j'))
+          subalign b g t (x,i-1,j) (x',i'-1,j')
         else if n' = bot then
           myfail "phase1 invariant nonzero-flow broken"
         else if n  = bot then
-          subalign b g t (x,(i-1,j)) (x',(i'-1,j'))
+          subalign b g t (x,i-1,j) (x',i'-1,j')
         else 
           let ((n,s), (n',s')) = 
             if s > s' then ((n',s'), (n,s)) else ((n,s), (n',s')) in
           if s = s' then
             if n = n' then 
-              subalign b g t (x,(i-s,j)) (x',(i'-s,j')) 
+              subalign b g t (x,i-s,j) (x',i'-s,j') 
             else 
               let (b1, g1) = add_new_block b g in
               let g2       = substitute g1 n  [b1] [] in 
               let g3       = substitute g2 n' [b1] [] in 
-              subalign b1 g3 t (x,(i-s,j)) (x',(i'-s,j'))
+              subalign b1 g3 t (x,i-s,j) (x',i'-s,j')
           else 
             let _ = myassert (s < s') in 
             if n = n' then 
               let (b1, g1) = add_new_block b g in 
               let g2       = substitute g1 n' [b1;b1] [s'-s] in
-              subalign b1 g2 t (x,(i,j)) (x',(i',j'))
+              subalign b1 g2 t (x,i,j) (x',i',j')
             else
               let (b1, g1) = add_new_block b  g  in
               let (b2, g2) = add_new_block b1 g1 in
               let g3       = substitute g2 n  [b1]    []     in
               let g4       = substitute g3 n' [b1;b2] [s'-s] in
-              subalign b2 g4 t (x,(i,j)) (x',(i',j'))
-  | _ -> 
-      myfail "assert-fail: error in subalign" 
+              subalign b2 g4 t (x,i,j) (x',i',j')
 
 let refine b g t c = 
   match c with
-  | Bottom (x,ij) -> (b, g, t) 
-  | IndexedEq ((x,(i,j)),(x',(i',j'))) ->
+  | Bottom (x,i,j) -> 
+      (b, g, t) 
+  | IndexedEq (z,z') ->
+      (b, g, t)
+     (* let (x,i,j)      = z  in
+      let (x',i',j')   = z' in
       let _            = myassert (size > i && i >= j && j >= 0) in
       let _            = myassert (size > i' && i' >= j' && j' >= 0) in
       let _            = myassert (i-j = i'-j') in
       let (b1, g1, t1) = break b  g  t  x (i ,j)  in 
       let (b2, g2, t2) = break b1 g1 t1 x'(i',j') in
-      let (b3, g3, t3) = subalign b2 g2 t2 (x,(i,j)) (x',(i',j')) in
-      let (b4, g4, t4) = subalign b3 g3 t3 (x',(i',j')) (x,(i,j)) in
-      (b4, g4, t4)
- | IndexedLeq ((x,(i,j)),(x',(i',j'))) ->
+      let (b3, g3, t3) = subalign b2 g2 t2 (x,i,j) (x',i',j') in
+      let (b4, g4, t4) = subalign b3 g3 t3 (x',i',j') (x,i,j) in
+      (b4, g4, t4) *)
+ | IndexedLeq (z,z') ->
+     (b,g,t)
+     (*
+      let (x,i,j)      = z  in
+      let (x',i',j')   = z' in
       let _            = assert (size > i && i >= j && j >= 0) in
       let _            = assert (size > i' && i' >= j' && j' >= 0) in
       let _            = assert (i-j = i'-j') in
       let (b1, g1, t1) = break b  g  t  x  (i,j) in
       let (b2, g2, t2) = break b1 g1 t1 x' (i',j') in
-      let (b3, g3, t3) = subalign b2 g2 t2 (x,(i,j)) (x',(i',j')) in
+      let (b3, g3, t3) = subalign b2 g2 t2 (x,i,j) (x',i',j') in
       (b3, g3, t3)
+*)
 
+             (*
 let rec solver b g t cs = 
   match cs with
   | [] -> 
@@ -294,4 +303,5 @@ let solve cs =
   let (b1,g1,t1)= solver b g t cs  in
   let _         = check_dag b1 g1 in
   (b1, g1, t1)
+  
   *)
