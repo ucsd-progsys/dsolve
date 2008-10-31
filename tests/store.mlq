@@ -4,7 +4,6 @@
 
 axiom get : forall (i: int, w: int, a: int. (w = get (set a i w) i))
 axiom set : forall (i: int, j: int, w: int, a: int. (i = j) or (get (set a j w) i = get a i))
-axiom remove : forall (j: int, w: int, a: int. remove (set a j w) j = a)
 
 
 val set: x: (m: 'a, 'b) t -> k: 'a -> l: 'b[k/m] -> {v: (n: 'a, {v: 'b[n/m] | v = get supr n}) t | v = set x k l}
@@ -15,7 +14,7 @@ val iter: ('a, 'b) t -> (k: 'a -> 'b[k/e0] -> unit) -> unit
 
 val iteri: ('a, 'b) t -> (int -> k: 'a -> 'b[k/e0] -> unit) -> unit
 
-val fold: ('a, 'b) t -> (k: 'a -> 'b[k/e0] -> 'a -> 'a) -> 'a -> 'a
+val fold: ('a, 'b) t -> ('c -> k: 'a -> 'b[k/e0] -> 'c) -> 'c -> 'c
 
 val empty: ('a, 'b) t
 

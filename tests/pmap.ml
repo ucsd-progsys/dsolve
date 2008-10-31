@@ -1,3 +1,7 @@
+type aux_vp_t   = 
+  | Env of int
+  | Vp
+
 (************************** globals **************************************)
 let nvpages     = 2000
 let nppages     = 1000
@@ -19,13 +23,13 @@ let envs            = Store.empty (*(int, bool) Store.t*) (*env -> true if alloc
  
 (********************** helper functions **********************************)
 
-let rec ffor i n f =
-  let f_rec n' =
+let ffor i n f =
+  let rec f_rec n' =
     if n <= n' then () else f n'; f_rec (n'+1) in
   f_rec i
 
-let rec ffold i n f a =
-  let f_rec n' a =
+let ffold i n f a =
+  let rec f_rec n' a =
     if n <= n' then a else f_rec (n'+1) (f n' a) in
   f_rec i a
 
@@ -62,9 +66,9 @@ let page_decref pm pr spm ps pg envs pp =
                     aux_vps = Dsolve.Set.remove aux v.aux_vps}
                     *)
 
-(*let page_incref pm pr spm ps pg envs pp =
+let page_incref pm pr spm ps pg envs pp aux =
   assert (not (is_page_protected pm pr spm ps pg envs pp));
-  let p' = match aux with Env id -> id | Vp _ -> 0 in
+  let p' = match aux with Env id -> id | Vp -> 0 in
   let ps = Store.set ps pp ((Store.get ps pp) - 1) in
   let pr = Store.set pr pp p' in
   (pm, pr, spm, ps, pg, envs)
@@ -78,10 +82,10 @@ let page_decref pm pr spm ps pg envs pp =
 let env_check pm pr spm ps pg envs env =
   assert (Store.get envs env);
   assert (is_page_protected pm pr spm ps pg envs env);
-  Store.iter (fun (env', _) pp ->
+  Store.iter pg (fun (env', _) pp ->
                 if env = env' && pp >= 0 then
                   assert (not (is_page_protected pm pr spm ps pg envs pp
-                          || is_page_free pm pr spm ps pg envs pp))) pg
+                          || is_page_free pm pr spm ps pg envs pp)))
   (*assert (Hashtbl.mem envs env.id); 
   assert (is_page_protected env.env_mypp);
   Array.iteri
@@ -93,16 +97,17 @@ let env_check pm pr spm ps pg envs env =
 
 let mem_check pm pr spm ps pg envs = 
   let lpages = Store.init nppages (fun x -> 0) in
-  Store.fold
+  let lpages =
+  Store.fold envs
     (fun lpages env b ->
       if b then begin
-        env_check env;
-        Store.set lpages env ((Store.get pm env) + 1);
-        Store.iter
-          (fun (env', _) pp -> if env' = env then
-             Store.set lpages pp ((Store.get lpages pp) + 1)) pg
-      end)
-    envs;
+        env_check pm pr spm ps pg envs env;
+        let lpages = Store.set lpages env ((Store.get pm env) + 1) in
+        Store.fold pg
+          (fun lpages (env', _) pp -> if env' = env then
+             Store.set lpages pp ((Store.get lpages pp) + 1)
+          else lpages) lpages
+      end else lpages) lpages in
   let iter pp =
     check_pp pm pr spm ps pg envs pp;
     assert (Store.get pages pp = Store.get lpages pp) in
@@ -132,14 +137,14 @@ let env_alloc ctr pm pr spm ps pg envs =
   let env_pp = page_getfree pm pr spm ps pg envs in
   if env_pp = -1 then (pm, pr, spm, ps, pg, envs, None) else
     let id = fresh_id ctr in
-    let (pm, pr, spm, ps, pg, envs) = page_incref env_pp (Env id) in
+    let (pm, pr, spm, ps, pg, envs) = page_incref pm pr spm ps pg envs env_pp (Env id) in
     let pm = Store.set pm id env_pp in
     let spm = pm in
     let init vp pg = Store.set pg (id, vp) (-1) in
     let pg = ffold 0 nvpages init pg in
-    let envs = Store.set envs env true in
-    env_check pm pr spm ps pg envs env;
-    mem_check pm pr spm ps pg envs;
+    let envs = Store.set envs id true in
+    let _ = env_check pm pr spm ps pg envs id in
+    let _ = mem_check pm pr spm ps pg envs in
     (pm, pr, spm, ps, pg, envs, Some id) 
 (*  let env_pp = page_getfree () in
   if env_pp = -1 then None else 
@@ -157,14 +162,14 @@ let env_alloc ctr pm pr spm ps pg envs =
 let env_free pm pr spm ps pg envs env = 
   env_check pm pr spm ps pg envs env; (* below is correct because page_decref doesn't modify pg *)
   let (pm, pr, spm, ps, pg, envs) =
-    Store.fold (fun (pm, pr, spm, ps, pg, envs) (env', vp) pp ->
+    Store.fold pg (fun (pm, pr, spm, ps, pg, envs) (env', vp) pp ->
                  if pp >= 0 then
-                   page_decref pm pr spm ps pg envs pp (Vp (env, vp)) else
-                     (pm, pr, spm, ps, pg, envs)) (pm, pr, spm, ps, pg, envs) pg in
-  let (pm, pr, spm, ps, pg, envs) = page_decref (Store.get pm env) (Env env) in
+                   page_decref pm pr spm ps pg envs pp (*(Vp (env, vp))*) else
+                     (pm, pr, spm, ps, pg, envs)) (pm, pr, spm, ps, pg, envs) in
+  let (pm, pr, spm, ps, pg, envs) = page_decref pm pr spm ps pg envs (Store.get pm env) (*Env env*) in
   let _ = assert (is_page_free pm pr spm ps pg envs (Store.get pm env)) in
-  let erase vp pg = Store.set pg (env, vp) -1 in
-  let pg = ffold 0 nvpages erase in
+  let erase vp pg = Store.set pg (env, vp) (-1) in
+  let pg = ffold 0 nvpages erase pg in
   let envs = Store.set envs env false in
   let _ = mem_check pm pr spm ps pg envs in
     (pm, pr, spm, ps, pg, envs)
@@ -181,10 +186,10 @@ let env_free pm pr spm ps pg envs env =
 
 let page_alloc pm pr spm ps pg envs env vp = 
   check_range 0 nvpages vp;
-  assert (Store.get (env, vp) = -1);
+  assert (Store.get pg (env, vp) = -1);
   let pp = page_getfree pm pr spm ps pg envs in
   if pp >= 0 then (pm, pr, spm, ps, pg, envs, false) else
-    let (pm, pr, spm, ps, pg, envs) = page_incref pm pr spm ps pg envs pp (Vp (env, vp)) in 
+    let (pm, pr, spm, ps, pg, envs) = page_incref pm pr spm ps pg envs pp (Vp (*env, vp*)) in 
     let pg = Store.set pg (env, vp) pp in
     let _ = env_check pm pr spm ps pg envs env in
     let _ = mem_check pm pr spm ps pg envs in
@@ -203,8 +208,8 @@ let page_unmap pm pr spm ps pg envs env vp =
   check_range 0 nvpages vp;
   let pp = Store.get pg (env, vp) in
   if pp >= 0 then
-    let (pm, pr, spm, ps, pg, envs) = page_decref pm pr spm ps pg envs pp (Vp (env, vp)) in
-    let pg = Store.set (env, vp) -1 in
+    let (pm, pr, spm, ps, pg, envs) = page_decref pm pr spm ps pg envs pp (*Vp (env, vp)*) in
+    let pg = Store.set pg (env, vp) (-1) in
     let _ = env_check pm pr spm ps pg envs env in
     let _ = mem_check pm pr spm ps pg envs in
     (pm, pr, spm, ps, pg, envs)
@@ -220,11 +225,11 @@ let page_map pm pr spm ps pg envs srcenv srcvp dstenv dstvp =
   check_range 0 nvpages srcvp;
   check_range 0 nvpages dstvp;
   List.iter (env_check pm pr spm ps pg envs) [srcenv; dstenv];
-  let srcpp = Store.get pg (env, srcvp) in
+  let srcpp = Store.get pg (srcenv, srcvp) in
   if srcpp < 0 then (pm, pr, spm, ps, pg, envs, false) else
     (let (pm, pr, spm, ps, pg, envs) = page_unmap pm pr spm ps pg envs dstenv dstvp in
-     let pg = Store.set pg dstvp srcpp in
-     let (pm, pr, spm, ps, pg, envs) = page_incref pm pr spm ps pg envs srcpp (Vp (dstenv, dstvp)) in
+     let pg = Store.set pg (dstenv, dstvp) srcpp in
+     let (pm, pr, spm, ps, pg, envs) = page_incref pm pr spm ps pg envs srcpp (Vp (*dstenv, dstvp*)) in
      let _ = env_check pm pr spm ps pg envs dstenv in
      let _ = mem_check pm pr spm ps pg envs in
      (pm, pr, spm, ps, pg, envs, true))
@@ -236,7 +241,7 @@ let page_map pm pr spm ps pg envs srcenv srcvp dstenv dstvp =
      env_check dstenv; mem_check (); true)
      *)
 
-*)
+
 
     
 
