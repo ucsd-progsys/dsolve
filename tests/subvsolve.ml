@@ -163,7 +163,7 @@ let rec twosplit pre post d =
           B ((name,s),d,s-d,post')
   end
 
-let _break b g t x d = 
+let ac_break b g t x d = 
   let (b0, g0, bvt) = get_bvtype b g t x in
   match twosplit [] bvt d with 
   | A _ -> 
@@ -175,8 +175,8 @@ let _break b g t x d =
     (b2, g3)
 
 let break b g t x (i,j) = 
-  let (b1, g1)   = _break b  g  t x (size-i-1) in
-  let (b2, g2)   = _break b1 g1 t x (size-j) in
+  let (b1, g1)   = ac_break b  g  t x (size-i-1) in
+  let (b2, g2)   = ac_break b1 g1 t x (size-j) in
   (b2, g2)
 
 (* INV: x broken at j *)
@@ -275,4 +275,3 @@ let solve cs =
   let (b', g')  = solver b g t cs  in
   let _         = check_dag b' g' in
   (b', g')
-
