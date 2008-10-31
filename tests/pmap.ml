@@ -3,12 +3,12 @@ let nvpages     = 2000
 let nppages     = 1000
 let _           = assert (nvpages > nppages)
 
-let env_mypp        = Store.create () (*(int, int) Store.t*) (*pm*) (*env -> pp*)
-let protected       = Store.create () (*(int, int) Store.t*) (*pr*) (*pp -> true iff mapped*)
-let env_mypp_shadow = Store.create () (*(int, int) Store.t*) (*spm*)
-let pages           = Store.create () (*(int, int) Store.t*) (*ps*) (*pp -> 1 iff mapped*)
-let env_pgdir       = Store.create () (*(int * int, int) Store.t*) (*pg*) (*env * vp -> pp*)
-let envs            = Store.create () (*(int, bool) Store.t*) (*env -> true if alloc*)
+let env_mypp        = Store.empty (*(int, int) Store.t*) (*pm*) (*env -> pp*)
+let protected       = Store.empty (*(int, int) Store.t*) (*pr*) (*pp -> true iff mapped*)
+let env_mypp_shadow = Store.empty (*(int, int) Store.t*) (*spm*)
+let pages           = Store.empty (*(int, int) Store.t*) (*ps*) (*pp -> 1 iff mapped*)
+let env_pgdir       = Store.empty (*(int * int, int) Store.t*) (*pg*) (*env * vp -> pp*)
+let envs            = Store.empty (*(int, bool) Store.t*) (*env -> true if alloc*)
 
 (*env_mypp        :: (i:int, (V >= 0) -> get page_protected V = i) Store.t 
   protected       :: (i:int, (V >  0) -> get env_mypp V = i) Store.t  
@@ -62,7 +62,7 @@ let page_decref pm pr spm ps pg envs pp =
                     aux_vps = Dsolve.Set.remove aux v.aux_vps}
                     *)
 
-let page_incref pm pr spm ps pg envs pp =
+(*let page_incref pm pr spm ps pg envs pp =
   assert (not (is_page_protected pm pr spm ps pg envs pp));
   let p' = match aux with Env id -> id | Vp _ -> 0 in
   let ps = Store.set ps pp ((Store.get ps pp) - 1) in
@@ -163,7 +163,7 @@ let env_free pm pr spm ps pg envs env =
                      (pm, pr, spm, ps, pg, envs)) (pm, pr, spm, ps, pg, envs) pg in
   let (pm, pr, spm, ps, pg, envs) = page_decref (Store.get pm env) (Env env) in
   let _ = assert (is_page_free pm pr spm ps pg envs (Store.get pm env)) in
-  let erase vp pg = Store.remove pg (env, vp) in
+  let erase vp pg = Store.set pg (env, vp) -1 in
   let pg = ffold 0 nvpages erase in
   let envs = Store.set envs env false in
   let _ = mem_check pm pr spm ps pg envs in
@@ -236,7 +236,7 @@ let page_map pm pr spm ps pg envs srcenv srcvp dstenv dstvp =
      env_check dstenv; mem_check (); true)
      *)
 
-
+*)
 
     
 
@@ -312,11 +312,11 @@ let _           = assert (nvpages > nppages)
                                       aux_vps = Dsolve.Set.empty}*)
 (*let envs        = Hashtbl.create 37 : (int, env) Hashtbl.t *)
 
-type protected = Store.create () (*(int, int) Store.t*)
-type env_mypp = Store.create () (*(int, int) Store.t*)
-type pages = Store.create () (*(int, int) Store.t*)
-type env_pgdir = Store.create () (*(int * int, int) Store.t*)
-type dummy_env_mypp = Store.create () (*(int, int) Store.t*)
+type protected = Store.empty () (*(int, int) Store.t*)
+type env_mypp = Store.empty () (*(int, int) Store.t*)
+type pages = Store.empty () (*(int, int) Store.t*)
+type env_pgdir = Store.empty () (*(int * int, int) Store.t*)
+type dummy_env_mypp = Store.empty () (*(int, int) Store.t*)
 
 (********************** helper functions **********************************)
 (** unit -> {0<V} *)
