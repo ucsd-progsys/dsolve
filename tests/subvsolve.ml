@@ -28,7 +28,8 @@ let has_child g n =
 
 
 let check_dag b g t =
- Myhash.iter (fun v n -> assert (0 <= n && n <= b)) t;
+ Myhash.iter (fun v n -> assert (0 <= n)) t;
+ Myhash.iter (fun v n -> assert (n <= b)) t;
  Myhash.iter 
    (fun i js -> 
      assert (i <= b);
@@ -51,9 +52,10 @@ type splitres =
   | B of (int * int) * int * int * (int * int) list
 
 type constr = 
-  | Bottom of indexedvar	                (* x[i:j] = \bot *)
-  | IndexedEq of indexedvar * indexedvar        (* x[i:j] = x'[i':j'] *)
-  | IndexedLeq of indexedvar * indexedvar       (* x[i:j] <= x'[i':j'] *)
+  | Bottom of var * int * int                           (* x[i:j] = \bot *)
+  | IndexedEq of (var * int * int) * (var * int * int)  (* x[i:j] = x'[i':j'] *)
+  | IndexedLeq of (var * int * int) * (var * int * int)  (* x[i:j] = x'[i':j'] *)
+(*| IndexedLeq of indexedvar * indexedvar               (* x[i:j] <= x'[i':j']*) *)
 
 let size = 64
 let bot = 0
@@ -68,9 +70,9 @@ type elabel_t = Outer | Inner of (int * int) (* Inner (posn,size) *)
 
 type node = int
 
-let new_bvtyping () = 
-  let t = Myhash.create 17 in 
-  let g = Myhash.create 17 in
+let new_bvtyping sz = 
+  let t = Myhash.create sz in 
+  let g = Myhash.create sz in
   let g = new_node g bot in
   (bot, g, t)
 
@@ -263,8 +265,7 @@ let refine b g t c =
   | Bottom (x,i,j) -> 
       (b, g, t) 
   | IndexedEq (z,z') ->
-      (b, g, t)
-     (* let (x,i,j)      = z  in
+      let (x,i,j)      = z  in
       let (x',i',j')   = z' in
       let _            = myassert (size > i && i >= j && j >= 0) in
       let _            = myassert (size > i' && i' >= j' && j' >= 0) in
@@ -273,22 +274,18 @@ let refine b g t c =
       let (b2, g2, t2) = break b1 g1 t1 x'(i',j') in
       let (b3, g3, t3) = subalign b2 g2 t2 (x,i,j) (x',i',j') in
       let (b4, g4, t4) = subalign b3 g3 t3 (x',i',j') (x,i,j) in
-      (b4, g4, t4) *)
+      (b4, g4, t4) 
  | IndexedLeq (z,z') ->
-     (b,g,t)
-     (*
       let (x,i,j)      = z  in
       let (x',i',j')   = z' in
-      let _            = assert (size > i && i >= j && j >= 0) in
-      let _            = assert (size > i' && i' >= j' && j' >= 0) in
-      let _            = assert (i-j = i'-j') in
+      let _            = myassert (size > i && i >= j && j >= 0) in
+      let _            = myassert (size > i' && i' >= j' && j' >= 0) in
+      let _            = myassert (i-j = i'-j') in
       let (b1, g1, t1) = break b  g  t  x  (i,j) in
       let (b2, g2, t2) = break b1 g1 t1 x' (i',j') in
       let (b3, g3, t3) = subalign b2 g2 t2 (x,i,j) (x',i',j') in
       (b3, g3, t3)
-*)
 
-             (*
 let rec solver b g t cs = 
   match cs with
   | [] -> 
@@ -298,10 +295,8 @@ let rec solver b g t cs =
       solver b1 g1 t1 cs'
 
 let solve cs = 
-  let (b, g, t) = new_bvtyping () in
+  let (b, g, t) = new_bvtyping 17 in
   let _         = check_dag b g in
   let (b1,g1,t1)= solver b g t cs  in
   let _         = check_dag b1 g1 in
   (b1, g1, t1)
-  
-  *)
