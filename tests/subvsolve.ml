@@ -5,6 +5,8 @@ let myfail s =
   print_string s; 
   assert false 
 
+let show x = x
+
 (***********************************************************************)
 (****************** Graph API ******************************************)
 (***********************************************************************)
@@ -26,8 +28,12 @@ let link g n n' l' =
 let has_child g n = 
   succs g n = []
 
+let check_dag g =
+  Myhash.iter 
+    (fun i js -> 
+      List.iter (fun z -> let (_,j) = z in assert (i < j)) js) g 
 
-let check_dag b g t =
+let check_all b g t =
  Myhash.iter (fun v n -> assert (0 <= n)) t;
  Myhash.iter (fun v n -> assert (n <= b)) t;
  Myhash.iter 
@@ -47,18 +53,18 @@ type indexedvar = var * int * int
 type sblock = int * int
 type bvtype = (int * int) list *)
 
-type splitres = 
-  | A of ((int * int) list * (int * int) list)  
-  | B of (int * int) * int * int * (int * int) list
+type 'a splitres = 
+  | A of (('a * int) list * ('a * int) list)  
+  | B of ('a * int) * int * int * ('a * int) list
 
 type constr = 
   | Bottom of var * int * int                           (* x[i:j] = \bot *)
   | IndexedEq of (var * int * int) * (var * int * int)  (* x[i:j] = x'[i':j'] *)
-  | IndexedLeq of (var * int * int) * (var * int * int)  (* x[i:j] = x'[i':j'] *)
-(*| IndexedLeq of indexedvar * indexedvar               (* x[i:j] <= x'[i':j']*) *)
+  | IndexedLeq of (var * int * int) * (var * int * int) (* x[i:j] <= x'[i':j'] *)
 
 let size = 64
 let bot = 0
+
 let get_new_block b = 
   b + 1
 
@@ -113,9 +119,9 @@ let rec fold2 f b1 b2 xs ys =
   | _ -> b1 
 
 let substitute g n ns' ss' =
+  let _ = check_dag g in
   let _ = myassert (List.length ns' = List.length ss' + 1) in
   let _ = myassert (List.for_all (is_leaf_block g) (n::ns')) in
-  let _ = myassert (n != bot) in
   match ns' with 
   | [] -> myfail ("error: ns' must be nonempty")
   | (n':: ns') -> 
@@ -125,7 +131,8 @@ let substitute g n ns' ss' =
           let g' = link g n n' (Inner (i,s')) in
           (g', i+1))
         g' 0 ns' ss'
-  (* let rec hookup g n i ns' ss' =
+
+  (* {{{ let rec hookup g n i ns' ss' =
     match (ns', ss') with 
     | (n'::ns'',s'::ss'') -> 
         let g' = link g n n' (Inner (i,s')) in
@@ -139,8 +146,7 @@ let substitute g n ns' ss' =
   let hookup n g i n' s' =  
     let g' = link g n n' (Inner (i,s')) in
     (g', i+1) in 
-  let (g'',j) = fold2 (hookup n) g' 0 ns' ss' in g'' 
- *)
+  let (g'',j) = fold2 (hookup n) g' 0 ns' ss' in g'' }}} *)
  
 
 (* INV: Graph is acyclic *)
@@ -191,8 +197,8 @@ let ac_break b g t x d =
   match twosplit [] bvt d with 
   | A _ -> 
       (b0, g0, t0) 
-  | B ((n,_), s1, s2, _) -> 
-      let (b1, g1) = add_new_block b0 g0 in
+  | B ((n,_), s1, s2, _) ->  
+      let (b1, g1) = add_new_block b0 g0 in (* *)
       let (b2, g2) = add_new_block b1 g1 in
       let g3       = substitute g2 n [b1;b2] [s2] in
       (b2, g3, t0)
@@ -292,11 +298,20 @@ let rec solver b g t cs =
       (b,g,t)
   | c::cs' ->
       let (b1,g1,t1) = refine b g t c in
-      solver b1 g1 t1 cs'
+      (b1, g1, t1)
+      (* solver b1 g1 t1 cs' *)
 
+  (*
+let mychecker zz = 
+  let (b, g, t) = new_bvtyping 17 in
+  let _         = check_all b g t in 
+  let (b0,g0)   = add_new_block b  g  in
+  let (b1,g1)   = add_new_block b0 g0 in
+  let (b2,g2)   = add_new_block b1 g1 in
+*)
 let solve cs = 
   let (b, g, t) = new_bvtyping 17 in
-  let _         = check_dag b g in
+  let _         = check_all b g t in 
   let (b1,g1,t1)= solver b g t cs  in
-  let _         = check_dag b1 g1 in
-  (b1, g1, t1)
+  let _         = check_all b1 g1 t1 in
+  (b1, g1, t1) 
