@@ -102,21 +102,46 @@ let e_sort es =
 
 let is_leaf_block g n = 
   (succs g n) = []
-  
+ 
+let rec fold2 f b1 b2 xs ys =
+  match xs, ys with
+  | (x::xs', y::ys') -> 
+      let (b1', b2') = f b1 b2 x y in
+      fold2 f b1' b2' xs' ys'
+  | _ -> b1 
+
 let substitute g n ns' ss' =
-  assert (List.length ns' = List.length ss' + 1);
-  assert (List.for_all (is_leaf_block g) (n::ns'));
-  assert (n != bot);
-  let hookup n (g, i) n' s' =  
-    let g' = link g n n' (Inner (i,s')) in
-    (g', i+1) in
+  let _ = myassert (List.length ns' = List.length ss' + 1) in
+  let _ = myassert (List.for_all (is_leaf_block g) (n::ns')) in
+  let _ = myassert (n != bot) in
   match ns' with 
   | [] -> myfail ("error: ns' must be nonempty")
   | (n':: ns') -> 
       let g'      = link g n n' Outer in
-      let (g'',_) = List.fold_left2 (hookup n) (g',0) ns' ss' in
-      g''
+      fold2 
+        (fun g i n' s' -> 
+          let g' = link g n n' (Inner (i,s')) in
+          (g', i+1))
+        g' 0 ns' ss'
+  (* let rec hookup g n i ns' ss' =
+    match (ns', ss') with 
+    | (n'::ns'',s'::ss'') -> 
+        let g' = link g n n' (Inner (i,s')) in
+        hookup g' n (i+1) ns'' ss''
+    | _ -> g in 
+  match ns' with 
+  | [] -> myfail ("error: ns' must be nonempty")
+  | (n':: ns') -> 
+      let g' = link g n n' Outer in
+      hookup g n 0 ns' ss'
+  let hookup n g i n' s' =  
+    let g' = link g n n' (Inner (i,s')) in
+    (g', i+1) in 
+  let (g'',j) = fold2 (hookup n) g' 0 ns' ss' in g'' 
+ *)
+ 
 
+(*
 (* INV: Graph is acyclic *)
 let rec desc g n s = 
   if s <= 0 then 
@@ -146,7 +171,6 @@ let get_bvtype b g t x =
   (b1, g1, t1, bs)
 
 (***********************************************************************)
-
 let rec twosplit pre post d = 
   if d = 0 then 
     A (List.rev pre, post)
@@ -270,3 +294,4 @@ let solve cs =
   let (b1,g1,t1)= solver b g t cs  in
   let _         = check_dag b1 g1 in
   (b1, g1, t1)
+  *)
