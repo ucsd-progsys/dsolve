@@ -1,3 +1,8 @@
-#define asdf
 
-val page_decref: 
+
+#define W_IN(pm, pr, spm, ps, pg, envs) pm -> pr -> spm -> ps -> pg -> envs 
+#define W_OUT(pm, pr, spm, ps, pg, envs) ((pm) * (pr) * (spm) * (ps) * (pg) * (envs))
+#define PPAGE {v: int | v >= 0 and v <= nppages}
+
+val page_decref: W_IN -> PPAGE -> W_OUT
+val page_incref: W_IN -> PPAGE -> aux_vp_t -> W_OUT
