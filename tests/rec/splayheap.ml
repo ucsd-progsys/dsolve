@@ -1,5 +1,10 @@
 (* Splay Heaps: Okasaki's "Purely Functional Data Structures" p.50 Fig. 5.5. *)
 
+let myfail s = 
+  print_string s; assert false
+
+let show x = x
+
 type 'a splayheap = 
   | E 
   | T of 'a * 'a splayheap * 'a splayheap
@@ -63,23 +68,50 @@ let rec merge t' t =
 
 let rec findMin t = 
   match t with
-  | E ->
+  | E -> 
       myfail "empty"
-  | T (x, E, b) -> 
-      x
   | T (x, a, b) -> 
-      findMin a
- 
-let rec findMin2 t = 
+      (match a with 
+       | E -> x
+       | _ -> findMin a)
+
+let findMin2 t = 
   match t with
   | E -> 
       myfail "empty"
-  | T (x, E, b) -> 
-      (x, T (x, E, b))
-  | T (x, a, b) ->
-      let (x', a') = findMin2 a in
-      (x', T (x, a', b))
+  | T (x, a, b) -> 
+      (match a with 
+       | E -> (x, T (x, E, b))
+       | _ -> let (x', a') = findMin2 a in
+              (x', T (x, a', b)))
 
+let rec deleteMin t = 
+  match t with
+  | E ->
+      myfail "empty"
+  | T (x, a, c) ->
+      (match a with 
+       | E -> 
+           c
+       | T (x', a', b) ->
+           (match a' with 
+           | E -> T (x, b, c)
+           | _ -> T (x', deleteMin a', T (x, b, c))))
+
+let rec deleteMin2 t = 
+  match t with
+  | E ->
+      myfail "empty"
+  | T (x, a, c) ->
+      (match a with 
+       | E -> 
+           (x, c)
+       | T (x', a', b) ->
+           (match a' with 
+           | E -> (x', T (x, b, c))
+           | _ -> let (m, a'') = deleteMin2 a' in
+                  (m, T (x', a'', T (x, b, c)))))
+(*
 let rec deleteMin t = 
   match t with
   | E ->
@@ -102,23 +134,24 @@ let rec deleteMin2 t =
   | T (y, T (x, a, b), c) ->
       let (r, a') = deleteMin2 a in
       (r, T (x, a', T (y, b, c)))
-(*
-let findMin t = 
-  match t with
-  | E -> 
-      myfail "empty"
-  | T (x, a, b) -> 
-      (match a with 
-       | E -> x
-       | _ -> findMin a)
 
-let findMin2 t = 
+let rec findMin t = 
+  match t with
+  | E ->
+      myfail "empty"
+  | T (x, E, b) -> 
+      x
+  | T (x, a, b) -> 
+      findMin a
+ 
+let rec findMin2 t = 
   match t with
   | E -> 
       myfail "empty"
-  | T (x, a, b) -> 
-      (match a with 
-       | E -> (x, T (x, E, b))
-       | _ -> let (x', a') = findMin2 a in
-              (x', T (x, a', b)))
+  | T (x, E, b) -> 
+      (x, T (x, E, b))
+  | T (x, a, b) ->
+      let (x', a') = findMin2 a in
+      (x', T (x, a', b))
 *)
+
