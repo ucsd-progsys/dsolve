@@ -295,17 +295,8 @@ let rec solver b g t cs =
       (b,g,t)
   | c::cs' ->
       let (b1,g1,t1) = refine b g t c in
-      (b1, g1, t1)
-      (* solver b1 g1 t1 cs' *)
+      solver b1 g1 t1 cs'
 
-  (*
-let mychecker zz = 
-  let (b, g, t) = new_bvtyping 17 in
-  let _         = check_all b g t in 
-  let (b0,g0)   = add_new_block b  g  in
-  let (b1,g1)   = add_new_block b0 g0 in
-  let (b2,g2)   = add_new_block b1 g1 in
-*)
 let solve cs = 
   let (b, g, t) = new_bvtyping 17 in
   let _         = check_all b g t in 
