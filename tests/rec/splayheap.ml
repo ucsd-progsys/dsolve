@@ -111,6 +111,30 @@ let rec deleteMin2 t =
            | E -> (x', T (x, b, c))
            | _ -> let (m, a'') = deleteMin2 a' in
                   (m, T (x', a'', T (x, b, c)))))
+
+let rec app x ys zs = 
+  match ys with
+  | [] -> x :: zs
+  | y :: ys' -> y :: (app x ys' zs)
+
+let rec to_list t = 
+  match t with
+  | E -> []
+  | T (x, a, b) -> x (to_list a) (to_list b)
+
+let rec check_sorted xs =
+  match xs with 
+  | [] -> 
+      ()
+  | x :: xs' -> 
+      List.iter (fun x' -> assert (x <= x')) xs';
+      check_sorted xs'
+
+let to_list2 t = 
+  let xs = to_list t in
+  let _  = check_sorted xs in
+  xs
+
 (*
 let rec deleteMin t = 
   match t with

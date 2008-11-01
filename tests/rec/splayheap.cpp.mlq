@@ -1,0 +1,15 @@
+#define R(p)   [[], [v: p, v: true, v: true]]
+#define RT     R(true)
+#define RLE    R(v <= e0)
+#define RGT    R(v > e0)
+#define HP     [z: t . || {e0: 'a | p}, e1: R(v <= e0) z, e2: R(v > e0) z]
+#define SHP    R(true) HP
+
+val empty     : SHP 
+val isEmpty   : SHP -> bool
+val insert    :  'a -> SHP -> SHP
+val merge     : SHP -> SHP -> SHP 
+val findMin2  : SHP -> ('a * R(e0 <= v) HP)
+val deleteMin : SHP -> SHP
+val deleteMin2: SHP -> ('a * R(e0 <= v) HP)
+val to_list2  : SHP -> 'a list
