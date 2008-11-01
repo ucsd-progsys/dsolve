@@ -1,5 +1,7 @@
 (* Splay Heaps: Okasaki's "Purely Functional Data Structures" p.50 Fig. 5.5. *)
 
+(* run with -no-simple *)
+
 let myfail s = 
   print_string s; assert false
 
@@ -100,7 +102,7 @@ let rec deleteMin t =
 
 let rec deleteMin2 t = 
   match t with
-  | E -> assert false 
+  | E -> myfail "empty" 
   | T (x, a, c) ->
       (match a with 
        | E -> 
