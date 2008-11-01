@@ -5,9 +5,9 @@ let myfail s =
 
 let show x = x
 
-type 'a splayheap = 
+type 'a t = 
   | E 
-  | T of 'a * 'a splayheap * 'a splayheap
+  | T of 'a * 'a t * 'a t 
 
 let empty = E
 
@@ -24,7 +24,7 @@ let rec partition pivot t =
       if x <= pivot then
         match b with
         | E -> 
-            (t, E)
+            (T(x, a, E), E)
         | T (y, b1, b2) ->
             (if y <= pivot then
               let (small, big)  = partition pivot b2 in
@@ -39,7 +39,7 @@ let rec partition pivot t =
       else
         match a with
         | E ->
-            (E, t)
+            (E, T(x,E,b))
         | T (y, a1, a2) ->
             if y <= pivot then
               let (small, big)  = partition pivot a2 in
@@ -75,7 +75,7 @@ let rec findMin t =
        | E -> x
        | _ -> findMin a)
 
-let findMin2 t = 
+let rec findMin2 t = 
   match t with
   | E -> 
       myfail "empty"
@@ -100,17 +100,18 @@ let rec deleteMin t =
 
 let rec deleteMin2 t = 
   match t with
-  | E ->
-      myfail "empty"
+  | E -> assert false 
   | T (x, a, c) ->
       (match a with 
        | E -> 
            (x, c)
        | T (x', a', b) ->
            (match a' with 
-           | E -> (x', T (x, b, c))
-           | _ -> let (m, a'') = deleteMin2 a' in
-                  (m, T (x', a'', T (x, b, c)))))
+           | E -> 
+               (x', T (x, b, c))
+           | _ -> 
+               let (m, a'') = deleteMin2 a' in
+               (m, T (x', a'', T (x, b, c)))))
 
 let rec app x ys zs = 
   match ys with
@@ -120,7 +121,7 @@ let rec app x ys zs =
 let rec to_list t = 
   match t with
   | E -> []
-  | T (x, a, b) -> x (to_list a) (to_list b)
+  | T (x, a, b) -> app x (to_list a) (to_list b)
 
 let rec check_sorted xs =
   match xs with 
@@ -135,7 +136,7 @@ let to_list2 t =
   let _  = check_sorted xs in
   xs
 
-(*
+  (*
 let rec deleteMin t = 
   match t with
   | E ->
