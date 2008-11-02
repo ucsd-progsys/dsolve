@@ -594,8 +594,8 @@ let dep_sub_to_sub binds scbinds env (s, s') =
   let c i =
     try List.assoc i binds
       with Not_found -> find_key_by_name env i in
-    try (c s', P.Var (List.assoc s scbinds))
-      with Not_found -> failwith "Could not bind dependent substitution to paths"
+  try (c s', P.Var (List.assoc s scbinds))
+    with Not_found -> failwith (sprintf "Could not bind dependent substitution %s to paths" s)
 
 let apply_dep_subs subs = function
     Fvar (p, i, _, r) -> Fvar (p, i, subs, r)

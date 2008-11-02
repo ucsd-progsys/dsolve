@@ -1,8 +1,14 @@
 
 
 #define W_IN(pm, pr, spm, ps, pg, envs) pm -> pr -> spm -> ps -> pg -> envs 
-#define W_OUT(pm, pr, spm, ps, pg, envs) ((pm) * (pr) * (spm) * (ps) * (pg) * (envs))
+#define W_OUT(pm, pr, spm, ps, pg, envs) pm * pr * spm * ps * pg * envs
+#define W_OUT_AND(pm, pr, spm, ps, pg, envs, and) pm * pr * spm * ps * pg * envs * and
 #define PPAGE {v: int | v >= 0 and v <= nppages}
 
-val page_decref: W_IN -> PPAGE -> W_OUT
-val page_incref: W_IN -> PPAGE -> aux_vp_t -> W_OUT
+#define OMAP(p) {v: UMAP | p}
+
+#define UMAP (int, int) Store.t
+#define UMAP2 (int * int, int) Store.t
+
+val env_alloc: int -> W_IN(pm: UMAP, UMAP, OMAP(v = pm), UMAP, UMAP, UMAP2) -> W_OUT_AND(UMAP, UMAP, OMAP(v = e0), UMAP, UMAP, UMAP2, int option)
+

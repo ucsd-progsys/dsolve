@@ -85,7 +85,7 @@ let env_check pm pr spm ps pg envs env =
   Store.iter pg (fun (env', _) pp ->
                 if env = env' && pp >= 0 then
                   assert (not (is_page_protected pm pr spm ps pg envs pp
-                          || is_page_free pm pr spm ps pg envs pp)))
+                          || is_page_free pm pr spm ps pg envs pp)) else ())
   (*assert (Hashtbl.mem envs env.id); 
   assert (is_page_protected env.env_mypp);
   Array.iteri
@@ -159,7 +159,7 @@ let env_alloc ctr pm pr spm ps pg envs =
      Some env)
      *)
 
-let env_free pm pr spm ps pg envs env = 
+(*let env_free pm pr spm ps pg envs env = 
   env_check pm pr spm ps pg envs env; (* below is correct because page_decref doesn't modify pg *)
   let (pm, pr, spm, ps, pg, envs) =
     Store.fold pg (fun (pm, pr, spm, ps, pg, envs) (env', vp) pp ->
@@ -240,7 +240,7 @@ let page_map pm pr spm ps pg envs srcenv srcvp dstenv dstvp =
      page_incref srcpp (Vp (dstenv.id, dstvp));
      env_check dstenv; mem_check (); true)
      *)
-
+*)
 
 
     
