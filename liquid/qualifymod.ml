@@ -129,6 +129,7 @@ let rec constrain e env guard =
   let freshf = Frame.fresh e.exp_env e.exp_type in
   let environment = (env, guard, freshf) in
   let (f, cstrs, rec_cstrs) =
+   try
     match (e.exp_desc, freshf) with
       | (Texp_constant const_typ, F.Fabstract(path, [], _, _)) -> constrain_constant path const_typ
       | (Texp_construct (cstrdesc, args), F.Fsum _) -> constrain_constructed environment cstrdesc args e
@@ -156,6 +157,7 @@ let rec constrain e env guard =
         fprintf err_formatter "@[Warning: Don't know how to constrain expression,
         structure:@ %a@ location:@ %a@]@.@." F.pprint f Location.print e.exp_loc; flush stderr;
         assert false
+   with Failure s -> printf "@[Failure:@ %s:@ %a@]" s F.pprint freshf; assert false
   in log_frame e.exp_loc f; (f, (List.map (label_constraint e) cstrs) @ rec_cstrs)
 
 and constrain_constant path = function

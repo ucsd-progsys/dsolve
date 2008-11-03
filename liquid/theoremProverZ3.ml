@@ -220,7 +220,7 @@ module Prover : PROVER =
 
     let rec cast env me ast (t, t') =
       if (t, t') = ("bool", "int") then z3App env me "_IOFB" [ast] else
-      if (t, t') = ("bool", "int") then z3App env me "_BOFI" [ast] else
+      if (t, t') = ("int", "bool") then z3App env me "_BOFI" [ast] else
         assert false
 
     and z3Cast env me = function
@@ -229,7 +229,8 @@ module Prover : PROVER =
         let (st, st') = C.app_pr (ast_type_to_string me) (t, t') in
         let t = if st = st' then a else (cast env me a (st, st')) in
           t :: (z3Cast env me (sa, fs))
-      | ([], x) -> []
+      | ([], x :: []) -> []
+      | ([], []) -> []
       | _ -> assert false
 
     and z3App env me s zes =
@@ -237,26 +238,38 @@ module Prover : PROVER =
       let cf  = z3Fun env me s k in
       let ft  = match getFunType me s env with Func ts -> ts | _ -> assert false in
       let zes = z3Cast env me (zes, ft) in
-        Z3.mk_app me.c cf (Array.of_list zes)
+      Z3.mk_app me.c cf (Array.of_list zes)
+
+    and z3AppBuiltin env me fes aes =
+      z3Cast env me (List.map (z3Exp env me) aes, fes) 
+
+    and z3AppRel env me mk e1 e2 =
+      match z3AppBuiltin env me [Int; Int] [e1; e2] with
+        [a1; a2] -> mk me.c a1 a2
+      | _ -> assert false
 
 (***************************************************************************************)
 (********************** Pred/Expr Transl ************************************************************)
 (***************************************************************************************)
 
-    let rec z3Exp env me e =
+    and z3Exp env me e =
       match e with 
       | P.PInt i                -> Z3.mk_int me.c i me.tint 
       | P.Var s                 -> z3Var env me s
       | P.FunApp (f,es)         -> z3App env me f (List.map (z3Exp env me) es)
-      | P.Binop (e1,P.Plus,e2)  -> Z3.mk_add me.c (Array.map (z3Exp env me) [|e1;e2|]) 
-      | P.Binop (e1,P.Minus,e2) -> Z3.mk_sub me.c (Array.map (z3Exp env me) [|e1;e2|]) 
-      | P.Binop (e1,P.Times,e2) -> Z3.mk_mul me.c (Array.map (z3Exp env me) [|e1;e2|]) 
+      | P.Binop (e1,P.Plus,e2)  ->
+          Z3.mk_add me.c (Array.map (z3Exp env me) [|e1; e2|])
+      | P.Binop (e1,P.Minus,e2) ->
+          Z3.mk_sub me.c (Array.map (z3Exp env me) [|e1; e2|])
+      | P.Binop (e1,P.Times,e2) ->
+          Z3.mk_mul me.c (Array.map (z3Exp env me) [|e1; e2|])
       | P.Binop (e1,P.Div,e2)   -> z3App env me "_DIV" (List.map (z3Exp env me) [e1;e2])  
       | P.Field (f, e)          -> z3App env me ("SELECT_"^(Ident.unique_name f)) [(z3Exp env me e)] 
                                    (** REQUIRES: disjoint intra-module field names *)
       | P.Ite (e1, e2, e3)      -> Z3.mk_ite me.c (z3Pred env me e1) (z3Exp env me e2) (z3Exp env me e3)
 
     and z3Pred env me p = 
+     try
       match p with 
         P.True          -> Z3.mk_true me.c
       | P.Not p' -> Z3.mk_not me.c (z3Pred env me p')
@@ -265,12 +278,23 @@ module Prover : PROVER =
       | P.Implies (p1, p2) -> Z3.mk_implies me.c (z3Pred env me p1) (z3Pred env me p2)
       | P.Iff (p, q) -> Z3.mk_iff me.c (z3Pred env me p) (z3Pred env me q)
    (* | P.Atom (e1,P.Lt,e2) -> z3Pred me (Atom (e1, P.Le, Binop(e2,P.Minus,PInt 1))) *)
-      | P.Atom (e1,P.Eq,e2) -> Z3.mk_eq me.c (z3Exp env me e1) (z3Exp env me e2)
-      | P.Atom (e1,P.Ne,e2) -> Z3.mk_distinct me.c [|z3Exp env me e1; z3Exp env me e2|]
-      | P.Atom (e1,P.Gt,e2) -> Z3.mk_gt me.c (z3Exp env me e1) (z3Exp env me e2)
-      | P.Atom (e1,P.Ge,e2) -> Z3.mk_ge me.c (z3Exp env me e1) (z3Exp env me e2)
-      | P.Atom (e1,P.Lt,e2) -> Z3.mk_lt me.c (z3Exp env me e1) (z3Exp env me e2)
-      | P.Atom (e1,P.Le,e2) -> Z3.mk_le me.c (z3Exp env me e1) (z3Exp env me e2)
+      | P.Atom (e1,P.Eq,e2) ->
+          (*Z3.mk_eq me.c (z3Exp env me e1) (z3Exp env me e2)*)
+          z3AppRel env me Z3.mk_eq e1 e2
+      | P.Atom (e1,P.Ne,e2) ->
+          Z3.mk_distinct me.c (Array.of_list (z3AppBuiltin env me [Int; Int] [e1; e2]))
+      | P.Atom (e1,P.Gt,e2) ->
+          (*Z3.mk_gt me.c (z3Exp env me e1) (z3Exp env me e2)*)
+          z3AppRel env me Z3.mk_gt e1 e2
+      | P.Atom (e1,P.Ge,e2) ->
+          (*Z3.mk_ge me.c (z3Exp env me e1) (z3Exp env me e2)*)
+          z3AppRel env me Z3.mk_ge e1 e2
+      | P.Atom (e1,P.Lt,e2) ->
+          (*Z3.mk_lt me.c (z3Exp env me e1) (z3Exp env me e2)*)
+          z3AppRel env me Z3.mk_lt e1 e2
+      | P.Atom (e1,P.Le,e2) ->
+          (*Z3.mk_le me.c (z3Exp env me e1) (z3Exp env me e2)*)
+          z3AppRel env me Z3.mk_le e1 e2
       | P.Forall (ps, q) -> 
           let (ps, ss) = List.split ps in
           let ts = List.map (transl_type me) ss in
@@ -280,6 +304,7 @@ module Prover : PROVER =
           let ts = List.map (transl_type me) ss in
           mk_quantifier Z3.mk_exists env me ps ts q
       | P.Boolexp e -> z3Exp env me e
+     with Failure s -> printf "%s: %a@." s P.pprint p; raise (Failure s)
 
     and mk_quantifier mk env me ps ts q =
       let args = qargs me ps ts in
@@ -298,7 +323,6 @@ module Prover : PROVER =
 (***************************************************************************************)
 (********************** Low Level Interface ************************************************************)
 (***************************************************************************************)
-
 
     let unsat me =
       let _ = incr nb_z3_unsat in
@@ -404,9 +428,15 @@ module Prover : PROVER =
       let itn = Parsetree.Pprover_abs "int" in
       let func s x = P.FunApp(s, [P.Var x]) in
         axiom Le.empty
+          (P.Forall ([(x, bol)], P.Iff(P.Atom(func "_IOFB" x, P.Eq, P.PInt(1)), P.Boolexp(P.Var x))));
+        axiom Le.empty 
+          (P.Forall ([(x, itn)], P.Iff(P.Boolexp(func "_BOFI" x), P.Atom(P.Var x, P.Eq, P.PInt(1)))));
+(*        axiom Le.empty
           (P.Forall ([(x, bol); (y, bol)], P.Iff(P.Atom(func "_IOFB" x, P.Eq, func "_IOFB" y), P.Atom(P.Var x, P.Eq, P.Var y))));
         axiom Le.empty 
           (P.Forall ([(x, itn); (y, itn)], P.Iff(P.Atom(func "_BOFI" x, P.Eq, func "_BOFI" y), P.Atom(P.Var x, P.Eq, P.Var y))));
+          *)
+    (* casting axioms may be a bit suspicious.. *)
 end
     
 

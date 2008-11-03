@@ -639,7 +639,7 @@ let instantiate env fr ftemplate =
       | (f1, f2) ->
           fprintf std_formatter "@[Unsupported@ types@ for@ instantiation:@;<1 2>%a@;<1 2>%a@]@."
 	    pprint f1 pprint f2;
-	    assert false
+	    raise (Failure ("Instantiate"))
   and inst_params scbinds ps ps' =
     let bind_param (ps, scbinds) (p, f, v) (_, f', _) =
       binds := (Bid p) :: !binds;

@@ -315,8 +315,12 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       ([], [])
   | (f1, f2) when f1 = f2 ->
       ([], [])
-  | (F.Farrow (p1, f1, f1'), F.Farrow (p2, f2, f2')) ->
-      let subs = if not (Pat.same p1 p2) then subst_to p1 p2 else [] in
+  | ((F.Farrow (p1, f1, f1') as fd), (F.Farrow (p2, f2, f2') as ff)) ->
+      let subs = if not (Pat.same p1 p2) then 
+        try subst_to p1 p2 
+          with Failure s -> printf "@[Failure:@ %s@ %a@ <:@ %a@]" s
+            F.pprint fd F.pprint ff; assert false
+          else [] in
       let env' = F.env_bind env p2 f2 in
       let f1'  = F.apply_subs subs f1' in
         (lequate_cs env g c F.Covariant f2 f1 @ lequate_cs env' g c F.Covariant f1' f2', [])
