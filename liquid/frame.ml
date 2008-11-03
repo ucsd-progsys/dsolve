@@ -696,7 +696,8 @@ let label_like_where destructive f f' =
         let f1 = label vars f1 f2 in
         let vars = if destructive then vars else ((Ident.name i1, Path.Pident i2) :: vars) in
           (i2, f1, v1) :: label_params_like vars ps1 ps2
-    | _ -> assert false
+    | ([], x :: xs)
+    | (x :: xs, []) -> raise (Failure "Label_like param mismatch")
   in label [] f f'
 
 let label_like = label_like_where false
@@ -986,9 +987,10 @@ let rec translate_pframe dopt env plist pf =
               let id = Ident.create id in
               if List.mem (Path.Pident id) !vars then failwith "Redefined variable";
                 vars := Path.Pident id :: !vars; Tpat_var id
-          | None -> fresh_binder ()
-        in Farrow (pat, transl_pframe_rec a, transl_pframe_rec b)
-    | PFtuple (fs, r) -> tuple_of_frames (List.map transl_pframe_rec fs) (transl_pref r)
+          | None -> fresh_binder () in
+        Farrow (pat, transl_pframe_rec a, transl_pframe_rec b)
+    | PFtuple (fs, r) -> 
+        tuple_of_frames (List.map transl_pframe_rec fs) (transl_pref r)
     | PFrecord (fs, r) -> transl_record fs r
   and transl_sum l rro cs r =
     let (path, decl) = lookup l in

@@ -458,7 +458,8 @@ let maybe_cstr_from_unlabel_frame fenv p f =
   if Le.mem p fenv
   then
     let f' = Le.find p fenv in
-    Some (SubFrame (fenv, [], f', F.label_like f f'))
+    try Some (SubFrame (fenv, [], f', F.label_like f f'))
+      with Failure s -> printf "@[Failure@ %s:@ %a@ <>@ %a@]@." s F.pprint f F.pprint f'; assert false
   else
     None 
 
