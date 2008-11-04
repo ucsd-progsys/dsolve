@@ -739,12 +739,12 @@ let instantiate_quals_in_env tr qs =
   let qpaths = List.fold_left (fun xs x -> List.fold_left (C.flip NSet.add) xs (Q.vars x)) NSet.empty qs in
     (fun (env, envl') ->
       try 
-        let (vs, (env, envl, quoi)) = TR.find_maximal envl' tr (fun (_, _, quoi) -> C.maybe_bool !quoi) in
+        let (vs, (env, envl, quoi)) = BS.time "find_maximal" (TR.find_maximal envl' tr) (fun (_, _, quoi) -> C.maybe_bool !quoi) in
         match !quoi with
         | Some qs -> quoi := Some qs; List.iter (fun (_, _, q) -> if C.maybe_bool !q then () else q := Some qs) vs; qs
         | None -> 
             let vm  = List.fold_left (add_path_set qpaths) C.StringMap.empty envl in
-            let q   = List.fold_left (fun qset q -> QSet.union (instantiate_in_vm vm q) qset) QSet.empty qs in
+            let q   = BS.time "fold quals" (List.fold_left (fun qset q -> QSet.union (instantiate_in_vm vm q) qset) QSet.empty) qs in
             let els = QSet.elements q in
             let _ = TR.iter_path envl tr (fun (_, _, quoi) -> if C.maybe_bool !quoi then () else quoi := Some els) in
             quoi := Some els; els
@@ -784,20 +784,23 @@ type solmode = WFS | LHS | RHS
 
 let app_sol s k qs = 
   if Sol.mem s k then
-    Sol.replace s k (C.sort_and_compact (List.rev_append qs (Sol.find s k)))
+    Sol.replace s k (List.rev_append qs (Sol.find s k))
   else Sol.replace s k qs
 
 let make_initial_solution cs =
-  let srhs = Sol.create 37 in
-  let slhs = Sol.create 37 in
+  let srhs = Sol.create 100 in
+  let slhs = Sol.create 100 in
+  let vars = ref [] in
   let s = Sol.create 37 in
   let _ = List.iter (function (SubRef (_, _, _, (_, F.Qvar k), _), qs) ->
             (Sol.replace srhs k (); Sol.replace s k qs) | _ -> ()) cs in
   let _ = List.iter (function (SubRef (_, _, r1, _, _), qs) ->
             List.iter (fun k -> Sol.replace slhs k (); if not !Cf.minsol && is_formal k && not (Sol.mem srhs k)
               then Sol.replace s k [] else Sol.replace s k qs) (F.refinement_qvars r1) | _ -> ()) cs in
-  let _ = List.iter (function (WFRef (_, (_, F.Qvar k), _), qs) ->
+  let _ = List.iter (function (WFRef (_, (_, F.Qvar k), _), qs) -> vars := k :: !vars;
             if Sol.mem srhs k || (Sol.mem slhs k && Sol.find s k != []) then app_sol s k qs else Sol.replace s k [] | _ -> ()) cs in
+  let vars = C.sort_and_compact !vars in
+  let _ = List.iter (fun k -> Sol.replace s k (C.sort_and_compact (Sol.find s k))) vars in
   s
                                          
 (**************************************************************)
@@ -923,7 +926,7 @@ let solve qs cs =
   let qs = List.map (fun qs -> List.filter Qualifier.may_not_be_tautology qs) qs in
   let _ = dump_qualifiers (List.combine (strip_origins cs) qs) in
   let sri = BS.time "making ref index" make_ref_index cs in
-  let s = make_initial_solution (List.combine (strip_origins cs) qs) in
+  let s = BS.time "make initial sol" make_initial_solution (List.combine (strip_origins cs) qs) in
   let _ = dump_solution s in
   let _ = dump_solving sri s 0 in
   let _ = BS.time "solving wfs" (solve_wf sri) s in
