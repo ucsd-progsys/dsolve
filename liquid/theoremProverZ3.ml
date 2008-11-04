@@ -303,7 +303,12 @@ module Prover : PROVER =
           let (ps, ss) = List.split ps in
           let ts = List.map (transl_type me) ss in
           mk_quantifier Z3.mk_exists env me ps ts q
-      | P.Boolexp e -> z3Exp env me e
+      | P.Boolexp e -> 
+          (* shady hack *)
+          let a = z3Exp env me e in
+          let t = Z3.get_type me.c a in
+          let t = ast_type_to_string me t in
+          if t = "int" then cast env me a ("int", "bool") else a
      with Failure s -> printf "%s: %a@." s P.pprint p; raise (Failure s)
 
     and mk_quantifier mk env me ps ts q =
@@ -431,12 +436,6 @@ module Prover : PROVER =
           (P.Forall ([(x, bol)], P.Iff(P.Atom(func "_IOFB" x, P.Eq, P.PInt(1)), P.Boolexp(P.Var x))));
         axiom Le.empty 
           (P.Forall ([(x, itn)], P.Iff(P.Boolexp(func "_BOFI" x), P.Atom(P.Var x, P.Eq, P.PInt(1)))));
-(*        axiom Le.empty
-          (P.Forall ([(x, bol); (y, bol)], P.Iff(P.Atom(func "_IOFB" x, P.Eq, func "_IOFB" y), P.Atom(P.Var x, P.Eq, P.Var y))));
-        axiom Le.empty 
-          (P.Forall ([(x, itn); (y, itn)], P.Iff(P.Atom(func "_BOFI" x, P.Eq, func "_BOFI" y), P.Atom(P.Var x, P.Eq, P.Var y))));
-          *)
-    (* casting axioms may be a bit suspicious.. *)
 end
     
 
