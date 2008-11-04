@@ -782,25 +782,35 @@ let filter_wfs cs = List.filter (fun (r, _) -> match r with WFRef(_, _, _) -> tr
 let filter_subs cs = List.filter (fun (r, _) -> match r with SubRef(_, _, _, _, _) -> true | _ -> false) cs
 type solmode = WFS | LHS | RHS
 
+let uniqueify_initial_solution qs =
+  QSet.elements (List.fold_left (fun q qs-> QSet.add qs q) QSet.empty qs)
+
 let app_sol s k qs = 
   if Sol.mem s k then
     Sol.replace s k (List.rev_append qs (Sol.find s k))
   else Sol.replace s k qs
 
 let make_initial_solution cs =
-  let srhs = Sol.create 100 in
-  let slhs = Sol.create 100 in
+  let srhs = Hashtbl.create 100 in
+  let slhs = Hashtbl.create 100 in
+  let wf1 = Hashtbl.create 100 in
   let vars = ref [] in
   let s = Sol.create 37 in
   let _ = List.iter (function (SubRef (_, _, _, (_, F.Qvar k), _), qs) ->
-            (Sol.replace srhs k (); Sol.replace s k qs) | _ -> ()) cs in
+            let k' = Path.unique_ident_name_crash k in
+            (Hashtbl.replace srhs k' (); Sol.replace s k qs) | _ -> ()) cs in
   let _ = List.iter (function (SubRef (_, _, r1, _, _), qs) ->
-            List.iter (fun k -> Sol.replace slhs k (); if not !Cf.minsol && is_formal k && not (Sol.mem srhs k)
+            List.iter (fun k ->
+              let k' = Path.unique_ident_name_crash k in
+              Hashtbl.replace slhs k' (); if not !Cf.minsol && is_formal k && not (Hashtbl.mem srhs k')
               then Sol.replace s k [] else Sol.replace s k qs) (F.refinement_qvars r1) | _ -> ()) cs in
-  let _ = List.iter (function (WFRef (_, (_, F.Qvar k), _), qs) -> vars := k :: !vars;
-            if Sol.mem srhs k || (Sol.mem slhs k && Sol.find s k != []) then app_sol s k qs else Sol.replace s k [] | _ -> ()) cs in
+  let _ = List.iter (function (WFRef (_, (_, F.Qvar k), _), qs) ->
+            let k' = Path.unique_ident_name_crash k in
+            if Hashtbl.mem wf1 k' then () else vars := k :: !vars; Hashtbl.replace wf1 k' ();
+            if Hashtbl.mem srhs k' || (Hashtbl.mem slhs k' && Sol.find s k != []) then app_sol s k qs else Sol.replace s k [] | _ -> ()) cs in
   let vars = C.sort_and_compact !vars in
-  let _ = List.iter (fun k -> Sol.replace s k (C.sort_and_compact (Sol.find s k))) vars in
+  let _ = List.iter (fun k ->
+                      Sol.replace s k (uniqueify_initial_solution (Sol.find s k))) vars in
   s
                                          
 (**************************************************************)
