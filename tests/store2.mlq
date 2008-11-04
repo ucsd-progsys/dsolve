@@ -1,0 +1,21 @@
+(*axiom make: forall (i: int, n: int, w: int.  (w = get (make n w) i))*)
+
+(*embed map for ('a, 'b) t*)
+
+(*axiom get : forall (i: int, w: int, a: int. (w = get (set a i w) i))
+axiom set : forall (i: int, j: int, w: int, a: int. (i = j) or (get (set a j w) i = get a i))*)
+
+
+val set: x: (m: 'a, 'b, 'c) t -> k: 'a -> l: 'b[k/m] -> 'c -> {v: (n: 'a, {v: 'b[n/m] | v = get supr n}, 'c) t | v = set x k l}
+
+val get: m: ('a, 'b, 'c) t -> k: 'a -> 'b -> {v: 'c[k/e0][m/supr] | v = get m k}
+
+val iter: ('a, 'b, 'c) t -> (k: 'a -> 'b[k/e0] -> 'c -> unit) -> unit
+
+val iteri: ('a, 'b, 'c) t -> (int -> k: 'a -> 'b[k/e0] -> 'c -> unit) -> unit
+
+val fold: ('a, 'b, 'c) t -> ('d -> k: 'a -> 'b[k/e0] -> 'd) -> 'd -> 'd
+
+val empty: ('a, 'b, 'c) t
+
+val init: n: int -> int -> (m: int -> int -> 'a) ->  ({v: int | v < n and v >= 0}, int, {v: 'a[e0/m] | v = get supr n}) t

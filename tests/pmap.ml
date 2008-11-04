@@ -1,7 +1,3 @@
-type aux_vp_t   = 
-  | Env of int
-  | Vp
-
 type maybe_int =
   | Something of int 
   | Nothing
@@ -99,17 +95,17 @@ let page_incref pm pr spm ps pg envs pp id =
 let env_check pm pr spm ps pg envs env =
   assert (Store.get envs env);
   assert (is_page_protected pm pr spm ps pg envs (Store.get pm env));
-  Store.iter pg (fun eu pp -> let (env', _) = eu in
-                if env = env' && pp >= 0 then
+  (*Store.iter pg (fun eu pp -> let (env', _) = eu in (* i don't know if we can do this *)
+                  if env = env' && pp >= 0 then
                   assert (not (is_page_protected pm pr spm ps pg envs pp
-                          || is_page_free pm pr spm ps pg envs pp)) else ())
+                          || is_page_free pm pr spm ps pg envs pp)) else ())*) ()
   (*assert (Hashtbl.mem envs env.id); 
   assert (is_page_protected env.env_mypp);
   Array.iteri
     (fun vp pp -> 
       if pp >= 0 then
         assert (not (is_page_protected pp || is_page_free pp)))
-    env.env_pgdir
+    env.env_pgdir*)
     
 
 let mem_check pm pr spm ps pg envs = 
@@ -142,7 +138,7 @@ let mem_check pm pr spm ps pg envs =
     (fun pp v -> check_pp pp; assert (v.pages = lpages.(pp)))
     mem
     *)
-  *)
+  
   
 (* not handled: out of memory condition *)
 (* not letting it recurse to work around weirdness disappearance from fixpoint *)
@@ -164,7 +160,7 @@ let env_alloc (ctr: int) (pm: (int, int) Store.t) (pr: (int, int) Store.t) (spm:
     let pg = ffold 0 nvpages init pg in
     let envs = Store.set envs id true in
     let _ = env_check pm pr spm ps pg envs id in
-    (*let _ = mem_check pm pr spm ps pg envs in*)
+    let _ = mem_check pm pr spm ps pg envs in
     (pm, pr, spm, ps, pg, envs, Something id) 
 (*  let env_pp = page_getfree () in
   if env_pp = -1 then None else 

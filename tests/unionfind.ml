@@ -14,43 +14,37 @@ let create n =
   (init_rank n, init_parent n)*)
 
 let rec find_aux (r: (int, int) Store.t) (p: (int, int) Store.t) (i: int) = 
-  (p, i)
-(*  
+  let pi = Store.get p i in
   if pi = i then 
-          (p, i)
-  else (assert false)
+    (p, i)
+  else
     let (p', i') = find_aux r p pi in
-    let _        = show i in
-    let _        = assert (Store.get p i != i) in
     let p''      = Store.set p' i i' in
     (p'', i')
-*)
 
 let find (r: (int, int) Store.t) (p: (int, int) Store.t) (i: int) =
-  find_aux r p i 
-  
-(*let union (h: (int, int) Store.t * (int, int) Store.t) (x: int) (y: int) =
-  let (r, p)   = h         in
+  find_aux r p i
+
+let union (r: (int, int) Store.t) (p: (int, int) Store.t) (x: int) (y: int) =
   let (p', x') = find r p x in
   let (p'',y') = find r p' y in
-  let x''= Store.get p'' x' in
-  let _ = assert (x' = x'') in
-  if x'' != y' then begin
-    let rx' = Store.get r x'' in
+  let _ = assert (Store.get p'' x' = x') in
+  if x' != y' then begin
+    let rx' = Store.get r x' in
     let ry' = Store.get r y' in
     if rx' > ry' then
       (*r, Store.set p'' y' x'*) assert false
     else if rx' < ry' then
       (*r, Store.set p'' x' y'*) assert false
     else 
-      let r' = Store.set r x'' (rx' + 1) in
-      (* let b = Store.get r' x' > Store.get r' y' in
-         let c = show b in*) 
-      let p''' = Store.set p'' y' x'' in
+      let r' = Store.set r x' (rx' + 1) in
+      let p''' = Store.set p'' y' x' in
       (r', p''')
   end else
     (*r, p''*) assert false
-    *)
+    
+
+
 
 (*************************************************)
 (*
