@@ -785,17 +785,20 @@ type solmode = WFS | LHS | RHS
 let uniqueify_initial_solution qs =
   QSet.elements (List.fold_left (fun q qs-> QSet.add qs q) QSet.empty qs)
 
-let app_sol s k qs = 
+let app_sol s s' l k qs = 
+  let f qs q = QSet.add q qs in
   if Sol.mem s k then
-    Sol.replace s k (List.rev_append qs (Sol.find s k))
+    if Sol.mem s' k then
+      Sol.replace s' k (List.fold_left f (Sol.find s' k) qs)
+    else (l := k :: !l; Sol.replace s' k (List.fold_left f (List.fold_left f QSet.empty (Sol.find s k)) qs))
   else Sol.replace s k qs
 
 let make_initial_solution cs =
   let srhs = Hashtbl.create 100 in
   let slhs = Hashtbl.create 100 in
-  let wf1 = Hashtbl.create 100 in
-  let vars = ref [] in
-  let s = Sol.create 37 in
+  let s = Sol.create 100 in
+  let s' = Sol.create 100 in
+  let l = ref [] in
   let _ = List.iter (function (SubRef (_, _, _, (_, F.Qvar k), _), qs) ->
             let k' = Path.unique_ident_name_crash k in
             (Hashtbl.replace srhs k' (); Sol.replace s k qs) | _ -> ()) cs in
@@ -806,11 +809,9 @@ let make_initial_solution cs =
               then Sol.replace s k [] else Sol.replace s k qs) (F.refinement_qvars r1) | _ -> ()) cs in
   let _ = List.iter (function (WFRef (_, (_, F.Qvar k), _), qs) ->
             let k' = Path.unique_ident_name_crash k in
-            if Hashtbl.mem wf1 k' then () else vars := k :: !vars; Hashtbl.replace wf1 k' ();
-            if Hashtbl.mem srhs k' || (Hashtbl.mem slhs k' && Sol.find s k != []) then app_sol s k qs else Sol.replace s k [] | _ -> ()) cs in
-  let vars = C.sort_and_compact !vars in
-  let _ = List.iter (fun k ->
-                      Sol.replace s k (uniqueify_initial_solution (Sol.find s k))) vars in
+            if Hashtbl.mem srhs k' || (Hashtbl.mem slhs k' && Sol.find s k != []) then app_sol s s' l k qs else Sol.replace s k [] | _ -> ()) cs in
+  let l = C.sort_and_compact !l in
+  let _ = List.iter (fun k -> Sol.replace s k (QSet.elements (Sol.find s' k))) l in
   s
                                          
 (**************************************************************)
