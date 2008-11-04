@@ -1,15 +1,22 @@
-
+#define GET(s, b) Store.get s b 
 
 #define W_IN(pm, pr, spm, ps, pg, envs) pm -> pr -> spm -> ps -> pg -> envs 
 #define W_OUT(pm, pr, spm, ps, pg, envs) pm * pr * spm * ps * pg * envs
 #define W_OUT_AND(pm, pr, spm, ps, pg, envs, and) pm * pr * spm * ps * pg * envs * (and)
 #define PPAGE {v: int | v >= 0 and v <= nppages}
 
-#define OMAP(p) {v: UMAP | p}
+#define R(v, b, p) {v: b | p}
 
-#define UMAP (int, int) Store.t
-#define UMAP2 (int * int, int) Store.t
-#define UBMAP (int, bool) Store.t
+#define MAP(e0, e1) (e0, e1) Store.t
+#define MAP2(e0, e1, e2) (e0 * e1, e2) Store.t
 
-val env_alloc: int -> W_IN(pm: UMAP, UMAP, OMAP(v = pm), UMAP, UMAP2, UBMAP) -> W_OUT_AND(UMAP, UMAP, OMAP(v = e0), UMAP, UMAP2, UBMAP, maybe_int) 
+#define UMAP MAP(int, int)
+#define UMAP2 MAP2(int, int, int)
+#define UBMAP MAP(int, bool)
+
+#define PR(pm)  MAP(int, R(v, int, v >= 0 and (v > 0 -> GET(pm, v) = e0)))
+#define PS(pr)  MAP(int, R(v, int, v >= 0 and (GET(pr, e0) > 0 -> v = 1)))
+#define SPM(pr, pm) R(v, MAP(int, R(v, int, (v >= 0 -> GET(pr, v) = e0))), v = pm)
+
+val env_alloc: R(v, int, v > 0) -> W_IN(pm: UMAP, pr: PR(pm), SPM(pr, pm), PS(pr), UMAP2, UBMAP) -> W_OUT_AND(UMAP, PR(e0), SPM(e1, e0), PS(e1), UMAP2, UBMAP, maybe_int) 
 
