@@ -728,8 +728,8 @@ let add_path_set vars m path =
       let rest = try C.StringMap.find name m with Not_found -> [] in C.StringMap.add name (path :: rest) m
   | _ -> m
 
-let instantiate_in_vm vm q =
-  List.fold_left (C.flip QSet.add) QSet.empty (Q.instantiate_about vm q)
+let instantiate_in_vm vm qset q =
+  List.fold_left (C.flip QSet.add) qset (Q.instantiate_about vm q)
 
 let path_is_temp p = match Path.ident_name p with Some s -> Le.badstring s | None -> false
 
@@ -744,7 +744,7 @@ let instantiate_quals_in_env tr qs =
         | Some qs -> quoi := Some qs; List.iter (fun (_, _, q) -> if C.maybe_bool !q then () else q := Some qs) vs; qs
         | None -> 
             let vm  = List.fold_left (add_path_set qpaths) C.StringMap.empty envl in
-            let q   = BS.time "fold quals" (List.fold_left (fun qset q -> QSet.union (instantiate_in_vm vm q) qset) QSet.empty) qs in
+            let q   = BS.time "fold quals" (List.fold_left (instantiate_in_vm vm) QSet.empty) qs in
             let els = QSet.elements q in
             let _ = TR.iter_path envl tr (fun (_, _, quoi) -> if C.maybe_bool !quoi then () else quoi := Some els) in
             quoi := Some els; els
@@ -934,7 +934,7 @@ let solve qs cs =
   (* let cs = if !Cf.esimple then 
                BS.time "e-simplification" (List.map esimple) cs else cs in *)
   let qs = BS.time "instantiating quals" (instantiate_per_environment cs) qs in
-  let qs = List.map (fun qs -> List.filter Qualifier.may_not_be_tautology qs) qs in
+  (*let qs = List.map (fun qs -> List.filter Qualifier.may_not_be_tautology qs) qs in*)
   let _ = dump_qualifiers (List.combine (strip_origins cs) qs) in
   let sri = BS.time "making ref index" make_ref_index cs in
   let s = BS.time "make initial sol" make_initial_solution (List.combine (strip_origins cs) qs) in
