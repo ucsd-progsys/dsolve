@@ -21,7 +21,7 @@ INCLUDES=-I external/z3/ocaml/ -I external/ocamlgraph/ \
 UTILS=utils/misc.cmo utils/config.cmo \
   utils/clflags.cmo utils/terminfo.cmo utils/ccomp.cmo utils/warnings.cmo \
   utils/tbl.cmo utils/consistbl.cmo utils/heap.cmo utils/bstats.cmo \
-	utils/trie.cmo
+	utils/trie.cmo utils/mystats.cmo
 
 PARSING=parsing/linenum.cmo parsing/location.cmo parsing/longident.cmo \
   parsing/syntaxerr.cmo parsing/parser.cmo \

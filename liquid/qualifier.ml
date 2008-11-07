@@ -25,6 +25,8 @@ open Format
 open Predicate
 
 module C = Common
+module BS = Bstats
+module JS = Mystats
 
 type t = Path.t * Path.t * Predicate.t
 

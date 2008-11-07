@@ -39,6 +39,7 @@ module QSet = Set.Make(Q)
 module NSet = Set.Make(String)
 module Sol = Hashtbl.Make(C.ComparablePath)
 module BS = Bstats
+module JS = Mystats
 
 (**************************************************************)
 (**************** Type definitions: Constraints ***************) 
@@ -729,24 +730,36 @@ let add_path_set vars m path =
   | _ -> m
 
 let instantiate_in_vm vm qset q =
-  List.fold_left (C.flip QSet.add) qset (Q.instantiate_about vm q)
+  List.fold_left (C.flip QSet.add) qset (JS.time "inst about" (Q.instantiate_about vm) q)
 
 let path_is_temp p = match Path.ident_name p with Some s -> Le.badstring s | None -> false
 
 let mk_envl env = Le.fold (fun p f l -> if Path.same p C.qual_test_var || path_is_temp p then l else p :: l) env []
 
+let tr_misses = ref 0
+
 let instantiate_quals_in_env tr qs =
   let qpaths = List.fold_left (fun xs x -> List.fold_left (C.flip NSet.add) xs (Q.vars x)) NSet.empty qs in
     (fun (env, envl') ->
       try 
-        let (vs, (env, envl, quoi)) = BS.time "find_maximal" (TR.find_maximal envl' tr) (fun (_, _, quoi) -> C.maybe_bool !quoi) in
+        let (vs, (env, envl, quoi)) = BS.time "find_maximal" (TR.find_maximal envl' tr)
+                                                                (fun (_, _, quoi) -> C.maybe_bool !quoi) in
         match !quoi with
-        | Some qs -> quoi := Some qs; List.iter (fun (_, _, q) -> if C.maybe_bool !q then () else q := Some qs) vs; qs
+        | Some qs -> 
+            (*TR.iter_path envl' tr (fun (_, _, quoi) -> if C.maybe_bool !quoi then () else quoi := Some qs);*)
+            quoi := Some qs;
+            List.iter (fun (_, _, q) -> if C.maybe_bool !q then () else q := Some qs) vs; qs
         | None -> 
+            let _   = incr tr_misses in
             let vm  = List.fold_left (add_path_set qpaths) C.StringMap.empty envl in
             let q   = BS.time "fold quals" (List.fold_left (instantiate_in_vm vm) QSet.empty) qs in
             let els = QSet.elements q in
-            let _ = TR.iter_path envl tr (fun (_, _, quoi) -> if C.maybe_bool !quoi then () else quoi := Some els) in
+            let _ = TR.iter_path envl tr 
+              (fun (_, _, quoi) ->
+                match !quoi with
+                | Some q -> if (List.length q) > (List.length els)
+                            then quoi := Some els
+                | None -> ()) in
             quoi := Some els; els
       with Not_found -> assert false)
 
@@ -756,8 +769,8 @@ let constraint_env (_, c) =
 (* Make copies of all the qualifiers where the free identifiers are replaced
    by the appropriate bound identifiers from all environments. *)
 let instantiate_per_environment cs qs =
-  let envs = BS.time "cenv" (List.rev_map constraint_env) cs in
-  let envls = BS.time "envls" (List.map mk_envl) envs in 
+  let envs = List.rev_map constraint_env cs in
+  let envls = List.map mk_envl envs in 
   let envvs = List.combine envs envls in
   let tr = (BS.time "tr" (List.fold_left (fun t (ev, el) -> TR.add el (ev, el, ref None) t) TR.empty) envvs) in
   BS.time "instquals" (List.rev_map (instantiate_quals_in_env tr qs)) envvs
@@ -781,9 +794,6 @@ let formals_addn qs = formals := List.rev_append qs !formals
 let filter_wfs cs = List.filter (fun (r, _) -> match r with WFRef(_, _, _) -> true | _ -> false) cs
 let filter_subs cs = List.filter (fun (r, _) -> match r with SubRef(_, _, _, _, _) -> true | _ -> false) cs
 type solmode = WFS | LHS | RHS
-
-let uniqueify_initial_solution qs =
-  QSet.elements (List.fold_left (fun q qs-> QSet.add qs q) QSet.empty qs)
 
 let app_sol s s' l k qs = 
   let f qs q = QSet.add q qs in
@@ -809,9 +819,9 @@ let make_initial_solution cs =
               then Sol.replace s k [] else Sol.replace s k qs) (F.refinement_qvars r1) | _ -> ()) cs in
   let _ = List.iter (function (WFRef (_, (_, F.Qvar k), _), qs) ->
             let k' = Path.unique_ident_name_crash k in
-            if Hashtbl.mem srhs k' || (Hashtbl.mem slhs k' && Sol.find s k != []) then app_sol s s' l k qs else Sol.replace s k [] | _ -> ()) cs in
-  let l = C.sort_and_compact !l in
-  let _ = List.iter (fun k -> Sol.replace s k (QSet.elements (Sol.find s' k))) l in
+            if Hashtbl.mem srhs k' || (Hashtbl.mem slhs k' && Sol.find s k != []) then BS.time "app_sol" (app_sol s s' l) k qs else Sol.replace s k [] | _ -> ()) cs in
+  let l = BS.time "sort and compact" C.sort_and_compact !l in
+  let _ = BS.time "elements" (List.iter (fun k -> Sol.replace s k (QSet.elements (Sol.find s' k)))) l in
   s
                                          
 (**************************************************************)
@@ -924,6 +934,7 @@ let solve_wf sri s =
   (function WFRef _ as c -> ignore (refine sri s c) | _ -> ())
 
 let solve qs cs = 
+  (*let _  = JS.doTime := true in*)
   let cs = if !Cf.simpguard then List.map simplify_fc cs else cs in
   let _  = dump_constraints cs in
   let _  = dump_unsplit cs in
@@ -935,9 +946,12 @@ let solve qs cs =
                BS.time "e-simplification" (List.map esimple) cs else cs in *)
   let qs = BS.time "instantiating quals" (instantiate_per_environment cs) qs in
   (*let qs = List.map (fun qs -> List.filter Qualifier.may_not_be_tautology qs) qs in*)
+  let _ = eprintf "@[%i@ queries@ %i@ misses@]@." (List.length cs) !tr_misses in
   let _ = dump_qualifiers (List.combine (strip_origins cs) qs) in
   let sri = BS.time "making ref index" make_ref_index cs in
   let s = BS.time "make initial sol" make_initial_solution (List.combine (strip_origins cs) qs) in
+  (*let _ = JS.print stdout "JanStats"; flush stdout in*)
+
   let _ = dump_solution s in
   let _ = dump_solving sri s 0 in
   let _ = BS.time "solving wfs" (solve_wf sri) s in

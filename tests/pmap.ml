@@ -13,15 +13,15 @@ let env_mypp        = Store.empty (*(int, int) Store.t*) (*pm*) (*env -> pp*)
 let protected       = Store.empty (*(int, int) Store.t*) (*pr*) (*pp -> true iff mapped*)
 let env_mypp_shadow = Store.empty (*(int, int) Store.t*) (*spm*)
 let pages           = Store.empty (*(int, int) Store.t*) (*ps*) (*pp -> 1 iff mapped*)
-let env_pgdir       = Store.empty (*(int * int, int) Store.t*) (*pg*) (*env * vp -> pp*)
+(*let env_pgdir       = Store2.empty (*(int * int, int) Store.t*) (*pg*) (*env * vp -> pp*)*)
 let envs            = Store.empty (*(int, bool) Store.t*) (*env -> true if alloc*)
 
 (* gets have to be done from spm, sets to {pm, spm} *)
 
-(*env_mypp        :: (i:int, (V >= 0) -> get page_protected V = i) Store.t 
-  protected       :: (i:int, ((V > 0) -> get env_mypp V = i) and v >= 0) Store.t  
-  pages           :: (i: int, (get protected i > 0 -> V = 1) and v >= 0) Store.t
-  env_pgdir       :: (int * int, (V >= 0 -> get protected V = 0)) Store.t
+(*env_mypp        :: (i:int, (V >= 0) -> get page_protected V = i) Store.t  pid -> page #
+  protected       :: (i:int, ((V > 0) <-> get env_mypp V = i) and v >= 0) Store.t  page # -> pid / 0
+  pages           :: (i: int, (get protected i > 0 -> V = 1) and v >= 0) Store.t 
+  env_pgdir       :: (int * int, (V >= 0 -> get protected V = 0 and get pages v = 1) and get pages V = 1) Store.t
   dummy_env_mypp  :: (i:int, (V >= 0) -> get page_protected V = i) Store.t
   envs            :: (i:int, (i > ctr) -> get supr i = false) Store.t
   *)
@@ -79,8 +79,16 @@ let page_incref pm pr spm ps pg envs pp id =
   let xx = Store.get ps pp in (*cheating*)
   let yy = Store.get pr pp in (*cheating*)
   assert (not (is_page_protected pm pr spm ps pg envs pp));
-  let ps = Store.set ps pp ((Store.get ps pp) + 1) in
-  let pr = Store.set pr pp id in
+  let pm = Store.set pm id pp in
+  let pr' = Store.set pr pp id in (* was below next line but must be above *)
+  let spm = Store.set spm id pp in
+  let _ = show pp in
+  let _ = show pr in
+  let _ = show pr' in
+  let _ = show pm in
+  let _ = show spm in
+  let pr = pr' in
+  let ps = Store.set ps pp 1 in (* no longer an addition *)
   (pm, pr, spm, ps, pg, envs)
   (*let v = mem.(pp) in
   let p' = match aux with Env id -> id | Vp _ -> 0 in
@@ -88,17 +96,17 @@ let page_incref pm pr spm ps pg envs pp id =
                     protected = p'; 
                     aux_vps = Dsolve.Set.add aux v.aux_vps};
                     *)
-  
-  
 
+(*let mini_env_check (pr: (int, int) Store.t) (pg: (int*int, int) Store.t) env =
+  Store.iter pg (fun _ pp -> if pp >= 0 then assert (Store.get pr pp = 0) else ())*)
 
-let env_check pm pr spm ps pg envs env =
+let env_check pm pr spm ps (pg: (int*int, int) Store.t) envs env =
   assert (Store.get envs env);
-  assert (is_page_protected pm pr spm ps pg envs (Store.get pm env));
-  (*Store.iter pg (fun eu pp -> let (env', _) = eu in (* i don't know if we can do this *)
+  (*assert (is_page_protected pm pr spm ps pg envs (Store.get pm env));*)
+  Store.iter pg (fun eu pp -> let (env', _) = eu in
                   if env = env' && pp >= 0 then
                   assert (not (is_page_protected pm pr spm ps pg envs pp
-                          || is_page_free pm pr spm ps pg envs pp)) else ())*) ()
+                               || is_page_free pm pr spm ps pg envs pp)) else ())
   (*assert (Hashtbl.mem envs env.id); 
   assert (is_page_protected env.env_mypp);
   Array.iteri
@@ -106,18 +114,19 @@ let env_check pm pr spm ps pg envs env =
       if pp >= 0 then
         assert (not (is_page_protected pp || is_page_free pp)))
     env.env_pgdir*)
+
     
 
-let mem_check pm pr spm ps pg envs = 
+(*let mem_check pm pr spm ps pg envs = 
   let lpages = Store.init nppages (fun x -> 0) in
   let lpages =
   Store.fold envs
     (fun lpages env b ->
       if b then begin
-        env_check pm pr spm ps pg envs env;
+        (*env_check pm pr spm ps pg envs env;*)
         let lpages = Store.set lpages env ((Store.get pm env) + 1) in
-        Store.fold pg
-          (fun lpages eu pp -> let (env', _) = eu in
+        Store2.fold pg
+          (fun lpages env' _ pp ->
              if env' = env then Store.set lpages pp ((Store.get lpages pp) + 1)
           else lpages) lpages
       end else lpages) lpages in
@@ -138,6 +147,7 @@ let mem_check pm pr spm ps pg envs =
     (fun pp v -> check_pp pp; assert (v.pages = lpages.(pp)))
     mem
     *)
+*)
   
   
 (* not handled: out of memory condition *)
@@ -155,12 +165,13 @@ let env_alloc (ctr: int) (pm: (int, int) Store.t) (pr: (int, int) Store.t) (spm:
     let id = fresh_id ctr in
     let (pm, pr, spm, ps, pg, envs) = page_incref pm pr spm ps pg envs env_pp id in
     let spm = Store.set spm id env_pp in
-    let pm = Store.set pm id env_pp in
+    let pm = Store.set pm id env_pp in (*shadowed*)
     let init vp pg = Store.set pg (id, vp) (-1) in
     let pg = ffold 0 nvpages init pg in
     let envs = Store.set envs id true in
+    (*let _ = mini_env_check pr pg id in*)
     let _ = env_check pm pr spm ps pg envs id in
-    let _ = mem_check pm pr spm ps pg envs in
+    (*let _ = mem_check pm pr spm ps pg envs in*)
     (pm, pr, spm, ps, pg, envs, Something id) 
 (*  let env_pp = page_getfree () in
   if env_pp = -1 then None else 

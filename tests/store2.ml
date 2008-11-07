@@ -1,15 +1,15 @@
-type (+'a, +'b) t = A of 'a | B of 'b | C
+type (+'a, +'b, +'c) t = A of 'a * 'b | B of 'b | C of 'c | D
 
-let set (x: ('a, 'b) t) (y: 'a) (z: 'b) = x
+let set (x: ('a, 'b, 'c) t) (y: 'a) (z: 'b) (a: 'c) = x
 
-let get (x: ('a, 'b) t) (y: 'a) = match x with B b -> b | _ -> assert false
+let get (x: ('a, 'b, 'c) t) (y: 'a) (z: 'b) = match x with C b -> b | _ -> assert false
 
-let iter (x: ('a, 'b) t) (f: ('a -> 'b -> unit)) = ()
+let iter (x: ('a, 'b, 'c) t) (f: ('a -> 'b -> 'c -> unit)) = ()
 
-let iteri (x: ('a, 'b) t) (f: (int -> 'a -> 'b -> unit)) = ()
+let iteri (x: ('a, 'b, 'c) t) (f: (int -> 'a -> 'b -> 'c -> unit)) = ()
 
-let fold (x: ('a, 'b) t) (f: ('c -> 'a -> 'b -> 'c)) (k: 'c) = k
+let fold (x: ('a, 'b, 'c) t) (f: ('d -> 'a -> 'b -> 'c -> 'd)) (k: 'd) = k
 
-let empty = C
+let empty = D
 
-let init (x: int) (f: (int -> 'a)) = A (5)
+let init (x: int) (y: int) (f: (int -> int -> 'a)) = A (5, 6)
