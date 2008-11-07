@@ -946,7 +946,7 @@ let solve qs cs =
                BS.time "e-simplification" (List.map esimple) cs else cs in *)
   let qs = BS.time "instantiating quals" (instantiate_per_environment cs) qs in
   (*let qs = List.map (fun qs -> List.filter Qualifier.may_not_be_tautology qs) qs in*)
-  let _ = eprintf "@[%i@ queries@ %i@ misses@]@." (List.length cs) !tr_misses in
+  let _ = C.cprintf C.ol_solve "@[%i@ instantiation@ queries@ %i@ misses@]@." (List.length cs) !tr_misses in
   let _ = dump_qualifiers (List.combine (strip_origins cs) qs) in
   let sri = BS.time "making ref index" make_ref_index cs in
   let s = BS.time "make initial sol" make_initial_solution (List.combine (strip_origins cs) qs) in
