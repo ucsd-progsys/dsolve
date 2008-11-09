@@ -84,6 +84,7 @@ let load_qualfile ppf qualfile =
 let load_dep_mlqfiles bname deps env fenv mlqenv =
   let pathnames = !Config.load_path in 
   let inames = List.map (fun s -> ((String.lowercase s) ^ ".mlq", s)) deps in
+  let inames = C.sort_and_compact inames in
   let f (s, d) pns =
     let p = try Some (List.find (fun p -> Sys.file_exists (p ^ "/" ^ s)) pns) with Not_found -> None in
       match p with
