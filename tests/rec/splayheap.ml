@@ -5,8 +5,6 @@
 let myfail s = 
   print_string s; assert false
 
-let show x = x
-
 type 'a t = 
   | E 
   | T of 'a * 'a t * 'a t 

@@ -1,5 +1,3 @@
-let show x = x
-
 let rec del x ys = 
   match ys with
   | []          -> []
@@ -36,21 +34,19 @@ let malloc (mem, us, fs) =
     | f::fs'      -> let mem' = Mystore.set mem f 1 in
                      let w'   = (mem', f::us, fs') in
                      let _    = check w' in
-                     let _    = show w' in
                      (f, w') in
   let _ = check w' in 
-  (f, show w')
+  (f, w')
 
 let free (mem, us, fs) p =
   if (Mystore.get mem p != 0) then
     let mem' = Mystore.set mem p 0 in
-    let us'  = del (show p) (show us) in
+    let us'  = del p us in
     (mem', us', p::fs) 
   else (mem, us, fs)
 
 let _ =
   let (m,us,fs) = init 1000 in
-  let _         = show fs in
   let fs'       = del (read_int ()) fs in
   ()
 
