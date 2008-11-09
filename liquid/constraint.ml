@@ -800,7 +800,7 @@ let app_sol s s' l k qs =
   if Sol.mem s k then
     if Sol.mem s' k then
       Sol.replace s' k (List.fold_left f (Sol.find s' k) qs)
-    else (l := k :: !l; Sol.replace s' k (List.fold_left f (List.fold_left f QSet.empty (Sol.find s k)) qs))
+    else if !Clflags.union_wfs then (l := k :: !l; Sol.replace s' k (List.fold_left f (List.fold_left f QSet.empty (Sol.find s k)) qs))
   else Sol.replace s k qs
 
 let make_initial_solution cs =

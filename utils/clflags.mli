@@ -81,6 +81,7 @@ val simpguard : bool ref
 val no_recrefs: bool ref
 val no_recvarrefs: bool ref
 val ck_mlq: bool ref
+val union_wfs: bool ref
 val no_simple_subs: bool ref
 val builtins_file: string option ref
 val less_qualifs: bool ref

@@ -31,14 +31,21 @@ def runtest(filep, expected_status):
   collect = int(filep[1])
   lqualifs = common.str_to_bool(filep[2])
   no_recrefs = common.str_to_bool(filep[3])
-  status = dsolve.gen_quals(file, True, lqualifs, collect, "")
+  no_simple = common.str_to_bool(filep[4])
+  union = common.str_to_bool(filep[5])
+  gflags = "-I tests"
+  status = dsolve.gen_quals(file, True, lqualifs, collect, gflags)
   if status != 0: 
     print "Qualgen failed on %s" % file
     sys.exit(2)
   start = time.time()
-  flags = ["-v", "0"]
+  flags = ["-v", "0", "-I", "tests"]
   if no_recrefs:
      flags += ["-no-recrefs"]
+  if no_simple:
+     flags += ["-no-simple"]
+  if union:
+     flags += ["-union-wfs"]
   status = dsolve.solve_quals(file, True, False, False, flags)
   if status == 2: sys.exit(2)
   print "%f seconds" % (time.time() - start)
