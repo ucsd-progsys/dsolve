@@ -31,6 +31,10 @@ let new_edge g n n' =
 
 let _ = new_edge
 
+let baz g x d = Myhash.set g x d 
+
+let _ = baz
+
 (* API *)
 let succs g n = 
   let _  = hassert (Myhash.mem g n) in
