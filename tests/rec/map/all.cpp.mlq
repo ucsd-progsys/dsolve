@@ -3,6 +3,8 @@
 #define HG0(v) (height(v) >= 0)
 #define BALW(e2, v, n) (height(v) <= height(e2) + n and height(v) >= height(e2) - n)
 
+#define S(v) set_of v
+
 #define RHO(p) [[], [v: p, v: true, v: true, v: true, v: true]]
 #define TRHO RHO(true)
 #define LT {e2: RHO(v < e0) z | HG0(e2)}
@@ -16,6 +18,11 @@ measure height =
     Empty -> 0
   | Node (_, _, _, _, h) -> h
 
+(*measure set_of =
+    Empty -> Myset.empty
+  | Node (d, _, l, r, _) -> Myset.cup (Myset.sng d) (Myset.cup (set_of x) (set_of l))
+  *)
+
 val add: 'a -> int -> t: UTGDTREE -> RTGDTREE(v, H(v) <= H(t) + 1 and H(v) >= H(t))
 (*
 val remove_min_binding: t: UTGDTREE -> 'a * int * RGDTREE(v, RHO(v > e0), H(v) >= H(t) - 1 and H(v) <= H(t))
@@ -24,3 +31,5 @@ val merge: m: 'a -> t1: RGDTREE(v, RHO(v < m), true) -> t2: RGDTREE(v, RHO(v > m
   RTGDTREE(v, H(v) <= MAX(H(t1), H(t2)) + 1 and H(v) >= MAX(H(t1), H(t2)))
 *)
 val remove: 'a -> t: UTGDTREE -> RTGDTREE(v, H(v) >= H(t) - 1 and H(v) <= H(t))
+
+(*val find: t: UTGDTREE -> x: {v: 'a | (? (Myset.mem v (set_of t))) } -> {v: 'a | v = x}*)

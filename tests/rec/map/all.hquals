@@ -1,3 +1,5 @@
+mdep Myset
+
 qualif FALSE(v) : (1 = 0)
 qualif BAL(v)   : (height v >= (height l <= height r + 2 and height l >= height r - 2 ? 
 (height l >= height r ? height l + 1 : height r + 1) : (height l >= height r ? height l : height r)))
@@ -11,3 +13,6 @@ qualif HGE0(v)  : height v { >=, > } 0
 qualif H(v)     : v = (height [l, e2] >= height [r, e3] ? height [l, e2] : height [r, e3]) + 1
 qualif COMP(v)  : ~A { * * } v 
 qualif H(v)     : v = height ~A
+
+(* qualifiers that should be from teh mlq file but aren't being mined correctly *)
+(*qualif S(v)     : (? (Myset.mem ~A (set_of v))) *)
