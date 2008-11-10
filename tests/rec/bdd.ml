@@ -1,6 +1,4 @@
 (* Binary Decision Diagrams, adapted from code by Jean-Christophe Filliatre *)
-let show x = x
-
 let myfail s = 
   print_string s; 
   assert false
@@ -39,15 +37,6 @@ let hash = function
 
 let gentag = let r = ref (-1) in fun z -> incr r; !r
 
-(* SIMPLE VERSION 
-let hashcons_node v l h =
-  let _ = show l in
-  let _ = show h in
-  let r = Node (gentag (), v, l, h) in
-  let _ = show r in
-  r
-*)
-
 (* COMPLEX VERSION *) 
 type table = {
   mutable table : bdd Weak.t array;
@@ -83,28 +72,17 @@ let hashcons_node v l h =
                if v==v' && l == l' && h == h' 
                then Node(t', v',l', h') else loop (i+1)
              | _ -> loop (i+1))
-	    (* begin match Weak.get bucket i with
-            | Some (Node(t',v',l',h')) -> 
-                if v==v' && l == l' && h == h'
-                then Node(t', v',l', h') else loop (i+1) (* assert false *)
-            | _ -> loop (i+1)
-            *)
         | _ -> loop (i+1)
     end
   in
   loop 0
-(* *)
 
 let zero = Zero (gentag ())  
 let one  = One (gentag ()) 
-(* SLICE let _    = add t zero; add t one *)
 
 let mk v low high =
-  let _ = show low in
-  let _ = show high in
-  let r = if low == high then low else hashcons_node v low high in
-  let _ = show r in
-  r
+  if low == high then low else hashcons_node v low high
+  
 
 let _ = mk
 
@@ -206,11 +184,6 @@ let gapply op =
 	      res 
     in 
     app b1 b2
-(*
-let mk_and = gapply Op_and
-let mk_or = gapply Op_or
-let mk_imp = gapply Op_imp 
-*)
 
 let mk_and = gapply (Op_any (fun b1 b2 -> b1 && b2))
 let mk_or  = gapply (Op_any (fun b1 b2 -> b1 || b2))
