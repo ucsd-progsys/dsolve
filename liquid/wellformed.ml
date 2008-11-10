@@ -61,9 +61,9 @@ let rec app_to_fun eq inst funf =
         (fun ps -> 
            match ps with
              p :: ps ->
-               (*let _ = Format.printf "@[%a@.%a@.%b@]@.@." pprint (shape f1) pprint (shape p)
-                 (subt f1 p) in*)
+               (*let _ = Format.printf "@[%a@.%a@.END@]@.@." pprint (shape f1) pprint (shape p) in*)
                let (eq, inst) = check_and_inst subt f1 p eq inst in 
+               (*let _ = Format.printf "@[OKOK@.@]" in*)
                (app_to_fun eq inst f2) ps
            | [] -> raise IllFormed)
     | f -> 
@@ -73,12 +73,13 @@ let rec app_to_fun eq inst funf =
            | _ -> raise IllFormed)
 
 let get_by_name (n, env) =
-  let s n' v = n = Path.name n' in
+  try find_by_name env n with Not_found -> raise IllFormed
+  (*let s n' v = n = Path.name n' in
   let cs = Lightenv.filterlist s env in
     match cs with 
       c :: [] -> c
     | c :: cs -> failwith (Printf.sprintf "too many definitions of %s" n)
-    | []      -> raise IllFormed
+    | []      -> raise IllFormed*)
 
 let get_by_name =
   let tbl = Hashtbl.create 17 in
@@ -129,26 +130,26 @@ let pred_is_well_typed env p =
         raise IllFormed
   and pred_shape_is_bool env = function
   | P.True -> true
-  | P.Not p -> pred_shape_is_bool env p
+  | P.Not p -> if pred_shape_is_bool env p then true else raise IllFormed
   | P.Iff (p1, p2)
   | P.Or (p1, p2)  
   | P.And (p1, p2)
   | P.Implies (p1, p2) ->
       if pred_shape_is_bool env p1 then
-        pred_shape_is_bool env p2
+        if pred_shape_is_bool env p2 then true else raise IllFormed
       else
         raise IllFormed
   | P.Atom (p1, rel, p2) -> 
       let p1_shp = get_expr_shape env p1 in
       let p2_shp = get_expr_shape env p2 in
-        (same_shape p1_shp p2_shp)
+        if same_shape p1_shp p2_shp then true else raise IllFormed
   | P.Exists (ps, q)
   | P.Forall (ps, q) ->
-      pred_shape_is_bool (bind_quantified env ps) q
+      if pred_shape_is_bool (bind_quantified env ps) q then true else raise IllFormed
   | P.Boolexp e ->
       expr_shape_is_bool env e
   and expr_shape_is_bool env e = same_shape (get_expr_shape env e) uBool in
-    pred_shape_is_bool env p
+    if pred_shape_is_bool env p then true else raise IllFormed
 
 let pred_well_formed env p =
   try pred_is_well_typed env p with IllFormed -> false | Not_found -> false

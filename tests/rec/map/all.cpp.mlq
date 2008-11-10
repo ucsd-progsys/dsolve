@@ -18,10 +18,9 @@ measure height =
     Empty -> 0
   | Node (_, _, _, _, h) -> h
 
-(*measure set_of =
-    Empty -> Myset.empty
-  | Node (d, _, l, r, _) -> Myset.cup (Myset.sng d) (Myset.cup (set_of x) (set_of l))
-  *)
+measure set_of =
+    Empty -> Myaset.empty
+  | Node (d, _, l, r, _) -> Myaset.cup (Myaset.sng d) (Myaset.cup (set_of l) (set_of r))
 
 val add: 'a -> int -> t: UTGDTREE -> RTGDTREE(v, H(v) <= H(t) + 1 and H(v) >= H(t))
 (*
@@ -32,4 +31,5 @@ val merge: m: 'a -> t1: RGDTREE(v, RHO(v < m), true) -> t2: RGDTREE(v, RHO(v > m
 *)
 val remove: 'a -> t: UTGDTREE -> RTGDTREE(v, H(v) >= H(t) - 1 and H(v) <= H(t))
 
-(*val find: t: UTGDTREE -> x: {v: 'a | (? (Myset.mem v (set_of t))) } -> {v: 'a | v = x}*)
+val find: t: UTGDTREE -> x: {v: 'a | (? (Myaset.mem v (set_of t)))} -> {v: 'a | v = x}
+

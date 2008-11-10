@@ -11,6 +11,12 @@ let height t =
   | Empty -> 0
   | Node (_,_,_,_,h) -> h
 
+let rec set_of t =
+  match t with
+  | Empty -> Myaset.empty
+  | Node (d, _, l, r, _) -> 
+      Myaset.cup (Myaset.sng d) (Myaset.cup (set_of l) (set_of r))
+
 let create x d l r =
   let hl = height l in
   let hr = height r in
@@ -88,3 +94,23 @@ let rec remove x t = match t with
         bal v d (remove x l) r
       else
         bal v d l (remove x r)
+
+let show x = x
+
+let rec find t x = match t with
+    Empty ->
+      let _ = assert (1=0) in assert false 
+  | Node(d, _, l, r, _) ->
+      if x = d then d else
+        if x < d then 
+          if set_of r != Myaset.empty then
+            let y = set_of r in
+            let xx = Myaset.xtr y in
+            find l x
+          else find l x
+        else
+          if set_of l != Myaset.empty then
+            let y = set_of l in
+            let xx = Myaset.xtr y in
+            find r x
+          else find r x
