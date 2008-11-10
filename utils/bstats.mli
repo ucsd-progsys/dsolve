@@ -32,6 +32,8 @@
 
 (** Utilities for maintaining timing statistics *)
 
+val dont_time : unit -> unit
+
 (** Reset all the timings *)
 val reset : unit -> unit 
 

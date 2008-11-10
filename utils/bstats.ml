@@ -47,6 +47,9 @@ let current : t list ref = ref [top]
 
 let reset () = top.sub <- []
 
+let do_time = ref true 
+
+let dont_time () = do_time := false
 
 let print chn msg = 
   (* Total up *)
@@ -94,9 +97,9 @@ let time str f arg =
       res
 	
 
-  
+let time str f arg = if !do_time then time str f arg else f arg  
 
-
+let print chn msg = if !do_time then print chn msg else ()
 
 
 

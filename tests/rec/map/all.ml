@@ -56,16 +56,16 @@ let rec add x data t =
   match t with
       Empty ->
         Node(x, data, Empty, Empty, 1)
-    | Node(v, d, l, r, h) ->
+    | Node(v, d, l, r, h) -> assert false
         (* let c = Ord.compare x v in *)
-        if x = v (* c = 0 *) then
+        (*if x = v (* c = 0 *) then
           Node(x, data, l, r, h)
         else if x < v (* c < 0 *) then
           bal v d (add x data l) r
         else
-          bal v d l (add x data r)
+          bal v d l (add x data r)*)
 
-let rec remove_min_binding t = match t with
+(*let rec remove_min_binding t = match t with
     Empty -> assert (0 = 1); assert false
   | Node(x, d, l, r, h) ->
       match l with
@@ -95,8 +95,6 @@ let rec remove x t = match t with
       else
         bal v d l (remove x r)
 
-let show x = x
-
 let rec find t x = match t with
     Empty ->
       let _ = assert (1=0) in assert false 
@@ -104,13 +102,12 @@ let rec find t x = match t with
       if x = d then d else
         if x < d then 
           if set_of r != Myaset.empty then
-            let y = set_of r in
-            let xx = Myaset.xtr y in
+            let xx = Myaset.xtr (set_of r) in
             find l x
           else find l x
         else
           if set_of l != Myaset.empty then
-            let y = set_of l in
-            let xx = Myaset.xtr y in
+            let xx = Myaset.xtr (set_of l) in
             find r x
           else find r x
+          *)
