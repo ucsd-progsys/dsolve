@@ -21,3 +21,5 @@ fix/add: let user choose between generalizing some mlq qualifiers and not genera
 fix: explicitly casting all implicit functions (ie, relationals) to int causes dramatic slowdown
 
 fix: single param variant types don't parse in param (int option parsed as 'a option)
+
+fix: nested pattern matches only seem to work for measures

@@ -37,6 +37,11 @@ let rec set_of t = match t with
   | Same (x, l, r) -> Myaset.cup (Myaset.sng x) (Myaset.cup (set_of l) (set_of r))
   | Diff (x, l, r) -> Myaset.cup (Myaset.sng x) (Myaset.cup (set_of l) (set_of r))
 
+let rec sz t = match t with
+    Empty -> 0
+  | Same (_, l, r) -> 1 + sz l + sz r
+  | Diff (_, l, r) -> 1 + sz l + sz r
+
 let empty = Empty
 
 let rec add x h = match h with
@@ -48,6 +53,7 @@ let rec add x h = match h with
         (* insertion to the right *)
   | Diff (y, l, r) ->
       if x > y then Same (x, l, add y r) else Same (y, l, add x r)
+      
       
 let maximum h = match h with
   | Empty -> assert false (* raise EmptyHeap *)
@@ -70,42 +76,74 @@ let rec extract_last h = match h with
       let y,l' = extract_last l in
         (y, Same (x, l', r))
 
-(*
-(* needs proof of balance invariant to get set invariant *)
+let ck_assume_empty h = match h with
+  | Empty -> h
+  | Same(_, _, _) -> let _ = assert (1=0) in assert false
+  | Diff(_, _, _) -> let _ = assert (1=0) in assert false
+
+(* returns the topmost element for set invariant *)
+(* proving the non-Empty case involves quite a bit of desugaring.. *)
 (* removes the topmost element of the tree and inserts a new element [x] *)
 let rec descent x h = match h with
   | Empty ->
       assert false
-  | Same (_, Empty, Empty) ->
-      Same (x, Empty, Empty)
-  | Diff (_, Same (z, ll, lr), Empty) ->
-      if x > z then Diff (x, Same (z, ll, lr), Empty)
-      else Diff (z, Same (x, Empty, Empty), Empty)
-  | Same (_, l, r) ->
+  | Same (y, Empty, Empty) ->
+      (y, Same (x, Empty, Empty))
+  | Diff (y, l, r) ->
+      (match r with
+      | Empty ->
+          (match l with
+          | Same (z, ll', lr') ->
+              let ll = ck_assume_empty ll' in
+              let lr = ck_assume_empty lr' in
+              let _ = assert (lr = lr') in
+              let _ = assert (ll = ll') in
+              if x > z then (y, Diff (x, Same (z, ll, lr), Empty))
+              else (y, Diff (z, Same (x, Empty, Empty), Empty))
+          | Diff (_, _, _) -> let _ = assert (1=0) in assert false
+          | Empty -> let _ = assert (1=0) in assert false)
+      | _ ->  (* we can't prove that {ml, mr} = z below, unchecked assumption for now.. *)
+         let (ml, l) = maximum l in
+         let (mr, r) = maximum r in
+       if x > ml && x > mr then
+         (y, Diff (x, l, r))
+       else if ml > mr then
+         let (z, l') = descent x l in
+         if ml = z then
+           let d = Diff (z, l', r) in (* z3 chokes on this: must be an unchecked assumption *)
+           if (Myaset.eq (Myaset.cup (set_of d) (Myaset.sng y)) (Myaset.cup (set_of h) (Myaset.sng x))) then
+             (y, d)
+           else assert false else assert false
+       else
+         let (z, r') = descent x r in
+         if z = mr then
+           let d = Diff (z, l, r') in
+           if (Myaset.eq (Myaset.cup (set_of d) (Myaset.sng y)) (Myaset.cup (set_of h) (Myaset.sng x))) then
+             (y, d)
+           else assert false else assert false)
+  | Same (y, l, r) ->
       let (ml, l) = maximum l in
       let (mr, r) = maximum r in
-        if x > ml && x > mr then
-	  Same (x, l, r)
-	else
-	  if ml > mr then
-	    Same (ml, descent x l, r)
+    if x > ml && x > mr then
+	    (y, Same (x, l, r))
+    else if ml > mr then
+      let (z, l) = descent x l in
+      if z = ml then
+        let d = Same (ml, l, r) in
+        if (Myaset.eq (Myaset.cup (set_of d) (Myaset.sng y)) (Myaset.cup (set_of h) (Myaset.sng x))) then
+	        (y, d)
+      else assert false else assert false
 	  else
-	    Same (mr, l, descent x r)
-  | Diff (_, l, r) ->
-      let (ml, l) = maximum l in
-      let (mr, r) = maximum r in
-	if x > ml && x > mr then
-	  Diff (x, l, r)
-	else
-	  if ml > mr then
-	    Diff (ml, descent x l, r)
-	  else
-	    Diff (mr, l, descent x r)
+      let (z, r) = descent x r in
+      if z = mr then
+        let d = Same (mr, l, r) in
+        if (Myaset.eq (Myaset.cup (set_of d) (Myaset.sng y)) (Myaset.cup (set_of h) (Myaset.sng x))) then
+	        (y, d)
+      else assert false else assert false
 
-      
-let remove = function
-  | Empty -> assert false (* raise EmptyHeap *)
-  | Same (x, Empty, Empty) -> Empty
+let remove h = match h with
+  | Empty -> let _ = assert (1 = 0) in assert false (* raise EmptyHeap *)
+  | Same (x, Empty, Empty) -> (x, Empty)
   | h -> let y,h' = extract_last h in descent y h'
 
 let rec iter f = function
@@ -117,4 +155,4 @@ let rec fold f h x0 = match h with
   | Empty -> x0
   | Same (x, l, r) -> fold f l (fold f r (f x x0))
   | Diff (x, l, r) -> fold f l (fold f r (f x x0))
-  *)
+
