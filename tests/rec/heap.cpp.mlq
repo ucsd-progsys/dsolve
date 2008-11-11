@@ -5,12 +5,40 @@
 #define HP     UR [z: t . || e0: 'a, e1: SR z, e2: SR z || e0: 'a, e1: SR z, e2: SR z]
 #define BHP(b) UR [z: t . || e0: 'a, e1: BR(b) z, e2: BR(b) z || e0: 'a, e1: BR(b) z, e2: BR(b) z]
 
+#define S(v)      (set_of v)
+#define CUP(x, y) (Myaset.cup x y)
+#define SNG(x)    (Myaset.sng x)
+#define SEQ(x, y) (? Myaset.eq x y)
+#define MEM(x, v) (? Myaset.mem x v)
+#define MNS(x, y) (Myaset.mns x y)
+
+#define H(v)      (height v)
+
+measure set_of =
+    Empty -> Myaset.empty
+  | Same (x, l, r) -> Myaset.cup (Myaset.sng x) (Myaset.cup (set_of l) (set_of r))
+  | Diff (x, l, r) -> Myaset.cup (Myaset.sng x) (Myaset.cup (set_of l) (set_of r))
+
+measure height =
+    Empty -> 0
+  | Same (x, l, r) -> 1 + (H(l) > H(r) ? H(l) : H(r))
+  | Diff (x, l, r) -> 1 + (H(l) > H(r) ? H(l) : H(r))
+
 val empty: HP
 
-val add: x: 'a -> h: HP -> HP
+val add: x: 'a -> h: HP -> {v: HP | SEQ(S(v), CUP(S(h), SNG(x)))} 
+val maximum: h: HP -> 'a * {v: BHP(e0) | MEM(e0, S(v)) and S(v) = S(h)}
+val extract_last: h: HP -> 'a * {v: HP | SEQ(S(h), CUP(S(v), SNG(e0)))}
+(*val descent: x: 'a -> h: HP -> 'a * {v: HP | SEQ(CUP(S(h), SNG(x)), CUP(S(v), SNG(e0))) }
+val remove: h: HP -> HP
+val iter: f: ('a -> 'b) -> h: HP -> unit
+val fold: f: ('a -> 'b -> 'b) -> h: HP -> b: 'b -> 'b
+*)
+
+(*val add: x: 'a -> h: HP -> HP
 val maximum: h: HP -> 'a * BHP(e0)
 val extract_last: h: HP -> 'a * HP
 val descent: x: 'a -> h: HP -> HP
 val remove: h: HP -> HP
 val iter: f: ('a -> 'b) -> h: HP -> unit
-val fold: f: ('a -> 'b -> 'b) -> h: HP -> b: 'b -> 'b
+val fold: f: ('a -> 'b -> 'b) -> h: HP -> b: 'b -> 'b*)

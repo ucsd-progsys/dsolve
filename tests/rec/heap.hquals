@@ -1,1 +1,3 @@
 qualif CMP(v): v { * * } ~A
+
+(*qualif S(v)     : (-. ? (Myaset.mem x (set_of h)))*)
