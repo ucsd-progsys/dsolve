@@ -2,6 +2,8 @@
 #define DIFF(l, r) (H(l) = H(r) + 1)
 #define SAME(l, r) (H(l) = H(r))
 
+#define M(v)       (max v)
+
 #define R(p)   [[], [v: p, v: true, v: true], [v: p, v: true, v: true]]
 #define UR     R(true)
 #define SR     R(v <= e0)
@@ -17,7 +19,6 @@
 #define MNS(x, y) (Myaset.mns x y)
 
 axiom pos : forall (x: int. sz x >= 0)
-(* ideas for max = descend: axiomize an INF and use a max measure that just grabs the field *)
 
 measure set_of =
     Empty -> Myaset.empty
@@ -29,21 +30,15 @@ measure sz =
   | Same (x, l, r) -> 1 + sz l + sz r
   | Diff (x, l, r) -> 1 + sz l + sz r
 
-val empty: HP
+measure max =
+  | Same (x, _, _) -> x
+  | Diff (x, _, _) -> x
 
-val add: x: 'a -> h: HP -> {v: HP | SEQ(S(v), CUP(S(h), SNG(x))) and DIFF(v, h)} 
-val maximum: h: HP -> 'a * {v: BHP(e0) | (MEM(e0, S(v))) and v = h}
-val extract_last: h: HP -> 'a * {v: HP | SEQ(S(h), CUP(S(v), SNG(e0))) and H(v) = H(h) - 1}
-val descent: x: 'a -> h: HP -> {v: 'a | MEM(v, S(h))} * {v: HP | SEQ(CUP(S(h), SNG(x)), CUP(S(v), SNG(e0))) and SAME(v, h)}
-val remove: h: {v: HP | H(v) > 0} -> {v: 'a | MEM(v, S(h))} * {v: HP | H(v) = H(h) - 1 and SEQ(S(h), CUP(SNG(e0), S(v)))}
+val empty: HP
+val add: x: 'a -> h: HP -> {v: HP | SEQ(S(v), CUP(S(h), SNG(x))) and DIFF(v, h)}
+val maximum: h: {v: HP | H(v) > 0} -> 'a * {v: BHP(e0) | ((MEM(e0, S(v))) and v = h) and e0 = M(v)}
+val extract_last: h: {v: HP | H(v) > 0} -> {v: 'a | (H(h) = 1 -> v = M(h))} * {v: HP | (SEQ(S(h), CUP(S(v), SNG(e0))) and H(v) = H(h) - 1) and (H(h) > 1 -> M(h) = M(v))}
+val descent: x: 'a -> h: {v: HP | H(v) > 0} -> {v: 'a | MEM(v, S(h)) and v = M(h)} * {v: HP | (SEQ(CUP(S(h), SNG(x)), CUP(S(v), SNG(e0))) and MEM(x, S(v))) and SAME(v, h)}
+val remove: h: {v: HP | H(v) > 0} -> {v: 'a | MEM(v, S(h)) and v = M(h)} * {v: HP | H(v) = H(h) - 1 and SEQ(S(h), CUP(SNG(e0), S(v)))}
 val iter: f: ('a -> 'b) -> h: HP -> unit
 val fold: f: ('a -> 'b -> 'b) -> h: HP -> b: 'b -> 'b
-
-
-(*val add: x: 'a -> h: HP -> HP
-val maximum: h: HP -> 'a * BHP(e0)
-val extract_last: h: HP -> 'a * HP
-val descent: x: 'a -> h: HP -> HP
-val remove: h: HP -> HP
-val iter: f: ('a -> 'b) -> h: HP -> unit
-val fold: f: ('a -> 'b -> 'b) -> h: HP -> b: 'b -> 'b*)
