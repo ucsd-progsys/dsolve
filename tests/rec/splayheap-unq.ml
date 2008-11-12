@@ -60,6 +60,7 @@ let insert x t =
   let (a, b) = partition x t in
   T (x, a, b)
 
+  (*
 let rec merge t' t =
   match t' with
   | E -> 
@@ -69,6 +70,7 @@ let rec merge t' t =
       let a'       = merge ta a in
       let b'       = merge tb b in
       T (x, a', b') 
+      *)
 
 let rec findMin t = 
   match t with

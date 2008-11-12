@@ -1,4 +1,4 @@
-qualif LEQ(v): ~A { <, <=, >=, > } v
+qualif LEQ(v): v { * * } ~A
 
 qualif S(v): sz v + sz e0 = sz t
 qualif S(v): sz v = sz t' + sz t
