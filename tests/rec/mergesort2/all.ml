@@ -13,18 +13,24 @@ let rec llen xss =
   match xss with
     | Nil -> 0
     | Cons(xs,xss') -> len xs + llen xss'
+    
+let rec set_of xss =
+  match xss with
+    | Nil -> Myset.empty
+    | Cons(xs, xss') -> Myset.cup (Myset.of_list xs) (set_of xss')
 
-let check xs =
+let check xs xss =
+  let _ = set_of xss in
   llen xs
 
 let rec initlist xs =
   match xs with
     | [] -> Nil 
-    | x1::xs' -> 
+    | x1::xs' ->
         begin
           match xs' with
-            | [] -> Cons([x1],Nil)
-            | x2::xs'' -> 
+            | [] -> Cons([x1], Nil)
+            | x2::xs'' ->
                 let ys = initlist xs'' in
                   if x1 < x2 then Cons(x1::x2::[],ys) else Cons(x2::x1::[],ys)  
         end
@@ -61,3 +67,4 @@ let rec mergeall xss =
 let mergesort2 xs =
   let xs' = initlist xs in
     mergeall xs'
+    
