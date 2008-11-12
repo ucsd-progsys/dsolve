@@ -29,8 +29,8 @@ let rec partition pivot t =
         match b with
         | E -> 
             (T(x, a, E), E)
-        | T (y, b1, b2) -> assert false
-            (*if y <= pivot then
+        | T (y, b1, b2) ->
+            if y <= pivot then
               let (small, big)  = partition pivot b2 in
               let r1            = T (y, T (x, a, b1), small) in
               let r2            = big in
@@ -39,9 +39,9 @@ let rec partition pivot t =
               let (small, big)  = partition pivot b1 in
               let r1            = T (x, a, small) in
               let r2            = T (y, big, b2)  in
-              (r1, r2)*)
-      else assert false
-        (*match a with
+              (r1, r2)
+      else
+        match a with
         | E ->
             (E, T(x,E,b))
         | T (y, a1, a2) ->
@@ -54,12 +54,12 @@ let rec partition pivot t =
               let (small, big)  = partition pivot a1 in
               let r1            = small in
               let r2            = T (y, big, T (x, a2, b)) in
-              (r1, r2)*)
+              (r1, r2)
 
 let insert x t =
   let (a, b) = partition x t in
   T (x, a, b)
-(*
+
 let rec merge t' t =
   match t' with
   | E -> 
@@ -73,26 +73,26 @@ let rec merge t' t =
 let rec findMin t = 
   match t with
   | E -> 
-      myfail "empty"
+      let _ = assert (1 = 0) in myfail "empty"
   | T (x, a, b) -> 
       (match a with 
        | E -> x
-       | _ -> findMin a)
+       | T (_, _, _) -> findMin a)
 
 let rec findMin2 t = 
   match t with
   | E -> 
-      myfail "empty"
+      let _ = assert (1 = 0) in myfail "empty"
   | T (x, a, b) -> 
       (match a with 
        | E -> (x, T (x, E, b))
-       | _ -> let (x', a') = findMin2 a in
+       | T (_, _, _) -> let (x', a') = findMin2 a in
               (x', T (x, a', b)))
 
 let rec deleteMin t = 
   match t with
   | E ->
-      myfail "empty"
+      let _ = assert (1 = 0) in myfail "empty"
   | T (x, a, c) ->
       (match a with 
        | E -> 
@@ -100,7 +100,8 @@ let rec deleteMin t =
        | T (x', a', b) ->
            (match a' with 
            | E -> T (x, b, c)
-           | _ -> T (x', deleteMin a', T (x, b, c))))
+           | T (_, _, _) -> T (x', deleteMin a', T (x, b, c))))
+
 
 let rec deleteMin2 t = 
   match t with
@@ -113,7 +114,7 @@ let rec deleteMin2 t =
            (match a' with 
            | E -> 
                (x', T (x, b, c))
-           | _ -> 
+           | T(_, _, _) -> 
                let (m, a'') = deleteMin2 a' in
                (m, T (x', a'', T (x, b, c)))))
 
@@ -183,4 +184,4 @@ let rec findMin2 t =
       let (x', a') = findMin2 a in
       (x', T (x, a', b))
 *)
-*)
+
