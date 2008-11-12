@@ -1,0 +1,20 @@
+
+#define S(v)   (sz v)
+
+#define R(p)   [[], [v: p, v: true, v: true]]
+#define HP     [z: t . || e0: 'a, e1: R(v <= e0) z, e2: R(v >= e0) z]
+#define SHP    R(true) HP
+
+measure sz =
+  | E -> 0
+  | T (_, l, r) -> 1 + sz l + sz r
+
+val empty     : {v: SHP | S(v) = 0} 
+val isEmpty   : t: SHP -> {v: bool | (? v -> S(t) = 0)}
+val insert    :  'a -> h: SHP -> {v: SHP | (*S(v) = S(t) + 1*) true}
+(*val merge     : SHP -> SHP -> SHP 
+val findMin2  : SHP -> ('a * R(e0 <= v) HP)
+val deleteMin : SHP -> SHP
+val deleteMin2: SHP -> ('a * R(e0 <= v) HP)
+val to_list2  : SHP -> 'a list
+*)

@@ -1,0 +1,3 @@
+qualif LEQ(v): ~A { <, <=, >=, > } v
+
+qualif S(v): sz v + sz e0 = sz t
