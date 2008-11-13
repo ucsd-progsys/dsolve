@@ -69,20 +69,29 @@ let rec nfind x h = match h with
   | E -> ()
   | T (y, l, r) -> nfind x l; nfind x r
 
+let rec ck_rec_notin x h = match h with
+  | E -> E
+  | T (y, l, r) -> T(y, ck_rec_notin x l, ck_rec_notin x r)
+
 let rec merge h t =
   match h with
   | E -> 
       t
   | T (x, a, b) ->
-      (*let xx = nfind x a in
-      let xx = nfind x b in*)
+      let xx = nfind x a in
+      let xx = nfind x b in
+      let _ = assert (not (Myset.mem x (set_of t))) in
       let (ta, tb) = partition x t in
-      (*if (not (Myset.mem x (set_of ta))) && (not (Myset.mem x (set_of tb))) then*)
+      if (not (Myset.mem x (set_of ta))) && (not (Myset.mem x (set_of tb))) then
+        let ta = ck_rec_notin x ta in
+        let tb = ck_rec_notin x tb in
         let a'       = merge ta a in
         let b'       = merge tb b in
-      (*if (not (Myset.mem x (set_of a'))) && (not (Myset.mem x (set_of b'))) then*)
+        if (not (Myset.mem x (set_of a'))) && (not (Myset.mem x (set_of b'))) then
+        let a' = ck_rec_notin x a' in
+        let b' = ck_rec_notin x b' in
           T (x, a', b')
-      (*else assert false else assert false*)
+      else assert false else assert false
 
 let rec findMin t = 
   match t with
