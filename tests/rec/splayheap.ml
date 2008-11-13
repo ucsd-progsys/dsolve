@@ -9,6 +9,14 @@ type 'a t =
   | E 
   | T of 'a * 'a t * 'a t 
 
+let rec sz t = match t with
+  | E -> 0
+  | T (_, l, r) -> 1 + sz l + sz r
+
+let rec set_of t = match t with
+  | E -> Myset.empty
+  | T (x, l, r) -> Myset.cup (Myset.sng x) (Myset.cup (set_of l) (set_of r))
+
 let empty = E
 
 let isEmpty h = 
@@ -56,8 +64,8 @@ let insert x t =
   let (a, b) = partition x t in
   T (x, a, b)
 
-let rec merge t' t =
-  match t' with
+let rec merge h t =
+  match h with
   | E -> 
       t
   | T (x, a, b) ->
@@ -69,26 +77,26 @@ let rec merge t' t =
 let rec findMin t = 
   match t with
   | E -> 
-      myfail "empty"
+      let _ = assert (1 = 0) in myfail "empty"
   | T (x, a, b) -> 
       (match a with 
        | E -> x
-       | _ -> findMin a)
+       | T (_, _, _) -> findMin a)
 
 let rec findMin2 t = 
   match t with
   | E -> 
-      myfail "empty"
+      let _ = assert (1 = 0) in myfail "empty"
   | T (x, a, b) -> 
       (match a with 
        | E -> (x, T (x, E, b))
-       | _ -> let (x', a') = findMin2 a in
+       | T (_, _, _) -> let (x', a') = findMin2 a in
               (x', T (x, a', b)))
 
 let rec deleteMin t = 
   match t with
   | E ->
-      myfail "empty"
+      let _ = assert (1 = 0) in myfail "empty"
   | T (x, a, c) ->
       (match a with 
        | E -> 
@@ -96,11 +104,11 @@ let rec deleteMin t =
        | T (x', a', b) ->
            (match a' with 
            | E -> T (x, b, c)
-           | _ -> T (x', deleteMin a', T (x, b, c))))
+           | T (_, _, _) -> T (x', deleteMin a', T (x, b, c))))
 
 let rec deleteMin2 t = 
   match t with
-  | E -> myfail "empty" 
+  | E -> let _ = assert (1 = 0) in myfail "empty" 
   | T (x, a, c) ->
       (match a with 
        | E -> 
@@ -109,7 +117,7 @@ let rec deleteMin2 t =
            (match a' with 
            | E -> 
                (x', T (x, b, c))
-           | _ -> 
+           | T (_, _, _) -> 
                let (m, a'') = deleteMin2 a' in
                (m, T (x', a'', T (x, b, c)))))
 
@@ -179,4 +187,3 @@ let rec findMin2 t =
       let (x', a') = findMin2 a in
       (x', T (x, a', b))
 *)
-

@@ -14,7 +14,7 @@ qualif H(v)     : v = (height [l, e2] >= height [r, e3] ? height [l, e2] : heigh
 qualif COMP(v)  : ~A { * * } v 
 qualif H(v)     : v = height ~A
 
-qualif S(v)     : (-. ? (Myaset.mem x (set_of t)))
+qualif S(v)     : (true || (? Myaset.un v)) and (-. ? (Myaset.mem x (set_of t)))
 qualif S(v)  : (? Myaset.eq (set_of v) (Myaset.cup (Myaset.sng x) (Myaset.cup (set_of l) (set_of r))))
 qualif S(v)  : (? Myaset.eq (set_of v) (Myaset.cup (set_of t2) (set_of t1)))
 qualif S(v)  : (? Myaset.eq (set_of [t2, l, t]) (Myaset.cup (set_of v) (Myaset.sng e0)))

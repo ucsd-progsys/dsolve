@@ -1,7 +1,6 @@
 (* Splay Heaps: Okasaki's "Purely Functional Data Structures" p.50 Fig. 5.5. *)
 
 (* run with -no-simple *)
-
 let myfail s = 
   print_string s; assert false
 
@@ -12,6 +11,10 @@ type 'a t =
 let rec sz t = match t with
   | E -> 0
   | T (_, l, r) -> 1 + sz l + sz r
+
+let rec set_of t = match t with
+  | E -> Myset.empty
+  | T (x, l, r) -> Myset.cup (Myset.sng x) (Myset.cup (set_of l) (set_of r))
 
 let empty = E
 
@@ -60,17 +63,26 @@ let insert x t =
   let (a, b) = partition x t in
   T (x, a, b)
 
-  (*
-let rec merge t' t =
-  match t' with
+let show x = x
+
+let rec nfind x h = match h with
+  | E -> ()
+  | T (y, l, r) -> nfind x l; nfind x r
+
+let rec merge h t =
+  match h with
   | E -> 
       t
   | T (x, a, b) ->
+      (*let xx = nfind x a in
+      let xx = nfind x b in*)
       let (ta, tb) = partition x t in
-      let a'       = merge ta a in
-      let b'       = merge tb b in
-      T (x, a', b') 
-      *)
+      (*if (not (Myset.mem x (set_of ta))) && (not (Myset.mem x (set_of tb))) then*)
+        let a'       = merge ta a in
+        let b'       = merge tb b in
+      (*if (not (Myset.mem x (set_of a'))) && (not (Myset.mem x (set_of b'))) then*)
+          T (x, a', b')
+      (*else assert false else assert false*)
 
 let rec findMin t = 
   match t with
@@ -107,7 +119,7 @@ let rec deleteMin t =
 
 let rec deleteMin2 t = 
   match t with
-  | E -> myfail "empty" 
+  | E -> let _ = assert (1 = 0) in myfail "empty" 
   | T (x, a, c) ->
       (match a with 
        | E -> 

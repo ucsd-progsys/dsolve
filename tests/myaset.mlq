@@ -11,6 +11,9 @@ axiom emp : forall (x: int. -. (? mem x empty))
 axiom cup : forall (x: int, y: set, z: set. (? mem x (cup y z) iff (? mem x y or ? mem x z)))
 axiom cap : forall (x: int, y: set, z: set. (? mem x (cap y z) iff (? mem x y and ? mem x z)))
 
+(* a bug in z3? *)
+axiom disj: forall (x: set, y: set, z: set. (? eq empty (cap y z) -> (? mem x y -> (-. (? mem x z)))))
+
 axiom mns : forall (x: int, y: set, z: set. (? mem x (mns y z) iff (? mem x y and (-.(? mem x z)))))
 
 axiom sng : forall (x: int, y: int. (? mem x (sng y) iff x = y))
@@ -32,3 +35,5 @@ val sng: x: 'a -> {v: 'a set | v = sng x}
 val mns: x: 'a set -> y: 'a set -> {v: 'a set | v = mns x y}
 
 val xtr: x: {v: 'a set | v != empty} -> {v: 'a | v = xtr x}
+
+val un: unit -> bool

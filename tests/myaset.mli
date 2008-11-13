@@ -10,3 +10,5 @@ val sng: 'a -> 'a set
 val mns: 'a set -> 'a set -> 'a set 
 
 val xtr: 'a set -> 'a
+
+val un: unit -> bool 
