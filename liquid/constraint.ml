@@ -729,8 +729,8 @@ let add_path_set vars m path =
       let rest = try C.StringMap.find name m with Not_found -> [] in C.StringMap.add name (path :: rest) m
   | _ -> m
 
-let instantiate_in_vm vm qset q =
-  List.fold_left (C.flip QSet.add) qset (JS.time "inst about" (Q.instantiate_about vm) q)
+let instantiate_in_vm vm env qset q =
+  List.fold_left (C.flip QSet.add) qset (JS.time "inst about" (Q.instantiate_about vm env) q)
 
 let path_is_temp p = match Path.ident_name p with Some s -> Le.badstring s | None -> false
 
@@ -741,7 +741,6 @@ let tr_misses = ref 0
 let instantiate_quals_in_env tr qs =
   let qpaths = List.fold_left (fun xs x -> List.fold_left (C.flip NSet.add) xs (Q.vars x)) NSet.empty qs in
     (fun (env, envl') ->
-      try 
         let (vs, (env, envl, quoi)) = BS.time "find_maximal" (TR.find_maximal envl' tr)
                                                                 (fun (_, _, quoi) -> C.maybe_bool !quoi) in
         match !quoi with
@@ -752,7 +751,7 @@ let instantiate_quals_in_env tr qs =
         | None -> 
             let _   = incr tr_misses in
             let vm  = List.fold_left (add_path_set qpaths) C.StringMap.empty envl in
-            let q   = BS.time "fold quals" (List.fold_left (instantiate_in_vm vm) QSet.empty) qs in
+            let q   = BS.time "fold quals" (List.fold_left (instantiate_in_vm vm env) QSet.empty) qs in
             let els = QSet.elements q in
             let _ = TR.iter_path envl tr 
               (fun (_, _, quoi) ->
@@ -760,8 +759,7 @@ let instantiate_quals_in_env tr qs =
                 | Some q -> if (List.length q) > (List.length els)
                             then quoi := Some els
                 | None -> ()) in
-            quoi := Some els; els
-      with Not_found -> assert false)
+            quoi := Some els; els)
 
 let constraint_env (_, c) =
   match c with | SubRef (_, _, _, _, _) -> Le.empty | WFRef (e, _, _) -> e

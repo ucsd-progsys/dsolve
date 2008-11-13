@@ -63,13 +63,24 @@ let fix_bound_vars vm ps =
   let names = List.map Path.name paths in
     List.fold_left2 (fun vm n p -> C.StringMap.add n [p] vm) vm names paths
 
+(* duplicated from frame to avoid circular dep because i'm in a hurry *)
+exception Found_key_by_name of Path.t
+let qfind_key_by_name env s =
+   try (Lightenv.iter (fun p _ -> if Path.name p = s then raise (Found_key_by_name p)) env; raise Not_found)
+    with Found_key_by_name p -> p
+
 (* in qualifier.ml to avoid an odd dependency problem that breaks the build *)
-let expand_about vm p =
+let expand_about vm env p =
   let rec e_rec vm = function
       PInt x -> [PInt x]
     | Var p -> 
-        let p = Path.ident_name_crash p in
-        List.rev_map (fun x -> Var x) (C.StringMap.find p vm)
+        (try let p = Path.ident_name_fail p in
+            List.rev_map (fun x -> Var x) (C.StringMap.find p vm)
+        with Failure _ -> [Var p]
+           | Not_found ->
+               let p = Path.ident_name_crash p in
+               if String.contains p '.' then
+               [Var (qfind_key_by_name env p)] else raise Not_found)
     | FunApp (s, ps) ->
         let ess = List.map (e_rec vm) ps in
           List.rev_map (fun x -> FunApp (s, x)) (C.lflap ess)
@@ -102,9 +113,9 @@ let expand_about vm p =
         List.rev_map (fun a -> Boolexp a) (e_rec vm e) in
   t_rec vm p
 
-let instantiate_about vm (path, valu, pred) = 
+let instantiate_about vm env (path, valu, pred) = 
   let vm = C.StringMap.add (Path.ident_name_crash valu) [valu] vm in
-    try List.rev_map (fun x -> (path, valu, x)) (expand_about vm pred)
+    try List.rev_map (fun x -> (path, valu, x)) (expand_about vm env pred)
     with Not_found -> []
 
 let map_pred f (p, v, pred) = 
