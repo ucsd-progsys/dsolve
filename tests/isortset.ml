@@ -1,5 +1,3 @@
-let ss = Myset.of_list
-
 let rec partition f xs = 
   match xs with 
   | []          -> ([],[])
@@ -63,7 +61,7 @@ let rec merge_sort xs =
         merge ys' zs')
 
 (*************************** Tests ****************************)
-
+let ss = Myset.of_list
 let test xs =
   let _ = let ys = insert_sort xs in 
           assert (Myset.eq (ss xs) (ss ys)) in
