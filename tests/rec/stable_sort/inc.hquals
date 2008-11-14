@@ -1,1 +1,3 @@
+mdep Myset
+
 qualif EQ(v) :  ~A { <=, >= } v
