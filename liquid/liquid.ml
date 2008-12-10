@@ -29,12 +29,12 @@ open Types
 open Clflags
 open Gc
 
-module F = Frame
+module F   = Frame
 module MLQ = Mlqmod
-module M = Measure
-module C = Common
-module Le = Lightenv
-module P = Predicate
+module M   = Measure
+module C   = Common
+module Le  = Lightenv
+module P   = Predicate
 
 let usage = "Usage: liquid <options> [source-files]\noptions are:"
 
@@ -137,8 +137,8 @@ let process_sourcefile env fenv fname =
       if !dump_qualifs then
         dump_qualifiers bname (str, env, menv, mlqenv) qname
       else
-        let (deps, quals)              = load_qualfile std_formatter qname in
-        let (env, menv', fenv, _)      = load_dep_mlqfiles bname deps env fenv mlqenv in
+        let (deps, quals)         = load_qualfile std_formatter qname in
+        let (env, menv', fenv, _) = load_dep_mlqfiles bname deps env fenv mlqenv in
         let (fenv, mlqenv, quals) = M.proc_premeas env (List.rev_append menv menv') fenv mlqenv quals in
         let fenv = MLQ.scrub_and_push_axioms fenv in
         let _ = if C.ck_olev C.ol_dump_quals then List.iter (function | Typedtree.Tstr_qualifier(a, (b, c)) -> printf "@[%a@]@." Qualifier.pprint (Path.Pident a, Path.Pident b, c) | _ -> assert false) quals in

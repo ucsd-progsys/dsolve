@@ -40,7 +40,7 @@ module Le = Lightenv
 (************** Type definitions: Refinements *****************)
 (**************************************************************)
 
-type substitution = Path.t * Predicate.pexpr
+type substitution = Path.t * P.pexpr
 type dep_sub = string * string
 
 type qvar = Path.t
@@ -245,7 +245,7 @@ let recref_is_empty rr =
   List.for_all (List.for_all refinement_is_empty) rr
 
 let false_refinement =
-  mk_refinement [] [(Path.mk_ident "false", Path.mk_ident "V", Predicate.Not (Predicate.True))] []
+  mk_refinement [] [(Path.mk_ident "false", Path.mk_ident "V", P.Not (P.True))] []
 
 let apply_refinement r = function
   | Fvar (p, level, s, _) -> Fvar (p, level, s, r)
@@ -280,7 +280,7 @@ let append_recref rr' f = match get_recref f with
   | None    -> f
 
 let eager_apply subs qs =
-  List.rev_map (Qualifier.map_pred (C.app_snd (Predicate.apply_substs subs))) qs 
+  List.rev_map (Qualifier.map_pred (C.app_snd (P.apply_substs subs))) qs 
 
 let refexpr_apply_subs subs' (subs, qexprs) =
   match qexprs with
@@ -449,31 +449,32 @@ let map_inst eq inst f =
 (**************************************************************)
 
 let pprint_sub ppf (path, pexp) =
-  fprintf ppf "@[(%s@ ->@ %a)@]" (Path.unique_name path) Predicate.pprint_pexpr pexp
+  fprintf ppf "@[(%s@ ->@ %a)@]" (Path.unique_name path) P.pprint_pexpr pexp
 
 let pprint_subs ppf subs =
   Oprint.print_list pprint_sub (fun ppf -> fprintf ppf ";@ ") ppf subs
 
 let pred_of_qual q =
-  Qualifier.apply (Predicate.Var (Path.mk_ident "V")) q
+  Qualifier.apply (P.Var (Path.mk_ident "V")) q
 
 let space ppf =
-  fprintf ppf "@;<0 1>"
+  fprintf ppf "" (* fprintf ppf "@;<0 1>" *)
+
+let comma ppf =
+  fprintf ppf "," (* fprintf ppf ",@;<1 0>" *)
+
 
 let pprint_refexpr ppf (subs, (qconsts, qvars)) =
-    if !Clflags.print_subs then
-      fprintf ppf "[%a]@;<1 0>%a@;<1 0>%a"
-      pprint_subs subs
-      (Oprint.print_list (fun ppf q -> Predicate.pprint ppf (pred_of_qual q)) space) qconsts
-      (Oprint.print_list (fun ppf v -> fprintf ppf "%s" (C.path_name v)) space) qvars
-    else
-      fprintf ppf "%a@;<1 0>%a"
-      (Oprint.print_list (fun ppf q -> Predicate.pprint ppf
-                          (Predicate.apply_substs subs (pred_of_qual q))) space) qconsts
-      (Oprint.print_list (fun ppf v -> fprintf ppf "%s" (C.path_name v)) space) qvars
-
-let pprint_refinement ppf res =
-  Oprint.print_list pprint_refexpr space ppf res
+  if !Clflags.print_subs then
+    fprintf ppf "[%a]@;<1 0>%a@;<1 0>%a"
+    pprint_subs subs
+    (Oprint.print_list (fun ppf q -> P.pprint ppf (pred_of_qual q)) space) qconsts
+    (Oprint.print_list (fun ppf v -> fprintf ppf "%s" (C.path_name v)) space) qvars
+  else
+    fprintf ppf "%a@;<1 0>%a"
+    (Oprint.print_list (fun ppf q -> P.pprint ppf
+                        (P.apply_substs subs (pred_of_qual q))) space) qconsts
+    (Oprint.print_list (fun ppf v -> fprintf ppf "%s" (C.path_name v)) space) qvars
 
 let rec pprint_pattern ppf = function
   | Tpat_any -> fprintf ppf "_"
@@ -490,58 +491,69 @@ let rec pprint_pattern ppf = function
 and pprint_pattern_list ppf pats =
   Oprint.print_list pprint_pattern (fun ppf -> fprintf ppf ", ") ppf (List.map (fun p -> p.pat_desc) pats)
 
-let wrap_refined ppf pp r =
+let pprint_refinement ppf res =
+  Oprint.print_list pprint_refexpr (fun _ -> ()) ppf res
+
+let wrap_refined r ppf pp =
   if List.for_all (function (_, ([], [])) -> true | _ -> false) r then
-    pp ppf
+    (fprintf ppf "@["; pp ppf; fprintf ppf "@]")
   else
     (fprintf ppf "@[{"; pp ppf; fprintf ppf " |@;<1 2>%a}@]" pprint_refinement r)
 
-let comma ppf =
-  fprintf ppf ",@;<1 0>"
-
 let pprint_refs ppf rs =
-  fprintf ppf "@[[%a]@]" (Oprint.print_list pprint_refinement comma) rs
+  fprintf ppf "[@[%a]@]" (Oprint.print_list pprint_refinement comma) rs
 
 let pprint_recref ppf rr =
-  if not (recref_is_empty rr) then fprintf ppf "@[[%a]@]" (Oprint.print_list pprint_refs comma) rr
-
-let pprint_recopt ppf = function
-  | Some (rp, rr) -> fprintf ppf "%a@;<1 0>μ%s." pprint_recref rr (C.path_name rp)
-  | None          -> ()
+  if not (recref_is_empty rr) 
+  then fprintf ppf "[@[%a]@]" (Oprint.print_list pprint_refs comma) rr
 
 let pprint_dep_subs ppf s = C.pprint_list "" (fun ppf (s, s') -> fprintf ppf "[%s/%s]" s s') ppf s  
 
+let level_suffix l = 
+  if l = generic_level then "P" else "M"
+
+let print_many s f ppf xs =
+  List.iter (fun x -> fprintf ppf "%s@ %a" s f x) xs
+
 let rec pprint ppf = function
   | Frec (path, rr, r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "@[%a@ %s@]" pprint_recref rr (C.path_name path)) r
+      wrap_refined r ppf 
+      (fun ppf -> fprintf ppf "@[%a@ %s@]" pprint_recref rr (C.path_name path))
   | Fvar (a, level, s, r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "'%s%s%a" (C.path_name a) (if level = generic_level then "P" else "M") pprint_dep_subs s) r
-  | Fsum (path, ro, [], r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "@[%a%s@]" pprint_recopt ro (C.path_name path)) r
-  | Fsum (path, ro, cs, r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "@[%a %s @[(%a)@]@]"
-                          pprint_recopt ro
-                          (C.path_name path)
-                          (Oprint.print_list pprint_constructor
-                             (fun ppf -> fprintf ppf "@;<1 0>|| ")) cs) r
-  | Farrow (pat, f, f') ->
-      fprintf ppf "@[%a:@ %a@ ->@;<1 2>%a@]" pprint_pattern pat pprint1 f pprint f'
+      wrap_refined r ppf 
+      (fun ppf -> fprintf ppf "'%s%s%a" (C.path_name a) (level_suffix level) pprint_dep_subs s)
+  | Fsum (path, None, cs, r) -> (* vanilla sum *)
+      wrap_refined r ppf 
+      (fun ppf -> fprintf ppf "%s. @[<hv 0>%a@]" (C.path_name path) print_sum cs)
+  | Fsum (path, Some (rp, rr), cs, r) -> (* rec sum: not printing rr *)
+      wrap_refined r ppf 
+      (fun ppf -> fprintf ppf "μ%s<<%s>>.@[<hv 0>%a@]" (C.path_name rp) (C.path_name path) print_sum cs)
+  | Farrow (pat, f, f') -> 
+      fprintf ppf "@[<hv 0>(%a:%a) ->@ %a@]" pprint_pattern pat pprint f pprint f'
+  | Fabstract (path, [], id, r) ->
+      wrap_refined r ppf 
+      (fun ppf -> fprintf ppf "@[%s@]" (C.path_name path)) 
   | Fabstract (path, params, id, r) ->
-      wrap_refined ppf (fun ppf -> fprintf ppf "@[%s(%a)@ %s@]"
-                          (if C.empty_list params then "" else (C.path_name (C.i2p id) ^ ": "))
-                          (pprint_params ",") params
-                          (C.path_name path)) r
- and pprint1 ppf = function
-   | (Farrow _) as f ->
-       fprintf ppf "@[(%a)@]" pprint f
-   | _ as f -> pprint ppf f
- and pprint_constructor ppf (_, (n, ps)) =
-    fprintf ppf "%s (%a)" n (pprint_params ",") ps
- and pprint_param ppf (name, f, _) =
-  fprintf ppf "%s:@;<1 2>%a" (C.ident_name name) pprint f
- and pprint_params sep ppf ps =
-  Oprint.print_list pprint_param (fun ppf -> fprintf ppf "@;<1 2>%s@;<1 2>" sep) ppf ps
+      wrap_refined r ppf 
+      (fun ppf -> fprintf ppf "@[%s: (%a) %s@]"
+                  (C.path_name (C.i2p id)) print_prd params (C.path_name path)) 
 
+ and print_sum ppf = function 
+  | []    -> ()
+  | c::[] -> fprintf ppf "%a" pprint_constructor c
+  | c::cs -> fprintf ppf "@[<hv 0>%a%a@]" pprint_constructor c (print_many " ||" pprint_constructor) cs
+
+ and print_prd ppf = function 
+  | []     -> ()
+  | p::[]  -> fprintf ppf "@[(%a)@]" print_bind p
+  | p::prd -> fprintf ppf "(@[<hv 0>%a%a)@]" print_bind p (print_many "," print_bind) prd
+
+ and pprint_constructor ppf (_, (n, ps)) = 
+   fprintf ppf "%s%a" n print_prd ps
+
+ and print_bind ppf (name, f, _) = 
+   fprintf ppf "%s:%a" (C.ident_name name) pprint f
+ 
 let rec pprint_fenv ppf fenv =
   Lightenv.maplist (fun k v -> printf "@[%s:@ %a@]@." (C.path_name k) pprint v) fenv
 
@@ -552,7 +564,7 @@ let rec pprint_fenv ppf fenv =
 let rec apply_refs rs ps = match (rs, ps) with
   | (r :: rs, (i, f, v) :: ps) ->
       let (ip, i') = (Path.Pident i, Ident.create (Ident.name i)) in
-      let sub      = (ip, Predicate.Var (Path.Pident i')) in
+      let sub      = (ip, P.Var (Path.Pident i')) in
       let ps       = List.map (fun (i, f, v) -> (i, apply_subs [sub] f, v)) ps in
       let rs       = List.map (List.map (refexpr_apply_subs [sub])) rs in
         (i', append_refinement r f, v) :: apply_refs rs ps
@@ -1057,7 +1069,7 @@ and bind_param (subs, binds) (i, f, _) pat =
   let f = apply_subs subs f in
   let subs =
     match pat with
-      | Tpat_var x -> (Path.Pident i, Predicate.Var (Path.Pident x)) :: subs
+      | Tpat_var x -> (Path.Pident i, P.Var (Path.Pident x)) :: subs
       | _          -> subs
   in (subs, bind pat f @ binds)
 
@@ -1079,13 +1091,13 @@ let apply_solution s f =
 
 let refexpr_conjuncts s qual_expr ((subs, qexprs) as r) =
   let (_, (quals, _)) = refexpr_apply_solution s r in
-    List.rev_map (C.compose (Predicate.apply_substs subs) (Qualifier.apply qual_expr)) quals
+    List.rev_map (C.compose (P.apply_substs subs) (Qualifier.apply qual_expr)) quals
 
 let refinement_conjuncts s qexpr res =
   C.flap (refexpr_conjuncts s qexpr) res
 
 let refinement_predicate s qvar refn =
-  Predicate.big_and (refinement_conjuncts s qvar refn)
+  P.big_and (refinement_conjuncts s qvar refn)
 
 let rec conjunct_fold cs s qual_expr f = match get_refinement f with
   | Some r -> refinement_conjuncts s qual_expr r @ cs
@@ -1095,4 +1107,4 @@ let rec conjuncts s qexpr fr =
   conjunct_fold [] s qexpr fr
 
 let predicate s qexpr fr =
-  Predicate.big_and (conjuncts s qexpr fr)
+  P.big_and (conjuncts s qexpr fr)

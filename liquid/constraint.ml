@@ -788,12 +788,21 @@ let make_initial_solution cs =
   let slhs = Sol.create 37 in
   let s = Sol.create 37 in
   let _ = List.iter (function (SubRef (_, _, _, (_, F.Qvar k), _), qs) ->
-            (Sol.replace srhs k (); Sol.replace s k qs) | _ -> ()) cs in
+                                (Sol.replace srhs k (); Sol.replace s k qs) 
+                              | _ -> ()) cs in
   let _ = List.iter (function (SubRef (_, _, r1, _, _), qs) ->
-            List.iter (fun k -> Sol.replace slhs k (); if not !Cf.minsol && is_formal k && not (Sol.mem srhs k)
-              then Sol.replace s k [] else Sol.replace s k qs) (F.refinement_qvars r1) | _ -> ()) cs in
+                                List.iter (fun k -> Sol.replace slhs k (); 
+                                                if not !Cf.minsol && is_formal k && 
+                                                   not (Sol.mem srhs k)
+                                                then Sol.replace s k [] 
+                                                else Sol.replace s k qs) 
+                                          (F.refinement_qvars r1) 
+                              | _ -> ()) cs in
   let _ = List.iter (function (WFRef (_, (_, F.Qvar k), _), qs) ->
-            if Sol.mem srhs k || (Sol.mem slhs k && Sol.find s k != []) then app_sol s k qs else Sol.replace s k [] | _ -> ()) cs in
+                                if Sol.mem srhs k || 
+                                   (Sol.mem slhs k && Sol.find s k != []) 
+                                then app_sol s k qs else Sol.replace s k [] 
+                              | _ -> ()) cs in
   s
                                          
 (**************************************************************)

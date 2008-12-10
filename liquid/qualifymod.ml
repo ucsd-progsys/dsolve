@@ -31,14 +31,14 @@ open Longident
 open Location
 open Format
 
-module P = Predicate
-module C = Common
-module Cf = Clflags
-module B = Builtins
-module Le = Lightenv
-module F = Frame
-module M = Measure
-module WF = Wellformed
+module P        = Predicate
+module C        = Common
+module Cf       = Clflags
+module B        = Builtins
+module Le       = Lightenv
+module F        = Frame
+module M        = Measure
+module WF       = Wellformed
 
 (******************************************************************************)
 (******************************* Error reporting ******************************)
