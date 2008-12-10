@@ -42,30 +42,10 @@ type binrel =
   | Lt
   | Le 
 
-type patpexpr =
-    PPInt of int list
-  | PVar of Path.t list
-  | PFunApp of Longident.t * patpexpr list 
-  | PBinop of patpexpr * binop list * patpexpr
-  | PField of string * patpexpr 
-  | Pite of tpat * patpexpr * patpexpr
-
-and tpat =
-    PTrue
-  | PAtom of patpexpr * binrel list * patpexpr
-  | PIff of tpat * tpat
-  | PNot of tpat
-  | PAnd of tpat * tpat
-  | POr of tpat * tpat
-  | PForall of (string * Parsetree.prover_t) list * tpat
-  | PExists of (string * Parsetree.prover_t) list * tpat
-  | PImplies of tpat * tpat
-  | PBoolexp of patpexpr
-
 type pexpr =
     PInt of int 
   | Var of Path.t
-  | FunApp of string * pexpr list  
+  | FunApp of Path.t * pexpr list  
   | Binop of pexpr * binop * pexpr
   | Field of Ident.t * pexpr
   | Ite of t * pexpr * pexpr
@@ -97,7 +77,7 @@ let rec pprint_pexpr ppf = function
   | Var x ->
       fprintf ppf "%s" (Common.path_name x)
   | FunApp (f, pexp) ->
-      fprintf ppf "@[(%s@ %a)@]" (C.strip_meas f) (Common.pprint_list " " pprint_pexpr) pexp
+      fprintf ppf "@[(%s@ %a)@]" (C.strip_meas (Path.name f)) (Common.pprint_list " " pprint_pexpr) pexp
   | Binop (p, op, q) ->
       let opstr = match op with
         | Plus -> "+"
@@ -170,7 +150,7 @@ let (=>.) p q = implies (p, q)
 
 let (?.) e = Boolexp e
 
-let tag_function = "__tag"
+let tag_function = Path.mk_ident "__tag"
 let tag x = FunApp(tag_function, [x])
 
 let find_const c =

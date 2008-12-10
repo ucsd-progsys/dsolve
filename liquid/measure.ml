@@ -113,10 +113,10 @@ let mk_guard env vp cpats =
 let rewrite_refexpr f (a, (qs, b)) = (a, (List.map (Qualifier.map_pred f) qs, b))
 
 let map_pred_funs f (v, p) =
-  (v, P.map_funs f p)
+  (v, P.pat_map_funs f p)
 
 let map_exp_funs f (v, p) =
-  (v, P.pexp_map_funs f p)
+  (v, P.pat_pexp_map_funs f p)
 
 let transl_pred names =
   map_pred_funs (fun x -> C.sub_from_list names x)     
@@ -131,7 +131,7 @@ let pprint_menv ppf menv =
 let proc_premeas env menv fenv ifenv quals =
   let (mnames, mcstrs) = (filter_names menv, filter_cstrs menv) in
   let subs = C.list_assoc_flip mnames in
-  let quals = Qualmod.map_preds (transl_pred subs) quals in
+  let quals = List.rev_map (transl_pred subs) quals in
   let fenv = Le.map (transl_frame subs) fenv in
   let ifenv = Le.map (transl_frame subs) ifenv in
   let mcstrs = List.map (fun (c, (ps, cstr)) -> (c, (ps, map_exp_funs (C.sub_from_list subs) cstr))) mcstrs in

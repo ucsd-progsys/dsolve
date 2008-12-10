@@ -83,7 +83,7 @@ let expand_about vm env p =
                [Var (qfind_key_by_name env p)] else raise Not_found)
     | FunApp (s, ps) ->
         let ess = List.map (e_rec vm) ps in
-          List.rev_map (fun x -> FunApp (s, x)) (C.lflap ess)
+          List.rev_map (fun x -> FunApp (s, x)) (C.rev_perms ess)
     | Binop (e1, b, e2) ->
         C.tflap2 (e_rec vm e1, e_rec vm e2) (fun a c -> Binop (a, b, c))
     | Field (f, e1) ->

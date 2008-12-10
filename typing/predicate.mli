@@ -37,30 +37,10 @@ type binrel =
   | Lt
   | Le 
 
-type patpexpr =
-    PPInt of int list
-  | PVar of Path.t list
-  | PFunApp of Longident.t * patpexpr list 
-  | PBinop of patpexpr * binop list * patpexpr
-  | PField of string * patpexpr
-  | Pite of tpat * patpexpr * patpexpr
-
-and tpat =
-    PTrue
-  | PAtom of patpexpr * binrel list * patpexpr
-  | PIff of tpat * tpat
-  | PNot of tpat
-  | PAnd of tpat * tpat
-  | POr of tpat * tpat
-  | PForall of (string * Parsetree.prover_t) list * tpat
-  | PExists of (string * Parsetree.prover_t) list * tpat
-  | PImplies of tpat * tpat
-  | PBoolexp of patpexpr
-
 type pexpr =   
     PInt of int 
   | Var of Path.t
-  | FunApp of string * pexpr list 
+  | FunApp of Path.t * pexpr list 
   | Binop of pexpr * binop * pexpr 
   | Field of Ident.t * pexpr     (* INVARIANT: disjoint fields in same module *)
   | Ite of t * pexpr * pexpr
@@ -82,12 +62,12 @@ val pprint: formatter -> t -> unit
 val pprint_pexpr: formatter -> pexpr -> unit
 
 val pexp_map_vars: (Path.t -> pexpr) -> pexpr -> pexpr 
-val pexp_map_funs: (string -> string) -> pexpr -> pexpr
+val pexp_map_funs: (Path.t -> Path.t) -> pexpr -> pexpr
 
 val map_vars: (Path.t -> pexpr) -> t -> t
-val map_funs: (string -> string) -> t -> t
+val map_funs: (Path.t -> Path.t) -> t -> t
 
-val tag_function: string
+val tag_function: Path.t
 val tag: pexpr -> pexpr
 
 val big_and: t list -> t
@@ -116,7 +96,7 @@ val subst: pexpr -> Path.t -> t -> t
 val apply_substs: (Path.t * pexpr) list -> t -> t
 val vars: t -> Path.t list
 val exp_vars: pexpr -> Path.t list
-val funs: t -> string list
+val funs: t -> Path.t list
 (* pmr: change to plain old instantiate *)
 val instantiate_named_vars: (string * Path.t) list -> t -> t
 val transl_op: Asttypes.predexp_op -> binop                                                             

@@ -77,12 +77,12 @@ let zip_partition xs bs =
 let flap f xs = 
   List.flatten (List.map f xs)
 
-let rec lflap es =
+let rec perms es =
   match es with
     | s :: [] ->
         List.map (fun c -> [c]) s
     | s :: es ->
-        flap (fun c -> List.map (fun d -> c :: d) (lflap es)) s
+        flap (fun c -> List.map (fun d -> c :: d) (perms es)) s
     | [] ->
         []
 
@@ -109,6 +109,13 @@ let fast_append v v' =
 
 let fast_flap f xs =
   fast_flatten (List.rev_map f xs)
+
+let rec rev_perms s = function
+  | [] -> s
+  | e :: es -> rev_perms 
+    (fast_flap (fun e -> List.rev_map (fun s -> e :: s) s) e) es 
+
+let rev_perms es = rev_perms [] es
 
 let tflap2 (e1, e2) f =
   List.fold_left (fun bs b -> List.fold_left (fun aas a -> f a b :: aas) bs e1) [] e2
@@ -273,8 +280,13 @@ let app_fst f (a, b) = (f a, b)
 let app_snd f (a, b) = (a, f b)
 let app_pr f (a, b) = (f a, f b)
 
+let app_triple f (a, b, c) = (f a, f b, f c)
+
 let l_to_s l = String.concat "." (Longident.flatten l)
 let s_to_l s = Longident.parse s
+let l_is_id id = function
+  | Longident.Lident s -> s = id
+  | _ -> false
 
 let int_of_tag = function
     Cstr_constant n -> 2*n

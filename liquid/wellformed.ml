@@ -85,11 +85,11 @@ let get_by_name =
   let tbl = Hashtbl.create 17 in
     fun n env -> Common.do_memo tbl get_by_name (n, env) n (* this should be memoized using envstring *)
 
-let get_app_shape s env =
+let get_app_shape f env =
   try
-    List.assoc s (Lazy.force builtin_fun_app_shapes)
+    List.assoc (Path.name f) (Lazy.force builtin_fun_app_shapes)
   with Not_found -> 
-    app_to_fun [] [] (get_by_name s env)
+    app_to_fun [] [] f
 
 let bind_quantified env ps =
   try
@@ -102,8 +102,8 @@ let pred_is_well_typed env p =
   let rec get_expr_shape env = function
   | P.PInt _ -> uInt
   | P.Var x -> (try Lightenv.find x env with Not_found -> raise IllFormed)
-  | P.FunApp (s, p') -> 
-      get_app_shape s env (List.map (get_expr_shape env) p')
+  | P.FunApp (f, p') -> 
+      get_app_shape f env (List.map (get_expr_shape env) p')
   | P.Binop (p1, op, p2) ->
       if same_shape (get_expr_shape env p1) uInt then
         if same_shape (get_expr_shape env p2) uInt then

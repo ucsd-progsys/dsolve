@@ -76,6 +76,9 @@ let mapi f m =
 let fold f m b =
   M.fold f m b
 
+let all m =
+  maplist (fun v r -> v) m
+
 let combine e1 e2 =
   fold (fun p f e -> add p f e) e1 e2
 

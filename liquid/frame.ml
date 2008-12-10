@@ -78,7 +78,7 @@ let path_tuple = Path.mk_ident "tuple"
 (**************** Type environments ***************************)
 (**************************************************************)
 
-(* this is a bit shady: we memoize by string only to save the compare *)
+(* this is a bit shady: we memoize by string only to save the compare*)
 exception Found_by_name of t
 exception Found_key_by_name of Path.t
 let fbn_memo = Hashtbl.create 37
@@ -430,6 +430,9 @@ let rec subt t1 t2 eq inst =
 
 let subti t1 t2 =
   subt t1 t2 [] []
+
+let subtis t1 t2 =
+  (fun (x, _, _) -> x) (subti t1 t2)
 
 let map_inst eq inst f =
   let get_ind p =
@@ -926,8 +929,9 @@ let rec build_uninterpreted name params = function
   | f ->
       let args = List.rev_map (fun p -> P.Var (Path.Pident p)) params in
       let v    = Path.mk_ident "v" in
-      let pexp = match args with [] -> P.Var (Path.mk_persistent name) | args -> P.FunApp (name, args) in
-      let r    = const_refinement [(Path.mk_ident name, v, P.Atom (P.Var v, P.Eq, pexp))] in
+      let name = match args with [] -> Path.mk_persistent name | args -> Path.mk_ident name in
+      let pexp = match args with [] -> P.Var name | args -> P.FunApp (name, args) in
+      let r    = const_refinement [(name, v, P.Atom (P.Var v, P.Eq, pexp))] in
         apply_refinement r f
 
 let fresh_uninterpreted env ty name =
@@ -960,8 +964,8 @@ let transl_pref plist env p =
     match p with
     | RLiteral (v, p) -> (v, p)
     | RVar s -> fp s in
-  let valu = Path.mk_ident v  in
-  [([], ([(C.dummy (), valu, Qualdecl.transl_patpred_single false valu env p)], []))]
+  let valu = C.qual_test_var in
+  [([], ([(C.dummy_id, valu, Qualdecl.transl_patpred_single false valu env p)], []))]
 
 let rec translate_pframe dopt env plist pf =
   let vars = ref [] in

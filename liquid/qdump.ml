@@ -32,6 +32,7 @@ module M = Measure
 module F = Frame
 module Le = Lightenv
 module B = Buffer
+module Qg = Qualgen
 
 let buf = B.create 80
 let ppf = formatter_of_buffer buf
@@ -63,6 +64,18 @@ let dump_qset ppf qs =
 let dump_deps ppf ds =
   List.iter (fun s -> fprintf ppf "@[mdep@ %s@]@." s) ds
 
+let dump_intset ppf = function
+  | [] -> ()
+  | i :: is -> fprintf "@[const_ints@ %i" i;
+  List.iter (fun s -> fprintf ppf ",@ %i" s) i;
+  fprintf "@]@."
+
+let dump_comment_list ppf name = function
+  | [] -> ()
+  | i :: is -> fprintf "@[(*%s:@ %s" name i;
+  List.iter (fun s -> fprintf ppf ",@ %s" s) i;
+  fprintf "*)@]@."
+
 let env_bound_ids env =
   let is = ref [] in
   Le.iter 
@@ -71,18 +84,19 @@ let env_bound_ids env =
         env; !is
 
 let dump_default_qualifiers (str, env, menv, ifenv) deps qname =
-  let qf = formatter_of_out_channel (open_out qname) in
+  (*let qf = formatter_of_out_channel (open_out qname) in*)
   let _ = pp_set_margin qf 1230912 in
   let _ = pp_set_margin ppf 1230912 in
-  let _ = C.verbose_level := C.ol_dquals in
+  (*let _ = C.verbose_level := C.ol_dquals in
   let (deps', dqstrs) = Pparse.file std_formatter !patf Parse.qualifier_patterns ast_impl_magic_number in
-  let deps = deps @ deps' in
+  let deps = deps @ deps' in*)
 
-  let prgids = Qualgen.bound_ids str in
+  let prgids = Qg.bound_ids str in
   let (a, b, ids, d) = prgids in
-  let ids = List.fold_left (fun s i -> Qualgen.IS.add (Ident.name i) s) ids (env_bound_ids ifenv) in
-  let prgids = (a, b, ids, d) in 
-  let ids = List.rev_map Path.mk_ident (Qualgen.IS.elements ids) in
+  let ids = List.fold_left (fun s i -> Qg.IS.add (Ident.name i) s) ids (env_bound_ids ifenv) in
+  let ids = Qg.IS.elements ids in
+  (*let prgids = (a, b, ids, d) in 
+  let ids = List.rev_map Path.mk_ident (Qg.IS.elements ids) in*)
 
   let mnms = snd (List.split (M.filter_names menv)) in
   let np m p = P.Atom(P.Var vid, P.Eq, P.FunApp(m, [P.Var p])) in 
@@ -97,8 +111,10 @@ let dump_default_qualifiers (str, env, menv, ifenv) deps qname =
   let fpreds = C.flap P.conjuncts fpreds in
   let fqs = List.fold_left (fun q e -> add ("MLQ", "_V", e) q) QS.empty fpreds in
 
-  let dqstrs = expand_quals env dqstrs prgids in
+  (*let dqstrs = expand_quals env dqstrs prgids in*)
   let initqs = add ("FALSE", "_V", P.Atom(P.PInt(1), P.Eq, P.PInt(0))) QS.empty in
-  let qs = List.fold_left (fun qs q -> add q qs) initqs dqstrs in
-  let qs = QS.union (QS.union qs fqs) mqs in
-  dump_deps qf deps; dump_qset qf qs; pp_print_flush qf ()
+  (*let qs = List.fold_left (fun qs q -> add q qs) initqs dqstrs in*)
+  let qs = QS.union (QS.union (QS.union qs fqs) mqs) initqs in
+  dump_deps qf deps; dump_intset qf ints;
+  dump_comment_list "Program Identifiers" ids;
+  dump_qset qf qs; pp_print_flush qf ()

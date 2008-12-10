@@ -205,16 +205,8 @@ let inj_name s = function
     | PFconstr (a, b, _, r) -> PFconstr (a, b, Some s, r)
     | f -> f
 
-let rw_frame_var f r =
-    let r = RVar(r) in
-    rw_frame f r
-
-let rw_frame_lit f v p =
-    let r = RLiteral (v, p) in
-    rw_frame f r
-
-let ptrue = RLiteral( "", {ppredpat_desc = Ppredpat_true; 
-                          ppredpat_loc = Location.none} )
+let ptrue = ("", {ppredpat_desc = Ppredpat_true; 
+                  ppredpat_loc = Location.none})
 
 let mk_implies a b =
   let pre = mkpredpat (Ppredpat_not(a)) in
@@ -322,7 +314,7 @@ let mktrue_record a = mkrecord a ptrue
 %token <string> PREFIXOP
 %token PRIVATE
 %token QUALIF
-%token SINGLE_QUALIF
+%token INTS
 %token MODULE_DEPENDENCY
 %token EMBED
 %token PREDICATE
@@ -436,10 +428,8 @@ The precedences must be listed from low to high.
 %type <Parsetree.toplevel_phrase> toplevel_phrase
 %start use_file                         /* for the #use directive */
 %type <Parsetree.toplevel_phrase list> use_file
-%start qualifiers                       /* runtime qualifier files */
-%type <string list * Parsetree.qualifier_declaration list> qualifiers
 %start qualifier_patterns               /* pattern qualifier files */
-%type <string list * Parsetree.qualifier_declaration list> qualifier_patterns
+%type <string list * int list * Parsetree.qualifier_declaration list> qualifier_patterns
 %start liquid_interface                 /* for mlq refined interface files */
 %type <Parsetree.liquid_sig> liquid_interface
 
@@ -477,8 +467,8 @@ use_file_tail:
   | toplevel_directive use_file_tail            { $1 :: $2 }
 ;
 liquid_interface:
-  | predicate_alias_list_opt liquid_signature EOF   { ($1, $2) }
-  | EOF                                             { ([], []) }
+  | liquid_signature EOF   { ($1, $2) }
+  | EOF                    { ([], []) }
 ;
 
 /* Module expressions */
@@ -1469,12 +1459,6 @@ qualifier_pattern_list:
   | QUALIF qualifier_pattern_declaration qualifier_pattern_list
       { $2::$3 }
 
-qualifier_list:
-    /* empty */
-      { [] }
-  | SINGLE_QUALIF qualifier_pattern_declaration qualifier_list
-      { $2::$3 }
-
 dep_list_opt:
     /* empty */
       { [] }
@@ -1487,19 +1471,27 @@ dep_list:
   | MODULE_DEPENDENCY UIDENT dep_list
       { $2 :: $3 }
 
-qualifiers:
-    dep_list_opt qualifier_list EOF
-      { ($1, $2) }
+int_list_opt:
+    /* empty */
+      { [] }
+  | INTS qual_int_list
+      { $2 }
+
+qual_int_list:
+    INT
+      { [$1] }
+  | INT COMMA qual_int_list
+      { $1 :: $3 }
 
 qualifier_patterns:
-    dep_list_opt qualifier_pattern_list EOF
-      { ($1, $2) }
+    dep_list_opt int_list_opt qualifier_pattern_list EOF
+      { ($1, $2, $3) }
 
 qualifier_pattern_declaration:
     UIDENT LPAREN LIDENT RPAREN LPAREN qual_ty_anno RPAREN COLON qualifier_pattern  
     { ($1, mkqpat($3, $6, $9)) }
   | UIDENT LPAREN LIDENT RPAREN COLON qualifier_pattern
-    { ($1, mkqpat($3, [], $6))  }
+    { ($1, mkqpat($3, [], $6)) }
 
 qual_ty_anno:
     UIDENT COLON simple_core_type_or_tuple
@@ -1729,17 +1721,13 @@ liquid_type:
     liquid_type_list 
       { match $1 with [st] -> st | _ -> mktrue_tuple $1  }
   | LBRACE LIDENT COLON liquid_type1 STAR liquid_type_list BAR predicate RBRACE
-      { mktuple ($4::$6) (RLiteral($2, $8)) }
-  | LBRACE liquid_type1 STAR liquid_type_list BAR UIDENT RBRACE 
-      { mktuple ($2::$4) (RVar($6)) }
+      { mktuple ($4::$6) ($2, $8) }
   | LBRACKET LIDENT COLON liquid_type1 RBRACKET
       { inj_name $2 $4 }
 
 liquid_type1:
     LBRACE LIDENT COLON liquid_type2 BAR predicate RBRACE 
       { rw_frame_lit $4 $2 $6  }
-  | LBRACE liquid_type2 BAR UIDENT RBRACE
-      { rw_frame_var $2 $4 }
   | liquid_type MINUSGREATER liquid_type
       { mkarrow None $1 $3 }
   | LIDENT COLON liquid_type MINUSGREATER liquid_type
@@ -1848,26 +1836,13 @@ liquid_elem_ref_list:
       { [$1] }
 
 liquid_elem_ref:
-    UIDENT
-      { RVar $1 }
-  | LIDENT COLON predicate
-      { RLiteral ($1, $3) }
+  LIDENT COLON predicate
+      { ($1, $3) }
 
 /* Predicates */
 
 predicate:
     qualifier_pattern                       { $1 } 
-
-predicate_alias:
-    PREDICATE UIDENT EQUAL LPAREN LIDENT RPAREN predicate        { ($2, ($5, $7)) }
-
-predicate_alias_list:
-    predicate_alias predicate_alias_list    { $1 :: $2 }
-  | predicate_alias                         { [$1] }
-
-predicate_alias_list_opt:
-    predicate_alias_list                    { $1 }
-  | /* empty */                             { [] }
 
 /* Constants */
 

@@ -40,11 +40,12 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/typetexp.cmo typing/stypes.cmo typing/typecore.cmo \
   typing/common.cmo typing/predicate.cmo \
   typing/typedecl.cmo typing/typeclass.cmo \
-  typing/qualgen.cmo typing/qualdecl.cmo \
+  typing/qualgen.cmo \
   typing/typemod.cmo typing/qualmod.cmo
 
 LIQUID=liquid/lightenv.cmo \
   liquid/qualifier.cmo liquid/pattern.cmo liquid/frame.cmo \
+	liquid/qualdecl.cmo \
   liquid/builtins.cmo liquid/message.cmo \
   liquid/theoremProverZ3.cmo liquid/theoremProver.cmo liquid/wellformed.cmo \
   liquid/constraint.cmo liquid/measure.cmo \

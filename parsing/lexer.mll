@@ -73,7 +73,7 @@ let keyword_table =
 (*  "parser", PARSER; *)
     "private", PRIVATE;
     "qualif", QUALIF;
-    "squalif", SINGLE_QUALIF;
+    "const_ints", INTS;
     "mdep", MODULE_DEPENDENCY;
     "embed", EMBED;
     "predicate", PREDICATE;
