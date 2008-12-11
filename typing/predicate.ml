@@ -47,7 +47,7 @@ type pexpr =
   | Var of Path.t
   | FunApp of Path.t * pexpr list  
   | Binop of pexpr * binop * pexpr
-  | Field of Ident.t * pexpr
+  | Field of Path.t * pexpr
   | Ite of t * pexpr * pexpr
 
 and t =
@@ -86,7 +86,7 @@ let rec pprint_pexpr ppf = function
 				| Div -> "/"
       in fprintf ppf "@[(%a@ %s@ %a)@]" pprint_pexpr p opstr pprint_pexpr q
   | Field (f, pexp) ->
-      fprintf ppf "@[%a.%s@]" pprint_pexpr pexp (Common.ident_name f)
+      fprintf ppf "@[%a.%s@]" pprint_pexpr pexp (Common.path_name f)
   | Ite (t, e1, e2) ->
       fprintf ppf "@[if@ (%a)@ then@ (%a)@ else@ (%a)@]" pprint t pprint_pexpr e1 pprint_pexpr e2
 

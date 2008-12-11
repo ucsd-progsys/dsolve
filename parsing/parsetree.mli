@@ -187,7 +187,7 @@ and liquid_decl =
   | LaxiomDecl of string * predicate_pattern
   | LrecrefDecl
 
-and liquid_sig = predicate_alias list * liquid_decl list  
+and liquid_sig = liquid_decl list  
 
 (* Prover types *)
 
@@ -213,9 +213,7 @@ and param = string * litframe
 
 and subs = (string * string) list
 
-and refinement =
-  | RLiteral of string * predicate_pattern
-  | RVar of string
+and refinement = string * predicate_pattern
 
 and recref = refinement list list
 

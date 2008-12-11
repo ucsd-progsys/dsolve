@@ -42,7 +42,7 @@ type pexpr =
   | Var of Path.t
   | FunApp of Path.t * pexpr list 
   | Binop of pexpr * binop * pexpr 
-  | Field of Ident.t * pexpr     (* INVARIANT: disjoint fields in same module *)
+  | Field of Path.t * pexpr     (* INVARIANT: disjoint fields in same module *)
   | Ite of t * pexpr * pexpr
 
 and t =  

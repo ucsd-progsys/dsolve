@@ -64,7 +64,7 @@ let bind_pexpr pat pexp =
     | Tpat_any -> subs
     | Tpat_var x -> (Path.Pident x, pexp) :: subs
     | Tpat_tuple pats ->
-      let pexps = Misc.mapi (fun pat i -> (pat.pat_desc, P.Field(C.tuple_elem_id i, pexp))) pats in
+      let pexps = Misc.mapi (fun pat i -> (pat.pat_desc, P.Field(Path.Pident (C.tuple_elem_id i), pexp))) pats in
         List.fold_left bind_rec subs pexps
     | _ -> failwith "Not trying to bind pexpr to exotic pattern (see tests/null_subst.ml)\n"
   in bind_rec [] (pat, pexp)

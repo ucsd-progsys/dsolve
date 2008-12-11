@@ -78,8 +78,8 @@ let analyze ppf sourcefile (str, env, fenv, ifenv) =
   Qualifymod.qualify_implementation sourcefile fenv ifenv env [] str
 
 let load_qualfile ppf qualfile =
-  let (deps, qs) = Pparse.file ppf qualfile Parse.qualifiers ast_impl_magic_number in
-    (deps, List.rev_map Qualmod.type_qualifier qs)
+  let (deps, consts, qs) = Pparse.file ppf qualfile Parse.qualifiers ast_impl_magic_number in
+    (deps, List.rev_map (Qualmod.instantiate_qualifier env consts) qs)
 
 let load_dep_mlqfiles bname deps env fenv mlqenv =
   let pathnames = !Config.load_path in 

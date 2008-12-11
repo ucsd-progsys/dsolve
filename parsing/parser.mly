@@ -467,8 +467,8 @@ use_file_tail:
   | toplevel_directive use_file_tail            { $1 :: $2 }
 ;
 liquid_interface:
-  | liquid_signature EOF   { ($1, $2) }
-  | EOF                    { ([], []) }
+  | liquid_signature EOF   { $1 }
+  | EOF                    { [] }
 ;
 
 /* Module expressions */
@@ -1727,7 +1727,7 @@ liquid_type:
 
 liquid_type1:
     LBRACE LIDENT COLON liquid_type2 BAR predicate RBRACE 
-      { rw_frame_lit $4 $2 $6  }
+      { rw_frame $4 ($2, $6)  }
   | liquid_type MINUSGREATER liquid_type
       { mkarrow None $1 $3 }
   | LIDENT COLON liquid_type MINUSGREATER liquid_type
@@ -1785,7 +1785,7 @@ liquid_param:
     LIDENT COLON liquid_type
       { ($1, $3) }
   | LBRACE LIDENT COLON liquid_type BAR predicate RBRACE
-      { ($2, rw_frame_lit $4 $2 $6) }
+      { ($2, rw_frame $4 ($2, $6)) }
 
 liquid_type_comma_list:
     liquid_type
