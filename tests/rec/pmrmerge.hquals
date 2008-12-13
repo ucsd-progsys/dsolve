@@ -1,2 +1,2 @@
-qualif INC(v): v >= e0
+(* qualif INC(v): v >= e0 *)
 qualif EQ(v) : ~A { <=, >= } v
