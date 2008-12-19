@@ -1,1 +1,2 @@
-qualif NE(v): len v > 0
+(* qualif BOT(v): 0 = 1 *)
+qualif NE(v): len v > 0 

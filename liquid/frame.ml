@@ -448,21 +448,28 @@ let map_inst eq inst f =
 (******************** Frame pretty printers *******************)
 (**************************************************************)
 
+let rec print_many brk s f ppf = function
+  | []     -> ()
+  | x::[]  -> fprintf ppf "%a" f x
+  | x::xs' -> ((if brk then fprintf ppf "%a %s@ " f x s else fprintf ppf "%a %s" f x s); 
+               print_many brk s f ppf xs')
+
 let pprint_sub ppf (path, pexp) =
   fprintf ppf "@[(%s@ ->@ %a)@]" (Path.unique_name path) P.pprint_pexpr pexp
 
-let pprint_subs ppf subs =
+(*let pprint_subs ppf subs =
   Oprint.print_list pprint_sub (fun ppf -> fprintf ppf ";@ ") ppf subs
+*)
 
 let pred_of_qual q =
   Qualifier.apply (P.Var (Path.mk_ident "V")) q
 
-let space ppf =
-  fprintf ppf "" (* fprintf ppf "@;<0 1>" *)
-
+(*
 let comma ppf =
   fprintf ppf "," (* fprintf ppf ",@;<1 0>" *)
 
+let space ppf =
+  fprintf ppf "" (* fprintf ppf "@;<0 1>" *)
 
 let pprint_refexpr ppf (subs, (qconsts, qvars)) =
   if !Clflags.print_subs then
@@ -475,45 +482,62 @@ let pprint_refexpr ppf (subs, (qconsts, qvars)) =
     (Oprint.print_list (fun ppf q -> P.pprint ppf
                         (P.apply_substs subs (pred_of_qual q))) space) qconsts
     (Oprint.print_list (fun ppf v -> fprintf ppf "%s" (C.path_name v)) space) qvars
+*)
+
+let pprint_refexpr ppf (subs, (qconsts, qvars)) =
+  if !Clflags.print_subs then
+    fprintf ppf "[%a] %a %a" 
+      (print_many false " " pprint_sub) subs
+      (print_many false "" (fun ppf q -> P.pprint ppf (pred_of_qual q))) qconsts
+      (print_many false " " (fun ppf v -> fprintf ppf "%s" (C.path_name v))) qvars
+  else
+    fprintf ppf "%a %a"
+      (print_many false "" (fun ppf q -> P.pprint ppf (P.apply_substs subs (pred_of_qual q)))) qconsts
+      (print_many false " "  (fun ppf v -> fprintf ppf "%s" (C.path_name v))) qvars
 
 let rec pprint_pattern ppf = function
-  | Tpat_any -> fprintf ppf "_"
-  | Tpat_var x -> fprintf ppf "%s" (C.ident_name x)
-  | Tpat_tuple pats ->
-      fprintf ppf "(%a)" pprint_pattern_list pats
+  | Tpat_any -> 
+      fprintf ppf "_"
+  | Tpat_var x -> 
+      fprintf ppf "%s" (C.ident_name x)
+  | Tpat_tuple pats -> 
+      fprintf ppf "(%a)" pprint_pattern_list pats 
   | Tpat_construct (cstrdesc, pats) ->
       begin match (repr cstrdesc.cstr_res).desc with
-        | Tconstr (p, _, _) -> fprintf ppf "%s(%a)" (Path.name p) pprint_pattern_list pats
-        | _ -> assert false
-      end
+        | Tconstr (p, _, _) -> 
+            fprintf ppf "%s(%a)" (Path.name p) pprint_pattern_list pats
+        | _ -> assert false end
   | _ -> assert false
 
 and pprint_pattern_list ppf pats =
-  Oprint.print_list pprint_pattern (fun ppf -> fprintf ppf ", ") ppf (List.map (fun p -> p.pat_desc) pats)
+  let ds = List.map (fun p -> p.pat_desc) pats in
+  print_many false "," pprint_pattern ppf ds 
+  (* Oprint.print_list pprint_pattern (fun ppf -> fprintf ppf ", ") ppf  *)
 
 let pprint_refinement ppf res =
-  Oprint.print_list pprint_refexpr (fun _ -> ()) ppf res
+  (* Oprint.print_list pprint_refexpr (fun _ -> ()) ppf res *)
+  print_many false "" pprint_refexpr ppf res 
 
 let wrap_refined r ppf pp =
   if List.for_all (function (_, ([], [])) -> true | _ -> false) r then
     (fprintf ppf "@["; pp ppf; fprintf ppf "@]")
   else
-    (fprintf ppf "@[{"; pp ppf; fprintf ppf " |@;<1 2>%a}@]" pprint_refinement r)
+    (fprintf ppf "@[{"; pp ppf; fprintf ppf " |@ %a}@]" pprint_refinement r)
+    (* (fprintf ppf "@[{"; pp ppf; fprintf ppf " |@;<1 2>%a}@]" pprint_refinement r) *)
 
 let pprint_refs ppf rs =
-  fprintf ppf "[@[%a]@]" (Oprint.print_list pprint_refinement comma) rs
+  fprintf ppf "‹@[%a›@]" (print_many false "," pprint_refinement) rs
+  (* fprintf ppf "‹@[%a›@]" (Oprint.print_list pprint_refinement comma) rs *)
 
 let pprint_recref ppf rr =
+  (* let lp, rp  = "⊲", "⊳" in *)
+  let lp, rp  = "‹", "›" in
   if not (recref_is_empty rr) 
-  then fprintf ppf "[@[%a]@]" (Oprint.print_list pprint_refs comma) rr
-
-let pprint_dep_subs ppf s = C.pprint_list "" (fun ppf (s, s') -> fprintf ppf "[%s/%s]" s s') ppf s  
+(*  then fprintf ppf "%s@[%a%s@]" lp (Oprint.print_list pprint_refs comma) rr rp *)
+  then fprintf ppf "%s@[%a%s@]" lp (print_many false "," pprint_refs) rr rp
 
 let level_suffix l = 
   if l = generic_level then "P" else "M"
-
-let print_many s f ppf xs =
-  List.iter (fun x -> fprintf ppf "%s@ %a" s f x) xs
 
 let rec pprint ppf = function
   | Frec (path, rr, r) ->
@@ -521,13 +545,14 @@ let rec pprint ppf = function
       (fun ppf -> fprintf ppf "@[%a@ %s@]" pprint_recref rr (C.path_name path))
   | Fvar (a, level, s, r) ->
       wrap_refined r ppf 
-      (fun ppf -> fprintf ppf "'%s%s%a" (C.path_name a) (level_suffix level) pprint_dep_subs s)
+      (fun ppf -> fprintf ppf "'%s%s%a" (C.path_name a) (level_suffix level) 
+                  (print_many false "" (fun ppf (s, s') -> fprintf ppf "[%s/%s]" s s')) s)
   | Fsum (path, None, cs, r) -> (* vanilla sum *)
       wrap_refined r ppf 
       (fun ppf -> fprintf ppf "%s. @[<hv 0>%a@]" (C.path_name path) print_sum cs)
   | Fsum (path, Some (rp, rr), cs, r) -> (* rec sum: not printing rr *)
       wrap_refined r ppf 
-      (fun ppf -> fprintf ppf "μ%s<<%s>>.@[<hv 0>%a@]" (C.path_name rp) (C.path_name path) print_sum cs)
+      (fun ppf -> fprintf ppf "\"%s\" %s. @[<hv 0>%a@]" (C.path_name path) (C.path_name rp) print_sum cs)
   | Farrow (pat, f, f') -> 
       fprintf ppf "@[<hv 0>(%a:%a) ->@ %a@]" pprint_pattern pat pprint f pprint f'
   | Fabstract (path, [], id, r) ->
@@ -538,20 +563,18 @@ let rec pprint ppf = function
       (fun ppf -> fprintf ppf "@[%s: (%a) %s@]"
                   (C.path_name (C.i2p id)) print_prd params (C.path_name path)) 
 
- and print_sum ppf = function 
-  | []    -> ()
-  | c::[] -> fprintf ppf "%a" pprint_constructor c
-  | c::cs -> fprintf ppf "@[<hv 0>%a%a@]" pprint_constructor c (print_many " ||" pprint_constructor) cs
+and print_sum ppf = function
+  | [] -> ()
+  | cs -> fprintf ppf "@[<hv 0>%a@]" (print_many true "+" pprint_constructor) cs
 
- and print_prd ppf = function 
-  | []     -> ()
-  | p::[]  -> fprintf ppf "@[(%a)@]" print_bind p
-  | p::prd -> fprintf ppf "(@[<hv 0>%a%a)@]" print_bind p (print_many "," print_bind) prd
+and print_prd ppf = function
+  | []  -> ()
+  | prd -> fprintf ppf "(@[<hv 0>%a)@]" (print_many true "," print_bind) prd
 
- and pprint_constructor ppf (_, (n, ps)) = 
+and pprint_constructor ppf (_, (n, ps)) = 
    fprintf ppf "%s%a" n print_prd ps
 
- and print_bind ppf (name, f, _) = 
+and print_bind ppf (name, f, _) = 
    fprintf ppf "%s:%a" (C.ident_name name) pprint f
  
 let rec pprint_fenv ppf fenv =
