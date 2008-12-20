@@ -52,11 +52,12 @@ let add q qs =
 
 let patf = ref ""
             
-let expand_quals env qstrs prgids =
+(*let expand_quals env qstrs prgids =
   let expand_squal (name, pat) =
     Qualdecl.transl_pattern_valu env prgids name pat
   in
   C.flap (expand_squal) qstrs 
+  *)
 
 let dump_qset ppf qs =
   QS.iter (fun (nm, q) -> fprintf ppf "@[squalif@ %s(%s)@ :@ %s@.@]" nm "_V" q) qs
@@ -66,15 +67,15 @@ let dump_deps ppf ds =
 
 let dump_intset ppf = function
   | [] -> ()
-  | i :: is -> fprintf "@[const_ints@ %i" i;
-  List.iter (fun s -> fprintf ppf ",@ %i" s) i;
-  fprintf "@]@."
+  | i :: is -> fprintf ppf "@[const_ints@ %i" i;
+  List.iter (fun s -> fprintf ppf ",@ %i" s) is;
+  fprintf ppf "@]@."
 
 let dump_comment_list ppf name = function
   | [] -> ()
-  | i :: is -> fprintf "@[(*%s:@ %s" name i;
-  List.iter (fun s -> fprintf ppf ",@ %s" s) i;
-  fprintf "*)@]@."
+  | i :: is -> fprintf ppf "@[(*%s:@ %s" name i;
+  List.iter (fun s -> fprintf ppf ",@ %s" s) is;
+  fprintf ppf "*)@]@."
 
 let env_bound_ids env =
   let is = ref [] in
@@ -84,10 +85,10 @@ let env_bound_ids env =
         env; !is
 
 let dump_default_qualifiers (str, env, menv, ifenv) deps qname =
-  (*let qf = formatter_of_out_channel (open_out qname) in*)
+  let qf = formatter_of_out_channel (open_out qname) in
   let _ = pp_set_margin qf 1230912 in
-  let _ = pp_set_margin ppf 1230912 in
-  (*let _ = C.verbose_level := C.ol_dquals in
+  (*let _ = pp_set_margin ppf 1230912 in
+  let _ = C.verbose_level := C.ol_dquals in
   let (deps', dqstrs) = Pparse.file std_formatter !patf Parse.qualifier_patterns ast_impl_magic_number in
   let deps = deps @ deps' in*)
 

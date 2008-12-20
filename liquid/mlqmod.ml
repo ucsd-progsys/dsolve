@@ -9,6 +9,7 @@ module P = Predicate
 module TP = TheoremProverZ3
 module QF = Qualifymod
 module Qd = Qualdecl
+module Le = Le
 
 (* MLQs *)
 
@@ -104,7 +105,7 @@ let load_val dopt env fenv (s, pf) =
   try
     let p = C.lookup_path (match dopt with Some d -> C.append_pref d s | None -> s) env in
     let _ = if String.contains s '.' then failwith (Printf.sprintf "mlq: val %s has invalid name" s) in
-      Lightenv.add p pf fenv
+      Le.add p pf fenv
   with Not_found -> failwith (Printf.sprintf "mlq: val %s does not correspond to program value" s)
 
 let load_nrval dopt env fenv (s, pf) =
@@ -113,7 +114,7 @@ let load_nrval dopt env fenv (s, pf) =
     let pf' = F.fresh env (Env.find_value p env).val_type in
     let pf = F.label_like pf' pf in
     let _ = if String.contains s '.' then failwith (Printf.sprintf "mlq: val %s has invalid name" s) in
-    QF.add_nrframe pf; Lightenv.add p pf fenv
+    QF.add_nrframe pf; Le.add p pf fenv
   with Not_found -> failwith (Printf.sprintf "mlq: val %s does not correspond to program value" s)
 
 let map_constructor_args dopt env (name, mlname) (cname, args, cpred) =
@@ -122,14 +123,14 @@ let map_constructor_args dopt env (name, mlname) (cname, args, cpred) =
   let argmap = List.combine dargs (List.map (fun s -> Path.mk_ident s) dargs) in
   let fvar s = 
     let l_env s = C.lookup_path s env in
-      lookup3_f (fun s -> List.assoc s argmap) (C.compose l_env (maybe_add_pref dopt)) l_env Path.mk_ident (C.l_to_s s) in
+      lookup3_f (fun s -> Some (List.assoc s argmap)) (Some (C.compose l_env (maybe_add_pref dopt))) (Some l_env) (fun x -> None) (C.l_to_s s) in
   let ffun s = lookup (fun s -> let s = maybe_add_pref dopt s in ignore (C.lookup_path s env); s) s s in
-  let pred = P.pexp_map_funs ffun (Qualdecl.transl_patpredexp_single_map fvar cpred) in
+  let pred = P.pexp_map_funs ffun (Qualdecl.transl_patpred_map fvar cpred) in
   let args = List.map (function Some s -> Some (List.assoc s argmap) | None -> None) args in
     Mcstr(cname, (args, (maybe_add_pref dopt name, pred)))
 
 let load_measure dopt env ((n, mn), cstrs) =
-  Mname(maybe_add_pref dopt n, maybe_add_pref dopt mn)
+  Mname (maybe_add_pref dopt n, maybe_add_pref dopt mn)
   :: List.map (map_constructor_args dopt env (n, mn)) cstrs
 
 let load_unint name ty env fenv ifenv menv =
@@ -151,7 +152,7 @@ let load_embed dopt ty psort env fenv ifenv menv =
 let axiom_prefix = "_axiom_"
 
 let load_axiom dopt env fenv ifenv menv name pred =
-  let pred = Qualdecl.transl_patpred_single false (Path.mk_ident "") env pred in
+  let pred = Qualdecl.transl_patpred_simple env pred in
   let fr = Builtins.rUnit "" (Path.mk_ident "") pred in 
   let add = Le.add (Path.mk_ident (axiom_prefix ^ name)) fr in
   let (fenv, ifenv) = match dopt with Some _ -> (fenv, add ifenv) | None -> (add fenv, ifenv) in
@@ -180,11 +181,14 @@ let load_rw dopt rw env menv' fenv (preds, decls) =
     | LembedDecl (ty, psort) -> load_embed dopt ty psort env fenv ifenv menv
     | LaxiomDecl (name, pred) -> load_axiom dopt env fenv ifenv menv name pred
     | LrecrefDecl -> (env, fenv, ifenv, menv) in
-  let (env, fenv, ifenv, menv) = List.fold_left load_decl (env, fenv, Lightenv.empty, []) decls in
+  let (env, fenv, ifenv, menv) = List.fold_left load_decl (env, fenv, Le.empty, []) decls in
   let (fenv, ifenv) = rw env fenv ifenv in
   let (measnames, mlnames) = List.split (M.filter_names menv) in
-  let fs = List.combine (List.map Path.mk_ident measnames) (List.map2 (M.mk_uninterpreted env) measnames mlnames) in
-  let fenv = Lightenv.addn fs fenv in
+  let measpaths = List.map Path.mk_ident measnames in
+  let _ = M.set_paths (List.combine measnames measpaths) in 
+  let fs = List.combine measpaths (List.map2 (M.mk_uninterpreted env) measnames mlnames) in
+  (*we could also add an uninterp for the mlname if not in source*)
+  let fenv = Le.addn fs fenv in
     (env, List.rev_append menv menv', fenv, ifenv)
 
 let rewrite_ref f r = List.map (M.rewrite_refexpr f) r

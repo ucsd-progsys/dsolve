@@ -51,7 +51,7 @@ module Prover : PROVER =
 
     type sort = Int | Array of sort * sort | Bool | Unint of string | Func of sort list
 
-    type decl = Vbl of Path.t | Fun of string * int | Barrier
+    type decl = Vbl of Path.t | Fun of Path.t * int | Barrier
     type var_ast = Const of Z3.ast | Bound of int * sort
     
     type z3_instance = { 
@@ -81,11 +81,16 @@ module Prover : PROVER =
 (********************** Typing ************************************************************)
 (***************************************************************************************)
 
+    let bofi = Path.mk_ident "_BOFI"
+    let iofb = Path.mk_ident "_IOFB"
+    let div = Path.mk_ident "_DIV"
+    let tag = P.tag_function
+
     let builtins = [
-            ("__tag", Func [Unint "obj"; Int]);
-            ("_DIV", Func [Int; Int; Int]);
-            ("_IOFB", Func [Bool; Int]);
-            ("_BOFI", Func [Int; Bool]);
+            (tag, Func [Unint "obj"; Int]);
+            (div, Func [Int; Int; Int]);
+            (iofb, Func [Bool; Int]);
+            (bofi, Func [Int; Bool]);
     ]
 
     let abs p = F.Fabstract(p, [], Ident.create "", F.empty_refinement)
@@ -176,11 +181,11 @@ module Prover : PROVER =
     let is_select = C.has_prefix "SELECT_"
     let select_type = Func [Int; Int]
  
-    let getFunType me s env =
-      if is_select s then select_type
-      else try List.assoc s builtins
-        with Not_found -> try frame_to_type me (F.find_by_name env s)
-          with Not_found -> printf "@[Warning:@ could@ not@ type@ function@ %s@ in@ tpz3@]" s; unint
+    let getFunType me p env =
+      if is_select (Path.name p) then select_type
+      else try List.assoc p builtins
+        with Not_found -> try frame_to_type me (Le.find p env)
+          with Not_found -> printf "@[Warning:@ could@ not@ type@ function@ %s@ in@ tpz3@]" (Path.name p); unint
 
 (***************************************************************************************)
 (********************** Vars ***********************************************************)
@@ -208,19 +213,18 @@ module Prover : PROVER =
 (********************** Funs ***********************************************************)
 (***************************************************************************************)
 
-    let z3Fun env me s k = 
+    let z3Fun env me p t k = 
       Misc.do_memo me.funt
       (fun () ->
-        let t   = getFunType me s env in
         let sym = Z3.mk_string_symbol me.c (fresh "z3f") in
         let (ts, ret) = z3ArgTypes me t in
         let rv  = Z3.mk_func_decl me.c sym (Array.of_list ts) ret in
-        me.vars <- (Fun (s,k))::me.vars; rv) 
-      () (Fun (s,k))
+        me.vars <- (Fun (p,k))::me.vars; rv) 
+      () (Fun (p,k))
 
     let rec cast env me ast (t, t') =
-      if (t, t') = ("bool", "int") then z3App env me "_IOFB" [ast] else
-      if (t, t') = ("int", "bool") then z3App env me "_BOFI" [ast] else
+      if (t, t') = ("bool", "int") then z3App env me iofb [ast] else
+      if (t, t') = ("int", "bool") then z3App env me bofi [ast] else
         assert false
 
     and z3Cast env me = function
@@ -233,10 +237,10 @@ module Prover : PROVER =
       | ([], []) -> []
       | _ -> assert false
 
-    and z3App env me s zes =
+    and z3App env me p zes =
       let k   = List.length zes in
-      let cf  = z3Fun env me s k in
-      let ft  = match getFunType me s env with Func ts -> ts | _ -> assert false in
+      let ft  = match getFunType me p env with Func ts -> ts | _ -> assert false in
+      let cf  = z3Fun env me p (Func ft) k in
       let zes = z3Cast env me (zes, ft) in
       Z3.mk_app me.c cf (Array.of_list zes)
 
@@ -263,9 +267,9 @@ module Prover : PROVER =
           Z3.mk_sub me.c (Array.map (z3Exp env me) [|e1; e2|])
       | P.Binop (e1,P.Times,e2) ->
           Z3.mk_mul me.c (Array.map (z3Exp env me) [|e1; e2|])
-      | P.Binop (e1,P.Div,e2)   -> z3App env me "_DIV" (List.map (z3Exp env me) [e1;e2])  
-      | P.Field (f, e)          -> z3App env me ("SELECT_"^(Ident.unique_name f)) [(z3Exp env me e)] 
-                                   (** REQUIRES: disjoint intra-module field names *)
+      | P.Binop (e1,P.Div,e2)   -> z3App env me div (List.map (z3Exp env me) [e1;e2])  
+      | P.Field (f, e)          -> (*z3App env me ("SELECT_"^(Path.unique_name f)) [(z3Exp env me e)]*)
+                                   (** REQUIRES: disjoint intra-module field names *) assert false
       | P.Ite (e1, e2, e3)      -> Z3.mk_ite me.c (z3Pred env me e1) (z3Exp env me e2) (z3Exp env me e3)
 
     and z3Pred env me p = 
@@ -433,9 +437,9 @@ module Prover : PROVER =
       let itn = Parsetree.Pprover_abs "int" in
       let func s x = P.FunApp(s, [P.Var x]) in
         axiom Le.empty
-          (P.Forall ([(x, bol)], P.Iff(P.Atom(func "_IOFB" x, P.Eq, P.PInt(1)), P.Boolexp(P.Var x))));
+          (P.Forall ([(x, bol)], P.Iff(P.Atom(func iofb x, P.Eq, P.PInt(1)), P.Boolexp(P.Var x))));
         axiom Le.empty 
-          (P.Forall ([(x, itn)], P.Iff(P.Boolexp(func "_BOFI" x), P.Atom(P.Var x, P.Eq, P.PInt(1)))));
+          (P.Forall ([(x, itn)], P.Iff(P.Boolexp(func bofi x), P.Atom(P.Var x, P.Eq, P.PInt(1)))));
 end
     
 

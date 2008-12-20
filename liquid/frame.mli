@@ -84,6 +84,7 @@ val constr_params: constr -> param list
 val constrs_tag_params: constructor_tag -> constr list -> param list
 val iter_labels: (pattern_desc -> unit) -> t -> unit
 val map_refexprs: (refexpr -> refexpr) -> t -> t
+val map_qualifiers: (Qualifier.t -> Qualifier.t) -> t -> t
 val params_frames: param list -> t list
 val shape: t -> t
 val is_shape: t -> bool
@@ -91,6 +92,7 @@ val params_ids: param list -> Ident.t list
 val same_shape: t -> t -> bool
 val subt: t -> t -> (Path.t * Path.t) list -> (Path.t * t) list -> bool * (Path.t * Path.t) list * (Path.t * t) list
 val subti: t -> t -> bool * (Path.t * Path.t) list * (Path.t * t) list
+val subtis: t -> t -> bool
 val map_inst: (Path.t * Path.t) list -> (Path.t * t) list -> t -> t
 (*val translate_pframe: string option -> Env.t -> (string * (string * Parsetree.predicate_pattern)) list -> Parsetree.litframe -> t*)
 val replace_recvar: t -> t -> t

@@ -29,4 +29,4 @@ val refinement_well_formed:
 val pred_well_formed:
   t Lightenv.t -> Predicate.t -> bool
 
-val get_by_name: string -> Frame.t Lightenv.t -> Frame.t
+(*val get_by_name: string -> Frame.t Lightenv.t -> Frame.t*)

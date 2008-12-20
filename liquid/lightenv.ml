@@ -64,6 +64,13 @@ let find k m =
 let iter f m =
   M.iter f m
 
+exception Found of Path.t
+
+let find_path k m =
+  let f p _ = let x = Path.name p in
+    if x = k then raise (Found (p)) else if String.compare x k > 0 then raise Not_found in 
+  try M.iter f m; raise Not_found with Found x -> x
+
 let mem k m =
   M.mem k m
 

@@ -26,6 +26,7 @@ open Frame
 
 module P = Predicate
 module TP = TheoremProverZ3.Prover
+module Le = Lightenv
 
 exception IllFormed
 
@@ -46,7 +47,7 @@ let builtin_fun_app_shapes = lazy(
     [("Array.length", abstract_app_shape [Predef.path_array] uInt);
      ("Bigarray.Array2.dim1", abstract_app_shape [array2_path] uInt);
      ("Bigarray.Array2.dim2", abstract_app_shape [array2_path] uInt);
-     (P.tag_function, (function [Fsum _] -> uInt | _ -> raise IllFormed))]
+     ((Path.name P.tag_function), (function [Fsum _] -> uInt | _ -> raise IllFormed))]
 )
 
 let check_and_inst f f1 f2 eq' inst' =
@@ -72,36 +73,30 @@ let rec app_to_fun eq inst funf =
              [] -> map_inst eq inst f
            | _ -> raise IllFormed)
 
-let get_by_name (n, env) =
+(*let get_by_name (n, env) =
   try find_by_name env n with Not_found -> raise IllFormed
-  (*let s n' v = n = Path.name n' in
-  let cs = Lightenv.filterlist s env in
-    match cs with 
-      c :: [] -> c
-    | c :: cs -> failwith (Printf.sprintf "too many definitions of %s" n)
-    | []      -> raise IllFormed*)
 
 let get_by_name =
   let tbl = Hashtbl.create 17 in
-    fun n env -> Common.do_memo tbl get_by_name (n, env) n (* this should be memoized using envstring *)
+    fun n env -> Common.do_memo tbl get_by_name (n, env) n (* this should be memoized using envstring *)*)
 
 let get_app_shape f env =
   try
     List.assoc (Path.name f) (Lazy.force builtin_fun_app_shapes)
   with Not_found -> 
-    app_to_fun [] [] f
+    app_to_fun [] [] (Le.find f env)
 
 let bind_quantified env ps =
   try
     let bindings = List.map (fun (p, tn) -> (p, TP.frame_of tn)) ps in
-      Lightenv.addn bindings env
+      Le.addn bindings env
   with Not_found ->
     raise IllFormed
 
 let pred_is_well_typed env p =
   let rec get_expr_shape env = function
   | P.PInt _ -> uInt
-  | P.Var x -> (try Lightenv.find x env with Not_found -> raise IllFormed)
+  | P.Var x -> (try Le.find x env with Not_found -> raise IllFormed)
   | P.FunApp (f, p') -> 
       get_app_shape f env (List.map (get_expr_shape env) p')
   | P.Binop (p1, op, p2) ->
@@ -116,7 +111,7 @@ let pred_is_well_typed env p =
       begin match get_expr_shape env r with
         | Fsum (_, _, [(_, (_, fs))], _) ->
             (* pmr: maybe we need to switch to ids for this *)
-            let is_referenced_field (name2, _, _) = String.compare (Ident.name name) (Ident.name name2) = 0 in
+            let is_referenced_field (name2, _, _) = Path.same name (Path.Pident name2) in
               if List.exists is_referenced_field fs then
                 (match (List.find is_referenced_field fs) with (_, f, _) -> f)
               else raise IllFormed

@@ -168,6 +168,9 @@ let map_refinements f fr =
 let map_refexprs f fr =
   map_refinements (fun r -> List.map f r) fr
 
+let map_qualifiers f fr =
+  map_refexprs (fun (subs, (qs, vs)) -> (subs, (List.rev_map f qs, vs))) fr
+
 let recref_fold f rr l =
   List.fold_right f (List.flatten rr) l
 

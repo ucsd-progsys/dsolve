@@ -41,12 +41,12 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/common.cmo typing/predicate.cmo \
   typing/typedecl.cmo typing/typeclass.cmo \
   typing/qualgen.cmo \
-  typing/typemod.cmo typing/qualmod.cmo
+  typing/typemod.cmo
 
-LIQUID=liquid/lightenv.cmo \
+LIQUID=liquid/qualmod.cmo liquid/lightenv.cmo \
   liquid/qualifier.cmo liquid/pattern.cmo liquid/frame.cmo \
-	liquid/builtins.cmo \
-  liquid/qualdecl.cmo liquid/message.cmo \
+	liquid/qualdecl.cmo \
+  liquid/builtins.cmo liquid/message.cmo \
   liquid/theoremProverZ3.cmo liquid/theoremProver.cmo liquid/wellformed.cmo \
   liquid/constraint.cmo liquid/measure.cmo \
   liquid/qualifymod.cmo \

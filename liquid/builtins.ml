@@ -35,16 +35,20 @@ let rec mk_longid = function
   | [id] -> Lident id
   | id :: idrem -> Ldot (mk_longid idrem, id)
 
-let qsize funm rel x y z = (Path.mk_ident ("SIZE_" ^ (pprint_rel rel)), y,
-                       Atom(Var z, rel, FunApp(funm, [Var x])))
+let fake s = Path.mk_ident s
+let faketable = Hashtbl.create 17
+let fake s = C.do_memo faketable fake s s
 
-let qsize_arr = qsize "Array.length" 
+let qsize funm rel x y z = (Path.mk_ident ("SIZE_" ^ (pprint_rel rel)), y,
+                       Atom(Var z, rel, FunApp(fake funm, [Var x])))
+
+let qsize_arr = qsize "Array.length"
 let qsize_str = qsize "String.length"
 
 let qdim rel dim x y z =
   let dimstr = string_of_int dim in
     (Path.mk_ident ("DIM" ^ dimstr ^ (pprint_rel rel)), y,
-     Atom(Var z, rel, FunApp("Bigarray.Array2.dim" ^ dimstr, [Var x])))
+     Atom(Var z, rel, FunApp(fake ("Bigarray.Array2.dim" ^ dimstr), [Var x])))
 
 let qint rel i y =
   (Path.mk_ident (Printf.sprintf "INT_%s%d" (pprint_rel rel) i), y, Atom(Var y, rel, PInt i))
@@ -241,7 +245,7 @@ let _frames = [
   (["copy"; "Array"],
    defun (forall (fun a ->
           fun arr -> mk_array a [] ==>
-          fun c -> rArray a "SameSize" c (FunApp("Array.length", [Var c]) ==. FunApp("Array.length", [Var arr])))));
+          fun c -> rArray a "SameSize" c (FunApp(fake "Array.length", [Var c]) ==. FunApp(fake "Array.length", [Var arr])))));
 
   (["make"; "String"],
    defun (forall (fun a ->
@@ -314,11 +318,14 @@ let ext_find_type_path t =
   in path
 
 let find_path id env = fst (Env.lookup_value (mk_longid id) env)
+let find_path_path env p = fst (Env.lookup_value (Longident.parse (Path.name p)) env)
 
-let frames env =
+let frames env fenv =
   let _ = _type_paths := Some (_type_path_constrs env) in
   let resolve_names x = List.map (fun (id, fr) -> (find_path id env, fr)) x in
-  List.append (resolve_names  _frames) (resolve_names (_lib_frames env))
+  let frames = List.append (resolve_names  _frames) (resolve_names (_lib_frames env)) in
+    List.rev_map (fun (p, fr) -> map_qualifiers
+      (fun (p1, p2, p) -> (p1, p2, map_funs (find_path_path env) p))) frames
 
 let equality_qualifier exp =
   let x = Path.mk_ident "V" in
@@ -348,10 +355,10 @@ let size_lit_refinement i =
     const_refinement
       [(Path.mk_ident "<size_lit_eq>",
         x,
-        FunApp("Array.length", [Var x]) ==. PInt i)]
+        FunApp(fake "Array.length", [Var x]) ==. PInt i)]
 
 let field_eq_qualifier name pexp =
-  let x = Path.mk_ident "x" in (Path.mk_ident "<field_eq>", x, Field (name, Var x) ==. pexp)
+  let x = Path.mk_ident "x" in (Path.mk_ident "<field_eq>", x, Field (Path.Pident name, Var x) ==. pexp)
 
 let proj_eq_qualifier n pexp =
-  let x = Path.mk_ident "x" in (Path.mk_ident "<tuple_nth_eq>", x, Field (Common.tuple_elem_id n, Var x) ==. pexp)
+  let x = Path.mk_ident "x" in (Path.mk_ident "<tuple_nth_eq>", x, Field (Path.Pident (Common.tuple_elem_id n), Var x) ==. pexp)

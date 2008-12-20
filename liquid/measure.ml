@@ -7,6 +7,7 @@ module P = Predicate
 module C = Common
 module F = Frame
 module Le = Lightenv
+module Qd = Qualdecl
 
 type mdef = (string * P.pexpr) 
 type m = (constructor_tag * Path.t option list * mdef) list 
@@ -62,6 +63,7 @@ let mk_uninterpreted env name mlname =
   with Not_found ->
     failwith ("Could not make uninterpreted version of undefined function: " ^ mlname)
 
+(* pretend these refs are hidden *)
 let bms = ref empty
 let mk_measures env ms = 
   let maybe_add e h =
@@ -70,6 +72,10 @@ let mk_measures env ms =
       | None -> e in
   bms := List.fold_left maybe_add empty ms
 
+let paths = ref []
+let set_paths pns = paths := pns
+let get_path s = List.assoc s !paths
+
 let mk_pred v mps (_, ps, ms) =
   let _ = if List.length ps != List.length mps then failwith "argument arity mismatch" in
   let ps = List.combine ps mps in
@@ -77,7 +83,7 @@ let mk_pred v mps (_, ps, ms) =
   let (s, e) = ms in
   try 
     let e = P.pexp_map_vars var_map e in
-      P.Atom(P.FunApp(s, [P.Var v]), P.Eq, e) 
+      P.Atom(P.FunApp(get_path s, [P.Var v]), P.Eq, e) 
   with Failure _ -> P.True
 
 let mk_pred_list v mps mcstrs =
@@ -113,16 +119,19 @@ let mk_guard env vp cpats =
 let rewrite_refexpr f (a, (qs, b)) = (a, (List.map (Qualifier.map_pred f) qs, b))
 
 let map_pred_funs f (v, p) =
-  (v, P.pat_map_funs f p)
+  (v, P.map_funs f p)
 
 let map_exp_funs f (v, p) =
-  (v, P.pat_pexp_map_funs f p)
+  (v, P.pexp_map_funs f p)
 
 let transl_pred names =
-  map_pred_funs (fun x -> C.sub_from_list names x)     
+  map_pred_funs (fun x -> C.sub_from_list names x) 
 
 let transl_frame names f =
   F.map_refexprs (rewrite_refexpr (transl_pred names)) f
+
+let transl_qualpat names q =
+  Qualmod.qualpat_map_predpat (Qd.pat_map_funs (fun x -> C.s_to_l (C.sub_from_list names (C.l_to_s x)))) q
 
 let pprint_menv ppf menv =
   List.iter (function | Mname(a,b) -> fprintf ppf "@[Name:@ (%s,@ %s)@]@." a b
@@ -131,10 +140,11 @@ let pprint_menv ppf menv =
 let proc_premeas env menv fenv ifenv quals =
   let (mnames, mcstrs) = (filter_names menv, filter_cstrs menv) in
   let subs = C.list_assoc_flip mnames in
-  let quals = List.rev_map (transl_pred subs) quals in
-  let fenv = Le.map (transl_frame subs) fenv in
-  let ifenv = Le.map (transl_frame subs) ifenv in
-  let mcstrs = List.map (fun (c, (ps, cstr)) -> (c, (ps, map_exp_funs (C.sub_from_list subs) cstr))) mcstrs in
+  let quals = List.rev_map (transl_qualpat subs) quals in
+  let subpaths = List.map (fun (x, y) -> (Le.find_path x fenv, get_path y)) subs in
+  let fenv = Le.map (transl_frame subpaths) fenv in
+  let ifenv = Le.map (transl_frame subpaths) ifenv in
+  let mcstrs = List.map (fun (c, (ps, cstr)) -> (c, (ps, map_exp_funs (C.sub_from_list subpaths) cstr))) mcstrs in
   let _ = C.cprintf C.ol_dump_meas "Measures:@.%a" pprint_menv ((List.map (fun (a, (b, c)) -> Mcstr(a, (b, c))) mcstrs)) in
   let _ = mk_measures env mcstrs in
     (fenv, ifenv, quals)
