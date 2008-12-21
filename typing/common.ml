@@ -220,12 +220,16 @@ let compose f g a = f (g a)
 
 let int_of_bool b = if b then 1 else 0
 
+let ex_one s = function
+    [x] -> x
+  | _ -> failwith s
+
 let only_one s = function
     x :: [] -> Some x
   | x :: xs -> failwith s
   | [] -> None
 
-let maybe_single = function
+let maybe_one = function
     [x] -> Some x
   | _ -> None
 

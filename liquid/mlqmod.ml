@@ -3,6 +3,7 @@ open Parsetree
 open Format
 open Types
 
+module Tt = Typedtree
 module F = Frame
 module M = Measure
 module P = Predicate
@@ -10,11 +11,12 @@ module TP = TheoremProverZ3
 module QF = Qualifymod
 module Qd = Qualdecl
 module Le = Le
+module T = Typetexp
 
 (* MLQs *)
 
 let parse ppf fname =
-  if Sys.file_exists fname then Pparse.file ppf fname Parse.liquid_interface Config.ast_impl_magic_number else ([], [])
+  if Sys.file_exists fname then Pparse.file ppf fname Parse.liquid_interface Config.ast_impl_magic_number else ([])
 
 let idf = (fun s -> s)
 let lu f f' s = try f s with Not_found -> f' s
@@ -32,7 +34,7 @@ let nativize_core_type dopt env ty =
      (lookup (fun s -> let s = Longident.parse (maybe_add_pref dopt (C.l_to_s l)) in 
        ignore (Env.lookup_type s env); s) l l)) ty
 
-let rec translate_pframe dopt env plist pf =
+let rec translate_pframe dopt env fenv plist pf =
   let vars = ref [] in
   let getvar a = try List.find (fun b -> Path.name b = a) !vars
                    with Not_found -> let a = Path.mk_ident a in
@@ -43,11 +45,11 @@ let rec translate_pframe dopt env plist pf =
     try Env.lookup_type (transl_lident l) env 
       with Not_found -> try Env.lookup_type l env
         with Not_found -> raise (T.Error(Location.none, T.Unbound_type_constructor l)) in
-  let transl_pref = Qd.transl_pref plist env in
+  let transl_pref = Qd.transl_pref plist fenv in
   let rec transl_pframe_rec pf =
     match pf with
-    | PFvar (a, subs, r) -> Fvar (getvar a, generic_level, subs, transl_pref r)
-    | PFrec (a, rr, r) -> Frec (getvar a, transl_recref rr, transl_pref r)
+    | PFvar (a, subs, r) -> F.Fvar (getvar a, F.generic_level, subs, transl_pref r)
+    | PFrec (a, rr, r) -> F.Frec (getvar a, transl_recref rr, transl_pref r)
     | PFsum (l, rro, cs, r) -> transl_sum l rro cs r
     | PFconstr (l, fs, i, r) -> transl_constr l fs i r
     | PFarrow (v, a, b) ->
@@ -55,24 +57,24 @@ let rec translate_pframe dopt env plist pf =
             Some id ->
               let id = Ident.create id in
               if List.mem (Path.Pident id) !vars then failwith "Redefined variable";
-                vars := Path.Pident id :: !vars; Tpat_var id
-          | None -> fresh_binder () in
-        Farrow (pat, transl_pframe_rec a, transl_pframe_rec b)
+                vars := Path.Pident id :: !vars; Tt.Tpat_var id
+          | None -> F.fresh_binder () in
+        F.Farrow (pat, transl_pframe_rec a, transl_pframe_rec b)
     | PFtuple (fs, r) -> 
-        tuple_of_frames (List.map transl_pframe_rec fs) (transl_pref r)
+        F.tuple_of_frames (List.map transl_pframe_rec fs) (transl_pref r)
     | PFrecord (fs, r) -> transl_record fs r
   and transl_sum l rro cs r =
     let (path, decl) = lookup l in
     let cstrs = snd (List.split (Env.constructors_of_type path (Env.find_type path env))) in
     let rro = match rro with None -> None | Some (rvar, rr) -> Some (getvar rvar, transl_recref rr) in
-      Fsum (path, rro, transl_cstrs (List.combine cs cstrs), transl_pref r)
+      F.Fsum (path, rro, transl_cstrs (List.combine cs cstrs), transl_pref r)
   and transl_cstrs = function
     | []                  -> []
     | (ps, cstr) :: cstrs -> (cstr.cstr_tag, ("", transl_params ps)) :: transl_cstrs cstrs
   and transl_params = function
     | [] -> []
         (* pmr: need real variance here *)
-    | (id, f) :: ps -> (Ident.create id, transl_pframe_rec f, Covariant) :: transl_params ps
+    | (id, f) :: ps -> (Ident.create id, transl_pframe_rec f, F.Covariant) :: transl_params ps
   and transl_recref rr =
     List.map (fun rs -> List.map transl_pref rs) rr
   and transl_constr l fs id r =
@@ -84,21 +86,21 @@ let rec translate_pframe dopt env plist pf =
     let (path, decl) = lookup l in
     let _ = if List.length fs != decl.type_arity then
       raise (T.Error(Location.none, T.Type_arity_mismatch(l, decl.type_arity, List.length fs))) in
-    let varis = List.map translate_variance decl.type_variance in
+    let varis = List.map F.translate_variance decl.type_variance in
       match decl.type_kind with 
           Type_abstract ->
-            abstract_of_params_with_labels ls path params varis id (transl_pref r)
+            F.abstract_of_params_with_labels ls path params varis id (transl_pref r)
         | Type_record(fields, _, _) ->
             (* fresh_record (fresh_without_vars env) path fields *) assert false
         | Type_variant _ ->
             match List.split (Env.constructors_of_type path (Env.find_type path env)) with
-              | (_, cstr :: _) -> apply_refinement (transl_pref r) 
-                                    (fresh_without_vars env (snd (Ctype.instance_constructor cstr)))
+              | (_, cstr :: _) -> F.apply_refinement (transl_pref r) 
+                                    (F.fresh_without_vars env (snd (Ctype.instance_constructor cstr)))
               | _              -> failwith "Annotated type has no constructors!"
   and transl_record fs r =
-    let ps = List.map (fun (f, s, m) -> (Ident.create s, transl_pframe_rec f, mutable_variance m)) fs in
+    let ps = List.map (fun (f, s, m) -> (Ident.create s, transl_pframe_rec f, F.mutable_variance m)) fs in
     let path = Path.mk_ident "_anon_record" in
-      record_of_params path ps (transl_pref r)
+      F.record_of_params path ps (transl_pref r)
   in transl_pframe_rec pf
 
 let load_val dopt env fenv (s, pf) =
@@ -122,10 +124,12 @@ let map_constructor_args dopt env (name, mlname) (cname, args, cpred) =
   let dargs = C.maybe_list args in
   let argmap = List.combine dargs (List.map (fun s -> Path.mk_ident s) dargs) in
   let fvar s = 
-    let l_env s = C.lookup_path s env in
-      lookup3_f (fun s -> Some (List.assoc s argmap)) (Some (C.compose l_env (maybe_add_pref dopt))) (Some l_env) (fun x -> None) (C.l_to_s s) in
-  let ffun s = lookup (fun s -> let s = maybe_add_pref dopt s in ignore (C.lookup_path s env); s) s s in
-  let pred = P.pexp_map_funs ffun (Qualdecl.transl_patpred_map fvar cpred) in
+    let l_env s = [C.lookup_path s env] in
+    let l_assoc s = [List.assoc s argmap] in
+      lookup3_f l_assoc (C.compose l_env (maybe_add_pref dopt)) l_env (fun x -> []) s in
+  (*let fvar s = match fvar s with Some p -> Some (P.Var p) | None -> None in*) 
+  let ffun s = lookup (fun s -> let s = maybe_add_pref dopt (Path.name s) in C.lookup_path s env) s s in
+  let pred = P.pexp_map_funs ffun (C.ex_one "metavariable or ident set used in measure" (Qualdecl.transl_patpred_map fvar cpred)) in
   let args = List.map (function Some s -> Some (List.assoc s argmap) | None -> None) args in
     Mcstr(cname, (args, (maybe_add_pref dopt name, pred)))
 
@@ -174,8 +178,8 @@ let scrub_axioms fenv =
 
 let load_rw dopt rw env menv' fenv (preds, decls) =
   let load_decl (env, fenv, ifenv, menv) = function
-      LvalDecl(s, f) -> (env, fenv, load_val dopt env ifenv (s, F.translate_pframe dopt env preds f), menv)
-    | LnrvalDecl(s, f) -> (env, fenv, load_nrval dopt env ifenv (s, F.translate_pframe dopt env preds f), menv)
+      LvalDecl(s, f) -> (env, fenv, load_val dopt env ifenv (s, F.translate_pframe dopt env fenv preds f), menv)
+    | LnrvalDecl(s, f) -> (env, fenv, load_nrval dopt env ifenv (s, F.translate_pframe dopt env fenv preds f), menv)
     | LmeasDecl (name, cstrs) -> (env, fenv, ifenv, List.rev_append (load_measure dopt env (name, cstrs)) menv)
     | LunintDecl (name, ty) -> load_unint name ty env fenv ifenv menv
     | LembedDecl (ty, psort) -> load_embed dopt ty psort env fenv ifenv menv

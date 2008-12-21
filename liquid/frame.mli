@@ -58,6 +58,8 @@ and constr = constructor_tag * (string * param list)
 
 and variance = Covariant | Contravariant | Invariant
 
+val mutable_variance: Asttypes.mutable_flag -> variance
+
 val generic_level: int
 
 val path_tuple: Path.t
@@ -66,6 +68,8 @@ val find_by_name: t Lightenv.t -> string -> t
 
 val record_of_params: Path.t -> param list -> refinement -> t
 val tuple_of_frames: t list -> refinement -> t
+val abstract_of_params_with_labels: 
+  Ident.t list -> Path.t -> t list -> variance list -> Ident.t -> refinement -> t
 
 val begin_def: unit -> unit
 val end_def: unit -> unit

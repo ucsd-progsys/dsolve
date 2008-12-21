@@ -20,7 +20,7 @@ let find_key_by_name s env =
   Le.filterkeylist (fun p _ -> Path.name p = s) env
 
 let map_key_by_name f env =
-  Le.mapfilter (fun p _ -> if f p then Some (Var p) else None) env 
+  Le.mapfilter (fun p _ -> if f p then Some p else None) env 
 
 let env_by_type_f f t m =
   Le.maplistfilter (fun v r -> f v (F.subtis t r)) m
@@ -84,19 +84,20 @@ let rec transl_patpred f env (v, nv) tymap constset p =
       | Ppredpatexp_any_int ->
           List.rev_map (fun p -> PInt p) constset
       | Ppredpatexp_var (y) ->
-          let z = f y in
+          let lookup =
+            if C.maybe_bool f then
+              C.maybe f
+            else (fun y -> map_key_by_name (fun p -> Path.name p = y) env) in
           let y = 
-            if C.maybe_bool z then [C.maybe z] else
             C.fast_flap 
-              (fun y -> let y = C.l_to_s y in if y = v then [Var nv]
-                else map_key_by_name (fun p -> Path.name p = y) env) y in
-          if C.empty_list y then assert false else y
+              (fun y -> let y = C.l_to_s y in if y = v then [Var nv] else List.rev_map (fun x -> Var x) (lookup y)) y in
+          if C.empty_list y then raise (Failure "") else y
       | Ppredpatexp_mvar (y) ->
           begin
           try [Var (List.assoc y !vm)]
             with Not_found ->
               untyped := true;
-              if C.empty_list (Le.all env) then assert false else ();
+              if C.empty_list (Le.all env) then raise (Failure "") else ();
               List.rev_map (fun p -> Var p) (Le.all env)
           end
       | Ppredpatexp_funapp (f, es) ->
@@ -144,14 +145,14 @@ let rec transl_patpred f env (v, nv) tymap constset p =
           let ps = List.combine (fst (List.split bs)) ps in
           let env = Le.addn bs env in
           List.rev_map (fun p -> Forall (ps, p))
-            (transl_patpred (fun x -> None) env (v, nv) tymap constset q)
+            (transl_patpred f env (v, nv) tymap constset q)
       | Ppredpat_exists (ps, q) ->
           let (bs, ps) = List.split ps in
           let bs = List.rev_map (fun b -> (Path.mk_ident b, dummy_frame)) bs in
           let ps = List.combine (fst (List.split bs)) ps in
           let env = Le.addn bs env in
           List.rev_map (fun p -> Exists (ps, p))
-            (transl_patpred (fun x -> None) env (v, nv) tymap constset q)
+            (transl_patpred f env (v, nv) tymap constset q)
       | Ppredpat_iff (e, p) ->
           permute_pred_pair (fun e p -> Iff (e, p)) e p
       | Ppredpat_boolexp e ->
@@ -163,15 +164,15 @@ let rec transl_patpred f env (v, nv) tymap constset p =
   let p' = C.fast_flap (fun t -> vm := t; transl_pred_rec p) ts in
   if !untyped then List.filter (ck_consistent p) p' else p'
 
-let transl_patpred_map f pred = transl_patpred f Le.empty ("", C.qual_test_var) [] [] pred
+let transl_patpred_map f pred = transl_patpred (Some f) Le.empty ("", C.qual_test_var) [] [] pred
 
-let transl_patpred = transl_patpred (fun x -> None)
+let transl_patpred = transl_patpred None
 
 let transl_patpred_simple env pred = transl_patpred env ("", C.qual_test_var) [] [] pred 
 
 let transl_pref plist env (v, p) = 
   let valu = C.qual_test_var in
-  [([], ([(C.dummy_id, valu, transl_patpred env (v, valu) [] [] p)], []))]
+  [([], ([(Path.Pident C.dummy_id, valu, List.hd (transl_patpred env (v, valu) [] [] p))], []))]
 
 let rec pat_map_pred_subexps f p =
   let rec sub p = 

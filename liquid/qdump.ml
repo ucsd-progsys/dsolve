@@ -93,14 +93,15 @@ let dump_default_qualifiers (str, env, menv, ifenv) deps qname =
   let deps = deps @ deps' in*)
 
   let prgids = Qg.bound_ids str in
-  let (a, b, ids, d) = prgids in
+  let (a, b, ids, ints) = prgids in
+  let ints = Qg.CS.elements ints in
   let ids = List.fold_left (fun s i -> Qg.IS.add (Ident.name i) s) ids (env_bound_ids ifenv) in
   let ids = Qg.IS.elements ids in
   (*let prgids = (a, b, ids, d) in 
   let ids = List.rev_map Path.mk_ident (Qg.IS.elements ids) in*)
 
   let mnms = snd (List.split (M.filter_names menv)) in
-  let np m p = P.Atom(P.Var vid, P.Eq, P.FunApp(m, [P.Var p])) in 
+  let np n p = P.Atom(P.Var vid, P.Eq, P.FunApp(Path.mk_ident n, [P.Var (Path.mk_ident p)])) in 
   let mnms = C.tflap2 (mnms, ids) np in
   let cstrs = M.filter_cstrs menv in
   let pv vs = List.map (function Some v -> Some (P.Var v) | None -> None) vs in
@@ -114,8 +115,9 @@ let dump_default_qualifiers (str, env, menv, ifenv) deps qname =
 
   (*let dqstrs = expand_quals env dqstrs prgids in*)
   let initqs = add ("FALSE", "_V", P.Atom(P.PInt(1), P.Eq, P.PInt(0))) QS.empty in
-  (*let qs = List.fold_left (fun qs q -> add q qs) initqs dqstrs in*)
-  let qs = QS.union (QS.union (QS.union qs fqs) mqs) initqs in
+  (*let qs = List.fold_left (fun qs q -> add q qs) initqs dqstrs in
+  let qs = QS.union (QS.union (QS.union qs fqs) mqs) initqs in*)
+  let qs = QS.union (QS.union fqs mqs) initqs in
   dump_deps qf deps; dump_intset qf ints;
-  dump_comment_list "Program Identifiers" ids;
+  dump_comment_list qf "Program Identifiers" ids;
   dump_qset qf qs; pp_print_flush qf ()
