@@ -74,11 +74,11 @@ let type_implementation initial_env ast =
     Typecore.force_delayed_checks ();
     str
 
-let analyze ppf sourcefile (str, env, fenv, ifenv) =
-  Qualifymod.qualify_implementation sourcefile fenv ifenv env [] str
+let analyze ppf sourcefile (str, consts, quals, env, fenv, ifenv) =
+  Qualifymod.qualify_implementation sourcefile fenv ifenv env quals consts str
 
 let load_qualfile ppf qualfile =
-  Pparse.file ppf qualfile Parse.qualifiers ast_impl_magic_number
+  Pparse.file ppf qualfile Parse.qualifier_patterns ast_impl_magic_number
 
 let load_dep_mlqfiles bname deps env fenv mlqenv =
   let pathnames = !Config.load_path in 
@@ -103,10 +103,10 @@ let dump_summary bname (str, env, menv, ifenv) qname =
 
 let load_valfile ppf env fenv fname =
   try
-    let (preds, decls) = MLQ.parse ppf fname in
+    let decls = MLQ.parse ppf fname in
     let vals = MLQ.filter_vals decls in
-    let kvl = List.map (fun (s, pf) -> (s, F.translate_pframe None env fenv preds pf)) vals in
-    let tag = (Path.mk_ident P.tag_function, F.Fvar(Path.mk_ident "", 0, [], F.empty_refinement)) in
+    let kvl = List.map (fun (s, pf) -> (s, MLQ.translate_pframe None env fenv pf)) vals in
+    let tag = (P.tag_function, F.Fvar(Path.mk_ident "", 0, [], F.empty_refinement)) in
     let f = (fun (k, v) -> (C.lookup_path k env, F.label_like v v)) in
     let kvl = tag :: (List.map f kvl) in
       (env, Lightenv.addn kvl fenv)
@@ -133,12 +133,12 @@ let process_sourcefile env fenv fname =
   let (qname, iname) = (bname ^ ".hquals", bname ^ ".mlq") in
   try
     (* We need to pull out uninterpreted functions from the MLQ in order to typecheck. *)
-    let (preds, vals)         = MLQ.parse std_formatter iname in
+    let vals         = MLQ.parse std_formatter iname in
     let (unints, vals)        = List.partition MLQ.is_unint_decl vals in
-    let (env, _, fenv, _)     = MLQ.load_local_sig env fenv ([], unints) in
+    let (env, _, fenv, _)     = MLQ.load_local_sig env fenv unints in
     let (str, env, fenv)      = load_sourcefile std_formatter env fenv fname in
     let fenv                  = List.fold_left (add_uninterpreted_constructors env) fenv (Env.types env) in
-    let (env, menv, fenv, mlqenv) = MLQ.load_local_sig env fenv (preds, vals) in
+    let (env, menv, fenv, mlqenv) = MLQ.load_local_sig env fenv vals in
       if C.maybe_bool !summarize then
         dump_summary bname (str, env, menv, mlqenv) (C.maybe !summarize)
       else
@@ -148,7 +148,7 @@ let process_sourcefile env fenv fname =
         let fenv = MLQ.scrub_and_push_axioms fenv in
         (*let _ = if C.ck_olev C.ol_dump_quals then List.iter (function | Typedtree.Tstr_qualifier(a, (b, c)) -> printf "@[%a@]@." Qualifier.pprint (Path.Pident a, Path.Pident b, c) | _ -> assert false) quals in*)
         let _ = if C.ck_olev C.ol_dump_env then (dump_env fenv; dump_env mlqenv) else () in
-          analyze std_formatter fname (str, quals, env, fenv, mlqenv)
+          analyze std_formatter fname (str, consts, tyquals, env, fenv, mlqenv)
    with x ->
      report_error std_formatter x; exit 1
 

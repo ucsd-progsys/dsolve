@@ -723,23 +723,13 @@ let unsat_constraints sri s =
 
 module TR = Trie.Make(Map.Make(C.ComparablePath))
 
-let add_path_set vars m path =
-  match Path.ident_name path with
-  | Some name when NSet.mem name vars ->
-      let rest = try C.StringMap.find name m with Not_found -> [] in C.StringMap.add name (path :: rest) m
-  | _ -> m
-
-let instantiate_in_vm vm env qset q =
-  List.fold_left (C.flip QSet.add) qset (JS.time "inst about" (Q.instantiate_about vm env) q)
-
 let path_is_temp p = match Path.ident_name p with Some s -> Le.badstring s | None -> false
 
 let mk_envl env = Le.fold (fun p f l -> if Path.same p C.qual_test_var || path_is_temp p then l else p :: l) env []
 
 let tr_misses = ref 0
 
-let instantiate_quals_in_env tr qs =
-  let qpaths = List.fold_left (fun xs x -> List.fold_left (C.flip NSet.add) xs (Q.vars x)) NSet.empty qs in
+let instantiate_quals_in_env tr mlenv consts qs =
     (fun (env, envl') ->
         let (vs, (env, envl, quoi)) = BS.time "find_maximal" (TR.find_maximal envl' tr)
                                                                 (fun (_, _, quoi) -> C.maybe_bool !quoi) in
@@ -750,28 +740,26 @@ let instantiate_quals_in_env tr qs =
             List.iter (fun (_, _, q) -> if C.maybe_bool !q then () else q := Some qs) vs; qs
         | None -> 
             let _   = incr tr_misses in
-            let vm  = List.fold_left (add_path_set qpaths) C.StringMap.empty envl in
-            let q   = BS.time "fold quals" (List.fold_left (instantiate_in_vm vm env) QSet.empty) qs in
-            let els = QSet.elements q in
+            let qs = C.fast_flap (Qualdecl.expand_qualpat_about consts env mlenv) qs in
             let _ = TR.iter_path envl tr 
               (fun (_, _, quoi) ->
                 match !quoi with
-                | Some q -> if (List.length q) > (List.length els)
-                            then quoi := Some els
+                | Some q -> if (List.length q) > (List.length qs)
+                            then quoi := Some qs
                 | None -> ()) in
-            quoi := Some els; els)
+            quoi := Some qs; qs)
 
 let constraint_env (_, c) =
   match c with | SubRef (_, _, _, _, _) -> Le.empty | WFRef (e, _, _) -> e
 
 (* Make copies of all the qualifiers where the free identifiers are replaced
    by the appropriate bound identifiers from all environments. *)
-let instantiate_per_environment cs qs =
+let instantiate_per_environment mlenv consts cs qs =
   let envs = List.rev_map constraint_env cs in
   let envls = List.map mk_envl envs in 
   let envvs = List.combine envs envls in
   let tr = (BS.time "tr" (List.fold_left (fun t (ev, el) -> TR.add el (ev, el, ref None) t) TR.empty) envvs) in
-  BS.time "instquals" (List.rev_map (instantiate_quals_in_env tr qs)) envvs
+  BS.time "instquals" (List.rev_map (instantiate_quals_in_env tr mlenv consts qs)) envvs
 
 (**************************************************************)
 (************************ Initial Solution ********************)
@@ -931,7 +919,7 @@ let solve_wf sri s =
   iter_ref_constraints sri 
   (function WFRef _ as c -> ignore (refine sri s c) | _ -> ())
 
-let solve qs cs = 
+let solve qs env consts cs = 
   (*let _  = JS.doTime := true in*)
   let cs = if !Cf.simpguard then List.map simplify_fc cs else cs in
   let _  = dump_constraints cs in
@@ -942,7 +930,7 @@ let solve qs cs =
   let cs = List.map (fun (v, c, cstr) -> (set_labeled_constraint c (make_val_env v max_env), cstr)) cs in
   (* let cs = if !Cf.esimple then 
                BS.time "e-simplification" (List.map esimple) cs else cs in *)
-  let qs = BS.time "instantiating quals" (instantiate_per_environment cs) qs in
+  let qs = BS.time "instantiating quals" (instantiate_per_environment env consts cs) qs in
   (*let qs = List.map (fun qs -> List.filter Qualifier.may_not_be_tautology qs) qs in*)
   let _ = C.cprintf C.ol_solve "@[%i@ instantiation@ queries@ %i@ misses@]@." (List.length cs) !tr_misses in
   let _ = dump_qualifiers (List.combine (strip_origins cs) qs) in

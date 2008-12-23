@@ -46,7 +46,8 @@ val pprint_fenv : Format.formatter -> Frame.t Lightenv.t -> unit
 val fresh_fc_id : unit -> fc_id 
 
 val solve: 
-  Qualifier.t list -> labeled_constraint list ->
+  Parsetree.qualifier_declaration list -> Env.t ->
+    int list -> labeled_constraint list ->
     ((Common.ComparablePath.t -> Qualifier.t list) * (labeled_constraint list))
 
 val formals_addn: Frame.qvar list -> unit

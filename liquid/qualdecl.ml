@@ -91,13 +91,13 @@ let rec transl_patpred f env (v, nv) tymap constset p =
           let y = 
             C.fast_flap 
               (fun y -> let y = C.l_to_s y in if y = v then [Var nv] else List.rev_map (fun x -> Var x) (lookup y)) y in
-          if C.empty_list y then raise (Failure "") else y
+          if C.empty_list y then raise (Failure "pattern instantiation empty") else y
       | Ppredpatexp_mvar (y) ->
           begin
           try [Var (List.assoc y !vm)]
             with Not_found ->
               untyped := true;
-              if C.empty_list (Le.all env) then raise (Failure "") else ();
+              if C.empty_list (Le.all env) then raise (Failure "pattern instantiation empty") else ();
               List.rev_map (fun p -> Var p) (Le.all env)
           end
       | Ppredpatexp_funapp (f, es) ->
@@ -164,13 +164,25 @@ let rec transl_patpred f env (v, nv) tymap constset p =
   let p' = C.fast_flap (fun t -> vm := t; transl_pred_rec p) ts in
   if !untyped then List.filter (ck_consistent p) p' else p'
 
-let transl_patpred_map f pred = transl_patpred (Some f) Le.empty ("", C.qual_test_var) [] [] pred
+let dummy_path = Path.mk_ident ""
+
+let transl_patpred_map f pred = transl_patpred (Some f) Le.empty ("", dummy_path) [] [] pred
 
 let transl_patpred = transl_patpred None
 
-let transl_patpred_simple env pred = transl_patpred env ("", C.qual_test_var) [] [] pred 
+let transl_patpred_simple env pred = transl_patpred env ("", dummy_path) [] [] pred 
 
-let transl_pref plist env (v, p) = 
+let strip_bool = function Boolexp e -> e | _ -> assert false
+
+let transl_patpredexp_map f exp = List.rev_map strip_bool (transl_patpred_map f
+  {ppredpat_desc = Ppredpat_boolexp exp; ppredpat_loc = Location.none})
+
+let expand_qualpat_about consts env mlenv (_, qual) =
+  let (v, tys, pat) = qual.pqual_pat_desc in
+  let tys = List.rev_map (fun (a, ty) -> (a, F.fresh_without_vars mlenv (Typetexp.transl_type_scheme mlenv ty))) tys in
+  List.rev_map (fun p -> (dummy_path, C.qual_test_var, p)) (transl_patpred env (v, C.qual_test_var) tys consts pat)
+
+let transl_pref env (v, p) = 
   let valu = C.qual_test_var in
   [([], ([(Path.Pident C.dummy_id, valu, List.hd (transl_patpred env (v, valu) [] [] p))], []))]
 

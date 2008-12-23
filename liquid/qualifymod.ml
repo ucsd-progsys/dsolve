@@ -473,7 +473,7 @@ let warn_invalid_mlq env p f =
   F.refinement_iter (fun r -> if not (WF.refinement_well_formed env s r aa) then
           eprintf "@[Warning:@ %s@ ::@ [...]@ %a@ [...]@ may@ not@ be@ wf@]@." (Path.name p) F.pprint_refinement r) f
      
-let qualify_implementation sourcefile fenv' ifenv env qs str =
+let qualify_implementation sourcefile fenv' ifenv env qs consts str =
   let _              = if !Clflags.ck_mlq then Le.iter (warn_invalid_mlq fenv') ifenv in
   let _              = reset_framelog () in
   let (qs, fenv, cs) = constrain_structure env fenv' qs str in
@@ -481,7 +481,7 @@ let qualify_implementation sourcefile fenv' ifenv env qs str =
   let cs             = List.rev_append nrcs cs in
   let cs             = (List.map (lbl_dummy_cstr env) (Le.maplistfilter (maybe_cstr_from_unlabel_frame fenv) ifenv)) @ cs in
   let _              = pre_solve sourcefile in
-  let (s,cs)         = Bstats.time "solving" (solve qs) cs in
+  let (s,cs)         = Bstats.time "solving" (solve qs env consts) cs in
   let _              = post_solve () in
   let flog           = if !Clflags.raw_frames then !flog else framemap_apply_solution s !flog in
   let _              = dump_frames sourcefile flog in

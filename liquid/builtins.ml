@@ -320,12 +320,12 @@ let ext_find_type_path t =
 let find_path id env = fst (Env.lookup_value (mk_longid id) env)
 let find_path_path env p = fst (Env.lookup_value (Longident.parse (Path.name p)) env)
 
-let frames env fenv =
+let frames env =
   let _ = _type_paths := Some (_type_path_constrs env) in
   let resolve_names x = List.map (fun (id, fr) -> (find_path id env, fr)) x in
   let frames = List.append (resolve_names  _frames) (resolve_names (_lib_frames env)) in
-    List.rev_map (fun (p, fr) -> map_qualifiers
-      (fun (p1, p2, p) -> (p1, p2, map_funs (find_path_path env) p))) frames
+    List.rev_map (fun (p, fr) -> (p, map_qualifiers
+      (fun (p1, p2, p) -> (p1, p2, map_funs (find_path_path env) p)) fr)) frames
 
 let equality_qualifier exp =
   let x = Path.mk_ident "V" in

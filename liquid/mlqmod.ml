@@ -34,7 +34,7 @@ let nativize_core_type dopt env ty =
      (lookup (fun s -> let s = Longident.parse (maybe_add_pref dopt (C.l_to_s l)) in 
        ignore (Env.lookup_type s env); s) l l)) ty
 
-let rec translate_pframe dopt env fenv plist pf =
+let rec translate_pframe dopt env fenv pf =
   let vars = ref [] in
   let getvar a = try List.find (fun b -> Path.name b = a) !vars
                    with Not_found -> let a = Path.mk_ident a in
@@ -45,7 +45,7 @@ let rec translate_pframe dopt env fenv plist pf =
     try Env.lookup_type (transl_lident l) env 
       with Not_found -> try Env.lookup_type l env
         with Not_found -> raise (T.Error(Location.none, T.Unbound_type_constructor l)) in
-  let transl_pref = Qd.transl_pref plist fenv in
+  let transl_pref = Qd.transl_pref fenv in
   let rec transl_pframe_rec pf =
     match pf with
     | PFvar (a, subs, r) -> F.Fvar (getvar a, F.generic_level, subs, transl_pref r)
@@ -129,7 +129,7 @@ let map_constructor_args dopt env (name, mlname) (cname, args, cpred) =
       lookup3_f l_assoc (C.compose l_env (maybe_add_pref dopt)) l_env (fun x -> []) s in
   (*let fvar s = match fvar s with Some p -> Some (P.Var p) | None -> None in*) 
   let ffun s = lookup (fun s -> let s = maybe_add_pref dopt (Path.name s) in C.lookup_path s env) s s in
-  let pred = P.pexp_map_funs ffun (C.ex_one "metavariable or ident set used in measure" (Qualdecl.transl_patpred_map fvar cpred)) in
+  let pred = P.pexp_map_funs ffun (C.ex_one "metavariable or ident set used in measure" (Qualdecl.transl_patpredexp_map fvar cpred)) in
   let args = List.map (function Some s -> Some (List.assoc s argmap) | None -> None) args in
     Mcstr(cname, (args, (maybe_add_pref dopt name, pred)))
 
@@ -156,7 +156,7 @@ let load_embed dopt ty psort env fenv ifenv menv =
 let axiom_prefix = "_axiom_"
 
 let load_axiom dopt env fenv ifenv menv name pred =
-  let pred = Qualdecl.transl_patpred_simple env pred in
+  let pred = C.ex_one "patterns used in axiom decl" (Qualdecl.transl_patpred_simple fenv pred) in
   let fr = Builtins.rUnit "" (Path.mk_ident "") pred in 
   let add = Le.add (Path.mk_ident (axiom_prefix ^ name)) fr in
   let (fenv, ifenv) = match dopt with Some _ -> (fenv, add ifenv) | None -> (add fenv, ifenv) in
@@ -176,10 +176,10 @@ let scrub_axioms fenv =
   Le.fold (fun p f env -> if C.has_prefix axiom_prefix (Path.name p) then 
             env else Le.add p f env) fenv Le.empty
 
-let load_rw dopt rw env menv' fenv (preds, decls) =
+let load_rw dopt rw env menv' fenv decls =
   let load_decl (env, fenv, ifenv, menv) = function
-      LvalDecl(s, f) -> (env, fenv, load_val dopt env ifenv (s, F.translate_pframe dopt env fenv preds f), menv)
-    | LnrvalDecl(s, f) -> (env, fenv, load_nrval dopt env ifenv (s, F.translate_pframe dopt env fenv preds f), menv)
+      LvalDecl(s, f) -> (env, fenv, load_val dopt env ifenv (s, translate_pframe dopt env fenv f), menv)
+    | LnrvalDecl(s, f) -> (env, fenv, load_nrval dopt env ifenv (s, translate_pframe dopt env fenv f), menv)
     | LmeasDecl (name, cstrs) -> (env, fenv, ifenv, List.rev_append (load_measure dopt env (name, cstrs)) menv)
     | LunintDecl (name, ty) -> load_unint name ty env fenv ifenv menv
     | LembedDecl (ty, psort) -> load_embed dopt ty psort env fenv ifenv menv
@@ -211,7 +211,7 @@ let load_dep_sigs env fenv mlqs =
   let rw dname env fenv ifenv =
     let modname s = C.append_pref dname s in
     let env_lookup s = let s = modname s in C.lookup_path s env in
-    let lfun s = lookup (fun s -> Path.name (env_lookup s)) s s in
+    let lfun s = lookup env_lookup s (Path.name s) in
     let lvar s = lookup env_lookup s (Path.name s) in
     let fenv = Le.fold (fun p fr e -> Le.add p (F.map_refexprs (M.rewrite_refexpr (C.app_snd (sub_pred lvar lfun))) 
                        (F.label_like fr fr)) e) ifenv fenv in
