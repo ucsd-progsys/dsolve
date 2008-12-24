@@ -723,9 +723,7 @@ let unsat_constraints sri s =
 
 module TR = Trie.Make(Map.Make(C.ComparablePath))
 
-let path_is_temp p = match Path.ident_name p with Some s -> Le.badstring s | None -> false
-
-let mk_envl env = Le.fold (fun p f l -> if Path.same p C.qual_test_var || path_is_temp p then l else p :: l) env []
+let mk_envl env = Le.fold (fun p f l -> if Path.same p C.qual_test_var || C.path_is_temp p then l else p :: l) env []
 
 let tr_misses = ref 0
 

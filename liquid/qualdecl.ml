@@ -91,13 +91,13 @@ let rec transl_patpred f env (v, nv) tymap constset p =
           let y = 
             C.fast_flap 
               (fun y -> let y = C.l_to_s y in if y = v then [Var nv] else List.rev_map (fun x -> Var x) (lookup y)) y in
-          if C.empty_list y then raise (Failure "pattern instantiation empty") else y
+          if C.empty_list y then failwith "pattern instantiation empty" else y
       | Ppredpatexp_mvar (y) ->
           begin
           try [Var (List.assoc y !vm)]
             with Not_found ->
               untyped := true;
-              if C.empty_list (Le.all env) then raise (Failure "pattern instantiation empty") else ();
+              if C.empty_list (Le.all env) then failwith "pattern instantiation empty" else ();
               List.rev_map (fun p -> Var p) (Le.all env)
           end
       | Ppredpatexp_funapp (f, es) ->
@@ -160,7 +160,8 @@ let rec transl_patpred f env (v, nv) tymap constset p =
   and permute_pred_pair f e p =
     let (e, p) = C.app_pr transl_pred_rec (e, p) in
     List.rev_map (function [e; p] -> f e p | _ -> assert false) (C.rev_perms [p; e]) in
-  let ts = C.rev_perms (List.rev_map (fun (v, t) -> env_by_type_f (fun n b -> if b then Some (v, n) else None) t env) tymap) in 
+  let ts = C.rev_perms (List.rev_map (fun (v, t) -> env_by_type_f
+    (fun n b -> if b && not(C.path_is_temp n) then Some (v, n) else None) t env) tymap) in 
   let p' = C.fast_flap (fun t -> vm := t; transl_pred_rec p) ts in
   if !untyped then List.filter (ck_consistent p) p' else p'
 

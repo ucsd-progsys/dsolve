@@ -126,9 +126,10 @@ let map_constructor_args dopt env (name, mlname) (cname, args, cpred) =
   let fvar s = 
     let l_env s = [C.lookup_path s env] in
     let l_assoc s = [List.assoc s argmap] in
-      lookup3_f l_assoc (C.compose l_env (maybe_add_pref dopt)) l_env (fun x -> []) s in
-  (*let fvar s = match fvar s with Some p -> Some (P.Var p) | None -> None in*) 
+      lookup3_f l_assoc (C.compose l_env (maybe_add_pref dopt)) l_env (fun x -> assert false) s in
   let ffun s = lookup (fun s -> let s = maybe_add_pref dopt (Path.name s) in C.lookup_path s env) s s in
+  let x = Qualdecl.transl_patpredexp_map fvar cpred in (* DEBUG *)
+  let _ = List.rev_map (fun p -> printf "%a@.@." P.pprint_pexpr p) x in (* DEBUG *)
   let pred = P.pexp_map_funs ffun (C.ex_one "metavariable or ident set used in measure" (Qualdecl.transl_patpredexp_map fvar cpred)) in
   let args = List.map (function Some s -> Some (List.assoc s argmap) | None -> None) args in
     Mcstr(cname, (args, (maybe_add_pref dopt name, pred)))

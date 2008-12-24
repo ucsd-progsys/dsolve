@@ -110,12 +110,18 @@ let fast_append v v' =
 let fast_flap f xs =
   fast_flatten (List.rev_map f xs)
 
+let rec fast_unflat ys = function
+  | x :: xs -> fast_unflat ([x] :: ys) xs
+  | [] -> ys
+
 let rec rev_perms s = function
   | [] -> s
   | e :: es -> rev_perms 
     (fast_flap (fun e -> List.rev_map (fun s -> e :: s) s) e) es 
 
-let rev_perms es = rev_perms [] es
+let rev_perms = function
+  | e :: es -> rev_perms (fast_unflat [] e) es
+  | es -> es 
 
 let tflap2 (e1, e2) f =
   List.fold_left (fun bs b -> List.fold_left (fun aas a -> f a b :: aas) bs e1) [] e2
@@ -210,6 +216,10 @@ let lookup_path s env =
 let lookup_type p env =
   (Env.find_value p env).Types.val_type
 
+let tmpstring s = if String.length s >= 2 then (s.[0] = '_' && s.[1] = '\'') || (s.[0] = 'A' && s.[1] = 'A') else false
+
+let path_is_temp p = match Path.ident_name p with Some s -> tmpstring s | None -> false
+
 let tuple_elem_id i =
   Ident.create ("e" ^ string_of_int i)
 
@@ -222,7 +232,8 @@ let int_of_bool b = if b then 1 else 0
 
 let ex_one s = function
     [x] -> x
-  | _ -> failwith s
+  | _ :: _ -> failwith s
+  | _ -> failwith (s ^ ". empty")
 
 let only_one s = function
     x :: [] -> Some x
