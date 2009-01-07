@@ -1,8 +1,24 @@
+#define GET(s, b) Store.get s b 
 
-
-#define W_IN(pm, pr, spm, ps, pg, envs) pm -> pr -> spm -> ps -> pg -> envs 
-#define W_OUT(pm, pr, spm, ps, pg, envs) ((pm) * (pr) * (spm) * (ps) * (pg) * (envs))
+#define W_IN(pm, pr, ps, pg, envs) pm -> pr -> ps -> pg -> envs 
+#define W_OUT(pm, pr, ps, pg, envs) pm * pr * ps * pg * envs
+#define W_OUT_AND(pm, pr, ps, pg, envs, and) pm * pr * ps * pg * envs * (and)
 #define PPAGE {v: int | v >= 0 and v <= nppages}
 
-val page_decref: W_IN -> PPAGE -> W_OUT
-val page_incref: W_IN -> PPAGE -> aux_vp_t -> W_OUT
+#define R(v, b, p) {v: b | p}
+
+#define MAP(e0, e1) (e0, e1) Store.t
+#define MAP2(e0, e1, e2) (e0 * e1, e2) Store.t
+
+#define UMAP MAP(int, int)
+#define UMAP2 MAP2(int, int, int)
+#define UBMAP MAP(int, bool)
+
+#define PR(pm)  MAP(int, R(v, int, v >= 0 and (v > 0 iff GET(pm, v) = e0)))
+#define PS(pr)  MAP(int, R(v, int, v >= 0 and (GET(pr, e0) > 0 -> v = 1)))
+#define PM      MAP(int, R(v, int, v >= 0-1))
+#define SPM(pr, pm) R(v, MAP(int, R(v, int, (v >= 0 -> GET(pr, v) = e0))), v = pm)
+#define PG(pr, ps) MAP2(int, int, R(v, int, ((v >= 0 -> (GET(pr, v) = 0 and GET(ps, v) = 0)) and GET(ps, v) = 1)))
+
+val env_alloc: R(v, int, v > 0) -> W_IN(pm: UMAP, pr: PR(pm), ps: PS(pr), PG(pr, ps), UBMAP) -> W_OUT_AND(UMAP, UMAP, UMAP, UMAP2, UBMAP, maybe_int) (*W_OUT_AND(UMAP, PR(e0), PS(e1), PG(e1, e3), UBMAP, maybe_int)*)
+

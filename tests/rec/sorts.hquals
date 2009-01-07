@@ -1,0 +1,11 @@
+(*actuals*)
+qualif EQ(v) : v { * * } ~A
+
+(*sets*)
+qualif V(v): ? Myset.eq (set_of v) (set_of xss)
+qualif V(v): ? Myset.eq (set_of v) (Myset.of_list xs)
+qualif V(v): ? Myset.eq (Myset.of_list v) (set_of xss)
+
+qualif CON(v): ? Myset.eq (Myset.of_list v) (Myset.cup (Myset.sng ~A) (Myset.of_list ~B))
+qualif PAR(v): ? Myset.eq (Myset.of_list ~A) (Myset.cup (Myset.of_list e0) (Myset.of_list v))
+qualif APP(v): ? Myset.eq (Myset.of_list v)  (Myset.cup (Myset.of_list ~A) (Myset.of_list ~B))

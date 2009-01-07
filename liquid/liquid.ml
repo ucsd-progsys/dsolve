@@ -82,10 +82,15 @@ let load_qualfile ppf qualfile =
     (deps, List.map Qualmod.type_qualifier qs)
 
 let load_dep_mlqfiles bname deps env fenv mlqenv =
-  let pathname = if String.contains bname '/' then 
-          String.sub bname 0 ((String.rindex bname '/') + 1) else "" in
-  let inames = List.map (fun s -> (pathname ^ (String.lowercase s) ^ ".mlq", s)) deps in
-  let mlqs = List.map (fun (x, d) -> if Sys.file_exists x then Some (Pparse.file std_formatter x Parse.liquid_interface Config.ast_impl_magic_number, d) else None) inames in 
+  let pathnames = !Config.load_path in 
+  let inames = List.map (fun s -> ((String.lowercase s) ^ ".mlq", s)) deps in
+  let inames = C.sort_and_compact inames in
+  let f (s, d) pns =
+    let p = try Some (List.find (fun p -> Sys.file_exists (p ^ "/" ^ s)) pns) with Not_found -> None in
+      match p with
+      | Some p -> Some (Pparse.file std_formatter (p ^ "/" ^ s) Parse.liquid_interface Config.ast_impl_magic_number, d)
+      | None -> None in
+  let mlqs = List.rev_map (fun xd -> f xd pathnames) inames in 
   let mlqs = C.maybe_list mlqs in
     MLQ.load_dep_sigs env fenv mlqs
 
@@ -232,6 +237,8 @@ let main () =
      "-no-recrefs", Arg.Set no_recrefs, "true out recursive refinements";
      "-no-recvarrefs", Arg.Set no_recvarrefs, "true out top-level recvar refinements";
      "-check-mlq", Arg.Set ck_mlq, "warn about possible errors in the local mlq";
+     "-union-wfs", Arg.Set union_wfs, "take the union of instantiated wf quals";
+     "-no-timing", Arg.Unit Bstats.dont_time, "don't do any profiling";
      "-vgc", Arg.Int (fun c -> (get ()).verbose <- c), "verbose garbage collector";
      "-v", Arg.Int (fun c -> Common.verbose_level := c), 
               "<level> Set degree of analyzer verbosity:\n\

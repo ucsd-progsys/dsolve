@@ -1,0 +1,25 @@
+qualif V(v): v { * * } ~A
+qualif V(v): v = 0-1
+qualif V(v): v = 1
+qualif V(v): v > 0
+(*qualif V(v): v = 0*)
+
+qualif V(v)(A: ('a, 'b) Store.t): v = Store.get ~A ~B
+qualif V(v): [0,1] { =, != } Store.get ~A v
+qualif V(v)(A: ('a, 'b) Store.t): Store.get ~A ~B = v
+qualif V(v): Store.get v ~A = ~B
+(*qualif V(v): Store.get ~A v = ~B*)
+qualif V(v)(C: ('a, 'b) Store.t): v = Store.set ~C ~A ~B
+
+
+qualif V(v)(A: ('a, 'b) Store.t): ? (Store.get ~A v)
+qualif V(v)(A: ('a, 'b) Store.t): (? v iff Store.get ~A pp { !=, = } 0)
+
+qualif V(v): Store.get pr (Store.get pm v) = v
+
+qualif V(v)(A: ('a, 'b) Store.t): (v { >=, > } 0 -> Store.get ~A v = ~B)
+
+qualif V(v): (v > 0 iff Store.get ~A v = ~B)
+(*qualif V(v): (Store.get ~A v = ~B -> v > 0)*)
+
+(*qualif V(v): (v >= 0 -> Store.get ~A v = 0)*)

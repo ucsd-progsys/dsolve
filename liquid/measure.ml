@@ -102,7 +102,12 @@ let mk_single_gd menv (vp, p, tag, ps) =
 let mk_guard env vp cpats =
   let preds = C.map_partial (mk_single_gd !bms) cpats in
   let preds = C.flap P.conjuncts preds in
-    P.big_and (List.filter (Wellformed.pred_well_formed env) preds)
+  (*let _ = List.iter (fun p -> printf "@[%a@]@." P.pprint p) preds in
+  let _ = printf "@.ENTER@." in*)
+  let preds = List.filter (Wellformed.pred_well_formed env) preds in
+  (*let _ = List.iter (fun p -> printf "@[%a@]@." P.pprint p) preds in
+  let _ = printf "@.EXIT@." in*)
+    P.big_and preds
 
 (* assumes no subs *)
 let rewrite_refexpr f (a, (qs, b)) = (a, (List.map (Qualifier.map_pred f) qs, b))

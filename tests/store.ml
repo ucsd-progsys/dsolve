@@ -12,4 +12,4 @@ let fold (x: ('a, 'b) t) (f: ('c -> 'a -> 'b -> 'c)) (k: 'c) = k
 
 let empty = C
 
-let init (x: int) (f: (int -> 'a)) = C
+let init (x: int) (f: (int -> 'a)) = A (5)

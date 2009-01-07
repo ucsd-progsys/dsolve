@@ -30,7 +30,7 @@ module StringMap = Map.Make(String)
 module ComparablePath = struct
   type t = Path.t
   let compare = compare
-  let equal = Path.same 
+  let equal = Path.same
   let hash = Hashtbl.hash
 end
 
@@ -333,7 +333,7 @@ let ol_timing = 2
 let ol_default = 2
 let ol_normalized = 3
 let ol_dquals = 4 
-let ol_unique_names = 9
+let ol_unique_names = 5 (* must be > ol_dquals *)
 let ol_solve = 10 
 let ol_refine = 11 
 let ol_scc = 12 

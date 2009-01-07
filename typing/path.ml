@@ -44,9 +44,18 @@ let ident_name = function
 let ident_name_crash = function
     Pident id -> Ident.name id 
   | _ -> assert false
+let unique_ident_name_crash = function
+    Pident id -> Ident.unique_name id
+  | _ -> assert false
 let unique_ident_name = function
     Pident id -> Some (Ident.unique_name id)
   | _ -> None
+let ident_name_fail = function
+    Pident id -> Ident.name id
+  | _ -> raise (Failure "path")
+let is_ident = function
+    Pident id -> true
+  | _ -> false
 
 let rec name = function
     Pident id -> Ident.name id

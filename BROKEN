@@ -17,3 +17,9 @@ try: convert paths to strings w/ envls in instantiate_per_environment to time st
 fix: tuple/record binds don't assert v = blah.e[0, 1, ...]
 
 fix/add: let user choose between generalizing some mlq qualifiers and not generalizing some qualifiers as they want to by dumping mlq qualifiers to a seperate file
+
+fix: explicitly casting all implicit functions (ie, relationals) to int causes dramatic slowdown
+
+fix: single param variant types don't parse in param (int option parsed as 'a option)
+
+fix: nested pattern matches only seem to work for measures

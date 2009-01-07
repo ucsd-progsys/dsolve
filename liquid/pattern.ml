@@ -36,7 +36,7 @@ let _bind_vars = function
   | (Tpat_tuple p1s, Tpat_tuple p2s)
   | (Tpat_construct (_, p1s), Tpat_construct (_, p2s)) ->
       (List.combine (pattern_descs p1s) (pattern_descs p2s), [])
-  | _ -> assert false
+  | _ -> raise (Failure "Pattern bind")
 
 let bind_vars p1 p2 = C.expand _bind_vars [(p1, p2)] []
 

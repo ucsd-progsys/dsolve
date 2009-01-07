@@ -1,0 +1,39 @@
+(* to use:
+   ocamlc tests/myset.mli
+  ./dsolve.py -I tests tests/mysetblah.ml
+*)
+
+embed set for 'a set
+embed set for int set
+
+axiom seq : forall (x: set, y: set. ((? eq x y) iff (forall (z: int. ((? mem z x) iff (? mem z y))))))
+axiom emp : forall (x: int. -. (? mem x empty))
+axiom cup : forall (x: int, y: set, z: set. (? mem x (cup y z) iff (? mem x y or ? mem x z)))
+axiom cap : forall (x: int, y: set, z: set. (? mem x (cap y z) iff (? mem x y and ? mem x z)))
+
+(* a bug in z3? *)
+axiom disj: forall (x: set, y: set, z: set. (? eq empty (cap y z) -> (? mem x y -> (-. (? mem x z)))))
+
+axiom mns : forall (x: int, y: set, z: set. (? mem x (mns y z) iff (? mem x y and (-.(? mem x z)))))
+
+axiom sng : forall (x: int, y: int. (? mem x (sng y) iff x = y))
+axiom eeq : forall (x: set, y: set. ((x = y) iff (forall (z: int. ((? mem z x) iff (? mem z y))))))
+
+axiom xtr : forall (x: set, y: int. (y != xtr x -> -. (? mem y x)))
+
+measure of_list =
+  | [] -> empty
+  | x :: xs -> cup (sng x) (of_list xs)
+
+val empty: 'a set
+val mem: x: 'a -> y: 'a set -> {v: bool | v = mem x y}
+val eq: x: 'a set -> y: 'a set -> {v: bool | v = eq x y}
+val of_list: x: 'a list -> {v: 'a set | v = of_list x}
+val cap: x: 'a set -> y: 'a set -> {v: 'a set | v = cap x y}
+val cup: x: 'a set -> y: 'a set -> {v: 'a set | v = cup x y}
+val sng: x: 'a -> {v: 'a set | v = sng x}
+val mns: x: 'a set -> y: 'a set -> {v: 'a set | v = mns x y}
+
+val xtr: x: {v: 'a set | v != empty} -> {v: 'a | v = xtr x}
+
+val un: unit -> bool

@@ -1,0 +1,35 @@
+
+#define S(v)   (sz v)
+#define SO(v)  (set_of v)
+#define CUP(v, h) (Myset.cup v h)
+#define SEQ(v, h) (? Myset.eq v h)
+#define SNG(v) (Myset.sng v)
+
+#define R(p)   [[], [v: p, v: true, v: true]]
+#define DHP    [z: t . || e0: 'a, e1: R(v < e0) z, e2: R(v > e0) z]
+#define HP     [z: t . || e0: 'a, e1: R(v <= e0) z, e2: R(v >= e0) z]
+#define DSHP   R(true) DHP
+#define SHP    R(true) HP
+
+#define MEM(v, s)    (? Myset.mem v (set_of s))
+#define DISJ(t, s)   (? Myset.eq (Myset.cap (set_of t) (set_of s)) Myset.empty)
+
+axiom pos: forall (x: int. S(x) >= 0)
+
+measure sz =
+  | E -> 0
+  | T (_, l, r) -> 1 + sz l + sz r
+
+measure set_of =
+  | E -> Myset.empty
+  | T (x, l, r) -> (Myset.cup (Myset.sng x) (Myset.cup (set_of l) (set_of r)))
+
+
+val empty     : {v: DSHP | S(v) = 0} 
+val isEmpty   : t: DSHP -> {v: bool | (? v -> S(t) = 0)}
+val insert    : x: 'a -> t: R(v != x) DHP -> {v: DSHP | S(v) = S(t) + 1}
+val merge     : h: DSHP -> t: {v: DSHP | DISJ(v, h)} -> {v: DSHP | S(v) = S(h) + S(t) and SEQ(SO(v), CUP(SO(t), SO(h)))}
+val findMin2  : t: {v: DSHP | S(v) > 0} -> ('a * {v: R(e0 <= v) DHP | v = t})
+val deleteMin : t: {v: DSHP | S(v) > 0} -> {v: DSHP | S(v) = S(t) - 1}
+val deleteMin2: t: {v: DSHP | S(v) > 0} -> ('a * {v: R(e0 < v) DHP | S(v) = S(t) - 1})
+val to_list2  : DSHP -> 'a list
