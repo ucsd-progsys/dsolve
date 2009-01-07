@@ -23,14 +23,14 @@ let rec merge xs ys =
             else y::(merge (x::xs') ys')
       end
 
-let rec mergesort ps =
+let rec sort ps =
   match ps with
   | [] -> []
   | p::ps' -> begin
       match ps' with [] -> [p] 
       | _ -> 
         let (qs,rs) = halve ps in
-        let qs' = mergesort qs in
-        let rs' = mergesort rs in
+        let qs' = sort qs in
+        let rs' = sort rs in
         merge qs' rs'
     end

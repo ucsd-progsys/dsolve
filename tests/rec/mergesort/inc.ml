@@ -2,12 +2,31 @@ let rec len xs =
   match xs with 
   | [] -> 0
   | x::xs' -> 1 + len xs'
+
 let rec halve xs =
   match xs with
   | []   -> ([], [])
   | x::xs' ->
       let (ys, zs) = halve xs' in
       (x::zs, ys)
+
+let rec merge xs ys =
+  match xs, ys with
+  | [],_           -> ys
+  | _ ,[]          -> xs
+  | x::xs', y::ys' -> if x < y 
+                      then x::(merge xs' (y::ys')) 
+                      else y::(merge (x::xs') ys')
+
+let rec mergesort = function 
+  | []    -> []
+  | p::[] -> [p]
+  | ps    -> let (qs,rs) = halve ps in
+             let qs' = mergesort qs in
+             let rs' = mergesort rs in
+             merge qs' rs'
+
+      (*
 let rec merge xs ys =
   match xs with
   | [] -> ys
@@ -20,6 +39,7 @@ let rec merge xs ys =
             then x::(merge xs' (y::ys')) 
             else y::(merge (x::xs') ys')
       end
+
 let rec mergesort ps =
   match ps with
   | [] -> []
@@ -31,3 +51,4 @@ let rec mergesort ps =
         let rs' = mergesort rs in
         merge qs' rs'
     end
+*)

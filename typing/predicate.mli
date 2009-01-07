@@ -124,3 +124,4 @@ val transl_rel: Asttypes.pred_rel -> binrel
 
 val conjuncts: t -> t list
 val is_taut: t -> bool
+val is_contra: t -> bool
