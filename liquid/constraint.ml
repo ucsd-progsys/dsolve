@@ -805,42 +805,20 @@ let make_initial_solution cs =
   let s' = Sol.create 100 in
   let l = ref [] in
   let _ = List.iter (function (SubRef (_, _, _, (_, F.Qvar k), _), qs) ->
-<<<<<<< HEAD:liquid/constraint.ml
-                                (Sol.replace srhs k (); Sol.replace s k qs) 
-                              | _ -> ()) cs in
-=======
             let k' = Path.unique_ident_name_crash k in
             (Hashtbl.replace srhs k' (); Sol.replace s k qs) | _ -> ()) cs in
->>>>>>> 107a49269db7d11c594954f9f775e76df154e56f:liquid/constraint.ml
   let _ = List.iter (function (SubRef (_, _, r1, _, _), qs) ->
-<<<<<<< HEAD:liquid/constraint.ml
-                                List.iter (fun k -> Sol.replace slhs k (); 
-                                                if not !Cf.minsol && is_formal k && 
-                                                   not (Sol.mem srhs k)
-                                                then Sol.replace s k [] 
-                                                else Sol.replace s k qs) 
-                                          (F.refinement_qvars r1) 
-                              | _ -> ()) cs in
-=======
             List.iter (fun k ->
               let k' = Path.unique_ident_name_crash k in
               Hashtbl.replace slhs k' (); if not !Cf.minsol && is_formal k && not (Hashtbl.mem srhs k')
               then Sol.replace s k [] else Sol.replace s k qs) (F.refinement_qvars r1) | _ -> ()) cs in
->>>>>>> 107a49269db7d11c594954f9f775e76df154e56f:liquid/constraint.ml
   let _ = List.iter (function (WFRef (_, (_, F.Qvar k), _), qs) ->
-<<<<<<< HEAD:liquid/constraint.ml
-                                if Sol.mem srhs k || 
-                                   (Sol.mem slhs k && Sol.find s k != []) 
-                                then app_sol s k qs else Sol.replace s k [] 
-                              | _ -> ()) cs in
-=======
             let k' = Path.unique_ident_name_crash k in
             if Hashtbl.mem srhs k' || (Hashtbl.mem slhs k' && Sol.find s k != []) then BS.time "app_sol" (app_sol s s' l) k qs else Sol.replace s k [] | _ -> ()) cs in
   let l = BS.time "sort and compact" C.sort_and_compact !l in
   let _ = BS.time "elements" (List.iter (fun k -> Sol.replace s k (QSet.elements (Sol.find s' k)))) l in
->>>>>>> 107a49269db7d11c594954f9f775e76df154e56f:liquid/constraint.ml
   s
-                                         
+
 (**************************************************************)
 (****************** Debug/Profile Information *****************)
 (**************************************************************)
