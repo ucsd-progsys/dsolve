@@ -1,9 +1,10 @@
-open Parsetree
 open Predicate
+open Parsetree
 
 module C = Common
 module Le = Lightenv
 module F = Frame
+module Ft = Format
 
 let rel_star = [Ge; Le; Ne]
 let op_star = [Plus; Minus; Times; Div]
@@ -74,20 +75,18 @@ let ck_consistent patpred pred =
       | _ -> assert false in
     ck_pred_rec patpred pred
 
-let rec transl_patpred f env (v, nv) tymap constset p =
+let rec transl_patpred f g env (v, nv) tymap constset p =
   let untyped = ref false in
   let vm = ref [] in
+  let lookup x y = if C.maybe_bool x then C.maybe x else y in
   let rec transl_expr_rec pe =
     match pe.ppredpatexp_desc with
       | Ppredpatexp_int (n) ->
-          List.rev_map (fun p -> PInt p) n
+          List.rev_map (fun n -> PInt n) n
       | Ppredpatexp_any_int ->
-          List.rev_map (fun p -> PInt p) constset
+          List.rev_map (fun n -> PInt n) constset
       | Ppredpatexp_var (y) ->
-          let lookup =
-            if C.maybe_bool f then
-              C.maybe f
-            else (fun y -> map_key_by_name (fun p -> Path.name p = y) env) in
+          let lookup = lookup f (fun y -> map_key_by_name (fun p -> Path.name p = y) env) in
           let y = 
             C.fast_flap 
               (fun y -> let y = C.l_to_s y in if y = v then [Var nv] else List.rev_map (fun x -> Var x) (lookup y)) y in
@@ -99,11 +98,15 @@ let rec transl_patpred f env (v, nv) tymap constset p =
               untyped := true;
               if C.empty_list (Le.all env) then failwith "pattern instantiation empty" else ();
               List.rev_map (fun p -> Var p) (Le.all env)
+              (*let _ = Ft.printf "blabla@ %i@." (List.length y) in
+              let _ = List.rev_map (fun p -> Ft.printf "%a@." pprint_pexpr p) y in y*)
           end
-      | Ppredpatexp_funapp (f, es) ->
+      | Ppredpatexp_funapp (fnc, es) ->
           let es = List.rev_map transl_expr_rec es in
-          let f' = List.hd (find_key_by_name (C.l_to_s f) env) in
-          List.rev_map (fun e -> FunApp (f', e)) (C.rev_perms es)
+          let fnc' = List.hd ((lookup g (fun x -> find_key_by_name x env)) (C.l_to_s fnc)) in
+          let _ = if C.empty_list (C.rev_perms es) then assert false in (* DEBUG *)
+          let _ = if C.empty_list (List.hd (C.rev_perms es)) then assert false in (* DEBUG *)
+          List.rev_map (fun e -> FunApp (fnc', e)) (C.rev_perms es)
       | Ppredpatexp_binop (e1, ops, e2) ->
           let (e1, e2) = C.app_pr transl_expr_rec (e1, e2) in
           let es = List.rev_map (function [e1; e2] -> (fun o -> Binop (e1, o, e2)) | _ -> assert false)
@@ -140,42 +143,46 @@ let rec transl_patpred f env (v, nv) tymap constset p =
       | Ppredpat_or (p1, p2) ->
           permute_pred_pair (fun p1 p2 -> Or (p1, p2)) p1 p2
       | Ppredpat_forall (ps, q) ->
-          let (bs, ps) = List.split ps in
-          let bs = List.rev_map (fun b -> (Path.mk_ident b, dummy_frame)) bs in
-          let ps = List.combine (fst (List.split bs)) ps in
-          let env = Le.addn bs env in
-          List.rev_map (fun p -> Forall (ps, p))
-            (transl_patpred f env (v, nv) tymap constset q)
+          do_quantified f g (fun ps p -> Forall (ps, p)) ps q
       | Ppredpat_exists (ps, q) ->
-          let (bs, ps) = List.split ps in
-          let bs = List.rev_map (fun b -> (Path.mk_ident b, dummy_frame)) bs in
-          let ps = List.combine (fst (List.split bs)) ps in
-          let env = Le.addn bs env in
-          List.rev_map (fun p -> Exists (ps, p))
-            (transl_patpred f env (v, nv) tymap constset q)
+          do_quantified f g (fun ps p -> Exists (ps, p)) ps q
       | Ppredpat_iff (e, p) ->
           permute_pred_pair (fun e p -> Iff (e, p)) e p
       | Ppredpat_boolexp e ->
+          let _ = if C.empty_list (transl_expr_rec e) then assert false in
           List.rev_map (fun p -> Boolexp p) (transl_expr_rec e)
+  and do_quantified f g h ps q =
+    let (bs, ps) = List.split ps in
+    let bs' = List.rev_map (fun b -> (Path.mk_ident b, dummy_frame)) bs in
+    let paths = fst (List.split bs') in
+    let ps = List.combine paths ps in
+    let ps' = List.combine bs paths in
+    let env = Le.addn bs' env in
+    let f = if C.maybe_bool f then
+      (Some (fun x -> try [List.assoc x ps'] with Not_found -> (C.maybe f) x)) else f in
+    List.rev_map (h ps)
+      (transl_patpred f g env (v, nv) tymap constset q)
   and permute_pred_pair f e p =
     let (e, p) = C.app_pr transl_pred_rec (e, p) in
     List.rev_map (function [e; p] -> f e p | _ -> assert false) (C.rev_perms [p; e]) in
   let ts = C.rev_perms (List.rev_map (fun (v, t) -> env_by_type_f
     (fun n b -> if b && not(C.path_is_temp n) then Some (v, n) else None) t env) tymap) in 
-  let p' = C.fast_flap (fun t -> vm := t; transl_pred_rec p) ts in
+  let p' = if C.empty_list ts then transl_pred_rec p else C.fast_flap (fun t -> vm := t; transl_pred_rec p) ts in
   if !untyped then List.filter (ck_consistent p) p' else p'
 
 let dummy_path = Path.mk_ident ""
 
-let transl_patpred_map f pred = transl_patpred (Some f) Le.empty ("", dummy_path) [] [] pred
+let transl_patpred_map f g pred = transl_patpred (Some f) (Some g) Le.empty ("", dummy_path) [] [] pred
 
-let transl_patpred = transl_patpred None
+let transl_patpred_valu_map f g valu pred = transl_patpred (Some f) (Some g) Le.empty valu [] [] pred
 
-let transl_patpred_simple env pred = transl_patpred env ("", dummy_path) [] [] pred 
+let transl_patpred = transl_patpred None None
+
+let transl_patpred_simple env pred = transl_patpred env ("", dummy_path) [] [] pred
 
 let strip_bool = function Boolexp e -> e | _ -> assert false
 
-let transl_patpredexp_map f exp = List.rev_map strip_bool (transl_patpred_map f
+let transl_patpredexp_map f g exp = List.rev_map strip_bool (transl_patpred_map f g
   {ppredpat_desc = Ppredpat_boolexp exp; ppredpat_loc = Location.none})
 
 let expand_qualpat_about consts env mlenv (_, qual) =
@@ -183,9 +190,9 @@ let expand_qualpat_about consts env mlenv (_, qual) =
   let tys = List.rev_map (fun (a, ty) -> (a, F.fresh_without_vars mlenv (Typetexp.transl_type_scheme mlenv ty))) tys in
   List.rev_map (fun p -> (dummy_path, C.qual_test_var, p)) (transl_patpred env (v, C.qual_test_var) tys consts pat)
 
-let transl_pref env (v, p) = 
+let transl_pref f (v, p) = 
   let valu = C.qual_test_var in
-  [([], ([(Path.Pident C.dummy_id, valu, List.hd (transl_patpred env (v, valu) [] [] p))], []))]
+  [([], ([(Path.Pident C.dummy_id, valu, List.hd (transl_patpred_valu_map f f (v, valu) p))], []))]
 
 let rec pat_map_pred_subexps f p =
   let rec sub p = 

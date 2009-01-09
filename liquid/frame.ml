@@ -932,7 +932,7 @@ let rec build_uninterpreted name params = function
   | f ->
       let args = List.rev_map (fun p -> P.Var (Path.Pident p)) params in
       let v    = Path.mk_ident "v" in
-      let name = match args with [] -> Path.mk_persistent name | args -> Path.mk_ident name in
+      let name = Path.mk_persistent name in
       let pexp = match args with [] -> P.Var name | args -> P.FunApp (name, args) in
       let r    = const_refinement [(name, v, P.Atom (P.Var v, P.Eq, pexp))] in
         apply_refinement r f

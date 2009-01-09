@@ -60,7 +60,7 @@ let patf = ref ""
   *)
 
 let dump_qset ppf qs =
-  QS.iter (fun (nm, q) -> fprintf ppf "@[squalif@ %s(%s)@ :@ %s@.@]" nm "_V" q) qs
+  QS.iter (fun (nm, q) -> fprintf ppf "@[qualif@ %s(%s)@ :@ %s@.@]" nm "_V" q) qs
 
 let dump_deps ppf ds =
   List.iter (fun s -> fprintf ppf "@[mdep@ %s@]@." s) ds
@@ -97,6 +97,7 @@ let dump_default_qualifiers (str, env, menv, ifenv) deps qname =
   let ints = Qg.CS.elements ints in
   let ids = List.fold_left (fun s i -> Qg.IS.add (Ident.name i) s) ids (env_bound_ids ifenv) in
   let ids = Qg.IS.elements ids in
+  let ids = List.filter (fun s -> not(C.tmpstring s)) ids in
   (*let prgids = (a, b, ids, d) in 
   let ids = List.rev_map Path.mk_ident (Qg.IS.elements ids) in*)
 

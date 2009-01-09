@@ -73,7 +73,7 @@ let mk_measures env ms =
   bms := List.fold_left maybe_add empty ms
 
 let paths = ref []
-let set_paths pns = paths := pns
+let set_paths pns = paths := List.rev_append pns !paths
 let get_path s = List.assoc s !paths
 
 let mk_pred v mps (_, ps, ms) =
@@ -141,7 +141,7 @@ let proc_premeas env menv fenv ifenv quals =
   let (mnames, mcstrs) = (filter_names menv, filter_cstrs menv) in
   let subs = C.list_assoc_flip mnames in
   let quals = List.rev_map (C.app_snd (transl_qualpat subs)) quals in
-  let subpaths = List.map (fun (x, y) -> (Le.find_path x fenv, get_path y)) subs in
+  let subpaths = List.map (fun (x, y) -> (C.lookup_path x env, get_path y)) subs in
   let fenv = Le.map (transl_frame subpaths) fenv in
   let ifenv = Le.map (transl_frame subpaths) ifenv in
   let mcstrs = List.map (fun (c, (ps, cstr)) -> (c, (ps, map_exp_funs (C.sub_from_list subpaths) cstr))) mcstrs in

@@ -45,7 +45,7 @@ let rec translate_pframe dopt env fenv pf =
     try Env.lookup_type (transl_lident l) env 
       with Not_found -> try Env.lookup_type l env
         with Not_found -> raise (T.Error(Location.none, T.Unbound_type_constructor l)) in
-  let transl_pref = Qd.transl_pref fenv in
+  let transl_pref = Qd.transl_pref (fun x -> try [C.lookup_path x env] with Not_found -> [Path.mk_ident x]) in
   let rec transl_pframe_rec pf =
     match pf with
     | PFvar (a, subs, r) -> F.Fvar (getvar a, F.generic_level, subs, transl_pref r)
@@ -128,9 +128,9 @@ let map_constructor_args dopt env (name, mlname) (cname, args, cpred) =
     let l_assoc s = [List.assoc s argmap] in
       lookup3_f l_assoc (C.compose l_env (maybe_add_pref dopt)) l_env (fun x -> assert false) s in
   let ffun s = lookup (fun s -> let s = maybe_add_pref dopt (Path.name s) in C.lookup_path s env) s s in
-  let x = Qualdecl.transl_patpredexp_map fvar cpred in (* DEBUG *)
-  let _ = List.rev_map (fun p -> printf "%a@.@." P.pprint_pexpr p) x in (* DEBUG *)
-  let pred = P.pexp_map_funs ffun (C.ex_one "metavariable or ident set used in measure" (Qualdecl.transl_patpredexp_map fvar cpred)) in
+  (*let x = Qualdecl.transl_patpredexp_map fvar fvar cpred in (* DEBUG *)
+  let _ = List.rev_map (fun p -> printf "%a@.@." P.pprint_pexpr p) x in (* DEBUG *)*)
+  let pred = P.pexp_map_funs ffun (C.ex_one "metavariable or ident set used in measure" (Qualdecl.transl_patpredexp_map fvar fvar cpred)) in
   let args = List.map (function Some s -> Some (List.assoc s argmap) | None -> None) args in
     Mcstr(cname, (args, (maybe_add_pref dopt name, pred)))
 
@@ -157,7 +157,10 @@ let load_embed dopt ty psort env fenv ifenv menv =
 let axiom_prefix = "_axiom_"
 
 let load_axiom dopt env fenv ifenv menv name pred =
-  let pred = C.ex_one "patterns used in axiom decl" (Qualdecl.transl_patpred_simple fenv pred) in
+  let lu = lu (fun x -> [C.lookup_path (maybe_add_pref dopt x) env])
+    (fun x -> failwith (sprintf "Axiom@ %s@ uses@ unbound@ identifier@ %s" name x)) in
+  let pred = C.ex_one "patterns used in axiom decl" (Qualdecl.transl_patpred_map lu lu pred) in
+  (*let pred = C.ex_one "patterns used in axiom decl" (Qualdecl.transl_patpred_simple (Le.combine fenv ifenv) pred) in*)
   let fr = Builtins.rUnit "" (Path.mk_ident "") pred in 
   let add = Le.add (Path.mk_ident (axiom_prefix ^ name)) fr in
   let (fenv, ifenv) = match dopt with Some _ -> (fenv, add ifenv) | None -> (add fenv, ifenv) in

@@ -185,7 +185,7 @@ module Prover : PROVER =
       if is_select (Path.name p) then select_type
       else try List.assoc p builtins
         with Not_found -> try frame_to_type me (Le.find p env)
-          with Not_found -> printf "@[Warning:@ could@ not@ type@ function@ %s@ in@ tpz3@]" (Path.name p); unint
+          with Not_found -> printf "@[Warning:@ could@ not@ type@ function@ %s@ in@ tpz3@]" (Path.unique_name p); unint
 
 (***************************************************************************************)
 (********************** Vars ***********************************************************)

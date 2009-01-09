@@ -182,7 +182,7 @@ let all_ids sstr =
   ignore (visit_sstr (vids f) sstr); !ids
 
 let all_modules sstr =
-  let ismod s = (String.capitalize s = s) in
+  let ismod s = (String.capitalize s = s && s.[0] != '_') in
   let cut s = if String.contains s '.' then String.sub s 0 (String.index s '.') else s in
   let f p = 
     let s = (Path.name p) in

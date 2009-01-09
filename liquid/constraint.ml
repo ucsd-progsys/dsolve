@@ -161,6 +161,9 @@ let pprint_fenv ppf env =
 let pprint_fenv_shp ppf env =
   Le.iter (fun p f -> fprintf ppf "@[%s@ ::@ %a@]@." (C.path_name p) F.pprint (F.shape f)) (prune_background env); fprintf ppf "==="
 
+let pprint_raw_fenv shp ppf env =
+  Le.iter (fun p f -> fprintf ppf "@[%s@ ::@ %a@]@." (C.path_name p) F.pprint (if shp then F.shape f else f)) env; fprintf ppf "==="
+
 let pprint_fenv_pred so ppf env =
   (* match so with
   | Some s -> P.pprint ppf (P.big_and (environment_preds (solution_map s) env))
@@ -738,7 +741,10 @@ let instantiate_quals_in_env tr mlenv consts qs =
             List.iter (fun (_, _, q) -> if C.maybe_bool !q then () else q := Some qs) vs; qs
         | None -> 
             let _   = incr tr_misses in
-            let qs = C.fast_flap (Qualdecl.expand_qualpat_about consts env mlenv) qs in
+            (*let _ = printf "@[%i@ qualifiers@ at@ p3@]@." (List.length qs) in*)
+            let qs = C.fast_flap
+              (fun q -> try Qualdecl.expand_qualpat_about consts env mlenv q with Failure _ -> []) qs in
+            (*let _ = printf "@[%i@ qualifiers@ generated@ at@ p4@]@." (List.length qs) in*)
             let _ = TR.iter_path envl tr 
               (fun (_, _, quoi) ->
                 match !quoi with
@@ -925,13 +931,17 @@ let solve qs env consts cs =
   let cs = BS.time "splitting constraints" split cs in
   let max_env = List.fold_left 
     (fun env (v, c, _) -> Le.combine (frame_env c.lc_cstr) env) Le.empty cs in
+(*let _ = printf "%a@.@." (pprint_raw_fenv true) max_env; assert false in*)
   let cs = List.map (fun (v, c, cstr) -> (set_labeled_constraint c (make_val_env v max_env), cstr)) cs in
   (* let cs = if !Cf.esimple then 
                BS.time "e-simplification" (List.map esimple) cs else cs in *)
+let _ = printf "starting@ %i@." (List.length qs) in
   let qs = BS.time "instantiating quals" (instantiate_per_environment env consts cs) qs in
+let _ = printf "ending@ %i@." (List.length qs) in
   (*let qs = List.map (fun qs -> List.filter Qualifier.may_not_be_tautology qs) qs in*)
   let _ = C.cprintf C.ol_solve "@[%i@ instantiation@ queries@ %i@ misses@]@." (List.length cs) !tr_misses in
   let _ = dump_qualifiers (List.combine (strip_origins cs) qs) in
+(*let _ = assert false in*)
   let sri = BS.time "making ref index" make_ref_index cs in
   let s = BS.time "make initial sol" make_initial_solution (List.combine (strip_origins cs) qs) in
   (*let _ = JS.print stdout "JanStats"; flush stdout in*)

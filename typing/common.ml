@@ -36,8 +36,8 @@ end
 
 module PathMap = Map.Make(ComparablePath)
 
-let qual_test_var = Path.mk_ident "AA"
-let dummy_id = Ident.create ""
+let qual_test_var = Path.Pident (Ident.create_persistent "AA")
+let dummy_id = Ident.create_persistent ""
 
 let get_unique =
   let cnt = ref 0 in

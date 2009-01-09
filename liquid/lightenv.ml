@@ -85,7 +85,7 @@ let fold f m b =
   M.fold f m b
 
 let all m =
-  maplist (fun v r -> v) m
+  mapfilter (fun v r -> if not(C.tmpstring (Path.name v)) then Some v else None) m
 
 let combine e1 e2 =
   fold (fun p f e -> add p f e) e1 e2
