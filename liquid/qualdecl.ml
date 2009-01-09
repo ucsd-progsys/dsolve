@@ -5,6 +5,7 @@ module C = Common
 module Le = Lightenv
 module F = Frame
 module Ft = Format
+module BS = Bstats
 
 let rel_star = [Ge; Le; Ne]
 let op_star = [Plus; Minus; Times; Div]
@@ -75,6 +76,8 @@ let ck_consistent patpred pred =
       | _ -> assert false in
     ck_pred_rec patpred pred
 
+let ck_consistent p1 p2 = BS.time "check consistent" (ck_consistent p1) p2
+
 let rec transl_patpred f g env (v, nv) tymap constset p =
   let untyped = ref false in
   let vm = ref [] in
@@ -104,8 +107,8 @@ let rec transl_patpred f g env (v, nv) tymap constset p =
       | Ppredpatexp_funapp (fnc, es) ->
           let es = List.rev_map transl_expr_rec es in
           let fnc' = List.hd ((lookup g (fun x -> find_key_by_name x env)) (C.l_to_s fnc)) in
-          let _ = if C.empty_list (C.rev_perms es) then assert false in (* DEBUG *)
-          let _ = if C.empty_list (List.hd (C.rev_perms es)) then assert false in (* DEBUG *)
+          (*let _ = if C.empty_list (C.rev_perms es) then assert false in (* DEBUG *)
+          let _ = if C.empty_list (List.hd (C.rev_perms es)) then assert false in (* DEBUG *)*)
           List.rev_map (fun e -> FunApp (fnc', e)) (C.rev_perms es)
       | Ppredpatexp_binop (e1, ops, e2) ->
           let (e1, e2) = C.app_pr transl_expr_rec (e1, e2) in

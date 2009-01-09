@@ -24,6 +24,7 @@
 open Types
 
 module F = Format
+module BS = Bstats
 
 module StringMap = Map.Make(String)
 
@@ -108,7 +109,7 @@ let fast_append v v' =
   List.rev_append v v'
 
 let fast_flap f xs =
-  fast_flatten (List.rev_map f xs)
+  List.fold_left (fun xs x -> List.rev_append (f x) xs) [] xs
 
 let rec fast_unflat ys = function
   | x :: xs -> fast_unflat ([x] :: ys) xs

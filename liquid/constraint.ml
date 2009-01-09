@@ -935,9 +935,7 @@ let solve qs env consts cs =
   let cs = List.map (fun (v, c, cstr) -> (set_labeled_constraint c (make_val_env v max_env), cstr)) cs in
   (* let cs = if !Cf.esimple then 
                BS.time "e-simplification" (List.map esimple) cs else cs in *)
-let _ = printf "starting@ %i@." (List.length qs) in
   let qs = BS.time "instantiating quals" (instantiate_per_environment env consts cs) qs in
-let _ = printf "ending@ %i@." (List.length qs) in
   (*let qs = List.map (fun qs -> List.filter Qualifier.may_not_be_tautology qs) qs in*)
   let _ = C.cprintf C.ol_solve "@[%i@ instantiation@ queries@ %i@ misses@]@." (List.length cs) !tr_misses in
   let _ = dump_qualifiers (List.combine (strip_origins cs) qs) in
