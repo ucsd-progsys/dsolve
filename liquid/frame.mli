@@ -65,6 +65,8 @@ val generic_level: int
 val path_tuple: Path.t
 
 val find_by_name: t Lightenv.t -> string -> t
+val find_key_by_name: t Lightenv.t -> string -> Path.t
+val prune_env_funs: t Lightenv.t -> Path.t list
 
 val record_of_params: Path.t -> param list -> refinement -> t
 val tuple_of_frames: t list -> refinement -> t

@@ -178,7 +178,8 @@ module Prover : PROVER =
       try frame_to_type me fr
         with Not_found -> unint
 
-    let is_select = C.has_prefix "SELECT_"
+    let is_select = C.has_prefix "SELECT_0"
+    let select = Path.mk_persistent "SELECT_0"
     let select_type = Func [Int; Int]
  
     let getFunType me p env =
@@ -268,8 +269,8 @@ module Prover : PROVER =
       | P.Binop (e1,P.Times,e2) ->
           Z3.mk_mul me.c (Array.map (z3Exp env me) [|e1; e2|])
       | P.Binop (e1,P.Div,e2)   -> z3App env me div (List.map (z3Exp env me) [e1;e2])  
-      | P.Field (f, e)          -> (*z3App env me ("SELECT_"^(Path.unique_name f)) [(z3Exp env me e)]*)
-                                   (** REQUIRES: disjoint intra-module field names *) assert false
+      | P.Field (f, e)          -> z3App env me (Path.Papply (select, f)) [(z3Exp env me e)]
+                                   (** REQUIRES: disjoint intra-module field names *)
       | P.Ite (e1, e2, e3)      -> Z3.mk_ite me.c (z3Pred env me e1) (z3Exp env me e2) (z3Exp env me e3)
 
     and z3Pred env me p = 

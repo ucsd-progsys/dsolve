@@ -96,6 +96,8 @@ let find_key_by_name env s =
 
 let find_key_by_name env s = C.do_memo fkbn_memo (fun () -> find_key_by_name env s) () s
 
+let prune_env_funs env = Le.fold (fun p f xs -> (function Farrow _ -> xs | _ -> p :: xs) f) env []
+
 (**************************************************************)
 (**************** Constructed type accessors ******************)
 (**************************************************************)

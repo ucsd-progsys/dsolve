@@ -99,10 +99,9 @@ let rec transl_patpred f g env (v, nv) tymap constset p =
           try [Var (List.assoc y !vm)]
             with Not_found ->
               untyped := true;
-              if C.empty_list (Le.all env) then failwith "pattern instantiation empty" else ();
-              List.rev_map (fun p -> Var p) (Le.all env)
-              (*let _ = Ft.printf "blabla@ %i@." (List.length y) in
-              let _ = List.rev_map (fun p -> Ft.printf "%a@." pprint_pexpr p) y in y*)
+              let ids = F.prune_env_funs env in
+              if C.empty_list (F.prune_env_funs env) then failwith "pattern instantiation empty"
+              else List.rev_map (fun p -> Var p) ids
           end
       | Ppredpatexp_funapp (fnc, es) ->
           let es = List.rev_map transl_expr_rec es in
@@ -152,7 +151,7 @@ let rec transl_patpred f g env (v, nv) tymap constset p =
       | Ppredpat_iff (e, p) ->
           permute_pred_pair (fun e p -> Iff (e, p)) e p
       | Ppredpat_boolexp e ->
-          let _ = if C.empty_list (transl_expr_rec e) then assert false in
+          (*let _ = if C.empty_list (transl_expr_rec e) then assert false in*)
           List.rev_map (fun p -> Boolexp p) (transl_expr_rec e)
   and do_quantified f g h ps q =
     let (bs, ps) = List.split ps in

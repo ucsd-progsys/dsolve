@@ -150,10 +150,13 @@ let pprint_local_binding f ppf = function
       (Path.unique_name k) f v
   | _ -> ()
 
-let env_ignore_list = ["Pervasives"; "Open_"; "FP_"; "false"; "true"; "Array"; "String"; "Big"; "None"; "Some"; "Random"; "[]"; "::"]
+let env_ignore_list = ["Pervasives"; "Open_"; "FP_"; "false"; "true"; "Array"; "String"; "Big"; "None"; "Some"; "Random"; "[]"; "()"]
 let filter_le f e = Le.fold (fun p fr m -> if f p fr then Le.add p fr m else m) e Le.empty
 let prune_background env = 
-  filter_le (fun p _ -> List.for_all (fun pre -> not (C.has_prefix pre (C.path_name p))) env_ignore_list) env 
+  filter_le (fun p _ -> let p = Path.name p in
+                        List.for_all
+                        (fun pre -> not(C.has_prefix pre p)) env_ignore_list
+                        && not(C.tmpstring p)) env
 
 let pprint_fenv ppf env =
   Le.iter (fun p f -> fprintf ppf "@[%s@ ::@ %a@]@." (C.path_name p) F.pprint f) (prune_background env); fprintf ppf "==="
@@ -741,10 +744,9 @@ let instantiate_quals_in_env tr mlenv consts qs =
             List.iter (fun (_, _, q) -> if C.maybe_bool !q then () else q := Some qs) vs; qs
         | None -> 
             let _   = incr tr_misses in
-            (*let _ = printf "@[%i@ qualifiers@ at@ p3@]@." (List.length qs) in*)
             let qs = C.fast_flap
-              (fun q -> try Qualdecl.expand_qualpat_about consts env mlenv q with Failure _ -> []) qs in
-            (*let _ = printf "@[%i@ qualifiers@ generated@ at@ p4@]@." (List.length qs) in*)
+              (fun q -> try Qualdecl.expand_qualpat_about consts
+                              (prune_background env) mlenv q with Failure _ -> []) qs in
             let _ = TR.iter_path envl tr 
               (fun (_, _, quoi) ->
                 match !quoi with
@@ -899,9 +901,10 @@ let dump_solution s =
 let dump_qualifiers cqs =
   if C.ck_olev C.ol_insane then
     (printf "Raw@ generated@ qualifiers:@.";
-    List.iter (fun (c, qs) -> printf "%a: " (pprint_ref None) c;
-                              List.iter (fun q -> printf "%a " Qualifier.pprint q) qs;
-                              printf "@.@.") cqs)
+    List.iter (fun (c, qs) -> (*printf "%a: " (pprint_ref None) c;*)
+                              List.iter (fun q -> printf "%a@." Qualifier.pprint q) qs;
+                              if not(C.empty_list qs) then printf "@.") cqs;
+     printf "done.@.")
 
 (**************************************************************)
 (******************** Iterative - Refinement  *****************)
@@ -931,7 +934,8 @@ let solve qs env consts cs =
   let cs = BS.time "splitting constraints" split cs in
   let max_env = List.fold_left 
     (fun env (v, c, _) -> Le.combine (frame_env c.lc_cstr) env) Le.empty cs in
-(*let _ = printf "%a@.@." (pprint_raw_fenv true) max_env; assert false in*)
+(*  let _ = C.cprintf C.ol_insane "===@.Pruned Maximum Environment@.%a@.===@." pprint_fenv_shp max_env in
+  let _ = printf "%a@.@." (pprint_raw_fenv true) max_env; assert false in*)
   let cs = List.map (fun (v, c, cstr) -> (set_labeled_constraint c (make_val_env v max_env), cstr)) cs in
   (* let cs = if !Cf.esimple then 
                BS.time "e-simplification" (List.map esimple) cs else cs in *)

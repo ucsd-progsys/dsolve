@@ -23,6 +23,8 @@ let lu f f' s = try f s with Not_found -> f' s
 
 let lookup3_f f1 f2 f3 fail s = lu f1 (lu f2 (lu f3 fail)) s 
 
+let lookup2_f f1 f2 fail s = lu f1 (lu f2 fail) s
+
 let lookup2 f1 f2 s = lu f1 (lu f2 idf) s
 
 let lookup f y s = lu f (fun s -> y) s 
@@ -157,10 +159,11 @@ let load_embed dopt ty psort env fenv ifenv menv =
 let axiom_prefix = "_axiom_"
 
 let load_axiom dopt env fenv ifenv menv name pred =
-  let lu = lu (fun x -> [C.lookup_path (maybe_add_pref dopt x) env])
-    (fun x -> failwith (sprintf "Axiom@ %s@ uses@ unbound@ identifier@ %s" name x)) in
+  let lu =
+    lookup2_f (fun x -> [C.lookup_path (maybe_add_pref dopt x) env])
+              (fun x -> [F.find_key_by_name fenv x])
+              (fun x -> failwith (sprintf "Axiom@ %s@ uses@ unbound@ identifier@ %s" name x)) in
   let pred = C.ex_one "patterns used in axiom decl" (Qualdecl.transl_patpred_map lu lu pred) in
-  (*let pred = C.ex_one "patterns used in axiom decl" (Qualdecl.transl_patpred_simple (Le.combine fenv ifenv) pred) in*)
   let fr = Builtins.rUnit "" (Path.mk_ident "") pred in 
   let add = Le.add (Path.mk_ident (axiom_prefix ^ name)) fr in
   let (fenv, ifenv) = match dopt with Some _ -> (fenv, add ifenv) | None -> (add fenv, ifenv) in

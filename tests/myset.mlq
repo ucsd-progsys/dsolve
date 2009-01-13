@@ -3,6 +3,19 @@
    ./dsolve.py -I tests tests/mysetblah.ml
 *)
 
+measure of_list =
+  | [] -> empty
+  | x :: xs -> cup (sng x) (of_list xs)
+
+val empty: set
+val mem: x: 'a -> y: set -> {v: bool | v = mem x y}
+val eq: x: set -> y: set -> {v: bool | v = eq x y}
+val of_list: x: 'a list -> {v: set | v = of_list x}
+val cap: x: set -> y: set -> {v: set | v = cap x y}
+val cup: x: set -> y: set -> {v: set | v = cup x y}
+val sng: x: 'a -> {v: set | v = sng x}
+val mns: x: set -> y: set -> {v: set | v = mns x y}
+
 embed set for set
 
 axiom seq : forall (x: set, y: set. ((? eq x y) iff (forall (z: int. ((? mem z x) iff (? mem z y))))))
@@ -17,16 +30,3 @@ axiom mns : forall (x: int, y: set, z: set. (? mem x (mns y z) iff (? mem x y an
 
 axiom sng : forall (x: int, y: int. (? mem x (sng y) iff x = y))
 axiom eeq : forall (x: set, y: set. ((x = y) iff (forall (z: int. ((? mem z x) iff (? mem z y))))))
-
-measure of_list =
-  | [] -> empty
-  | x :: xs -> cup (sng x) (of_list xs)
-
-val empty: set
-val mem: x: 'a -> y: set -> {v: bool | v = mem x y}
-val eq: x: set -> y: set -> {v: bool | v = eq x y}
-val of_list: x: 'a list -> {v: set | v = of_list x}
-val cap: x: set -> y: set -> {v: set | v = cap x y}
-val cup: x: set -> y: set -> {v: set | v = cup x y}
-val sng: x: 'a -> {v: set | v = sng x}
-val mns: x: set -> y: set -> {v: set | v = mns x y}
