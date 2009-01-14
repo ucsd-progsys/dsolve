@@ -179,7 +179,7 @@ module Prover : PROVER =
         with Not_found -> unint
 
     let is_select = C.has_prefix "SELECT_0"
-    let select = Path.mk_persistent "SELECT_0"
+    let select = Path.mk_persistent "SELECT"
     let select_type = Func [Int; Int]
  
     let getFunType me p env =

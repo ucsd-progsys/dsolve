@@ -47,7 +47,10 @@ let rec translate_pframe dopt env fenv pf =
     try Env.lookup_type (transl_lident l) env 
       with Not_found -> try Env.lookup_type l env
         with Not_found -> raise (T.Error(Location.none, T.Unbound_type_constructor l)) in
-  let transl_pref = Qd.transl_pref (fun x -> try [C.lookup_path x env] with Not_found -> [Path.mk_ident x]) in
+  let transl_pref x = 
+    let r = Qd.transl_pref (fun x -> try [C.lookup_path x env] with Not_found -> [Path.mk_ident x]) x in
+    (*let _ = List.iter (fun (_, (r, _)) -> List.iter (fun r -> printf "%a@." Qualifier.pprint r) r) r in*)
+    r in
   let rec transl_pframe_rec pf =
     match pf with
     | PFvar (a, subs, r) -> F.Fvar (getvar a, F.generic_level, subs, transl_pref r)
@@ -143,8 +146,9 @@ let load_measure dopt env ((n, mn), cstrs) =
 let load_unint name ty env fenv ifenv menv =
   let id   = Ident.create name in
   let ty   = Typetexp.transl_type_scheme env ty in
+  let name = Path.Pident id in
   let env  = Env.add_value id {val_type = ty; val_kind = Val_reg} env in
-  let fenv = Le.add (Path.Pident id) (F.fresh_uninterpreted env ty name) fenv in
+  let fenv = Le.add name (F.fresh_uninterpreted env ty name) fenv in
     (env, fenv, ifenv, menv)
 
 let is_unint_decl = function
@@ -197,7 +201,7 @@ let load_rw dopt rw env menv' fenv decls =
   let (measnames, mlnames) = List.split (M.filter_names menv) in
   let measpaths = List.map Path.mk_ident measnames in
   let _ = M.set_paths (List.combine measnames measpaths) in 
-  let fs = List.combine measpaths (List.map2 (M.mk_uninterpreted env) measnames mlnames) in
+  let fs = List.combine measpaths (List.map2 (M.mk_uninterpreted env) measpaths mlnames) in
   (*we could also add an uninterp for the mlname if not in source*)
   let fenv = Le.addn fs fenv in
     (env, List.rev_append menv menv', fenv, ifenv)

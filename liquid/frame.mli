@@ -67,6 +67,7 @@ val path_tuple: Path.t
 val find_by_name: t Lightenv.t -> string -> t
 val find_key_by_name: t Lightenv.t -> string -> Path.t
 val prune_env_funs: t Lightenv.t -> Path.t list
+val prune_background: 'a Lightenv.t -> 'a Lightenv.t
 
 val record_of_params: Path.t -> param list -> refinement -> t
 val tuple_of_frames: t list -> refinement -> t
@@ -113,7 +114,7 @@ val fresh: Env.t -> type_expr -> t
 val fresh_without_vars: Env.t -> type_expr -> t
 val fresh_false: Env.t -> type_expr -> t
 val fresh_with_labels: Env.t -> type_expr -> t -> t
-val fresh_uninterpreted: Env.t -> type_expr -> string -> t
+val fresh_uninterpreted: Env.t -> type_expr -> Path.t -> t
 val uninterpreted_constructors: Env.t -> type_expr -> (string * t) list
 val instantiate: t Lightenv.t -> t -> t -> t
 val instantiate_qualifiers: (string * Path.t) list -> t -> t

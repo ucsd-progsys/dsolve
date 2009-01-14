@@ -1,3 +1,5 @@
+mdep Myhash
+
 qualif LEQ(v): ~A { <, >, <=, >=} v
 
 (* 

@@ -98,6 +98,13 @@ let find_key_by_name env s = C.do_memo fkbn_memo (fun () -> find_key_by_name env
 
 let prune_env_funs env = Le.fold (fun p f xs -> (function Farrow _ -> xs | _ -> p :: xs) f) env []
 
+let env_ignore_list = ["Pervasives"; "Open_"; "FP_"; "false"; "true"; "Array"; "String"; "Big"; "None"; "Some"; "Random"; "[]"; "()"]
+
+let prune_background env = Le.filter
+  (fun p _ -> 
+    let p = Path.name p in
+    List.for_all (fun pre -> not(C.has_prefix pre p)) env_ignore_list && not(C.tmpstring p)) env
+
 (**************************************************************)
 (**************** Constructed type accessors ******************)
 (**************************************************************)
@@ -934,7 +941,6 @@ let rec build_uninterpreted name params = function
   | f ->
       let args = List.rev_map (fun p -> P.Var (Path.Pident p)) params in
       let v    = Path.mk_ident "v" in
-      let name = Path.mk_persistent name in
       let pexp = match args with [] -> P.Var name | args -> P.FunApp (name, args) in
       let r    = const_refinement [(name, v, P.Atom (P.Var v, P.Eq, pexp))] in
         apply_refinement r f
@@ -953,7 +959,7 @@ let mk_unint_constructor f n ps =
 let uninterpreted_constructors env ty =
   let f = fresh_without_vars env ty in
     match unfold f with
-      | Fsum (_, _, cs, _) -> List.map (fun (_, (n, ps)) -> (n, mk_unint_constructor f n ps)) cs
+      | Fsum (_, _, cs, _) -> List.map (fun (_, (n, ps)) -> (n, mk_unint_constructor f (Path.mk_persistent n) ps)) cs
       | _                  -> invalid_arg "uninterpreted_constructors called with non-sum type"
 
 (**************************************************************)

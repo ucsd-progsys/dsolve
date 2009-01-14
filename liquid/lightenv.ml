@@ -54,6 +54,9 @@ let mapfilter f env =
 let add a m =
   M.add a m
 
+let filter f env =
+  M.fold (fun p fr m -> if f p fr then add p fr m else m) env M.empty
+
 let empty = M.empty
 
 let addn items m =

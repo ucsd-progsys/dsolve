@@ -130,7 +130,7 @@ let add_uninterpreted_constructors tenv fenv (id, td) =
 
 let process_sourcefile env fenv fname =
   let bname = Misc.chop_extension_if_any fname in
-  let (qname, iname) = (bname ^ ".hquals", bname ^ ".mlq") in
+  let (qname, iname) = (bname ^ ".quals", bname ^ ".mlq") in
   try
     (* We need to pull out uninterpreted functions from the MLQ in order to typecheck. *)
     let vals         = MLQ.parse std_formatter iname in
