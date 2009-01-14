@@ -32,7 +32,7 @@ def runtest(filep, expected_status):
   collect = int(filep[1])
   lqualifs = common.str_to_bool(filep[2])
   include = filep[3]
-  status = dsolve.gen_quals(file, True, lqualifs, collect, "-I " + include)
+  status = dsolve.gen_quals(file, True, "-I " + include)
   if status != 0: 
     print "Qualgen failed on %s" % file
     sys.exit(2)

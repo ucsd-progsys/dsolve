@@ -24,14 +24,15 @@ import sys, os, os.path, common
 d_pats= "default_patterns"
 solve = "./liquid.opt -dframes".split()
 flags = []
-tname = "dsolve.scratch"
+tname = "/tmp/qual.scratch"
+tname2 = "/tmp/summary.scratch"
 null  = open("/dev/null", "w")
 
 def cat_files(files,outfile):
   os.system("rm -f %s" % outfile)
   for f in files: os.system("cat %s 1>> %s 2> /dev/null" % (f,outfile))
 
-def gen_quals(src,bare,lq,col,flags):
+def gen_quals(src,bare,flags):
   bname = src[:-3]
   (fname,qname,hname) = (bname+".ml", bname+".quals", bname+".hquals")
   os.system("rm -f %s" % qname)
@@ -39,14 +40,10 @@ def gen_quals(src,bare,lq,col,flags):
     os.system("cp -f %s %s" % (hname, tname))
   else:
     cat_files([hname,d_pats],tname)
-  if lq:
-    lq = "-lqualifs"
-  else:
-    lq = ""
-  gen   = ("./liquid.opt %s %s -no-anormal -collect %d -dqualifs" % (lq, flags, col)).split()
-  qfile = open(qname, "w")
-  succ = common.logged_sys_call(gen + [tname, fname])
-  qfile.close()
+  gen  = ("./liquid.opt %s -summarize" % (flags)).split()
+  succ = common.logged_sys_call(gen + [tname2, fname])
+  split= ("./depsplit %s %s %s" % (tname, tname2, qname)).split()
+  common.logged_sys_call(split)
   return succ
 
 def solve_quals(file,bare,time,quiet,flags):
@@ -79,7 +76,7 @@ def main():
     sys.argv.pop(1)
   flags = sys.argv[1:-1]
   fn = sys.argv[len(sys.argv) - 1]
-  gen_succ = gen_quals(fn, bare, False, 4, include)
+  gen_succ = gen_quals(fn, bare, include)
   if (gen_succ != 0):
     print "Qualifier generation failed"
     sys.exit(gen_succ)

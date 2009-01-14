@@ -1,0 +1,12 @@
+#!/bin/bash
+
+t1=/tmp/dsolve1.scratch
+t2=/tmp/dsolve2.scratch
+
+d=$((`grep -c mdep $1`))
+l=$((`wc -l $1 | cut -d " " -f 1 -`))
+c=$(($l-$d)) 
+
+head -n $d $1 > $t1
+tail -n $c $1 > $t2
+cat $t1 $2 $t2 > $3
