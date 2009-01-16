@@ -57,6 +57,9 @@ let add a m =
 let filter f env =
   M.fold (fun p fr m -> if f p fr then add p fr m else m) env M.empty
 
+let minus e1 e2 =
+  filter (fun p _ -> not(M.mem p e2)) e1
+
 let empty = M.empty
 
 let addn items m =

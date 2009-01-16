@@ -25,8 +25,6 @@ let lookup3_f f1 f2 f3 fail s = lu f1 (lu f2 (lu f3 fail)) s
 
 let lookup2_f f1 f2 fail s = lu f1 (lu f2 fail) s
 
-let lookup2 f1 f2 s = lu f1 (lu f2 idf) s
-
 let lookup f y s = lu f (fun s -> y) s 
 
 let maybe_add_pref dopt s = match dopt with None -> s | Some d -> C.append_pref d s
@@ -165,7 +163,7 @@ let axiom_prefix = "_axiom_"
 let load_axiom dopt env fenv ifenv menv name pred =
   let lu =
     lookup2_f (fun x -> [C.lookup_path (maybe_add_pref dopt x) env])
-              (fun x -> [F.find_key_by_name fenv x])
+              (fun x -> [Le.find_path x fenv])
               (fun x -> failwith (sprintf "Axiom@ %s@ uses@ unbound@ identifier@ %s" name x)) in
   let pred = C.ex_one "patterns used in axiom decl" (Qualdecl.transl_patpred_map lu lu pred) in
   let fr = Builtins.rUnit "" (Path.mk_ident "") pred in 
@@ -222,9 +220,9 @@ let load_dep_sigs env fenv mlqs =
   let rw dname env fenv ifenv =
     let modname s = C.append_pref dname s in
     let env_lookup s = let s = modname s in C.lookup_path s env in
-    let lfun s = lookup env_lookup s (Path.name s) in
-    let lvar s = lookup env_lookup s (Path.name s) in
-    let fenv = Le.fold (fun p fr e -> Le.add p (F.map_refexprs (M.rewrite_refexpr (C.app_snd (sub_pred lvar lfun))) 
+    let fenv_lookup s = let s = modname s in Le.find_path s fenv in
+    let lu s = lookup2_f env_lookup fenv_lookup (fun _ -> s) (Path.name s) in
+    let fenv = Le.fold (fun p fr e -> Le.add p (F.map_refexprs (M.rewrite_refexpr (C.app_snd (sub_pred lu lu))) 
                        (F.label_like fr fr)) e) ifenv fenv in
       (fenv, Le.empty) in
   List.fold_left (fun (env, menv, fenv, _) (mlq, dname) -> load_rw (Some dname) (rw dname) env menv fenv mlq) (env, [], fenv, Le.empty) mlqs

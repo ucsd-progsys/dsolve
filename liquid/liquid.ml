@@ -93,10 +93,10 @@ let load_dep_mlqfiles bname deps env fenv mlqenv =
   let mlqs = C.maybe_list mlqs in
     MLQ.load_dep_sigs env fenv mlqs
 
-let dump_summary bname (str, env, menv, ifenv) qname = 
+let dump_summary bname (str, env, menv, ifenv, fenv) qname = 
   let deps = Qualgen.all_modules str in
-  (*let (tymap, tyset, idset, intset) = Qualgen.bound_ids str in*) 
-  let (env, emenv, efenv, _) = load_dep_mlqfiles bname deps env Le.empty Le.empty in
+  let (env, emenv, efenv, _) = load_dep_mlqfiles bname deps env fenv Le.empty in
+  let efenv = Le.minus efenv fenv in
   let (menv, ifenv) = (List.rev_append menv emenv, Le.combine efenv ifenv) in
   let ifenv = MLQ.scrub_axioms ifenv in
     Qdump.dump_default_qualifiers (str, env, menv, ifenv) deps qname
@@ -140,7 +140,7 @@ let process_sourcefile env fenv fname =
     let fenv                  = List.fold_left (add_uninterpreted_constructors env) fenv (Env.types env) in
     let (env, menv, fenv, mlqenv) = MLQ.load_local_sig env fenv vals in
       if C.maybe_bool !summarize then
-        dump_summary bname (str, env, menv, mlqenv) (C.maybe !summarize)
+        dump_summary bname (str, env, menv, mlqenv, fenv) (C.maybe !summarize)
       else
         let (deps, consts, tyquals)  = load_qualfile std_formatter qname in
         let (env, menv', fenv, _)    = load_dep_mlqfiles bname deps env fenv mlqenv in

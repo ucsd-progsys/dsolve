@@ -1,5 +1,3 @@
-let ss = Myset.eq
-
 let rec append xs ys =
   match xs with
   | []          -> ys

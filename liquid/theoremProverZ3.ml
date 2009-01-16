@@ -183,7 +183,7 @@ module Prover : PROVER =
     let select_type = Func [Int; Int]
  
     let getFunType me p env =
-      if is_select (Path.name p) then select_type
+      if is_select (Path.unique_name p) then select_type
       else try List.assoc p builtins
         with Not_found -> try frame_to_type me (Le.find p env)
           with Not_found -> printf "@[Warning:@ could@ not@ type@ function@ %s@ in@ tpz3@]" (Path.unique_name p); unint
@@ -240,7 +240,7 @@ module Prover : PROVER =
 
     and z3App env me p zes =
       let k   = List.length zes in
-      let ft  = match getFunType me p env with Func ts -> ts | _ -> assert false in
+      let ft  = match getFunType me p env with Func ts -> ts | f -> failwith (sprintf "%s@ ::@ %s" (Path.unique_name p) (type_to_string f)) in
       let cf  = z3Fun env me p (Func ft) k in
       let zes = z3Cast env me (zes, ft) in
       Z3.mk_app me.c cf (Array.of_list zes)
