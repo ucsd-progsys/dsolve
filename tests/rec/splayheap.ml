@@ -74,6 +74,49 @@ let rec merge h t =
       let b'       = merge tb b in
       T (x, a', b') 
 
+let rec deleteMin t = 
+  match t with
+  | E ->
+      myfail "empty"
+  | T (x, E, b) ->
+      b
+  | T (y, T (x, E, b), c) ->
+      T (y, b, c)
+  | T (y, T (x, a, b), c) ->
+      T (x, deleteMin a, T (y, b, c))
+
+let rec deleteMin2 t = 
+  match t with
+  | E ->
+      myfail "empty"
+  | T (x, E, b) ->
+      (x, b)
+  | T (y, T (x, E, b), c) ->
+      (x, T (y, b, c))
+  | T (y, T (x, a, b), c) ->
+      let (r, a') = deleteMin2 a in
+      (r, T (x, a', T (y, b, c)))
+
+let rec findMin t = 
+  match t with
+  | E ->
+      myfail "empty"
+  | T (x, E, b) -> 
+      x
+  | T (x, a, b) -> 
+      findMin a
+ 
+let rec findMin2 t = 
+  match t with
+  | E -> 
+      myfail "empty"
+  | T (x, E, b) -> 
+      (x, T (x, E, b))
+  | T (x, a, b) ->
+      let (x', a') = findMin2 a in
+      (x', T (x, a', b))
+
+(*
 let rec findMin t = 
   match t with
   | E -> 
@@ -120,6 +163,7 @@ let rec deleteMin2 t =
            | T (_, _, _) -> 
                let (m, a'') = deleteMin2 a' in
                (m, T (x', a'', T (x, b, c)))))
+*)
 
 let rec app x ys zs = 
   match ys with

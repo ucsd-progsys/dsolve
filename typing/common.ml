@@ -173,12 +173,18 @@ let array_to_index_list a =
   List.rev (snd 
     (Array.fold_left (fun (i,rv) v -> (i+1,(i,v)::rv)) (0,[]) a))
 
+let rec pprint_many brk s f ppf = function
+  | []     -> ()
+  | x::[]  -> F.fprintf ppf "%a" f x
+  | x::xs' -> ((if brk then F.fprintf ppf "%a %s@ " f x s else F.fprintf ppf "%a %s" f x s); 
+               pprint_many brk s f ppf xs')
+
 let pprint_list sepstr pp =
   (fun ppf -> Oprint.print_list pp
      (fun ppf -> F.fprintf ppf "%s@;<1 2>" sepstr) ppf)
 
 let pprint_str ppf s =
-  Format.fprintf ppf "%s" s
+  F.fprintf ppf "%s" s
 
 let rec is_unique xs =
   match xs with
@@ -260,9 +266,24 @@ let maybe_bool = function
 let all_defined xs =
   List.for_all maybe_bool xs
 
+let has_prefix pre s =
+  try String.sub s 0 (String.length pre) = pre
+    with Invalid_argument _ -> false
+
 let sub_from_list subs s =
   try List.assoc s subs with Not_found -> s
 
+let strip_meas s =
+  let start = try 1 + (String.rindex s '.') with Not_found -> 0 in
+  try 
+    if String.sub s start 6 = "_meas_" then 
+      let pre  = String.sub s 0 start in
+      let post = String.sub s (start + 6) ((String.length s) - start - 6) in
+      pre ^ post
+    else s
+  with Invalid_argument _ -> s
+
+(*
 let sub_from s c =
   try 
     let x = String.rindex s c in
@@ -275,13 +296,12 @@ let sub_to_r s c =
 
 let strip_meas_whole s =
   if !Clflags.dsmeasures then s else
-  try if String.sub s 0 6 = "_meas_" then 
+  try 
+    let start = try String.rindex s '.'
+    
+    if String.sub s 0 6 = "_meas_" then 
     String.sub s 6 (String.length s - 6) 
   else s with Invalid_argument _ -> s 
-
-let has_prefix pre s =
-  try String.sub s 0 (String.length pre) = pre
-    with Invalid_argument _ -> false
 
 let rw_suff f s c =
   let suff = f (sub_from s c) in
@@ -289,6 +309,7 @@ let rw_suff f s c =
 
 let strip_meas s =
   rw_suff strip_meas_whole s '.'
+*)
 
 let append_pref p s =
   (p ^ "." ^ s)
@@ -474,8 +495,8 @@ let write_to_file f s =
 (**************************************************************************)
 
 let fsprintf f p = 
-  Format.fprintf Format.str_formatter "@[%a@]" f p;
-  Format.flush_str_formatter ()
+  F.fprintf F.str_formatter "@[%a@]" f p;
+  F.flush_str_formatter ()
 (*
 let pred_to_string p = 
   fsprintf Predicate.pprint p
@@ -491,7 +512,7 @@ let set_cnt f s =
    List.length (f s)
 
 (******************************************************************************)
-(********************************* Formatting *********************************)
+(********************************* Fting *********************************)
 (******************************************************************************)
 
 let space ppf =
@@ -507,7 +528,7 @@ let rec same_length l1 l2 = match l1, l2 with
 (******************************************************************************)
 
 open Gc
-open Format
+(* open Format *)
 
 let pprint_gc s =
   (*printf "@[Gc@ Stats:@]@.";
@@ -516,10 +537,10 @@ let pprint_gc s =
   printf "@[major@ words:@ %f@]@." s.major_words;*)
   (*printf "@[total allocated:@ %fMB@]@." (floor ((s.major_words +. s.minor_words -. s.promoted_words) *. (4.0) /. (1024.0 *. 1024.0)));*)
 
-  printf "@[total allocated:@ %fMB@]@." (floor ((allocated_bytes ()) /. (1024.0 *. 1024.0)));
-  printf "@[minor@ collections:@ %i@]@." s.minor_collections;
-  printf "@[major@ collections:@ %i@]@." s.major_collections;
-  printf "@[heap@ size:@ %iMB@]@." (s.heap_words * 4 / (1024 * 1024));
+  F.printf "@[total allocated:@ %fMB@]@." (floor ((allocated_bytes ()) /. (1024.0 *. 1024.0)));
+  F.printf "@[minor@ collections:@ %i@]@." s.minor_collections;
+  F.printf "@[major@ collections:@ %i@]@." s.major_collections;
+  F.printf "@[heap@ size:@ %iMB@]@." (s.heap_words * 4 / (1024 * 1024));
   (*printf "@[heap@ chunks:@ %i@]@." s.heap_chunks;
   (*printf "@[live@ words:@ %i@]@." s.live_words;
   printf "@[live@ blocks:@ %i@]@." s.live_blocks;
@@ -527,11 +548,11 @@ let pprint_gc s =
   printf "@[free@ blocks:@ %i@]@." s.free_blocks;
   printf "@[largest@ free:@ %i@]@." s.largest_free;
   printf "@[fragments:@ %i@]@." s.fragments;*)*)
-  printf "@[compactions:@ %i@]@." s.compactions;
+  F.printf "@[compactions:@ %i@]@." s.compactions;
   (*printf "@[top@ heap@ words:@ %i@]@." s.top_heap_words*) ()
 
 let dump_gc s =
-  printf "@[%s@]@." s;
+  F.printf "@[%s@]@." s;
   pprint_gc (Gc.quick_stat ())
 
 (* ************************************************************* *)

@@ -2,6 +2,21 @@
   | True of 'a
   | False of 'b
 
+
+let inc x = x + 1
+
+let rec maker n = 
+  if n < 0 then [] else n::(maker (n-1))
+
+let _ = inc 10
+
+
+let _ = maker (read_int ())
+
+let bob x = [1;x;2;3;4;1]
+
+let _ = bob
+
 let rec len xs = 
   match xs with 
   | [] -> 0

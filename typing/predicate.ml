@@ -70,6 +70,16 @@ let pprint_rel = function
   | Lt -> "<"
   | Le -> "<="
 
+let strip_meas s =
+  let start = try 1 + (String.rindex s '.') with Not_found -> 0 in
+  try 
+    if String.sub s start 6 = "_meas_" then 
+      let pre  = String.sub s 0 start in
+      let post = String.sub s (start + 6) ((String.length s) - start - 6) in
+      pre ^ post
+    else s
+  with Invalid_argument _ -> s
+
 let rec pprint_pexpr ppf = function
   | PInt n ->
       if n < 0 then fprintf ppf "(0 - %d)" (-n)
@@ -77,18 +87,18 @@ let rec pprint_pexpr ppf = function
   | Var x ->
       fprintf ppf "%s" (C.path_name x)
   | FunApp (f, pexp) ->
-      fprintf ppf "@[(%s@ %a)@]" (C.strip_meas (C.path_name f)) (C.pprint_list " " pprint_pexpr) pexp
+      fprintf ppf "@[(%s %a)@]" (strip_meas (C.path_name f)) (Common.pprint_many false "" pprint_pexpr) pexp
   | Binop (p, op, q) ->
       let opstr = match op with
         | Plus -> "+"
         | Minus -> "-"
         | Times -> "*"
-				| Div -> "/"
-      in fprintf ppf "@[(%a@ %s@ %a)@]" pprint_pexpr p opstr pprint_pexpr q
+        | Div -> "/"
+      in fprintf ppf "@[(%a %s %a)@]" pprint_pexpr p opstr pprint_pexpr q
   | Field (f, pexp) ->
       fprintf ppf "@[%a.%s@]" pprint_pexpr pexp (C.path_name f)
   | Ite (t, e1, e2) ->
-      fprintf ppf "@[if@ (%a)@ then@ (%a)@ else@ (%a)@]" pprint t pprint_pexpr e1 pprint_pexpr e2
+      fprintf ppf "@[if (%a) then (%a) else (%a)@]" pprint t pprint_pexpr e1 pprint_pexpr e2
 
 and pprint ppf = function
   | True ->
@@ -98,7 +108,7 @@ and pprint ppf = function
   | Iff (px, q) ->
       fprintf ppf "@[(%a@ iff@;<1 2>%a)@]" pprint px pprint q
   | Not p ->
-      fprintf ppf "@[(-.@ %a)@]" pprint p
+      fprintf ppf "@[(-. %a)@]" pprint p
   | And (p, q) ->
       fprintf ppf "@[(%a@ and@;<1 2>@;<1 2>%a)@]" pprint p pprint q
   | Or (p, q) ->
@@ -106,11 +116,11 @@ and pprint ppf = function
   | Implies (p, q) ->
       fprintf ppf "@[(%a ->@;<1 2>%a)@]" pprint p pprint q
   | Forall (p, q) ->
-      let p = List.map (fun (n, t) -> (C.path_name n) ^ ": " ^ (C.prover_t_to_s t)) p in
-      fprintf ppf "@[(forall@ (%a.@ %a))@]" (C.pprint_list ", " C.pprint_str) p pprint q
+      let p = List.map (fun (n, t) -> (Common.path_name n) ^ ": " ^ (C.prover_t_to_s t)) p in
+      fprintf ppf "@[(forall@ (%a.@ %a))@]" (Common.pprint_many false "," Common.pprint_str) p pprint q
   | Exists (p, q) ->
-      let p = List.map (fun (n, t) -> (C.path_name n) ^ ": " ^ (C.prover_t_to_s t)) p in
-      fprintf ppf "@[(exists@ (%a.@ %a))@]" (C.pprint_list ", " (C.pprint_str)) p pprint q
+      let p = List.map (fun (n, t) -> (Common.path_name n) ^ ": " ^ (C.prover_t_to_s t)) p in
+      fprintf ppf "@[(exists@ (%a.@ %a))@]" (Common.pprint_many false "," (Common.pprint_str)) p pprint q
   | Boolexp e ->
       fprintf ppf "@[(? (%a))@]" pprint_pexpr e
 
@@ -373,3 +383,9 @@ let is_taut = function
   | Atom(e1, Eq, e2) -> e1 = e2
   | True -> true
   | _ -> false
+
+let is_contra = 
+  let falses = [Not True; Atom (PInt 0, Eq, PInt 1); Atom (PInt 1, Eq, PInt 0)] in
+  fun p -> List.mem p falses 
+
+

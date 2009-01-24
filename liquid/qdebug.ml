@@ -65,18 +65,18 @@ let rec pprint_expression ppf exp =
       | Pexp_apply (e1, exps) ->
           let pprint_arg ppf (_, e) =
             fprintf ppf "(%a)" pprint_expression e
-          in fprintf ppf "@[(%a@;<1 2>%a)@]" pprint_expression e1 (pprint_list "" pprint_arg) exps
+          in fprintf ppf "@[(%a@;<1 2>%a)@]" pprint_expression e1 (pprint_many false "" pprint_arg) exps
       | Pexp_let (recf, binds, e2) ->
           fprintf ppf "@[let%a@ %a@;<1 0>in@;<1 2>%a@]"
                pprint_rec recf pprint_binds binds pprint_expression e2
       | Pexp_array es ->
-          fprintf ppf "@[[|%a|]@]" (pprint_list ";" pprint_expression) es
+          fprintf ppf "@[[|%a|]@]" (pprint_many false ";" pprint_expression) es
       | Pexp_sequence(e1, e2) ->
-          fprintf ppf "@[%a@]" (pprint_list ";" pprint_expression) [e1; e2]
+          fprintf ppf "@[%a@]" (pprint_many false ";" pprint_expression) [e1; e2]
       | Pexp_tuple(es) ->
-          fprintf ppf "@[(%a)@]" (pprint_list "," pprint_expression) es
+          fprintf ppf "@[(%a)@]" (pprint_many false "," pprint_expression) es
       | Pexp_record (bindings, None) ->
-          fprintf ppf "@[{%a}@]" (pprint_list ";" pprint_binding) bindings
+          fprintf ppf "@[{%a}@]" (pprint_many false ";" pprint_binding) bindings
       | Pexp_field (e, lid) ->
           fprintf ppf "@[%a.%s@]" pprint_expression e (print_id lid)
       | Pexp_assertfalse ->

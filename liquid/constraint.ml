@@ -389,7 +389,7 @@ let split cs =
   C.expand (fun c -> 
       match c.lc_cstr with 
       | SubFrame _ -> split_sub c 
-      | WFFrame _ -> split_wf c) cs []
+      | WFFrame _  -> split_wf c) cs []
 
 (**************************************************************)
 (********************* Constraint Indexing ********************) 
@@ -595,9 +595,6 @@ let refine_simple s r1 k2 =
   let q2s' = List.filter (fun q -> QSet.mem q q1s) q2s in
   refine_sol_update s k2 q2s q2s'
 
-let pfalse = P.Not (P.True)
-
-let falses = [pfalse; P.Atom (P.PInt 0, P.Eq, P.PInt 1); P.Atom (P.PInt 1, P.Eq, P.PInt 0)]
 
 let qual_wf sm env subs q =
   BS.time "qual_wf" 
@@ -620,7 +617,7 @@ let check_tp senv lhs_ps x2 =
   let dump s p = 
     let p = List.map (fun p -> P.big_and (List.filter (function P.Atom(p, P.Eq, p') when p = p' -> false | _ -> true) (P.conjuncts p))) p in
     let p = List.filter (function P.True -> false | _ -> true) p in
-    C.cprintf C.ol_dump_prover "@[%s:@ %a@]@." s (C.pprint_list " " P.pprint) p in
+    C.cprintf C.ol_dump_prover "@[%s:@ %a@]@." s (C.pprint_many false " " P.pprint) p in
   let dump s p = if C.ck_olev C.ol_dump_prover then dump s p else () in
   let _ = dump "Assert" lhs_ps in
   let _ = if C.ck_olev C.ol_dump_prover then dump "Ck" (snd (List.split x2)) in
@@ -655,10 +652,10 @@ let refine_tp senv s env g r1 sub2s k2 =
   let rhs_qps = rhs_cands sm sub2s k2 in
 (*  let _       = check_env_bindings senv lhs_ps (List.map snd rhs_qps) in *)
   let rhs_qps' =
-    if List.exists (fun p -> List.mem p falses) lhs_ps 
+    if List.exists P.is_contra lhs_ps 
     then (stat_matches := !stat_matches + (List.length rhs_qps); rhs_qps) 
     else
-      let rhs_qps = List.filter (fun (_,p) -> not (List.mem p falses)) rhs_qps in
+      let rhs_qps = List.filter (fun (_,p) -> not (P.is_contra p)) rhs_qps in
       let lhsm    = List.fold_left (fun pm p -> PM.add p true pm) PM.empty lhs_ps in
       let (x1,x2) = List.partition (fun (_,p) -> PM.mem p lhsm) rhs_qps in
       let _       = stat_matches := !stat_matches + (List.length x1) in 
@@ -807,7 +804,7 @@ let make_initial_solution cs =
   let l = BS.time "sort and compact" C.sort_and_compact !l in
   let _ = BS.time "elements" (List.iter (fun k -> Sol.replace s k (QSet.elements (Sol.find s' k)))) l in
   s
-                                         
+
 (**************************************************************)
 (****************** Debug/Profile Information *****************)
 (**************************************************************)
