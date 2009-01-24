@@ -75,9 +75,9 @@ let rec pprint_pexpr ppf = function
       if n < 0 then fprintf ppf "(0 - %d)" (-n)
       else fprintf ppf "%d" n
   | Var x ->
-      fprintf ppf "%s" (Common.path_name x)
+      fprintf ppf "%s" (C.path_name x)
   | FunApp (f, pexp) ->
-      fprintf ppf "@[(%s@ %a)@]" (C.strip_meas (Path.unique_name f)) (Common.pprint_list " " pprint_pexpr) pexp
+      fprintf ppf "@[(%s@ %a)@]" (C.strip_meas (C.path_name f)) (C.pprint_list " " pprint_pexpr) pexp
   | Binop (p, op, q) ->
       let opstr = match op with
         | Plus -> "+"
@@ -86,7 +86,7 @@ let rec pprint_pexpr ppf = function
 				| Div -> "/"
       in fprintf ppf "@[(%a@ %s@ %a)@]" pprint_pexpr p opstr pprint_pexpr q
   | Field (f, pexp) ->
-      fprintf ppf "@[%a.%s@]" pprint_pexpr pexp (Common.path_name f)
+      fprintf ppf "@[%a.%s@]" pprint_pexpr pexp (C.path_name f)
   | Ite (t, e1, e2) ->
       fprintf ppf "@[if@ (%a)@ then@ (%a)@ else@ (%a)@]" pprint t pprint_pexpr e1 pprint_pexpr e2
 
@@ -106,13 +106,82 @@ and pprint ppf = function
   | Implies (p, q) ->
       fprintf ppf "@[(%a ->@;<1 2>%a)@]" pprint p pprint q
   | Forall (p, q) ->
-      let p = List.map (fun (n, t) -> (Common.path_name n) ^ ": " ^ (C.prover_t_to_s t)) p in
-      fprintf ppf "@[(forall@ (%a.@ %a))@]" (Common.pprint_list ", " Common.pprint_str) p pprint q
+      let p = List.map (fun (n, t) -> (C.path_name n) ^ ": " ^ (C.prover_t_to_s t)) p in
+      fprintf ppf "@[(forall@ (%a.@ %a))@]" (C.pprint_list ", " C.pprint_str) p pprint q
   | Exists (p, q) ->
-      let p = List.map (fun (n, t) -> (Common.path_name n) ^ ": " ^ (C.prover_t_to_s t)) p in
-      fprintf ppf "@[(forall@ (%a.@ %a))@]" (Common.pprint_list ", " (Common.pprint_str)) p pprint q
+      let p = List.map (fun (n, t) -> (C.path_name n) ^ ": " ^ (C.prover_t_to_s t)) p in
+      fprintf ppf "@[(exists@ (%a.@ %a))@]" (C.pprint_list ", " (C.pprint_str)) p pprint q
   | Boolexp e ->
       fprintf ppf "@[(? (%a))@]" pprint_pexpr e
+
+let rec pprint_pattern ppf p =
+  match p.ppredpat_desc with
+  | Ppredpat_true ->
+      fprintf ppf "true"
+  | Ppredpat_atom (p, rel, q) ->
+      let relstring = function
+      | Pred_eq -> "="
+      | Pred_ne -> "!="
+      | Pred_gt -> ">"
+      | Pred_lt -> "<"
+      | Pred_le -> "<="
+      | Pred_ge -> ">=" in
+      let relstring = function
+      | [x] -> relstring x
+      | xs -> "[ " ^ (String.concat ", " (List.map relstring xs)) ^ " ]" in
+      fprintf ppf "@[(%a@ %s@ %a)@]" pprint_pattern_pexpr p (relstring rel) pprint_pattern_pexpr q
+  | Ppredpat_iff (px, q) ->
+      fprintf ppf "@[(%a@ iff@;<1 2>%a)@]" pprint_pattern px pprint_pattern q
+  | Ppredpat_not p ->
+      fprintf ppf "@[(-.@ %a)@]" pprint_pattern p
+  | Ppredpat_and (p, q) ->
+      fprintf ppf "@[(%a@ and@;<1 2>@;<1 2>%a)@]" pprint_pattern p pprint_pattern q
+  | Ppredpat_or (p, q) ->
+      fprintf ppf "@[(%a@ or@;<1 2>@;<1 2>%a)@]" pprint_pattern p pprint_pattern q
+  | Ppredpat_implies (p, q) ->
+      fprintf ppf "@[(%a ->@;<1 2>%a)@]" pprint_pattern p pprint_pattern q
+  | Ppredpat_forall (p, q) ->
+      let p = List.map (fun (n, t) -> n ^ ": " ^ (C.prover_t_to_s t)) p in
+      fprintf ppf "@[(forall@ (%a.@ %a))@]" (C.pprint_list ", " C.pprint_str) p pprint_pattern q
+  | Ppredpat_exists (p, q) ->
+      let p = List.map (fun (n, t) -> n ^ ": " ^ (C.prover_t_to_s t)) p in
+      fprintf ppf "@[(exists@ (%a.@ %a))@]" (C.pprint_list ", " (C.pprint_str)) p pprint_pattern q
+  | Ppredpat_boolexp e ->
+      fprintf ppf "@[(? (%a))@]" pprint_pattern_pexpr e
+
+and pprint_pattern_pexpr ppf p =
+  match p.ppredpatexp_desc with
+  | Ppredpatexp_any_int ->
+      fprintf ppf "^"
+  | Ppredpatexp_int n ->
+      let f n = if n < 0 then fprintf ppf "(0 - %d) " (-n)
+                else fprintf ppf "%d " n in
+      (match n with
+      | [n] -> f n
+      | ns -> fprintf ppf "@[["; ignore (List.map f ns); fprintf ppf "]@]")
+  | Ppredpatexp_var x ->
+      let f n = fprintf ppf "%s" (C.l_to_s n) in
+      (match x with
+      | [x] -> f x
+      | xs -> fprintf ppf "@[["; ignore (List.map f xs); fprintf ppf "]@]")
+  | Ppredpatexp_mvar x ->
+      fprintf ppf "~%s" x
+  | Ppredpatexp_funapp (f, pexp) ->
+      fprintf ppf "@[(%s@ %a)@]" (C.l_to_s f) (C.pprint_list " " pprint_pattern_pexpr) pexp
+  | Ppredpatexp_binop (p, op, q) ->
+      let opstr op = match op with
+        | Predexp_plus -> "+"
+        | Predexp_minus -> "-"
+        | Predexp_times -> "*"
+				| Predexp_div -> "/" in
+      let opstr = function
+        | [o] -> opstr o
+        | os -> "{ " ^ (String.concat ", " (List.map opstr os)) ^ " }" in
+      fprintf ppf "@[(%a@ %s@ %a)@]" pprint_pattern_pexpr p (opstr op) pprint_pattern_pexpr q
+  | Ppredpatexp_field (f, pexp) ->
+      fprintf ppf "@[%a.%s@]" pprint_pattern_pexpr pexp f
+  | Ppredpatexp_ite (t, e1, e2) ->
+      fprintf ppf "@[if@ (%a)@ then@ (%a)@ else@ (%a)@]" pprint_pattern t pprint_pattern_pexpr e1 pprint_pattern_pexpr e2
 
 let equals(p, q) = Atom(p, Eq, q)
 

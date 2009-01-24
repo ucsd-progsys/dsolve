@@ -202,7 +202,7 @@ let rec pat_map_pred_subexps f p =
       | Ppredpat_atom (e1, r, e2) -> Ppredpat_atom (pat_map_exps f e1, r, pat_map_exps f e2)
       | Ppredpat_not (p) -> Ppredpat_not (sub p)
       | Ppredpat_and (p1, p2) -> Ppredpat_and (sub p1, sub p2)
-      | Ppredpat_implies (p1, p2) -> Ppredpat_and (sub p1, sub p2)
+      | Ppredpat_implies (p1, p2) -> Ppredpat_implies (sub p1, sub p2)
       | Ppredpat_or (p1, p2) -> Ppredpat_or (sub p1, sub p2)
       | Ppredpat_forall (ps, p) -> Ppredpat_forall (ps, sub p)
       | Ppredpat_exists (ps, p) -> Ppredpat_exists (ps, sub p)

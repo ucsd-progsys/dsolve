@@ -18,7 +18,7 @@ qualif LLE(v) : len v { <=, >= } len t + [0, 1]
 (* bst prop *)
 
 (* from mlq *)
-qualif C(v)(A: int) : v { <, > } ~A
+qualif C(v)(*A: int*) : v { <, > } ~A
 qualif C(v) : v { <, > } e0
 
 

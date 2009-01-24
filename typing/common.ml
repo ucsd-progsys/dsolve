@@ -274,6 +274,7 @@ let sub_to_r s c =
     String.sub s 0 x
 
 let strip_meas_whole s =
+  if !Clflags.dsmeasures then s else
   try if String.sub s 0 6 = "_meas_" then 
     String.sub s 6 (String.length s - 6) 
   else s with Invalid_argument _ -> s 

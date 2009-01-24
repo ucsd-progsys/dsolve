@@ -175,3 +175,4 @@ let rec fold f h x0 = match h with
   | Empty -> x0
   | Same (x, l, r) -> fold f l (fold f r (f x x0))
   | Diff (x, l, r) -> fold f l (fold f r (f x x0))
+  

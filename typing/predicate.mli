@@ -60,6 +60,8 @@ and t =
 val pprint_rel: binrel -> string
 val pprint: formatter -> t -> unit
 val pprint_pexpr: formatter -> pexpr -> unit
+val pprint_pattern: formatter -> Parsetree.predicate_pattern -> unit
+val pprint_pattern_pexpr: formatter -> Parsetree.predpatexp -> unit
 
 val pexp_map_vars: (Path.t -> pexpr) -> pexpr -> pexpr 
 val pexp_map_funs: (Path.t -> Path.t) -> pexpr -> pexpr

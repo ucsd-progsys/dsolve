@@ -1,4 +1,7 @@
 #filename     [# of lambdas to collect idents under]  [only collect idents which name formals]  [-I directory]
+tests/rec/mergesort2/all.ml 4 False tests
+tests/rec/mergesort/all.ml  4 False tests
+tests/rec/quicksort/all.ml  4 False tests
 tests/inc.ml                4 False tests
 tests/mem.ml                4 False tests
 tests/malloc.ml             4 False tests
@@ -36,6 +39,4 @@ tests/rec/map/all.ml        4 False tests
 tests/rec/redblack/all.ml   4 False tests
 tests/rec/avltree/all.ml    4 False tests
 tests/rec/vec/all.ml        4 False tests
-tests/rec/mergesort2/all.ml 4 False tests
-tests/rec/mergesort/all.ml  4 False tests
-tests/rec/quicksort/all.ml  4 False tests
+

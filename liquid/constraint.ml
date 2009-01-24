@@ -700,12 +700,13 @@ let refine sri s c =
 let sat sri s c = 
   match c with
   | SubRef (env,g,r1, (sub2s, F.Qvar k2), _)  ->
-      not (refine_tp (get_ref_fenv sri c) s env g r1 sub2s k2)
+      (*not (refine_tp (get_ref_fenv sri c) s env g r1 sub2s k2)*)
+      true
   | SubRef (env, g, r1, sr2, _) as c ->
       let sm     = solution_map s in
       let lhs_ps = lhs_preds sm env g r1 in
       let rhs    = F.refinement_predicate sm qual_test_expr (F.ref_of_simple sr2) in
-      1 = List.length (check_tp (get_ref_fenv sri c) lhs_ps [(0,rhs)])
+      (1 = List.length (check_tp (get_ref_fenv sri c) lhs_ps [(0,rhs)]))
   | WFRef (env,(subs, F.Qvar k), _) ->
       true 
   | _ -> true
@@ -930,6 +931,8 @@ let solve qs env consts cs =
   let cs = List.map (fun (v, c, cstr) -> (set_labeled_constraint c (make_val_env v max_env), cstr)) cs in
   (* let cs = if !Cf.esimple then 
                BS.time "e-simplification" (List.map esimple) cs else cs in *)
+  let _ = printf "Qualifier@ patterns@.";
+    List.map (fun (_, {Parsetree.pqual_pat_desc = (_, _, p)}) -> printf "%a@." P.pprint_pattern p) qs in
   let qs = BS.time "instantiating quals" (instantiate_per_environment env consts cs) qs in
   (*let qs = List.map (fun qs -> List.filter Qualifier.may_not_be_tautology qs) qs in*)
   let _ = C.cprintf C.ol_solve "@[%i@ instantiation@ queries@ %i@ misses@]@." (List.length cs) !tr_misses in
@@ -952,7 +955,8 @@ let solve qs env consts cs =
   let _ = dump_solution s in
   let _ = TP.reset () in
   let unsat = BS.time "testing solution" (unsat_constraints sri) s in
-  (if List.length unsat > 0 then 
+  (*let sat = List.for_all (fun x -> x) (BS.time "testing solution" (List.map (refine sri s)) cs') in*)
+  if List.length unsat > 0 then 
     C.cprintf C.ol_solve_error "@[Ref_constraints@ still@ unsatisfied:@\n@]";
-    List.iter (fun (c, b) -> C.cprintf C.ol_solve_error "@[%a@.@\n@]" (pprint_ref None) c) unsat);
+    List.iter (fun (c, b) -> C.cprintf C.ol_solve_error "@[%a@.@\n@]" (pprint_ref None) c) unsat;
   (solution_map s, List.map snd unsat)

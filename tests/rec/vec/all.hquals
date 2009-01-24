@@ -1,4 +1,4 @@
-qualif FALSE(v) : 1 = 0
+(*qualif FALSE(v) : 1 = 0*)
 
 (* from the mlq *)
 
@@ -8,13 +8,13 @@ qualif H(_v)(A: 'a t): height _v { * * } height ~A
 
 qualif LVAR(_v)(A: int) : length _v { * * } ~A 
 qualif LCONST(v) : length v { * * } [0, 1]
-qualif LVARV(v) : v { * * } length ~A
+qualif LVARV(v)(A: 'a t) : v { * * } length ~A
 qualif LVARVV(v)(A: 'a t) : length v { * * } length ~A
 
 qualif SUB(v) : length v = j - i
 
 qualif SETAPPEND(_v) : length _v = (length v > i ? length v : i + 1)
-qualif TOARR(v) : length t = Array.length v
+qualif TOARR(v) : length t = Marray.length v
 
 qualif LPLUSONE(v) : length v { * * } length t {< -, + >} 1
 qualif ISEMPTY(v) : ((? v) iff (height t = 0 or length t = 0))
@@ -29,7 +29,7 @@ qualif H(_v)(A: 'a t): _v = height ~A
 
 (* not from the mlq *)
 
-qualif BAL(v): height v { <=, >= } height ~A {< -, + >} [1, 2, 3]
+qualif BAL(v)(A: 'a t): height v { <=, >= } height ~A {< -, + >} [1, 2, 3]
 qualif BAL(v):
    height v >= (height l <= height r + 2 and height l >= height r - 2 ? (height l >= height r ? height l : height r) + 1 : 0)
 qualif BAL(v):
@@ -41,7 +41,7 @@ qualif JOIN(v): height v {>=, <=} (height [l, t1] >= height [r, t2] ? height [l,
 
 qualif ITERI(v) : v <= length t - length t'
 qualif ITERI(v) : v + k = [i, j]
-qualif MAPI(v) : ~A <= length t - length v
+qualif MAPI(v)(A: int) : ~A <= length t - length v
 qualif SETAPPEND(v) : length v = n {< +, - >} 1
 
 qualif LSUM(v) : length v = [0, 1] + length [t1, l] + length [t2, r]

@@ -15,7 +15,7 @@
 (* Abstract syntax tree produced by parsing *)
 
 open Asttypes
-
+ 
 (* Type expressions for the core language *)
 
 type core_type =

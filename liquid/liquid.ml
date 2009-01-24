@@ -143,6 +143,7 @@ let process_sourcefile env fenv fname =
         dump_summary bname (str, env, menv, mlqenv, fenv) (C.maybe !summarize)
       else
         let (deps, consts, tyquals)  = load_qualfile std_formatter qname in
+        let _ = List.iter (fun (_, {Parsetree.pqual_pat_desc = (_, _, p)}) -> printf "%a@." P.pprint_pattern p) tyquals in
         let (env, menv', fenv, _)    = load_dep_mlqfiles bname deps env fenv mlqenv in
         let (fenv, mlqenv, tyquals)  = M.proc_premeas env (List.rev_append menv menv') fenv mlqenv tyquals in
         let fenv = MLQ.scrub_and_push_axioms fenv in
@@ -238,6 +239,7 @@ let main () =
      "-check-mlq", Arg.Set ck_mlq, "warn about possible errors in the local mlq";
      "-union-wfs", Arg.Set union_wfs, "take the union of instantiated wf quals";
      "-summarize", Arg.String (fun s -> summarize := Some s), "dump a summary of source to filename";
+     "-dsmeasures", Arg.Set dsmeasures, "don't strip measure names";
      "-no-timing", Arg.Unit Bstats.dont_time, "don't do any profiling";
      "-vgc", Arg.Int (fun c -> (get ()).verbose <- c), "verbose garbage collector";
      "-v", Arg.Int (fun c -> Common.verbose_level := c), 

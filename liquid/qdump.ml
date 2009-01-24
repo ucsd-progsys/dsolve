@@ -87,8 +87,8 @@ let env_bound_ids env =
 let dump_default_qualifiers (str, env, menv, ifenv) deps qname =
   let qf = formatter_of_out_channel (open_out qname) in
   let _ = pp_set_margin qf 1230912 in
-  (*let _ = pp_set_margin ppf 1230912 in
   let _ = C.verbose_level := C.ol_dquals in
+  (*let _ = pp_set_margin ppf 1230912 in
   let (deps', dqstrs) = Pparse.file std_formatter !patf Parse.qualifier_patterns ast_impl_magic_number in
   let deps = deps @ deps' in*)
 
@@ -103,6 +103,7 @@ let dump_default_qualifiers (str, env, menv, ifenv) deps qname =
 
   let mnms = snd (List.split (M.filter_names menv)) in
   let np n p = P.Atom(P.Var vid, P.Eq, P.FunApp(Path.mk_ident n, [P.Var (Path.mk_ident p)])) in 
+  (* TODO: instead of ids just write mvars -- change qs to patterns *)
   let mnms = C.tflap2 (mnms, ids) np in
   let cstrs = M.filter_cstrs menv in
   let pv vs = List.map (function Some v -> Some (P.Var v) | None -> None) vs in
