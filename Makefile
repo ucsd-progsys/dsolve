@@ -68,8 +68,9 @@ liquid.opt: $(LIQOBJS:.cmo=.cmx)
 tests:
 	./regrtest.py
 
+.PHONY: theories
 theories:
-	ocamlc tests/*.mli tests/rec/*.mli
+	ocamlc theories/*.mli
 
 depend: beforedepend
 	(for d in utils parsing typing liquid; \

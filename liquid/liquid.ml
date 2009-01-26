@@ -1,3 +1,4 @@
+
 (*
  * Copyright © 2008 The Regents of the University of California. All rights reserved.
  *
@@ -50,7 +51,7 @@ let init_path () =
     else !Clflags.include_dirs in
   let exp_dirs =
     List.map (expand_directory Config.standard_library) dirs in
-  load_path := "" :: List.rev_append exp_dirs (Clflags.std_include_dir ());
+  load_path := "" :: "./theories/" :: List.rev_append exp_dirs (Clflags.std_include_dir ());
   Env.reset_cache ()
 
 let initial_env () =
