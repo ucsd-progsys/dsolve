@@ -53,11 +53,6 @@ let qdim rel dim x y z =
 let qint rel i y =
   (Path.mk_ident (Printf.sprintf "INT_%s%d" (pprint_rel rel) i), y, Atom(Var y, rel, PInt i))
 
-let qrel rel x y =
-    (Path.mk_ident (Printf.sprintf "_%s%s%s_" (Path.name x) (pprint_rel rel) (Path.name y)), 
-     x,
-     Atom(Var x, rel, Var y))
-
 let mk_tyvar () = Frame.Fvar(Path.mk_ident "a", Frame.generic_level, [], empty_refinement)
 
 let mk_abstract path qs =
@@ -76,7 +71,6 @@ let rString name v p = mk_string [(Path.mk_ident name, v, p)]
 
 let mk_bool qs = Fsum(Predef.path_bool, None, [(Cstr_constant 0, ("true", [])); (Cstr_constant 1, ("false", []))], const_refinement qs)
 let uBool = mk_bool []
-let rBool name v p = mk_bool [(Path.mk_ident name, v, p)]
 
 let array_contents_id = Ident.create "contents"
 let mk_array f qs = Fabstract(Predef.path_array, [(array_contents_id, f, Invariant)], C.abstr_elem_id (), const_refinement qs)
@@ -136,82 +130,7 @@ let (===>) x y = x ==> fun _ -> def y
 
 let forall f = f (mk_tyvar ())
 
-let op_frame path qname op =
-  (path, defun (fun x -> uInt ===>
-                fun y -> uInt ==>
-                fun z -> rInt qname z (Var z ==. Binop (Var x, op, Var y))))
-
-let bool_op_frame s op =
-   defun (fun x -> uBool ===>
-          fun y -> uBool ==>
-          fun z -> rBool "||" z ((?. (Var z)) <=>. (op (?. (Var x)) (?. (Var y)))))
-
-let or_frame () = bool_op_frame "||" (||.)
-let and_frame () = bool_op_frame "&&" (&&.)
-
-let qbool_rel qname rel (x, y, z) = rBool qname z ((?. (Var z)) <=>. (Atom (Var x, rel, Var y)))
-
-let poly_rel_frame path qname rel =
-  (path,
-   defun (forall (fun a -> fun x -> a ===> fun y -> a ==> fun z -> qbool_rel qname rel (x, y, z))))
-
 let _frames = [
-  op_frame ["+"; "Pervasives"] "+" Plus;
-  op_frame ["-"; "Pervasives"] "-" Minus;
-  op_frame ["/"; "Pervasives"] "/" Div;
-  op_frame ["*"; "Pervasives"] "*" Times;
-
-  (["lsr"; "Pervasives"],
-   defun (fun x -> uInt ===> fun y -> uInt ==> fun z -> rInt "lsr" z (PInt 0 <=. Var z)));
-
-  (["land"; "Pervasives"],
-   defun (fun x -> uInt ===>
-          fun y -> uInt ==>
-          fun z ->
-            rInt "land" z
-              (((Var x >=. PInt 0) &&. (Var y >=. PInt 0))
-                 =>. big_and [PInt 0 <=. Var z; Var z <=. Var x; Var z <=. Var y;])));
-
-  (["mod"; "Pervasives"],
-   defun (fun x -> uInt ===>
-          fun y -> uInt ==>
-          fun z -> (rInt "mod" z
-            (((((Var x >=. PInt 0) =>. (PInt 0 <=. Var z)) &&.
-            ((Var y <. PInt 0) ||. (Var y >. PInt 0))) &&.
-            ((Var y >. PInt 0) =>. (Var z <. Var y))) &&.
-            (Var z ==. (Var x -- (Var y *- (Var x /- Var y))))))));
-
-  (["/"; "Pervasives"],
-   defun (fun x -> uInt ===>
-          fun y -> uInt ==>
-          fun z ->
-            rInt "/" z
-              ((Var z ==. Var x /- Var y) &&. (Var z ==. (Var x /- Var y) +- PInt 0))));
-
-  (["&&"; "Pervasives"], and_frame ());
-
-  (["||"; "Pervasives"], or_frame ());
-
-  (["or"; "Pervasives"], or_frame ());
-
-  (["not"; "Pervasives"],
-   defun (fun x -> uBool ==> fun y -> rBool "NOT" y ((?.(Var y)) <=>. (!. (?. (Var x))))));
-
-  (["ignore"; "Pervasives"], defun (forall (fun a -> fun x -> a ==> fun y -> uUnit)));
-
-  (["succ"; "Pervasives"], defun (fun x -> uInt ==> fun y -> rInt "succ" y ((Var y) ==. ((Var x) +- PInt 1))));
-
-  (["pred"; "Pervasives"], defun (fun x -> uInt ==> fun y -> rInt "pred" y ((Var y) ==. ((Var x) -- PInt 1))));
-
-  poly_rel_frame ["="; "Pervasives"] "=" Eq;
-  poly_rel_frame ["=="; "Pervasives"] "==" Eq;
-  poly_rel_frame ["!="; "Pervasives"] "!=" Ne;
-  poly_rel_frame ["<>"; "Pervasives"] "<>" Ne;
-  poly_rel_frame ["<"; "Pervasives"] "<" Lt;
-  poly_rel_frame [">"; "Pervasives"] ">" Gt;
-  poly_rel_frame [">="; "Pervasives"] ">=" Ge;
-  poly_rel_frame ["<="; "Pervasives"] "<=" Le;
-
   (["length"; "Array"],
    defun (forall (fun a ->
           fun x -> mk_array a [] ==>
@@ -265,8 +184,6 @@ let _frames = [
 
   (["int"; "Random"], defun (fun x -> rInt "PosMax" x (PInt 0 <. Var x) ==>
                              fun y -> rInt "RandBounds" y ((PInt 0 <=. Var y) &&. (Var y <. Var x))));
-
-  (["max_int"; "Pervasives"], uInt);
 
 ]
 

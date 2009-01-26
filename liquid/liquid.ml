@@ -60,8 +60,9 @@ let initial_env () =
     if !Clflags.nopervasives
     then Env.initial
     else Env.open_pers_signature "Pervasives" Env.initial
-  with Not_found ->
-    failwith "cannot open pervasives.cmi"
+  with
+    | Not_found   -> failwith "cannot open builtins.cmi"
+    | Env.Error e -> printf "Env error: %a@." Env.report_error e; assert false
 
 let initial_fenv env = Lightenv.addn (Builtins.frames env) Lightenv.empty
 

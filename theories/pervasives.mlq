@@ -1,0 +1,35 @@
+(* Arithmetic operators *)
+val (+): x: int -> y: int -> {v: int | v = x + y}
+val (-): x: int -> y: int -> {v: int | v = x - y}
+val ( * ): x: int -> y: int -> {v: int | v = x * y}
+val (/): x: int -> y: int -> {v: int | v = x / y}
+
+val succ: x: int -> {v: int | v = x + 1}
+val pred: x: int -> {v: int | v = x - 1}
+
+val (mod): x: int -> {y: int | y != 0} -> {v: int |
+                                               (x >= 0 := v >= 0)
+                                           and ((y > 0 := z < y)
+                                           and z = x - (y * (x / y)))}
+
+(* Comparisons *)
+val (=): x: 'a -> y: 'a -> {v: bool | ((? v) iff (x = y))}
+val (==): x: 'a -> y: 'a -> {v: bool | ((? v) iff (x = y))}
+val (!=): x: 'a -> y: 'a -> {v: bool | ((? v) iff (x != y))}
+val (<>): x: 'a -> y: 'a -> {v: bool | ((? v) iff (x != y))}
+val (>): x: 'a -> y: 'a -> {v: bool | ((? v) iff (x > y))}
+val (<): x: 'a -> y: 'a -> {v: bool | ((? v) iff (x < y))}
+val (>=): x: 'a -> y: 'a -> {v: bool | ((? v) iff (x >= y))}
+val (<=): x: 'a -> y: 'a -> {v: bool | ((? v) iff (x <= y))}
+
+(* Logical operators *)
+val (&&): x: bool -> y: bool -> {v: bool | ((? v) iff ((? x) and (? y)))}
+val (||): x: bool -> y: bool -> {v: bool | ((? v) iff ((? x) or (? y)))}
+val (or): x: bool -> y: bool -> {v: bool | ((? v) iff ((? x) or (? y)))}
+val not: x: bool -> {v: bool | ((? v) iff (-. (? x)))}
+
+(* Bitwise operators *)
+val (lsr): x: int -> y: int -> {v: int | 0 <= v}
+val (land): x: int -> y: int -> {v: int | ((x >= 0) and (y >= 0)) := (v >= 0 and (v <= x and v <= y))}
+
+val ignore: 'a -> unit
