@@ -78,6 +78,8 @@ let find_path k m =
     if x = k then raise (Found (p)) else if String.compare x k > 0 then raise Not_found in 
   try M.iter f m; raise Not_found with Found x -> x
 
+let find_all_paths k m = filterkeylist (fun p _ -> k = Path.name p) m
+  
 let mem k m =
   M.mem k m
 

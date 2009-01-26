@@ -27,6 +27,7 @@ open Predicate
 module C = Common
 module BS = Bstats
 module JS = Mystats
+module Le = Lightenv
 
 type t = Path.t * Path.t * Predicate.t
 
@@ -63,12 +64,6 @@ let fix_bound_vars vm ps =
   let names = List.map Path.name paths in
     List.fold_left2 (fun vm n p -> C.StringMap.add n [p] vm) vm names paths
 
-(* duplicated from frame to avoid circular dep because i'm in a hurry *)
-exception Found_key_by_name of Path.t
-let qfind_key_by_name env s =
-   try (Lightenv.iter (fun p _ -> if Path.name p = s then raise (Found_key_by_name p)) env; raise Not_found)
-    with Found_key_by_name p -> p
-
 (* in qualifier.ml to avoid an odd dependency problem that breaks the build *)
 let expand_about vm env p =
   let rec e_rec vm = function
@@ -80,7 +75,7 @@ let expand_about vm env p =
            | Not_found ->
                let p = Path.ident_name_crash p in
                if String.contains p '.' then
-               [Var (qfind_key_by_name env p)] else raise Not_found)
+               [Var (Le.find_path p env)] else raise Not_found)
     | FunApp (s, ps) ->
         let ess = List.map (e_rec vm) ps in
           List.rev_map (fun x -> FunApp (s, x)) (C.rev_perms ess)

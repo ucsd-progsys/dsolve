@@ -38,5 +38,9 @@ tests/rec/ralist.ml         4 False tests
 tests/rec/map/all.ml        4 False tests
 tests/rec/redblack/all.ml   4 False tests
 tests/rec/avltree/all.ml    4 False tests
+tests/rec/splayheap.ml      0 False tests
+tests/unionfind-pc.ml       0 False tests
+tests/subvsolve.ml          0 False tests
+tests/rec/bdd.ml            0 False tests
 tests/rec/vec/all.ml        4 False tests
 

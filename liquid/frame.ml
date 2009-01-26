@@ -80,21 +80,10 @@ let path_tuple = Path.mk_ident "tuple"
 
 (* this is a bit shady: we memoize by string only to save the compare*)
 exception Found_by_name of t
-exception Found_key_by_name of Path.t
-let fbn_memo = Hashtbl.create 37
-let fkbn_memo = Hashtbl.create 37
 
 let find_by_name env s =
    try (Le.iter (fun p f -> if Path.name p = s then raise (Found_by_name f)) env; raise Not_found)
     with Found_by_name t -> t 
-
-let find_by_name env s = C.do_memo fbn_memo (fun () -> find_by_name env s) () s
-
-let find_key_by_name env s =
-   try (Le.iter (fun p _ -> if Path.name p = s then raise (Found_key_by_name p)) env; raise Not_found)
-    with Found_key_by_name p -> p
-
-let find_key_by_name env s = C.do_memo fkbn_memo (fun () -> find_key_by_name env s) () s
 
 let prune_env_funs env = Le.fold (fun p f xs -> (function Farrow _ -> xs | _ -> p :: xs) f) env []
 
@@ -650,7 +639,7 @@ let dep_sub_to_sub binds scbinds env (s, s') =
   let scbinds = C.flap bind scbinds in
   let c i =
     try List.assoc i binds
-      with Not_found -> find_key_by_name env i in
+      with Not_found -> Le.find_path i env in
   try (c s', P.Var (List.assoc s scbinds))
     with Not_found -> failwith (sprintf "Could not bind dependent substitution %s to paths" s)
 

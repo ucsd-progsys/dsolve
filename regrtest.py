@@ -23,7 +23,7 @@ import common, sys, time
 import itertools as it
 import dsolve
 
-testfiles = [("tests/negtests", 1), ("tests/postests", 0)]
+testfiles = [("tests/postests", 0), ("tests/negtests", 1)]
 
 def runtest(filep, expected_status):
   file = filep[0]

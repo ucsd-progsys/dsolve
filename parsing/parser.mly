@@ -1474,14 +1474,8 @@ dep_list:
 int_list_opt:
     /* empty */
       { [] }
-  | INTS qual_int_list
+  | INTS qual_intlist
       { $2 }
-
-qual_int_list:
-    INT
-      { [$1] }
-  | INT COMMA qual_int_list
-      { $1 :: $3 }
 
 qualifier_patterns:
     dep_list_opt int_list_opt qualifier_pattern_list EOF
@@ -1591,6 +1585,7 @@ qual_intlist:
     INT                                     { [$1] }
   | MINUS INT                               { [0-$2] }
   | INT COMMA qual_intlist                  { $1::$3 }
+  | MINUS INT COMMA qual_intlist            { (0-$2)::$4 }
 
 qual_litident:
     UIDENT DOT qual_litident                { $1 ^ "." ^ $3 }

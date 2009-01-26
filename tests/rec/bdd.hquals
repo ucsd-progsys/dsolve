@@ -1,6 +1,6 @@
-qualif VEQ(v): var ~A { <=, < } var v
-qualif VEQ(v):     ~A { <=, < } var v
-qualif OEQ(v): ((var ~A <= var v) or (var ~B <= var v))
+qualif VEQ(v)(A: bdd): var ~A { <=, < } var v
+qualif VEQ(v)(A: int):     ~A { <=, < } var v
+qualif OEQ(v)(A: bdd, B: bdd): ((var ~A <= var v) or (var ~B <= var v))
 
 (* qualif OEQ(v): ((var e0 <= var v) or (var e1 <= var v))
    qualif OEQ(v): ((var u1 <= var v) or (var u2 <= var v))

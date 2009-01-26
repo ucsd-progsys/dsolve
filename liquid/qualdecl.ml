@@ -18,9 +18,6 @@ let transl_rels rels =
       [] -> rel_star
     | _ -> List.map transl_rel rels
 
-let find_key_by_name s env =
-  Le.filterkeylist (fun p _ -> Path.name p = s) env
-
 let map_key_by_name f env =
   Le.mapfilter (fun p _ -> if f p then Some p else None) env 
 
@@ -105,9 +102,7 @@ let rec transl_patpred f g env (v, nv) tymap constset p =
           end
       | Ppredpatexp_funapp (fnc, es) ->
           let es = List.rev_map transl_expr_rec es in
-          let fnc' = List.hd ((lookup g (fun x -> find_key_by_name x env)) (C.l_to_s fnc)) in
-          (*let _ = if C.empty_list (C.rev_perms es) then assert false in (* DEBUG *)
-          let _ = if C.empty_list (List.hd (C.rev_perms es)) then assert false in (* DEBUG *)*)
+          let fnc' = List.hd ((lookup g (fun x -> Le.find_all_paths x env)) (C.l_to_s fnc)) in
           List.rev_map (fun e -> FunApp (fnc', e)) (C.rev_perms es)
       | Ppredpatexp_binop (e1, ops, e2) ->
           let (e1, e2) = C.app_pr transl_expr_rec (e1, e2) in
@@ -116,7 +111,7 @@ let rec transl_patpred f g env (v, nv) tymap constset p =
           let ops = transl_ops ops in
           C.fast_flap (fun e -> List.rev_map e ops) es
       | Ppredpatexp_field (f, e1) ->
-          let es = List.rev_map (fun f -> (fun e1 -> Field (f, e1))) (find_key_by_name f env) in
+          let es = List.rev_map (fun f -> (fun e1 -> Field (f, e1))) (Le.find_all_paths f env) in
           let e1 = transl_expr_rec e1 in
           C.fast_flap (fun e -> List.rev_map e e1) es 
       | Ppredpatexp_ite (t, e1, e2) ->
@@ -151,7 +146,6 @@ let rec transl_patpred f g env (v, nv) tymap constset p =
       | Ppredpat_iff (e, p) ->
           permute_pred_pair (fun e p -> Iff (e, p)) e p
       | Ppredpat_boolexp e ->
-          (*let _ = if C.empty_list (transl_expr_rec e) then assert false in*)
           List.rev_map (fun p -> Boolexp p) (transl_expr_rec e)
   and do_quantified f g h ps q =
     let (bs, ps) = List.split ps in
