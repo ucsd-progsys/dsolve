@@ -39,7 +39,7 @@ def runtest(filep, expected_status):
     print "Qualgen failed on %s" % file
     sys.exit(2)
   start = time.time()
-  flags = ["-v", "0", "-I", "tests", "-no-timing"]
+  flags = ["-v", "0", "-I", "theories", "-no-timing"]
   if no_recrefs:
      flags += ["-no-recrefs"]
   if no_simple:

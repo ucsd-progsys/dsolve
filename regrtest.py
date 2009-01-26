@@ -31,7 +31,8 @@ def runtest(filep, expected_status):
     return ("", 1)
   collect = int(filep[1])
   lqualifs = common.str_to_bool(filep[2])
-  include = filep[3]
+  #include = filep[3]
+  include = "theories"
   status = dsolve.gen_quals(file, True, "-I " + include)
   if status != 0: 
     print "Qualgen failed on %s" % file
