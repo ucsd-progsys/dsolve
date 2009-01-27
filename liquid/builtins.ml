@@ -80,10 +80,6 @@ let mk_named id fs qs env =
   let fresh_names = Misc.mapi (fun _ i -> Common.tuple_elem_id i) varis in
     Fabstract(path, Common.combine3 fresh_names fs varis, C.abstr_elem_id (), const_refinement qs)
 
-let ref_contents_id = Ident.create "contents"
-let mk_ref f env =
-  record_of_params (fst (find_constructed_type ["ref"; "Pervasives"] env)) [(ref_contents_id, f, Invariant)] empty_refinement
-
 let mk_bigarray_kind a b qs env = mk_named ["kind"; "Bigarray"] [a; b] qs env
 
 let mk_bigarray_layout a qs env = mk_named ["layout"; "Bigarray"] [a] qs env
@@ -156,7 +152,6 @@ let _lib_frames env = [
 ]
 
 let _type_path_constrs env = [
-  ("ref", find_constructed_type ["ref"; "Pervasives"] env);
   ("array2", find_constructed_type ["t"; "Array2"; "Bigarray"] env);
 ]
 

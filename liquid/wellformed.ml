@@ -44,8 +44,7 @@ let abstract_app_shape paths out_shape in_shapes =
    we'll suspend this and force it when we know it's safe *)
 let builtin_fun_app_shapes = lazy(
   let array2_path = Builtins.ext_find_type_path "array2" in
-    [("Array.length", abstract_app_shape [Predef.path_array] uInt);
-     ("Bigarray.Array2.dim1", abstract_app_shape [array2_path] uInt);
+    [("Bigarray.Array2.dim1", abstract_app_shape [array2_path] uInt);
      ("Bigarray.Array2.dim2", abstract_app_shape [array2_path] uInt);
      ((Path.name P.tag_function), (function [Fsum _] -> uInt | _ -> raise IllFormed))]
 )
