@@ -1,0 +1,5 @@
+val length: s: string -> {n: int | length s = n and n >= 0}
+
+val make: n: {n: int | n >= 0} -> char -> {s: string | length s = n}
+
+val get: s: string -> {i: int | 0 <= i and i < length s} -> char

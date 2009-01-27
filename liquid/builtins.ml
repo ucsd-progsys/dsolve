@@ -39,11 +39,6 @@ let fake s = Path.mk_ident s
 let faketable = Hashtbl.create 17
 let fake s = C.do_memo faketable fake s s
 
-let qsize funm rel x y z = (Path.mk_ident ("SIZE_" ^ (pprint_rel rel)), y,
-                       Atom(Var z, rel, FunApp(fake funm, [Var x])))
-
-let qsize_str = qsize "String.length"
-
 let qdim rel dim x y z =
   let dimstr = string_of_int dim in
     (Path.mk_ident ("DIM" ^ dimstr ^ (pprint_rel rel)), y,
@@ -61,12 +56,11 @@ let mk_int qs = mk_abstract Predef.path_int qs
 
 let uFloat = mk_abstract Predef.path_float []
 
-let uChar = Fsum(Predef.path_char, None, [], empty_refinement)
+let uChar = mk_abstract Predef.path_char []
 
 let mk_string qs = mk_abstract Predef.path_string qs
 
 let uString = mk_string []
-let rString name v p = mk_string [(Path.mk_ident name, v, p)]
 
 let mk_bool qs = Fsum(Predef.path_bool, None, [(Cstr_constant 0, ("true", [])); (Cstr_constant 1, ("false", []))], const_refinement qs)
 let uBool = mk_bool []
@@ -101,8 +95,6 @@ let uUnit = mk_unit []
 let rUnit name v p = mk_unit [(Path.mk_ident name, v, p)]
 
 let uInt = mk_int []
-let rInt name v p = mk_int [(Path.mk_ident name, v, p)]
-let rArray b name v p = mk_array b [(Path.mk_ident name, v, p)]
 
 let char = ref 0
 
@@ -128,28 +120,6 @@ let (==>) x y = (x, y)
 let (===>) x y = x ==> fun _ -> def y
 
 let forall f = f (mk_tyvar ())
-
-let _frames = [
-  (["make"; "String"],
-   defun (forall (fun a ->
-          fun x -> rInt "NonNegSize" x (PInt 0 <=. Var x) ===>
-          fun c -> uChar ==>
-          fun s -> mk_string [qsize_str Eq s s x])));
-
-  (["length"; "String"],
-   defun (fun x -> mk_string [] ==>
-          fun y -> mk_int [qsize_str Eq x y y; qint Ge 0 y]));
-
-  (["get"; "String"],
-   defun (forall (fun a ->
-          fun x -> uString ===>
-          fun y -> mk_int [qsize_str Lt x y y; qint Ge 0 y] ==>
-          fun z -> uChar)));
-
-  (["int"; "Random"], defun (fun x -> rInt "PosMax" x (PInt 0 <. Var x) ==>
-                             fun y -> rInt "RandBounds" y ((PInt 0 <=. Var y) &&. (Var y <. Var x))));
-
-]
 
 let bigarray_dim_frame dim env =
   (["dim" ^ string_of_int dim; "Array2"; "Bigarray"],
@@ -204,7 +174,7 @@ let find_path_path env p = fst (Env.lookup_value (Longident.parse (Path.name p))
 let frames env =
   let _ = _type_paths := Some (_type_path_constrs env) in
   let resolve_names x = List.map (fun (id, fr) -> (find_path id env, fr)) x in
-  let frames = List.append (resolve_names  _frames) (resolve_names (_lib_frames env)) in
+  let frames = resolve_names (_lib_frames env) in
     List.rev_map (fun (p, fr) -> (p, map_qualifiers
       (fun (p1, p2, p) -> (p1, p2, map_funs (find_path_path env) p)) fr)) frames
 
