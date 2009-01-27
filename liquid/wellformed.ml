@@ -40,14 +40,8 @@ let abstract_app_shape paths out_shape in_shapes =
         (List.for_all2 f paths in_shapes) 
           then out_shape else raise IllFormed
 
-(* ext_find_type_path isn't initialized until sometime late in ocaml startup, so
-   we'll suspend this and force it when we know it's safe *)
-let builtin_fun_app_shapes = lazy(
-  let array2_path = Builtins.ext_find_type_path "array2" in
-    [("Bigarray.Array2.dim1", abstract_app_shape [array2_path] uInt);
-     ("Bigarray.Array2.dim2", abstract_app_shape [array2_path] uInt);
-     ((Path.name P.tag_function), (function [Fsum _] -> uInt | _ -> raise IllFormed))]
-)
+let builtin_fun_app_shapes =
+  [((Path.name P.tag_function), (function [Fsum _] -> uInt | _ -> raise IllFormed))]
 
 let check_and_inst f f1 f2 eq' inst' =
   let (sub, eq, inst) = subt f1 f2 eq' inst' in
@@ -72,16 +66,9 @@ let rec app_to_fun eq inst funf =
              [] -> map_inst eq inst f
            | _ -> raise IllFormed)
 
-(*let get_by_name (n, env) =
-  try find_by_name env n with Not_found -> raise IllFormed
-
-let get_by_name =
-  let tbl = Hashtbl.create 17 in
-    fun n env -> Common.do_memo tbl get_by_name (n, env) n (* this should be memoized using envstring *)*)
-
 let get_app_shape f env =
   try
-    List.assoc (Path.name f) (Lazy.force builtin_fun_app_shapes)
+    List.assoc (Path.name f) builtin_fun_app_shapes
   with Not_found -> 
     app_to_fun [] [] (Le.find f env)
 

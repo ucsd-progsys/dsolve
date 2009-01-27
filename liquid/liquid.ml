@@ -1,4 +1,3 @@
-
 (*
  * Copyright © 2008 The Regents of the University of California. All rights reserved.
  *
@@ -63,8 +62,6 @@ let initial_env () =
   with
     | Not_found   -> failwith "cannot open builtins.cmi"
     | Env.Error e -> printf "Env error: %a@." Env.report_error e; assert false
-
-let initial_fenv env = Lightenv.addn (Builtins.frames env) Lightenv.empty
 
 let print_if ppf flag printer arg =
   if !flag then fprintf ppf "%a@." printer arg;
@@ -257,7 +254,7 @@ let main () =
   ] file_argument usage;
   init_path ();
   let env = initial_env () in
-    ignore (List.fold_left process_file (env, initial_fenv env) !filenames)
+    ignore (List.fold_left process_file (env, Lightenv.empty) !filenames)
 
 let _ = 
   main (); exit 0
