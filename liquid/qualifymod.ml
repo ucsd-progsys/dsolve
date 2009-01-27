@@ -146,7 +146,7 @@ let rec constrain e env guard =
       | (Texp_ident (id, _), _) -> constrain_identifier environment id e.exp_env
       | (Texp_apply (e1, exps), _) -> constrain_application environment e1 exps
       | (Texp_let (recflag, bindings, body_exp), t) -> constrain_let environment recflag bindings body_exp
-      | (Texp_array es, _) -> constrain_array environment es
+      | (Texp_array es, _) -> constrain_array environment e.exp_env es
       | (Texp_sequence (e1, e2), _) -> constrain_sequence environment e1 e2
       | (Texp_tuple es, _) -> constrain_tuple environment es
       | (Texp_assertfalse, _) -> constrain_assertfalse environment e.exp_env e.exp_type
@@ -338,11 +338,11 @@ and constrain_let (env, guard, f) recflag bindings body =
       let f = F.label_like f body_frame in
         (f, [WFFrame (env, f); SubFrame (env', guard, body_frame, f)], cstrs1 @ cstrs2)
 
-and constrain_array (env, guard, f) elements =
+and constrain_array (env, guard, f) tenv elements =
   let (f, fa) =
     match f with
       | F.Fabstract(p, ([(_, fa, _)] as ps), id, _) ->
-          (F.Fabstract(p, ps, id, B.size_lit_refinement(List.length elements)), fa)
+          (F.Fabstract(p, ps, id, B.size_lit_refinement (List.length elements) tenv), fa)
       | _ -> assert false in
   let list_rec (fs, c) e = (fun (f, cs) -> (f::fs, cs @ c)) (constrain e env guard) in
   let (fs', sub_cs)      = List.fold_left list_rec ([], []) elements in

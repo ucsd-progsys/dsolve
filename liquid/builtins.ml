@@ -42,7 +42,6 @@ let fake s = C.do_memo faketable fake s s
 let qsize funm rel x y z = (Path.mk_ident ("SIZE_" ^ (pprint_rel rel)), y,
                        Atom(Var z, rel, FunApp(fake funm, [Var x])))
 
-let qsize_arr = qsize "Array.length"
 let qsize_str = qsize "String.length"
 
 let qdim rel dim x y z =
@@ -131,41 +130,6 @@ let (===>) x y = x ==> fun _ -> def y
 let forall f = f (mk_tyvar ())
 
 let _frames = [
-  (["length"; "Array"],
-   defun (forall (fun a ->
-          fun x -> mk_array a [] ==>
-          fun y -> mk_int [qsize_arr Eq x y y; qint Ge 0 y])));
-
-  (["set"; "Array"],
-   defun (forall (fun a ->
-          fun x -> mk_array a [] ===>
-          fun y -> mk_int [qsize_arr Lt x y y; qint Ge 0 y] ===>
-          fun _ -> a ==>
-          fun _ -> uUnit)));
-
-  (["get"; "Array"],
-   defun (forall (fun a ->
-          fun x -> mk_array a [] ===>
-          fun y -> mk_int [qsize_arr Lt x y y; qint Ge 0 y] ==>
-          fun _ -> a)));
-
-  (["make"; "Array"],
-   defun (forall (fun a ->
-          fun x -> rInt "NonNegSize" x (PInt 0 <=. Var x) ===>
-          fun y -> a ==>
-          fun z -> mk_array a [qsize_arr Eq z z x])));
-
-  (["init"; "Array"],
-   defun (forall (fun a ->
-          fun x -> rInt "NonNegSize" x (PInt 0 <=. Var x) ===>
-          fun i -> (defun (fun y -> rInt "Bounded" y ((PInt 0 <=. Var y) &&. (Var y <. Var x)) ==> fun _ -> a)) ==>
-          fun z -> mk_array a [qsize_arr Eq z z x])));
-
-  (["copy"; "Array"],
-   defun (forall (fun a ->
-          fun arr -> mk_array a [] ==>
-          fun c -> rArray a "SameSize" c (FunApp(fake "Array.length", [Var c]) ==. FunApp(fake "Array.length", [Var arr])))));
-
   (["make"; "String"],
    defun (forall (fun a ->
           fun x -> rInt "NonNegSize" x (PInt 0 <=. Var x) ===>
@@ -267,12 +231,12 @@ let tag_refinement p t =
   let expstr = Format.flush_str_formatter () in
     const_refinement [(Path.mk_ident expstr, x, pred)]
 
-let size_lit_refinement i =
+let size_lit_refinement i env =
   let x = Path.mk_ident "x" in
     const_refinement
       [(Path.mk_ident "<size_lit_eq>",
         x,
-        FunApp(fake "Array.length", [Var x]) ==. PInt i)]
+        FunApp(Common.lookup_path "Array.length" env, [Var x]) ==. PInt i)]
 
 let field_eq_qualifier name pexp =
   let x = Path.mk_ident "x" in (Path.mk_ident "<field_eq>", x, Field (Path.Pident name, Var x) ==. pexp)
