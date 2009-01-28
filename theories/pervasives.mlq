@@ -7,10 +7,10 @@ val (/): x: int -> y: int -> {v: int | v = x / y}
 val succ: x: int -> {v: int | v = x + 1}
 val pred: x: int -> {v: int | v = x - 1}
 
-val (mod): x: int -> {y: int | y != 0} -> {v: int |
-                                               (x >= 0 := v >= 0)
-                                           and ((y > 0 := z < y)
-                                           and z = x - (y * (x / y)))}
+val (mod): x: int -> y: {y: int | y != 0} -> {v: int |
+                                                  (x >= 0 := v >= 0)
+                                              and ((y > 0 := v < y)
+                                              and v = x - (y * (x / y)))}
 
 (* Comparisons *)
 val (=): x: 'a -> y: 'a -> {v: bool | ((? v) iff (x = y))}
