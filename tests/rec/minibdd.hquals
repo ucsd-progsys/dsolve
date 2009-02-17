@@ -1,2 +1,0 @@
-qualif VEQ(v): var ~A { <=, < } var v
-qualif OEQ(v): ((var ~A <= var v) or (var ~B <= var v))

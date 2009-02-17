@@ -1,9 +1,0 @@
-#define T    [[], [v: true, v: true, v: true, v: true]]
-#define TREE [z: || e0: int, e1: 'a, {e2: T z | rank(e2) = e0}, {e3: T z | rank(e3) <= e0}]
-
-measure rank =
-  | Tempty                  -> 0
-  | Tcons (r, d, t, t1, t2) -> 0
-  | Node (r, d, t)          -> r
-
-val link: t1: T TREE -> t2: {t2: T TREE | rank(t2) = rank(t1)} -> {v: T TREE | rank(v) = rank(t1) + 1}

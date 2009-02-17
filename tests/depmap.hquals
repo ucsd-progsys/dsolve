@@ -1,6 +1,0 @@
-
-qualif P(v): 0 < v 
-qualif N(v): x < 0
-qualif LEQ(v) : ~A <= v
-qualif GTI(v): 1 <= v
-qualif GTB(v): b <= v

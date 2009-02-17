@@ -1,4 +1,0 @@
-measure size =
-  | Nil -> 1
-  | Node (c, a, b) -> size a + size b
-

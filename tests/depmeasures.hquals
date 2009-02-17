@@ -1,2 +1,0 @@
-qualif A(v): _meas_par v = [0, 1, 2, 3]
-qualif B(v): _meas_par ~A = v

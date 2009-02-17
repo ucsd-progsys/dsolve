@@ -1,3 +1,0 @@
-qualif LEQ(v): ~A <= v
-qualif LT(v):  ~A < v
-qualif NE(v):  ~A != v 

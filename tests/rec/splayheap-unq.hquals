@@ -1,6 +1,0 @@
-qualif LEQ(v): v { * * } ~A
-
-qualif S(v): sz v + sz e0 = sz t
-qualif S(v): sz v = sz t' + sz t
-qualif S(v): ? Myset.eq (Myset.cup (set_of v) (set_of e0)) (set_of t)
-qualif S(v): (true or (? Myset.un v)) and -. (? Myset.mem x (set_of h))

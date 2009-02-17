@@ -1,6 +1,0 @@
-
-(*val f: (j: int -> 'a[j/i]) -> b: int -> 'a[i/b]*)
-(*val f: (j: int -> 'a[j/i]) -> int*)
-val f: (j: int -> 'a) -> b: int -> 'a[b/j]
-
-val g: ('b, {v: 'a | e0 < v}) blah -> int

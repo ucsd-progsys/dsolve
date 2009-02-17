@@ -1,6 +1,0 @@
-
-
-measure height =
-  | Empty -> 0
-  | Red (e, l, r) -> (height l > height r ? height l : height r)
-  | Black (e, l, r) -> (height (l) > height (r) ? height l : height r) + 1

@@ -1,3 +1,0 @@
-measure len =
-    [] -> 0
-  | x :: xs -> 1 + len xs

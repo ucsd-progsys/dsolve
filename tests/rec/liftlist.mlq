@@ -1,4 +1,0 @@
-val copy:
-[[], [v: true, v: true]] [t: list . || e0: 'a, e1: [[], [v: v >= e0, v: true]] t] ->
-[[], [v: true, v: true]] [t: list . || e0: 'a, e1: [[], [v: v >= e0, v: true]] t]
-

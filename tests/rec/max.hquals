@@ -1,1 +1,0 @@
-qualif MAX(v): v = if (~A <= ~B) then (~A) else (~B)

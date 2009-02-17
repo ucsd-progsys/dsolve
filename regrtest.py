@@ -19,19 +19,13 @@
 # ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION
 # TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-import common, sys, time
+import common, sys, time, os, os.path
 import itertools as it
 import dsolve
 
-testfiles = [("tests/postests", 0), ("tests/negtests", 1)]
+testdirs = [("postests", 0), ("negtests", 1)]
 
-def runtest(filep, expected_status):
-  file = filep[0]
-  if file[0] == '#':
-    return ("", 1)
-  collect = int(filep[1])
-  lqualifs = common.str_to_bool(filep[2])
-  #include = filep[3]
+def runtest(file, expected_status):
   include = "theories"
   status = dsolve.gen_quals(file, True, "-I " + include)
   if status != 0: 
@@ -49,11 +43,12 @@ def runtest(filep, expected_status):
     print "\033[1;31mFAILURE :(\033[1;0m\n"
   return (file, ok)
 
-def runtests(file, expected_status):
-  print "Running tests from %s" % file
-  return [runtest(test.rstrip().split(), expected_status) for test in common.read_lines(file)]
+def runtests(dir, expected_status):
+  print "Running tests from %s/" % dir
+  files = it.chain(*[[os.path.join(dir, file) for file in files] for dir, dirs, files in os.walk(dir)])
+  return [runtest(file, expected_status) for file in files if file.endswith(".ml")]
 
-results   = [runtests(file, expected_status) for (file, expected_status) in testfiles]
+results   = [runtests(dir, expected_status) for (dir, expected_status) in testdirs]
 failed    = [result[0] for result in it.chain(*results) if result[1] == False]
 failcount = len(failed)
 if failcount == 0:

@@ -1,6 +1,0 @@
-qualif A(v) : _meas_len ~A = v
-qualif B(v) : _meas_len v = [0, 1, 2, 3]
-qualif BB(v): _meas_len v = 1 + _meas_len y
-qualif BBB(v): e1 = y
-qualif C(v) : __tag v = 0
-qualif D(v) : __tag v = 1

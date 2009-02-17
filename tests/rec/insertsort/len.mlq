@@ -1,7 +1,0 @@
-measure len =
-    [] -> 0
-  | x :: xs -> 1 + len xs
- 
-val insert_sort: l:
-  [[], [v: true, v: true]] [t: list . || e0: 'a, e1: [[], [v: true, v: true]] t] ->
-  {v : [[], [v: true, v: true]] [t: list . || e0: 'a, e1: [[], [v: true, v: true]] t] | len v = len l}

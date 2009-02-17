@@ -1,4 +1,0 @@
-qualif EQ(v)  : v = ~A					(* non - spec *)
-qualif ROOT(v): Store.get ~A v = v			(* non - spec *)
-qualif BIND(v): v = Store.get ~A ~B
-qualif PRNT(v): (v = ~B) or (Store.get ~A ~B < Store.get ~A v)
