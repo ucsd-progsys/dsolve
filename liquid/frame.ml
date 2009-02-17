@@ -714,6 +714,7 @@ let instantiate_qualifiers vars fr =
    [f'] and changing constant qualifiers appropriately.
    [f] and [f'] are expected to be of the same shape; also, [f]
    must be completely unlabeled (as frames are after creation by fresh). *)
+(* pmr: this flag needs to be removed!! *)
 let label_like_where destructive f f' =
   let rec label vars f f' = match (f, f') with
     | (Fvar _, Fvar (_, _, s, _)) ->
