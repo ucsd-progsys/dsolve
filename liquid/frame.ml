@@ -463,30 +463,6 @@ let pred_of_qual subs q =
   let p = Qualifier.apply (P.Var (Path.mk_ident "V")) q in
   P.apply_substs subs p
 
-(*
-let pprint_refexpr ppf (subs, (qconsts, qvars)) =
-  let subs' = if !Clflags.print_subs then [] else subs in
-  let ps    = List.map (pred_of_qual subs') qconsts in
-  if qconsts = [] && qvars = [] then 
-    fprintf ppf "%s" top_sym
-  else if List.exists P.is_contra ps then 
-    fprintf ppf "%s" bot_sym
-  else if !Clflags.print_subs then
-    fprintf ppf "[%a] %a %a" 
-      (C.pprint_many false " " pprint_sub) subs
-      (C.pprint_many false "" P.pprint) ps 
-      (C.pprint_many false " " (fun ppf v -> fprintf ppf "%s" (C.path_name v))) qvars
-  else 
-    fprintf ppf "%a%a"
-      (C.pprint_many false "" P.pprint) ps 
-      (C.pprint_many false " "  (fun ppf v -> fprintf ppf "%s" (C.path_name v))) qvars
-
-let pprint_refinement ppf = function
-  | []  -> fprintf ppf "%s" top_sym
-  | res -> C.pprint_many false "" pprint_refexpr ppf res 
-
-*)
-
 let flatten_refinement res = 
   List.fold_left 
     (fun (ps, svs) (s, (qs, vs)) -> 
@@ -540,9 +516,6 @@ let pprint_refs ppf rs =
   fprintf ppf "‹@[%a›@]" (C.pprint_many false "," pprint_refinement) rs
 
 let pprint_recref ppf rr =
-  (* let lp, rp  = "⊲", "⊳" in 
-  let lp, rp  = "‹", "›" in 
-  let lp, rp  = "⎨", "⎬" in *)
   let lp, rp  = "«", "»" in 
   if not (recref_is_empty rr) 
   then fprintf ppf "%s@[%a%s@]" lp (C.pprint_many false "," pprint_refs) rr rp
@@ -662,10 +635,6 @@ let instantiate env fr ftemplate =
     try List.assoc p !vars with Not_found -> vars := (p, ft) :: !vars; ft in
   let rec inst scbinds f ft =
     match (f, ft) with
-      (*| (Fvar (p, level, s, r), Fvar(p', level', s', r')) when p = p' ->
-          let instf = vmap p ft in
-          let subs = List.map (dep_sub_to_sub !binds scbinds env) s in
-          apply_subs subs (apply_refinement r instf)*)
       | (Fvar (p, level, s, r), _) when level = generic_level ->
           let instf = vmap p ft in 
           let subs = List.map (dep_sub_to_sub !binds scbinds env) s in
