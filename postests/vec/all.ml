@@ -349,16 +349,15 @@ let rec to_array t =
         begin 
 	  (* Creates the array *)
 	  let n = (cl + cr + 1) in 
-	  let a = Marray.make n d in 
+	  let a = Array.make n d in
 	    (* and fills it *)
 	  let rec fill k t' =
             match t' with
 	        Empty -> a
 	      | Node (l, cl, d, r, _, _) -> begin
 	          ignore (fill k l); 
-	          Marray.set a (k + cl) d; 
+	          Array.set a (k + cl) d;
 	          fill (k + cl + 1) r
 	        end
 	  in fill 0 t 
         end
-
