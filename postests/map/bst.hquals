@@ -1,3 +1,2 @@
-qualif FALSE(v) : (1=0)
 (* qualifiers from the mlq file *)
 qualif COMP(v)  : ~A { * * } v 
