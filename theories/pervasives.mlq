@@ -9,8 +9,11 @@ val pred: x: int -> {v: int | v = x - 1}
 
 val (mod): x: int -> y: {y: int | y != 0} -> {v: int |
                                                   (x >= 0 := v >= 0)
+                                              and (((x >= 0 and y >= 0) := v >= 0)
                                               and ((y > 0 := v < y)
-                                              and v = x - (y * (x / y)))}
+                                              and v = x - (y * (x / y))))}
+
+val abs: int -> {v: int | v >= 0}
 
 (* Comparisons *)
 val (=): x: 'a -> y: 'a -> {v: bool | ((? v) iff (x = y))}
