@@ -27,10 +27,10 @@ let restore_right e lt r =
                   begin match rr with
                     |  Red _ ->
                          Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
-                    | Black _   -> assert (0 = 1); assert false
-                    | Purple _ -> assert (0 = 1); assert false
+                    | Black _   -> (* assert (0 = 1); *) assert false
+                    | Purple _ -> (* assert (0 = 1); *) assert false
                   end
-              | Purple _ -> assert (0 = 1); assert false
+              | Purple _ -> (* assert (0 = 1); *) assert false
             end
         | Black _ ->
             begin match rl with
@@ -40,9 +40,9 @@ let restore_right e lt r =
               | Black _   ->
                   (* l is black, shallow rotate *)
                   Black(re, Red(e, lt, rl), rr)
-              | Purple _ -> assert (0 = 1); assert false
+              | Purple _ -> (* assert (0 = 1); *) assert false
             end
-        | Purple _ -> assert (0 = 1); assert false
+        | Purple _ -> (* assert (0 = 1); *) assert false
       end
   | Red _   -> Black (e, lt, r)
   | Black _ -> Black (e, lt, r)
@@ -58,10 +58,10 @@ let restore_left e l rt =
                   begin match ll with
                     | Red _ ->
                         Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
-                    | Black _   -> assert (0 = 1); assert false
-                    | Purple _ -> assert (0 = 1); assert false
+                    | Black _   -> (* assert (0 = 1); *) assert false
+                    | Purple _ -> (* assert (0 = 1); *) assert false
                   end
-              | Purple _ -> assert (0 = 1); assert false
+              | Purple _ -> (* assert (0 = 1); *) assert false
             end
         | Black _ ->
             begin match lr with
@@ -71,9 +71,9 @@ let restore_left e l rt =
               | Black _   ->
                   (* r is black, shallow rotate *)
                   Black (le, ll, Red (e, lr, rt))
-              | Purple _ -> assert (0 = 1); assert false
+              | Purple _ -> (* assert (0 = 1); *) assert false
             end
-        | Purple _ -> assert (0 = 1); assert false
+        | Purple _ -> (* assert (0 = 1); *) assert false
       end
   | Red _   -> Black (e, l, rt)
   | Black _ -> Black (e, l, rt)
@@ -90,7 +90,7 @@ let rec ins1 key d = match d with
             | Red _     -> Purple (key1, l', right)
             | Black _   -> Red (key1, l', right)
             | Empty     -> Red (key1, l', right)
-            | Purple _ -> assert (0 = 1); assert false
+            | Purple _ -> (* assert (0 = 1); *) assert false
           end
       else
         let r' = ins1 key right in
@@ -98,10 +98,10 @@ let rec ins1 key d = match d with
             | Red _     -> Purple (key1, left, r')
             | Black _   -> Red (key1, left, r')
             | Empty     -> Red (key1, left, r')
-            | Purple _ -> assert (0 = 1); assert false
+            | Purple _ -> (* assert (0 = 1); *) assert false
           end
   | Empty     -> Red (key, Empty, Empty)
-  | Purple _ -> assert (0 = 1); assert false
+  | Purple _ -> (* assert (0 = 1); *) assert false
 let insert dict key =
   let dict = ins1 key dict in
     match dict with

@@ -28,7 +28,7 @@ val create: 'a -> n: {v: int | v >= 0} -> RGDTREE('a, v, true)
 
 val empty: RGDTREE('a, v, H(v) = 0)
 
-val is_empty: t: UGDTREE('a) -> {v: bool | (? v) iff ((? H(t) = 0) or (? L(t) = 0))}
+val is_empty: t: UGDTREE('a) -> {v: bool | ((? v) iff (H(t) = 0))}
 
 val singleton: 'a -> RGDTREE('a, v, H(v) = 1)
 
