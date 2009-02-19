@@ -58,7 +58,7 @@ let add t x = () (* SLICE *)
 
 let hashcons_node v l h =
   let index = (hash_node v l h) mod (Array.length t.table) in
-  let bucket = t.table.(index) in
+  let bucket = Array.unsafe_get t.table index in
   let sz = Weak.length bucket in
   let rec loop i =
     if i >= sz then begin
