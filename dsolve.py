@@ -37,9 +37,10 @@ def gen_quals(src,bare,flags):
   (fname,qname,hname) = (bname+".ml", bname+".quals", bname+".hquals")
   os.system("rm -f %s" % qname)
   if bare and os.path.exists(hname):
-    os.system("cp -f %s %s" % (hname, tname))
+    files = [hname]
   else:
-    cat_files([hname,d_pats],tname)
+    files = [hname, d_pats]
+  cat_files([hname,d_pats],tname)
   gen  = ("./liquid.opt %s -summarize" % (flags)).split()
   succ = common.logged_sys_call(gen + [tname2, fname])
   split= ("./depsplit %s %s %s" % (tname, tname2, qname)).split()
