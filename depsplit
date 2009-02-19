@@ -3,8 +3,10 @@
 t1=/tmp/dsolve1.scratch
 t2=/tmp/dsolve2.scratch
 
+echo > /tmp/newline
+
 d=$((`grep -c mdep $1`))
-l=$((`wc -l $1 | cut -d " " -f 1 -`))
+l=$((`cat $1 /tmp/newline | wc -l | cut -d " " -f 1 -`))
 c=$(($l-$d)) 
 
 head -n $d $1 > $t1
