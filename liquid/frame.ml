@@ -684,7 +684,7 @@ let instantiate_qualifiers vars fr =
    [f] and [f'] are expected to be of the same shape; also, [f]
    must be completely unlabeled (as frames are after creation by fresh). *)
 (* pmr: this flag needs to be removed!! *)
-let label_like_where destructive f f' =
+let label_like f f' =
   let rec label vars f f' = match (f, f') with
     | (Fvar _, Fvar (_, _, s, _)) ->
         instantiate_qualifiers vars (apply_dep_subs (instantiate_dep_subs vars s) f) 
@@ -697,11 +697,10 @@ let label_like_where destructive f f' =
             | Some (rv, rr) -> Some (rv, instantiate_recref_qualifiers vars rr)
         in Fsum (p, rro, label_constrs_like vars cs1 cs2, instantiate_ref_qualifiers vars r)
     | (Fabstract (p, ps, id, r), Fabstract (_, ps', id', _)) ->
-        let vars' = if destructive then vars else ((Ident.name id, Path.Pident id') :: vars) in
-        Fabstract (p, label_params_like vars' ps ps', id', instantiate_ref_qualifiers vars r)
+        let vars' = (Ident.name id, Path.Pident id') :: vars in
+          Fabstract (p, label_params_like vars' ps ps', id', instantiate_ref_qualifiers vars r)
     | (Farrow (p1, f1, f1'), Farrow (p2, f2, f2')) ->
-        let vars' = (List.map (fun (x, y) -> (Ident.name x, Path.Pident y)) 
-          (if destructive then [] else Pattern.bind_vars p1 p2)) @ vars in
+        let vars' = List.map (fun (x, y) -> (Ident.name x, Path.Pident y)) (Pattern.bind_vars p1 p2) @ vars in
           Farrow (p2, label vars f1 f2, label vars' f1' f2')
     | _ -> printf "Can't label %a like %a" pprint f pprint f'; assert false
   and label_constrs_like vars cs1 cs2 =
@@ -710,14 +709,11 @@ let label_like_where destructive f f' =
     | ([], []) -> []
     | ((i1, f1, v1) :: ps1, (i2, f2, _) :: ps2) ->
         let f1 = label vars f1 f2 in
-        let vars = if destructive then vars else ((Ident.name i1, Path.Pident i2) :: vars) in
+        let vars = (Ident.name i1, Path.Pident i2) :: vars in
           (i2, f1, v1) :: label_params_like vars ps1 ps2
     | ([], x :: xs)
     | (x :: xs, []) -> raise (Failure "Label_like param mismatch")
   in label [] f f'
-
-let label_like = label_like_where false
-let label_like_destructive = label_like_where true
 
 let record_of_params path ps r =
   Fsum(path, None, [(Cstr_constant 0, ("rec", ps))], r)
@@ -930,7 +926,7 @@ let fresh_false env ty =
   fresh_with_var_fun env (fun _ -> false_refinement) ty
 
 let fresh_with_labels env ty f =
-  label_like_destructive (fresh env ty) f
+  label_like (fresh env ty) f
 
 let fresh_without_vars env ty =
   fresh_with_var_fun env (fun _ -> empty_refinement) ty
