@@ -89,7 +89,6 @@ and simpguard = ref false                (* simplify guard *)
 and no_recrefs = ref false              (* true out recursive refinements *)
 and no_recvarrefs = ref false           (* no top-level refinements on recvars *)
 and ck_mlq = ref false                  (* do a quick incomplete check over the mlq constraints *)
-and union_wfs = ref false               (* take the union of instantiated wf quals *)
 and summarize = ref None                (* dump a summary of program to disk and terminate *)
 and dsmeasures = ref false              (* don't strip measure names *)
 

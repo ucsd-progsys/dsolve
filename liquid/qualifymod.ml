@@ -358,10 +358,12 @@ and constrain_sequence (env, guard, f) e1 e2 =
 and elem_qualifier fexpr n =
   B.proj_eq_qualifier n (expression_to_pexpr fexpr)
 
-and constrain_tuple (env, guard, _) es =
+and constrain_tuple (env, guard, f) es =
   let (fs, subexp_cs) = constrain_subexprs env guard es in
-  let f'               = F.tuple_of_frames fs (F.mk_refinement [] (Misc.mapi elem_qualifier es) []) in
-  (f', [WFFrame(env, f')], subexp_cs)
+  let f'              = F.tuple_of_frames fs (F.mk_refinement [] (Misc.mapi elem_qualifier es) []) in
+    (* We can't just use f' directly because we might need substitutions to make the new
+       tuple self-contained (e.g., to refer to e0 instead of some local var) *)
+    (f, [WFFrame(env, f); SubFrame (env, guard, f', f)], subexp_cs)
 
 and constrain_assertfalse (env, _, _) tenv ty =
   let f = F.fresh_false tenv ty in

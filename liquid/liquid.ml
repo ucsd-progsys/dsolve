@@ -236,7 +236,6 @@ let main () =
      "-no-recrefs", Arg.Set no_recrefs, "true out recursive refinements";
      "-no-recvarrefs", Arg.Set no_recvarrefs, "true out top-level recvar refinements";
      "-check-mlq", Arg.Set ck_mlq, "warn about possible errors in the local mlq";
-     "-union-wfs", Arg.Set union_wfs, "take the union of instantiated wf quals";
      "-summarize", Arg.String (fun s -> summarize := Some s), "dump a summary of source to filename";
      "-dsmeasures", Arg.Set dsmeasures, "don't strip measure names";
      "-no-timing", Arg.Unit Bstats.dont_time, "don't do any profiling";

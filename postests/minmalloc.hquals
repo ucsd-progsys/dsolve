@@ -1,0 +1,3 @@
+mdep Mystore
+
+qualif FRE(v): (Mystore.get ~A v) { * * } 0
