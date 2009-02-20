@@ -124,23 +124,24 @@ let constrs_tag_params t cs =
 (**************************************************************)
 
 let rec map f = function
-  | (Fvar _ | Frec _) as fr -> f fr
-  | Fsum (p, ro, cs, r) ->
-      f (Fsum (p, ro, List.map (constr_app_params (map_params f)) cs, r))
+  | (Fvar _ | Frec _) as fr  -> f fr
+  | Fsum (p, ro, cs, r)      -> f (Fsum (p, ro, List.map (constr_app_params (map_params f)) cs, r))
   | Fabstract (p, ps, id, r) -> f (Fabstract (p, map_params f ps, id, r))
-  | Farrow (x, f1, f2) -> f (Farrow (x, map f f1, map f f2))
+  | Farrow (x, f1, f2)       -> f (Farrow (x, map f f1, map f f2))
 
 and map_params f ps =
   List.map (fun (p, fr, v) -> (p, map f fr, v)) ps
 
 let rec map_labels f fr = 
-  let f' = function   Farrow (x, a, b) -> Farrow (f x, a, b)
-                    | Fabstract (p, ps, id, r) -> 
-                        let id = if C.empty_list ps then id else
-                                   (List.hd (Typedtree.pat_desc_bound_idents (f (Tpat_var id)))) in
-                        Fabstract(p, map_param_labels f ps, id, r)
-                    | fr -> fr in
-    map f' fr
+  map (map_label_map f) fr
+
+and map_label_map f = function
+    Farrow (x, a, b) -> Farrow (f x, a, b)
+  | Fabstract (p, ps, id, r) ->
+      let id = if C.empty_list ps then id else
+        (List.hd (Typedtree.pat_desc_bound_idents (f (Tpat_var id)))) in
+        Fabstract(p, map_param_labels f ps, id, r)
+  | fr -> fr
 
 and map_param_labels f ps =
   let i2p i = Tpat_var i in
@@ -154,11 +155,11 @@ let map_recref f rr =
   List.map (fun r -> List.map f r) rr
 
 let rec map_refinements_map f = function
-  | Frec (p, rr, r) -> Frec (p, map_recref f rr, f r)
-  | Fvar (p, level, s, r) -> Fvar (p, level, s, f r)
-  | Fsum (p, ro, cs, r) -> Fsum (p, M.may_map (fun (p, rr) -> (p, map_recref f rr)) ro, cs, f r)
+  | Frec (p, rr, r)          -> Frec (p, map_recref f rr, f r)
+  | Fvar (p, level, s, r)    -> Fvar (p, level, s, f r)
+  | Fsum (p, ro, cs, r)      -> Fsum (p, M.may_map (fun (p, rr) -> (p, map_recref f rr)) ro, cs, f r)
   | Fabstract (p, ps, id, r) -> Fabstract (p, ps, id, f r)
-  | Farrow _ as f -> f
+  | Farrow _ as f            -> f
 
 let map_refinements f fr =
   map (map_refinements_map f) fr
@@ -249,10 +250,10 @@ let false_refinement =
   mk_refinement [] [(Path.mk_ident "false", Path.mk_ident "V", P.Not (P.True))] []
 
 let apply_refinement r = function
-  | Fvar (p, level, s, _) -> Fvar (p, level, s, r)
-  | Fsum (p, rr, cs, _) -> Fsum (p, rr, cs, r)
+  | Fvar (p, level, s, _)    -> Fvar (p, level, s, r)
+  | Fsum (p, rr, cs, _)      -> Fsum (p, rr, cs, r)
   | Fabstract (p, ps, id, _) -> Fabstract (p, ps, id, r)
-  | f -> f
+  | f                        -> f
 
   (*need to apply subs when refinement is pulled somehow..*)
 let get_refinement = function
@@ -262,7 +263,7 @@ let get_refinement = function
 let append_refinement res' f =
   match get_refinement f with
     | Some res -> apply_refinement (res @ res') f
-    | None -> f
+    | None     -> f
 
 let set_recref rr = function
   | Frec (p, _, r)                -> Frec (p, rr, r)
@@ -271,7 +272,7 @@ let set_recref rr = function
 
 let get_recref = function
   | Frec (_, rr, _) | Fsum (_, Some (_, rr), _, _) -> Some rr
-  | _                                           -> None
+  | _                                              -> None
 
 let merge_recrefs rr rr' =
   List.map2 (List.map2 (@)) rr rr'
@@ -285,7 +286,7 @@ let eager_apply subs qs =
 
 let refexpr_apply_subs subs' (subs, qexprs) =
   match qexprs with
-  | (qconsts, []) -> (subs, (eager_apply subs' qconsts, []))
+  | (qconsts, [])    -> (subs, (eager_apply subs' qconsts, []))
   | (qconsts, qvars) -> (subs' @ subs, qexprs)
 
 let apply_subs subs f =
@@ -314,7 +315,7 @@ let ref_to_simples r =
 
 let ref_of_simple = function
   | (subs, Qconst q) -> mk_refinement subs [q] []
-  | (subs, Qvar v) -> mk_refinement subs [] [v]
+  | (subs, Qvar v)   -> mk_refinement subs [] [v]
 
 (******************************************************************************)
 (****************************** Constructor tags ******************************)
@@ -327,7 +328,7 @@ let maybe_tag_qualifier (_, v, pred) =
 
 let find_tag_single ts r =
   let (_, (qs, _)) = r in
-  (C.maybe_list (List.map maybe_tag_qualifier qs)) @ ts
+    (C.maybe_list (List.map maybe_tag_qualifier qs)) @ ts
 
 let find_tag rs =
   C.only_one "too many tags in constructed value" (List.fold_left find_tag_single [] rs)
@@ -505,7 +506,6 @@ and pprint_pattern_list ppf pats =
   let ds = List.map (fun p -> p.pat_desc) pats in
   C.pprint_many false "," pprint_pattern ppf ds 
 
-
 let wrap_refined r ppf pp =
   if List.for_all (function (_, ([], [])) -> true | _ -> false) r then
     (fprintf ppf "@["; pp ppf; fprintf ppf "@]")
@@ -590,7 +590,7 @@ let replace_recvar f f' = match f with
       map (function Frec (rp', rr', r') when Path.same rp rp' -> append_refinement r' (append_recref rr' f') | f -> f) (Fsum (p, None, cs, r))
   | _ -> f
 
-let unfold f = (* this may not be right *)
+let unfold f =
   replace_recvar f (apply_refinement empty_refinement f)
 
 let unfold_applying f =
@@ -618,7 +618,7 @@ let dep_sub_to_sub binds scbinds env (s, s') =
 
 let apply_dep_subs subs = function
     Fvar (p, i, _, r) -> Fvar (p, i, subs, r)
-  | _ -> assert false
+  | _                 -> assert false
 
 let instantiate_dep_subs vars subs =
   let c i =
@@ -630,20 +630,20 @@ let instantiate_dep_subs vars subs =
    one is undefined and unimportant. *)
 let instantiate env fr ftemplate =
   let binds = ref [] in
-  let vars = ref [] in
+  let vars  = ref [] in
   let vmap p ft =
     try List.assoc p !vars with Not_found -> vars := (p, ft) :: !vars; ft in
   let rec inst scbinds f ft =
     match (f, ft) with
       | (Fvar (p, level, s, r), _) when level = generic_level ->
           let instf = vmap p ft in 
-          let subs = List.map (dep_sub_to_sub !binds scbinds env) s in
+          let subs  = List.map (dep_sub_to_sub !binds scbinds env) s in
           apply_subs subs (append_refinement r instf)
       | (Fvar _, _) | (Frec _, _) ->
           f
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
           let nf1 = inst scbinds f1 f2 in
-          let _ = binds := (Bpat l) :: !binds in
+          let _   = binds := (Bpat l) :: !binds in
           let nf2 = inst ((Bpat l) :: scbinds) f1' f2' in
           Farrow (l, nf1, nf2)
       | (Fsum (p, ro, cs, r), Fsum(p', _, cs', _)) ->
@@ -663,8 +663,7 @@ let instantiate env fr ftemplate =
   in inst [] fr ftemplate
 
 let instantiate_refexpr_qualifiers vars (subs, (qconsts, qvars)) =
-  (subs, (List.map (fun q -> match Qualifier.instantiate vars q with Some q -> q | None -> q) qconsts,
-          qvars))
+  (subs, (List.map (fun q -> match Qualifier.instantiate vars q with Some q -> q | None -> q) qconsts, qvars))
 
 let instantiate_ref_qualifiers vars r =
   List.map (instantiate_refexpr_qualifiers vars) r
@@ -748,10 +747,10 @@ let apply f es =
 (**************************************************************)
 
 let translate_variance = function
-        | (true, true, true) -> Invariant
-        | (true, false, false) -> Covariant
-        | (false, true, false) -> Contravariant
-  | (a, b, c) -> printf "@[Got gibberish variance (%b, %b, %b)@]@." a b c; assert false
+  | (true, true, true)   -> Invariant
+  | (true, false, false) -> Covariant
+  | (false, true, false) -> Contravariant
+  | (a, b, c)            -> printf "@[Got gibberish variance (%b, %b, %b)@]@." a b c; assert false
 
 let mutable_variance = function
   | Mutable -> Invariant
