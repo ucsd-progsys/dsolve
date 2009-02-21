@@ -34,7 +34,7 @@ let _bind_vars = function
   | (Tpat_any, _)                   -> ([], [])
   | (Tpat_var x, Tpat_var y)        -> ([], [(x, y)])
   | (Tpat_var x, Tpat_alias (_, y)) -> ([], [(x, y)])
-  | (Tpat_var _, _)                 -> ([], [])
+  | (Tpat_var x, _)                 -> ([], [(x, Ident.create "_unbound_")])
   | (Tpat_tuple p1s, Tpat_tuple p2s)
   | (Tpat_construct (_, p1s), Tpat_construct (_, p2s)) ->
       (List.combine (pattern_descs p1s) (pattern_descs p2s), [])
