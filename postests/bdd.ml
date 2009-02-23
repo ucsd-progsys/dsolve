@@ -39,9 +39,9 @@ let gentag = let r = ref (-1) in fun z -> incr r; !r
 
 (* COMPLEX VERSION *) 
 type table = {
-  mutable table : bdd Weak.t array;
-  mutable totsize : int;             (* sum of the bucket sizes *)
-  mutable limit : int;               (* max ratio totsize/table length *)
+  table : bdd Weak.t array;
+  totsize : int;             (* sum of the bucket sizes *)
+  limit : int;               (* max ratio totsize/table length *)
 }
 
 let create sz =
