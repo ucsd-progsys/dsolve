@@ -84,7 +84,8 @@ let load_dep_mlqfiles bname deps env fenv mlqenv =
   let inames = List.map (fun s -> ((String.lowercase s) ^ ".mlq", s)) deps in
   let inames = C.sort_and_compact inames in
   let f (s, d) pns =
-    let p = try Some (List.find (fun p -> Sys.file_exists (p ^ "/" ^ s)) pns) with Not_found -> None in
+    let p = try Some (List.find (fun p -> Sys.file_exists (p ^ "/" ^ s)) pns)
+      with Not_found -> C.cprintf C.ol_warn_mlqs "@[WARNING:@ could@ not@ find@ %s@.@]" s; None in
       match p with
       | Some p -> Some (Pparse.file std_formatter (p ^ "/" ^ s) Parse.liquid_interface Config.ast_impl_magic_number, d)
       | None -> None in

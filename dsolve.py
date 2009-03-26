@@ -40,7 +40,7 @@ def gen_quals(src,bare,flags):
     files = [hname]
   else:
     files = [hname, d_pats]
-  cat_files([hname,d_pats],tname)
+  cat_files(files, tname)
   gen  = ("./liquid.opt %s -summarize" % (flags)).split()
   succ = common.logged_sys_call(gen + [tname2, fname])
   split= ("./depsplit %s %s %s" % (tname, tname2, qname)).split()

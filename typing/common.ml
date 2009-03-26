@@ -356,6 +356,7 @@ let ol_solve_master = 2
 let ol_solve_stats = 2
 let ol_timing = 2
 let ol_default = 2
+let ol_warn_mlqs = 3
 let ol_normalized = 3
 let ol_dquals = 4 
 let ol_unique_names = 5 (* must be > ol_dquals *)
