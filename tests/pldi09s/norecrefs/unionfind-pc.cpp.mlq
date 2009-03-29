@@ -1,0 +1,10 @@
+#define RANK		(i: int, int) Store.t
+#define BIND(i,v)	(v = Store.get supr i)
+#define PRNT(r,i,v)	((v=i) or (Store.get r i < Store.get r v))
+#define ROOT(p,v)	(Store.get p v = v)
+#define PRES(p,i,v)	((Store.get p i = i) -> (v = i)) 
+#define PAR(p)		(i: int, {v: int | BIND(i, v) and (p)}) Store.t 
+#define PARR(r,p)	PAR(PRNT(r,i,v) and p)
+
+val find : r: RANK -> p: PARR(r,true) -> int -> PARR(r,PRES(p,i,v)) * {v : int | ROOT(e0,v)}
+val union: r: RANK -> p: PARR(r,true) -> int -> int -> RANK * PARR(e0,true)

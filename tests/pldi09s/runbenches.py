@@ -22,15 +22,12 @@
 import common, sys, time, os, os.path
 import itertools as it
 import dsolve
-import time
 
-testdirs = [("tests/pldi09s/norecrefs", True), ("tests/pldi09s/run", False)]
-
-dsolve.solve = "./liquid.opt".split()
+testdirs = [("tests/pldi09s/run", False), ("tests/pldi09s/norecrefs", True)]
 
 def runtest(file, norecrefs):
-  expected_status = 0
-  include = "theories"
+  expected_stats = 0
+  include = "../../theories"
   status = dsolve.gen_quals(file, True, "-I " + include)
   if status != 0: 
     print "Qualgen failed on %s" % file
@@ -48,7 +45,6 @@ def runtest(file, norecrefs):
     print "\033[1;32mSUCCESS!\033[1;0m\n"
   else:
     print "\033[1;31mFAILURE :(\033[1;0m\n"
-  time.sleep(20)
   return (file, ok)
 
 def runtests(dir, expected_status):

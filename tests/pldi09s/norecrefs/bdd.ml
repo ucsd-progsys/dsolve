@@ -5,8 +5,6 @@ let myfail s =
 
 type bdd = Zero of int | One of int | Node of int * int * bdd * bdd
 
-let skip (x:bdd) = () 
-
 let tag  = function
   | Zero t              -> t
   | One t               -> t
@@ -82,7 +80,7 @@ let one  = One (gentag ())
 
 let mk v low high =
   if low == high then low else hashcons_node v low high
-
+  
 let mk_var v = mk v zero one
 
 let cache_default_size = 7001

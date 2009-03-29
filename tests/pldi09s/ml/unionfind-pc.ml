@@ -42,8 +42,6 @@ let union (r: (int, int) Store.t) (p: (int, int) Store.t) (x: int) (y: int) =
   end else
     (r, p'') 
 
-(************************************************)
-
 let check r p = 
   Store.iter p (fun i v -> assert (v=i || Store.get r i < Store.get r v))
 
