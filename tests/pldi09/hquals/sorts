@@ -1,0 +1,66 @@
+(*(*mergesort*)
+qualif A(v): v = len ~A
+qualif D(v): len v = len ~A 
+qualif E(v): len v = len ~A {< +, - >} len ~B
+qualif EQ(v) : ~A { >=, <= } v
+
+
+(*mergesort2*)
+qualif EQ(v) : ~A { * * } v
+
+qualif E(v): len v = len ~A + len ~B 
+qualif LB(v): llen v = len ~A (* yes *)
+qualif BL(v): len v = llen ~A
+
+qualif V(v): ? Myset.eq (set_of v) (set_of xss)
+qualif V(v): ? Myset.eq (set_of v) (Myset.of_list xs)
+qualif V(v): ? Myset.eq (Myset.of_list v) (set_of xss)
+qualif V(v): ? Myset.eq (Myset.of_list v) (Myset.cup (Myset.of_list xs) (Myset.of_list ys))
+
+(* from the MLQ *)
+qualif D(v): len v = len ~A 
+qualif A(v): v = len ~A 
+qualif LL(v): llen v = llen ~A
+
+
+(*isort*)
+qualif EQ(v) : ~A { <= } v
+
+(*quicksort*)
+qualif EQ(v) : v { >=, <= } ~A
+qualif LP(v): len v + len ~B = len ~A
+qualif E(v): len v = len ~A + len ~B
+
+(* from the MLQ *)
+qualif LP(v): len v = len ~A
+
+(*isortset*)
+qualif CON(v): ? Myset.eq (Myset.of_list v) (Myset.cup (Myset.sng ~A) (Myset.of_list ~B))
+qualif PAR(v): ? Myset.eq (Myset.of_list ~A) (Myset.cup (Myset.of_list e0) (Myset.of_list v))
+qualif APP(v): ? Myset.eq (Myset.of_list v)  (Myset.cup (Myset.of_list ~A) (Myset.of_list ~B))*)
+
+(*actuals*)
+qualif EQ(v) : ~A { * * } v
+
+(*merge2*)
+qualif LB(v): llen v = len ~A (* yes *)
+qualif BL(v): len v = llen ~A
+
+(*merge*) (*quick*)
+qualif E(v): len v = len ~A {< +, - >} len ~B
+
+(*sets*)
+qualif V(v): ? Myset.eq (set_of v) (set_of xss)
+qualif V(v): ? Myset.eq (set_of v) (Myset.of_list xs)
+qualif V(v): ? Myset.eq (Myset.of_list v) (set_of xss)
+
+qualif CON(v): ? Myset.eq (Myset.of_list v) (Myset.cup (Myset.sng ~A) (Myset.of_list ~B))
+qualif PAR(v): ? Myset.eq (Myset.of_list ~A) (Myset.cup (Myset.of_list e0) (Myset.of_list v))
+qualif APP(v): ? Myset.eq (Myset.of_list v)  (Myset.cup (Myset.of_list ~A) (Myset.of_list ~B))*)
+
+(*MLQ*)
+qualif D(v): len v = len ~A 
+qualif A(v): v = len ~A 
+qualif D(v): llen v = llen ~A
+
+
