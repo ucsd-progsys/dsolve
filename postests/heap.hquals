@@ -1,4 +1,4 @@
-qualif CMP(v): v { * * } ~A
+qualif CMP(v)(A: int): v { * * } ~A
 
 (*qualif S(v) : set_of v = Myaset.empty*)
 qualif S(v) : sz v > 1

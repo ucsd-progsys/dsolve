@@ -66,7 +66,7 @@ let addn items m =
   List.fold_left (fun e (k, v) -> M.add k v e) m items
 
 let find k m =
-  Bstats.time "env find" (M.find k) m
+  M.find k m
 
 let iter f m =
   M.iter f m

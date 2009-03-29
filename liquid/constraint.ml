@@ -725,14 +725,13 @@ let tr_misses = ref 0
 
 let instantiate_quals_in_env tr mlenv consts qs =
     (fun (env, envl') ->
-        let (vs, (env, envl, quoi)) = BS.time "find_maximal" (TR.find_maximal envl' tr)
-                                                                (fun (_, _, quoi) -> C.maybe_bool !quoi) in
+        let (vs, (env, envl, quoi)) = TR.find_maximal envl' tr (fun (_, _, quoi) -> C.maybe_bool !quoi) in
         match !quoi with
-        | Some qs -> 
+          | Some qs -> 
             (*TR.iter_path envl' tr (fun (_, _, quoi) -> if C.maybe_bool !quoi then () else quoi := Some qs);*)
             quoi := Some qs;
             List.iter (fun (_, _, q) -> if C.maybe_bool !q then () else q := Some qs) vs; qs
-        | None -> 
+          | None -> 
             let _   = incr tr_misses in
             let qs = C.fast_flap
             (fun q -> try Qualdecl.expand_qualpat_about consts env mlenv q with Failure _ -> []) qs in
@@ -753,7 +752,7 @@ let instantiate_per_environment mlenv consts cs qs =
   let envs = List.rev_map constraint_env cs in
   let envls = List.map mk_envl envs in 
   let envvs = List.combine envs envls in
-  let tr = (BS.time "tr" (List.fold_left (fun t (ev, el) -> TR.add el (ev, el, ref None) t) TR.empty) envvs) in
+  let tr = List.fold_left (fun t (ev, el) -> TR.add el (ev, el, ref None) t) TR.empty envvs in
   BS.time "instquals" (List.rev_map (instantiate_quals_in_env tr mlenv consts qs)) envvs
 
 (**************************************************************)
@@ -931,9 +930,12 @@ let solve qs env consts cs =
     List.map (fun (_, {Parsetree.pqual_pat_desc = (_, _, p)}) -> printf "%a@." P.pprint_pattern p) qs in*)
   let qs = BS.time "instantiating quals" (instantiate_per_environment env consts cs) qs in
   (*let qs = List.map (fun qs -> List.filter Qualifier.may_not_be_tautology qs) qs in*)
-  let _ = C.cprintf C.ol_solve "@[%i@ instantiation@ queries@ %i@ misses@]@." (List.length cs) !tr_misses in
-  let _ = C.cprintf C.ol_solve_stats "@[%i@ qualifiers@ generated@]@." (List.length (List.flatten qs)) in
-  let _ = dump_qualifiers (List.combine (strip_origins cs) qs) in
+  let _ = if C.ck_olev C.ol_solve then
+          C.cprintf C.ol_solve "@[%i@ instantiation@ queries@ %i@ misses@]@." (List.length cs) !tr_misses in
+  let _ = if C.ck_olev C.ol_solve then
+          C.cprintf C.ol_solve_stats "@[%i@ qualifiers@ generated@]@." (List.length (List.flatten qs)) in
+  let _ = if C.ck_olev C.ol_insane then
+          dump_qualifiers (List.combine (strip_origins cs) qs) in
 (*let _ = assert false in*)
   let sri = BS.time "making ref index" make_ref_index cs in
   let s = BS.time "make initial sol" make_initial_solution (List.combine (strip_origins cs) qs) in
