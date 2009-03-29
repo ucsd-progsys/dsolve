@@ -81,5 +81,5 @@ val revfoldi: t: UGDTREE('a) -> ({v: int | 0 <= v and v < L(t)} -> 'a -> 'b -> '
 
 val revrangefoldi: i: int -> j: int -> t: UGDTREE('a) -> ({v: int | v >= i and v <= j} -> 'a -> 'b -> 'b) -> 'b -> 'b
 
-val to_array: t: UGDTREE('a) -> 'a array
+val to_array: t: UGDTREE('a) -> {v: 'a array | Marray.length v = L(t)}
 
