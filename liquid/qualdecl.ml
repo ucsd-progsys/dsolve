@@ -73,8 +73,6 @@ let ck_consistent patpred pred =
       | _ -> assert false in
     ck_pred_rec patpred pred
 
-let ck_consistent p1 p2 = BS.time "check consistent" (ck_consistent p1) p2
-
 let rec transl_patpred f g env (v, nv) tymap constset p =
   let untyped = ref false in
   let vm = ref [] in

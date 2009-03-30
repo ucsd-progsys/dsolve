@@ -19,34 +19,27 @@
 # ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION
 # TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-import common, sys, time
+import common, sys, time, os, os.path
 import itertools as it
 import dsolve
+import time
 
-testfiles = [("tests/rec/benchtests", 0)]
+testdirs = [("tests/pldi09s/norecrefs", True), ("tests/pldi09s/run", False)]
 
-def runtest(filep, expected_status):
-  file = filep[0]
-  if file == "#": return (file, True)
-  collect = int(filep[1])
-  lqualifs = common.str_to_bool(filep[2])
-  no_recrefs = common.str_to_bool(filep[3])
-  no_simple = common.str_to_bool(filep[4])
-  union = common.str_to_bool(filep[5])
-  gflags = "-I tests"
-  status = dsolve.gen_quals(file, True, lqualifs, collect, gflags)
+dsolve.solve = "./liquid.opt".split()
+
+def runtest(file, norecrefs):
+  expected_status = 0
+  include = "theories"
+  status = dsolve.gen_quals(file, True, "-I " + include)
   if status != 0: 
     print "Qualgen failed on %s" % file
     sys.exit(2)
   start = time.time()
-  flags = ["-v", "0", "-I", "theories", "-no-timing"]
-  if no_recrefs:
-     flags += ["-no-recrefs"]
-  if no_simple:
-     flags += ["-no-simple"]
-  if union:
-     flags += ["-union-wfs"]
-  status = dsolve.solve_quals(file, True, False, False, flags)
+  flags = ["-v", "0", "-no-simple", "-no-timing", "-I", include]
+  if norecrefs:
+    flags += ["-no-recrefs"]
+  status = dsolve.solve_quals(file, True, False, True, flags)
   if status == 2: sys.exit(2)
   print "%f seconds" % (time.time() - start)
 
@@ -55,13 +48,15 @@ def runtest(filep, expected_status):
     print "\033[1;32mSUCCESS!\033[1;0m\n"
   else:
     print "\033[1;31mFAILURE :(\033[1;0m\n"
+  time.sleep(20)
   return (file, ok)
 
-def runtests(file, expected_status):
-  print "Running tests from %s" % file
-  return [runtest(test.rstrip().split(), expected_status) for test in common.read_lines(file)]
+def runtests(dir, expected_status):
+  print "Running tests from %s/" % dir
+  files = it.chain(*[[os.path.join(dir, file) for file in files] for dir, dirs, files in os.walk(dir)])
+  return [runtest(file, expected_status) for file in files if file.endswith(".ml")]
 
-results   = [runtests(file, expected_status) for (file, expected_status) in testfiles]
+results   = [runtests(dir, expected_status) for (dir, expected_status) in testdirs]
 failed    = [result[0] for result in it.chain(*results) if result[1] == False]
 failcount = len(failed)
 if failcount == 0:

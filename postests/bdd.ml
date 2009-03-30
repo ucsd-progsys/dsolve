@@ -82,9 +82,6 @@ let one  = One (gentag ())
 
 let mk v low high =
   if low == high then low else hashcons_node v low high
-  
-
-let _ = mk
 
 let mk_var v = mk v zero one
 

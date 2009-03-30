@@ -1,0 +1,44 @@
+#define H(v)       (sz v)
+#define DIFF(l, r) (H(l) = H(r) + 1)
+#define SAME(l, r) (H(l) = H(r))
+
+#define M(v)       (max v)
+
+#define R(p)   [[], [v: p, v: true, v: true], [v: p, v: true, v: true]]
+#define UR     R(true)
+#define SR     R(v <= e0)
+#define BR(b)  R(v <= d and v <= b)
+#define HP     UR [z: t . || e0: 'a, e1: SR z, {e2: SR z | SAME(e1, e2)} || e0: 'a, e1: SR z, {e2: SR z | DIFF(e1, e2)}]
+#define BHP(b) UR [z: t . || d: 'a, e1: BR(b) z, {e2: BR(b) z | SAME(e1, e2)} || d: 'a, e1: BR(b) z, {e2: BR(b) z | DIFF(e1, e2)}]
+
+#define S(v)      (set_of v)
+#define CUP(x, y) (Myaset.cup x y)
+#define SNG(x)    (Myaset.sng x)
+#define SEQ(x, y) (? Myaset.eq x y)
+#define MEM(x, v) (? Myaset.mem x v)
+#define MNS(x, y) (Myaset.mns x y)
+
+axiom pos : forall (x: int. sz x >= 0)
+
+measure set_of =
+    Empty -> Myaset.empty
+  | Same (x, l, r) -> Myaset.cup (Myaset.sng x) (Myaset.cup (set_of l) (set_of r))
+  | Diff (x, l, r) -> Myaset.cup (Myaset.sng x) (Myaset.cup (set_of l) (set_of r))
+
+measure sz =
+    Empty -> 0
+  | Same (x, l, r) -> 1 + sz l + sz r
+  | Diff (x, l, r) -> 1 + sz l + sz r
+
+measure max =
+  | Same (x, _, _) -> x
+  | Diff (x, _, _) -> x
+
+val empty: HP
+val add: x: 'a -> h: HP -> {v: HP | SEQ(S(v), CUP(S(h), SNG(x))) and DIFF(v, h)}
+val maximum: h: {v: HP | H(v) > 0} -> 'a * {v: BHP(e0) | ((MEM(e0, S(v))) and v = h) and e0 = M(v)}
+val extract_last: h: {v: HP | H(v) > 0} -> {v: 'a | (H(h) = 1 -> v = M(h))} * {v: HP | (SEQ(S(h), CUP(S(v), SNG(e0))) and H(v) = H(h) - 1) and (H(h) > 1 -> M(h) = M(v))}
+val descent: x: 'a -> h: {v: HP | H(v) > 0} -> {v: 'a | MEM(v, S(h)) and v = M(h)} * {v: HP | (SEQ(CUP(S(h), SNG(x)), CUP(S(v), SNG(e0))) and MEM(x, S(v))) and SAME(v, h)}
+val remove: h: {v: HP | H(v) > 0} -> {v: 'a | MEM(v, S(h)) and v = M(h)} * {v: HP | H(v) = H(h) - 1 and SEQ(S(h), CUP(SNG(e0), S(v)))}
+val iter: f: ('a -> 'b) -> h: HP -> unit
+val fold: f: ('a -> 'b -> 'b) -> h: HP -> b: 'b -> 'b

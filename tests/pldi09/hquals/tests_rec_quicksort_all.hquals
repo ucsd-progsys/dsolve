@@ -1,0 +1,6 @@
+qualif EQ(v) : v { >=, <= } ~A
+qualif LP(v): len v + len ~B = len ~A
+qualif E(v): len v = len ~A + len ~B
+
+(* from the MLQ *)
+qualif LP(v): len v = len ~A
