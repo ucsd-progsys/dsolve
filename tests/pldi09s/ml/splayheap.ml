@@ -4,14 +4,12 @@ let myfail s =
 type 'a t = 
   | E 
   | T of 'a * 'a t * 'a t 
-
-let rec sz t = match t with
+(*let rec sz t = match t with
   | E -> 0
   | T (_, l, r) -> 1 + sz l + sz r
-
 let rec set_of t = match t with
   | E -> Myset.empty
-  | T (x, l, r) -> Myset.cup (Myset.sng x) (Myset.cup (set_of l) (set_of r))
+  | T (x, l, r) -> Myset.cup (Myset.sng x) (Myset.cup (set_of l) (set_of r))*)
 
 let empty = E
 

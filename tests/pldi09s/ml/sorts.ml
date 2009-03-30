@@ -63,11 +63,9 @@ let rec merge_sort xs =
         merge ys' zs')
 
 type 'a llist = Nil | Cons of 'a list * 'a llist
-
-let rec set_of xss =
-  match xss with
+(*let rec set_of xss = match xss with
     | Nil -> Myset.empty
-    | Cons(xs, xss') -> Myset.cup (Myset.of_list xs) (set_of xss')
+    | Cons(xs, xss') -> Myset.cup (Myset.of_list xs) (set_of xss')*)
 
 let rec initlist xs =
   match xs with

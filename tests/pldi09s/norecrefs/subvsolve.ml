@@ -1,3 +1,6 @@
+let myassert b = 
+  ()
+
 let myfail s =
   print_string s; 
   assert false 
@@ -7,12 +10,16 @@ let myfail s =
 (***********************************************************************)
 
 let new_node g (n : 'a) = 
+  let _ = myassert (not (Myhash.mem g n)) in
   Myhash.set g n ([] : ('b * 'a) list)
 
 let succs g (n : 'a) : ('b * 'a) list = 
+  let _  = myassert (Myhash.mem g n) in
   Myhash.get g n
 
 let link g n n' l' = 
+  let _  = myassert (Myhash.mem g n) in
+  let _  = myassert (Myhash.mem g n') in
   let v  = succs g n in
   Myhash.set g n ((l',n')::v)
 
@@ -108,6 +115,8 @@ let rec fold2 f b1 b2 xs ys =
 
 let substitute g n ns' ss' =
   let _ = check_dag g in
+  let _ = myassert (List.length ns' = List.length ss' + 1) in
+  let _ = myassert (List.for_all (is_leaf_block g) (n::ns')) in
   match ns' with 
   | [] -> myfail ("error: ns' must be nonempty")
   | (n':: ns') -> 
@@ -159,6 +168,8 @@ and proc g s es  =
 let get_bvtype b g t x =
   let (b1,g1,t1,nx) = get_var_node b g t x in
   let bs            = desc g nx size in
+  let _             = myassert (List.for_all (fun z -> let (n,_) = z in is_leaf_block g n) bs) in
+  let _             = myassert (List.fold_left (+) 0 (List.map snd bs) = size) in
   (b1, g1, t1, bs)
 
 (***********************************************************************)
@@ -238,6 +249,7 @@ let rec subalign b0 g0 t0 z z' =
               let g3       = substitute g2 n' [b1] [] in 
               subalign b1 g3 t (x,i-s,j) (x',i'-s,j')
           else 
+            let _ = myassert (s < s') in 
             if n = n' then 
               let (b1, g1) = add_new_block b g in 
               let g2       = substitute g1 n' [b1;b1] [s'-s] in
@@ -256,6 +268,9 @@ let refine b g t c =
   | IndexedEq (z,z') ->
       let (x,i,j)      = z  in
       let (x',i',j')   = z' in
+      let _            = myassert (size > i && i >= j && j >= 0) in
+      let _            = myassert (size > i' && i' >= j' && j' >= 0) in
+      let _            = myassert (i-j = i'-j') in
       let (b1, g1, t1) = break b  g  t  x (i ,j)  in 
       let (b2, g2, t2) = break b1 g1 t1 x'(i',j') in
       let (b3, g3, t3) = subalign b2 g2 t2 (x,i,j) (x',i',j') in
@@ -264,6 +279,9 @@ let refine b g t c =
  | IndexedLeq (z,z') ->
       let (x,i,j)      = z  in
       let (x',i',j')   = z' in
+      let _            = myassert (size > i && i >= j && j >= 0) in
+      let _            = myassert (size > i' && i' >= j' && j' >= 0) in
+      let _            = myassert (i-j = i'-j') in
       let (b1, g1, t1) = break b  g  t  x  (i,j) in
       let (b2, g2, t2) = break b1 g1 t1 x' (i',j') in
       let (b3, g3, t3) = subalign b2 g2 t2 (x,i,j) (x',i',j') in

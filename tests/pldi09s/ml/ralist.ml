@@ -3,13 +3,11 @@ type 'a rlist =
   | One of 'a
   | Even of 'a rlist * 'a rlist
   | Odd  of 'a * 'a rlist * 'a rlist
-
-let rec sz l = 
-  match l with
+(*let rec sz l =  match l with
     | Nil -> 0
     | One x -> 1
     | Even (l1, l2) -> (sz l1) + (sz l2)
-    | Odd (_, l1, l2) -> (1 + (sz l1) + (sz l2)) 
+    | Odd (_, l1, l2) -> (1 + (sz l1) + (sz l2))*) 
 
 let rec cons x xs =
   match xs with

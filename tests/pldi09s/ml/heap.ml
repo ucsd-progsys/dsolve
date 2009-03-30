@@ -2,21 +2,18 @@ type 'a t =
   | Empty
   | Same of 'a * 'a t * 'a t (* same number of elements on both sides *)
   | Diff of 'a * 'a t * 'a t (* left has [n+1] nodes and right has [n] *)
-
-let rec set_of t = match t with
+(*let rec set_of t = match t with
     Empty -> Myaset.empty
   | Same (x, l, r) -> Myaset.cup (Myaset.sng x) (Myaset.cup (set_of l) (set_of r))
   | Diff (x, l, r) -> Myaset.cup (Myaset.sng x) (Myaset.cup (set_of l) (set_of r))
-
 let rec sz t = match t with
     Empty -> 0
   | Same (_, l, r) -> 1 + sz l + sz r
   | Diff (_, l, r) -> 1 + sz l + sz r
-
 let max h = match h with
     Empty -> assert false
   | Same (x, _, _) -> x
-  | Diff (x, _, _) -> x
+  | Diff (x, _, _) -> x*)
 
 let empty = Empty
 
@@ -46,11 +43,7 @@ let rec extract_last h = match h with
       | Diff (_, _, _) ->
           let y,r' = extract_last r  in y, Diff (x, l, r'))
   | Diff (x, l, r) -> let y,l' = extract_last l in y, Same (x, l', r)
-
-let ck_assume_empty h = match h with
-  | Empty -> h
-  | Same(_, _, _) -> let _ = assert (1=0) in assert false
-  | Diff(_, _, _) -> let _ = assert (1=0) in assert false
+(**)let ck_assume_empty h = match h with
 
 let rec descent x h = match h with
   | Empty ->
@@ -60,8 +53,8 @@ let rec descent x h = match h with
       | Empty ->
           (match l with
           | Same (z, ll', lr') ->
-              let ll = ck_assume_empty ll' in let _ = assert (ll = ll') in
-              let lr = ck_assume_empty lr' in let _ = assert (lr = lr') in
+              let ll = ck_assume_empty ll' in let _ = assert (ll = ll') in (**)
+              let lr = ck_assume_empty lr' in let _ = assert (lr = lr') in (**)
               if x > z then (y, Diff (x, Same (z, ll, lr), Empty))
               else (y, Diff (z, Same (x, Empty, Empty), Empty))
           | Diff (_, _, _) -> let _ = assert (1=0) in assert false

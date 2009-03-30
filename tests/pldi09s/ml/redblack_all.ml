@@ -9,15 +9,11 @@ let color = function
   | Black (a, b, c) -> 1
   | Red (a, b, c) -> 2
   | Purple (a, b, c) -> 3
-
-let max x y =
-  if x > y then x else y
-
-let rec height = function
+(*let rec height = function
   | Empty -> 0
   | Red (_, l, r) -> (max (height l) (height r))
   | Black (_, l, r) -> (max (height l) (height r)) + 1
-  | Purple (_, l, r) -> (max (height l) (height r))
+  | Purple (_, l, r) -> (max (height l) (height r))*)
 
 let restore_right e lt r =
   match r with

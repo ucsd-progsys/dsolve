@@ -6,12 +6,10 @@ let height t =
   match t with
   | Empty -> 0
   | Node (_,_,_,_,h) -> h
-
-let rec set_of t =
-  match t with
+(*let rec set_of t = match t with
   | Empty -> Myaset.empty
   | Node (d, _, l, r, _) -> 
-      Myaset.cup (Myaset.sng d) (Myaset.cup (set_of l) (set_of r))
+      Myaset.cup (Myaset.sng d) (Myaset.cup (set_of l) (set_of r))*)
 
 let create x d l r =
   let hl = height l in
@@ -48,7 +46,6 @@ let bal x d l r =
     else
       Node(x, d, l, r, if hl >= hr then hl + 1 else hr + 1)
       
-
 let rec add x data t =
   match t with
       Empty ->
@@ -60,8 +57,6 @@ let rec add x data t =
           bal v d (add x data l) r
         else
           bal v d l (add x data r)
-
-let show x = x
 
 let rec remove_min_binding t = match t with
     Empty -> assert (0 = 1); assert false
@@ -81,27 +76,21 @@ let merge m t1 t2 =
       | Node(r, _, rl, rr, h2) ->
           let (x, d, t2') = remove_min_binding t2 in
             bal x d t1 t2'
-            
-let rec nfind x t = match t with
-    Empty ->
-      ()
-  | Node(d, _, l, r, _) ->
-      let xx = nfind x l in
-      let yy = nfind x r in ()
+(**)let rec nfind x t = match t with
 
 let rec remove x t = match t with
     Empty ->
       Empty
   | Node(v, d, l, r, h) ->
       if x = v then
-        let xx = nfind x l in
-        let xx = nfind x r in
+        let xx = nfind x l in (**)
+        let xx = nfind x r in (**)
           merge x l r
       else if x < v then
-        let xx = nfind x r in
+        let xx = nfind x r in (**)
         bal v d (remove x l) r
       else
-        let xx = nfind x l in
+        let xx = nfind x l in (**)
         bal v d l (remove x r)
 
 let rec find t x = match t with
@@ -110,8 +99,8 @@ let rec find t x = match t with
   | Node(d, _, l, r, _) ->
       if x = d then d else
         if x < d then 
-          let xx = nfind x r in
+          let xx = nfind x r in (**)
           find l x
         else
-          let xx = nfind x l in
+          let xx = nfind x l in (**)
           find r x
