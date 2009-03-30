@@ -1,4 +1,3 @@
-qualif COMP(v): e0 { <=, >= } v
 qualif EQ(v) :  ~A { <=, >= } v
 
 (* 
