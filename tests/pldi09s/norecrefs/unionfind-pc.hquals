@@ -1,4 +1,4 @@
-qualif EQ(v)  : v = ~A					(* non - spec *)
+qualif EQ(v)  : v = ~A					(* non - spec, but generatable *)
 qualif ROOT(v)(A: (int, int) Store.t): Store.get ~A v = v			(* non - spec *)
 qualif BIND(v)(A: (int, int) Store.t, B: int): v = Store.get ~A ~B
 qualif PRNT(v)(A: (int, int) Store.t, B: int): (v = ~B) or (Store.get ~A ~B < Store.get ~A v)
