@@ -1,0 +1,49 @@
+mdep Pervasives
+const_ints 0, 1, 2
+(*Program Identifiers: a, b, x, y*)
+qualif MLQ(_V) : (((x >= 0) and  (y >= 0)) -> ((_V >= 0) and  ((_V <= x) and  (_V <= y))))
+qualif MLQ(_V) : (((x >= 0) and  (y >= 0)) -> (_V >= 0))
+qualif MLQ(_V) : ((? (_V)) iff ((? (x)) and  (? (y))))
+qualif MLQ(_V) : ((? (_V)) iff ((? (x)) or  (? (y))))
+qualif MLQ(_V) : ((? (_V)) iff (-. (? (x))))
+qualif MLQ(_V) : ((? (_V)) iff (x != y))
+qualif MLQ(_V) : ((? (_V)) iff (x < y))
+qualif MLQ(_V) : ((? (_V)) iff (x <= y))
+qualif MLQ(_V) : ((? (_V)) iff (x = y))
+qualif MLQ(_V) : ((? (_V)) iff (x > y))
+qualif MLQ(_V) : ((? (_V)) iff (x >= y))
+qualif Measure(_V) : ((sz _V) = ((1 + (sz l)) + (sz l')))
+qualif Measure(_V) : ((sz _V) = ((sz l) + (sz l')))
+qualif Measure(_V) : ((sz _V) = 0)
+qualif Measure(_V) : ((sz _V) = 1)
+qualif MLQ(_V) : ((x >= 0) -> (_V >= 0))
+qualif MLQ(_V) : ((y > 0) -> (_V < y))
+qualif MLQ(_V) : (0 <= _V)
+qualif FALSE(_V) : (1 = 0)
+qualif MLQ(_V) : (_V != 0)
+qualif Measure(_V) : (_V = (sz a))
+qualif Measure(_V) : (_V = (sz b))
+qualif Measure(_V) : (_V = (sz x))
+qualif Measure(_V) : (_V = (sz y))
+qualif MLQ(_V) : (_V = (x * y))
+qualif MLQ(_V) : (_V = (x + 1))
+qualif MLQ(_V) : (_V = (x + y))
+qualif MLQ(_V) : (_V = (x - (y * (x / y))))
+qualif MLQ(_V) : (_V = (x - 1))
+qualif MLQ(_V) : (_V = (x - y))
+qualif MLQ(_V) : (_V = (x / y))
+qualif MLQ(_V) : (_V >= 0)
+(*qualif FALSE(v) : (1=0)*)
+(* from the mlq *)
+
+qualif A(v) : sz l { * *} v
+qualif AA(v) : sz v = ~A
+qualif ZERO(v) : sz v { * * } 0
+
+(* not from the mlq *)
+
+qualif B(v) : sz v = sz ~A {< +, - >} [0, 1]
+qualif ZEROC(v) : v { * * } 0
+qualif N(v) : v { * * } ~A 
+
+
