@@ -22,7 +22,6 @@
 import common, sys, time, os, os.path
 import itertools as it
 import dsolve
-import time
 
 testdirs = [("tests/pldi09s/norecrefs", True), ("tests/pldi09s/run", False)]
 
@@ -35,20 +34,21 @@ def runtest(file, norecrefs):
   if status != 0: 
     print "Qualgen failed on %s" % file
     sys.exit(2)
-  start = time.time()
   flags = ["-v", "0", "-no-simple", "-no-timing", "-I", include]
   if norecrefs:
     flags += ["-no-recrefs"]
-  status = dsolve.solve_quals(file, True, False, True, flags)
+  start = time.time()
+  status = dsolve.solve_quals(file, True, False, False, flags)
+  end = time.time()
   if status == 2: sys.exit(2)
-  print "%f seconds" % (time.time() - start)
+  print "%f seconds" % (end - start)
 
   ok = (status == expected_status)
   if ok:
     print "\033[1;32mSUCCESS!\033[1;0m\n"
   else:
     print "\033[1;31mFAILURE :(\033[1;0m\n"
-  time.sleep(20)
+  time.sleep(60)
   return (file, ok)
 
 def runtests(dir, expected_status):
