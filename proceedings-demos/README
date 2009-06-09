@@ -1,0 +1,4 @@
+cd ..
+./runbenches.py
+cd proceedings-demos
+./fixfn.sh
