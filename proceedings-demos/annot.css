@@ -1,0 +1,12 @@
+    <script SRC="boxover.js"></script>
+  <style>
+    .annotbody {
+        font-family:consolas;
+        font-size:16px;
+	background:#b4eeb4;
+        border-left:1px solid #C4D5E3;
+        border-right:1px solid #C4D5E3;
+        border-bottom:1px solid #C4D5E3;
+        padding:10px;
+     }
+  </style>

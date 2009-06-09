@@ -1,0 +1,18 @@
+qualif LEQ(v) : ~A { >=, <= } v
+
+
+
+
+
+(* for length properties
+qualif LA(v): len v = len ~A 
+qualif LB(v): len v = len ~A {< +, - >} len ~B
+*)
+
+
+
+
+(* for set properties
+qualif SA(v): ? S.eq (S.elts  v) (S.cup (S.elts ~A) (S.elts ~B))
+qualif SB(v): ? S.eq (S.elts ~A) (S.cup (S.elts ~B) (S.elts v))
+*)

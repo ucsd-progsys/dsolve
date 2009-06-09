@@ -1,7 +1,5 @@
 (* Splay Heaps: Okasaki's "Purely Functional Data Structures" p.50 Fig. 5.5. *)
 
-(* run with -no-simple *)
-
 let myfail s = 
   print_string s; assert false
 
@@ -116,7 +114,7 @@ let rec findMin2 t =
       let (x', a') = findMin2 a in
       (x', T (x, a', b))
 
-(*
+(* original code in comments
 let rec findMin t = 
   match t with
   | E -> 

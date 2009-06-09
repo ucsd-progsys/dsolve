@@ -1,0 +1,3 @@
+qualif CMP(v): v { >=, <= } ~A
+qualif ADD(v): len v = len ~A {< +,- >} len ~B + [0, 1]
+qualif EQU(v): len v = len ~A

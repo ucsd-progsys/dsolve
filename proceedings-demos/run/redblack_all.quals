@@ -53,8 +53,6 @@ qualif MLQ(_V) : (_V = (x - y))
 qualif MLQ(_V) : (_V = (x / y))
 qualif MLQ(_V) : (_V > e0)
 qualif MLQ(_V) : (_V >= 0)
-(*qualif FALSE(v) : 1 = 0*)
-
 (* Color quals *)
 qualif WHENPURPLE(v):     (color v <= 2) or (color ~A = 2)
 

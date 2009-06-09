@@ -1,23 +1,23 @@
-#define MAX(x, y) (x >= y ? x : y)
-#define H(v) height v
-#define HG0(v) (height(v) >= 0)
-#define BALW(e2, v, n) (height(v) <= height(e2) + n and height(v) >= height(e2) - n)
+#define MAX(x, y)      (x >= y ? x : y)
+#define H(v)           (height (v))
+#define HG0(v)         (H(v) >= 0)
+#define BALW(e2, v, n) (H(v) <= H(e2) + n and H(v) >= H(e2) - n)
 
-#define S(v) (set_of v)
+#define S(v)      (set_of v)
 #define CUP(x, y) (Myaset.cup x y)
 #define MEM(v, t) (? Myaset.mem v S(t))
-#define SNG(x) (Myaset.sng x)
+#define SNG(x)    (Myaset.sng x)
 #define SEQ(x, y) (? Myaset.eq x y)
 #define MNS(x, y) (Myaset.mns x y)
 
-#define RHO(p) [[], [v: p, v: true, v: true, v: true, v: true]]
-#define TRHO RHO(true)
-#define LT {e2: RHO(v < e0) z | HG0(e2)}
-#define RT {e3: RHO(v > e0) z | BALW(e2, e3, 2) and HG0(e3)}
-#define TREE [z: t . || e0: 'a, e1: int, LT, RT, {e4: int | ((e4 = MAX(height(e2), height(e3)) + 1) and e4 >= 0)}]
+#define RHO(p)           [[], [v: p, v: true, v: true, v: true, v: true]]
+#define TRHO             RHO(true)
+#define LT               {e2: RHO(v < e0) z | HG0(e2)}
+#define RT               {e3: RHO(v > e0) z | BALW(e2, e3, 2) and HG0(e3)}
+#define TREE             [z: t . || e0: 'a, e1: int, LT, RT, {e4: int | ((e4 = MAX(H(e2), H(e3)) + 1) and e4 >= 0)}]
 #define RGDTREE(v, t, r) {v : t TREE | HG0(v) and (r)}
-#define RTGDTREE(v, r) RGDTREE(v, TRHO, r)
-#define UTGDTREE RTGDTREE(v, true)
+#define RTGDTREE(v, r)   RGDTREE(v, TRHO, r)
+#define UTGDTREE         RTGDTREE(v, true)
 
 measure height =
     Empty -> 0
@@ -29,12 +29,6 @@ measure set_of =
 
 val add: x: 'a -> int -> t: UTGDTREE -> RTGDTREE(v, (H(v) <= H(t) + 1 and H(v) >= H(t)) and SEQ(S(v), CUP(S(t), SNG(x))))
 
-(*
-val remove_min_binding: t: UTGDTREE -> 'a * int * RGDTREE(v, RHO(v > e0), H(v) >= H(t) - 1 and H(v) <= H(t))
-
-val merge: m: 'a -> t1: RGDTREE(v, RHO(v < m), true) -> t2: RGDTREE(v, RHO(v > m), BALW(t1, v, 2)) ->
-  RTGDTREE(v, H(v) <= MAX(H(t1), H(t2)) + 1 and H(v) >= MAX(H(t1), H(t2)))
-*)
 val remove: x: 'a -> t: UTGDTREE -> RTGDTREE(v, (H(v) >= H(t) - 1 and H(v) <= H(t)) and SEQ(S(v), MNS(S(t), SNG(x))))
 
 val find: t: UTGDTREE -> x: {v: 'a | MEM(v, t)} -> {v: 'a | v = x}

@@ -1,0 +1,2 @@
+qualif CMPZ(v):  0 { >=, <= } v
+qualif CMP(v) : ~A { >=, <= } v

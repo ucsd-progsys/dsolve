@@ -66,8 +66,6 @@ let rec add x data t =
         else
           bal v d l (add x data r)
 
-let show x = x
-
 let rec remove_min_binding t = match t with
     Empty -> assert (0 = 1); assert false
   | Node(x, d, l, r, h) ->
@@ -87,6 +85,8 @@ let merge m t1 t2 =
           let (x, d, t2') = remove_min_binding t2 in
             bal x d t1 t2'
             
+(* a ghost function for verification that instantiates all universally embedded
+ * facts about t *)
 let rec nfind x t = match t with
     Empty ->
       ()
@@ -117,15 +117,6 @@ let rec find t x = match t with
         if x < d then 
           let xx = nfind x r in
           find l x
-          (*if set_of r != Myaset.empty then
-            let xx = Myaset.xtr (set_of r) in
-            find l x
-          else find l x*)
         else
           let xx = nfind x l in
           find r x
-          (*if set_of l != Myaset.empty then
-            let xx = Myaset.xtr (set_of l) in
-            find r x
-          else find r x*)
-          

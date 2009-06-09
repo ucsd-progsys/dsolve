@@ -13,7 +13,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(*s Heaps *)
+(* Heaps *)
 
 (* Heaps are encoded as complete binary trees, i.e., binary trees
    which are full expect, may be, on the bottom level.

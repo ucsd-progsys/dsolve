@@ -535,8 +535,9 @@ let rec pprint ppf = function
       wrap_refined r ppf 
       (fun ppf -> fprintf ppf "%s. @[<hv 0>%a@]" (C.path_name path) print_sum cs)
   | Fsum (path, Some (rp, rr), cs, r) -> (* rec sum: not printing rr *)
+      let la, ra  = "«", "»" in 
       wrap_refined r ppf 
-      (fun ppf -> fprintf ppf "\"%s\" %s. @[<hv 0>%a@]" (C.path_name path) (C.path_name rp) print_sum cs)
+      (fun ppf -> fprintf ppf "%s%s%s %s. @[<hv 0>%a@]" la (C.path_name path) ra (C.path_name rp) print_sum cs)
   | Farrow (pat, f, f') -> 
       fprintf ppf "@[<hv 0>(%a:%a) ->@ %a@]" pprint_pattern pat pprint f pprint f'
   | Fabstract (path, [], id, r) ->

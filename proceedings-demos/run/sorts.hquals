@@ -1,4 +1,3 @@
-(*actuals*)
 qualif EQ(v)(A: int) : v { * * } ~A
 
 (*sets*)

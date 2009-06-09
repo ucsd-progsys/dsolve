@@ -1,0 +1,309 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>
+Hover mouse over variables to see types</title>
+  <meta name="GENERATOR" content="caml2html 1.3.0">
+    <script SRC="boxover.js"></script>
+  <style>
+    .annotbody {
+        font-family:consolas;
+        font-size:16px;
+	background:#b4eeb4;
+        border-left:1px solid #C4D5E3;
+        border-right:1px solid #C4D5E3;
+        border-bottom:1px solid #C4D5E3;
+        padding:10px;
+     }
+  </style>
+<style type="text/css">
+code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hover { background-color: #b4eeb4; }
+.Cbar,
+.Cdo,
+.Cdone,
+.Cdownto,
+.Celse,
+.Cfor,
+.Cif,
+.Clazy,
+.Cmatch,
+.Cnew,
+.Cor,
+.Cthen,
+.Cto,
+.Ctry,
+.Cwhen,
+.Cwhile,
+.Cwith { color: #77aaaa; }
+.Cassert,
+.Cinclude,
+.Copen { color: #cc9900; }
+.Cstring { color: #aa4444; }
+.Cand,
+.Cas,
+.Cclass,
+.Cconstraint,
+.Cexception,
+.Cexternal,
+.Cfun,
+.Cfunction,
+.Cfunctor,
+.Cin,
+.Cinherit,
+.Cinitializer,
+.Clet,
+.Cmethod,
+.Cmodule,
+.Cmutable,
+.Cof,
+.Cprivate,
+.Crec,
+.Ctype,
+.Cval,
+.Cvirtual { color: green; }
+.Cbackground { background-color: white; }
+.Craise { color: red; }
+.Cconstructor { color: #0033cc; }
+.Ccomment { color: #990000; }
+.Calphakeyword,
+.Casr,
+.Cland,
+.Clor,
+.Clsl,
+.Clsr,
+.Clxor,
+.Cmod { color: #808080; }
+.Clinenum { color: black; background-color: silver; }
+.Cbegin,
+.Cend,
+.Cobject,
+.Csig,
+.Cstruct { color: #990099; }
+.Cfalse,
+.Cnonalphakeyword,
+.Cquotation,
+.Ctrue { }
+</style>
+</head>
+<body>
+<h1><a name="Hover mouse over variables to see types"></a><code>Hover mouse over variables to see types</code></h1>
+
+<pre><span class="Clinenum">   1:</span><span class="Cbackground"> </span><span class="Ccomment">(* Binary Decision Diagrams, adapted from code by Jean-Christophe Filliatre *)</span>
+<span class="Clinenum">   2:</span><span class="Cbackground"> </span>
+<span class="Clinenum">   3:</span><span class="Cbackground"> </span><span class="Clet">let</span> myfail s <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">   4:</span><span class="Cbackground"> </span>  print_string s<span class="Cnonalphakeyword">;</span> 
+<span class="Clinenum">   5:</span><span class="Cbackground"> </span>  <span class="Cassert">assert</span> <span class="Cfalse">false</span>
+<span class="Clinenum">   6:</span><span class="Cbackground"> </span>
+<span class="Clinenum">   7:</span><span class="Cbackground"> </span><span class="Ctype">type</span> bdd <span class="Cnonalphakeyword">=</span> <span class="Cconstructor">Zero</span> <span class="Cof">of</span> int <span class="Cbar">|</span> <span class="Cconstructor">One</span> <span class="Cof">of</span> int <span class="Cbar">|</span> <span class="Cconstructor">Node</span> <span class="Cof">of</span> int <span class="Cnonalphakeyword">*</span> int <span class="Cnonalphakeyword">*</span> bdd <span class="Cnonalphakeyword">*</span> bdd
+<span class="Clinenum">   8:</span><span class="Cbackground"> </span>
+<span class="Clinenum">   9:</span><span class="Cbackground"> </span><span class="Clet">let</span> skip <span class="Cnonalphakeyword">(</span>x:bdd<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">=</span> <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span> 
+<span class="Clinenum">  10:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  11:</span><span class="Cbackground"> </span><span class="Clet">let</span> tag  <span class="Cnonalphakeyword">=</span> <span class="Cfunction">function</span>
+<span class="Clinenum">  12:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Zero</span> t              <span class="Cnonalphakeyword">-&gt;</span> t
+<span class="Clinenum">  13:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">One</span> t               <span class="Cnonalphakeyword">-&gt;</span> t
+<span class="Clinenum">  14:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Node</span> <span class="Cnonalphakeyword">(</span>t<span class="Cnonalphakeyword">,</span><span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">,</span><span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">,</span><span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">)</span>      <span class="Cnonalphakeyword">-&gt;</span> t
+<span class="Clinenum">  15:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  16:</span><span class="Cbackground"> </span><span class="Clet">let</span> var b <span class="Cnonalphakeyword">=</span> <span class="Cmatch">match</span> b <span class="Cwith">with</span>
+<span class="Clinenum">  17:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Zero</span> <span class="Cnonalphakeyword">_</span>              <span class="Cnonalphakeyword">-&gt;</span> 1000
+<span class="Clinenum">  18:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">One</span>  <span class="Cnonalphakeyword">_</span>              <span class="Cnonalphakeyword">-&gt;</span> 1000 
+<span class="Clinenum">  19:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Node</span> <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">,</span>v<span class="Cnonalphakeyword">,</span><span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">,</span> <span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">)</span>     <span class="Cnonalphakeyword">-&gt;</span> v
+<span class="Clinenum">  20:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  21:</span><span class="Cbackground"> </span><span class="Clet">let</span> low b <span class="Cnonalphakeyword">=</span> <span class="Cmatch">match</span> b <span class="Cwith">with</span>
+<span class="Clinenum">  22:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Zero</span> <span class="Cnonalphakeyword">_</span>              <span class="Cnonalphakeyword">-&gt;</span> myfail <span class="Cstring">&#171;Bdd.low&#187;</span>
+<span class="Clinenum">  23:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">One</span>  <span class="Cnonalphakeyword">_</span>              <span class="Cnonalphakeyword">-&gt;</span> myfail <span class="Cstring">&#171;Bdd.low&#187;</span>
+<span class="Clinenum">  24:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Node</span> <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">,</span><span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">,</span>l<span class="Cnonalphakeyword">,</span><span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">)</span>      <span class="Cnonalphakeyword">-&gt;</span> l
+<span class="Clinenum">  25:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  26:</span><span class="Cbackground"> </span><span class="Clet">let</span> high b <span class="Cnonalphakeyword">=</span> <span class="Cmatch">match</span> b <span class="Cwith">with</span>
+<span class="Clinenum">  27:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Zero</span> <span class="Cnonalphakeyword">_</span>              <span class="Cnonalphakeyword">-&gt;</span> myfail <span class="Cstring">&#171;Bdd.high&#187;</span> 
+<span class="Clinenum">  28:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">One</span>  <span class="Cnonalphakeyword">_</span>              <span class="Cnonalphakeyword">-&gt;</span> myfail <span class="Cstring">&#171;Bdd.high&#187;</span>
+<span class="Clinenum">  29:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Node</span> <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">,</span><span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">,</span><span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">,</span>h<span class="Cnonalphakeyword">)</span>      <span class="Cnonalphakeyword">-&gt;</span> h
+<span class="Clinenum">  30:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  31:</span><span class="Cbackground"> </span><span class="Clet">let</span> hash_node v l h <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">  32:</span><span class="Cbackground"> </span>  abs <span class="Cnonalphakeyword">(</span>19 <span class="Cnonalphakeyword">*</span> <span class="Cnonalphakeyword">(</span>19 <span class="Cnonalphakeyword">*</span> <span class="Cnonalphakeyword">(</span>tag l<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">+</span> <span class="Cnonalphakeyword">(</span>tag h<span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">+</span> v<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  33:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  34:</span><span class="Cbackground"> </span><span class="Clet">let</span> hash <span class="Cnonalphakeyword">=</span> <span class="Cfunction">function</span>
+<span class="Clinenum">  35:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Zero</span> <span class="Cnonalphakeyword">_</span> <span class="Cnonalphakeyword">-&gt;</span> 0
+<span class="Clinenum">  36:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">One</span>  <span class="Cnonalphakeyword">_</span> <span class="Cnonalphakeyword">-&gt;</span> 1
+<span class="Clinenum">  37:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Node</span> <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">,</span> v<span class="Cnonalphakeyword">,</span> l<span class="Cnonalphakeyword">,</span> h<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">-&gt;</span> hash_node v l h
+<span class="Clinenum">  38:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  39:</span><span class="Cbackground"> </span><span class="Clet">let</span> gentag <span class="Cnonalphakeyword">=</span> <span class="Clet">let</span> r <span class="Cnonalphakeyword">=</span> ref <span class="Cnonalphakeyword">(</span>-1<span class="Cnonalphakeyword">)</span> <span class="Cin">in</span> <span class="Cfun">fun</span> z <span class="Cnonalphakeyword">-&gt;</span> incr r<span class="Cnonalphakeyword">;</span> !r
+<span class="Clinenum">  40:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  41:</span><span class="Cbackground"> </span><span class="Ctype">type</span> table <span class="Cnonalphakeyword">=</span> <span class="Cnonalphakeyword">&#123;</span>
+<span class="Clinenum">  42:</span><span class="Cbackground"> </span>  table : bdd <span class="Cconstructor">Weak</span><span class="Cnonalphakeyword">.</span>t array<span class="Cnonalphakeyword">;</span>
+<span class="Clinenum">  43:</span><span class="Cbackground"> </span>  totsize : int<span class="Cnonalphakeyword">;</span>             <span class="Ccomment">(* sum of the bucket sizes *)</span>
+<span class="Clinenum">  44:</span><span class="Cbackground"> </span>  limit : int<span class="Cnonalphakeyword">;</span>               <span class="Ccomment">(* max ratio totsize/table length *)</span>
+<span class="Clinenum">  45:</span><span class="Cbackground"> </span><span class="Cnonalphakeyword">&#125;</span>
+<span class="Clinenum">  46:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  47:</span><span class="Cbackground"> </span><span class="Clet">let</span> create sz <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  48:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> sz <span class="Cnonalphakeyword">=</span> <span class="Cif">if</span> sz <span class="Cnonalphakeyword">&lt;</span> 7 <span class="Cthen">then</span> 7 <span class="Celse">else</span> sz <span class="Cin">in</span>
+<span class="Clinenum">  49:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> sz <span class="Cnonalphakeyword">=</span> <span class="Cif">if</span> sz <span class="Cnonalphakeyword">&gt;</span> <span class="Cconstructor">Sys</span><span class="Cnonalphakeyword">.</span>max_array_length <span class="Cthen">then</span> <span class="Cconstructor">Sys</span><span class="Cnonalphakeyword">.</span>max_array_length <span class="Celse">else</span> sz <span class="Cin">in</span>
+<span class="Clinenum">  50:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> emptybucket <span class="Cnonalphakeyword">=</span> <span class="Cconstructor">Weak</span><span class="Cnonalphakeyword">.</span>create 0 <span class="Cin">in</span>
+<span class="Clinenum">  51:</span><span class="Cbackground"> </span>  <span class="Cnonalphakeyword">&#123;</span> table   <span class="Cnonalphakeyword">=</span> <span class="Cconstructor">Array</span><span class="Cnonalphakeyword">.</span>create sz emptybucket<span class="Cnonalphakeyword">;</span>
+<span class="Clinenum">  52:</span><span class="Cbackground"> </span>    totsize <span class="Cnonalphakeyword">=</span> 0<span class="Cnonalphakeyword">;</span>
+<span class="Clinenum">  53:</span><span class="Cbackground"> </span>    limit   <span class="Cnonalphakeyword">=</span> 3<span class="Cnonalphakeyword">;</span> <span class="Cnonalphakeyword">&#125;</span>
+<span class="Clinenum">  54:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  55:</span><span class="Cbackground"> </span><span class="Clet">let</span> t <span class="Cnonalphakeyword">=</span> create 100003 
+<span class="Clinenum">  56:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  57:</span><span class="Cbackground"> </span><span class="Clet">let</span> add t x <span class="Cnonalphakeyword">=</span> <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span> <span class="Ccomment">(* SLICE *)</span>
+<span class="Clinenum">  58:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  59:</span><span class="Cbackground"> </span><span class="Clet">let</span> hashcons_node v l h <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  60:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> index <span class="Cnonalphakeyword">=</span> <span class="Cnonalphakeyword">(</span>hash_node v l h<span class="Cnonalphakeyword">)</span> <span class="Cmod">mod</span> <span class="Cnonalphakeyword">(</span><span class="Cconstructor">Array</span><span class="Cnonalphakeyword">.</span>length t<span class="Cnonalphakeyword">.</span>table<span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum">  61:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> bucket <span class="Cnonalphakeyword">=</span> <span class="Cconstructor">Array</span><span class="Cnonalphakeyword">.</span>unsafe_get t<span class="Cnonalphakeyword">.</span>table index <span class="Cin">in</span>
+<span class="Clinenum">  62:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> sz <span class="Cnonalphakeyword">=</span> <span class="Cconstructor">Weak</span><span class="Cnonalphakeyword">.</span>length bucket <span class="Cin">in</span>
+<span class="Clinenum">  63:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Crec">rec</span> loop i <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  64:</span><span class="Cbackground"> </span>    <span class="Cif">if</span> i &gt;= sz <span class="Cthen">then</span> <span class="Cbegin">begin</span>
+<span class="Clinenum">  65:</span><span class="Cbackground"> </span>      <span class="Clet">let</span> hnode <span class="Cnonalphakeyword">=</span> <span class="Cconstructor">Node</span> <span class="Cnonalphakeyword">(</span>gentag <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">,</span> v<span class="Cnonalphakeyword">,</span> l<span class="Cnonalphakeyword">,</span> h<span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum">  66:</span><span class="Cbackground"> </span>      <span class="Ccomment">(* SLICE: add_index t hnode index; *)</span>
+<span class="Clinenum">  67:</span><span class="Cbackground"> </span>      hnode
+<span class="Clinenum">  68:</span><span class="Cbackground"> </span>    <span class="Cend">end</span> <span class="Celse">else</span> <span class="Cbegin">begin</span>
+<span class="Clinenum">  69:</span><span class="Cbackground"> </span>      <span class="Cmatch">match</span> <span class="Cconstructor">Weak</span><span class="Cnonalphakeyword">.</span>get_copy bucket i <span class="Cwith">with</span>
+<span class="Clinenum">  70:</span><span class="Cbackground"> </span>        <span class="Cbar">|</span> <span class="Cconstructor">Some</span> zz <span class="Cnonalphakeyword">-&gt;</span>
+<span class="Clinenum">  71:</span><span class="Cbackground"> </span>            <span class="Cnonalphakeyword">(</span><span class="Cmatch">match</span> zz <span class="Cwith">with</span> <span class="Cconstructor">Node</span><span class="Cnonalphakeyword">(</span>t'<span class="Cnonalphakeyword">,</span> v'<span class="Cnonalphakeyword">,</span>l'<span class="Cnonalphakeyword">,</span> h'<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">-&gt;</span>
+<span class="Clinenum">  72:</span><span class="Cbackground"> </span>               <span class="Cif">if</span> v==v' <span class="Cnonalphakeyword">&amp;&amp;</span> l == l' <span class="Cnonalphakeyword">&amp;&amp;</span> h == h' 
+<span class="Clinenum">  73:</span><span class="Cbackground"> </span>               <span class="Cthen">then</span> <span class="Cconstructor">Node</span><span class="Cnonalphakeyword">(</span>t'<span class="Cnonalphakeyword">,</span> v'<span class="Cnonalphakeyword">,</span>l'<span class="Cnonalphakeyword">,</span> h'<span class="Cnonalphakeyword">)</span> <span class="Celse">else</span> loop <span class="Cnonalphakeyword">(</span>i<span class="Cnonalphakeyword">+</span>1<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  74:</span><span class="Cbackground"> </span>             <span class="Cbar">|</span> <span class="Cnonalphakeyword">_</span> <span class="Cnonalphakeyword">-&gt;</span> loop <span class="Cnonalphakeyword">(</span>i<span class="Cnonalphakeyword">+</span>1<span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  75:</span><span class="Cbackground"> </span>        <span class="Cbar">|</span> <span class="Cnonalphakeyword">_</span> <span class="Cnonalphakeyword">-&gt;</span> loop <span class="Cnonalphakeyword">(</span>i<span class="Cnonalphakeyword">+</span>1<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  76:</span><span class="Cbackground"> </span>    <span class="Cend">end</span>
+<span class="Clinenum">  77:</span><span class="Cbackground"> </span>  <span class="Cin">in</span>
+<span class="Clinenum">  78:</span><span class="Cbackground"> </span>  loop 0
+<span class="Clinenum">  79:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  80:</span><span class="Cbackground"> </span><span class="Clet">let</span> zero <span class="Cnonalphakeyword">=</span> <span class="Cconstructor">Zero</span> <span class="Cnonalphakeyword">(</span>gentag <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">)</span>  
+<span class="Clinenum">  81:</span><span class="Cbackground"> </span><span class="Clet">let</span> one  <span class="Cnonalphakeyword">=</span> <span class="Cconstructor">One</span> <span class="Cnonalphakeyword">(</span>gentag <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">)</span> 
+<span class="Clinenum">  82:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  83:</span><span class="Cbackground"> </span><span class="Clet">let</span> mk v low high <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  84:</span><span class="Cbackground"> </span>  <span class="Cif">if</span> low == high <span class="Cthen">then</span> low <span class="Celse">else</span> hashcons_node v low high
+<span class="Clinenum">  85:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  86:</span><span class="Cbackground"> </span><span class="Clet">let</span> mk_var v <span class="Cnonalphakeyword">=</span> mk v zero one
+<span class="Clinenum">  87:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  88:</span><span class="Cbackground"> </span><span class="Clet">let</span> cache_default_size <span class="Cnonalphakeyword">=</span> 7001
+<span class="Clinenum">  89:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  90:</span><span class="Cbackground"> </span><span class="Clet">let</span> mk_not x <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">  91:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> cache <span class="Cnonalphakeyword">=</span> <span class="Cconstructor">Hashtbl</span><span class="Cnonalphakeyword">.</span>create cache_default_size <span class="Cin">in</span>
+<span class="Clinenum">  92:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Crec">rec</span> mk_not_rec x <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">  93:</span><span class="Cbackground"> </span>    <span class="Cif">if</span> <span class="Cconstructor">Hashtbl</span><span class="Cnonalphakeyword">.</span>mem cache x <span class="Cthen">then</span>
+<span class="Clinenum">  94:</span><span class="Cbackground"> </span>      <span class="Cconstructor">Hashtbl</span><span class="Cnonalphakeyword">.</span>find cache x 
+<span class="Clinenum">  95:</span><span class="Cbackground"> </span>    <span class="Celse">else</span>
+<span class="Clinenum">  96:</span><span class="Cbackground"> </span>      <span class="Clet">let</span> res <span class="Cnonalphakeyword">=</span> <span class="Cmatch">match</span> x <span class="Cwith">with</span>
+<span class="Clinenum">  97:</span><span class="Cbackground"> </span>        <span class="Cbar">|</span> <span class="Cconstructor">Zero</span> <span class="Cnonalphakeyword">_</span>         <span class="Cnonalphakeyword">-&gt;</span> one
+<span class="Clinenum">  98:</span><span class="Cbackground"> </span>        <span class="Cbar">|</span> <span class="Cconstructor">One</span>  <span class="Cnonalphakeyword">_</span>         <span class="Cnonalphakeyword">-&gt;</span> zero
+<span class="Clinenum">  99:</span><span class="Cbackground"> </span>        <span class="Cbar">|</span> <span class="Cconstructor">Node</span> <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">,</span>v<span class="Cnonalphakeyword">,</span>l<span class="Cnonalphakeyword">,</span>h<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">-&gt;</span> mk v <span class="Cnonalphakeyword">(</span>mk_not_rec l<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>mk_not_rec h<span class="Cnonalphakeyword">)</span> 
+<span class="Clinenum"> 100:</span><span class="Cbackground"> </span>      <span class="Cin">in</span>
+<span class="Clinenum"> 101:</span><span class="Cbackground"> </span>      <span class="Cconstructor">Hashtbl</span><span class="Cnonalphakeyword">.</span>add cache x res<span class="Cnonalphakeyword">;</span>
+<span class="Clinenum"> 102:</span><span class="Cbackground"> </span>      res
+<span class="Clinenum"> 103:</span><span class="Cbackground"> </span>  <span class="Cin">in</span>
+<span class="Clinenum"> 104:</span><span class="Cbackground"> </span>  mk_not_rec x
+<span class="Clinenum"> 105:</span><span class="Cbackground"> </span>
+<span class="Clinenum"> 106:</span><span class="Cbackground"> </span><span class="Clet">let</span> of_bool b <span class="Cnonalphakeyword">=</span> <span class="Cif">if</span> b <span class="Cthen">then</span> one <span class="Celse">else</span> zero
+<span class="Clinenum"> 107:</span><span class="Cbackground"> </span>
+<span class="Clinenum"> 108:</span><span class="Cbackground"> </span><span class="Ctype">type</span> operator <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum"> 109:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Op_and</span> <span class="Cbar">|</span> <span class="Cconstructor">Op_or</span> <span class="Cbar">|</span> <span class="Cconstructor">Op_imp</span>
+<span class="Clinenum"> 110:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Op_any</span> <span class="Cof">of</span> <span class="Cnonalphakeyword">(</span>bool <span class="Cnonalphakeyword">-&gt;</span> bool <span class="Cnonalphakeyword">-&gt;</span> bool<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum"> 111:</span><span class="Cbackground"> </span>
+<span class="Clinenum"> 112:</span><span class="Cbackground"> </span><span class="Clet">let</span> apply_op op b1 b2 <span class="Cnonalphakeyword">=</span> <span class="Cmatch">match</span> op <span class="Cwith">with</span>
+<span class="Clinenum"> 113:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Op_and</span> <span class="Cnonalphakeyword">-&gt;</span> b1 <span class="Cnonalphakeyword">&amp;&amp;</span> b2
+<span class="Clinenum"> 114:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Op_or</span>  <span class="Cnonalphakeyword">-&gt;</span> b1 || b2
+<span class="Clinenum"> 115:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Op_imp</span> <span class="Cnonalphakeyword">-&gt;</span> <span class="Cnonalphakeyword">(</span>not b1<span class="Cnonalphakeyword">)</span> || b2
+<span class="Clinenum"> 116:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Op_any</span> f <span class="Cnonalphakeyword">-&gt;</span> f b1 b2
+<span class="Clinenum"> 117:</span><span class="Cbackground"> </span>
+<span class="Clinenum"> 118:</span><span class="Cbackground"> </span><span class="Clet">let</span> gapply op <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum"> 119:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> op_z_z <span class="Cnonalphakeyword">=</span> of_bool <span class="Cnonalphakeyword">(</span>apply_op op <span class="Cfalse">false</span> <span class="Cfalse">false</span><span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum"> 120:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> op_z_o <span class="Cnonalphakeyword">=</span> of_bool <span class="Cnonalphakeyword">(</span>apply_op op <span class="Cfalse">false</span> <span class="Ctrue">true</span><span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum"> 121:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> op_o_z <span class="Cnonalphakeyword">=</span> of_bool <span class="Cnonalphakeyword">(</span>apply_op op <span class="Ctrue">true</span> <span class="Cfalse">false</span><span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum"> 122:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> op_o_o <span class="Cnonalphakeyword">=</span> of_bool <span class="Cnonalphakeyword">(</span>apply_op op <span class="Ctrue">true</span> <span class="Ctrue">true</span><span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum"> 123:</span><span class="Cbackground"> </span>  <span class="Cfun">fun</span> b1 b2 <span class="Cnonalphakeyword">-&gt;</span> 
+<span class="Clinenum"> 124:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> cache <span class="Cnonalphakeyword">=</span> <span class="Cconstructor">Hash2</span><span class="Cnonalphakeyword">.</span>create cache_default_size <span class="Cin">in</span>
+<span class="Clinenum"> 125:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> <span class="Crec">rec</span> app u1 u2  <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum"> 126:</span><span class="Cbackground"> </span>      <span class="Cmatch">match</span> op <span class="Cwith">with</span>
+<span class="Clinenum"> 127:</span><span class="Cbackground"> </span>        <span class="Cbar">|</span> <span class="Cconstructor">Op_and</span> <span class="Cnonalphakeyword">-&gt;</span>
+<span class="Clinenum"> 128:</span><span class="Cbackground"> </span>            <span class="Cif">if</span> u1 == u2 <span class="Cthen">then</span> 
+<span class="Clinenum"> 129:</span><span class="Cbackground"> </span>              u1
+<span class="Clinenum"> 130:</span><span class="Cbackground"> </span>            <span class="Celse">else</span> <span class="Cif">if</span> u1 == zero || u2 == zero <span class="Cthen">then</span>
+<span class="Clinenum"> 131:</span><span class="Cbackground"> </span>              zero
+<span class="Clinenum"> 132:</span><span class="Cbackground"> </span>            <span class="Celse">else</span> <span class="Cif">if</span> u1 == one <span class="Cthen">then</span>
+<span class="Clinenum"> 133:</span><span class="Cbackground"> </span>              u2
+<span class="Clinenum"> 134:</span><span class="Cbackground"> </span>            <span class="Celse">else</span> <span class="Cif">if</span> u2 == one <span class="Cthen">then</span>
+<span class="Clinenum"> 135:</span><span class="Cbackground"> </span>              u1 
+<span class="Clinenum"> 136:</span><span class="Cbackground"> </span>            <span class="Celse">else</span>
+<span class="Clinenum"> 137:</span><span class="Cbackground"> </span>              app_gen u1 u2 
+<span class="Clinenum"> 138:</span><span class="Cbackground"> </span>        <span class="Cbar">|</span> <span class="Cconstructor">Op_or</span> <span class="Cnonalphakeyword">-&gt;</span>
+<span class="Clinenum"> 139:</span><span class="Cbackground"> </span>            <span class="Cif">if</span> u1 == u2 <span class="Cthen">then</span>
+<span class="Clinenum"> 140:</span><span class="Cbackground"> </span>              u1
+<span class="Clinenum"> 141:</span><span class="Cbackground"> </span>            <span class="Celse">else</span> <span class="Cif">if</span> u1 == one || u2 == one <span class="Cthen">then</span>
+<span class="Clinenum"> 142:</span><span class="Cbackground"> </span>              one
+<span class="Clinenum"> 143:</span><span class="Cbackground"> </span>            <span class="Celse">else</span> <span class="Cif">if</span> u1 == zero <span class="Cthen">then</span>
+<span class="Clinenum"> 144:</span><span class="Cbackground"> </span>              u2
+<span class="Clinenum"> 145:</span><span class="Cbackground"> </span>            <span class="Celse">else</span> <span class="Cif">if</span> u2 == zero <span class="Cthen">then</span>
+<span class="Clinenum"> 146:</span><span class="Cbackground"> </span>              u1
+<span class="Clinenum"> 147:</span><span class="Cbackground"> </span>            <span class="Celse">else</span> 
+<span class="Clinenum"> 148:</span><span class="Cbackground"> </span>              app_gen u1 u2 
+<span class="Clinenum"> 149:</span><span class="Cbackground"> </span>        <span class="Cbar">|</span> <span class="Cconstructor">Op_imp</span> <span class="Cnonalphakeyword">-&gt;</span> 
+<span class="Clinenum"> 150:</span><span class="Cbackground"> </span>            <span class="Cif">if</span> u1 == zero <span class="Cthen">then</span>
+<span class="Clinenum"> 151:</span><span class="Cbackground"> </span>              one
+<span class="Clinenum"> 152:</span><span class="Cbackground"> </span>            <span class="Celse">else</span> <span class="Cif">if</span> u1 == one <span class="Cthen">then</span>
+<span class="Clinenum"> 153:</span><span class="Cbackground"> </span>              u2
+<span class="Clinenum"> 154:</span><span class="Cbackground"> </span>            <span class="Celse">else</span> <span class="Cif">if</span> u2 == one <span class="Cthen">then</span>
+<span class="Clinenum"> 155:</span><span class="Cbackground"> </span>              one
+<span class="Clinenum"> 156:</span><span class="Cbackground"> </span>            <span class="Celse">else</span>
+<span class="Clinenum"> 157:</span><span class="Cbackground"> </span>              app_gen u1 u2 
+<span class="Clinenum"> 158:</span><span class="Cbackground"> </span>         <span class="Cbar">|</span> <span class="Cconstructor">Op_any</span> <span class="Cnonalphakeyword">_</span> <span class="Cnonalphakeyword">-&gt;</span>
+<span class="Clinenum"> 159:</span><span class="Cbackground"> </span>            app_gen u1 u2 
+<span class="Clinenum"> 160:</span><span class="Cbackground"> </span>    <span class="Cand">and</span> app_gen u1 u2 <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum"> 161:</span><span class="Cbackground"> </span>      <span class="Cmatch">match</span> <span class="Cnonalphakeyword">(</span>u1<span class="Cnonalphakeyword">,</span> u2<span class="Cnonalphakeyword">)</span> <span class="Cwith">with</span>
+<span class="Clinenum"> 162:</span><span class="Cbackground"> </span>        <span class="Cbar">|</span> <span class="Cnonalphakeyword">(</span><span class="Cconstructor">Zero</span> <span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">,</span> <span class="Cnonalphakeyword">(</span><span class="Cconstructor">Zero</span> <span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">-&gt;</span> op_z_z
+<span class="Clinenum"> 163:</span><span class="Cbackground"> </span>        <span class="Cbar">|</span> <span class="Cnonalphakeyword">(</span><span class="Cconstructor">Zero</span> <span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">,</span> <span class="Cnonalphakeyword">(</span><span class="Cconstructor">One</span>  <span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">-&gt;</span> op_z_o
+<span class="Clinenum"> 164:</span><span class="Cbackground"> </span>        <span class="Cbar">|</span> <span class="Cnonalphakeyword">(</span><span class="Cconstructor">One</span>  <span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">,</span> <span class="Cnonalphakeyword">(</span><span class="Cconstructor">Zero</span> <span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">-&gt;</span> op_o_z
+<span class="Clinenum"> 165:</span><span class="Cbackground"> </span>        <span class="Cbar">|</span> <span class="Cnonalphakeyword">(</span><span class="Cconstructor">One</span>  <span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">,</span> <span class="Cnonalphakeyword">(</span><span class="Cconstructor">One</span>  <span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">-&gt;</span> op_o_o
+<span class="Clinenum"> 166:</span><span class="Cbackground"> </span>        <span class="Cbar">|</span> <span class="Cnonalphakeyword">_</span> <span class="Cnonalphakeyword">-&gt;</span>
+<span class="Clinenum"> 167:</span><span class="Cbackground"> </span>            <span class="Cif">if</span> <span class="Cconstructor">Hash2</span><span class="Cnonalphakeyword">.</span>mem cache u1 u2 <span class="Cthen">then</span>
+<span class="Clinenum"> 168:</span><span class="Cbackground"> </span>              <span class="Cconstructor">Hash2</span><span class="Cnonalphakeyword">.</span>find cache u1 u2 
+<span class="Clinenum"> 169:</span><span class="Cbackground"> </span>            <span class="Celse">else</span>  
+<span class="Clinenum"> 170:</span><span class="Cbackground"> </span>              <span class="Clet">let</span> res <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum"> 171:</span><span class="Cbackground"> </span>                <span class="Clet">let</span> v1 <span class="Cnonalphakeyword">=</span> var u1 <span class="Cin">in</span>
+<span class="Clinenum"> 172:</span><span class="Cbackground"> </span>                <span class="Clet">let</span> v2 <span class="Cnonalphakeyword">=</span> var u2 <span class="Cin">in</span>
+<span class="Clinenum"> 173:</span><span class="Cbackground"> </span>                <span class="Cif">if</span> v1 == v2 <span class="Cthen">then</span>
+<span class="Clinenum"> 174:</span><span class="Cbackground"> </span>                  mk v1 <span class="Cnonalphakeyword">(</span>app <span class="Cnonalphakeyword">(</span>low u1<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>low u2<span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>app <span class="Cnonalphakeyword">(</span>high u1<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>high u2<span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">)</span>
+<span class="Clinenum"> 175:</span><span class="Cbackground"> </span>                <span class="Celse">else</span> <span class="Cif">if</span> v1 <span class="Cnonalphakeyword">&lt;</span> v2 <span class="Cthen">then</span>
+<span class="Clinenum"> 176:</span><span class="Cbackground"> </span>                  mk v1 <span class="Cnonalphakeyword">(</span>app <span class="Cnonalphakeyword">(</span>low u1<span class="Cnonalphakeyword">)</span> u2<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>app <span class="Cnonalphakeyword">(</span>high u1<span class="Cnonalphakeyword">)</span> u2<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum"> 177:</span><span class="Cbackground"> </span>                <span class="Celse">else</span> <span class="Ccomment">(* v1 &gt; v2 *)</span>
+<span class="Clinenum"> 178:</span><span class="Cbackground"> </span>                  mk v2 <span class="Cnonalphakeyword">(</span>app u1 <span class="Cnonalphakeyword">(</span>low u2<span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>app u1 <span class="Cnonalphakeyword">(</span>high u2<span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">)</span> 
+<span class="Clinenum"> 179:</span><span class="Cbackground"> </span>              <span class="Cin">in</span>
+<span class="Clinenum"> 180:</span><span class="Cbackground"> </span>              <span class="Cconstructor">Hash2</span><span class="Cnonalphakeyword">.</span>add cache u1 u2 res<span class="Cnonalphakeyword">;</span>
+<span class="Clinenum"> 181:</span><span class="Cbackground"> </span>              res 
+<span class="Clinenum"> 182:</span><span class="Cbackground"> </span>    <span class="Cin">in</span> 
+<span class="Clinenum"> 183:</span><span class="Cbackground"> </span>    app b1 b2
+<span class="Clinenum"> 184:</span><span class="Cbackground"> </span>
+<span class="Clinenum"> 185:</span><span class="Cbackground"> </span><span class="Clet">let</span> mk_and <span class="Cnonalphakeyword">=</span> gapply <span class="Cnonalphakeyword">(</span><span class="Cconstructor">Op_any</span> <span class="Cnonalphakeyword">(</span><span class="Cfun">fun</span> b1 b2 <span class="Cnonalphakeyword">-&gt;</span> b1 <span class="Cnonalphakeyword">&amp;&amp;</span> b2<span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">)</span>
+<span class="Clinenum"> 186:</span><span class="Cbackground"> </span><span class="Clet">let</span> mk_or  <span class="Cnonalphakeyword">=</span> gapply <span class="Cnonalphakeyword">(</span><span class="Cconstructor">Op_any</span> <span class="Cnonalphakeyword">(</span><span class="Cfun">fun</span> b1 b2 <span class="Cnonalphakeyword">-&gt;</span> b1 || b2<span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">)</span>
+<span class="Clinenum"> 187:</span><span class="Cbackground"> </span><span class="Clet">let</span> mk_imp <span class="Cnonalphakeyword">=</span> gapply <span class="Cnonalphakeyword">(</span><span class="Cconstructor">Op_any</span> <span class="Cnonalphakeyword">(</span><span class="Cfun">fun</span> b1 b2 <span class="Cnonalphakeyword">-&gt;</span> <span class="Cnonalphakeyword">(</span>not b1<span class="Cnonalphakeyword">)</span> || b2<span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">)</span>
+<span class="Clinenum"> 188:</span><span class="Cbackground"> </span><span class="Clet">let</span> mk_iff <span class="Cnonalphakeyword">=</span> gapply <span class="Cnonalphakeyword">(</span><span class="Cconstructor">Op_any</span> <span class="Cnonalphakeyword">(</span><span class="Cfun">fun</span> b1 b2 <span class="Cnonalphakeyword">-&gt;</span> b1 == b2<span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">)</span>
+<span class="Clinenum"> 189:</span><span class="Cbackground"> </span><span class="Clet">let</span> apply f <span class="Cnonalphakeyword">=</span> gapply <span class="Cnonalphakeyword">(</span><span class="Cconstructor">Op_any</span> f<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum"> 190:</span><span class="Cbackground"> </span>
+<span class="Clinenum"> 191:</span><span class="Cbackground"> </span><span class="Ccomment">(* formula -&gt; bdd *)</span>
+<span class="Clinenum"> 192:</span><span class="Cbackground"> </span><span class="Ctype">type</span> formula <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum"> 193:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Ffalse</span> 
+<span class="Clinenum"> 194:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Ftrue</span> 
+<span class="Clinenum"> 195:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Fvar</span> <span class="Cof">of</span> int 
+<span class="Clinenum"> 196:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Fand</span> <span class="Cof">of</span> formula <span class="Cnonalphakeyword">*</span>  formula
+<span class="Clinenum"> 197:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">For</span>  <span class="Cof">of</span> formula <span class="Cnonalphakeyword">*</span>  formula
+<span class="Clinenum"> 198:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Fimp</span> <span class="Cof">of</span> formula <span class="Cnonalphakeyword">*</span>  formula
+<span class="Clinenum"> 199:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Fiff</span> <span class="Cof">of</span> formula <span class="Cnonalphakeyword">*</span>  formula
+<span class="Clinenum"> 200:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Fnot</span> <span class="Cof">of</span> formula
+<span class="Clinenum"> 201:</span><span class="Cbackground"> </span>
+<span class="Clinenum"> 202:</span><span class="Cbackground"> </span><span class="Clet">let</span> <span class="Crec">rec</span> build <span class="Cnonalphakeyword">=</span> <span class="Cfunction">function</span>
+<span class="Clinenum"> 203:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Ffalse</span> <span class="Cnonalphakeyword">-&gt;</span> zero
+<span class="Clinenum"> 204:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Ftrue</span> <span class="Cnonalphakeyword">-&gt;</span> one
+<span class="Clinenum"> 205:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Fvar</span> v <span class="Cnonalphakeyword">-&gt;</span> <span class="Cif">if</span> 0 &lt;= v <span class="Cnonalphakeyword">&amp;&amp;</span> v <span class="Cnonalphakeyword">&lt;</span> 1000 <span class="Cthen">then</span> mk_var v <span class="Celse">else</span> myfail <span class="Cstring">&#171;Bdd.build var&#187;</span> 
+<span class="Clinenum"> 206:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Fand</span> <span class="Cnonalphakeyword">(</span>f1<span class="Cnonalphakeyword">,</span> f2<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">-&gt;</span> mk_and <span class="Cnonalphakeyword">(</span>build f1<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>build f2<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum"> 207:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">For</span> <span class="Cnonalphakeyword">(</span>f1<span class="Cnonalphakeyword">,</span> f2<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">-&gt;</span> mk_or <span class="Cnonalphakeyword">(</span>build f1<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>build f2<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum"> 208:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Fimp</span> <span class="Cnonalphakeyword">(</span>f1<span class="Cnonalphakeyword">,</span> f2<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">-&gt;</span> mk_imp <span class="Cnonalphakeyword">(</span>build f1<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>build f2<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum"> 209:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Fiff</span> <span class="Cnonalphakeyword">(</span>f1<span class="Cnonalphakeyword">,</span> f2<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">-&gt;</span> mk_iff <span class="Cnonalphakeyword">(</span>build f1<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>build f2<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum"> 210:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Fnot</span> f <span class="Cnonalphakeyword">-&gt;</span> mk_not <span class="Cnonalphakeyword">(</span>build f<span class="Cnonalphakeyword">)</span>
+</pre>
+
+<hr>
+<p>
+<em>This document was generated using 
+<a href="http://martin.jambon.free.fr/caml2html.html">caml2html</a></em>
+</body>
+</html>

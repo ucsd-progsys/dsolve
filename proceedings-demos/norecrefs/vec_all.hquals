@@ -1,4 +1,18 @@
-(*qualif FALSE(v) : 1 = 0*)
+(* for balance *)
+qualif BAL(v)(A: 'a t): height v { <=, >= } height ~A {< -, + >} [1, 2, 3]
+qualif BAL(v):
+   height v >= (height l <= height r + 2 and height l >= height r - 2 ? (height l >= height r ? height l : height r) + 1 : 0)
+qualif BAL(v):
+   height v >= (height l >= height r ? height l : height r) + (height l <= height r + 2 and height l >= height r - 2 ? 1 : [0, -1])
+qualif JOIN(v): height v {>=, <=} (height [l, t1] >= height [r, t2] ? height [l, t1] : height [r, t2]) {< -, + >} [0, 1]
+
+
+(* for fold/iter etc *)
+qualif ITERI(v) : v <= length t - length t'
+qualif ITERI(v) : v + k = [i, j]
+qualif MAPI(v)(A: int) : ~A <= length t - length v
+qualif SETAPPEND(v) : length v = n {< +, - >} 1
+qualif LSUM(v) : length v = [0, 1] + length [t1, l] + length [t2, r]
 
 (* from the mlq *)
 qualif HG0(v) : height v { >, >= } 0
@@ -17,21 +31,3 @@ qualif Ph(v): v = (height [l, e0] >= height [r, e3] ? height [l, e0] : height [r
 qualif BAL(v):
    height v { >=, <= } (height l >= height r ? height l : height r) {< +, - >} [1, 2]
 qualif H(_v)(A: 'a t): _v = height ~A 
-
-
-(* not from the mlq *)
-
-qualif BAL(v)(A: 'a t): height v { <=, >= } height ~A {< -, + >} [1, 2, 3]
-qualif BAL(v):
-   height v >= (height l <= height r + 2 and height l >= height r - 2 ? (height l >= height r ? height l : height r) + 1 : 0)
-qualif BAL(v):
-   height v >= (height l >= height r ? height l : height r) + (height l <= height r + 2 and height l >= height r - 2 ? 1 : [0, -1])
-qualif JOIN(v): height v {>=, <=} (height [l, t1] >= height [r, t2] ? height [l, t1] : height [r, t2]) {< -, + >} [0, 1]
-
-
-(* for fold/iter etc *)
-qualif ITERI(v) : v <= length t - length t'
-qualif ITERI(v) : v + k = [i, j]
-qualif MAPI(v)(A: int) : ~A <= length t - length v
-qualif SETAPPEND(v) : length v = n {< +, - >} 1
-qualif LSUM(v) : length v = [0, 1] + length [t1, l] + length [t2, r]

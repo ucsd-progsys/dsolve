@@ -1,0 +1,12 @@
+for index demo:
+	1. demo_all(.ml.html) 
+
+for index2 demo:	
+	1. insertsort vanilla	(recref)
+	2. insertsort len	(len-measure)
+	3. mergesort 		(len = 0, termination bug)
+	4. mergesort-fixed 	(len-measure)
+	5. mergesort-fixed-elts	(sets)
+	6. bst-bug		(recref)
+	7. bst-fix	
+	8. bst-spec ?

@@ -1,9 +1,12 @@
 (* Binary Decision Diagrams, adapted from code by Jean-Christophe Filliatre *)
+
 let myfail s = 
   print_string s; 
   assert false
 
 type bdd = Zero of int | One of int | Node of int * int * bdd * bdd
+
+let skip (x:bdd) = () 
 
 let tag  = function
   | Zero t              -> t
@@ -35,7 +38,6 @@ let hash = function
 
 let gentag = let r = ref (-1) in fun z -> incr r; !r
 
-(* COMPLEX VERSION *) 
 type table = {
   table : bdd Weak.t array;
   totsize : int;             (* sum of the bucket sizes *)
@@ -80,7 +82,7 @@ let one  = One (gentag ())
 
 let mk v low high =
   if low == high then low else hashcons_node v low high
-  
+
 let mk_var v = mk v zero one
 
 let cache_default_size = 7001

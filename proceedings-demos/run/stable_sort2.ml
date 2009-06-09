@@ -1,5 +1,3 @@
-let show x = x
-
 let rec split_aux lst left right = 
   match lst with
   | []           -> (left, right)
@@ -156,6 +154,7 @@ let rec sortcheck l =
     | x :: y :: ys ->
         assert (x <= y); sortcheck (y :: ys)
 
+(* specification *)
 let check xs = 
   let xs' = ssort xs in
   let _ = sortcheck xs' in 

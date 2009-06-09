@@ -171,7 +171,7 @@ z3lib:
 	cd external/z3/ocaml; ./build.sh $(LIBDIR)
 
 graphlib:
-	cd external/ocamlgraph; ./configure; $(MAKE) all;
+	cd external/ocamlgraph; ./configure --libdir $(LIBDIR); $(MAKE) all;
 
 libs: z3lib graphlib
 

@@ -48,7 +48,6 @@ qualif MLQ(_V) : (_V = (x - y))
 qualif MLQ(_V) : (_V = (x / y))
 qualif MLQ(_V) : (_V >= 0)
 qualif MLQ(_V) : (_V >= e0)
-(*actuals*)
 qualif EQ(v)(A: int) : v { * * } ~A
 
 (*sets*)

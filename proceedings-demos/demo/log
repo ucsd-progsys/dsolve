@@ -1,0 +1,7 @@
+dsolve 0.1: © Copyright 2008 Regents of the University of California 
+dsolve 0.1: © Copyright 2008 Regents of the University of California 
+Yices pushes = 79 
+QProver Instances = 0 
+QProver pushes = 0, queries = 0, valid = 0 
+exec: ./liquid.opt -no-anormal -collect 4 -dqualifs ./dsolve.scratch 1244507199.ml
+exec: ./liquid.opt -dframes -v 0 1244507199.ml

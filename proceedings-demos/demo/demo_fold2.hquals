@@ -1,0 +1,3 @@
+qualif POS(_V)  :  0 <= _V 
+qualif LEQ(_V)  : _V { <=, < } ~A
+qualif LTLen(_V): _V < Array.length ~A 

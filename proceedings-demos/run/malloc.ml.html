@@ -1,0 +1,1245 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>
+Hover mouse over variables to see types</title>
+  <meta name="GENERATOR" content="caml2html 1.3.0">
+    <script SRC="boxover.js"></script>
+  <style>
+    .annotbody {
+        font-family:consolas;
+        font-size:16px;
+	background:#b4eeb4;
+        border-left:1px solid #C4D5E3;
+        border-right:1px solid #C4D5E3;
+        border-bottom:1px solid #C4D5E3;
+        padding:10px;
+     }
+  </style>
+<style type="text/css">
+code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hover { background-color: #b4eeb4; }
+.Cbar,
+.Cdo,
+.Cdone,
+.Cdownto,
+.Celse,
+.Cfor,
+.Cif,
+.Clazy,
+.Cmatch,
+.Cnew,
+.Cor,
+.Cthen,
+.Cto,
+.Ctry,
+.Cwhen,
+.Cwhile,
+.Cwith { color: #77aaaa; }
+.Cassert,
+.Cinclude,
+.Copen { color: #cc9900; }
+.Cstring { color: #aa4444; }
+.Cand,
+.Cas,
+.Cclass,
+.Cconstraint,
+.Cexception,
+.Cexternal,
+.Cfun,
+.Cfunction,
+.Cfunctor,
+.Cin,
+.Cinherit,
+.Cinitializer,
+.Clet,
+.Cmethod,
+.Cmodule,
+.Cmutable,
+.Cof,
+.Cprivate,
+.Crec,
+.Ctype,
+.Cval,
+.Cvirtual { color: green; }
+.Cbackground { background-color: white; }
+.Craise { color: red; }
+.Cconstructor { color: #0033cc; }
+.Ccomment { color: #990000; }
+.Calphakeyword,
+.Casr,
+.Cland,
+.Clor,
+.Clsl,
+.Clsr,
+.Clxor,
+.Cmod { color: #808080; }
+.Clinenum { color: black; background-color: silver; }
+.Cbegin,
+.Cend,
+.Cobject,
+.Csig,
+.Cstruct { color: #990099; }
+.Cfalse,
+.Cnonalphakeyword,
+.Cquotation,
+.Ctrue { }
+</style>
+</head>
+<body>
+<h1><a name="Hover mouse over variables to see types"></a><code>Hover mouse over variables to see types</code></h1>
+
+<pre><span class="Clinenum">   1:</span><span class="Cbackground"> </span><span class="Ccomment">(* A kernel from a memory allocator *)</span>
+<span class="Clinenum">   2:</span><span class="Cbackground"> </span>
+<span class="Clinenum">   3:</span><span class="Cbackground"> </span><span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1:«‹› ,‹(e0 != V) ,⊤›» t) |
+  (V = ys)&#125;</pre>]"><span class="Crec">rec</span></a> del x ys <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | ⊥&#125; , e1:&#123;«‹› ,‹⊥ ,⊤›» t | ⊥&#125;) |
+  (V = &amp;#9121;&amp;#9126;)  ((__tag V) = 0)&#125;</pre>]">
+<span class="Clinenum">   4:</span><span class="Cbackground"> </span></a>  <span class="Cmatch">match</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1:«‹› ,‹(e0 != V) ,⊤›» t) |
+  (V = ys)&#125;</pre>]"> ys</a> <span class="Cwith">with</span>
+<span class="Clinenum">   5:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span>          <span class="Cnonalphakeyword">-&gt;</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span>
+<span class="Clinenum">   6:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> y<span class="Cnonalphakeyword">::</span>ys'<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (xs:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aP , e1:«‹› ,‹(e0 != V) ,⊤›» t)) -&gt;
+  unit. ()</pre>]">      <span class="Cnonalphakeyword">-&gt;</span></a> <span class="Cif">if</span> x <span class="Cnonalphakeyword">=</span> y <span class="Cthen">then</span> ys' <span class="Celse">else</span> y<span class="Cnonalphakeyword">::</span><span class="Cnonalphakeyword">(</span>del x ys'<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">   7:</span><span class="Cbackground"> </span>
+<span class="Clinenum">   8:</span><span class="Cbackground"> </span><span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1:«‹› ,‹(e0 != V) ,⊤›» t) |
+  (V = xs)&#125;</pre>]"><span class="Crec">rec</span></a> checkdiff xs<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;unit. () | (V = ())  ((__tag V) = 0)&#125;</pre>]"> </a><span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">   9:</span><span class="Cbackground"> </span>  <span class="Cmatch">match</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1:«‹› ,‹(e0 != V) ,⊤›» t) |
+  (V = xs)&#125;</pre>]"> xs</a> <span class="Cwith">with</span> 
+<span class="Clinenum">  10:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span>          <span class="Cnonalphakeyword">-&gt;</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (xs:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (x != V)&#125; ,
+                     e1:«‹› ,‹(e0 != V) ,⊤›» t)) -&gt;
+  unit. ()</pre>]"><span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span> 
+<span class="Clinenum">  11:</span><span class="Cbackground"> </span></a>  <span class="Cbar">|</span> x<span class="Cnonalphakeyword">::</span>xs'      <span class="Cnonalphakeyword">-&gt;</span> <span class="Clet">let</span> <span class="Cnonalphakeyword">_</span> <span class="Cnonalphakeyword">=</span> <span class="Cconstructor">List</span><span class="Cnonalphakeyword">.</span>iter <span class="Cnonalphakeyword">(</span><span class="Cfun">fun</span> x' <span class="Cnonalphakeyword">-&gt;</span> <span class="Cassert">assert</span> <span class="Cnonalphakeyword">(</span>x <span class="Cnonalphakeyword">!=</span> x'<span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">)</span> xs' <span class="Cin">in</span>
+<span class="Clinenum">  12:</span><span class="Cbackground"> </span>                   checkdiff xs'
+<span class="Clinenum">  13:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  14:</span><span class="Cbackground"> </span><span class="Clet">let</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (xs:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;int |
+                        ((Mystore.get m V) &gt;= 0)  ((Mystore.get m V) &lt;= 0)&#125; ,
+                     e1:«‹› ,‹(e0 != V) ,⊤›» t)) -&gt;
+  unit. ()</pre>]"> check  </a><span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;int |
+                     ((Mystore.get m V) &gt;= 0)  ((Mystore.get m V) &lt;= 0)&#125; ,
+                  e1:«‹› ,‹(e0 != V)  ((Mystore.get m V) &gt;= 0) ,⊤›» t) |
+  (V = fs)&#125;</pre>]">m<span class="Cnonalphakeyword">,</span></a> us<span class="Cnonalphakeyword">,</span> fs<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  15:</span><span class="Cbackground"> </span>  <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (c:(b:&#123;int | ((Mystore.get m V) &gt;= 0)  ((Mystore.get m V) != 0)&#125;) -&gt;
+     unit. ()) -&gt;
+  (a:«list» t. &amp;#9121;&amp;#9126; +
+                 ::(e0:&#123;int |
+                       ((Mystore.get m V) &gt;= 0)  ((Mystore.get m V) != 0)&#125; ,
+                    e1: t)) -&gt;
+  unit. ()</pre>]">checkdiff</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (p:&#123;int | ((Mystore.get m V) &gt;= 0)  ((Mystore.get m V) != 0)&#125;) -&gt; unit. ()</pre>]">us<span class="Cnonalphakeyword">;</span>
+<span class="Clinenum">  16:</span><span class="Cbackground"> </span></a>  <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (c:(b:&#123;int | ((Mystore.get m V) &gt;= 0)  ((Mystore.get m V) &lt;= 0)&#125;) -&gt;
+     unit. ()) -&gt;
+  (a:«list» t. &amp;#9121;&amp;#9126; +
+                 ::(e0:&#123;int |
+                       ((Mystore.get m V) &gt;= 0)  ((Mystore.get m V) &lt;= 0)&#125; ,
+                    e1: t)) -&gt;
+  unit. ()</pre>]">checkdiff</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (p:&#123;int | ((Mystore.get m V) &gt;= 0)  ((Mystore.get m V) &lt;= 0)&#125;) -&gt; unit. ()</pre>]">fs<span class="Cnonalphakeyword">;</span>
+<span class="Clinenum">  17:</span><span class="Cbackground"> </span></a>  <span class="Cconstructor">List</span><span class="Cnonalphakeyword">.</span>iter <span class="Cnonalphakeyword">(</span><span class="Cfun">fun</span> p <span class="Cnonalphakeyword">-&gt;</span> <span class="Cassert">assert</span> <span class="Cnonalphakeyword">(</span><span class="Cconstructor">Mystore</span><span class="Cnonalphakeyword">.</span>get m p <span class="Cnonalphakeyword">!=</span> 0<span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">)</span> us<span class="Cnonalphakeyword">;</span>
+<span class="Clinenum">  18:</span><span class="Cbackground"> </span>  <span class="Cconstructor">List</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (size:&#123;int | (0 &lt;= V)  (V != 0)  (V &gt;= 0)&#125;) -&gt;
+  tuple. rec(e0:Mystore.inta ,
+             e1:«list» t. &amp;#9121;&amp;#9126; +
+                            ::(e0:&#123;int |
+                                  (0 &lt;= V) 
+                                  (V != 0) 
+                                  (V &gt;= 0) 
+                                  (size &gt;= V) 
+                                  (size &lt;= V) 
+                                  (size != V) 
+                                  ((Mystore.get e0 V) &gt;= 0) 
+                                  ((Mystore.get e0 V) &lt;= 0) 
+                                  ((Mystore.get e0 V) != 0)&#125; ,
+                               e1:«‹› ,‹(0 &lt;= V) 
+                                               (V != 0) 
+                                               (V &gt;= 0) 
+                                               (e0 &gt;= V) 
+                                               (e0 &lt;= V) 
+                                               (e0 != V) 
+                                               (size &gt;= V) 
+                                               (size &lt;= V) 
+                                               (size != V) 
+                                               ((Mystore.get e0 V) &gt;= 0) 
+                                               ((Mystore.get e0 V) &lt;= 0) 
+                                               ((Mystore.get e0 V) != 0) ,⊤›» t) ,
+             e2:«list» t. &amp;#9121;&amp;#9126; +
+                            ::(e0:&#123;int |
+                                  (0 &lt;= V) 
+                                  (V &gt;= 0) 
+                                  (size &gt;= V) 
+                                  (size != V) 
+                                  ((Mystore.get e0 V) &gt;= 0) 
+                                  ((Mystore.get e0 V) &lt;= 0)&#125; ,
+                               e1:«‹› ,‹(0 &lt;= V) 
+                                               (V &gt;= 0) 
+                                               (e0 &gt;= V) 
+                                               (e0 != V) 
+                                               (size &gt;= V) 
+                                               (size != V) 
+                                               ((Mystore.get e0 V) &gt;= 0) 
+                                               ((Mystore.get e0 V) &lt;= 0) ,⊤›» t))</pre>]"><span class="Cnonalphakeyword">.</span>iter</a> <span class="Cnonalphakeyword">(</span><span class="Cfun">fun</span> p <span class="Cnonalphakeyword">-&gt;</span> <span class="Cassert">assert</span> <span class="Cnonalphakeyword">(</span><span class="Cconstructor">Mystore</span><span class="Cnonalphakeyword">.</span>get m p <span class="Cnonalphakeyword">=</span> 0<span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">)</span> fs
+<span class="Clinenum">  19:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  20:</span><span class="Cbackground"> </span><span class="Clet">let</span> init size<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  unit. ()</pre>]"> <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">  21:</span><span class="Cbackground"> </span></a>  <span class="Clet">let</span> a   <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (k:&#123;int |
+     (0 &lt;= V) 
+     (V &gt;= 0) 
+     (size &gt;= V) 
+     ((Mystore.get a V) &gt;= 0) 
+     ((Mystore.get a V) &lt;= 0)&#125;) -&gt;
+  (us:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;int |
+                        (0 &lt;= V) 
+                        (V != 0) 
+                        (V = (Mystore.size a)) 
+                        (V &gt;= 0) 
+                        (size &gt;= V) 
+                        (size &lt;= V) 
+                        (size != V) 
+                        ((Mystore.get a V) &gt;= 0) 
+                        ((Mystore.get a V) &lt;= 0) 
+                        ((Mystore.get a V) != 0) 
+                        (k &gt;= V) 
+                        (k &lt;= V) 
+                        (k != V)&#125; ,
+                     e1:«‹› ,‹(0 &lt;= V) 
+                                     (V != 0) 
+                                     (V = (Mystore.size a)) 
+                                     (V &gt;= 0) 
+                                     (e0 &gt;= V) 
+                                     (e0 &lt;= V) 
+                                     (e0 != V) 
+                                     (size &gt;= V) 
+                                     (size &lt;= V) 
+                                     (size != V) 
+                                     ((Mystore.get a V) &gt;= 0) 
+                                     ((Mystore.get a V) &lt;= 0) 
+                                     ((Mystore.get a V) != 0) 
+                                     (k &gt;= V) 
+                                     (k &lt;= V) 
+                                     (k != V) ,⊤›» t)) -&gt;
+  (fs:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;int |
+                        (0 &lt;= V) 
+                        (V &gt;= 0) 
+                        (size &gt;= V) 
+                        (size != V) 
+                        ((Mystore.get a V) &gt;= 0) 
+                        ((Mystore.get a V) &lt;= 0) 
+                        (k &gt;= V) 
+                        (k != V)&#125; ,
+                     e1:«‹› ,‹(0 &lt;= V) 
+                                     (V &gt;= 0) 
+                                     (e0 &gt;= V) 
+                                     (e0 != V) 
+                                     (size &gt;= V) 
+                                     (size != V) 
+                                     ((Mystore.get a V) &gt;= 0) 
+                                     ((Mystore.get a V) &lt;= 0) 
+                                     (k &gt;= V) 
+                                     (k != V) ,⊤›» t)) -&gt;
+  tuple. rec(e0:&#123;Mystore.inta | (a &gt;= V)  (a &lt;= V)&#125; ,
+             e1:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                             ::(e0:&#123;int |
+                                   (0 &lt;= V) 
+                                   (V != 0) 
+                                   (V = (Mystore.size a)) 
+                                   (V &gt;= 0) 
+                                   (k &gt;= V) 
+                                   (k &lt;= V) 
+                                   (k != V) 
+                                   (size &gt;= V) 
+                                   (size &lt;= V) 
+                                   (size != V) 
+                                   ((Mystore.get e0 V) &gt;= 0) 
+                                   ((Mystore.get e0 V) &lt;= 0) 
+                                   ((Mystore.get e0 V) != 0) 
+                                   ((Mystore.get a V) &gt;= 0) 
+                                   ((Mystore.get a V) &lt;= 0) 
+                                   ((Mystore.get a V) != 0)&#125; ,
+                                e1:&#123;«‹› ,‹(0 &lt;= V) 
+                                                 (V != 0) 
+                                                 (V = (Mystore.size a)) 
+                                                 (V &gt;= 0) 
+                                                 (e0 &gt;= V) 
+                                                 (e0 &lt;= V) 
+                                                 (e0 != V) 
+                                                 (k &gt;= V) 
+                                                 (k &lt;= V) 
+                                                 (k != V) 
+                                                 (size &gt;= V) 
+                                                 (size &lt;= V) 
+                                                 (size != V) 
+                                                 ((Mystore.get e0 V) &gt;= 0) 
+                                                 ((Mystore.get e0 V) &lt;= 0) 
+                                                 ((Mystore.get e0 V) != 0) 
+                                                 ((Mystore.get a V) &gt;= 0) 
+                                                 ((Mystore.get a V) &lt;= 0) 
+                                                 ((Mystore.get a V) != 0) ,⊤›» t |
+                                   (fs &gt;= V) 
+                                   (fs &lt;= V) 
+                                   (fs != V) 
+                                   (us &gt;= V) 
+                                   (us &lt;= V) 
+                                   (us != V)&#125;) |
+                (us &gt;= V)  (us &lt;= V)&#125; ,
+             e2:«list» t. &amp;#9121;&amp;#9126; +
+                            ::(e0:&#123;int |
+                                  (0 &lt;= V) 
+                                  (V &gt;= 0) 
+                                  (size &gt;= V) 
+                                  (size != V) 
+                                  ((Mystore.get e0 V) &gt;= 0) 
+                                  ((Mystore.get e0 V) &lt;= 0) 
+                                  ((Mystore.get a V) &gt;= 0) 
+                                  ((Mystore.get a V) &lt;= 0)&#125; ,
+                               e1:«‹› ,‹(0 &lt;= V) 
+                                               (V &gt;= 0) 
+                                               (e0 &gt;= V) 
+                                               (e0 != V) 
+                                               (size &gt;= V) 
+                                               (size != V) 
+                                               ((Mystore.get e0 V) &gt;= 0) 
+                                               ((Mystore.get e0 V) &lt;= 0) 
+                                               ((Mystore.get a V) &gt;= 0) 
+                                               ((Mystore.get a V) &lt;= 0) ,⊤›» t))</pre>]"><span class="Cnonalphakeyword">=</span></a> <span class="Cconstructor">Mystore</span><span class="Cnonalphakeyword">.</span>make 255 0 <span class="Cin">in</span>
+<span class="Clinenum">  22:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Cnonalphakeyword">_</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = k)&#125;</pre>]">   </a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;int |
+     (0 &lt;= V) 
+     (V &gt;= 0) 
+     (k &lt;= V) 
+     (size &gt;= V) 
+     ((Mystore.get a V) &gt;= 0) 
+     ((Mystore.get a V) &lt;= 0) 
+     true&#125;) -&gt;
+  (y:&#123;int |
+     (0 &lt;= V) 
+     (V &gt;= 0) 
+     (k &lt;= V) 
+     (size &gt;= V) 
+     ((Mystore.get a V) &gt;= 0) 
+     ((Mystore.get a V) &lt;= 0) 
+     true&#125;) -&gt;
+  &#123;bool. false + true | ((? (V)) iff (x &gt;= y))&#125;</pre>]"><span class="Cnonalphakeyword">=</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = size)&#125;</pre>]"><span class="Cassert">assert</span></a> <span class="Cnonalphakeyword">(</span>0 <span class="Cnonalphakeyword">=</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;Mystore.inta | (V = a)&#125;</pre>]"> </a><span class="Cconstructor">Mystore</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;int |
+                     (0 &lt;= V) 
+                     (V &gt;= 0) 
+                     (k &gt;= V) 
+                     (k != V) 
+                     (size &gt;= V) 
+                     (size != V) 
+                     ((Mystore.get a V) &gt;= 0) 
+                     ((Mystore.get a V) &lt;= 0)&#125; ,
+                  e1:«‹› ,‹(0 &lt;= V) 
+                                  (V &gt;= 0) 
+                                  (e0 &gt;= V) 
+                                  (e0 != V) 
+                                  (k &gt;= V) 
+                                  (k != V) 
+                                  (size &gt;= V) 
+                                  (size != V) 
+                                  ((Mystore.get a V) &gt;= 0) 
+                                  ((Mystore.get a V) &lt;= 0) ,⊤›» t) |
+  (V = fs)&#125;</pre>]"><span class="Cnonalphakeyword">.</span></a>get a 5<span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum">  23:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Crec">rec</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (a:&#123;Mystore.inta | true&#125;) -&gt;
+  (i:&#123;int | true&#125;) -&gt; &#123;int | (V = (Mystore.get a i))&#125;</pre>]"> f k us fs </a><span class="Cnonalphakeyword">=</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;Mystore.inta | (V = a)&#125;</pre>]"> </a>
+<span class="Clinenum">  24:</span><span class="Cbackground"> </span>    <span class="Cif">if</span> k &gt;= size <span class="Cthen">then</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (a:&#123;Mystore.inta | true&#125;) -&gt;
+  (i:&#123;int | true&#125;) -&gt; &#123;int | (V = (Mystore.get a i))&#125;</pre>]"> <span class="Cnonalphakeyword">(</span>a<span class="Cnonalphakeyword">,</span> us<span class="Cnonalphakeyword">,</span> fs</a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;Mystore.inta | (V = a)&#125;</pre>]"><span class="Cnonalphakeyword">)</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = k)&#125;</pre>]"><span class="Celse">else</span></a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = 0)&#125;</pre>]">
+<span class="Clinenum">  25:</span><span class="Cbackground"> </span></a>      <span class="Cif">if</span> <span class="Cconstructor">Mystore</span><span class="Cnonalphakeyword">.</span>get<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (a:&#123;Mystore.inta | true&#125;) -&gt;
+  (i:&#123;int | true&#125;) -&gt; &#123;int | (V = (Mystore.get a i))&#125;</pre>]"> a k <span class="Cnonalphakeyword">=</span> 0 
+<span class="Clinenum">  26:</span><span class="Cbackground"> </span></a>      <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;Mystore.inta | (a &gt;= V)  (a &lt;= V)&#125; ,
+              e1:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:&#123;int |
+                                    (0 &lt;= V) 
+                                    (V != 0) 
+                                    (V = (Mystore.size a)) 
+                                    (V &gt;= 0) 
+                                    (0 &gt;= V) 
+                                    (0 &lt;= V) 
+                                    (0 != V) 
+                                    (size &gt;= V) 
+                                    (size &lt;= V) 
+                                    (size != V) 
+                                    ((Mystore.get e0 V) &gt;= 0) 
+                                    ((Mystore.get e0 V) &lt;= 0) 
+                                    ((Mystore.get e0 V) != 0) 
+                                    ((Mystore.get a V) &gt;= 0) 
+                                    ((Mystore.get a V) &lt;= 0) 
+                                    ((Mystore.get a V) != 0)&#125; ,
+                                 e1:&#123;«‹› ,‹(0 &lt;= V) 
+                                                  (V != 0) 
+                                                  (V = (Mystore.size a)) 
+                                                  (V &gt;= 0) 
+                                                  (e0 &gt;= V) 
+                                                  (e0 &lt;= V) 
+                                                  (e0 != V) 
+                                                  (0 &gt;= V) 
+                                                  (0 &lt;= V) 
+                                                  (0 != V) 
+                                                  (size &gt;= V) 
+                                                  (size &lt;= V) 
+                                                  (size != V) 
+                                                  ((Mystore.get e0 V) &gt;= 0) 
+                                                  ((Mystore.get e0 V) &lt;= 0) 
+                                                  ((Mystore.get e0 V) != 0) 
+                                                  ((Mystore.get a V) &gt;= 0) 
+                                                  ((Mystore.get a V) &lt;= 0) 
+                                                  ((Mystore.get a V) != 0) ,⊤›» t |
+                                    (_'48 &gt;= V) 
+                                    (_'48 &lt;= V) 
+                                    (_'48 != V) 
+                                    (_'47 &gt;= V) 
+                                    (_'47 &lt;= V) 
+                                    (_'47 != V)&#125;) |
+                 (_'47 &gt;= V)  (_'47 &lt;= V)&#125; ,
+              e2:«list» t. &amp;#9121;&amp;#9126; +
+                             ::(e0:&#123;int |
+                                   (0 &lt;= V) 
+                                   (V &gt;= 0) 
+                                   (size &gt;= V) 
+                                   (size != V) 
+                                   ((Mystore.get e0 V) &gt;= 0) 
+                                   ((Mystore.get e0 V) &lt;= 0) 
+                                   ((Mystore.get a V) &gt;= 0) 
+                                   ((Mystore.get a V) &lt;= 0)&#125; ,
+                                e1:«‹› ,‹(0 &lt;= V) 
+                                                (V &gt;= 0) 
+                                                (e0 &gt;= V) 
+                                                (e0 != V) 
+                                                (size &gt;= V) 
+                                                (size != V) 
+                                                ((Mystore.get e0 V) &gt;= 0) 
+                                                ((Mystore.get e0 V) &lt;= 0) 
+                                                ((Mystore.get a V) &gt;= 0) 
+                                                ((Mystore.get a V) &lt;= 0) ,⊤›» t)) |
+  (V = _'45)&#125;</pre>]"><span class="Cthen">then</span></a> <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (k:&#123;int |
+     (0 &lt;= V) 
+     (V &gt;= 0) 
+     (size &gt;= V) 
+     ((Mystore.get a V) &gt;= 0) 
+     ((Mystore.get a V) &lt;= 0)&#125;) -&gt;
+  (us:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;int |
+                        (0 &lt;= V) 
+                        (V != 0) 
+                        (V = (Mystore.size a)) 
+                        (V &gt;= 0) 
+                        (size &gt;= V) 
+                        (size &lt;= V) 
+                        (size != V) 
+                        ((Mystore.get a V) &gt;= 0) 
+                        ((Mystore.get a V) &lt;= 0) 
+                        ((Mystore.get a V) != 0) 
+                        (k &gt;= V) 
+                        (k &lt;= V) 
+                        (k != V)&#125; ,
+                     e1:«‹› ,‹(0 &lt;= V) 
+                                     (V != 0) 
+                                     (V = (Mystore.size a)) 
+                                     (V &gt;= 0) 
+                                     (e0 &gt;= V) 
+                                     (e0 &lt;= V) 
+                                     (e0 != V) 
+                                     (size &gt;= V) 
+                                     (size &lt;= V) 
+                                     (size != V) 
+                                     ((Mystore.get a V) &gt;= 0) 
+                                     ((Mystore.get a V) &lt;= 0) 
+                                     ((Mystore.get a V) != 0) 
+                                     (k &gt;= V) 
+                                     (k &lt;= V) 
+                                     (k != V) ,⊤›» t)) -&gt;
+  (fs:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;int |
+                        (0 &lt;= V) 
+                        (V &gt;= 0) 
+                        (size &gt;= V) 
+                        (size != V) 
+                        ((Mystore.get a V) &gt;= 0) 
+                        ((Mystore.get a V) &lt;= 0) 
+                        (k &gt;= V) 
+                        (k != V)&#125; ,
+                     e1:«‹› ,‹(0 &lt;= V) 
+                                     (V &gt;= 0) 
+                                     (e0 &gt;= V) 
+                                     (e0 != V) 
+                                     (size &gt;= V) 
+                                     (size != V) 
+                                     ((Mystore.get a V) &gt;= 0) 
+                                     ((Mystore.get a V) &lt;= 0) 
+                                     (k &gt;= V) 
+                                     (k != V) ,⊤›» t)) -&gt;
+  tuple. rec(e0:&#123;Mystore.inta | (a &gt;= V)  (a &lt;= V)&#125; ,
+             e1:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                             ::(e0:&#123;int |
+                                   (0 &lt;= V) 
+                                   (V != 0) 
+                                   (V = (Mystore.size a)) 
+                                   (V &gt;= 0) 
+                                   (k &gt;= V) 
+                                   (k &lt;= V) 
+                                   (k != V) 
+                                   (size &gt;= V) 
+                                   (size &lt;= V) 
+                                   (size != V) 
+                                   ((Mystore.get e0 V) &gt;= 0) 
+                                   ((Mystore.get e0 V) &lt;= 0) 
+                                   ((Mystore.get e0 V) != 0) 
+                                   ((Mystore.get a V) &gt;= 0) 
+                                   ((Mystore.get a V) &lt;= 0) 
+                                   ((Mystore.get a V) != 0)&#125; ,
+                                e1:&#123;«‹› ,‹(0 &lt;= V) 
+                                                 (V != 0) 
+                                                 (V = (Mystore.size a)) 
+                                                 (V &gt;= 0) 
+                                                 (e0 &gt;= V) 
+                                                 (e0 &lt;= V) 
+                                                 (e0 != V) 
+                                                 (k &gt;= V) 
+                                                 (k &lt;= V) 
+                                                 (k != V) 
+                                                 (size &gt;= V) 
+                                                 (size &lt;= V) 
+                                                 (size != V) 
+                                                 ((Mystore.get e0 V) &gt;= 0) 
+                                                 ((Mystore.get e0 V) &lt;= 0) 
+                                                 ((Mystore.get e0 V) != 0) 
+                                                 ((Mystore.get a V) &gt;= 0) 
+                                                 ((Mystore.get a V) &lt;= 0) 
+                                                 ((Mystore.get a V) != 0) ,⊤›» t |
+                                   (fs &gt;= V) 
+                                   (fs &lt;= V) 
+                                   (fs != V) 
+                                   (us &gt;= V) 
+                                   (us &lt;= V) 
+                                   (us != V)&#125;) |
+                (us &gt;= V)  (us &lt;= V)&#125; ,
+             e2:«list» t. &amp;#9121;&amp;#9126; +
+                            ::(e0:&#123;int |
+                                  (0 &lt;= V) 
+                                  (V &gt;= 0) 
+                                  (size &gt;= V) 
+                                  (size != V) 
+                                  ((Mystore.get e0 V) &gt;= 0) 
+                                  ((Mystore.get e0 V) &lt;= 0) 
+                                  ((Mystore.get a V) &gt;= 0) 
+                                  ((Mystore.get a V) &lt;= 0)&#125; ,
+                               e1:«‹› ,‹(0 &lt;= V) 
+                                               (V &gt;= 0) 
+                                               (e0 &gt;= V) 
+                                               (e0 != V) 
+                                               (size &gt;= V) 
+                                               (size != V) 
+                                               ((Mystore.get e0 V) &gt;= 0) 
+                                               ((Mystore.get e0 V) &lt;= 0) 
+                                               ((Mystore.get a V) &gt;= 0) 
+                                               ((Mystore.get a V) &lt;= 0) ,⊤›» t))</pre>]"><span class="Cassert">assert</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | ⊥&#125; , e1:&#123;«‹› ,‹⊥ ,⊤›» t | ⊥&#125;) |
+  (V = &amp;#9121;&amp;#9126;)  ((__tag V) = 0)&#125;</pre>]"><span class="Cnonalphakeyword">(</span><span class="Cconstructor">Mystore</span></a><span class="Cnonalphakeyword">.</span>get a k <span class="Cnonalphakeyword">=</span> 0<span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">;</span> f <span class="Cnonalphakeyword">(</span>k<span class="Cnonalphakeyword">+</span>1<span class="Cnonalphakeyword">)</span> us <span class="Cnonalphakeyword">(</span>k<span class="Cnonalphakeyword">::</span>fs<span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  27:</span><span class="Cbackground"> </span>      <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;unit. () | (V = _'49)&#125;</pre>]"><span class="Celse">else</span></a> <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  ((m ,us ,fs):tuple. rec(e0:Mystore.inta ,
+                          e1:«list» t. &amp;#9121;&amp;#9126; +
+                                         ::(e0:&#123;int |
+                                               ((Mystore.get e0 V) &gt;= 0) 
+                                               ((Mystore.get e0 V) != 0)&#125; ,
+                                            e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+                          e2:«list» t. &amp;#9121;&amp;#9126; +
+                                         ::(e0:&#123;int |
+                                               ((Mystore.get e0 V) &gt;= 0) 
+                                               ((Mystore.get e0 V) &lt;= 0)&#125; ,
+                                            e1:«‹› ,‹(e0 != V) 
+                                                            ((Mystore.get e0 V)
+                                                            &gt;= 0) ,⊤›» t))) -&gt;
+  unit. ()</pre>]"><span class="Cassert">assert</span></a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;Mystore.inta | (a &gt;= V)  (a &lt;= V)&#125; ,
+              e1:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:&#123;int |
+                                    (0 &lt;= V) 
+                                    (V != 0) 
+                                    (V = (Mystore.size a)) 
+                                    (V &gt;= 0) 
+                                    (0 &gt;= V) 
+                                    (0 &lt;= V) 
+                                    (0 != V) 
+                                    (size &gt;= V) 
+                                    (size &lt;= V) 
+                                    (size != V) 
+                                    ((Mystore.get e0 V) &gt;= 0) 
+                                    ((Mystore.get e0 V) &lt;= 0) 
+                                    ((Mystore.get e0 V) != 0) 
+                                    ((Mystore.get a V) &gt;= 0) 
+                                    ((Mystore.get a V) &lt;= 0) 
+                                    ((Mystore.get a V) != 0)&#125; ,
+                                 e1:&#123;«‹› ,‹(0 &lt;= V) 
+                                                  (V != 0) 
+                                                  (V = (Mystore.size a)) 
+                                                  (V &gt;= 0) 
+                                                  (e0 &gt;= V) 
+                                                  (e0 &lt;= V) 
+                                                  (e0 != V) 
+                                                  (0 &gt;= V) 
+                                                  (0 &lt;= V) 
+                                                  (0 != V) 
+                                                  (size &gt;= V) 
+                                                  (size &lt;= V) 
+                                                  (size != V) 
+                                                  ((Mystore.get e0 V) &gt;= 0) 
+                                                  ((Mystore.get e0 V) &lt;= 0) 
+                                                  ((Mystore.get e0 V) != 0) 
+                                                  ((Mystore.get a V) &gt;= 0) 
+                                                  ((Mystore.get a V) &lt;= 0) 
+                                                  ((Mystore.get a V) != 0) ,⊤›» t |
+                                    (_'48 &gt;= V) 
+                                    (_'48 &lt;= V) 
+                                    (_'48 != V) 
+                                    (_'47 &gt;= V) 
+                                    (_'47 &lt;= V) 
+                                    (_'47 != V)&#125;) |
+                 (_'47 &gt;= V)  (_'47 &lt;= V)&#125; ,
+              e2:«list» t. &amp;#9121;&amp;#9126; +
+                             ::(e0:&#123;int |
+                                   (0 &lt;= V) 
+                                   (V &gt;= 0) 
+                                   (size &gt;= V) 
+                                   (size != V) 
+                                   ((Mystore.get e0 V) &gt;= 0) 
+                                   ((Mystore.get e0 V) &lt;= 0) 
+                                   ((Mystore.get a V) &gt;= 0) 
+                                   ((Mystore.get a V) &lt;= 0)&#125; ,
+                                e1:«‹› ,‹(0 &lt;= V) 
+                                                (V &gt;= 0) 
+                                                (e0 &gt;= V) 
+                                                (e0 != V) 
+                                                (size &gt;= V) 
+                                                (size != V) 
+                                                ((Mystore.get e0 V) &gt;= 0) 
+                                                ((Mystore.get e0 V) &lt;= 0) 
+                                                ((Mystore.get a V) &gt;= 0) 
+                                                ((Mystore.get a V) &lt;= 0) ,⊤›» t)) |
+  (V = w)&#125;</pre>]"> </a><span class="Cnonalphakeyword">(</span><span class="Cconstructor">Mystore</span><span class="Cnonalphakeyword">.</span>get a k <span class="Cnonalphakeyword">!=</span> 0<span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">;</span> f <span class="Cnonalphakeyword">(</span>k<span class="Cnonalphakeyword">+</span>1<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>k<span class="Cnonalphakeyword">::</span>us<span class="Cnonalphakeyword">)</span> fs<span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum">  28:</span><span class="Cbackground"> </span>  <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;Mystore.inta | (a &gt;= V)  (a &lt;= V)&#125; ,
+              e1:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:&#123;int |
+                                    (0 &lt;= V) 
+                                    (V != 0) 
+                                    (V = (Mystore.size a)) 
+                                    (V &gt;= 0) 
+                                    (0 &gt;= V) 
+                                    (0 &lt;= V) 
+                                    (0 != V) 
+                                    (size &gt;= V) 
+                                    (size &lt;= V) 
+                                    (size != V) 
+                                    ((Mystore.get e0 V) &gt;= 0) 
+                                    ((Mystore.get e0 V) &lt;= 0) 
+                                    ((Mystore.get e0 V) != 0) 
+                                    ((Mystore.get a V) &gt;= 0) 
+                                    ((Mystore.get a V) &lt;= 0) 
+                                    ((Mystore.get a V) != 0)&#125; ,
+                                 e1:&#123;«‹› ,‹(0 &lt;= V) 
+                                                  (V != 0) 
+                                                  (V = (Mystore.size a)) 
+                                                  (V &gt;= 0) 
+                                                  (e0 &gt;= V) 
+                                                  (e0 &lt;= V) 
+                                                  (e0 != V) 
+                                                  (0 &gt;= V) 
+                                                  (0 &lt;= V) 
+                                                  (0 != V) 
+                                                  (size &gt;= V) 
+                                                  (size &lt;= V) 
+                                                  (size != V) 
+                                                  ((Mystore.get e0 V) &gt;= 0) 
+                                                  ((Mystore.get e0 V) &lt;= 0) 
+                                                  ((Mystore.get e0 V) != 0) 
+                                                  ((Mystore.get a V) &gt;= 0) 
+                                                  ((Mystore.get a V) &lt;= 0) 
+                                                  ((Mystore.get a V) != 0) ,⊤›» t |
+                                    (_'48 &gt;= V) 
+                                    (_'48 &lt;= V) 
+                                    (_'48 != V) 
+                                    (_'47 &gt;= V) 
+                                    (_'47 &lt;= V) 
+                                    (_'47 != V)&#125;) |
+                 (_'47 &gt;= V)  (_'47 &lt;= V)&#125; ,
+              e2:«list» t. &amp;#9121;&amp;#9126; +
+                             ::(e0:&#123;int |
+                                   (0 &lt;= V) 
+                                   (V &gt;= 0) 
+                                   (size &gt;= V) 
+                                   (size != V) 
+                                   ((Mystore.get e0 V) &gt;= 0) 
+                                   ((Mystore.get e0 V) &lt;= 0) 
+                                   ((Mystore.get a V) &gt;= 0) 
+                                   ((Mystore.get a V) &lt;= 0)&#125; ,
+                                e1:«‹› ,‹(0 &lt;= V) 
+                                                (V &gt;= 0) 
+                                                (e0 &gt;= V) 
+                                                (e0 != V) 
+                                                (size &gt;= V) 
+                                                (size != V) 
+                                                ((Mystore.get e0 V) &gt;= 0) 
+                                                ((Mystore.get e0 V) &lt;= 0) 
+                                                ((Mystore.get a V) &gt;= 0) 
+                                                ((Mystore.get a V) &lt;= 0) ,⊤›» t)) |
+  (V = w)&#125;</pre>]"><span class="Clet">let</span></a> w   <span class="Cnonalphakeyword">=</span> f 0 <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cin">in</span>
+<span class="Clinenum">  29:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Cnonalphakeyword">_</span>   <span class="Cnonalphakeyword">=</span> check w <span class="Cin">in</span>
+<span class="Clinenum">  30:</span><span class="Cbackground"> </span>  w
+<span class="Clinenum">  31:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  32:</span><span class="Cbackground"> </span><span class="Clet">let</span> malloc<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;int |
+                     ((Mystore.get mem V) &gt;= 0)  ((Mystore.get mem V) &lt;= 0)&#125; ,
+                  e1:«‹› ,‹(e0 != V)  ((Mystore.get mem V) &gt;= 0) ,⊤›» t) |
+  (V = fs)&#125;</pre>]"> <span class="Cnonalphakeyword">(</span></a>mem<span class="Cnonalphakeyword">,</span> us<span class="Cnonalphakeyword">,</span> fs<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">  33:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;int |
+                     ((Mystore.get mem V) &gt;= 0)  ((Mystore.get mem V) &lt;= 0)&#125; ,
+                  e1:«‹› ,‹(e0 != V)  ((Mystore.get mem V) &gt;= 0) ,⊤›» t) |
+  (V = fs)&#125;</pre>]"><span class="Cnonalphakeyword">(</span>f</a><span class="Cnonalphakeyword">,</span> w'<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  34:</span><span class="Cbackground"> </span>    <span class="Cmatch">match</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;int |
+                     ((Mystore.get mem V) &gt;= 0)  ((Mystore.get mem V) &lt;= 0)&#125; ,
+                  e1:«‹› ,‹(e0 != V)  ((Mystore.get mem V) &gt;= 0) ,⊤›» t) |
+  (V = fs)&#125;</pre>]"> fs</a> <span class="Cwith">with</span>
+<span class="Clinenum">  35:</span><span class="Cbackground"> </span>    <span class="Cbar">|</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span>          <span class="Cnonalphakeyword">-&gt;</span> <span class="Cassert">assert</span> <span class="Cfalse">false</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;Mystore.inta | (V = mem')&#125;</pre>]">
+<span class="Clinenum">  36:</span><span class="Cbackground"> </span></a>    <span class="Cbar">|</span> f<span class="Cnonalphakeyword">::</span>fs'      <span class="Cnonalphakeyword">-&gt;</span> <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;unit. () | (V = _'56)&#125;</pre>]">mem'</a> <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  ((m ,us ,fs):tuple. rec(e0:Mystore.inta ,
+                          e1:«list» t. &amp;#9121;&amp;#9126; +
+                                         ::(e0:&#123;int |
+                                               ((Mystore.get e0 V) &gt;= 0) 
+                                               ((Mystore.get e0 V) != 0)&#125; ,
+                                            e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+                          e2:«list» t. &amp;#9121;&amp;#9126; +
+                                         ::(e0:&#123;int |
+                                               ((Mystore.get e0 V) &gt;= 0) 
+                                               ((Mystore.get e0 V) &lt;= 0)&#125; ,
+                                            e1:«‹› ,‹(e0 != V) 
+                                                            ((Mystore.get e0 V)
+                                                            &gt;= 0) ,⊤›» t))) -&gt;
+  unit. ()</pre>]"><span class="Cconstructor">Mystore</span></a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;Mystore.inta | (mem' &gt;= V)  (mem' &lt;= V)  (mem != V)&#125; ,
+              e1:«list» t. &amp;#9121;&amp;#9126; +
+                             ::(e0:&#123;int |
+                                   ((Mystore.get mem' V) &gt;= 0) 
+                                   ((Mystore.get mem' V) != 0) 
+                                   ((Mystore.get mem V) &gt;= 0) 
+                                   ((Mystore.get e0 V) &gt;= 0) 
+                                   ((Mystore.get e0 V) != 0)&#125; ,
+                                e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+              e2:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:&#123;int |
+                                    (f != V) 
+                                    ((Mystore.get mem V) &gt;= 0) 
+                                    ((Mystore.get mem V) &lt;= 0) 
+                                    ((Mystore.get e0 V) &gt;= 0) 
+                                    ((Mystore.get e0 V) &lt;= 0) 
+                                    ((Mystore.get mem' V) &gt;= 0) 
+                                    ((Mystore.get mem' V) &lt;= 0)&#125; ,
+                                 e1:«‹› ,‹(e0 != V) 
+                                                 ((Mystore.get mem V) &gt;= 0) 
+                                                 ((Mystore.get e0 V) &gt;= 0) 
+                                                 ((Mystore.get mem' V) &gt;= 0) ,⊤›» t) |
+                 (fs' &gt;= V)  (fs' &lt;= V)&#125;) |
+  (V = w')&#125;</pre>]"><span class="Cnonalphakeyword">.</span></a>set mem f 1 <span class="Cin">in</span>
+<span class="Clinenum">  37:</span><span class="Cbackground"> </span>                     <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;Mystore.inta | (mem' &gt;= V)  (mem' &lt;= V)  (mem != V)&#125; ,
+              e1:«list» t. &amp;#9121;&amp;#9126; +
+                             ::(e0:&#123;int |
+                                   ((Mystore.get mem' V) &gt;= 0) 
+                                   ((Mystore.get mem' V) != 0) 
+                                   ((Mystore.get mem V) &gt;= 0) 
+                                   ((Mystore.get e0 V) &gt;= 0) 
+                                   ((Mystore.get e0 V) != 0)&#125; ,
+                                e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+              e2:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:&#123;int |
+                                    (f != V) 
+                                    ((Mystore.get mem V) &gt;= 0) 
+                                    ((Mystore.get mem V) &lt;= 0) 
+                                    ((Mystore.get e0 V) &gt;= 0) 
+                                    ((Mystore.get e0 V) &lt;= 0) 
+                                    ((Mystore.get mem' V) &gt;= 0) 
+                                    ((Mystore.get mem' V) &lt;= 0)&#125; ,
+                                 e1:«‹› ,‹(e0 != V) 
+                                                 ((Mystore.get mem V) &gt;= 0) 
+                                                 ((Mystore.get e0 V) &gt;= 0) 
+                                                 ((Mystore.get mem' V) &gt;= 0) ,⊤›» t) |
+                 (fs' &gt;= V)  (fs' &lt;= V)&#125;) |
+  (V = w')&#125;</pre>]">w'</a>   <span class="Cnonalphakeyword">=</span> <span class="Cnonalphakeyword">(</span>mem'<span class="Cnonalphakeyword">,</span> f<span class="Cnonalphakeyword">::</span>us<span class="Cnonalphakeyword">,</span> fs'<span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum">  38:</span><span class="Cbackground"> </span>                     <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  tuple. rec(e0:&#123;int |
+                ((Mystore.get mem V) &gt;= 0)  ((Mystore.get mem V) &lt;= 0)&#125; ,
+             e1:tuple. rec(e0:&#123;Mystore.inta | (mem != V)&#125; ,
+                           e1:«list» t. &amp;#9121;&amp;#9126; +
+                                          ::(e0:&#123;int |
+                                                ((Mystore.get e0 V) &gt;= 0) 
+                                                ((Mystore.get e0 V) != 0) 
+                                                ((Mystore.get mem V) &gt;= 0)&#125; ,
+                                             e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+                           e2:«list» t. &amp;#9121;&amp;#9126; +
+                                          ::(e0:&#123;int |
+                                                (e0 != V) 
+                                                ((Mystore.get e0 V) &gt;= 0) 
+                                                ((Mystore.get e0 V) &lt;= 0) 
+                                                ((Mystore.get mem V) &gt;= 0) 
+                                                ((Mystore.get mem V) &lt;= 0)&#125; ,
+                                             e1:«‹› ,‹(e0 != V) 
+                                                             ((Mystore.get e0 V)
+                                                             &gt;= 0) 
+                                                             ((Mystore.get mem V)
+                                                             &gt;= 0) ,⊤›» t)))</pre>]"><span class="Clet">let</span> <span class="Cnonalphakeyword">_</span>    <span class="Cnonalphakeyword">=</span> check w' <span class="Cin">in</span>
+<span class="Clinenum">  39:</span><span class="Cbackground"> </span>                     </a><span class="Cnonalphakeyword">(</span>f<span class="Cnonalphakeyword">,</span> w'<span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum">  40:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Cnonalphakeyword">_</span> <span class="Cnonalphakeyword">=</span> check w' <span class="Cin">in</span> 
+<span class="Clinenum">  41:</span><span class="Cbackground"> </span>  <span class="Cnonalphakeyword">(</span>f<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  ((mem ,us ,fs):tuple. rec(e0:Mystore.inta ,
+                            e1:«list» t. &amp;#9121;&amp;#9126; +
+                                           ::(e0:&#123;int |
+                                                 ((Mystore.get e0 V) &gt;= 0) 
+                                                 ((Mystore.get e0 V) != 0)&#125; ,
+                                              e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+                            e2:«list» t. &amp;#9121;&amp;#9126; +
+                                           ::(e0:&#123;int |
+                                                 ((Mystore.get e0 V) &gt;= 0) 
+                                                 ((Mystore.get e0 V) &lt;= 0)&#125; ,
+                                              e1:«‹› ,‹(e0 != V) 
+                                                              ((Mystore.get e0 V)
+                                                              &gt;= 0) ,⊤›» t))) -&gt;
+  (p:int) -&gt;
+  tuple. rec(e0:Mystore.inta ,
+             e1:«list» t. &amp;#9121;&amp;#9126; +
+                            ::(e0:&#123;int |
+                                  (p != V) 
+                                  ((Mystore.get e0 V) &gt;= 0) 
+                                  ((Mystore.get e0 V) != 0) 
+                                  ((Mystore.get mem V) &gt;= 0) 
+                                  ((Mystore.get mem V) != 0)&#125; ,
+                               e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+             e2:«list» t. &amp;#9121;&amp;#9126; +
+                            ::(e0:&#123;int |
+                                  ((Mystore.get e0 V) &gt;= 0) 
+                                  ((Mystore.get e0 V) &lt;= 0)&#125; ,
+                               e1:«‹› ,‹(e0 != V) 
+                                               ((Mystore.get e0 V) &gt;= 0) 
+                                               ((Mystore.get mem V) &gt;= 0) ,⊤›» t))</pre>]"><span class="Cnonalphakeyword">,</span> w'</a><span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  42:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  43:</span><span class="Cbackground"> </span><span class="Clet">let</span> free<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;Mystore.inta | (V = _'63)&#125;</pre>]"> <span class="Cnonalphakeyword">(</span>mem</a><span class="Cnonalphakeyword">,</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (a:&#123;Mystore.inta | true&#125;) -&gt;
+  (i:&#123;int | true&#125;) -&gt;
+  (w:&#123;int | true&#125;) -&gt; &#123;Mystore.inta | (V = (Mystore.set a i w))&#125;</pre>]">us<span class="Cnonalphakeyword">,</span> fs<span class="Cnonalphakeyword">)</span> p <span class="Cnonalphakeyword">=</span></a>
+<span class="Clinenum">  44:</span><span class="Cbackground"> </span>  <span class="Cif">if</span> <span class="Cnonalphakeyword">(</span><span class="Cconstructor">Mystore</span><span class="Cnonalphakeyword">.</span>get<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;int | ((Mystore.get mem V) != 0)  ((Mystore.get mem' V) &gt;= 0)&#125;) -&gt;
+  (ys:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;int |
+                        ((Mystore.get mem V) != 0) 
+                        ((Mystore.get mem' V) &gt;= 0)&#125; ,
+                     e1:«‹› ,‹(e0 != V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:&#123;int |
+                    ((Mystore.get mem V) != 0) 
+                    ((Mystore.get mem' V) &gt;= 0) 
+                    (x != V)&#125; ,
+                 e1:«‹› ,‹(e0 != V) ,⊤›» t)</pre>]"> </a>mem<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;int |
+                     ((Mystore.get mem V) &gt;= 0)  ((Mystore.get mem V) != 0)&#125; ,
+                  e1:«‹› ,‹(e0 != V) ,⊤›» t) |
+  (V = us)&#125;</pre>]"> p</a> <span class="Cnonalphakeyword">!=</span> 0<span class="Cnonalphakeyword">)</span> <span class="Cthen">then</span>
+<span class="Clinenum">  45:</span><span class="Cbackground"> </span>    <span class="Clet">let</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;Mystore.inta | (V = mem')&#125;</pre>]"> mem'</a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;int |
+                     ((Mystore.get mem V) != 0) 
+                     ((Mystore.get mem' V) &gt;= 0) 
+                     (p != V)&#125; ,
+                  e1:«‹› ,‹(e0 != V) ,⊤›» t) |
+  (V = us')&#125;</pre>]"> <span class="Cnonalphakeyword">=</span></a> <span class="Cconstructor">Mystore</span><span class="Cnonalphakeyword">.</span>set mem p 0 <span class="Cin">in</span>
+<span class="Clinenum">  46:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;Mystore.inta | (V = mem)&#125;</pre>]">us'</a>  <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;int |
+                     ((Mystore.get mem V) &gt;= 0)  ((Mystore.get mem V) != 0)&#125; ,
+                  e1:«‹› ,‹(e0 != V) ,⊤›» t) |
+  (V = us)&#125;</pre>]"><span class="Cnonalphakeyword">=</span> </a>del<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;int |
+                     ((Mystore.get mem V) &gt;= 0)  ((Mystore.get mem V) &lt;= 0)&#125; ,
+                  e1:«‹› ,‹(e0 != V)  ((Mystore.get mem V) &gt;= 0) ,⊤›» t) |
+  (V = fs)&#125;</pre>]"> </a>p us <span class="Cin">in</span>
+<span class="Clinenum">  47:</span><span class="Cbackground"> </span>    <span class="Cnonalphakeyword">(</span>mem'<span class="Cnonalphakeyword">,</span> us'<span class="Cnonalphakeyword">,</span> p<span class="Cnonalphakeyword">::</span>fs<span class="Cnonalphakeyword">)</span> 
+<span class="Clinenum">  48:</span><span class="Cbackground"> </span>  <span class="Celse">else</span> <span class="Cnonalphakeyword">(</span>mem<span class="Cnonalphakeyword">,</span> us<span class="Cnonalphakeyword">,</span> fs<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  49:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  50:</span><span class="Cbackground"> </span><span class="Clet">let</span> <span class="Cnonalphakeyword">_</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;int | (_'71 != V)&#125; ,
+                  e1:«‹› ,‹(e0 != V) ,⊤›» t) |
+  (V = _'70)&#125;</pre>]"><span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  51:</span><span class="Cbackground"> </span></a>  <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;unit. () | (V = ())  ((__tag V) = 0)&#125;</pre>]"><span class="Clet">let</span></a> <span class="Cnonalphakeyword">(</span>m<span class="Cnonalphakeyword">,</span>us<span class="Cnonalphakeyword">,</span>fs<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">=</span> init 1000 <span class="Cin">in</span>
+<span class="Clinenum">  52:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> fs'       <span class="Cnonalphakeyword">=</span> del <span class="Cnonalphakeyword">(</span>read_int <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">)</span> fs <span class="Cin">in</span>
+<span class="Clinenum">  53:</span><span class="Cbackground"> </span>  <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  54:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  55:</span><span class="Cbackground"> </span><span class="Clet">let</span> <span class="Cnonalphakeyword">_</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;unit. () | (V = _'75)&#125;</pre>]"><span class="Cnonalphakeyword">=</span></a>
+<span class="Clinenum">  56:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;int |
+                 ((Mystore.get _'78.e0 V) &gt;= 0) 
+                 ((Mystore.get _'78.e0 V) &lt;= 0)&#125; ,
+              e1:tuple. rec(e0:&#123;Mystore.inta | (_'78.e0 != V)&#125; ,
+                            e1:«list» t. &amp;#9121;&amp;#9126; +
+                                           ::(e0:&#123;int |
+                                                 ((Mystore.get e0 V) &gt;= 0) 
+                                                 ((Mystore.get e0 V) != 0) 
+                                                 ((Mystore.get _'78.e0 V) &gt;=
+                                                 0)&#125; ,
+                                              e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+                            e2:«list» t. &amp;#9121;&amp;#9126; +
+                                           ::(e0:&#123;int |
+                                                 (e0 != V) 
+                                                 ((Mystore.get e0 V) &gt;= 0) 
+                                                 ((Mystore.get e0 V) &lt;= 0) 
+                                                 ((Mystore.get _'78.e0 V) &gt;=
+                                                 0) 
+                                                 ((Mystore.get _'78.e0 V) &lt;=
+                                                 0)&#125; ,
+                                              e1:«‹› ,‹(e0 != V) 
+                                                              ((Mystore.get e0 V)
+                                                              &gt;= 0) 
+                                                              ((Mystore.get 
+                                                               _'78.e0 V)
+                                                              &gt;= 0) ,⊤›» t))) |
+  (V = _'77)&#125;</pre>]"><span class="Cnonalphakeyword">(</span>m<span class="Cnonalphakeyword">,</span>us<span class="Cnonalphakeyword">,</span>fs</a><span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  ((mem ,us ,fs):tuple. rec(e0:Mystore.inta ,
+                            e1:«list» t. &amp;#9121;&amp;#9126; +
+                                           ::(e0:&#123;int |
+                                                 ((Mystore.get e0 V) &gt;= 0) 
+                                                 ((Mystore.get e0 V) != 0)&#125; ,
+                                              e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+                            e2:«list» t. &amp;#9121;&amp;#9126; +
+                                           ::(e0:&#123;int |
+                                                 ((Mystore.get e0 V) &gt;= 0) 
+                                                 ((Mystore.get e0 V) &lt;= 0)&#125; ,
+                                              e1:«‹› ,‹(e0 != V) 
+                                                              ((Mystore.get e0 V)
+                                                              &gt;= 0) ,⊤›» t))) -&gt;
+  tuple. rec(e0:&#123;int |
+                ((Mystore.get mem V) &gt;= 0)  ((Mystore.get mem V) &lt;= 0)&#125; ,
+             e1:tuple. rec(e0:&#123;Mystore.inta | (mem != V)&#125; ,
+                           e1:«list» t. &amp;#9121;&amp;#9126; +
+                                          ::(e0:&#123;int |
+                                                ((Mystore.get e0 V) &gt;= 0) 
+                                                ((Mystore.get e0 V) != 0) 
+                                                ((Mystore.get mem V) &gt;= 0)&#125; ,
+                                             e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+                           e2:«list» t. &amp;#9121;&amp;#9126; +
+                                          ::(e0:&#123;int |
+                                                (e0 != V) 
+                                                ((Mystore.get e0 V) &gt;= 0) 
+                                                ((Mystore.get e0 V) &lt;= 0) 
+                                                ((Mystore.get mem V) &gt;= 0) 
+                                                ((Mystore.get mem V) &lt;= 0)&#125; ,
+                                             e1:«‹› ,‹(e0 != V) 
+                                                             ((Mystore.get e0 V)
+                                                             &gt;= 0) 
+                                                             ((Mystore.get mem V)
+                                                             &gt;= 0) ,⊤›» t)))</pre>]">init 1000</a> <span class="Cin">in</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;int |
+                     (0 &lt;= V) 
+                     (V != 0) 
+                     (V &gt;= 0) 
+                     (1000 &gt;= V) 
+                     (1000 &lt;= V) 
+                     (1000 != V) 
+                     ((Mystore.get m V) &gt;= 0) 
+                     ((Mystore.get m V) &lt;= 0) 
+                     ((Mystore.get m V) != 0)&#125; ,
+                  e1:«‹› ,‹(0 &lt;= V) 
+                                  (V != 0) 
+                                  (V &gt;= 0) 
+                                  (e0 &gt;= V) 
+                                  (e0 &lt;= V) 
+                                  (e0 != V) 
+                                  (1000 &gt;= V) 
+                                  (1000 &lt;= V) 
+                                  (1000 != V) 
+                                  ((Mystore.get m V) &gt;= 0) 
+                                  ((Mystore.get m V) &lt;= 0) 
+                                  ((Mystore.get m V) != 0) ,⊤›» t) |
+  (V = us)&#125;</pre>]">
+<span class="Clinenum">  57:</span><span class="Cbackground"> </span></a>  <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;unit. () | (V = _'79)&#125;</pre>]"><span class="Cnonalphakeyword">_</span></a>         <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  ((m ,us ,fs):tuple. rec(e0:Mystore.inta ,
+                          e1:«list» t. &amp;#9121;&amp;#9126; +
+                                         ::(e0:&#123;int |
+                                               ((Mystore.get e0 V) &gt;= 0) 
+                                               ((Mystore.get e0 V) != 0)&#125; ,
+                                            e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+                          e2:«list» t. &amp;#9121;&amp;#9126; +
+                                         ::(e0:&#123;int |
+                                               ((Mystore.get e0 V) &gt;= 0) 
+                                               ((Mystore.get e0 V) &lt;= 0)&#125; ,
+                                            e1:«‹› ,‹(e0 != V) 
+                                                            ((Mystore.get e0 V)
+                                                            &gt;= 0) ,⊤›» t))) -&gt;
+  unit. ()</pre>]">check</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;Mystore.inta | (_'78.e0 != V)&#125; ,
+              e1:«list» t. &amp;#9121;&amp;#9126; +
+                             ::(e0:&#123;int |
+                                   ((Mystore.get e0 V) &gt;= 0) 
+                                   ((Mystore.get e0 V) != 0) 
+                                   ((Mystore.get _'78.e0 V) &gt;= 0)&#125; ,
+                                e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+              e2:«list» t. &amp;#9121;&amp;#9126; +
+                             ::(e0:&#123;int |
+                                   (e0 != V) 
+                                   ((Mystore.get e0 V) &gt;= 0) 
+                                   ((Mystore.get e0 V) &lt;= 0) 
+                                   ((Mystore.get _'78.e0 V) &gt;= 0) 
+                                   ((Mystore.get _'78.e0 V) &lt;= 0)&#125; ,
+                                e1:«‹› ,‹(e0 != V) 
+                                                ((Mystore.get e0 V) &gt;= 0) 
+                                                ((Mystore.get _'78.e0 V) &gt;=
+                                                0) ,⊤›» t)) |
+  (V = w')&#125;</pre>]"><span class="Cnonalphakeyword">(</span>m</a><span class="Cnonalphakeyword">,</span> us<span class="Cnonalphakeyword">,</span> fs<span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum">  58:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:Mystore.inta ,
+              e1:«list» t. &amp;#9121;&amp;#9126; +
+                             ::(e0:&#123;int |
+                                   (_'81 != V) 
+                                   ((Mystore.get e0 V) &gt;= 0) 
+                                   ((Mystore.get e0 V) != 0) 
+                                   ((Mystore.get w'.e0 V) &gt;= 0) 
+                                   ((Mystore.get w'.e0 V) != 0)&#125; ,
+                                e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+              e2:«list» t. &amp;#9121;&amp;#9126; +
+                             ::(e0:&#123;int |
+                                   ((Mystore.get e0 V) &gt;= 0) 
+                                   ((Mystore.get e0 V) &lt;= 0)&#125; ,
+                                e1:«‹› ,‹(e0 != V) 
+                                                ((Mystore.get e0 V) &gt;= 0) 
+                                                ((Mystore.get w'.e0 V) &gt;= 0) ,⊤›» t)) |
+  (V = _'80)&#125;</pre>]"><span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">,</span></a> w'<span class="Cnonalphakeyword">)</span>   <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  ((mem ,us ,fs):tuple. rec(e0:Mystore.inta ,
+                            e1:«list» t. &amp;#9121;&amp;#9126; +
+                                           ::(e0:&#123;int |
+                                                 ((Mystore.get e0 V) &gt;= 0) 
+                                                 ((Mystore.get e0 V) != 0)&#125; ,
+                                              e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+                            e2:«list» t. &amp;#9121;&amp;#9126; +
+                                           ::(e0:&#123;int |
+                                                 ((Mystore.get e0 V) &gt;= 0) 
+                                                 ((Mystore.get e0 V) &lt;= 0)&#125; ,
+                                              e1:«‹› ,‹(e0 != V) 
+                                                              ((Mystore.get e0 V)
+                                                              &gt;= 0) ,⊤›» t))) -&gt;
+  (p:int) -&gt;
+  tuple. rec(e0:Mystore.inta ,
+             e1:«list» t. &amp;#9121;&amp;#9126; +
+                            ::(e0:&#123;int |
+                                  (p != V) 
+                                  ((Mystore.get e0 V) &gt;= 0) 
+                                  ((Mystore.get e0 V) != 0) 
+                                  ((Mystore.get mem V) &gt;= 0) 
+                                  ((Mystore.get mem V) != 0)&#125; ,
+                               e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+             e2:«list» t. &amp;#9121;&amp;#9126; +
+                            ::(e0:&#123;int |
+                                  ((Mystore.get e0 V) &gt;= 0) 
+                                  ((Mystore.get e0 V) &lt;= 0)&#125; ,
+                               e1:«‹› ,‹(e0 != V) 
+                                               ((Mystore.get e0 V) &gt;= 0) 
+                                               ((Mystore.get mem V) &gt;= 0) ,⊤›» t))</pre>]">malloc</a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;Mystore.inta | (_'78.e0 != V)&#125; ,
+              e1:«list» t. &amp;#9121;&amp;#9126; +
+                             ::(e0:&#123;int |
+                                   ((Mystore.get e0 V) &gt;= 0) 
+                                   ((Mystore.get e0 V) != 0) 
+                                   ((Mystore.get _'78.e0 V) &gt;= 0)&#125; ,
+                                e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+              e2:«list» t. &amp;#9121;&amp;#9126; +
+                             ::(e0:&#123;int |
+                                   (e0 != V) 
+                                   ((Mystore.get e0 V) &gt;= 0) 
+                                   ((Mystore.get e0 V) &lt;= 0) 
+                                   ((Mystore.get _'78.e0 V) &gt;= 0) 
+                                   ((Mystore.get _'78.e0 V) &lt;= 0)&#125; ,
+                                e1:«‹› ,‹(e0 != V) 
+                                                ((Mystore.get e0 V) &gt;= 0) 
+                                                ((Mystore.get _'78.e0 V) &gt;=
+                                                0) ,⊤›» t)) |
+  (V = w')&#125;</pre>]"> </a><span class="Cnonalphakeyword">(</span>m<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (a:unit. ()) -&gt; int</pre>]"><span class="Cnonalphakeyword">,</span> us<span class="Cnonalphakeyword">,</span> fs</a><span class="Cnonalphakeyword">)</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;unit. () | (V = ())  ((__tag V) = 0)&#125;</pre>]"> <span class="Cin">in</span></a>
+<span class="Clinenum">  59:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;unit. () | (V = _'83)&#125;</pre>]"><span class="Cnonalphakeyword">_</span></a>         <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  ((m ,us ,fs):tuple. rec(e0:Mystore.inta ,
+                          e1:«list» t. &amp;#9121;&amp;#9126; +
+                                         ::(e0:&#123;int |
+                                               ((Mystore.get e0 V) &gt;= 0) 
+                                               ((Mystore.get e0 V) != 0)&#125; ,
+                                            e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+                          e2:«list» t. &amp;#9121;&amp;#9126; +
+                                         ::(e0:&#123;int |
+                                               ((Mystore.get e0 V) &gt;= 0) 
+                                               ((Mystore.get e0 V) &lt;= 0)&#125; ,
+                                            e1:«‹› ,‹(e0 != V) 
+                                                            ((Mystore.get e0 V)
+                                                            &gt;= 0) ,⊤›» t))) -&gt;
+  unit. ()</pre>]">check</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:Mystore.inta ,
+              e1:«list» t. &amp;#9121;&amp;#9126; +
+                             ::(e0:&#123;int |
+                                   (_'81 != V) 
+                                   ((Mystore.get e0 V) &gt;= 0) 
+                                   ((Mystore.get e0 V) != 0) 
+                                   ((Mystore.get w'.e0 V) &gt;= 0) 
+                                   ((Mystore.get w'.e0 V) != 0)&#125; ,
+                                e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+              e2:«list» t. &amp;#9121;&amp;#9126; +
+                             ::(e0:&#123;int |
+                                   ((Mystore.get e0 V) &gt;= 0) 
+                                   ((Mystore.get e0 V) &lt;= 0)&#125; ,
+                                e1:«‹› ,‹(e0 != V) 
+                                                ((Mystore.get e0 V) &gt;= 0) 
+                                                ((Mystore.get w'.e0 V) &gt;= 0) ,⊤›» t)) |
+  (V = w'')&#125;</pre>]">w' </a><span class="Cin">in</span> 
+<span class="Clinenum">  60:</span><span class="Cbackground"> </span>  <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;unit. () | (V = ())  ((__tag V) = 0)&#125;</pre>]"><span class="Clet">let</span></a> w''       <span class="Cnonalphakeyword">=</span> free w' <span class="Cnonalphakeyword">(</span>read_int <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum">  61:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Cnonalphakeyword">_</span>         <span class="Cnonalphakeyword">=</span> check w'' <span class="Cin">in</span>
+<span class="Clinenum">  62:</span><span class="Cbackground"> </span>  <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aP | ⊥&#125;</pre>]">
+<span class="Clinenum">  63:</span><span class="Cbackground"> </span></a>
+<span class="Clinenum">  64:</span><span class="Cbackground"> </span><span class="Clet">let</span> main<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = _'84)&#125;</pre>]"> <span class="Cnonalphakeyword">=</span></a>
+<span class="Clinenum">  65:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Crec">rec</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;int | true&#125;) -&gt;
+  (y:&#123;int | true&#125;) -&gt; &#123;bool. false + true | ((? (V)) iff (x = y))&#125;</pre>]">spin</a> w <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">  66:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> ch<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;int |
+                 ((Mystore.get w.e0 V) &gt;= 0)  ((Mystore.get w.e0 V) &lt;= 0)&#125; ,
+              e1:tuple. rec(e0:&#123;Mystore.inta | (w.e0 != V)&#125; ,
+                            e1:«list» t. &amp;#9121;&amp;#9126; +
+                                           ::(e0:&#123;int |
+                                                 ((Mystore.get e0 V) &gt;= 0) 
+                                                 ((Mystore.get e0 V) != 0) 
+                                                 ((Mystore.get w.e0 V) &gt;= 0)&#125; ,
+                                              e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+                            e2:«list» t. &amp;#9121;&amp;#9126; +
+                                           ::(e0:&#123;int |
+                                                 (e0 != V) 
+                                                 ((Mystore.get e0 V) &gt;= 0) 
+                                                 ((Mystore.get e0 V) &lt;= 0) 
+                                                 ((Mystore.get w.e0 V) &gt;= 0) 
+                                                 ((Mystore.get w.e0 V) &lt;= 0)&#125; ,
+                                              e1:«‹› ,‹(e0 != V) 
+                                                              ((Mystore.get e0 V)
+                                                              &gt;= 0) 
+                                                              ((Mystore.get 
+                                                               w.e0 V)
+                                                              &gt;= 0) ,⊤›» t))) |
+  (V = _'91)&#125;</pre>]"> <span class="Cnonalphakeyword">=</span> read_int</a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  ((mem ,us ,fs):tuple. rec(e0:Mystore.inta ,
+                            e1:«list» t. &amp;#9121;&amp;#9126; +
+                                           ::(e0:&#123;int |
+                                                 ((Mystore.get e0 V) &gt;= 0) 
+                                                 ((Mystore.get e0 V) != 0)&#125; ,
+                                              e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+                            e2:«list» t. &amp;#9121;&amp;#9126; +
+                                           ::(e0:&#123;int |
+                                                 ((Mystore.get e0 V) &gt;= 0) 
+                                                 ((Mystore.get e0 V) &lt;= 0)&#125; ,
+                                              e1:«‹› ,‹(e0 != V) 
+                                                              ((Mystore.get e0 V)
+                                                              &gt;= 0) ,⊤›» t))) -&gt;
+  tuple. rec(e0:&#123;int |
+                ((Mystore.get mem V) &gt;= 0)  ((Mystore.get mem V) &lt;= 0)&#125; ,
+             e1:tuple. rec(e0:&#123;Mystore.inta | (mem != V)&#125; ,
+                           e1:«list» t. &amp;#9121;&amp;#9126; +
+                                          ::(e0:&#123;int |
+                                                ((Mystore.get e0 V) &gt;= 0) 
+                                                ((Mystore.get e0 V) != 0) 
+                                                ((Mystore.get mem V) &gt;= 0)&#125; ,
+                                             e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+                           e2:«list» t. &amp;#9121;&amp;#9126; +
+                                          ::(e0:&#123;int |
+                                                (e0 != V) 
+                                                ((Mystore.get e0 V) &gt;= 0) 
+                                                ((Mystore.get e0 V) &lt;= 0) 
+                                                ((Mystore.get mem V) &gt;= 0) 
+                                                ((Mystore.get mem V) &lt;= 0)&#125; ,
+                                             e1:«‹› ,‹(e0 != V) 
+                                                             ((Mystore.get e0 V)
+                                                             &gt;= 0) 
+                                                             ((Mystore.get mem V)
+                                                             &gt;= 0) ,⊤›» t)))</pre>]"> <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span> </a><span class="Cin">in</span>
+<span class="Clinenum">  67:</span><span class="Cbackground"> </span>    <span class="Cif">if</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (w:tuple. rec(e0:Mystore.inta ,
+                e1:«list» t. &amp;#9121;&amp;#9126; +
+                               ::(e0:&#123;int |
+                                     ((Mystore.get e0 V) &gt;= 0) 
+                                     ((Mystore.get e0 V) != 0)&#125; ,
+                                  e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+                e2:«list» t. &amp;#9121;&amp;#9126; +
+                               ::(e0:&#123;int |
+                                     ((Mystore.get e0 V) &gt;= 0) 
+                                     ((Mystore.get e0 V) &lt;= 0)&#125; ,
+                                  e1:«‹› ,‹(e0 != V) 
+                                                  ((Mystore.get e0 V) &gt;= 0) ,⊤›» t))) -&gt;
+  &#123;'aM | ⊥&#125;</pre>]"> ch </a><span class="Cnonalphakeyword">=</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;Mystore.inta | (w.e0 != V)&#125; ,
+              e1:«list» t. &amp;#9121;&amp;#9126; +
+                             ::(e0:&#123;int |
+                                   ((Mystore.get e0 V) &gt;= 0) 
+                                   ((Mystore.get e0 V) != 0) 
+                                   ((Mystore.get w.e0 V) &gt;= 0)&#125; ,
+                                e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+              e2:«list» t. &amp;#9121;&amp;#9126; +
+                             ::(e0:&#123;int |
+                                   (e0 != V) 
+                                   ((Mystore.get e0 V) &gt;= 0) 
+                                   ((Mystore.get e0 V) &lt;= 0) 
+                                   ((Mystore.get w.e0 V) &gt;= 0) 
+                                   ((Mystore.get w.e0 V) &lt;= 0)&#125; ,
+                                e1:«‹› ,‹(e0 != V) 
+                                                ((Mystore.get e0 V) &gt;= 0) 
+                                                ((Mystore.get w.e0 V) &gt;= 0) ,⊤›» t)) |
+  (V = w')&#125;</pre>]"> 0</a> <span class="Cthen">then</span> 
+<span class="Clinenum">  68:</span><span class="Cbackground"> </span>      <span class="Clet">let</span> <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">,</span>w'<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">=</span> malloc w <span class="Cin">in</span>
+<span class="Clinenum">  69:</span><span class="Cbackground"> </span>      spin<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:Mystore.inta ,
+              e1:«list» t. &amp;#9121;&amp;#9126; +
+                             ::(e0:&#123;int |
+                                   (_'89 != V) 
+                                   ((Mystore.get e0 V) &gt;= 0) 
+                                   ((Mystore.get e0 V) != 0) 
+                                   ((Mystore.get w.e0 V) &gt;= 0) 
+                                   ((Mystore.get w.e0 V) != 0)&#125; ,
+                                e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+              e2:«list» t. &amp;#9121;&amp;#9126; +
+                             ::(e0:&#123;int |
+                                   ((Mystore.get e0 V) &gt;= 0) 
+                                   ((Mystore.get e0 V) &lt;= 0)&#125; ,
+                                e1:«‹› ,‹(e0 != V) 
+                                                ((Mystore.get e0 V) &gt;= 0) 
+                                                ((Mystore.get w.e0 V) &gt;= 0) ,⊤›» t)) |
+  (V = _'88)&#125;</pre>]"> w'</a>
+<span class="Clinenum">  70:</span><span class="Cbackground"> </span>    <span class="Celse">else</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (w:tuple. rec(e0:Mystore.inta ,
+                e1:«list» t. &amp;#9121;&amp;#9126; +
+                               ::(e0:&#123;int |
+                                     ((Mystore.get e0 V) &gt;= 0) 
+                                     ((Mystore.get e0 V) != 0)&#125; ,
+                                  e1:«‹› ,‹(e0 != V) ,⊤›» t) ,
+                e2:«list» t. &amp;#9121;&amp;#9126; +
+                               ::(e0:&#123;int |
+                                     ((Mystore.get e0 V) &gt;= 0) 
+                                     ((Mystore.get e0 V) &lt;= 0)&#125; ,
+                                  e1:«‹› ,‹(e0 != V) 
+                                                  ((Mystore.get e0 V) &gt;= 0) ,⊤›» t))) -&gt;
+  &#123;'aM | ⊥&#125;</pre>]"> 
+<span class="Clinenum">  71:</span><span class="Cbackground"> </span></a>      <span class="Clet">let</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (size:&#123;int | (0 &lt;= V)  (V != 0)  (V &gt;= 0)&#125;) -&gt;
+  tuple. rec(e0:Mystore.inta ,
+             e1:«list» t. &amp;#9121;&amp;#9126; +
+                            ::(e0:&#123;int |
+                                  (0 &lt;= V) 
+                                  (V != 0) 
+                                  (V &gt;= 0) 
+                                  (size &gt;= V) 
+                                  (size &lt;= V) 
+                                  (size != V) 
+                                  ((Mystore.get e0 V) &gt;= 0) 
+                                  ((Mystore.get e0 V) &lt;= 0) 
+                                  ((Mystore.get e0 V) != 0)&#125; ,
+                               e1:«‹› ,‹(0 &lt;= V) 
+                                               (V != 0) 
+                                               (V &gt;= 0) 
+                                               (e0 &gt;= V) 
+                                               (e0 &lt;= V) 
+                                               (e0 != V) 
+                                               (size &gt;= V) 
+                                               (size &lt;= V) 
+                                               (size != V) 
+                                               ((Mystore.get e0 V) &gt;= 0) 
+                                               ((Mystore.get e0 V) &lt;= 0) 
+                                               ((Mystore.get e0 V) != 0) ,⊤›» t) ,
+             e2:«list» t. &amp;#9121;&amp;#9126; +
+                            ::(e0:&#123;int |
+                                  (0 &lt;= V) 
+                                  (V &gt;= 0) 
+                                  (size &gt;= V) 
+                                  (size != V) 
+                                  ((Mystore.get e0 V) &gt;= 0) 
+                                  ((Mystore.get e0 V) &lt;= 0)&#125; ,
+                               e1:«‹› ,‹(0 &lt;= V) 
+                                               (V &gt;= 0) 
+                                               (e0 &gt;= V) 
+                                               (e0 != V) 
+                                               (size &gt;= V) 
+                                               (size != V) 
+                                               ((Mystore.get e0 V) &gt;= 0) 
+                                               ((Mystore.get e0 V) &lt;= 0) ,⊤›» t))</pre>]"> w'</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = 1000)&#125;</pre>]"><span class="Cnonalphakeyword">=</span> free</a> w <span class="Cnonalphakeyword">(</span>read_int <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum">  72:</span><span class="Cbackground"> </span>      spin w' <span class="Cin">in</span>
+<span class="Clinenum">  73:</span><span class="Cbackground"> </span>  spin <span class="Cnonalphakeyword">(</span>init 1000<span class="Cnonalphakeyword">)</span>
+</pre>
+
+<hr>
+<p>
+<em>This document was generated using 
+<a href="http://martin.jambon.free.fr/caml2html.html">caml2html</a></em>
+</body>
+</html>

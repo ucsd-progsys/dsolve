@@ -23,7 +23,7 @@ import common, sys, time, os, os.path
 import itertools as it
 import dsolve
 
-testdirs = [("tests/pldi09s/run", False), ("tests/pldi09s/norecrefs", True)]
+testdirs = [("proceedings-demos/run", False), ("proceedings-demos/norecrefs", True)]
 
 def runtest(file, norecrefs):
   expected_stats = 0

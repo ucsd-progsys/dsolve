@@ -1,3 +1,5 @@
+(* textbook union-find implementation with path compression *)
+
 let init_rank n = 
   let rec init_rec m i =
     if i >= n then m else init_rec (Store.set m i 1) (i+1) in
@@ -26,7 +28,7 @@ let find (r: (int, int) Store.t) (p: (int, int) Store.t) (i: int) =
 let union (r: (int, int) Store.t) (p: (int, int) Store.t) (x: int) (y: int) =
   let (p', x')  = find r p  x in
   let (p'',y')  = find r p' y in
-  let _         = assert (Store.get p'' x' = x') in
+  let _         = assert (Store.get p'' x' = x') in (* these facts must be manually instantiated *)
   let _         = assert (Store.get p'' y' = y') in 
   if x' != y' then begin
     let rx' = Store.get r x' in
@@ -36,7 +38,7 @@ let union (r: (int, int) Store.t) (p: (int, int) Store.t) (x: int) (y: int) =
     else if rx' < ry' then
       (r, Store.set p'' x' y') 
     else 
-      let r = Store.set r x' (rx' + 1) in (* COMMENT TO SEE BUG *)
+      let r = Store.set r x' (rx' + 1) in
       let p''' = Store.set p'' y' x' in
       (r, p''') 
   end else

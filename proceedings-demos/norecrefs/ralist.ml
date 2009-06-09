@@ -84,6 +84,7 @@ let rec print_rlist l =
     | Odd (_, _, _) ->
         let (x, l) = uncons l in print_int x; print_rlist l
         
+(* the check function serves as specification *)
 let check x n n' i =
   if n > 0 then
     let xs = makelist n in

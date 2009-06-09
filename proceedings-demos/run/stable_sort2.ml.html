@@ -1,0 +1,806 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>
+Hover mouse over variables to see types</title>
+  <meta name="GENERATOR" content="caml2html 1.3.0">
+    <script SRC="boxover.js"></script>
+  <style>
+    .annotbody {
+        font-family:consolas;
+        font-size:16px;
+	background:#b4eeb4;
+        border-left:1px solid #C4D5E3;
+        border-right:1px solid #C4D5E3;
+        border-bottom:1px solid #C4D5E3;
+        padding:10px;
+     }
+  </style>
+<style type="text/css">
+code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hover { background-color: #b4eeb4; }
+.Cbar,
+.Cdo,
+.Cdone,
+.Cdownto,
+.Celse,
+.Cfor,
+.Cif,
+.Clazy,
+.Cmatch,
+.Cnew,
+.Cor,
+.Cthen,
+.Cto,
+.Ctry,
+.Cwhen,
+.Cwhile,
+.Cwith { color: #77aaaa; }
+.Cassert,
+.Cinclude,
+.Copen { color: #cc9900; }
+.Cstring { color: #aa4444; }
+.Cand,
+.Cas,
+.Cclass,
+.Cconstraint,
+.Cexception,
+.Cexternal,
+.Cfun,
+.Cfunction,
+.Cfunctor,
+.Cin,
+.Cinherit,
+.Cinitializer,
+.Clet,
+.Cmethod,
+.Cmodule,
+.Cmutable,
+.Cof,
+.Cprivate,
+.Crec,
+.Ctype,
+.Cval,
+.Cvirtual { color: green; }
+.Cbackground { background-color: white; }
+.Craise { color: red; }
+.Cconstructor { color: #0033cc; }
+.Ccomment { color: #990000; }
+.Calphakeyword,
+.Casr,
+.Cland,
+.Clor,
+.Clsl,
+.Clsr,
+.Clxor,
+.Cmod { color: #808080; }
+.Clinenum { color: black; background-color: silver; }
+.Cbegin,
+.Cend,
+.Cobject,
+.Csig,
+.Cstruct { color: #990099; }
+.Cfalse,
+.Cnonalphakeyword,
+.Cquotation,
+.Ctrue { }
+</style>
+</head>
+<body>
+<h1><a name="Hover mouse over variables to see types"></a><code>Hover mouse over variables to see types</code></h1>
+
+<pre><span class="Clinenum">   1:</span><span class="Cbackground"> </span><span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:'aP) -&gt; &#123;'aP | (x &lt;= V)  (x &gt;= V)&#125;</pre>]"><span class="Crec">rec</span> </a>split_aux lst left right <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">   2:</span><span class="Cbackground"> </span>  <span class="Cmatch">match</span> lst <span class="Cwith">with</span>
+<span class="Clinenum">   3:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span>           <span class="Cnonalphakeyword">-&gt;</span> <span class="Cnonalphakeyword">(</span>left<span class="Cnonalphakeyword">,</span> right<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">   4:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cnonalphakeyword">[</span>x<span class="Cnonalphakeyword">]</span>          <span class="Cnonalphakeyword">-&gt;</span> <span class="Cnonalphakeyword">(</span>x <span class="Cnonalphakeyword">::</span> left<span class="Cnonalphakeyword">,</span> right<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">   5:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = lst)&#125;</pre>]">x </a><span class="Cnonalphakeyword">::</span> y <span class="Cnonalphakeyword">::</span> ys <span class="Cnonalphakeyword">-&gt;</span> split_aux<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = right)&#125;</pre>]"> ys</a> <span class="Cnonalphakeyword">(</span>x <span class="Cnonalphakeyword">::</span> left<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>y <span class="Cnonalphakeyword">::</span> right<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">   6:</span><span class="Cbackground"> </span>
+<span class="Clinenum">   7:</span><span class="Cbackground"> </span><span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = lst)&#125;</pre>]">split lst <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">   8:</span><span class="Cbackground"> </span></a>  split_aux lst <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span>
+<span class="Clinenum">   9:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  10:</span><span class="Cbackground"> </span><span class="Clet">let</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (lst:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t)) -&gt;
+  (left:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t)) -&gt;
+  (right:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t)) -&gt;
+  tuple. rec(e0:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) ,
+             e1:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t))</pre>]"> <span class="Crec">rec</span> len</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = lst)&#125;</pre>]">xs </a><span class="Cnonalphakeyword">=</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | ⊥&#125; , e1:&#123;«‹› ,‹⊥ ,⊤›» t | ⊥&#125;) |
+  (V = &amp;#9121;&amp;#9126;)  ((len V) = 0)  ((__tag V) = 0)&#125;</pre>]"> 
+<span class="Clinenum">  11:</span><span class="Cbackground"> </span></a>  <span class="Cmatch">match</span> xs <span class="Cwith">with</span> 
+<span class="Clinenum">  12:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">-&gt;</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (xs:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aP , e1: t)) -&gt; &#123;int | (0 &lt;= V)  (V &gt;= 0)&#125;</pre>]"> 0</a>
+<span class="Clinenum">  13:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> x<span class="Cnonalphakeyword">::</span>xs' <span class="Cnonalphakeyword">-&gt;</span> 1 <span class="Cnonalphakeyword">+</span> len xs'
+<span class="Clinenum">  14:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  15:</span><span class="Cbackground"> </span><span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = xs)&#125;</pre>]"><span class="Crec">rec</span> chop</a> k<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = 1)&#125;</pre>]"> </a>l<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;int | true&#125;) -&gt; (y:&#123;int | true&#125;) -&gt; &#123;int | (V = (x + y))&#125;</pre>]"> </a>l'<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (xs:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t)) -&gt; &#123;int | (0 &lt;= V)  (V &gt;= 0)&#125;</pre>]"> <span class="Cnonalphakeyword">=</span></a>
+<span class="Clinenum">  16:</span><span class="Cbackground"> </span>  <span class="Cif">if</span> k <span class="Cnonalphakeyword">=</span> 0 <span class="Cthen">then</span> <span class="Cnonalphakeyword">(</span>l<span class="Cnonalphakeyword">,</span>l'<span class="Cnonalphakeyword">)</span> <span class="Celse">else</span> <span class="Cbegin">begin</span>
+<span class="Clinenum">  17:</span><span class="Cbackground"> </span>    <span class="Cmatch">match</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (k:int) -&gt;
+  (l:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aP , e1: t)) -&gt;
+  (l':«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aP , e1: t)) -&gt;
+  tuple. rec(e0:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aP , e1: t) ,
+             e1:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aP , e1: t))</pre>]"> l </a><span class="Cwith">with</span>
+<span class="Clinenum">  18:</span><span class="Cbackground"> </span>    <span class="Cbar">|</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = k)&#125;</pre>]"> </a>x<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;int | true&#125;) -&gt;
+  (y:&#123;int | true&#125;) -&gt; &#123;bool. false + true | ((? (V)) iff (x = y))&#125;</pre>]"><span class="Cnonalphakeyword">::</span></a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = 0)&#125;</pre>]">t</a> <span class="Cnonalphakeyword">-&gt;</span> chop <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = l')&#125;</pre>]"><span class="Cnonalphakeyword">(</span>k</a>-1<span class="Cnonalphakeyword">)</span> t <span class="Cnonalphakeyword">(</span>x<span class="Cnonalphakeyword">::</span>l'<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  19:</span><span class="Cbackground"> </span>    <span class="Cbar">|</span> <span class="Cnonalphakeyword">_</span> <span class="Cnonalphakeyword">-&gt;</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = l)&#125;</pre>]"> </a><span class="Cassert">assert</span> <span class="Cfalse">false</span>
+<span class="Clinenum">  20:</span><span class="Cbackground"> </span>  <span class="Cend">end</span>
+<span class="Clinenum">  21:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  22:</span><span class="Cbackground"> </span><span class="Clet">let</span> <span class="Crec">rec</span> rev k ys zs <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">  23:</span><span class="Cbackground"> </span>  <span class="Cmatch">match</span> ys <span class="Cwith">with</span>
+<span class="Clinenum">  24:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span>    <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (k:'aP) -&gt;
+  (ys:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aP | (k &gt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &gt;= V)  (k &gt;= V) ,⊤›» t)) -&gt;
+  (zs:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aP | (k &lt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (k &lt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:'aP , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]"><span class="Cnonalphakeyword">-&gt;</span></a> zs
+<span class="Clinenum">  25:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> y<span class="Cnonalphakeyword">::</span>ys' <span class="Cnonalphakeyword">-&gt;</span> rev y ys' <span class="Cnonalphakeyword">(</span>y<span class="Cnonalphakeyword">::</span>zs<span class="Cnonalphakeyword">)</span> 
+<span class="Clinenum">  26:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  27:</span><span class="Cbackground"> </span><span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | (k &gt;= V)&#125; ,
+                  e1:«‹› ,‹(e0 &gt;= V)  (k &gt;= V) ,⊤›» t) |
+  (V = ys)&#125;</pre>]">reverse</a> xs<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (k:'aM) -&gt;
+  (ys:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (k &gt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &gt;= V)  (k &gt;= V) ,⊤›» t)) -&gt;
+  (zs:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (k &lt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (k &lt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]"> <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  28:</span><span class="Cbackground"> </span></a>  <span class="Cmatch">match</span> xs <span class="Cwith">with</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">-&gt;</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> 
+<span class="Clinenum">  29:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (xs:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aP , e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:'aP , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]">x<span class="Cnonalphakeyword">::</span>xs' </a><span class="Cnonalphakeyword">-&gt;</span> rev x <span class="Cnonalphakeyword">(</span>x<span class="Cnonalphakeyword">::</span>xs'<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> 
+<span class="Clinenum">  30:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  31:</span><span class="Cbackground"> </span><span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t) |
+  (V = xs)&#125;</pre>]"><span class="Crec">rec</span> rev_append</a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x)&#125;</pre>]"> </a>w <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x)&#125;</pre>]">l1</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t) |
+  (V = xs')&#125;</pre>]">l2 </a><span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  32:</span><span class="Cbackground"> </span>  <span class="Cmatch">match</span> l1 <span class="Cwith">with</span>
+<span class="Clinenum">  33:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">-&gt;</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (w:'aP) -&gt;
+  (l1:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aP | (w &lt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  (l2:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aP | (w &gt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; + ::(e0:'aP , e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t)</pre>]"> l2
+<span class="Clinenum">  34:</span><span class="Cbackground"> </span></a>  <span class="Cbar">|</span> a <span class="Cnonalphakeyword">::</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | (w &lt;= V)&#125; ,
+                  e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t) |
+  (V = l1)&#125;</pre>]"> l</a> <span class="Cnonalphakeyword">-&gt;</span> rev_append <span class="Cnonalphakeyword">(</span>show a<span class="Cnonalphakeyword">)</span> l <span class="Cnonalphakeyword">(</span>a <span class="Cnonalphakeyword">::</span> l2<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  35:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  36:</span><span class="Cbackground"> </span><span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | (w &lt;= V)&#125; ,
+                  e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t) |
+  (V = l1)&#125;</pre>]"><span class="Crec">rec</span> rev_append_rev</a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (w:'aM) -&gt;
+  (l1:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (w &lt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  (l2:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (w &gt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t)</pre>]"> w</a> l1<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;'aM | (a &lt;= V)  (a &gt;= V)  (w &lt;= V)&#125;) -&gt;
+  &#123;'aM | (a &lt;= V)  (a &gt;= V)  (w &lt;= V)  (x &lt;= V)  (x &gt;= V)&#125;</pre>]"> l2</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = a)&#125;</pre>]"><span class="Cnonalphakeyword">=</span></a>
+<span class="Clinenum">  37:</span><span class="Cbackground"> </span>  <span class="Cmatch">match</span> l1 <span class="Cwith">with</span>
+<span class="Clinenum">  38:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">-&gt;</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (w:'aP) -&gt;
+  (l1:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aP | (w &gt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  (l2:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aP | (w &lt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:'aP , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]"> l2
+<span class="Clinenum">  39:</span><span class="Cbackground"> </span></a>  <span class="Cbar">|</span> a <span class="Cnonalphakeyword">::</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | (w &gt;= V)&#125; ,
+                  e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t) |
+  (V = l1)&#125;</pre>]"> l</a> <span class="Cnonalphakeyword">-&gt;</span> rev_append_rev <span class="Cnonalphakeyword">(</span>show a<span class="Cnonalphakeyword">)</span> l <span class="Cnonalphakeyword">(</span>a <span class="Cnonalphakeyword">::</span> l2<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  40:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  41:</span><span class="Cbackground"> </span><span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | (w &gt;= V)&#125; ,
+                  e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t) |
+  (V = l1)&#125;</pre>]">rev_merge</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (w:'aM) -&gt;
+  (l1:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (w &gt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  (l2:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (w &lt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]">l1 l2 <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  42:</span><span class="Cbackground"> </span></a>  <span class="Clet">let</span> <span class="Crec">rec</span> revm w l1 l2 accu <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  43:</span><span class="Cbackground"> </span>  <span class="Cmatch">match</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (l1:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:'aP ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)) -&gt;
+  (l2:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:'aP ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; + ::(e0:'aP , e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t)</pre>]"> l1<span class="Cnonalphakeyword">,</span> l2</a> <span class="Cwith">with</span>
+<span class="Clinenum">  44:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span><span class="Cnonalphakeyword">,</span> l2<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (w:'aP) -&gt;
+  (l1:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aP | (w &lt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  (l2:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aP | (w &lt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  (accu:«list» t. &amp;#9121;&amp;#9126; +
+                    ::(e0:&#123;'aP | (w &gt;= V)&#125; ,
+                       e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; + ::(e0:'aP , e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t)</pre>]"> <span class="Cnonalphakeyword">-&gt;</span> </a>rev_append w l2 accu
+<span class="Clinenum">  45:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> l1<span class="Cnonalphakeyword">,</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | (w &lt;= V)&#125; ,
+                  e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t) |
+  (V = l1)&#125;</pre>]"><span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span></a> <span class="Cnonalphakeyword">-&gt;</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | (w &lt;= V)&#125; ,
+                  e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t) |
+  (V = l2)&#125;</pre>]"> </a>rev_append w l1 accu
+<span class="Clinenum">  46:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:&#123;'aM | (w &lt;= V)&#125; ,
+                                 e1:«‹› ,‹(e0 &lt;= V) 
+                                                 (e0 &lt;= V) 
+                                                 (w &lt;= V) ,⊤›» t) |
+                 (l1 &lt;= V)  (l1 &gt;= V)&#125; ,
+              e1:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:&#123;'aM | (w &lt;= V)&#125; ,
+                                 e1:«‹› ,‹(e0 &lt;= V) 
+                                                 (e0 &lt;= V) 
+                                                 (w &lt;= V) ,⊤›» t) |
+                 (l2 &lt;= V)  (l2 &gt;= V)&#125;) |
+  (V = _'58)&#125;</pre>]">h1<span class="Cnonalphakeyword">::</span>t1</a><span class="Cnonalphakeyword">,</span> h2<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (w:'aM) -&gt;
+  (l1:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (w &lt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  (l2:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (w &gt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t)</pre>]"><span class="Cnonalphakeyword">::</span>t2 <span class="Cnonalphakeyword">-&gt;</span>
+<span class="Clinenum">  47:</span><span class="Cbackground"> </span></a>      <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:&#123;'aM | (w &lt;= V)&#125; ,
+                                 e1:«‹› ,‹(e0 &lt;= V) 
+                                                 (e0 &lt;= V) 
+                                                 (w &lt;= V) ,⊤›» t) |
+                 (l1 &lt;= V)  (l1 &gt;= V)&#125; ,
+              e1:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:&#123;'aM | (w &lt;= V)&#125; ,
+                                 e1:«‹› ,‹(e0 &lt;= V) 
+                                                 (e0 &lt;= V) 
+                                                 (w &lt;= V) ,⊤›» t) |
+                 (l2 &lt;= V)  (l2 &gt;= V)&#125;) |
+  (V = _'58)&#125;</pre>]"><span class="Cif">if</span> h1</a> &lt;=<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (w:'aM) -&gt;
+  (l1:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (w &lt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  (l2:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (w &gt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t)</pre>]"> h2 
+<span class="Clinenum">  48:</span><span class="Cbackground"> </span></a>      <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:&#123;'aM | (w &lt;= V)&#125; ,
+                                 e1:«‹› ,‹(e0 &lt;= V) 
+                                                 (e0 &lt;= V) 
+                                                 (w &lt;= V) ,⊤›» t) |
+                 (l1 &lt;= V)  (l1 &gt;= V)&#125; ,
+              e1:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:&#123;'aM | (w &lt;= V)&#125; ,
+                                 e1:«‹› ,‹(e0 &lt;= V) 
+                                                 (e0 &lt;= V) 
+                                                 (w &lt;= V) ,⊤›» t) |
+                 (l2 &lt;= V)  (l2 &gt;= V)&#125;) |
+  (V = _'58)&#125;</pre>]"><span class="Cthen">then</span> revm h1</a> t1 <span class="Cnonalphakeyword">(</span>h2<span class="Cnonalphakeyword">::</span>t2<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>h1<span class="Cnonalphakeyword">::</span>accu<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  49:</span><span class="Cbackground"> </span>      <span class="Celse">else</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = h1)&#125;</pre>]"> </a>revm<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = h2)&#125;</pre>]"> h2</a> <span class="Cnonalphakeyword">(</span>h1<span class="Cnonalphakeyword">::</span>t1<span class="Cnonalphakeyword">)</span> t2 <span class="Cnonalphakeyword">(</span>h2<span class="Cnonalphakeyword">::</span>accu<span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum">  50:</span><span class="Cbackground"> </span>  <span class="Cmatch">match</span> l1<span class="Cnonalphakeyword">,</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (w:'aM) -&gt;
+  (l1:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (w &lt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  (l2:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (w &lt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  (accu:«list» t. &amp;#9121;&amp;#9126; +
+                    ::(e0:&#123;'aM | (w &gt;= V)&#125; ,
+                       e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t)</pre>]"> l2 </a><span class="Cwith">with</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | (w &lt;= V)&#125; ,
+                  e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t) |
+  (V = t1)&#125;</pre>]">
+<span class="Clinenum">  51:</span><span class="Cbackground"> </span></a>  <span class="Cbar">|</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span><span class="Cnonalphakeyword">,</span><span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">-&gt;</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (w:'aM) -&gt;
+  (l1:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (w &lt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  (l2:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (w &lt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  (accu:«list» t. &amp;#9121;&amp;#9126; +
+                    ::(e0:&#123;'aM | (w &gt;= V)&#125; ,
+                       e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t)</pre>]"> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = h2)&#125;</pre>]">
+<span class="Clinenum">  52:</span><span class="Cbackground"> </span></a>  <span class="Cbar">|</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span><span class="Cnonalphakeyword">,</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t) |
+  (V = l1)&#125;</pre>]">h2</a><span class="Cnonalphakeyword">::</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t) |
+  (V = l2)&#125;</pre>]">t2</a> <span class="Cnonalphakeyword">-&gt;</span> revm h2 <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">(</span>h2<span class="Cnonalphakeyword">::</span>t2<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> 
+<span class="Clinenum">  53:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:'aM ,
+                                 e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t) |
+                 (l1 &lt;= V)  (l1 &gt;= V)&#125; ,
+              e1:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:'aM ,
+                                 e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t) |
+                 (l2 &lt;= V)  (l2 &gt;= V)&#125;) |
+  (V = _'86)&#125;</pre>]">h1<span class="Cnonalphakeyword">::</span>t1</a><span class="Cnonalphakeyword">,</span><span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | ⊥&#125; , e1:&#123;«‹› ,‹⊥ ,⊤›» t | ⊥&#125;) |
+  (V = &amp;#9121;&amp;#9126;)  ((len V) = 0)  ((__tag V) = 0)&#125;</pre>]"> <span class="Cnonalphakeyword">-&gt;</span></a> revm h1 <span class="Cnonalphakeyword">(</span>h1<span class="Cnonalphakeyword">::</span>t1<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> 
+<span class="Clinenum">  54:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:'aM ,
+                                 e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t) |
+                 (l1 &lt;= V)  (l1 &gt;= V)&#125; ,
+              e1:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:'aM ,
+                                 e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t) |
+                 (l2 &lt;= V)  (l2 &gt;= V)&#125;) |
+  (V = _'86)&#125;</pre>]">h1<span class="Cnonalphakeyword">::</span>t1<span class="Cnonalphakeyword">,</span> h2</a><span class="Cnonalphakeyword">::</span>t2<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (w:&#123;'aM | (h2 &lt;= V)&#125;) -&gt;
+  (l1:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (h2 &lt;= V)  (w &lt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  (l2:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (h2 &lt;= V)  (w &lt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  (accu:«list» t. &amp;#9121;&amp;#9126; +
+                    ::(e0:&#123;'aM | (h2 &lt;= V)  (w &gt;= V)&#125; ,
+                       e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:&#123;'aM | (h2 &lt;= V)&#125; ,
+                 e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t)</pre>]"> <span class="Cnonalphakeyword">-&gt;</span>
+<span class="Clinenum">  55:</span><span class="Cbackground"> </span></a>      <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:'aM ,
+                                 e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t) |
+                 (l1 &lt;= V)  (l1 &gt;= V)&#125; ,
+              e1:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:'aM ,
+                                 e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t) |
+                 (l2 &lt;= V)  (l2 &gt;= V)&#125;) |
+  (V = _'86)&#125;</pre>]"><span class="Cif">if</span> h1 &lt;=</a> h2<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (w:&#123;'aM | (h1 &lt;= V)&#125;) -&gt;
+  (l1:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (h1 &lt;= V)  (w &lt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  (l2:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (h1 &lt;= V)  (w &lt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  (accu:«list» t. &amp;#9121;&amp;#9126; +
+                    ::(e0:&#123;'aM | (h1 &lt;= V)  (w &gt;= V)&#125; ,
+                       e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:&#123;'aM | (h1 &lt;= V)&#125; ,
+                 e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t)</pre>]"> <span class="Cthen">then</span></a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = h1)&#125;</pre>]"> revm</a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = h1)&#125;</pre>]"> </a>h1<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t) |
+  (V = t1)&#125;</pre>]"> <span class="Cnonalphakeyword">(</span></a>h1<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | ⊥&#125; , e1:&#123;«‹› ,‹⊥ ,⊤›» t | ⊥&#125;) |
+  (V = &amp;#9121;&amp;#9126;)  ((len V) = 0)  ((__tag V) = 0)&#125;</pre>]"><span class="Cnonalphakeyword">::</span></a>t1<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | ⊥&#125; , e1:&#123;«‹› ,‹⊥ ,⊤›» t | ⊥&#125;) |
+  (V = &amp;#9121;&amp;#9126;)  ((len V) = 0)  ((__tag V) = 0)&#125;</pre>]"><span class="Cnonalphakeyword">)</span></a> <span class="Cnonalphakeyword">(</span>h2<span class="Cnonalphakeyword">::</span>t2<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> 
+<span class="Clinenum">  56:</span><span class="Cbackground"> </span>      <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:'aM ,
+                                 e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t) |
+                 (l1 &lt;= V)  (l1 &gt;= V)&#125; ,
+              e1:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:'aM ,
+                                 e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t) |
+                 (l2 &lt;= V)  (l2 &gt;= V)&#125;) |
+  (V = _'86)&#125;</pre>]"><span class="Celse">else</span> revm h2</a> <span class="Cnonalphakeyword">(</span>h1<span class="Cnonalphakeyword">::</span>t1<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>h2<span class="Cnonalphakeyword">::</span>t2<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> 
+<span class="Clinenum">  57:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  58:</span><span class="Cbackground"> </span><span class="Clet">let</span> rev_merge_rev<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = h2)&#125;</pre>]"> </a>l1<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = h1)&#125;</pre>]"> l2</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t) |
+  (V = t1)&#125;</pre>]"><span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  59:</span><span class="Cbackground"> </span></a>  <span class="Clet">let</span> <span class="Crec">rec</span> revm w l1 l2 accu <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  60:</span><span class="Cbackground"> </span>  <span class="Cmatch">match</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (l1:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aP , e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t)) -&gt;
+  (l2:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aP , e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:'aP , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]"> l1<span class="Cnonalphakeyword">,</span> l2 <span class="Cwith">with</span></a>
+<span class="Clinenum">  61:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span><span class="Cnonalphakeyword">,</span> l2<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (w:'aP) -&gt;
+  (l1:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aP | (w &gt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  (l2:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aP | (w &gt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  (accu:«list» t. &amp;#9121;&amp;#9126; +
+                    ::(e0:&#123;'aP | (w &lt;= V)&#125; ,
+                       e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:'aP , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]"> <span class="Cnonalphakeyword">-&gt;</span> </a>rev_append_rev w l2 accu
+<span class="Clinenum">  62:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> l1<span class="Cnonalphakeyword">,</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | (w &gt;= V)&#125; ,
+                  e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t) |
+  (V = l1)&#125;</pre>]"><span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span></a> <span class="Cnonalphakeyword">-&gt;</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | (w &gt;= V)&#125; ,
+                  e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t) |
+  (V = l2)&#125;</pre>]"> </a>rev_append_rev w l1 accu
+<span class="Clinenum">  63:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:&#123;'aM | (w &gt;= V)&#125; ,
+                                 e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t) |
+                 (l1 &lt;= V)  (l1 &gt;= V)&#125; ,
+              e1:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:&#123;'aM | (w &gt;= V)&#125; ,
+                                 e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t) |
+                 (l2 &lt;= V)  (l2 &gt;= V)&#125;) |
+  (V = _'100)&#125;</pre>]">h1<span class="Cnonalphakeyword">::</span>t1</a><span class="Cnonalphakeyword">,</span> h2<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (w:'aM) -&gt;
+  (l1:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (w &gt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  (l2:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (w &lt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]"><span class="Cnonalphakeyword">::</span>t2 <span class="Cnonalphakeyword">-&gt;</span>
+<span class="Clinenum">  64:</span><span class="Cbackground"> </span></a>      <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:&#123;'aM | (w &gt;= V)&#125; ,
+                                 e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t) |
+                 (l1 &lt;= V)  (l1 &gt;= V)&#125; ,
+              e1:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:&#123;'aM | (w &gt;= V)&#125; ,
+                                 e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t) |
+                 (l2 &lt;= V)  (l2 &gt;= V)&#125;) |
+  (V = _'100)&#125;</pre>]"><span class="Cif">if</span> h1</a> <span class="Cnonalphakeyword">&gt;</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (w:'aM) -&gt;
+  (l1:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (w &gt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  (l2:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (w &lt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]">h2 
+<span class="Clinenum">  65:</span><span class="Cbackground"> </span></a>      <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:&#123;'aM | (w &gt;= V)&#125; ,
+                                 e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t) |
+                 (l1 &lt;= V)  (l1 &gt;= V)&#125; ,
+              e1:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:&#123;'aM | (w &gt;= V)&#125; ,
+                                 e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t) |
+                 (l2 &lt;= V)  (l2 &gt;= V)&#125;) |
+  (V = _'100)&#125;</pre>]"><span class="Cthen">then</span> revm h1</a> t1 <span class="Cnonalphakeyword">(</span>h2<span class="Cnonalphakeyword">::</span>t2<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>h1<span class="Cnonalphakeyword">::</span>accu<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  66:</span><span class="Cbackground"> </span>      <span class="Celse">else</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = h1)&#125;</pre>]"> </a>revm<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = h2)&#125;</pre>]"> </a>h2 <span class="Cnonalphakeyword">(</span>h1<span class="Cnonalphakeyword">::</span>t1<span class="Cnonalphakeyword">)</span> t2 <span class="Cnonalphakeyword">(</span>h2<span class="Cnonalphakeyword">::</span>accu<span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum">  67:</span><span class="Cbackground"> </span>  <span class="Cmatch">match</span> l1<span class="Cnonalphakeyword">,</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (w:'aM) -&gt;
+  (l1:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (w &gt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  (l2:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (w &gt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  (accu:«list» t. &amp;#9121;&amp;#9126; +
+                    ::(e0:&#123;'aM | (w &lt;= V)&#125; ,
+                       e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]"> l2 </a><span class="Cwith">with</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | (w &gt;= V)&#125; ,
+                  e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t) |
+  (V = t1)&#125;</pre>]">
+<span class="Clinenum">  68:</span><span class="Cbackground"> </span></a>  <span class="Cbar">|</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span><span class="Cnonalphakeyword">,</span><span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">-&gt;</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (w:'aM) -&gt;
+  (l1:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (w &gt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  (l2:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (w &gt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  (accu:«list» t. &amp;#9121;&amp;#9126; +
+                    ::(e0:&#123;'aM | (w &lt;= V)&#125; ,
+                       e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]"> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = h2)&#125;</pre>]">
+<span class="Clinenum">  69:</span><span class="Cbackground"> </span></a>  <span class="Cbar">|</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span><span class="Cnonalphakeyword">,</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t) |
+  (V = l1)&#125;</pre>]">h2</a><span class="Cnonalphakeyword">::</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t) |
+  (V = l2)&#125;</pre>]">t2</a> <span class="Cnonalphakeyword">-&gt;</span> revm h2 <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">(</span>h2<span class="Cnonalphakeyword">::</span>t2<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> 
+<span class="Clinenum">  70:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:'aM ,
+                                 e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t) |
+                 (l1 &lt;= V)  (l1 &gt;= V)&#125; ,
+              e1:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:'aM ,
+                                 e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t) |
+                 (l2 &lt;= V)  (l2 &gt;= V)&#125;) |
+  (V = _'128)&#125;</pre>]">h1<span class="Cnonalphakeyword">::</span>t1</a><span class="Cnonalphakeyword">,</span><span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | ⊥&#125; , e1:&#123;«‹› ,‹⊥ ,⊤›» t | ⊥&#125;) |
+  (V = &amp;#9121;&amp;#9126;)  ((len V) = 0)  ((__tag V) = 0)&#125;</pre>]"> <span class="Cnonalphakeyword">-&gt;</span></a> revm h1 <span class="Cnonalphakeyword">(</span>h1<span class="Cnonalphakeyword">::</span>t1<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> 
+<span class="Clinenum">  71:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:'aM ,
+                                 e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t) |
+                 (l1 &lt;= V)  (l1 &gt;= V)&#125; ,
+              e1:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:'aM ,
+                                 e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t) |
+                 (l2 &lt;= V)  (l2 &gt;= V)&#125;) |
+  (V = _'128)&#125;</pre>]">h1<span class="Cnonalphakeyword">::</span>t1<span class="Cnonalphakeyword">,</span> h2</a><span class="Cnonalphakeyword">::</span>t2<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (w:&#123;'aM | (h2 &gt;= V)&#125;) -&gt;
+  (l1:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (h2 &gt;= V)  (w &gt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  (l2:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (h2 &gt;= V)  (w &gt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  (accu:«list» t. &amp;#9121;&amp;#9126; +
+                    ::(e0:&#123;'aM | (h2 &gt;= V)  (w &lt;= V)&#125; ,
+                       e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:&#123;'aM | (h2 &gt;= V)&#125; ,
+                 e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]"> <span class="Cnonalphakeyword">-&gt;</span>
+<span class="Clinenum">  72:</span><span class="Cbackground"> </span></a>      <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:'aM ,
+                                 e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t) |
+                 (l1 &lt;= V)  (l1 &gt;= V)&#125; ,
+              e1:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:'aM ,
+                                 e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t) |
+                 (l2 &lt;= V)  (l2 &gt;= V)&#125;) |
+  (V = _'128)&#125;</pre>]"><span class="Cif">if</span> h1 <span class="Cnonalphakeyword">&gt;</span></a> h2 <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (w:&#123;'aM | (h1 &gt;= V)&#125;) -&gt;
+  (l1:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (h1 &gt;= V)  (w &gt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  (l2:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (h1 &gt;= V)  (w &gt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  (accu:«list» t. &amp;#9121;&amp;#9126; +
+                    ::(e0:&#123;'aM | (h1 &gt;= V)  (w &lt;= V)&#125; ,
+                       e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:&#123;'aM | (h1 &gt;= V)&#125; ,
+                 e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]"><span class="Cthen">then</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = h1)&#125;</pre>]">revm</a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = h1)&#125;</pre>]"> h1</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t) |
+  (V = t1)&#125;</pre>]"><span class="Cnonalphakeyword">(</span>h1</a><span class="Cnonalphakeyword">::</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | ⊥&#125; , e1:&#123;«‹› ,‹⊥ ,⊤›» t | ⊥&#125;) |
+  (V = &amp;#9121;&amp;#9126;)  ((len V) = 0)  ((__tag V) = 0)&#125;</pre>]">t1</a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | ⊥&#125; , e1:&#123;«‹› ,‹⊥ ,⊤›» t | ⊥&#125;) |
+  (V = &amp;#9121;&amp;#9126;)  ((len V) = 0)  ((__tag V) = 0)&#125;</pre>]"><span class="Cnonalphakeyword">)</span> </a><span class="Cnonalphakeyword">(</span>h2<span class="Cnonalphakeyword">::</span>t2<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> 
+<span class="Clinenum">  73:</span><span class="Cbackground"> </span>      <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:'aM ,
+                                 e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t) |
+                 (l1 &lt;= V)  (l1 &gt;= V)&#125; ,
+              e1:&#123;«list» t. &amp;#9121;&amp;#9126; +
+                              ::(e0:'aM ,
+                                 e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t) |
+                 (l2 &lt;= V)  (l2 &gt;= V)&#125;) |
+  (V = _'128)&#125;</pre>]"><span class="Celse">else</span> revm h2</a> <span class="Cnonalphakeyword">(</span>h1<span class="Cnonalphakeyword">::</span>t1<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>h2<span class="Cnonalphakeyword">::</span>t2<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> 
+<span class="Clinenum">  74:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  75:</span><span class="Cbackground"> </span><span class="Clet">let</span> <span class="Crec">rec</span> ssort<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (w:&#123;'aM | (h2 &gt;= V)&#125;) -&gt;
+  (l1:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (h2 &gt;= V)  (w &gt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  (l2:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:&#123;'aM | (h2 &gt;= V)  (w &gt;= V)&#125; ,
+                     e1:«‹› ,‹(e0 &gt;= V)  (w &gt;= V) ,⊤›» t)) -&gt;
+  (accu:«list» t. &amp;#9121;&amp;#9126; +
+                    ::(e0:&#123;'aM | (h2 &gt;= V)  (w &lt;= V)&#125; ,
+                       e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V)  (w &lt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:&#123;'aM | (h2 &gt;= V)&#125; ,
+                 e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]"> l</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = h2)&#125;</pre>]"><span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  76:</span><span class="Cbackground"> </span></a>  <span class="Cmatch">match</span> l <span class="Cwith">with</span>
+<span class="Clinenum">  77:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">-&gt;</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (l:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aP , e1: t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:'aP , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]"> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span>
+<span class="Clinenum">  78:</span><span class="Cbackground"> </span></a>  <span class="Cbar">|</span> x1<span class="Cnonalphakeyword">::</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = l)&#125;</pre>]"><span class="Cnonalphakeyword">[</span></a><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">-&gt;</span> <span class="Cnonalphakeyword">[</span>x1<span class="Cnonalphakeyword">]</span>
+<span class="Clinenum">  79:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = l)&#125;</pre>]">x1</a> <span class="Cnonalphakeyword">::</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | ⊥&#125; , e1:&#123;«‹› ,‹⊥ ,⊤›» t | ⊥&#125;) |
+  (V = &amp;#9121;&amp;#9126;)  ((len V) = 0)  ((__tag V) = 0)&#125;</pre>]">x2</a> <span class="Cnonalphakeyword">::</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">-&gt;</span>
+<span class="Clinenum">  80:</span><span class="Cbackground"> </span>     <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = l)&#125;</pre>]"><span class="Cif">if</span> x1</a> &lt;= x2<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x1)&#125;</pre>]"> </a><span class="Cthen">then</span> <span class="Cnonalphakeyword">[</span>x1<span class="Cnonalphakeyword">;</span> x2<span class="Cnonalphakeyword">]</span> <span class="Celse">else</span> <span class="Cnonalphakeyword">[</span>x2<span class="Cnonalphakeyword">;</span> x1<span class="Cnonalphakeyword">]</span>
+<span class="Clinenum">  81:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = l)&#125;</pre>]">x1 <span class="Cnonalphakeyword">::</span> x2 <span class="Cnonalphakeyword">::</span> x3</a> <span class="Cnonalphakeyword">::</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">-&gt;</span>
+<span class="Clinenum">  82:</span><span class="Cbackground"> </span>     <span class="Cif">if</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x1)&#125;</pre>]">x1</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;'aM | true&#125;) -&gt;
+  (y:&#123;'aM | true&#125;) -&gt; &#123;bool. false + true | ((? (V)) iff (x &lt;= y))&#125;</pre>]">&lt;=</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x2)&#125;</pre>]">x2</a> <span class="Cthen">then</span> <span class="Cbegin">begin</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x2)&#125;</pre>]">
+<span class="Clinenum">  83:</span><span class="Cbackground"> </span></a>       <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = l)&#125;</pre>]"><span class="Cif">if</span> x2 &lt;= x3 <span class="Cthen">then</span> </a><span class="Cnonalphakeyword">[</span>x1<span class="Cnonalphakeyword">;</span> x2<span class="Cnonalphakeyword">;</span> x3<span class="Cnonalphakeyword">]</span>
+<span class="Clinenum">  84:</span><span class="Cbackground"> </span>       <span class="Celse">else</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;'aM | true&#125;) -&gt;
+  (y:&#123;'aM | true&#125;) -&gt; &#123;bool. false + true | ((? (V)) iff (x &lt;= y))&#125;</pre>]"> <span class="Cif">if</span></a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x2)&#125;</pre>]"> x1</a> &lt;= x3 <span class="Cthen">then</span> <span class="Cnonalphakeyword">[</span>x1<span class="Cnonalphakeyword">;</span> x3<span class="Cnonalphakeyword">;</span> x2<span class="Cnonalphakeyword">]</span>
+<span class="Clinenum">  85:</span><span class="Cbackground"> </span>       <span class="Celse">else</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x2)&#125;</pre>]"> </a><span class="Cnonalphakeyword">[</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;'aM | true&#125;) -&gt;
+  (y:&#123;'aM | true&#125;) -&gt; &#123;bool. false + true | ((? (V)) iff (x &lt;= y))&#125;</pre>]">x3</a><span class="Cnonalphakeyword">;</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x3)&#125;</pre>]"> x1</a><span class="Cnonalphakeyword">;</span> x2<span class="Cnonalphakeyword">]</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | (x3 &gt;= V)  (x1 &lt;= V)&#125; ,
+                  e1:«‹› ,‹(e0 &lt;= V) 
+                                  (e0 &lt;= V) 
+                                  (x3 &gt;= V) 
+                                  (x2 &lt;= V) 
+                                  (x1 &lt;= V) ,⊤›» t) |
+  (l &lt;= V)  (l &gt;= V)&#125;</pre>]">
+<span class="Clinenum">  86:</span><span class="Cbackground"> </span></a>     <span class="Cend">end</span> <span class="Celse">else</span> <span class="Cbegin">begin</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;'aM | (x2 &gt;= V)  true&#125;) -&gt;
+  (y:&#123;'aM | (x2 &gt;= V)  true&#125;) -&gt;
+  &#123;bool. false + true | ((? (V)) iff (x &lt;= y))&#125;</pre>]">
+<span class="Clinenum">  87:</span><span class="Cbackground"> </span></a>       <span class="Cif">if</span> x1 <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x3)&#125;</pre>]">&lt;=</a> x3<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x1)&#125;</pre>]"> </a><span class="Cthen">then</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | (x3 &lt;= V)  (x2 &lt;= V)  (x2 &gt;= V)  (x1 &lt;= V)&#125; ,
+                  e1:&#123;«‹› ,‹⊥ ,⊤›» t | ((len V) = 0)&#125;) |
+  (V = _'173)&#125;</pre>]"> </a><span class="Cnonalphakeyword">[</span>x2<span class="Cnonalphakeyword">;</span> x1<span class="Cnonalphakeyword">;</span> x3<span class="Cnonalphakeyword">]</span>
+<span class="Clinenum">  88:</span><span class="Cbackground"> </span>       <span class="Celse">else</span> <span class="Cif">if</span> x2 &lt;= x3 <span class="Cthen">then</span> <span class="Cnonalphakeyword">[</span>x2<span class="Cnonalphakeyword">;</span> x3<span class="Cnonalphakeyword">;</span> x1<span class="Cnonalphakeyword">]</span>
+<span class="Clinenum">  89:</span><span class="Cbackground"> </span>       <span class="Celse">else</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x1)&#125;</pre>]"> </a><span class="Cnonalphakeyword">[</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;'aM | true&#125;) -&gt;
+  (y:&#123;'aM | true&#125;) -&gt; &#123;bool. false + true | ((? (V)) iff (x &lt;= y))&#125;</pre>]">x3</a><span class="Cnonalphakeyword">;</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x3)&#125;</pre>]"> x2</a><span class="Cnonalphakeyword">;</span> x1<span class="Cnonalphakeyword">]</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:&#123;'aM | (x3 &gt;= V)  (x2 &lt;= V)&#125; ,
+                 e1:«‹› ,‹(e0 &lt;= V) 
+                                 (e0 &lt;= V) 
+                                 (x3 &gt;= V) 
+                                 (x2 &lt;= V) 
+                                 (x1 &lt;= V) ,⊤›» t)</pre>]">
+<span class="Clinenum">  90:</span><span class="Cbackground"> </span></a>     <span class="Cend">end</span> 
+<span class="Clinenum">  91:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> x1 <span class="Cnonalphakeyword">::</span> x2 <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x3)&#125;</pre>]"><span class="Cnonalphakeyword">::</span></a> x3<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x2)&#125;</pre>]"> </a><span class="Cnonalphakeyword">::</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x1)&#125;</pre>]"> <span class="Cnonalphakeyword">_</span></a> <span class="Cnonalphakeyword">-&gt;</span>
+<span class="Clinenum">  92:</span><span class="Cbackground"> </span>     <span class="Clet">let</span> <span class="Cnonalphakeyword">(</span>l1<span class="Cnonalphakeyword">,</span>l2<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">=</span> split l <span class="Cin">in</span>
+<span class="Clinenum">  93:</span><span class="Cbackground"> </span>     <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = l)&#125;</pre>]"><span class="Clet">let</span> s1 <span class="Cnonalphakeyword">=</span> ssort l1 </a><span class="Cin">in</span>
+<span class="Clinenum">  94:</span><span class="Cbackground"> </span>     <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) ,
+              e1:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t)) |
+  (V = _'191)&#125;</pre>]">s2 <span class="Cnonalphakeyword">=</span> ssort</a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (lst:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t)) -&gt;
+  tuple. rec(e0:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) ,
+             e1:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t))</pre>]"> l2 <span class="Cin">in</span></a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = l)&#125;</pre>]">
+<span class="Clinenum">  95:</span><span class="Cbackground"> </span></a>     <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t) |
+  (V = _'192)&#125;</pre>]">s  </a><span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (l:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]">rev_merge</a> s1 s2 <span class="Cin">in</span>
+<span class="Clinenum">  96:</span><span class="Cbackground"> </span>     reverse s<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (l:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]"> 
+<span class="Clinenum">  97:</span><span class="Cbackground"> </span></a>
+<span class="Clinenum">  98:</span><span class="Cbackground"> </span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]"><span class="Clet">let</span> stable_sort</a> l <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  99:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Crec">rec</span> sort n l <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum"> 100:</span><span class="Cbackground"> </span>    <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (l:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aP , e1: t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:'aP , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]"><span class="Cmatch">match</span> l <span class="Cwith">with</span></a>
+<span class="Clinenum"> 101:</span><span class="Cbackground"> </span>    <span class="Cbar">|</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">-&gt;</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (n:int) -&gt;
+  (l:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aP , e1: t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:'aP , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]"> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span></a>
+<span class="Clinenum"> 102:</span><span class="Cbackground"> </span>    <span class="Cbar">|</span> x1 <span class="Cnonalphakeyword">::</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">-&gt;</span> <span class="Cnonalphakeyword">[</span>x1<span class="Cnonalphakeyword">]</span>
+<span class="Clinenum"> 103:</span><span class="Cbackground"> </span>    <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = l)&#125;</pre>]">x1</a> <span class="Cnonalphakeyword">::</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | ⊥&#125; , e1:&#123;«‹› ,‹⊥ ,⊤›» t | ⊥&#125;) |
+  (V = &amp;#9121;&amp;#9126;)  ((len V) = 0)  ((__tag V) = 0)&#125;</pre>]">x2</a> <span class="Cnonalphakeyword">::</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">-&gt;</span>
+<span class="Clinenum"> 104:</span><span class="Cbackground"> </span>       <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = l)&#125;</pre>]"><span class="Cif">if</span> x1 &lt;=</a> x2 <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x1)&#125;</pre>]"><span class="Cthen">then</span></a> <span class="Cnonalphakeyword">[</span>x1<span class="Cnonalphakeyword">;</span> x2<span class="Cnonalphakeyword">]</span> <span class="Celse">else</span> <span class="Cnonalphakeyword">[</span>x2<span class="Cnonalphakeyword">;</span> x1<span class="Cnonalphakeyword">]</span>
+<span class="Clinenum"> 105:</span><span class="Cbackground"> </span>    <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = l)&#125;</pre>]">x1 <span class="Cnonalphakeyword">::</span> x2 <span class="Cnonalphakeyword">::</span> x3</a> <span class="Cnonalphakeyword">::</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">-&gt;</span>
+<span class="Clinenum"> 106:</span><span class="Cbackground"> </span>       <span class="Cif">if</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x1)&#125;</pre>]">x1</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;'aM | true&#125;) -&gt;
+  (y:&#123;'aM | true&#125;) -&gt; &#123;bool. false + true | ((? (V)) iff (x &lt;= y))&#125;</pre>]">&lt;=</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x2)&#125;</pre>]">x2</a> <span class="Cthen">then</span> <span class="Cbegin">begin</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x2)&#125;</pre>]">
+<span class="Clinenum"> 107:</span><span class="Cbackground"> </span></a>         <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = l)&#125;</pre>]"><span class="Cif">if</span> x2 &lt;= x3 <span class="Cthen">then</span> </a><span class="Cnonalphakeyword">[</span>x1<span class="Cnonalphakeyword">;</span> x2<span class="Cnonalphakeyword">;</span> x3<span class="Cnonalphakeyword">]</span>
+<span class="Clinenum"> 108:</span><span class="Cbackground"> </span>         <span class="Celse">else</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;'aM | true&#125;) -&gt;
+  (y:&#123;'aM | true&#125;) -&gt; &#123;bool. false + true | ((? (V)) iff (x &lt;= y))&#125;</pre>]"> <span class="Cif">if</span></a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x2)&#125;</pre>]"> x1</a> &lt;= x3 <span class="Cthen">then</span> <span class="Cnonalphakeyword">[</span>x1<span class="Cnonalphakeyword">;</span> x3<span class="Cnonalphakeyword">;</span> x2<span class="Cnonalphakeyword">]</span>
+<span class="Clinenum"> 109:</span><span class="Cbackground"> </span>         <span class="Celse">else</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x2)&#125;</pre>]"> </a><span class="Cnonalphakeyword">[</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;'aM | true&#125;) -&gt;
+  (y:&#123;'aM | true&#125;) -&gt; &#123;bool. false + true | ((? (V)) iff (x &lt;= y))&#125;</pre>]">x3</a><span class="Cnonalphakeyword">;</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x3)&#125;</pre>]"> x1</a><span class="Cnonalphakeyword">;</span> x2<span class="Cnonalphakeyword">]</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | (x3 &gt;= V)  (x1 &lt;= V)&#125; ,
+                  e1:«‹› ,‹(e0 &lt;= V) 
+                                  (e0 &lt;= V) 
+                                  (x3 &gt;= V) 
+                                  (x2 &lt;= V) 
+                                  (x1 &lt;= V) ,⊤›» t) |
+  (l &lt;= V)  (l &gt;= V)&#125;</pre>]">
+<span class="Clinenum"> 110:</span><span class="Cbackground"> </span></a>       <span class="Cend">end</span> <span class="Celse">else</span> <span class="Cbegin">begin</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;'aM | (x2 &gt;= V)  true&#125;) -&gt;
+  (y:&#123;'aM | (x2 &gt;= V)  true&#125;) -&gt;
+  &#123;bool. false + true | ((? (V)) iff (x &lt;= y))&#125;</pre>]">
+<span class="Clinenum"> 111:</span><span class="Cbackground"> </span></a>         <span class="Cif">if</span> x1 <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x3)&#125;</pre>]">&lt;=</a> x3<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x1)&#125;</pre>]"> </a><span class="Cthen">then</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | (x3 &lt;= V)  (x2 &lt;= V)  (x2 &gt;= V)  (x1 &lt;= V)&#125; ,
+                  e1:&#123;«‹› ,‹⊥ ,⊤›» t | ((len V) = 0)&#125;) |
+  (V = _'243)&#125;</pre>]"> </a><span class="Cnonalphakeyword">[</span>x2<span class="Cnonalphakeyword">;</span> x1<span class="Cnonalphakeyword">;</span> x3<span class="Cnonalphakeyword">]</span>
+<span class="Clinenum"> 112:</span><span class="Cbackground"> </span>         <span class="Celse">else</span> <span class="Cif">if</span> x2 &lt;= x3 <span class="Cthen">then</span> <span class="Cnonalphakeyword">[</span>x2<span class="Cnonalphakeyword">;</span> x3<span class="Cnonalphakeyword">;</span> x1<span class="Cnonalphakeyword">]</span>
+<span class="Clinenum"> 113:</span><span class="Cbackground"> </span>         <span class="Celse">else</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x1)&#125;</pre>]"> </a><span class="Cnonalphakeyword">[</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;'aM | true&#125;) -&gt;
+  (y:&#123;'aM | true&#125;) -&gt; &#123;bool. false + true | ((? (V)) iff (x &lt;= y))&#125;</pre>]">x3</a><span class="Cnonalphakeyword">;</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x3)&#125;</pre>]"> x2</a><span class="Cnonalphakeyword">;</span> x1<span class="Cnonalphakeyword">]</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:&#123;'aM | (x3 &gt;= V)  (x2 &lt;= V)&#125; ,
+                 e1:«‹› ,‹(e0 &lt;= V) 
+                                 (e0 &lt;= V) 
+                                 (x3 &gt;= V) 
+                                 (x2 &lt;= V) 
+                                 (x1 &lt;= V) ,⊤›» t)</pre>]">
+<span class="Clinenum"> 114:</span><span class="Cbackground"> </span></a>       <span class="Cend">end</span>
+<span class="Clinenum"> 115:</span><span class="Cbackground"> </span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:&#123;'aM | (x1 &gt;= V)&#125; ,
+                 e1:«‹› ,‹(e0 &lt;= V) 
+                                 (e0 &lt;= V) 
+                                 (x3 &lt;= V) 
+                                 (x2 &lt;= V) 
+                                 (x1 &gt;= V) ,⊤›» t)</pre>]">    <span class="Cbar">|</span> l <span class="Cnonalphakeyword">-&gt;</span>
+<span class="Clinenum"> 116:</span><span class="Cbackground"> </span></a>       <span class="Clet">let</span> n1 <span class="Cnonalphakeyword">=</span> n <span class="Casr">asr</span> 1  <span class="Cin">in</span>
+<span class="Clinenum"> 117:</span><span class="Cbackground"> </span>       <span class="Clet">let</span> n2 <span class="Cnonalphakeyword">=</span> n <span class="Cnonalphakeyword">-</span> n1 <span class="Cin">in</span>
+<span class="Clinenum"> 118:</span><span class="Cbackground"> </span>       <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = _'261)&#125;</pre>]"><span class="Cnonalphakeyword">(</span>l1</a><span class="Cnonalphakeyword">,</span>l2<span class="Cnonalphakeyword">)</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (b:int) -&gt; (a:int) -&gt; int</pre>]"> <span class="Cnonalphakeyword">=</span> </a>chop n1 l <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cin">in</span> 
+<span class="Clinenum"> 119:</span><span class="Cbackground"> </span>       <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = _'263)&#125;</pre>]">s1</a> <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = n)&#125;</pre>]">rev_sort</a> n1 l1 <span class="Cin">in</span>
+<span class="Clinenum"> 120:</span><span class="Cbackground"> </span>       <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) ,
+              e1:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t)) |
+  (V = _'264)&#125;</pre>]">s2 <span class="Cnonalphakeyword">=</span> rev_sort</a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (k:int) -&gt;
+  (l:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t)) -&gt;
+  (l':«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t)) -&gt;
+  tuple. rec(e0:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) ,
+             e1:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t))</pre>]"> </a>n2<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = n1)&#125;</pre>]"> </a>l2 <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | ⊥&#125; , e1:&#123;«‹› ,‹⊥ ,⊤›» t | ⊥&#125;) |
+  (V = &amp;#9121;&amp;#9126;)  ((len V) = 0)  ((__tag V) = 0)&#125;</pre>]"><span class="Cin">in</span></a>
+<span class="Clinenum"> 121:</span><span class="Cbackground"> </span>       rev_merge_rev<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (n:int) -&gt;
+  (l:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t)</pre>]"> s1 </a>s2<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = n1)&#125;</pre>]"> </a>
+<span class="Clinenum"> 122:</span><span class="Cbackground"> </span>  <span class="Cand">and</span> rev_sort n<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (n:int) -&gt;
+  (l:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t)</pre>]"> l <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum"> 123:</span><span class="Cbackground"> </span></a>    <span class="Cmatch">match</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (l1:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t)) -&gt;
+  (l2:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]"> l <span class="Cwith">with</span>
+<span class="Clinenum"> 124:</span><span class="Cbackground"> </span></a>    <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (n:int) -&gt;
+  (l:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aP , e1: t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; + ::(e0:'aP , e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t)</pre>]"><span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">-&gt;</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span></a>
+<span class="Clinenum"> 125:</span><span class="Cbackground"> </span>    <span class="Cbar">|</span> x1 <span class="Cnonalphakeyword">::</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">-&gt;</span> <span class="Cnonalphakeyword">[</span>x1<span class="Cnonalphakeyword">]</span>
+<span class="Clinenum"> 126:</span><span class="Cbackground"> </span>    <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = l)&#125;</pre>]">x1</a> <span class="Cnonalphakeyword">::</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | ⊥&#125; , e1:&#123;«‹› ,‹⊥ ,⊤›» t | ⊥&#125;) |
+  (V = &amp;#9121;&amp;#9126;)  ((len V) = 0)  ((__tag V) = 0)&#125;</pre>]">x2</a> <span class="Cnonalphakeyword">::</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">-&gt;</span>
+<span class="Clinenum"> 127:</span><span class="Cbackground"> </span>       <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = l)&#125;</pre>]"><span class="Cif">if</span> x1 <span class="Cnonalphakeyword">&gt;</span></a> x2 <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:&#123;'aM | (x1 &lt;= V)  (x1 &gt;= V)&#125; ,
+                  e1:&#123;«‹› ,‹⊥ ,⊤›» t | ((len V) = 0)&#125;) |
+  (l &lt;= V)  (l &gt;= V)&#125;</pre>]"><span class="Cthen">then</span></a> <span class="Cnonalphakeyword">[</span>x1<span class="Cnonalphakeyword">;</span> x2<span class="Cnonalphakeyword">]</span> <span class="Celse">else</span> <span class="Cnonalphakeyword">[</span>x2<span class="Cnonalphakeyword">;</span> x1<span class="Cnonalphakeyword">]</span>
+<span class="Clinenum"> 128:</span><span class="Cbackground"> </span>    <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = l)&#125;</pre>]">x1 <span class="Cnonalphakeyword">::</span> x2 <span class="Cnonalphakeyword">::</span> x3</a> <span class="Cnonalphakeyword">::</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">-&gt;</span>
+<span class="Clinenum"> 129:</span><span class="Cbackground"> </span>       <span class="Cif">if</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x1)&#125;</pre>]">x1</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;'aM | true&#125;) -&gt;
+  (y:&#123;'aM | true&#125;) -&gt; &#123;bool. false + true | ((? (V)) iff (x &gt; y))&#125;</pre>]"><span class="Cnonalphakeyword">&gt;</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x2)&#125;</pre>]">x2</a> <span class="Cthen">then</span> <span class="Cbegin">begin</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x2)&#125;</pre>]">
+<span class="Clinenum"> 130:</span><span class="Cbackground"> </span></a>         <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = l)&#125;</pre>]"><span class="Cif">if</span> x2 <span class="Cnonalphakeyword">&gt;</span> x3 <span class="Cthen">then</span> <span class="Cnonalphakeyword">[</span></a>x1<span class="Cnonalphakeyword">;</span> x2<span class="Cnonalphakeyword">;</span> x3<span class="Cnonalphakeyword">]</span>
+<span class="Clinenum"> 131:</span><span class="Cbackground"> </span>         <span class="Celse">else</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;'aM | true&#125;) -&gt;
+  (y:&#123;'aM | true&#125;) -&gt; &#123;bool. false + true | ((? (V)) iff (x &gt; y))&#125;</pre>]"> </a><span class="Cif">if</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x2)&#125;</pre>]"> </a>x1 <span class="Cnonalphakeyword">&gt;</span> x3 <span class="Cthen">then</span> <span class="Cnonalphakeyword">[</span>x1<span class="Cnonalphakeyword">;</span> x3<span class="Cnonalphakeyword">;</span> x2<span class="Cnonalphakeyword">]</span> 
+<span class="Clinenum"> 132:</span><span class="Cbackground"> </span>         <span class="Celse">else</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x2)&#125;</pre>]"> </a><span class="Cnonalphakeyword">[</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;'aM | true&#125;) -&gt;
+  (y:&#123;'aM | true&#125;) -&gt; &#123;bool. false + true | ((? (V)) iff (x &gt; y))&#125;</pre>]">x3</a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x3)&#125;</pre>]"><span class="Cnonalphakeyword">;</span> </a>x1<span class="Cnonalphakeyword">;</span> x2<span class="Cnonalphakeyword">]</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x1)&#125;</pre>]">
+<span class="Clinenum"> 133:</span><span class="Cbackground"> </span></a>       <span class="Cend">end</span> <span class="Celse">else</span> <span class="Cbegin">begin</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;bool. false + true | ((? (V)) iff (x1 &gt; x3))&#125;</pre>]">
+<span class="Clinenum"> 134:</span><span class="Cbackground"> </span></a>         <span class="Cif">if</span> x1 <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x3)&#125;</pre>]"><span class="Cnonalphakeyword">&gt;</span> </a>x3<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x1)&#125;</pre>]"> <span class="Cthen">then</span></a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x2)&#125;</pre>]"> </a><span class="Cnonalphakeyword">[</span>x2<span class="Cnonalphakeyword">;</span> x1<span class="Cnonalphakeyword">;</span> x3<span class="Cnonalphakeyword">]</span>
+<span class="Clinenum"> 135:</span><span class="Cbackground"> </span>         <span class="Celse">else</span> <span class="Cif">if</span> x2 <span class="Cnonalphakeyword">&gt;</span> x3  <span class="Cthen">then</span> <span class="Cnonalphakeyword">[</span>x2<span class="Cnonalphakeyword">;</span> x3<span class="Cnonalphakeyword">;</span> x1<span class="Cnonalphakeyword">]</span>
+<span class="Clinenum"> 136:</span><span class="Cbackground"> </span>         <span class="Celse">else</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x1)&#125;</pre>]"> </a><span class="Cnonalphakeyword">[</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;'aM | true&#125;) -&gt;
+  (y:&#123;'aM | true&#125;) -&gt; &#123;bool. false + true | ((? (V)) iff (x &gt; y))&#125;</pre>]">x3</a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x3)&#125;</pre>]"><span class="Cnonalphakeyword">;</span> </a>x2<span class="Cnonalphakeyword">;</span> x1<span class="Cnonalphakeyword">]</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x2)&#125;</pre>]">
+<span class="Clinenum"> 137:</span><span class="Cbackground"> </span></a>       <span class="Cend">end</span>
+<span class="Clinenum"> 138:</span><span class="Cbackground"> </span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:&#123;'aM | (x1 &lt;= V)&#125; ,
+                 e1:«‹› ,‹(e0 &gt;= V)  (x3 &gt;= V)  (x2 &gt;= V)  (x1 &lt;= V) ,⊤›» t)</pre>]">    <span class="Cbar">|</span> l <span class="Cnonalphakeyword">-&gt;</span>
+<span class="Clinenum"> 139:</span><span class="Cbackground"> </span></a>       <span class="Clet">let</span> n1 <span class="Cnonalphakeyword">=</span> n <span class="Casr">asr</span> 1 <span class="Cin">in</span>
+<span class="Clinenum"> 140:</span><span class="Cbackground"> </span>       <span class="Clet">let</span> n2 <span class="Cnonalphakeyword">=</span> n <span class="Cnonalphakeyword">-</span> n1 <span class="Cin">in</span>
+<span class="Clinenum"> 141:</span><span class="Cbackground"> </span>       <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = _'330)&#125;</pre>]"><span class="Cnonalphakeyword">(</span>l1</a><span class="Cnonalphakeyword">,</span>l2<span class="Cnonalphakeyword">)</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (b:int) -&gt; (a:int) -&gt; int</pre>]"> <span class="Cnonalphakeyword">=</span> </a>chop n1 l <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cin">in</span> 
+<span class="Clinenum"> 142:</span><span class="Cbackground"> </span>       <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = _'332)&#125;</pre>]">s1</a> <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = n)&#125;</pre>]">sort</a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = n1)&#125;</pre>]"> n1</a> l1  <span class="Cin">in</span>
+<span class="Clinenum"> 143:</span><span class="Cbackground"> </span>       <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) ,
+              e1:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t)) |
+  (V = _'333)&#125;</pre>]">s2 <span class="Cnonalphakeyword">=</span> sort</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (k:int) -&gt;
+  (l:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t)) -&gt;
+  (l':«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t)) -&gt;
+  tuple. rec(e0:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) ,
+             e1:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t))</pre>]">n2 l2</a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = n1)&#125;</pre>]"> <span class="Cin">in</span></a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = l)&#125;</pre>]">
+<span class="Clinenum"> 144:</span><span class="Cbackground"> </span></a>       rev_merge<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (n:int) -&gt;
+  (l:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]"> s1 </a>s2<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = n1)&#125;</pre>]"> </a>
+<span class="Clinenum"> 145:</span><span class="Cbackground"> </span>  <span class="Cin">in</span>
+<span class="Clinenum"> 146:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> n<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (l1:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:'aM ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)) -&gt;
+  (l2:«list» t. &amp;#9121;&amp;#9126; +
+                  ::(e0:'aM ,
+                     e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1:«‹› ,‹(e0 &gt;= V) ,⊤›» t)</pre>]"> <span class="Cnonalphakeyword">=</span> len l </a><span class="Cin">in</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t) |
+  (V = s1)&#125;</pre>]">
+<span class="Clinenum"> 147:</span><span class="Cbackground"> </span></a>  <span class="Ccomment">(* if n &lt; 2 then l else *)</span>
+<span class="Clinenum"> 148:</span><span class="Cbackground"> </span>  sort<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = _'337)&#125;</pre>]"> </a>n l<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (xs:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t)) -&gt; &#123;int | (0 &lt;= V)  (V &gt;= 0)&#125;</pre>]">
+<span class="Clinenum"> 149:</span><span class="Cbackground"> </span></a>
+<span class="Clinenum"> 150:</span><span class="Cbackground"> </span><span class="Clet">let</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (n:int) -&gt;
+  (l:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]"> <span class="Crec">rec</span></a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = n)&#125;</pre>]"> </a>sortcheck l <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum"> 151:</span><span class="Cbackground"> </span>  <span class="Cmatch">match</span> l <span class="Cwith">with</span>
+<span class="Clinenum"> 152:</span><span class="Cbackground"> </span>    <span class="Cbar">|</span> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (l:«list» t. &amp;#9121;&amp;#9126; +
+                 ::(e0:'aP ,
+                    e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)) -&gt;
+  unit. ()</pre>]"> <span class="Cnonalphakeyword">-&gt;</span> <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span>
+<span class="Clinenum"> 153:</span><span class="Cbackground"> </span></a>    <span class="Cbar">|</span> x <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t) |
+  (V = l)&#125;</pre>]"><span class="Cnonalphakeyword">::</span></a> <span class="Cnonalphakeyword">[</span><span class="Cnonalphakeyword">]</span> <span class="Cnonalphakeyword">-&gt;</span> <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span>
+<span class="Clinenum"> 154:</span><span class="Cbackground"> </span>    <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t) |
+  (V = l)&#125;</pre>]">x </a><span class="Cnonalphakeyword">::</span> y<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;unit. () | (V = ())  ((__tag V) = 0)&#125;</pre>]"> <span class="Cnonalphakeyword">::</span></a> ys <span class="Cnonalphakeyword">-&gt;</span>
+<span class="Clinenum"> 155:</span><span class="Cbackground"> </span>        <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t) |
+  (V = l)&#125;</pre>]"><span class="Cassert">assert</span></a> <span class="Cnonalphakeyword">(</span>x<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;unit. () | (V = ())  ((__tag V) = 0)&#125;</pre>]"> &lt;=</a> y<span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">;</span> sortcheck <span class="Cnonalphakeyword">(</span>y <span class="Cnonalphakeyword">::</span> ys<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum"> 156:</span><span class="Cbackground"> </span>
+<span class="Clinenum"> 157:</span><span class="Cbackground"> </span><span class="Ccomment">(* specification *)</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;'aM | (y &gt;= V)  (x &lt;= V)  true&#125;) -&gt;
+  (y:&#123;'aM | (y &gt;= V)  (x &lt;= V)  true&#125;) -&gt;
+  &#123;bool. false + true | ((? (V)) iff (x &lt;= y))&#125;</pre>]">
+<span class="Clinenum"> 158:</span><span class="Cbackground"> </span></a><span class="Clet">let</span> check xs <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum"> 159:</span><span class="Cbackground"> </span>  <span class="Clet">let</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (xs:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aP , e1: t)) -&gt; unit. ()</pre>]"> xs'</a> <span class="Cnonalphakeyword">=</span> ssort xs <span class="Cin">in</span>
+<span class="Clinenum"> 160:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t) |
+  (V = _'346)&#125;</pre>]"><span class="Cnonalphakeyword">_</span> <span class="Cnonalphakeyword">=</span></a> sortcheck<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = xs)&#125;</pre>]"> </a>xs' <span class="Cin">in</span> 
+<span class="Clinenum"> 161:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;unit. () | (V = _'347)&#125;</pre>]">xs''</a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (l:«list» t. &amp;#9121;&amp;#9126; +
+                 ::(e0:'aM ,
+                    e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)) -&gt;
+  unit. ()</pre>]"> <span class="Cnonalphakeyword">=</span> stable_sort</a> xs <span class="Cin">in</span>
+<span class="Clinenum"> 162:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; +
+               ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t) |
+  (V = _'348)&#125;</pre>]"><span class="Cnonalphakeyword">_</span> <span class="Cnonalphakeyword">=</span> </a>sortcheck<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (l:«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t)) -&gt;
+  «list» t. &amp;#9121;&amp;#9126; +
+              ::(e0:'aM , e1:«‹› ,‹(e0 &lt;= V)  (e0 &lt;= V) ,⊤›» t)</pre>]"> xs''</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«list» t. &amp;#9121;&amp;#9126; + ::(e0:'aM , e1: t) | (V = xs)&#125;</pre>]"><span class="Cin">in</span></a> 
+<span class="Clinenum"> 163:</span><span class="Cbackground"> </span>  <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  unit. ()</pre>]"><span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span>
+<span class="Clinenum"> 164:</span><span class="Cbackground"> </span></a></pre>
+
+<hr>
+<p>
+<em>This document was generated using 
+<a href="http://martin.jambon.free.fr/caml2html.html">caml2html</a></em>
+</body>
+</html>

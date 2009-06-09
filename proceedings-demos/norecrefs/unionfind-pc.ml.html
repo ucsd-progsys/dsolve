@@ -1,0 +1,164 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>
+Hover mouse over variables to see types</title>
+  <meta name="GENERATOR" content="caml2html 1.3.0">
+    <script SRC="boxover.js"></script>
+  <style>
+    .annotbody {
+        font-family:consolas;
+        font-size:16px;
+	background:#b4eeb4;
+        border-left:1px solid #C4D5E3;
+        border-right:1px solid #C4D5E3;
+        border-bottom:1px solid #C4D5E3;
+        padding:10px;
+     }
+  </style>
+<style type="text/css">
+code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hover { background-color: #b4eeb4; }
+.Cbar,
+.Cdo,
+.Cdone,
+.Cdownto,
+.Celse,
+.Cfor,
+.Cif,
+.Clazy,
+.Cmatch,
+.Cnew,
+.Cor,
+.Cthen,
+.Cto,
+.Ctry,
+.Cwhen,
+.Cwhile,
+.Cwith { color: #77aaaa; }
+.Cassert,
+.Cinclude,
+.Copen { color: #cc9900; }
+.Cstring { color: #aa4444; }
+.Cand,
+.Cas,
+.Cclass,
+.Cconstraint,
+.Cexception,
+.Cexternal,
+.Cfun,
+.Cfunction,
+.Cfunctor,
+.Cin,
+.Cinherit,
+.Cinitializer,
+.Clet,
+.Cmethod,
+.Cmodule,
+.Cmutable,
+.Cof,
+.Cprivate,
+.Crec,
+.Ctype,
+.Cval,
+.Cvirtual { color: green; }
+.Cbackground { background-color: white; }
+.Craise { color: red; }
+.Cconstructor { color: #0033cc; }
+.Ccomment { color: #990000; }
+.Calphakeyword,
+.Casr,
+.Cland,
+.Clor,
+.Clsl,
+.Clsr,
+.Clxor,
+.Cmod { color: #808080; }
+.Clinenum { color: black; background-color: silver; }
+.Cbegin,
+.Cend,
+.Cobject,
+.Csig,
+.Cstruct { color: #990099; }
+.Cfalse,
+.Cnonalphakeyword,
+.Cquotation,
+.Ctrue { }
+</style>
+</head>
+<body>
+<h1><a name="Hover mouse over variables to see types"></a><code>Hover mouse over variables to see types</code></h1>
+
+<pre><span class="Clinenum">   1:</span><span class="Cbackground"> </span><span class="Ccomment">(* textbook union-find implementation with path compression *)</span>
+<span class="Clinenum">   2:</span><span class="Cbackground"> </span>
+<span class="Clinenum">   3:</span><span class="Cbackground"> </span><span class="Clet">let</span> init_rank n <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">   4:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Crec">rec</span> init_rec m i <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">   5:</span><span class="Cbackground"> </span>    <span class="Cif">if</span> i &gt;= n <span class="Cthen">then</span> m <span class="Celse">else</span> init_rec <span class="Cnonalphakeyword">(</span><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>set m i 1<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>i<span class="Cnonalphakeyword">+</span>1<span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum">   6:</span><span class="Cbackground"> </span>  init_rec <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>empty 0
+<span class="Clinenum">   7:</span><span class="Cbackground"> </span>
+<span class="Clinenum">   8:</span><span class="Cbackground"> </span><span class="Clet">let</span> init_parent n <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">   9:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Crec">rec</span> init_rec m i <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  10:</span><span class="Cbackground"> </span>    <span class="Cif">if</span> i &gt;= n <span class="Cthen">then</span> m <span class="Celse">else</span> init_rec <span class="Cnonalphakeyword">(</span><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>set m i i<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>i<span class="Cnonalphakeyword">+</span>1<span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum">  11:</span><span class="Cbackground"> </span>  init_rec <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>empty 0
+<span class="Clinenum">  12:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  13:</span><span class="Cbackground"> </span><span class="Clet">let</span> create n <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">  14:</span><span class="Cbackground"> </span>  <span class="Cnonalphakeyword">(</span>init_rank n<span class="Cnonalphakeyword">,</span> init_parent n<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  15:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  16:</span><span class="Cbackground"> </span><span class="Clet">let</span> <span class="Crec">rec</span> find_aux <span class="Cnonalphakeyword">(</span>r: <span class="Cnonalphakeyword">(</span>int<span class="Cnonalphakeyword">,</span> int<span class="Cnonalphakeyword">)</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>t<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>p: <span class="Cnonalphakeyword">(</span>int<span class="Cnonalphakeyword">,</span> int<span class="Cnonalphakeyword">)</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>t<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>i: int<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">  17:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> pi <span class="Cnonalphakeyword">=</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>get p i <span class="Cin">in</span>
+<span class="Clinenum">  18:</span><span class="Cbackground"> </span>  <span class="Cif">if</span> pi <span class="Cnonalphakeyword">=</span> i <span class="Cthen">then</span> 
+<span class="Clinenum">  19:</span><span class="Cbackground"> </span>    <span class="Cnonalphakeyword">(</span>p<span class="Cnonalphakeyword">,</span> i<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  20:</span><span class="Cbackground"> </span>  <span class="Celse">else</span>
+<span class="Clinenum">  21:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> <span class="Cnonalphakeyword">(</span>p'<span class="Cnonalphakeyword">,</span>i'<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">=</span> find_aux r p pi <span class="Cin">in</span>
+<span class="Clinenum">  22:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> p''     <span class="Cnonalphakeyword">=</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>set p' i i' <span class="Cin">in</span>
+<span class="Clinenum">  23:</span><span class="Cbackground"> </span>    <span class="Cnonalphakeyword">(</span>p''<span class="Cnonalphakeyword">,</span> i'<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  24:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  25:</span><span class="Cbackground"> </span><span class="Clet">let</span> find <span class="Cnonalphakeyword">(</span>r: <span class="Cnonalphakeyword">(</span>int<span class="Cnonalphakeyword">,</span> int<span class="Cnonalphakeyword">)</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>t<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>p: <span class="Cnonalphakeyword">(</span>int<span class="Cnonalphakeyword">,</span> int<span class="Cnonalphakeyword">)</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>t<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>i: int<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  26:</span><span class="Cbackground"> </span>  find_aux r p i 
+<span class="Clinenum">  27:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  28:</span><span class="Cbackground"> </span><span class="Clet">let</span> union <span class="Cnonalphakeyword">(</span>r: <span class="Cnonalphakeyword">(</span>int<span class="Cnonalphakeyword">,</span> int<span class="Cnonalphakeyword">)</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>t<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>p: <span class="Cnonalphakeyword">(</span>int<span class="Cnonalphakeyword">,</span> int<span class="Cnonalphakeyword">)</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>t<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>x: int<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>y: int<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  29:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Cnonalphakeyword">(</span>p'<span class="Cnonalphakeyword">,</span> x'<span class="Cnonalphakeyword">)</span>  <span class="Cnonalphakeyword">=</span> find r p  x <span class="Cin">in</span>
+<span class="Clinenum">  30:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Cnonalphakeyword">(</span>p''<span class="Cnonalphakeyword">,</span>y'<span class="Cnonalphakeyword">)</span>  <span class="Cnonalphakeyword">=</span> find r p' y <span class="Cin">in</span>
+<span class="Clinenum">  31:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Cnonalphakeyword">_</span>         <span class="Cnonalphakeyword">=</span> <span class="Cassert">assert</span> <span class="Cnonalphakeyword">(</span><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>get p'' x' <span class="Cnonalphakeyword">=</span> x'<span class="Cnonalphakeyword">)</span> <span class="Cin">in</span> <span class="Ccomment">(* these facts must be manually instantiated *)</span>
+<span class="Clinenum">  32:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Cnonalphakeyword">_</span>         <span class="Cnonalphakeyword">=</span> <span class="Cassert">assert</span> <span class="Cnonalphakeyword">(</span><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>get p'' y' <span class="Cnonalphakeyword">=</span> y'<span class="Cnonalphakeyword">)</span> <span class="Cin">in</span> 
+<span class="Clinenum">  33:</span><span class="Cbackground"> </span>  <span class="Cif">if</span> x' <span class="Cnonalphakeyword">!=</span> y' <span class="Cthen">then</span> <span class="Cbegin">begin</span>
+<span class="Clinenum">  34:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> rx' <span class="Cnonalphakeyword">=</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>get r x' <span class="Cin">in</span>
+<span class="Clinenum">  35:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> ry' <span class="Cnonalphakeyword">=</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>get r y' <span class="Cin">in</span>
+<span class="Clinenum">  36:</span><span class="Cbackground"> </span>    <span class="Cif">if</span> rx' <span class="Cnonalphakeyword">&gt;</span> ry' <span class="Cthen">then</span>
+<span class="Clinenum">  37:</span><span class="Cbackground"> </span>      <span class="Cnonalphakeyword">(</span>r<span class="Cnonalphakeyword">,</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>set p'' y' x'<span class="Cnonalphakeyword">)</span> 
+<span class="Clinenum">  38:</span><span class="Cbackground"> </span>    <span class="Celse">else</span> <span class="Cif">if</span> rx' <span class="Cnonalphakeyword">&lt;</span> ry' <span class="Cthen">then</span>
+<span class="Clinenum">  39:</span><span class="Cbackground"> </span>      <span class="Cnonalphakeyword">(</span>r<span class="Cnonalphakeyword">,</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>set p'' x' y'<span class="Cnonalphakeyword">)</span> 
+<span class="Clinenum">  40:</span><span class="Cbackground"> </span>    <span class="Celse">else</span> 
+<span class="Clinenum">  41:</span><span class="Cbackground"> </span>      <span class="Clet">let</span> r <span class="Cnonalphakeyword">=</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>set r x' <span class="Cnonalphakeyword">(</span>rx' <span class="Cnonalphakeyword">+</span> 1<span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum">  42:</span><span class="Cbackground"> </span>      <span class="Clet">let</span> p''' <span class="Cnonalphakeyword">=</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>set p'' y' x' <span class="Cin">in</span>
+<span class="Clinenum">  43:</span><span class="Cbackground"> </span>      <span class="Cnonalphakeyword">(</span>r<span class="Cnonalphakeyword">,</span> p'''<span class="Cnonalphakeyword">)</span> 
+<span class="Clinenum">  44:</span><span class="Cbackground"> </span>  <span class="Cend">end</span> <span class="Celse">else</span>
+<span class="Clinenum">  45:</span><span class="Cbackground"> </span>    <span class="Cnonalphakeyword">(</span>r<span class="Cnonalphakeyword">,</span> p''<span class="Cnonalphakeyword">)</span> 
+<span class="Clinenum">  46:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  47:</span><span class="Cbackground"> </span><span class="Ccomment">(************************************************)</span>
+<span class="Clinenum">  48:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  49:</span><span class="Cbackground"> </span><span class="Clet">let</span> check r p <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">  50:</span><span class="Cbackground"> </span>  <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>iter p <span class="Cnonalphakeyword">(</span><span class="Cfun">fun</span> i v <span class="Cnonalphakeyword">-&gt;</span> <span class="Cassert">assert</span> <span class="Cnonalphakeyword">(</span>v<span class="Cnonalphakeyword">=</span>i || <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>get r i <span class="Cnonalphakeyword">&lt;</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>get r v<span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  51:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  52:</span><span class="Cbackground"> </span><span class="Clet">let</span> <span class="Crec">rec</span> tester r p <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">  53:</span><span class="Cbackground"> </span>  <span class="Cif">if</span> read_int <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">&gt;</span> 0 <span class="Cthen">then</span> <span class="Cnonalphakeyword">(</span>r<span class="Cnonalphakeyword">,</span> p<span class="Cnonalphakeyword">)</span> <span class="Celse">else</span> 
+<span class="Clinenum">  54:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> x       <span class="Cnonalphakeyword">=</span> read_int <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum">  55:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> y       <span class="Cnonalphakeyword">=</span> read_int <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum">  56:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> <span class="Cnonalphakeyword">(</span>r'<span class="Cnonalphakeyword">,</span>p'<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">=</span> union r p x y <span class="Cin">in</span>
+<span class="Clinenum">  57:</span><span class="Cbackground"> </span>    tester r' p'
+<span class="Clinenum">  58:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  59:</span><span class="Cbackground"> </span><span class="Clet">let</span> <span class="Cnonalphakeyword">_</span> <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">  60:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> n         <span class="Cnonalphakeyword">=</span> read_int <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum">  61:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> r         <span class="Cnonalphakeyword">=</span> init_rank n <span class="Cin">in</span>
+<span class="Clinenum">  62:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> p         <span class="Cnonalphakeyword">=</span> init_parent n <span class="Cin">in</span>
+<span class="Clinenum">  63:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Cnonalphakeyword">_</span>         <span class="Cnonalphakeyword">=</span> check r p <span class="Cin">in</span>
+<span class="Clinenum">  64:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Cnonalphakeyword">(</span>r'<span class="Cnonalphakeyword">,</span> p'<span class="Cnonalphakeyword">)</span>  <span class="Cnonalphakeyword">=</span> tester r p <span class="Cin">in</span> 
+<span class="Clinenum">  65:</span><span class="Cbackground"> </span>  check r' p'
+</pre>
+
+<hr>
+<p>
+<em>This document was generated using 
+<a href="http://martin.jambon.free.fr/caml2html.html">caml2html</a></em>
+</body>
+</html>

@@ -1,0 +1,8 @@
+(* Program Specific *)
+qualif POS(v) : v >= 0
+qualif EQL(v) : len v = ~A
+
+(* List Generic *)
+qualif POS(v) : len v >= 0
+qualif LEN(v) : len v = len ~A
+qualif INC(v) : len v = 1 + len ~A

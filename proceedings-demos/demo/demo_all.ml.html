@@ -1,0 +1,189 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
+  <title>
+1233555810.ml</title>
+  <meta name="GENERATOR" content="caml2html 1.3.0">
+  <script SRC="boxover.js"></script>
+  <style>
+    .annotbody {
+        font-family:consolas;
+        font-size:16px;
+	background:#b4eeb4;
+        border-left:1px solid #C4D5E3;
+        border-right:1px solid #C4D5E3;
+        border-bottom:1px solid #C4D5E3;
+        padding:10px;
+     }
+  </style>
+<style type="text/css">
+code,pre { color:black;background-color:white }a.Cannot { color:black;text-decoration:none }.Cannot:hover { background-color: #b4eeb4; }
+.Cbar,
+.Cdo,
+.Cdone,
+.Cdownto,
+.Celse,
+.Cfor,
+.Cif,
+.Clazy,
+.Cmatch,
+.Cnew,
+.Cor,
+.Cthen,
+.Cto,
+.Ctry,
+.Cwhen,
+.Cwhile,
+.Cwith { color: #77aaaa; }
+.Cassert,
+.Cinclude,
+.Copen { color: #cc9900; }
+.Cstring { color: #aa4444; }
+.Cand,
+.Cas,
+.Cclass,
+.Cconstraint,
+.Cexception,
+.Cexternal,
+.Cfun,
+.Cfunction,
+.Cfunctor,
+.Cin,
+.Cinherit,
+.Cinitializer,
+.Clet,
+.Cmethod,
+.Cmodule,
+.Cmutable,
+.Cof,
+.Cprivate,
+.Crec,
+.Ctype,
+.Cval,
+.Cvirtual { color: green; }
+.Cbackground { background-color: white; }
+.Craise { color: red; }
+.Cconstructor { color: #0033cc; }
+.Ccomment { color: #990000; }
+.Calphakeyword,
+.Casr,
+.Cland,
+.Clor,
+.Clsl,
+.Clsr,
+.Clxor,
+.Cmod { color: #808080; }
+.Clinenum { color: black; background-color: silver; }
+.Cbegin,
+.Cend,
+.Cobject,
+.Csig,
+.Cstruct { color: #990099; }
+.Cfalse,
+.Cnonalphakeyword,
+.Cquotation,
+.Ctrue { }
+</style>
+</head>
+<body>
+
+<pre><span class="Clinenum">   1:</span><span class="Cbackground"> </span><span class="Ccomment">(* </span>
+<span class="Clinenum">   2:</span><span class="Cbackground"> </span><span class="Ccomment">qualif POS(_V):   _V &gt;= 0 </span>
+<span class="Clinenum">   3:</span><span class="Cbackground"> </span><span class="Ccomment">qualif LT(_V):    _V &lt; ~A  </span>
+<span class="Clinenum">   4:</span><span class="Cbackground"> </span><span class="Ccomment">qualif LTLen(_V): _V &lt; Array.length ~A </span>
+<span class="Clinenum">   5:</span><span class="Cbackground"> </span><span class="Ccomment">*)</span>
+<span class="Clinenum">   6:</span><span class="Cbackground"> </span>
+<span class="Clinenum">   7:</span><span class="Cbackground"> </span><span class="Clet">let</span> show x <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {unit | ((__tag V) = 0)}]"><span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span></a>
+<span class="Clinenum">   8:</span><span class="Cbackground"> </span>
+<span class="Clinenum">   9:</span><span class="Cbackground"> </span><span class="Ccomment">(* Recursion *)</span>
+<span class="Clinenum">  10:</span><span class="Cbackground"> </span><span class="Clet">let</span> <span class="Crec">rec</span> sum k <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  11:</span><span class="Cbackground"> </span>  <span class="Cif">if</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = k)}]">k</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  b: int -&gt; d: int -&gt; {bool | ((__tag V) &lt;=&gt; (b &lt; d))}]"><span class="Cnonalphakeyword">&lt;</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = 0)}]">0</a> <span class="Cthen">then</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = 0)}]">0</a> <span class="Celse">else</span>
+<span class="Clinenum">  12:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> s <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  k: int -&gt; {int | (V &gt;= 0)}]">sum</a> <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = k)}]">k</a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  b: int -&gt; d: int -&gt; {int | (V = (b - d))}]">-1</a><span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum">  13:</span><span class="Cbackground"> </span>    <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = s)}]">s</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  b: int -&gt; d: int -&gt; {int | (V = (b + d))}]"><span class="Cnonalphakeyword">+</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = k)}]">k</a>
+<span class="Clinenum">  14:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  15:</span><span class="Cbackground"> </span><span class="Clet">let</span> <span class="Cnonalphakeyword">_</span> <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  k: int -&gt; {int | (V &gt;= 0)}]">sum</a>
+<span class="Clinenum">  16:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  17:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  18:</span><span class="Cbackground"> </span><span class="Ccomment">(* Array Bounds *)</span>
+<span class="Clinenum">  19:</span><span class="Cbackground"> </span><span class="Clet">let</span> max x y <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  20:</span><span class="Cbackground"> </span>  <span class="Cif">if</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  Var(a_616)]">x</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  b: Var(a_615) -&gt; d: Var(a_615) -&gt; {bool | ((__tag V) &lt;=&gt; (b &gt; d))}]"><span class="Cnonalphakeyword">&gt;</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  Var(a_617)]">y</a> <span class="Cthen">then</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  Var(a_619)]">x</a> <span class="Celse">else</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  Var(a_620)]">y</a>
+<span class="Clinenum">  21:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  22:</span><span class="Cbackground"> </span><span class="Clet">let</span> arraymax1 a <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">  23:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Crec">rec</span> loop i m <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">  24:</span><span class="Cbackground"> </span>    <span class="Cif">if</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = i)}]">i</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  b:
+  {int | (V &gt;= 0)} -&gt; d: {int | (V &gt;= 0)} -&gt; {bool | ((__tag V) &lt;=&gt; (b &lt; d))}]"><span class="Cnonalphakeyword">&lt;</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  b: {int | (V &gt;= 0)} array -&gt; {int | (V = (Array.length b)) (V &gt;= 0)}]"><span class="Cconstructor">Array</span><span class="Cnonalphakeyword">.</span>length</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V &gt;= 0)} array]">a</a> <span class="Cthen">then</span> 
+<span class="Clinenum">  25:</span><span class="Cbackground"> </span>      <span class="Clet">let</span> x  <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  b:
+  {int | (V &gt;= 0)} array -&gt;
+    d: {int | (V &lt; (Array.length b)) (V &gt;= 0)} -&gt; {int | (V &gt;= 0)}]"><span class="Cconstructor">Array</span><span class="Cnonalphakeyword">.</span>get</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V &gt;= 0)} array]">a</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = i)}]">i</a> <span class="Cin">in</span>
+<span class="Clinenum">  26:</span><span class="Cbackground"> </span>      <span class="Clet">let</span> m' <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  x: {int | (V &gt;= 0)} -&gt; y: {int | (V &gt;= 0)} -&gt; {int | (V &gt;= 0)}]">max</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = m)}]">m</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = x)}]">x</a> <span class="Cin">in</span>
+<span class="Clinenum">  27:</span><span class="Cbackground"> </span>      <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  i: {int | (V &gt;= 0)} -&gt; m: {int | (V &gt;= 0)} -&gt; {int | (V &gt;= 0)}]">loop</a> <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = i)}]">i</a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  b: int -&gt; d: int -&gt; {int | (V = (b + d))}]"><span class="Cnonalphakeyword">+</span></a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = 1)}]">1</a><span class="Cnonalphakeyword">)</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = m')}]">m'</a>
+<span class="Clinenum">  28:</span><span class="Cbackground"> </span>    <span class="Celse">else</span> 
+<span class="Clinenum">  29:</span><span class="Cbackground"> </span>      <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = m)}]">m</a> 
+<span class="Clinenum">  30:</span><span class="Cbackground"> </span>  <span class="Cin">in</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  i: {int | (V &gt;= 0)} -&gt; m: {int | (V &gt;= 0)} -&gt; {int | (V &gt;= 0)}]">loop</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = 0)}]">0</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = 0)}]">0</a>
+<span class="Clinenum">  31:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  32:</span><span class="Cbackground"> </span><span class="Clet">let</span> <span class="Cnonalphakeyword">_</span> <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  a: {int | (V &gt;= 0)} array -&gt; {int | (V &gt;= 0)}]">arraymax1</a>
+<span class="Clinenum">  33:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  34:</span><span class="Cbackground"> </span><span class="Ccomment">(* Higher-Order Functions *)</span>
+<span class="Clinenum">  35:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  36:</span><span class="Cbackground"> </span><span class="Clet">let</span> foldn n b f <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  37:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Crec">rec</span> loop i c <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  38:</span><span class="Cbackground"> </span>    <span class="Cif">if</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = i)}]">i</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  b:
+  {int | (V &gt;= 0)} -&gt; d: {int | (V &gt;= 0)} -&gt; {bool | ((__tag V) &lt;=&gt; (b &lt; d))}]"><span class="Cnonalphakeyword">&lt;</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = n)}]">n</a> <span class="Cthen">then</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  i: {int | (V &gt;= 0)} -&gt; c: Var(a_908) -&gt; Var(a_908)]">loop</a> <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = i)}]">i</a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  b: int -&gt; d: int -&gt; {int | (V = (b + d))}]"><span class="Cnonalphakeyword">+</span></a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = 1)}]">1</a><span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V &gt;= 0) (V &lt; n)} -&gt; Var(a_900) -&gt; Var(a_900)]">f</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = i)}]">i</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  Var(a_905)]">c</a><span class="Cnonalphakeyword">)</span> <span class="Celse">else</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  Var(a_914)]">c</a> <span class="Cin">in</span>
+<span class="Clinenum">  39:</span><span class="Cbackground"> </span>  <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  i: {int | (V &gt;= 0)} -&gt; c: Var(a_920) -&gt; Var(a_920)]">loop</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = 0)}]">0</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  Var(a_925)]">b</a>
+<span class="Clinenum">  40:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  41:</span><span class="Cbackground"> </span><span class="Clet">let</span> arraymax2 a <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  42:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> am l m <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  x: {int | (V &gt;= 0)} -&gt; y: {int | (V &gt;= 0)} -&gt; {int | (V &gt;= 0)}]">max</a> <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  b:
+  {int | (V &gt;= 0)} array -&gt;
+    d: {int | (V &lt; (Array.length b)) (V &gt;= 0)} -&gt; {int | (V &gt;= 0)}]"><span class="Cconstructor">Array</span><span class="Cnonalphakeyword">.</span>get</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V &gt;= 0)} array]">a</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = l)}]">l</a><span class="Cnonalphakeyword">)</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = m)}]">m</a> <span class="Cin">in</span>
+<span class="Clinenum">  43:</span><span class="Cbackground"> </span>  <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  n:
+  {int | (V &gt;= 0)} -&gt;
+    b:
+    {int | (V &gt;= 0)} -&gt;
+      f:
+      ({int | (V &lt; n) (V &gt;= 0)} -&gt; {int | (V &gt;= 0)} -&gt; {int | (V &gt;= 0)}) -&gt;
+         {int | (V &gt;= 0)}]">foldn</a> <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  b: {int | (V &gt;= 0)} array -&gt; {int | (V = (Array.length b)) (V &gt;= 0)}]"><span class="Cconstructor">Array</span><span class="Cnonalphakeyword">.</span>length</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V &gt;= 0)} array]">a</a><span class="Cnonalphakeyword">)</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = 0)}]">0</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  l:
+  {int | (V &gt;= 0) (V &lt; (Array.length a))} -&gt;
+    m: {int | (V &gt;= 0)} -&gt; {int | (V &gt;= 0)}]">am</a>
+<span class="Clinenum">  44:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  45:</span><span class="Cbackground"> </span><span class="Clet">let</span> arraytest a <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  46:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> vec <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  b:
+  {int | (0 &lt;= V)} -&gt;
+    d: {int | (V &gt;= 0)} -&gt; {{int | (V &gt;= 0)} array | (b = (Array.length V))}]"><span class="Cconstructor">Array</span><span class="Cnonalphakeyword">.</span>make</a> <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  b: {int | (0 &lt; V)} -&gt; {int | ((0 &lt;= V) and  (V &lt; b))}]"><span class="Cconstructor">Random</span><span class="Cnonalphakeyword">.</span>int</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = 40)}]">40</a><span class="Cnonalphakeyword">)</span>  <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = 0)}]">0</a> <span class="Cin">in</span>
+<span class="Clinenum">  47:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> r   <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  a: {int | (V &gt;= 0)} array -&gt; {int | (V &gt;= 0)}]">arraymax2</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {{int | (V &gt;= 0)} array | (__atmp25 = (Array.length V))}]">vec</a> <span class="Cin">in</span>
+<span class="Clinenum">  48:</span><span class="Cbackground"> </span><span class="Ccomment">(* Polymorphism *)</span>
+<span class="Clinenum">  49:</span><span class="Cbackground"> </span>  <span class="Cassert">assert</span> <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = r)}]">r</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  b:
+  {int | (V &gt;= 0)} -&gt;
+    d: {int | (V &gt;= 0)} -&gt; {bool | ((__tag V) &lt;=&gt; (b &gt;= d))}]">&gt;=</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = 0)}]">0</a><span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  50:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  51:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  52:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  53:</span><span class="Cbackground"> </span><span class="Ccomment">(* Misc *)</span>
+<span class="Clinenum">  54:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  55:</span><span class="Cbackground"> </span><span class="Clet">let</span> <span class="Cnonalphakeyword">(</span>|&gt;<span class="Cnonalphakeyword">)</span> x f <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  Var(a_1045) -&gt; Var(a_1044)]">f</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  Var(a_1046)]">x</a>
+<span class="Clinenum">  56:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  57:</span><span class="Cbackground"> </span><span class="Clet">let</span> abs x <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">  58:</span><span class="Cbackground"> </span>  <span class="Cif">if</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = x)}]">x</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  b: int -&gt; d: int -&gt; {bool | ((__tag V) &lt;=&gt; (b &gt; d))}]"><span class="Cnonalphakeyword">&gt;</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = 0)}]">0</a> <span class="Cthen">then</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = x)}]">x</a> <span class="Celse">else</span> <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = 0)}]">0</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  b: int -&gt; d: int -&gt; {int | (V = (b - d))}]"><span class="Cnonalphakeyword">-</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = x)}]">x</a><span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  59:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  60:</span><span class="Cbackground"> </span><span class="Clet">let</span> magnitude xs <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  61:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> rv <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">  62:</span><span class="Cbackground"> </span>    <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  int
+list]">xs</a> 
+<span class="Clinenum">  63:</span><span class="Cbackground"> </span>    <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  x: int list -&gt;
+    f: (int list -&gt; {int | (V &gt;= 0)} list) -&gt; {int | (V &gt;= 0)} list]">|&gt;</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  (int -&gt; {int | (V &gt;= 0)}) -&gt; int list -&gt; {int | (V &gt;= 0)} list]"><span class="Cconstructor">List</span><span class="Cnonalphakeyword">.</span>map</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  x: int -&gt; {int | (V &gt;= 0)}]">abs</a>
+<span class="Clinenum">  64:</span><span class="Cbackground"> </span>    <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  x:
+  {int | (V &gt;= 0)} list -&gt;
+    f: ({int | (V &gt;= 0)} list -&gt; {int | (V &gt;= 0)}) -&gt; {int | (V &gt;= 0)}]">|&gt;</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  ({int | (V &gt;= 0)} -&gt; {int | (V &gt;= 0)} -&gt; {int | (V &gt;= 0)}) -&gt;
+     {int | (V &gt;= 0)} -&gt; {int | (V &gt;= 0)} list -&gt; {int | (V &gt;= 0)}]"><span class="Cconstructor">List</span><span class="Cnonalphakeyword">.</span>fold_left</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  b: int -&gt; d: int -&gt; {int | (V = (b + d))}]"><span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">+</span><span class="Cnonalphakeyword">)</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = 0)}]">0</a> <span class="Cin">in</span>
+<span class="Clinenum">  65:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Cnonalphakeyword">_</span>  <span class="Cnonalphakeyword">=</span> <span class="Cassert">assert</span> <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = rv)}]">rv</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  b:
+  {int | (V &gt;= 0)} -&gt;
+    d: {int | (V &gt;= 0)} -&gt; {bool | ((__tag V) &lt;=&gt; (b &gt;= d))}]">&gt;=</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = 0)}]">0</a><span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum">  66:</span><span class="Cbackground"> </span>  <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[on] header=[] body=[  {int | (V = rv)}]">rv</a>
+</pre>
+
+<hr>
+<p>
+<em>This document was generated using 
+<a href="http://martin.jambon.free.fr/caml2html.html">caml2html</a></em>
+</body>
+</html>

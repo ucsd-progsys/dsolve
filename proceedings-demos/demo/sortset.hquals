@@ -1,0 +1,5 @@
+qualif CON(v): ? S.eq (S.elts  v) (S.cup (S.sng ~A) (S.elts ~B))
+qualif CUP(v): ? S.eq (S.elts  v) (S.cup (S.elts ~A) (S.elts ~B))
+qualif EQ(v) : ? S.eq (S.elts  v) (S.elts ~A)
+qualif EMP(v): ? S.eq (S.elts  v) (S.empty)
+qualif PAR(v): ? S.eq (S.elts ~A) (S.cup (S.elts e0) (S.elts v))

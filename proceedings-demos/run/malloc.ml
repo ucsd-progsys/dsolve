@@ -1,3 +1,5 @@
+(* A kernel from a memory allocator *)
+
 let rec del x ys = 
   match ys with
   | []          -> []

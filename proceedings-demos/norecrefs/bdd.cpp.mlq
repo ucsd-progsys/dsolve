@@ -3,14 +3,14 @@
 #define SUB(v)  {v:RR z | (e1 < var v) and (var v <= 1000)}
 #define BDD     RR [z: bdd. e0: int || e0:int || e0: int, BND(e1), SUB(e2), SUB(e3)]
 #define TT(p)   {v:BDD | (0 <= var v and var v <= 1000) and (p) }    
-#define VART 	BND(v)
+#define VART 	  BND(v)
 
 measure var =
   | Zero _		-> 1000 
   | One  _		-> 1000 
   | Node (_,v,_,_)	-> v
 
-(* 
+(* non-api
   val mk	  : x: BND(v) -> TT(x < var v) -> TT(x < var v) -> TT(x <= var v)
   val mk_var: x: BND(v) -> TT(true)
   val mk_not: x: TT(true) -> TT(var x <= var v) 

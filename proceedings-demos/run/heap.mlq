@@ -1,3 +1,4 @@
+axiom pos : forall (x: int. sz x >= 0)
 measure set_of =
     Empty -> Myaset.empty
   | Same (x, l, r) -> Myaset.cup (Myaset.sng x) (Myaset.cup (set_of l) (set_of r))
@@ -17,6 +18,3 @@ val descent: x: 'a -> h: {v: [[], [v: true, v: true, v: true], [v: true, v: true
 val remove: h: {v: [[], [v: true, v: true, v: true], [v: true, v: true, v: true]] [z: t . || e0: 'a, e1: [[], [v: v <= e0, v: true, v: true], [v: v <= e0, v: true, v: true]] z, {e2: [[], [v: v <= e0, v: true, v: true], [v: v <= e0, v: true, v: true]] z | ((sz e1) = (sz e2))} || e0: 'a, e1: [[], [v: v <= e0, v: true, v: true], [v: v <= e0, v: true, v: true]] z, {e2: [[], [v: v <= e0, v: true, v: true], [v: v <= e0, v: true, v: true]] z | ((sz e1) = (sz e2) + 1)}] | (sz v) > 0} -> {v: 'a | (? Myaset.mem v (set_of h)) and v = (max h)} * {v: [[], [v: true, v: true, v: true], [v: true, v: true, v: true]] [z: t . || e0: 'a, e1: [[], [v: v <= e0, v: true, v: true], [v: v <= e0, v: true, v: true]] z, {e2: [[], [v: v <= e0, v: true, v: true], [v: v <= e0, v: true, v: true]] z | ((sz e1) = (sz e2))} || e0: 'a, e1: [[], [v: v <= e0, v: true, v: true], [v: v <= e0, v: true, v: true]] z, {e2: [[], [v: v <= e0, v: true, v: true], [v: v <= e0, v: true, v: true]] z | ((sz e1) = (sz e2) + 1)}] | (sz v) = (sz h) - 1 and (? Myaset.eq (set_of h) (Myaset.cup (Myaset.sng e0) (set_of v)))}
 val iter: f: ('a -> 'b) -> h: [[], [v: true, v: true, v: true], [v: true, v: true, v: true]] [z: t . || e0: 'a, e1: [[], [v: v <= e0, v: true, v: true], [v: v <= e0, v: true, v: true]] z, {e2: [[], [v: v <= e0, v: true, v: true], [v: v <= e0, v: true, v: true]] z | ((sz e1) = (sz e2))} || e0: 'a, e1: [[], [v: v <= e0, v: true, v: true], [v: v <= e0, v: true, v: true]] z, {e2: [[], [v: v <= e0, v: true, v: true], [v: v <= e0, v: true, v: true]] z | ((sz e1) = (sz e2) + 1)}] -> unit
 val fold: f: ('a -> 'b -> 'b) -> h: [[], [v: true, v: true, v: true], [v: true, v: true, v: true]] [z: t . || e0: 'a, e1: [[], [v: v <= e0, v: true, v: true], [v: v <= e0, v: true, v: true]] z, {e2: [[], [v: v <= e0, v: true, v: true], [v: v <= e0, v: true, v: true]] z | ((sz e1) = (sz e2))} || e0: 'a, e1: [[], [v: v <= e0, v: true, v: true], [v: v <= e0, v: true, v: true]] z, {e2: [[], [v: v <= e0, v: true, v: true], [v: v <= e0, v: true, v: true]] z | ((sz e1) = (sz e2) + 1)}] -> b: 'b -> 'b
-
-
-axiom pos : forall (x: int. sz x >= 0)
