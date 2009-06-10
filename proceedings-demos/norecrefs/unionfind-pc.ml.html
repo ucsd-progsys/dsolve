@@ -91,69 +91,1046 @@ code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hov
 
 <pre><span class="Clinenum">   1:</span><span class="Cbackground"> </span><span class="Ccomment">(* textbook union-find implementation with path compression *)</span>
 <span class="Clinenum">   2:</span><span class="Cbackground"> </span>
-<span class="Clinenum">   3:</span><span class="Cbackground"> </span><span class="Clet">let</span> init_rank n <span class="Cnonalphakeyword">=</span> 
-<span class="Clinenum">   4:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Crec">rec</span> init_rec m i <span class="Cnonalphakeyword">=</span>
-<span class="Clinenum">   5:</span><span class="Cbackground"> </span>    <span class="Cif">if</span> i &gt;= n <span class="Cthen">then</span> m <span class="Celse">else</span> init_rec <span class="Cnonalphakeyword">(</span><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>set m i 1<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>i<span class="Cnonalphakeyword">+</span>1<span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
-<span class="Clinenum">   6:</span><span class="Cbackground"> </span>  init_rec <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>empty 0
+<span class="Clinenum">   3:</span><span class="Cbackground"> </span><span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (n:int) -&gt;
+  supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+         e1:&#123;int |
+            (0 &lt;= V) 
+            (V != 0) 
+            (V &gt;= 0) 
+            (V = (Store.get supr e0)) 
+            (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t</pre>]">init_rank</a> n <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">   4:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Crec">rec</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (m:supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+            e1:&#123;int |
+               (0 &lt;= V) 
+               (V != 0) 
+               (V &gt;= 0) 
+               (V = (Store.get supr e0)) 
+               (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t) -&gt;
+  (i:&#123;int | (0 &lt;= V)  (V &gt;= 0)&#125;) -&gt;
+  supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+         e1:&#123;int |
+            (0 &lt;= V) 
+            (V != 0) 
+            (V &gt;= 0) 
+            (V = (Store.get supr e0)) 
+            (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t</pre>]">init_rec</a> m i <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">   5:</span><span class="Cbackground"> </span>    <span class="Cif">if</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = i)&#125;</pre>]">i</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;int | true&#125;) -&gt;
+  (y:&#123;int | true&#125;) -&gt; &#123;bool. false + true | ((? (V)) iff (x &gt;= y))&#125;</pre>]">&gt;=</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = n)&#125;</pre>]">n</a> <span class="Cthen">then</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+          e1:&#123;int |
+             (0 &lt;= V) 
+             (V != 0) 
+             (V &gt;= 0) 
+             (V = (Store.get supr e0)) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = m)&#125;</pre>]">m</a> <span class="Celse">else</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (m:supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+            e1:&#123;int |
+               (0 &lt;= V) 
+               (V != 0) 
+               (V &gt;= 0) 
+               (V = (Store.get supr e0)) 
+               (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t) -&gt;
+  (i:&#123;int | (0 &lt;= V)  (V &gt;= 0)&#125;) -&gt;
+  supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+         e1:&#123;int |
+            (0 &lt;= V) 
+            (V != 0) 
+            (V &gt;= 0) 
+            (V = (Store.get supr e0)) 
+            (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t</pre>]">init_rec</a> <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;supr: (m:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)  true&#125; ,
+             e1:&#123;int | (0 &lt;= V)  (V != 0)  (V &gt;= 0)  true&#125;) Store.t |
+     true&#125;) -&gt;
+  (k:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)  true&#125;) -&gt;
+  (l:&#123;int | (0 &lt;= V)  (V != 0)  (V &gt;= 0)  true&#125;) -&gt;
+  &#123;supr: (n:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)  true&#125; ,
+          e1:&#123;int | (0 &lt;= V)  (V != 0)  (V &gt;= 0)  (V = (Store.get supr n))&#125;) Store.t |
+  (V = (Store.set x k l))&#125;</pre>]"><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>set</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+          e1:&#123;int |
+             (0 &lt;= V) 
+             (V != 0) 
+             (V &gt;= 0) 
+             (V = (Store.get supr e0)) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = m)&#125;</pre>]">m</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = i)&#125;</pre>]">i</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = 1)&#125;</pre>]">1</a><span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = i)&#125;</pre>]">i</a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;int | true&#125;) -&gt; (y:&#123;int | true&#125;) -&gt; &#123;int | (V = (x + y))&#125;</pre>]"><span class="Cnonalphakeyword">+</span></a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = 1)&#125;</pre>]">1</a><span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum">   6:</span><span class="Cbackground"> </span>  <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (m:supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+            e1:&#123;int |
+               (0 &lt;= V) 
+               (V != 0) 
+               (V &gt;= 0) 
+               (V = (Store.get supr e0)) 
+               (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t) -&gt;
+  (i:&#123;int | (0 &lt;= V)  (V &gt;= 0)&#125;) -&gt;
+  supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+         e1:&#123;int |
+            (0 &lt;= V) 
+            (V != 0) 
+            (V &gt;= 0) 
+            (V = (Store.get supr e0)) 
+            (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t</pre>]">init_rec</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:&#123;int | ⊥&#125; , e1:&#123;int | ⊥&#125;) Store.t | (V = Store.empty)&#125;</pre>]"><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>empty</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = 0)&#125;</pre>]">0</a>
 <span class="Clinenum">   7:</span><span class="Cbackground"> </span>
-<span class="Clinenum">   8:</span><span class="Cbackground"> </span><span class="Clet">let</span> init_parent n <span class="Cnonalphakeyword">=</span> 
-<span class="Clinenum">   9:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Crec">rec</span> init_rec m i <span class="Cnonalphakeyword">=</span>
-<span class="Clinenum">  10:</span><span class="Cbackground"> </span>    <span class="Cif">if</span> i &gt;= n <span class="Cthen">then</span> m <span class="Celse">else</span> init_rec <span class="Cnonalphakeyword">(</span><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>set m i i<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>i<span class="Cnonalphakeyword">+</span>1<span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
-<span class="Clinenum">  11:</span><span class="Cbackground"> </span>  init_rec <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>empty 0
+<span class="Clinenum">   8:</span><span class="Cbackground"> </span><span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (n:int) -&gt;
+  supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+         e1:&#123;int |
+            (0 &lt;= V) 
+            (V &lt; n) 
+            (V &gt;= 0) 
+            (V = e0) 
+            ((Store.get supr V) = V) 
+            (V = (Store.get supr e0)) 
+            ((V = e0) or  ((Store.get supr e0) &lt; (Store.get supr V))) 
+            (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t</pre>]">init_parent</a> n <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">   9:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Crec">rec</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (m:supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+            e1:&#123;int |
+               (0 &lt;= V) 
+               (V &lt; n) 
+               (V &gt;= 0) 
+               (V = e0) 
+               (V = (Store.get supr e0)) 
+               ((Store.get supr V) = V) 
+               ((V = e0) or  ((Store.get supr e0) &lt; (Store.get supr V))) 
+               (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t) -&gt;
+  (i:&#123;int | (0 &lt;= V)  (V &gt;= 0)&#125;) -&gt;
+  supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+         e1:&#123;int |
+            (0 &lt;= V) 
+            (V &lt; n) 
+            (V &gt;= 0) 
+            (V = e0) 
+            ((Store.get supr V) = V) 
+            (V = (Store.get supr e0)) 
+            ((V = e0) or  ((Store.get supr e0) &lt; (Store.get supr V))) 
+            ((V = e0) or  ((Store.get m e0) &lt; (Store.get m V))) 
+            (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+            (((Store.get m e0) = e0) -&gt; (V = e0))&#125;) Store.t</pre>]">init_rec</a> m i <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  10:</span><span class="Cbackground"> </span>    <span class="Cif">if</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = i)&#125;</pre>]">i</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;int | true&#125;) -&gt;
+  (y:&#123;int | true&#125;) -&gt; &#123;bool. false + true | ((? (V)) iff (x &gt;= y))&#125;</pre>]">&gt;=</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = n)&#125;</pre>]">n</a> <span class="Cthen">then</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+          e1:&#123;int |
+             (0 &lt;= V) 
+             (V &lt; n) 
+             (V &gt;= 0) 
+             (V = e0) 
+             ((Store.get supr V) = V) 
+             (V = (Store.get supr e0)) 
+             ((V = e0) or  ((Store.get supr e0) &lt; (Store.get supr V))) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = m)&#125;</pre>]">m</a> <span class="Celse">else</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (m:supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+            e1:&#123;int |
+               (0 &lt;= V) 
+               (V &lt; n) 
+               (V &gt;= 0) 
+               (V = e0) 
+               (V = (Store.get supr e0)) 
+               ((Store.get supr V) = V) 
+               ((V = e0) or  ((Store.get supr e0) &lt; (Store.get supr V))) 
+               (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t) -&gt;
+  (i:&#123;int | (0 &lt;= V)  (V &gt;= 0)&#125;) -&gt;
+  supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+         e1:&#123;int |
+            (0 &lt;= V) 
+            (V &lt; n) 
+            (V &gt;= 0) 
+            (V = e0) 
+            ((Store.get supr V) = V) 
+            (V = (Store.get supr e0)) 
+            ((V = e0) or  ((Store.get supr e0) &lt; (Store.get supr V))) 
+            ((V = e0) or  ((Store.get m e0) &lt; (Store.get m V))) 
+            (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+            (((Store.get m e0) = e0) -&gt; (V = e0))&#125;) Store.t</pre>]">init_rec</a> <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;supr: (m:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)  true&#125; ,
+             e1:&#123;int |
+                (V = m) 
+                (0 &lt;= V) 
+                (V &lt; n) 
+                (V &gt;= 0) 
+                ((V = m) or  ((Store.get supr m) &lt; (Store.get supr V))) 
+                (((Store.get supr m) = m) -&gt; (V = m)) 
+                ((V = m) or  ((Store.get m m) &lt; (Store.get m V))) 
+                (((Store.get m m) = m) -&gt; (V = m)) 
+                true&#125;) Store.t |
+     true&#125;) -&gt;
+  (k:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)  true&#125;) -&gt;
+  (l:&#123;int |
+     (V = k) 
+     (0 &lt;= V) 
+     (V &lt; n) 
+     (V &gt;= 0) 
+     ((V = k) or  ((Store.get supr k) &lt; (Store.get supr V))) 
+     (((Store.get supr k) = k) -&gt; (V = k)) 
+     ((V = k) or  ((Store.get m k) &lt; (Store.get m V))) 
+     (((Store.get m k) = k) -&gt; (V = k)) 
+     true&#125;) -&gt;
+  &#123;supr: (n:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)  true&#125; ,
+          e1:&#123;int |
+             (V = n) 
+             (0 &lt;= V) 
+             (V &lt; n) 
+             (V &gt;= 0) 
+             ((V = n) or  ((Store.get supr n) &lt; (Store.get supr V))) 
+             (((Store.get supr n) = n) -&gt; (V = n)) 
+             ((V = n) or  ((Store.get m n) &lt; (Store.get m V))) 
+             (((Store.get m n) = n) -&gt; (V = n)) 
+             (V = (Store.get supr n))&#125;) Store.t |
+  (V = (Store.set x k l))&#125;</pre>]"><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>set</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+          e1:&#123;int |
+             (0 &lt;= V) 
+             (V &lt; n) 
+             (V &gt;= 0) 
+             (V = e0) 
+             ((Store.get supr V) = V) 
+             (V = (Store.get supr e0)) 
+             ((V = e0) or  ((Store.get supr e0) &lt; (Store.get supr V))) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = m)&#125;</pre>]">m</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = i)&#125;</pre>]">i</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = i)&#125;</pre>]">i</a><span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = i)&#125;</pre>]">i</a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;int | true&#125;) -&gt; (y:&#123;int | true&#125;) -&gt; &#123;int | (V = (x + y))&#125;</pre>]"><span class="Cnonalphakeyword">+</span></a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = 1)&#125;</pre>]">1</a><span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum">  11:</span><span class="Cbackground"> </span>  <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (m:supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+            e1:&#123;int |
+               (0 &lt;= V) 
+               (V &lt; n) 
+               (V &gt;= 0) 
+               (V = e0) 
+               (V = (Store.get supr e0)) 
+               ((Store.get supr V) = V) 
+               ((V = e0) or  ((Store.get supr e0) &lt; (Store.get supr V))) 
+               (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t) -&gt;
+  (i:&#123;int | (0 &lt;= V)  (V &gt;= 0)&#125;) -&gt;
+  supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+         e1:&#123;int |
+            (0 &lt;= V) 
+            (V &lt; n) 
+            (V &gt;= 0) 
+            (V = e0) 
+            ((Store.get supr V) = V) 
+            (V = (Store.get supr e0)) 
+            ((V = e0) or  ((Store.get supr e0) &lt; (Store.get supr V))) 
+            ((V = e0) or  ((Store.get m e0) &lt; (Store.get m V))) 
+            (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+            (((Store.get m e0) = e0) -&gt; (V = e0))&#125;) Store.t</pre>]">init_rec</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:&#123;int | ⊥&#125; , e1:&#123;int | ⊥&#125;) Store.t | (V = Store.empty)&#125;</pre>]"><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>empty</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = 0)&#125;</pre>]">0</a>
 <span class="Clinenum">  12:</span><span class="Cbackground"> </span>
-<span class="Clinenum">  13:</span><span class="Cbackground"> </span><span class="Clet">let</span> create n <span class="Cnonalphakeyword">=</span> 
-<span class="Clinenum">  14:</span><span class="Cbackground"> </span>  <span class="Cnonalphakeyword">(</span>init_rank n<span class="Cnonalphakeyword">,</span> init_parent n<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  13:</span><span class="Cbackground"> </span><span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (n:int) -&gt;
+  tuple. rec(e0:supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+                       e1:&#123;int |
+                          (0 &lt;= V) 
+                          (V != 0) 
+                          (V &gt;= 0) 
+                          (V = (Store.get supr e0)) 
+                          (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t ,
+             e1:supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+                       e1:&#123;int |
+                          (0 &lt;= V) 
+                          (V &lt; n) 
+                          (V &gt;= 0) 
+                          (V = e0) 
+                          ((Store.get supr V) = V) 
+                          (V = (Store.get supr e0)) 
+                          ((V = e0) or 
+                            ((Store.get e0 e0) &lt; (Store.get e0 V))) 
+                          ((V = e0) or 
+                            ((Store.get supr e0) &lt; (Store.get supr V))) 
+                          (((Store.get e0 e0) = e0) -&gt; (V = e0)) 
+                          (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t)</pre>]">create</a> n <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">  14:</span><span class="Cbackground"> </span>  <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (n:int) -&gt;
+  supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+         e1:&#123;int |
+            (0 &lt;= V) 
+            (V != 0) 
+            (V &gt;= 0) 
+            (V = (Store.get supr e0)) 
+            (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t</pre>]">init_rank</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = n)&#125;</pre>]">n</a><span class="Cnonalphakeyword">,</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (n:int) -&gt;
+  supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+         e1:&#123;int |
+            (0 &lt;= V) 
+            (V &lt; n) 
+            (V &gt;= 0) 
+            (V = e0) 
+            ((Store.get supr V) = V) 
+            (V = (Store.get supr e0)) 
+            ((V = e0) or  ((Store.get supr e0) &lt; (Store.get supr V))) 
+            (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t</pre>]">init_parent</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = n)&#125;</pre>]">n</a><span class="Cnonalphakeyword">)</span>
 <span class="Clinenum">  15:</span><span class="Cbackground"> </span>
-<span class="Clinenum">  16:</span><span class="Cbackground"> </span><span class="Clet">let</span> <span class="Crec">rec</span> find_aux <span class="Cnonalphakeyword">(</span>r: <span class="Cnonalphakeyword">(</span>int<span class="Cnonalphakeyword">,</span> int<span class="Cnonalphakeyword">)</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>t<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>p: <span class="Cnonalphakeyword">(</span>int<span class="Cnonalphakeyword">,</span> int<span class="Cnonalphakeyword">)</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>t<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>i: int<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">=</span> 
-<span class="Clinenum">  17:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> pi <span class="Cnonalphakeyword">=</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>get p i <span class="Cin">in</span>
-<span class="Clinenum">  18:</span><span class="Cbackground"> </span>  <span class="Cif">if</span> pi <span class="Cnonalphakeyword">=</span> i <span class="Cthen">then</span> 
-<span class="Clinenum">  19:</span><span class="Cbackground"> </span>    <span class="Cnonalphakeyword">(</span>p<span class="Cnonalphakeyword">,</span> i<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  16:</span><span class="Cbackground"> </span><span class="Clet">let</span> <span class="Crec">rec</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (r:supr: (e0:int , e1:int) Store.t) -&gt;
+  (p:supr: (e0:int ,
+            e1:&#123;int |
+               (V = (Store.get supr e0)) 
+               ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+               (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t) -&gt;
+  (i:int) -&gt;
+  tuple. rec(e0:supr: (e0:int ,
+                       e1:&#123;int |
+                          (V = (Store.get supr e0)) 
+                          ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+                          (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+                          (((Store.get p e0) = e0) -&gt; (V = e0))&#125;) Store.t ,
+             e1:&#123;int |
+                (((Store.get p i) = i) -&gt; (V = i)) 
+                ((Store.get e0 V) = V) 
+                ((V = i) or  ((Store.get r i) &lt; (Store.get r V))) 
+                ((Store.get e0 V) = V) 
+                ((Store.get p V) = V) 
+                (V = (Store.get e0 i)) 
+                ((V = i) or  ((Store.get r i) &lt; (Store.get r V))) 
+                (((Store.get e0 i) = i) -&gt; (V = i)) 
+                (((Store.get p i) = i) -&gt; (V = i))&#125;)</pre>]">find_aux</a> <span class="Cnonalphakeyword">(</span>r: <span class="Cnonalphakeyword">(</span>int<span class="Cnonalphakeyword">,</span> int<span class="Cnonalphakeyword">)</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>t<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>p: <span class="Cnonalphakeyword">(</span>int<span class="Cnonalphakeyword">,</span> int<span class="Cnonalphakeyword">)</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>t<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>i: int<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">  17:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = _'14)&#125;</pre>]">pi</a> <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (m:&#123;supr: (e0:&#123;int | true&#125; ,
+             e1:&#123;int |
+                (V = (Store.get supr e0)) 
+                ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+                (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+                (V = (Store.get p e0)) 
+                (((Store.get p e0) = e0) -&gt; (V = e0)) 
+                true&#125;) Store.t |
+     true&#125;) -&gt;
+  (k:&#123;int | true&#125;) -&gt;
+  &#123;int |
+  (V = (Store.get m k)) 
+  ((V = k) or  ((Store.get r k) &lt; (Store.get r V))) 
+  (((Store.get m k) = k) -&gt; (V = k)) 
+  (V = (Store.get p k)) 
+  (((Store.get p k) = k) -&gt; (V = k)) 
+  (V = (Store.get m k))&#125;</pre>]"><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>get</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int ,
+          e1:&#123;int |
+             (V = (Store.get supr e0)) 
+             ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = p)&#125;</pre>]">p</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = i)&#125;</pre>]">i</a> <span class="Cin">in</span>
+<span class="Clinenum">  18:</span><span class="Cbackground"> </span>  <span class="Cif">if</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = pi)&#125;</pre>]">pi</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;int |
+     (((Store.get p i) = i) -&gt; (V = i)) 
+     ((V = i) or  ((Store.get r i) &lt; (Store.get r V))) 
+     ((V = i) or  ((Store.get r i) &lt; (Store.get r V))) 
+     (((Store.get p i) = i) -&gt; (V = i)) 
+     true&#125;) -&gt;
+  (y:&#123;int |
+     (((Store.get p i) = i) -&gt; (V = i)) 
+     ((V = i) or  ((Store.get r i) &lt; (Store.get r V))) 
+     ((V = i) or  ((Store.get r i) &lt; (Store.get r V))) 
+     (((Store.get p i) = i) -&gt; (V = i)) 
+     true&#125;) -&gt;
+  &#123;bool. false + true | ((? (V)) iff (x = y))&#125;</pre>]"><span class="Cnonalphakeyword">=</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = i)&#125;</pre>]">i</a> <span class="Cthen">then</span> 
+<span class="Clinenum">  19:</span><span class="Cbackground"> </span>    <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int ,
+          e1:&#123;int |
+             (V = (Store.get supr e0)) 
+             ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = p)&#125;</pre>]">p</a><span class="Cnonalphakeyword">,</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = i)&#125;</pre>]">i</a><span class="Cnonalphakeyword">)</span>
 <span class="Clinenum">  20:</span><span class="Cbackground"> </span>  <span class="Celse">else</span>
-<span class="Clinenum">  21:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> <span class="Cnonalphakeyword">(</span>p'<span class="Cnonalphakeyword">,</span>i'<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">=</span> find_aux r p pi <span class="Cin">in</span>
-<span class="Clinenum">  22:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> p''     <span class="Cnonalphakeyword">=</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>set p' i i' <span class="Cin">in</span>
-<span class="Clinenum">  23:</span><span class="Cbackground"> </span>    <span class="Cnonalphakeyword">(</span>p''<span class="Cnonalphakeyword">,</span> i'<span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  21:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:supr: (e0:int ,
+                        e1:&#123;int |
+                           (V = (Store.get supr e0)) 
+                           ((V = e0) or 
+                             ((Store.get r e0) &lt; (Store.get r V))) 
+                           (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+                           (((Store.get p e0) = e0) -&gt; (V = e0))&#125;) Store.t ,
+              e1:&#123;int |
+                 (((Store.get p pi) = pi) -&gt; (V = pi)) 
+                 ((Store.get e0 V) = V) 
+                 ((V = pi) or  ((Store.get r pi) &lt; (Store.get r V))) 
+                 ((Store.get e0 V) = V) 
+                 ((Store.get p V) = V) 
+                 (V = (Store.get e0 pi)) 
+                 ((V = pi) or  ((Store.get r pi) &lt; (Store.get r V))) 
+                 (((Store.get e0 pi) = pi) -&gt; (V = pi)) 
+                 (((Store.get p pi) = pi) -&gt; (V = pi))&#125;) |
+  (V = _'16)&#125;</pre>]"><span class="Cnonalphakeyword">(</span>p'<span class="Cnonalphakeyword">,</span>i'<span class="Cnonalphakeyword">)</span></a> <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (r:supr: (e0:int , e1:int) Store.t) -&gt;
+  (p:supr: (e0:int ,
+            e1:&#123;int |
+               (V = (Store.get supr e0)) 
+               ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+               (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t) -&gt;
+  (i:int) -&gt;
+  tuple. rec(e0:supr: (e0:int ,
+                       e1:&#123;int |
+                          (V = (Store.get supr e0)) 
+                          ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+                          (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+                          (((Store.get p e0) = e0) -&gt; (V = e0))&#125;) Store.t ,
+             e1:&#123;int |
+                (((Store.get p i) = i) -&gt; (V = i)) 
+                ((Store.get e0 V) = V) 
+                ((V = i) or  ((Store.get r i) &lt; (Store.get r V))) 
+                ((Store.get e0 V) = V) 
+                ((Store.get p V) = V) 
+                (V = (Store.get e0 i)) 
+                ((V = i) or  ((Store.get r i) &lt; (Store.get r V))) 
+                (((Store.get e0 i) = i) -&gt; (V = i)) 
+                (((Store.get p i) = i) -&gt; (V = i))&#125;)</pre>]">find_aux</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int , e1:int) Store.t | (V = r)&#125;</pre>]">r</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int ,
+          e1:&#123;int |
+             (V = (Store.get supr e0)) 
+             ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = p)&#125;</pre>]">p</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = pi)&#125;</pre>]">pi</a> <span class="Cin">in</span>
+<span class="Clinenum">  22:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (n:&#123;int |
+            (((Store.get p i) = i) -&gt; (V = i)) 
+            (((Store.get p i) = i) -&gt; (V = i)) 
+            true&#125; ,
+          e1:&#123;int |
+             ((V = n) or  ((Store.get r n) &lt; (Store.get r V))) 
+             (((Store.get p n) = n) -&gt; (V = n)) 
+             (((Store.get p i) = i) -&gt; (V = i)) 
+             (((Store.get p i) = i) -&gt; (V = i)) 
+             (V = (Store.get supr n))&#125;) Store.t |
+  (V = _'17)&#125;</pre>]">p''</a>     <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;supr: (m:&#123;int |
+               (((Store.get p i) = i) -&gt; (V = i)) 
+               (((Store.get p i) = i) -&gt; (V = i)) 
+               true&#125; ,
+             e1:&#123;int |
+                ((V = m) or  ((Store.get r m) &lt; (Store.get r V))) 
+                (((Store.get p m) = m) -&gt; (V = m)) 
+                (((Store.get p i) = i) -&gt; (V = i)) 
+                (((Store.get p i) = i) -&gt; (V = i)) 
+                true&#125;) Store.t |
+     true&#125;) -&gt;
+  (k:&#123;int |
+     (((Store.get p i) = i) -&gt; (V = i)) 
+     (((Store.get p i) = i) -&gt; (V = i)) 
+     true&#125;) -&gt;
+  (l:&#123;int |
+     ((V = k) or  ((Store.get r k) &lt; (Store.get r V))) 
+     (((Store.get p k) = k) -&gt; (V = k)) 
+     (((Store.get p i) = i) -&gt; (V = i)) 
+     (((Store.get p i) = i) -&gt; (V = i)) 
+     true&#125;) -&gt;
+  &#123;supr: (n:&#123;int |
+            (((Store.get p i) = i) -&gt; (V = i)) 
+            (((Store.get p i) = i) -&gt; (V = i)) 
+            true&#125; ,
+          e1:&#123;int |
+             ((V = n) or  ((Store.get r n) &lt; (Store.get r V))) 
+             (((Store.get p n) = n) -&gt; (V = n)) 
+             (((Store.get p i) = i) -&gt; (V = i)) 
+             (((Store.get p i) = i) -&gt; (V = i)) 
+             (V = (Store.get supr n))&#125;) Store.t |
+  (V = (Store.set x k l))&#125;</pre>]"><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>set</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int ,
+          e1:&#123;int |
+             (V = (Store.get supr e0)) 
+             ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+             (((Store.get p e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = p')&#125;</pre>]">p'</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = i)&#125;</pre>]">i</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = i')&#125;</pre>]">i'</a> <span class="Cin">in</span>
+<span class="Clinenum">  23:</span><span class="Cbackground"> </span>    <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (n:&#123;int |
+            (((Store.get p i) = i) -&gt; (V = i)) 
+            (((Store.get p i) = i) -&gt; (V = i)) 
+            true&#125; ,
+          e1:&#123;int |
+             ((V = n) or  ((Store.get r n) &lt; (Store.get r V))) 
+             (((Store.get p n) = n) -&gt; (V = n)) 
+             (((Store.get p i) = i) -&gt; (V = i)) 
+             (((Store.get p i) = i) -&gt; (V = i)) 
+             (V = (Store.get supr n))&#125;) Store.t |
+  (V = p'')&#125;</pre>]">p''</a><span class="Cnonalphakeyword">,</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = i')&#125;</pre>]">i'</a><span class="Cnonalphakeyword">)</span>
 <span class="Clinenum">  24:</span><span class="Cbackground"> </span>
-<span class="Clinenum">  25:</span><span class="Cbackground"> </span><span class="Clet">let</span> find <span class="Cnonalphakeyword">(</span>r: <span class="Cnonalphakeyword">(</span>int<span class="Cnonalphakeyword">,</span> int<span class="Cnonalphakeyword">)</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>t<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>p: <span class="Cnonalphakeyword">(</span>int<span class="Cnonalphakeyword">,</span> int<span class="Cnonalphakeyword">)</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>t<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>i: int<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">=</span>
-<span class="Clinenum">  26:</span><span class="Cbackground"> </span>  find_aux r p i 
+<span class="Clinenum">  25:</span><span class="Cbackground"> </span><span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (r:supr: (e0:int , e1:int) Store.t) -&gt;
+  (p:supr: (e0:int ,
+            e1:&#123;int |
+               (V = (Store.get supr e0)) 
+               ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+               (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t) -&gt;
+  (i:int) -&gt;
+  tuple. rec(e0:supr: (e0:int ,
+                       e1:&#123;int |
+                          (V = (Store.get supr e0)) 
+                          ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+                          (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+                          (((Store.get p e0) = e0) -&gt; (V = e0))&#125;) Store.t ,
+             e1:&#123;int |
+                (((Store.get p i) = i) -&gt; (V = i)) 
+                ((Store.get e0 V) = V) 
+                ((V = i) or  ((Store.get r i) &lt; (Store.get r V))) 
+                ((Store.get e0 V) = V) 
+                ((Store.get p V) = V) 
+                (V = (Store.get e0 i)) 
+                ((V = i) or  ((Store.get r i) &lt; (Store.get r V))) 
+                (((Store.get e0 i) = i) -&gt; (V = i)) 
+                (((Store.get p i) = i) -&gt; (V = i))&#125;)</pre>]">find</a> <span class="Cnonalphakeyword">(</span>r: <span class="Cnonalphakeyword">(</span>int<span class="Cnonalphakeyword">,</span> int<span class="Cnonalphakeyword">)</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>t<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>p: <span class="Cnonalphakeyword">(</span>int<span class="Cnonalphakeyword">,</span> int<span class="Cnonalphakeyword">)</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>t<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>i: int<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  26:</span><span class="Cbackground"> </span>  <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (r:supr: (e0:int , e1:int) Store.t) -&gt;
+  (p:supr: (e0:int ,
+            e1:&#123;int |
+               (V = (Store.get supr e0)) 
+               ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+               (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t) -&gt;
+  (i:int) -&gt;
+  tuple. rec(e0:supr: (e0:int ,
+                       e1:&#123;int |
+                          (V = (Store.get supr e0)) 
+                          ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+                          (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+                          (((Store.get p e0) = e0) -&gt; (V = e0))&#125;) Store.t ,
+             e1:&#123;int |
+                (((Store.get p i) = i) -&gt; (V = i)) 
+                ((Store.get e0 V) = V) 
+                ((V = i) or  ((Store.get r i) &lt; (Store.get r V))) 
+                ((Store.get e0 V) = V) 
+                ((Store.get p V) = V) 
+                (V = (Store.get e0 i)) 
+                ((V = i) or  ((Store.get r i) &lt; (Store.get r V))) 
+                (((Store.get e0 i) = i) -&gt; (V = i)) 
+                (((Store.get p i) = i) -&gt; (V = i))&#125;)</pre>]">find_aux</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int , e1:int) Store.t | (V = r)&#125;</pre>]">r</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int ,
+          e1:&#123;int |
+             (V = (Store.get supr e0)) 
+             ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = p)&#125;</pre>]">p</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = i)&#125;</pre>]">i</a> 
 <span class="Clinenum">  27:</span><span class="Cbackground"> </span>
-<span class="Clinenum">  28:</span><span class="Cbackground"> </span><span class="Clet">let</span> union <span class="Cnonalphakeyword">(</span>r: <span class="Cnonalphakeyword">(</span>int<span class="Cnonalphakeyword">,</span> int<span class="Cnonalphakeyword">)</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>t<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>p: <span class="Cnonalphakeyword">(</span>int<span class="Cnonalphakeyword">,</span> int<span class="Cnonalphakeyword">)</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>t<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>x: int<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>y: int<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">=</span>
-<span class="Clinenum">  29:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Cnonalphakeyword">(</span>p'<span class="Cnonalphakeyword">,</span> x'<span class="Cnonalphakeyword">)</span>  <span class="Cnonalphakeyword">=</span> find r p  x <span class="Cin">in</span>
-<span class="Clinenum">  30:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Cnonalphakeyword">(</span>p''<span class="Cnonalphakeyword">,</span>y'<span class="Cnonalphakeyword">)</span>  <span class="Cnonalphakeyword">=</span> find r p' y <span class="Cin">in</span>
-<span class="Clinenum">  31:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Cnonalphakeyword">_</span>         <span class="Cnonalphakeyword">=</span> <span class="Cassert">assert</span> <span class="Cnonalphakeyword">(</span><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>get p'' x' <span class="Cnonalphakeyword">=</span> x'<span class="Cnonalphakeyword">)</span> <span class="Cin">in</span> <span class="Ccomment">(* these facts must be manually instantiated *)</span>
-<span class="Clinenum">  32:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Cnonalphakeyword">_</span>         <span class="Cnonalphakeyword">=</span> <span class="Cassert">assert</span> <span class="Cnonalphakeyword">(</span><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>get p'' y' <span class="Cnonalphakeyword">=</span> y'<span class="Cnonalphakeyword">)</span> <span class="Cin">in</span> 
-<span class="Clinenum">  33:</span><span class="Cbackground"> </span>  <span class="Cif">if</span> x' <span class="Cnonalphakeyword">!=</span> y' <span class="Cthen">then</span> <span class="Cbegin">begin</span>
-<span class="Clinenum">  34:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> rx' <span class="Cnonalphakeyword">=</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>get r x' <span class="Cin">in</span>
-<span class="Clinenum">  35:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> ry' <span class="Cnonalphakeyword">=</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>get r y' <span class="Cin">in</span>
-<span class="Clinenum">  36:</span><span class="Cbackground"> </span>    <span class="Cif">if</span> rx' <span class="Cnonalphakeyword">&gt;</span> ry' <span class="Cthen">then</span>
-<span class="Clinenum">  37:</span><span class="Cbackground"> </span>      <span class="Cnonalphakeyword">(</span>r<span class="Cnonalphakeyword">,</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>set p'' y' x'<span class="Cnonalphakeyword">)</span> 
-<span class="Clinenum">  38:</span><span class="Cbackground"> </span>    <span class="Celse">else</span> <span class="Cif">if</span> rx' <span class="Cnonalphakeyword">&lt;</span> ry' <span class="Cthen">then</span>
-<span class="Clinenum">  39:</span><span class="Cbackground"> </span>      <span class="Cnonalphakeyword">(</span>r<span class="Cnonalphakeyword">,</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>set p'' x' y'<span class="Cnonalphakeyword">)</span> 
+<span class="Clinenum">  28:</span><span class="Cbackground"> </span><span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (r:supr: (e0:int , e1:int) Store.t) -&gt;
+  (p:supr: (e0:int ,
+            e1:&#123;int |
+               (V = (Store.get supr e0)) 
+               ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+               (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t) -&gt;
+  (x:int) -&gt;
+  (y:int) -&gt;
+  tuple. rec(e0:supr: (e0:int , e1:int) Store.t ,
+             e1:supr: (e0:int ,
+                       e1:&#123;int |
+                          (V = (Store.get supr e0)) 
+                          ((V = e0) or 
+                            ((Store.get e0 e0) &lt; (Store.get e0 V))) 
+                          (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t)</pre>]">union</a> <span class="Cnonalphakeyword">(</span>r: <span class="Cnonalphakeyword">(</span>int<span class="Cnonalphakeyword">,</span> int<span class="Cnonalphakeyword">)</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>t<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>p: <span class="Cnonalphakeyword">(</span>int<span class="Cnonalphakeyword">,</span> int<span class="Cnonalphakeyword">)</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>t<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>x: int<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">(</span>y: int<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  29:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:supr: (e0:int ,
+                        e1:&#123;int |
+                           (V = (Store.get supr e0)) 
+                           ((V = e0) or 
+                             ((Store.get r e0) &lt; (Store.get r V))) 
+                           (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+                           (((Store.get p e0) = e0) -&gt; (V = e0))&#125;) Store.t ,
+              e1:&#123;int |
+                 (((Store.get p x) = x) -&gt; (V = x)) 
+                 ((Store.get e0 V) = V) 
+                 ((V = x) or  ((Store.get r x) &lt; (Store.get r V))) 
+                 ((Store.get e0 V) = V) 
+                 ((Store.get p V) = V) 
+                 (V = (Store.get e0 x)) 
+                 ((V = x) or  ((Store.get r x) &lt; (Store.get r V))) 
+                 (((Store.get e0 x) = x) -&gt; (V = x)) 
+                 (((Store.get p x) = x) -&gt; (V = x))&#125;) |
+  (V = _'18)&#125;</pre>]"><span class="Cnonalphakeyword">(</span>p'<span class="Cnonalphakeyword">,</span> x'<span class="Cnonalphakeyword">)</span></a>  <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (r:supr: (e0:int , e1:int) Store.t) -&gt;
+  (p:supr: (e0:int ,
+            e1:&#123;int |
+               (V = (Store.get supr e0)) 
+               ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+               (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t) -&gt;
+  (i:int) -&gt;
+  tuple. rec(e0:supr: (e0:int ,
+                       e1:&#123;int |
+                          (V = (Store.get supr e0)) 
+                          ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+                          (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+                          (((Store.get p e0) = e0) -&gt; (V = e0))&#125;) Store.t ,
+             e1:&#123;int |
+                (((Store.get p i) = i) -&gt; (V = i)) 
+                ((Store.get e0 V) = V) 
+                ((V = i) or  ((Store.get r i) &lt; (Store.get r V))) 
+                ((Store.get e0 V) = V) 
+                ((Store.get p V) = V) 
+                (V = (Store.get e0 i)) 
+                ((V = i) or  ((Store.get r i) &lt; (Store.get r V))) 
+                (((Store.get e0 i) = i) -&gt; (V = i)) 
+                (((Store.get p i) = i) -&gt; (V = i))&#125;)</pre>]">find</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int , e1:int) Store.t | (V = r)&#125;</pre>]">r</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int ,
+          e1:&#123;int |
+             (V = (Store.get supr e0)) 
+             ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = p)&#125;</pre>]">p</a>  <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = x)&#125;</pre>]">x</a> <span class="Cin">in</span>
+<span class="Clinenum">  30:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:supr: (e0:int ,
+                        e1:&#123;int |
+                           (V = (Store.get supr e0)) 
+                           ((V = e0) or 
+                             ((Store.get r e0) &lt; (Store.get r V))) 
+                           (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+                           (((Store.get p' e0) = e0) -&gt; (V = e0))&#125;) Store.t ,
+              e1:&#123;int |
+                 (((Store.get p' y) = y) -&gt; (V = y)) 
+                 ((Store.get e0 V) = V) 
+                 ((V = y) or  ((Store.get r y) &lt; (Store.get r V))) 
+                 ((Store.get e0 V) = V) 
+                 ((Store.get p' V) = V) 
+                 (V = (Store.get e0 y)) 
+                 ((V = y) or  ((Store.get r y) &lt; (Store.get r V))) 
+                 (((Store.get e0 y) = y) -&gt; (V = y)) 
+                 (((Store.get p' y) = y) -&gt; (V = y))&#125;) |
+  (V = _'19)&#125;</pre>]"><span class="Cnonalphakeyword">(</span>p''<span class="Cnonalphakeyword">,</span>y'<span class="Cnonalphakeyword">)</span></a>  <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (r:supr: (e0:int , e1:int) Store.t) -&gt;
+  (p:supr: (e0:int ,
+            e1:&#123;int |
+               (V = (Store.get supr e0)) 
+               ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+               (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t) -&gt;
+  (i:int) -&gt;
+  tuple. rec(e0:supr: (e0:int ,
+                       e1:&#123;int |
+                          (V = (Store.get supr e0)) 
+                          ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+                          (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+                          (((Store.get p e0) = e0) -&gt; (V = e0))&#125;) Store.t ,
+             e1:&#123;int |
+                (((Store.get p i) = i) -&gt; (V = i)) 
+                ((Store.get e0 V) = V) 
+                ((V = i) or  ((Store.get r i) &lt; (Store.get r V))) 
+                ((Store.get e0 V) = V) 
+                ((Store.get p V) = V) 
+                (V = (Store.get e0 i)) 
+                ((V = i) or  ((Store.get r i) &lt; (Store.get r V))) 
+                (((Store.get e0 i) = i) -&gt; (V = i)) 
+                (((Store.get p i) = i) -&gt; (V = i))&#125;)</pre>]">find</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int , e1:int) Store.t | (V = r)&#125;</pre>]">r</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int ,
+          e1:&#123;int |
+             (V = (Store.get supr e0)) 
+             ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+             (((Store.get p e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = p')&#125;</pre>]">p'</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = y)&#125;</pre>]">y</a> <span class="Cin">in</span>
+<span class="Clinenum">  31:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;unit. () | (V = _'22)&#125;</pre>]"><span class="Cnonalphakeyword">_</span></a>         <span class="Cnonalphakeyword">=</span> <span class="Cassert">assert</span> <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (m:&#123;supr: (e0:&#123;int | true&#125; ,
+             e1:&#123;int |
+                (V = (Store.get supr e0)) 
+                ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+                (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+                (((Store.get p' e0) = e0) -&gt; (V = e0)) 
+                (V = (Store.get p'' e0)) 
+                (((Store.get p'' e0) = e0) -&gt; (V = e0)) 
+                true&#125;) Store.t |
+     true&#125;) -&gt;
+  (k:&#123;int | true&#125;) -&gt;
+  &#123;int |
+  (V = (Store.get m k)) 
+  ((V = k) or  ((Store.get r k) &lt; (Store.get r V))) 
+  (((Store.get m k) = k) -&gt; (V = k)) 
+  (((Store.get p' k) = k) -&gt; (V = k)) 
+  (V = (Store.get p'' k)) 
+  (((Store.get p'' k) = k) -&gt; (V = k)) 
+  (V = (Store.get m k))&#125;</pre>]"><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>get</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int ,
+          e1:&#123;int |
+             (V = (Store.get supr e0)) 
+             ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+             (((Store.get p' e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = p'')&#125;</pre>]">p''</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = x')&#125;</pre>]">x'</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;int |
+     (V = x') 
+     ((Store.get p'' V) = V) 
+     ((Store.get p' V) = V) 
+     ((Store.get p V) = V) 
+     (V = (Store.get p'' x')) 
+     (V = (Store.get p' x')) 
+     (V = (Store.get p x')) 
+     (V = (Store.get p' x)) 
+     ((V = x') or  ((Store.get p'' x') &lt; (Store.get p'' V))) 
+     ((V = x') or  ((Store.get p' x') &lt; (Store.get p' V))) 
+     ((V = x') or  ((Store.get p x') &lt; (Store.get p V))) 
+     ((V = x') or  ((Store.get r x') &lt; (Store.get r V))) 
+     ((V = x) or  ((Store.get r x) &lt; (Store.get r V))) 
+     (((Store.get p'' x') = x') -&gt; (V = x')) 
+     (((Store.get p' x') = x') -&gt; (V = x')) 
+     (((Store.get p x') = x') -&gt; (V = x')) 
+     (((Store.get r x') = x') -&gt; (V = x')) 
+     (((Store.get p' x) = x) -&gt; (V = x)) 
+     (((Store.get p x) = x) -&gt; (V = x)) 
+     true&#125;) -&gt;
+  (y:&#123;int |
+     (V = x') 
+     ((Store.get p'' V) = V) 
+     ((Store.get p' V) = V) 
+     ((Store.get p V) = V) 
+     (V = (Store.get p'' x')) 
+     (V = (Store.get p' x')) 
+     (V = (Store.get p x')) 
+     (V = (Store.get p' x)) 
+     ((V = x') or  ((Store.get p'' x') &lt; (Store.get p'' V))) 
+     ((V = x') or  ((Store.get p' x') &lt; (Store.get p' V))) 
+     ((V = x') or  ((Store.get p x') &lt; (Store.get p V))) 
+     ((V = x') or  ((Store.get r x') &lt; (Store.get r V))) 
+     ((V = x) or  ((Store.get r x) &lt; (Store.get r V))) 
+     (((Store.get p'' x') = x') -&gt; (V = x')) 
+     (((Store.get p' x') = x') -&gt; (V = x')) 
+     (((Store.get p x') = x') -&gt; (V = x')) 
+     (((Store.get r x') = x') -&gt; (V = x')) 
+     (((Store.get p' x) = x) -&gt; (V = x)) 
+     (((Store.get p x) = x) -&gt; (V = x)) 
+     true&#125;) -&gt;
+  &#123;bool. false + true | ((? (V)) iff (x = y))&#125;</pre>]"><span class="Cnonalphakeyword">=</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = x')&#125;</pre>]">x'</a><span class="Cnonalphakeyword">)</span> <span class="Cin">in</span> <span class="Ccomment">(* these facts must be manually instantiated *)</span>
+<span class="Clinenum">  32:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;unit. () | (V = _'25)&#125;</pre>]"><span class="Cnonalphakeyword">_</span></a>         <span class="Cnonalphakeyword">=</span> <span class="Cassert">assert</span> <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (m:&#123;supr: (e0:&#123;int | true&#125; ,
+             e1:&#123;int |
+                (V = (Store.get supr e0)) 
+                ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+                (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+                (((Store.get p' e0) = e0) -&gt; (V = e0)) 
+                (V = (Store.get p'' e0)) 
+                (((Store.get p'' e0) = e0) -&gt; (V = e0)) 
+                true&#125;) Store.t |
+     true&#125;) -&gt;
+  (k:&#123;int | true&#125;) -&gt;
+  &#123;int |
+  (V = (Store.get m k)) 
+  ((V = k) or  ((Store.get r k) &lt; (Store.get r V))) 
+  (((Store.get m k) = k) -&gt; (V = k)) 
+  (((Store.get p' k) = k) -&gt; (V = k)) 
+  (V = (Store.get p'' k)) 
+  (((Store.get p'' k) = k) -&gt; (V = k)) 
+  (V = (Store.get m k))&#125;</pre>]"><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>get</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int ,
+          e1:&#123;int |
+             (V = (Store.get supr e0)) 
+             ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+             (((Store.get p' e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = p'')&#125;</pre>]">p''</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = y')&#125;</pre>]">y'</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;int |
+     (V = y') 
+     ((Store.get p'' V) = V) 
+     ((Store.get p' V) = V) 
+     (V = (Store.get p'' y')) 
+     (V = (Store.get p' y')) 
+     (V = (Store.get p'' y)) 
+     ((V = y') or  ((Store.get p'' y') &lt; (Store.get p'' V))) 
+     ((V = y') or  ((Store.get p' y') &lt; (Store.get p' V))) 
+     ((V = y') or  ((Store.get p y') &lt; (Store.get p V))) 
+     ((V = y') or  ((Store.get r y') &lt; (Store.get r V))) 
+     ((V = y) or  ((Store.get r y) &lt; (Store.get r V))) 
+     (((Store.get p'' y') = y') -&gt; (V = y')) 
+     (((Store.get p' y') = y') -&gt; (V = y')) 
+     (((Store.get p y') = y') -&gt; (V = y')) 
+     (((Store.get r y') = y') -&gt; (V = y')) 
+     (((Store.get p'' y) = y) -&gt; (V = y)) 
+     (((Store.get p' y) = y) -&gt; (V = y)) 
+     true&#125;) -&gt;
+  (y:&#123;int |
+     (V = y') 
+     ((Store.get p'' V) = V) 
+     ((Store.get p' V) = V) 
+     (V = (Store.get p'' y')) 
+     (V = (Store.get p' y')) 
+     (V = (Store.get p'' y)) 
+     ((V = y') or  ((Store.get p'' y') &lt; (Store.get p'' V))) 
+     ((V = y') or  ((Store.get p' y') &lt; (Store.get p' V))) 
+     ((V = y') or  ((Store.get p y') &lt; (Store.get p V))) 
+     ((V = y') or  ((Store.get r y') &lt; (Store.get r V))) 
+     ((V = y) or  ((Store.get r y) &lt; (Store.get r V))) 
+     (((Store.get p'' y') = y') -&gt; (V = y')) 
+     (((Store.get p' y') = y') -&gt; (V = y')) 
+     (((Store.get p y') = y') -&gt; (V = y')) 
+     (((Store.get r y') = y') -&gt; (V = y')) 
+     (((Store.get p'' y) = y) -&gt; (V = y)) 
+     (((Store.get p' y) = y) -&gt; (V = y)) 
+     true&#125;) -&gt;
+  &#123;bool. false + true | ((? (V)) iff (x = y))&#125;</pre>]"><span class="Cnonalphakeyword">=</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = y')&#125;</pre>]">y'</a><span class="Cnonalphakeyword">)</span> <span class="Cin">in</span> 
+<span class="Clinenum">  33:</span><span class="Cbackground"> </span>  <span class="Cif">if</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = x')&#125;</pre>]">x'</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;int | ((Store.get p' V) = V)  true&#125;) -&gt;
+  (y:&#123;int | ((Store.get p' V) = V)  true&#125;) -&gt;
+  &#123;bool. false + true | ((? (V)) iff (x != y))&#125;</pre>]"><span class="Cnonalphakeyword">!=</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = y')&#125;</pre>]">y'</a> <span class="Cthen">then</span> <span class="Cbegin">begin</span>
+<span class="Clinenum">  34:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = _'27)&#125;</pre>]">rx'</a> <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (m:&#123;supr: (e0:&#123;int | true&#125; , e1:&#123;int | true&#125;) Store.t | true&#125;) -&gt;
+  (k:&#123;int | true&#125;) -&gt; &#123;int | (V = (Store.get m k))&#125;</pre>]"><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>get</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int , e1:int) Store.t | (V = r)&#125;</pre>]">r</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = x')&#125;</pre>]">x'</a> <span class="Cin">in</span>
+<span class="Clinenum">  35:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = _'28)&#125;</pre>]">ry'</a> <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (m:&#123;supr: (e0:&#123;int | true&#125; , e1:&#123;int | true&#125;) Store.t | true&#125;) -&gt;
+  (k:&#123;int | true&#125;) -&gt; &#123;int | (V = (Store.get m k))&#125;</pre>]"><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>get</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int , e1:int) Store.t | (V = r)&#125;</pre>]">r</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = y')&#125;</pre>]">y'</a> <span class="Cin">in</span>
+<span class="Clinenum">  36:</span><span class="Cbackground"> </span>    <span class="Cif">if</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = rx')&#125;</pre>]">rx'</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;int | true&#125;) -&gt;
+  (y:&#123;int | true&#125;) -&gt; &#123;bool. false + true | ((? (V)) iff (x &gt; y))&#125;</pre>]"><span class="Cnonalphakeyword">&gt;</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = ry')&#125;</pre>]">ry'</a> <span class="Cthen">then</span>
+<span class="Clinenum">  37:</span><span class="Cbackground"> </span>      <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int , e1:int) Store.t | (V = r)&#125;</pre>]">r</a><span class="Cnonalphakeyword">,</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;supr: (m:&#123;int | true&#125; ,
+             e1:&#123;int |
+                ((V = m) or  ((Store.get r m) &lt; (Store.get r V)))  true&#125;) Store.t |
+     true&#125;) -&gt;
+  (k:&#123;int | true&#125;) -&gt;
+  (l:&#123;int | ((V = k) or  ((Store.get r k) &lt; (Store.get r V)))  true&#125;) -&gt;
+  &#123;supr: (n:&#123;int | true&#125; ,
+          e1:&#123;int |
+             ((V = n) or  ((Store.get r n) &lt; (Store.get r V))) 
+             (V = (Store.get supr n))&#125;) Store.t |
+  (V = (Store.set x k l))&#125;</pre>]"><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>set</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int ,
+          e1:&#123;int |
+             (V = (Store.get supr e0)) 
+             ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+             (((Store.get p' e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = p'')&#125;</pre>]">p''</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = y')&#125;</pre>]">y'</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = x')&#125;</pre>]">x'</a><span class="Cnonalphakeyword">)</span> 
+<span class="Clinenum">  38:</span><span class="Cbackground"> </span>    <span class="Celse">else</span> <span class="Cif">if</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = rx')&#125;</pre>]">rx'</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;int | true&#125;) -&gt;
+  (y:&#123;int | true&#125;) -&gt; &#123;bool. false + true | ((? (V)) iff (x &lt; y))&#125;</pre>]"><span class="Cnonalphakeyword">&lt;</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = ry')&#125;</pre>]">ry'</a> <span class="Cthen">then</span>
+<span class="Clinenum">  39:</span><span class="Cbackground"> </span>      <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int , e1:int) Store.t | (V = r)&#125;</pre>]">r</a><span class="Cnonalphakeyword">,</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;supr: (m:&#123;int | true&#125; ,
+             e1:&#123;int |
+                ((V = m) or  ((Store.get r m) &lt; (Store.get r V)))  true&#125;) Store.t |
+     true&#125;) -&gt;
+  (k:&#123;int | true&#125;) -&gt;
+  (l:&#123;int | ((V = k) or  ((Store.get r k) &lt; (Store.get r V)))  true&#125;) -&gt;
+  &#123;supr: (n:&#123;int | true&#125; ,
+          e1:&#123;int |
+             ((V = n) or  ((Store.get r n) &lt; (Store.get r V))) 
+             (V = (Store.get supr n))&#125;) Store.t |
+  (V = (Store.set x k l))&#125;</pre>]"><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>set</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int ,
+          e1:&#123;int |
+             (V = (Store.get supr e0)) 
+             ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+             (((Store.get p' e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = p'')&#125;</pre>]">p''</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = x')&#125;</pre>]">x'</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = y')&#125;</pre>]">y'</a><span class="Cnonalphakeyword">)</span> 
 <span class="Clinenum">  40:</span><span class="Cbackground"> </span>    <span class="Celse">else</span> 
-<span class="Clinenum">  41:</span><span class="Cbackground"> </span>      <span class="Clet">let</span> r <span class="Cnonalphakeyword">=</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>set r x' <span class="Cnonalphakeyword">(</span>rx' <span class="Cnonalphakeyword">+</span> 1<span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
-<span class="Clinenum">  42:</span><span class="Cbackground"> </span>      <span class="Clet">let</span> p''' <span class="Cnonalphakeyword">=</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>set p'' y' x' <span class="Cin">in</span>
-<span class="Clinenum">  43:</span><span class="Cbackground"> </span>      <span class="Cnonalphakeyword">(</span>r<span class="Cnonalphakeyword">,</span> p'''<span class="Cnonalphakeyword">)</span> 
+<span class="Clinenum">  41:</span><span class="Cbackground"> </span>      <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (n:&#123;int | true&#125; , e1:&#123;int | (V = (Store.get supr n))&#125;) Store.t |
+  (V = _'31)&#125;</pre>]">r</a> <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;supr: (m:&#123;int | true&#125; , e1:&#123;int | true&#125;) Store.t | true&#125;) -&gt;
+  (k:&#123;int | true&#125;) -&gt;
+  (l:&#123;int | true&#125;) -&gt;
+  &#123;supr: (n:&#123;int | true&#125; , e1:&#123;int | (V = (Store.get supr n))&#125;) Store.t |
+  (V = (Store.set x k l))&#125;</pre>]"><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>set</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int , e1:int) Store.t | (V = r)&#125;</pre>]">r</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = x')&#125;</pre>]">x'</a> <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = rx')&#125;</pre>]">rx'</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;int | true&#125;) -&gt; (y:&#123;int | true&#125;) -&gt; &#123;int | (V = (x + y))&#125;</pre>]"><span class="Cnonalphakeyword">+</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = 1)&#125;</pre>]">1</a><span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
+<span class="Clinenum">  42:</span><span class="Cbackground"> </span>      <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (n:&#123;int | true&#125; ,
+          e1:&#123;int |
+             ((V = n) or  ((Store.get r n) &lt; (Store.get r V))) 
+             (V = (Store.get supr n))&#125;) Store.t |
+  (V = _'34)&#125;</pre>]">p'''</a> <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;supr: (m:&#123;int | true&#125; ,
+             e1:&#123;int |
+                ((V = m) or  ((Store.get r m) &lt; (Store.get r V)))  true&#125;) Store.t |
+     true&#125;) -&gt;
+  (k:&#123;int | true&#125;) -&gt;
+  (l:&#123;int | ((V = k) or  ((Store.get r k) &lt; (Store.get r V)))  true&#125;) -&gt;
+  &#123;supr: (n:&#123;int | true&#125; ,
+          e1:&#123;int |
+             ((V = n) or  ((Store.get r n) &lt; (Store.get r V))) 
+             (V = (Store.get supr n))&#125;) Store.t |
+  (V = (Store.set x k l))&#125;</pre>]"><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>set</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int ,
+          e1:&#123;int |
+             (V = (Store.get supr e0)) 
+             ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+             (((Store.get p' e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = p'')&#125;</pre>]">p''</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = y')&#125;</pre>]">y'</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = x')&#125;</pre>]">x'</a> <span class="Cin">in</span>
+<span class="Clinenum">  43:</span><span class="Cbackground"> </span>      <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (n:&#123;int | true&#125; , e1:&#123;int | (V = (Store.get supr n))&#125;) Store.t |
+  (V = r)&#125;</pre>]">r</a><span class="Cnonalphakeyword">,</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (n:&#123;int | true&#125; ,
+          e1:&#123;int |
+             ((V = n) or  ((Store.get r n) &lt; (Store.get r V))) 
+             (V = (Store.get supr n))&#125;) Store.t |
+  (V = p''')&#125;</pre>]">p'''</a><span class="Cnonalphakeyword">)</span> 
 <span class="Clinenum">  44:</span><span class="Cbackground"> </span>  <span class="Cend">end</span> <span class="Celse">else</span>
-<span class="Clinenum">  45:</span><span class="Cbackground"> </span>    <span class="Cnonalphakeyword">(</span>r<span class="Cnonalphakeyword">,</span> p''<span class="Cnonalphakeyword">)</span> 
+<span class="Clinenum">  45:</span><span class="Cbackground"> </span>    <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int , e1:int) Store.t | (V = r)&#125;</pre>]">r</a><span class="Cnonalphakeyword">,</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int ,
+          e1:&#123;int |
+             (V = (Store.get supr e0)) 
+             ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+             (((Store.get p' e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = p'')&#125;</pre>]">p''</a><span class="Cnonalphakeyword">)</span> 
 <span class="Clinenum">  46:</span><span class="Cbackground"> </span>
 <span class="Clinenum">  47:</span><span class="Cbackground"> </span><span class="Ccomment">(************************************************)</span>
 <span class="Clinenum">  48:</span><span class="Cbackground"> </span>
-<span class="Clinenum">  49:</span><span class="Cbackground"> </span><span class="Clet">let</span> check r p <span class="Cnonalphakeyword">=</span> 
-<span class="Clinenum">  50:</span><span class="Cbackground"> </span>  <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>iter p <span class="Cnonalphakeyword">(</span><span class="Cfun">fun</span> i v <span class="Cnonalphakeyword">-&gt;</span> <span class="Cassert">assert</span> <span class="Cnonalphakeyword">(</span>v<span class="Cnonalphakeyword">=</span>i || <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>get r i <span class="Cnonalphakeyword">&lt;</span> <span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>get r v<span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  49:</span><span class="Cbackground"> </span><span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (r:supr: (e0:'aP , e1:'aP) Store.t) -&gt;
+  (p:supr: (e0:'aP ,
+            e1:&#123;'aP |
+               (V = (Store.get supr e0)) 
+               (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+               ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V)))&#125;) Store.t) -&gt;
+  unit. ()</pre>]">check</a> r p <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">  50:</span><span class="Cbackground"> </span>  <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (d:&#123;supr: (e0:&#123;'aM | true&#125; ,
+             e1:&#123;'aM |
+                (V = (Store.get supr e0)) 
+                ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+                (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+                (V = (Store.get p e0)) 
+                (((Store.get p e0) = e0) -&gt; (V = e0)) 
+                true&#125;) Store.t |
+     true&#125;) -&gt;
+  (e:(k:&#123;'aM | true&#125;) -&gt;
+     (a:&#123;'aM |
+        (V = (Store.get supr k)) 
+        ((V = k) or  ((Store.get r k) &lt; (Store.get r V))) 
+        (((Store.get supr k) = k) -&gt; (V = k)) 
+        (V = (Store.get p k)) 
+        (((Store.get p k) = k) -&gt; (V = k)) 
+        true&#125;) -&gt;
+     &#123;unit. () | true&#125;) -&gt;
+  &#123;unit. () | true&#125;</pre>]"><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>iter</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:'aM ,
+          e1:&#123;'aM |
+             (V = (Store.get supr e0)) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+             ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V)))&#125;) Store.t |
+  (V = p)&#125;</pre>]">p</a> <span class="Cnonalphakeyword">(</span><span class="Cfun">fun</span> i v <span class="Cnonalphakeyword">-&gt;</span> <span class="Cassert">assert</span> <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = v)&#125;</pre>]">v</a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;'aM |
+     (((Store.get p i) = i) -&gt; (V = i)) 
+     ((V = i) or  ((Store.get r i) &lt; (Store.get r V))) 
+     ((V = i) or  ((Store.get r i) &lt; (Store.get r V))) 
+     (((Store.get p i) = i) -&gt; (V = i)) 
+     true&#125;) -&gt;
+  (y:&#123;'aM |
+     (((Store.get p i) = i) -&gt; (V = i)) 
+     ((V = i) or  ((Store.get r i) &lt; (Store.get r V))) 
+     ((V = i) or  ((Store.get r i) &lt; (Store.get r V))) 
+     (((Store.get p i) = i) -&gt; (V = i)) 
+     true&#125;) -&gt;
+  &#123;bool. false + true | ((? (V)) iff (x = y))&#125;</pre>]"><span class="Cnonalphakeyword">=</span></a><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = i)&#125;</pre>]">i</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;bool. false + true | true&#125;) -&gt;
+  (y:&#123;bool. false + true | true&#125;) -&gt;
+  &#123;bool. false + true | ((? (V)) iff ((? (x)) or  (? (y))))&#125;</pre>]">||</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (m:&#123;supr: (e0:&#123;'aM | true&#125; , e1:&#123;'aM | true&#125;) Store.t | true&#125;) -&gt;
+  (k:&#123;'aM | true&#125;) -&gt; &#123;'aM | (V = (Store.get m k))&#125;</pre>]"><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>get</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:'aM , e1:'aM) Store.t | (V = r)&#125;</pre>]">r</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = i)&#125;</pre>]">i</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;'aM | true&#125;) -&gt;
+  (y:&#123;'aM | true&#125;) -&gt; &#123;bool. false + true | ((? (V)) iff (x &lt; y))&#125;</pre>]"><span class="Cnonalphakeyword">&lt;</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (m:&#123;supr: (e0:&#123;'aM | true&#125; , e1:&#123;'aM | true&#125;) Store.t | true&#125;) -&gt;
+  (k:&#123;'aM | true&#125;) -&gt; &#123;'aM | (V = (Store.get m k))&#125;</pre>]"><span class="Cconstructor">Store</span><span class="Cnonalphakeyword">.</span>get</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:'aM , e1:'aM) Store.t | (V = r)&#125;</pre>]">r</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = v)&#125;</pre>]">v</a><span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">)</span>
 <span class="Clinenum">  51:</span><span class="Cbackground"> </span>
-<span class="Clinenum">  52:</span><span class="Cbackground"> </span><span class="Clet">let</span> <span class="Crec">rec</span> tester r p <span class="Cnonalphakeyword">=</span> 
-<span class="Clinenum">  53:</span><span class="Cbackground"> </span>  <span class="Cif">if</span> read_int <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">&gt;</span> 0 <span class="Cthen">then</span> <span class="Cnonalphakeyword">(</span>r<span class="Cnonalphakeyword">,</span> p<span class="Cnonalphakeyword">)</span> <span class="Celse">else</span> 
-<span class="Clinenum">  54:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> x       <span class="Cnonalphakeyword">=</span> read_int <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
-<span class="Clinenum">  55:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> y       <span class="Cnonalphakeyword">=</span> read_int <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
-<span class="Clinenum">  56:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> <span class="Cnonalphakeyword">(</span>r'<span class="Cnonalphakeyword">,</span>p'<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">=</span> union r p x y <span class="Cin">in</span>
-<span class="Clinenum">  57:</span><span class="Cbackground"> </span>    tester r' p'
+<span class="Clinenum">  52:</span><span class="Cbackground"> </span><span class="Clet">let</span> <span class="Crec">rec</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (r:supr: (e0:int , e1:int) Store.t) -&gt;
+  (p:supr: (e0:int ,
+            e1:&#123;int |
+               (V = (Store.get supr e0)) 
+               (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+               ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V)))&#125;) Store.t) -&gt;
+  tuple. rec(e0:supr: (e0:int , e1:int) Store.t ,
+             e1:supr: (e0:int ,
+                       e1:&#123;int |
+                          (V = (Store.get supr e0)) 
+                          ((V = e0) or 
+                            ((Store.get e0 e0) &lt; (Store.get e0 V))) 
+                          (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t)</pre>]">tester</a> r p <span class="Cnonalphakeyword">=</span> 
+<span class="Clinenum">  53:</span><span class="Cbackground"> </span>  <span class="Cif">if</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (a:unit. ()) -&gt; int</pre>]">read_int</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;unit. () | (V = ())  ((__tag V) = 0)&#125;</pre>]"><span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;int | true&#125;) -&gt;
+  (y:&#123;int | true&#125;) -&gt; &#123;bool. false + true | ((? (V)) iff (x &gt; y))&#125;</pre>]"><span class="Cnonalphakeyword">&gt;</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = 0)&#125;</pre>]">0</a> <span class="Cthen">then</span> <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int , e1:int) Store.t | (V = r)&#125;</pre>]">r</a><span class="Cnonalphakeyword">,</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int ,
+          e1:&#123;int |
+             (V = (Store.get supr e0)) 
+             ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = p)&#125;</pre>]">p</a><span class="Cnonalphakeyword">)</span> <span class="Celse">else</span> 
+<span class="Clinenum">  54:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = _'47)&#125;</pre>]">x</a>       <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (a:unit. ()) -&gt; int</pre>]">read_int</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;unit. () | (V = ())  ((__tag V) = 0)&#125;</pre>]"><span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span></a> <span class="Cin">in</span>
+<span class="Clinenum">  55:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = _'49)&#125;</pre>]">y</a>       <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (a:unit. ()) -&gt; int</pre>]">read_int</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;unit. () | (V = ())  ((__tag V) = 0)&#125;</pre>]"><span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span></a> <span class="Cin">in</span>
+<span class="Clinenum">  56:</span><span class="Cbackground"> </span>    <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:supr: (e0:int , e1:int) Store.t ,
+              e1:supr: (e0:int ,
+                        e1:&#123;int |
+                           (V = (Store.get supr e0)) 
+                           ((V = e0) or 
+                             ((Store.get e0 e0) &lt; (Store.get e0 V))) 
+                           (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t) |
+  (V = _'51)&#125;</pre>]"><span class="Cnonalphakeyword">(</span>r'<span class="Cnonalphakeyword">,</span>p'<span class="Cnonalphakeyword">)</span></a> <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (r:supr: (e0:int , e1:int) Store.t) -&gt;
+  (p:supr: (e0:int ,
+            e1:&#123;int |
+               (V = (Store.get supr e0)) 
+               ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+               (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t) -&gt;
+  (x:int) -&gt;
+  (y:int) -&gt;
+  tuple. rec(e0:supr: (e0:int , e1:int) Store.t ,
+             e1:supr: (e0:int ,
+                       e1:&#123;int |
+                          (V = (Store.get supr e0)) 
+                          ((V = e0) or 
+                            ((Store.get e0 e0) &lt; (Store.get e0 V))) 
+                          (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t)</pre>]">union</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int , e1:int) Store.t | (V = r)&#125;</pre>]">r</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int ,
+          e1:&#123;int |
+             (V = (Store.get supr e0)) 
+             ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V))) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = p)&#125;</pre>]">p</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = x)&#125;</pre>]">x</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = y)&#125;</pre>]">y</a> <span class="Cin">in</span>
+<span class="Clinenum">  57:</span><span class="Cbackground"> </span>    <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (r:supr: (e0:int , e1:int) Store.t) -&gt;
+  (p:supr: (e0:int ,
+            e1:&#123;int |
+               (V = (Store.get supr e0)) 
+               (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+               ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V)))&#125;) Store.t) -&gt;
+  tuple. rec(e0:supr: (e0:int , e1:int) Store.t ,
+             e1:supr: (e0:int ,
+                       e1:&#123;int |
+                          (V = (Store.get supr e0)) 
+                          ((V = e0) or 
+                            ((Store.get e0 e0) &lt; (Store.get e0 V))) 
+                          (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t)</pre>]">tester</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int , e1:int) Store.t | (V = r')&#125;</pre>]">r'</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int ,
+          e1:&#123;int |
+             (V = (Store.get supr e0)) 
+             ((V = e0) or  ((Store.get r' e0) &lt; (Store.get r' V))) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = p')&#125;</pre>]">p'</a>
 <span class="Clinenum">  58:</span><span class="Cbackground"> </span>
 <span class="Clinenum">  59:</span><span class="Cbackground"> </span><span class="Clet">let</span> <span class="Cnonalphakeyword">_</span> <span class="Cnonalphakeyword">=</span> 
-<span class="Clinenum">  60:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> n         <span class="Cnonalphakeyword">=</span> read_int <span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span> <span class="Cin">in</span>
-<span class="Clinenum">  61:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> r         <span class="Cnonalphakeyword">=</span> init_rank n <span class="Cin">in</span>
-<span class="Clinenum">  62:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> p         <span class="Cnonalphakeyword">=</span> init_parent n <span class="Cin">in</span>
-<span class="Clinenum">  63:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Cnonalphakeyword">_</span>         <span class="Cnonalphakeyword">=</span> check r p <span class="Cin">in</span>
-<span class="Clinenum">  64:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <span class="Cnonalphakeyword">(</span>r'<span class="Cnonalphakeyword">,</span> p'<span class="Cnonalphakeyword">)</span>  <span class="Cnonalphakeyword">=</span> tester r p <span class="Cin">in</span> 
-<span class="Clinenum">  65:</span><span class="Cbackground"> </span>  check r' p'
+<span class="Clinenum">  60:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = _'52)&#125;</pre>]">n</a>         <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (a:unit. ()) -&gt; int</pre>]">read_int</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;unit. () | (V = ())  ((__tag V) = 0)&#125;</pre>]"><span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">)</span></a> <span class="Cin">in</span>
+<span class="Clinenum">  61:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+          e1:&#123;int |
+             (0 &lt;= V) 
+             (V != 0) 
+             (V &gt;= 0) 
+             (V = (Store.get supr e0)) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = _'54)&#125;</pre>]">r</a>         <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (n:int) -&gt;
+  supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+         e1:&#123;int |
+            (0 &lt;= V) 
+            (V != 0) 
+            (V &gt;= 0) 
+            (V = (Store.get supr e0)) 
+            (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t</pre>]">init_rank</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = n)&#125;</pre>]">n</a> <span class="Cin">in</span>
+<span class="Clinenum">  62:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+          e1:&#123;int |
+             (0 &lt;= V) 
+             (V &lt; n) 
+             (V &gt;= 0) 
+             (V = e0) 
+             ((Store.get supr V) = V) 
+             (V = (Store.get supr e0)) 
+             ((V = e0) or  ((Store.get supr e0) &lt; (Store.get supr V))) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = _'55)&#125;</pre>]">p</a>         <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (n:int) -&gt;
+  supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+         e1:&#123;int |
+            (0 &lt;= V) 
+            (V &lt; n) 
+            (V &gt;= 0) 
+            (V = e0) 
+            ((Store.get supr V) = V) 
+            (V = (Store.get supr e0)) 
+            ((V = e0) or  ((Store.get supr e0) &lt; (Store.get supr V))) 
+            (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t</pre>]">init_parent</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = n)&#125;</pre>]">n</a> <span class="Cin">in</span>
+<span class="Clinenum">  63:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;unit. () | (V = _'56)&#125;</pre>]"><span class="Cnonalphakeyword">_</span></a>         <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (r:supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+            e1:&#123;int |
+               (0 &lt;= V) 
+               (V != 0) 
+               (V &gt;= 0) 
+               (V = (Store.get supr e0)) 
+               (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+               (V = (Store.get r e0)) 
+               (((Store.get r e0) = e0) -&gt; (V = e0))&#125;) Store.t) -&gt;
+  (p:supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+            e1:&#123;int |
+               (0 &lt;= V) 
+               (V &lt; n) 
+               (V &gt;= 0) 
+               (V = (Store.get supr e0)) 
+               (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+               ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V)))&#125;) Store.t) -&gt;
+  unit. ()</pre>]">check</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+          e1:&#123;int |
+             (0 &lt;= V) 
+             (V != 0) 
+             (V &gt;= 0) 
+             (V = (Store.get supr e0)) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = r)&#125;</pre>]">r</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+          e1:&#123;int |
+             (0 &lt;= V) 
+             (V &lt; n) 
+             (V &gt;= 0) 
+             (V = e0) 
+             ((Store.get supr V) = V) 
+             (V = (Store.get supr e0)) 
+             ((V = e0) or  ((Store.get supr e0) &lt; (Store.get supr V))) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = p)&#125;</pre>]">p</a> <span class="Cin">in</span>
+<span class="Clinenum">  64:</span><span class="Cbackground"> </span>  <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:supr: (e0:int , e1:int) Store.t ,
+              e1:supr: (e0:int ,
+                        e1:&#123;int |
+                           (V = (Store.get supr e0)) 
+                           ((V = e0) or 
+                             ((Store.get e0 e0) &lt; (Store.get e0 V))) 
+                           (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t) |
+  (V = _'57)&#125;</pre>]"><span class="Cnonalphakeyword">(</span>r'<span class="Cnonalphakeyword">,</span> p'<span class="Cnonalphakeyword">)</span></a>  <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (r:supr: (e0:int , e1:int) Store.t) -&gt;
+  (p:supr: (e0:int ,
+            e1:&#123;int |
+               (V = (Store.get supr e0)) 
+               (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+               ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V)))&#125;) Store.t) -&gt;
+  tuple. rec(e0:supr: (e0:int , e1:int) Store.t ,
+             e1:supr: (e0:int ,
+                       e1:&#123;int |
+                          (V = (Store.get supr e0)) 
+                          ((V = e0) or 
+                            ((Store.get e0 e0) &lt; (Store.get e0 V))) 
+                          (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t)</pre>]">tester</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+          e1:&#123;int |
+             (0 &lt;= V) 
+             (V != 0) 
+             (V &gt;= 0) 
+             (V = (Store.get supr e0)) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = r)&#125;</pre>]">r</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:&#123;int | (0 &lt;= V)  (V &lt; n)  (V &gt;= 0)&#125; ,
+          e1:&#123;int |
+             (0 &lt;= V) 
+             (V &lt; n) 
+             (V &gt;= 0) 
+             (V = e0) 
+             ((Store.get supr V) = V) 
+             (V = (Store.get supr e0)) 
+             ((V = e0) or  ((Store.get supr e0) &lt; (Store.get supr V))) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = p)&#125;</pre>]">p</a> <span class="Cin">in</span> 
+<span class="Clinenum">  65:</span><span class="Cbackground"> </span>  <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (r:supr: (e0:int , e1:int) Store.t) -&gt;
+  (p:supr: (e0:int ,
+            e1:&#123;int |
+               (V = (Store.get supr e0)) 
+               (((Store.get supr e0) = e0) -&gt; (V = e0)) 
+               ((V = e0) or  ((Store.get r e0) &lt; (Store.get r V)))&#125;) Store.t) -&gt;
+  unit. ()</pre>]">check</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int , e1:int) Store.t | (V = r')&#125;</pre>]">r'</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;supr: (e0:int ,
+          e1:&#123;int |
+             (V = (Store.get supr e0)) 
+             ((V = e0) or  ((Store.get r' e0) &lt; (Store.get r' V))) 
+             (((Store.get supr e0) = e0) -&gt; (V = e0))&#125;) Store.t |
+  (V = p')&#125;</pre>]">p'</a>
 </pre>
 
 <hr>

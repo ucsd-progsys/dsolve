@@ -31,12 +31,12 @@ let reverse xs =
 let rec rev_append w l1 l2 =
   match l1 with
   | [] -> l2
-  | a :: l -> rev_append (show a) l (a :: l2)
+  | a :: l -> rev_append a l (a :: l2)
 
 let rec rev_append_rev w l1 l2 =
   match l1 with
   | [] -> l2
-  | a :: l -> rev_append_rev (show a) l (a :: l2)
+  | a :: l -> rev_append_rev a l (a :: l2)
 
 let rev_merge l1 l2 =
   let rec revm w l1 l2 accu =

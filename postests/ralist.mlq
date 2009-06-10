@@ -16,4 +16,3 @@ val head:   l: {V : 'a rlist <valid> | length V > 0} -> 'a
 val tail:   l: {V : 'a rlist <valid> | length V > 0} -> {V:'a rlist | length V = length l - 1 } 
 val lookup: l: 'a rlist <valid> -> {V : int | 0 <= V && V < length l} -> 'a 
 *)
-

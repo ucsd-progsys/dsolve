@@ -4059,9 +4059,7 @@ code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hov
                      (height e3)) + 1))&#125;) |
   (V = r)&#125;</pre>]">r</a><span class="Cnonalphakeyword">)</span>
 <span class="Clinenum">  68:</span><span class="Cbackground"> </span>
-<span class="Clinenum">  69:</span><span class="Cbackground"> </span><span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:'aP) -&gt; &#123;'aP | (V = x)  (x &gt;= V)  (x &lt;= V)&#125;</pre>]"><span class="Crec">rec</span> </a>remove_min_binding t <span class="Cnonalphakeyword">=</span> <span class="Cmatch">match</span> t <span class="Cwith">with</span>
-<span class="Clinenum">  70:</span><span class="Cbackground"> </span>    <span class="Cconstructor">Empty</span> <span class="Cnonalphakeyword">-&gt;</span> <span class="Cassert">assert</span> <span class="Cnonalphakeyword">(</span>0 <span class="Cnonalphakeyword">=</span> 1<span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">;</span> <span class="Cassert">assert</span> <span class="Cfalse">false</span>
-<span class="Clinenum">  71:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Node</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (t:&#123;«t» t. Empty +
+<span class="Clinenum">  69:</span><span class="Cbackground"> </span><span class="Clet">let</span> <span class="Crec">rec</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (t:&#123;«t» t. Empty +
                Node(e0:'aP ,
                     e1:int ,
                     e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
@@ -4137,8 +4135,7 @@ code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hov
                 ((height V) &gt;= ((height Empty) - 2)) 
                 ((height V) &gt;= ((height Empty) - 3)) 
                 ((height V) &gt;= 0) 
-                (? ((Myaset.eq (set_of t) (Myaset.cup (set_of V) (Myaset.sng e0)))))&#125;)</pre>]"><span class="Cnonalphakeyword">(</span>x<span class="Cnonalphakeyword">,</span> d<span class="Cnonalphakeyword">,</span> l<span class="Cnonalphakeyword">,</span> r<span class="Cnonalphakeyword">,</span> h<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">-&gt;</span></a>
-<span class="Clinenum">  72:</span><span class="Cbackground"> </span>      <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+                (? ((Myaset.eq (set_of t) (Myaset.cup (set_of V) (Myaset.sng e0)))))&#125;)</pre>]">remove_min_binding</a> t <span class="Cnonalphakeyword">=</span> <span class="Cmatch">match</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
             Node(e0:'aM ,
                  e1:int ,
                  e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
@@ -4162,12 +4159,8 @@ code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hov
                     (V =
                     (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
                      (height e3)) + 1))&#125;) |
-  (V = t)&#125;</pre>]"><span class="Cmatch">match</span></a> l<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;unit. () |
-  (? ((Myaset.mem V (set_of t)))) 
-  (__measure_guard &gt;= V) 
-  (__measure_guard &lt;= V) 
-  (__measure_guard != V)&#125;</pre>]"> <span class="Cwith">with</span>
-<span class="Clinenum">  73:</span><span class="Cbackground"> </span></a>      <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+  (V = t)&#125;</pre>]">t</a> <span class="Cwith">with</span>
+<span class="Clinenum">  70:</span><span class="Cbackground"> </span>    <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
             Node(e0:'aM ,
                  e1:int ,
                  e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
@@ -4191,8 +4184,37 @@ code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hov
                     (V =
                     (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
                      (height e3)) + 1))&#125;) |
-  (V = t)&#125;</pre>]"><span class="Cbar">|</span> <span class="Cconstructor">Empty</span> <span class="Cnonalphakeyword">-&gt;</span> <span class="Cnonalphakeyword">(</span>x<span class="Cnonalphakeyword">,</span> d<span class="Cnonalphakeyword">,</span></a> r<span class="Cnonalphakeyword">)</span>
-<span class="Clinenum">  74:</span><span class="Cbackground"> </span>      <span class="Cbar">|</span> <span class="Cconstructor">Node</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+  (V = t)&#125;</pre>]"><span class="Cconstructor">Empty</span></a> <span class="Cnonalphakeyword">-&gt;</span> <span class="Cassert">assert</span> <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = 0)&#125;</pre>]">0</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;int |
+     (0 &lt;= V) 
+     (? ((Myaset.mem V (set_of t)))) 
+     (V != 0) 
+     (V = (height t)) 
+     (V &gt;= 0) 
+     (V = (height t)) 
+     (V = (height Empty)) 
+     true&#125;) -&gt;
+  (y:&#123;int |
+     (0 &lt;= V) 
+     (? ((Myaset.mem V (set_of t)))) 
+     (V != 0) 
+     (V = (height t)) 
+     (V &gt;= 0) 
+     (V = (height t)) 
+     (V = (height Empty)) 
+     true&#125;) -&gt;
+  &#123;bool. false + true | ((? (V)) iff (x = y))&#125;</pre>]"><span class="Cnonalphakeyword">=</span></a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = 1)&#125;</pre>]">1</a><span class="Cnonalphakeyword">)</span><span class="Cnonalphakeyword">;</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;'aM | ⊥&#125; ,
+              e1:&#123;int | ⊥&#125; ,
+              e2:&#123;«t» t. Empty +
+                           Node(e0:&#123;'aM | ⊥&#125; ,
+                                e1:&#123;int | ⊥&#125; ,
+                                e2:&#123;«‹› ,‹⊥ ,⊥ ,⊤ ,⊤ ,⊥›» t |
+                                   ⊥&#125; ,
+                                e3:&#123;«‹› ,‹⊥ ,⊥ ,⊤ ,⊤ ,⊥›» t |
+                                   ⊥&#125; ,
+                                e4:&#123;int | ⊥&#125;) |
+                 ⊥&#125;) |
+  ⊥&#125;</pre>]"><span class="Cassert">assert</span> <span class="Cfalse">false</span></a>
+<span class="Clinenum">  71:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
             Node(e0:'aM ,
                  e1:int ,
                  e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
@@ -4216,8 +4238,8 @@ code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hov
                     (V =
                     (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
                      (height e3)) + 1))&#125;) |
-  (V = l)&#125;</pre>]"><span class="Cnonalphakeyword">(</span></a><span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">,</span> <span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">,</span> ll<span class="Cnonalphakeyword">,</span> lr<span class="Cnonalphakeyword">,</span> h'<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">-&gt;</span>
-<span class="Clinenum">  75:</span><span class="Cbackground"> </span>        <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+  (V = t)&#125;</pre>]"><span class="Cconstructor">Node</span><span class="Cnonalphakeyword">(</span>x<span class="Cnonalphakeyword">,</span> d<span class="Cnonalphakeyword">,</span> l<span class="Cnonalphakeyword">,</span> r<span class="Cnonalphakeyword">,</span> h<span class="Cnonalphakeyword">)</span></a> <span class="Cnonalphakeyword">-&gt;</span>
+<span class="Clinenum">  72:</span><span class="Cbackground"> </span>      <span class="Cmatch">match</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
             Node(e0:'aM ,
                  e1:int ,
                  e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
@@ -4241,7 +4263,8 @@ code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hov
                     (V =
                     (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
                      (height e3)) + 1))&#125;) |
-  (V = l)&#125;</pre>]"><span class="Clet">let</span> <span class="Cnonalphakeyword">(</span></a>x'<span class="Cnonalphakeyword">,</span> d'<span class="Cnonalphakeyword">,</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = d)&#125;</pre>]">l'</a><span class="Cnonalphakeyword">)</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+  (V = l)&#125;</pre>]">l</a> <span class="Cwith">with</span>
+<span class="Clinenum">  73:</span><span class="Cbackground"> </span>      <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
             Node(e0:'aM ,
                  e1:int ,
                  e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
@@ -4265,8 +4288,7 @@ code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hov
                     (V =
                     (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
                      (height e3)) + 1))&#125;) |
-  (V = r)&#125;</pre>]"> </a><span class="Cnonalphakeyword">=</span> remove_min_binding l <span class="Cin">in</span>
-<span class="Clinenum">  76:</span><span class="Cbackground"> </span>          <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+  (V = l)&#125;</pre>]"><span class="Cconstructor">Empty</span></a> <span class="Cnonalphakeyword">-&gt;</span> <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x)&#125;</pre>]">x</a><span class="Cnonalphakeyword">,</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = d)&#125;</pre>]">d</a><span class="Cnonalphakeyword">,</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
             Node(e0:'aM ,
                  e1:int ,
                  e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
@@ -4290,9 +4312,196 @@ code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hov
                     (V =
                     (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
                      (height e3)) + 1))&#125;) |
-  (V = l)&#125;</pre>]"><span class="Cnonalphakeyword">(</span>x'<span class="Cnonalphakeyword">,</span> d'<span class="Cnonalphakeyword">,</span> bal x d l' </a>r<span class="Cnonalphakeyword">)</span>
-<span class="Clinenum">  77:</span><span class="Cbackground"> </span>
-<span class="Clinenum">  78:</span><span class="Cbackground"> </span><span class="Clet">let</span> merge m<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x')&#125;</pre>]"> t1</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = d')&#125;</pre>]">t2</a> <span class="Cnonalphakeyword">=</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;'aM | (x' &lt;= V)  (x' != V)&#125;) -&gt;
+  (V = r)&#125;</pre>]">r</a><span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  74:</span><span class="Cbackground"> </span>      <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+            Node(e0:'aM ,
+                 e1:int ,
+                 e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                    ((height V) &gt;= 0)  ((height V) &gt;= 0)&#125; ,
+                 e3:&#123;«‹› ,‹(V &gt; e0)  (e0 &lt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                    ((height V) &lt;= ((height e2) + 2)) 
+                    ((height V) &gt;= ((height e2) - 2)) 
+                    ((height V) &gt;= 0) 
+                    ((height V) &gt;= ((height e2) - 2)) 
+                    ((height V) &lt;= ((height e2) + 2)) 
+                    ((height V) &gt;= ((height e2) - 3)) 
+                    ((height V) &lt;= ((height e2) + 3)) 
+                    ((height V) &gt;= 0)&#125; ,
+                 e4:&#123;int |
+                    (0 &lt;= V) 
+                    (V != 0) 
+                    (V =
+                    (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                     (height e3)) + 1)) 
+                    (V &gt;= 0) 
+                    (V =
+                    (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                     (height e3)) + 1))&#125;) |
+  (V = l)&#125;</pre>]"><span class="Cconstructor">Node</span><span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">,</span> <span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">,</span> ll<span class="Cnonalphakeyword">,</span> lr<span class="Cnonalphakeyword">,</span> h'<span class="Cnonalphakeyword">)</span></a> <span class="Cnonalphakeyword">-&gt;</span>
+<span class="Clinenum">  75:</span><span class="Cbackground"> </span>        <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;'aM | (x &gt;= V)  (x != V)  (? ((Myaset.mem V (set_of l))))&#125; ,
+              e1:int ,
+              e2:&#123;«t» t. Empty +
+                           Node(e0:&#123;'aM |
+                                   (x &gt;= V) 
+                                   (x != V) 
+                                   (V &gt; e0) 
+                                   (e0 &lt;= V) 
+                                   (e0 != V)&#125; ,
+                                e1:int ,
+                                e2:&#123;«‹› ,‹(V &lt; e0) 
+                                                 (e0 &gt;= V) 
+                                                 (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                                   ((height V) &gt;= 0)  ((height V) &gt;= 0)&#125; ,
+                                e3:&#123;«‹› ,‹(V &gt; e0) 
+                                                 (V &gt; e0) 
+                                                 (e0 &lt;= V) 
+                                                 (e0 != V) 
+                                                 (e0 &lt;= V) 
+                                                 (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                                   ((height V) &lt;= ((height e2) + 2)) 
+                                   ((height V) &gt;= ((height e2) - 2)) 
+                                   ((height V) &gt;= 0) 
+                                   ((height V) &gt;= ((height e2) - 2)) 
+                                   ((height V) &lt;= ((height e2) + 2)) 
+                                   ((height V) &gt;= ((height e2) - 3)) 
+                                   ((height V) &lt;= ((height e2) + 3)) 
+                                   ((height V) &gt;= 0)&#125; ,
+                                e4:&#123;int |
+                                   (0 &lt;= V) 
+                                   (V != 0) 
+                                   (V =
+                                   (if (((height e2) &gt;= (height e3))) then (
+                                    (height e2)) else ((height e3)) + 1)) 
+                                   (V &gt;= 0) 
+                                   (V =
+                                   (if (((height e2) &gt;= (height e3))) then (
+                                    (height e2)) else ((height e3)) + 1))&#125;) |
+                 ((height V) &lt;= ((height l) + 1)) 
+                 ((height V) &lt;= (height l)) 
+                 ((height V) &gt;= ((height l) - 1)) 
+                 ((height V) &gt;= 0) 
+                 ((height V) &lt;= ((height l) - 0)) 
+                 ((height V) &lt;= ((height l) + 0)) 
+                 ((height V) &gt;= ((height l) - 1)) 
+                 ((height V) &lt;= ((height l) + 1)) 
+                 ((height V) &gt;= ((height l) - 2)) 
+                 ((height V) &lt;= ((height l) + 2)) 
+                 ((height V) &gt;= ((height l) - 3)) 
+                 ((height V) &lt;= ((height l) + 3)) 
+                 ((height V) &gt;= ((height Empty) - 0)) 
+                 ((height V) &gt;= ((height Empty) + 0)) 
+                 ((height V) &gt;= ((height Empty) - 1)) 
+                 ((height V) &gt;= ((height Empty) - 2)) 
+                 ((height V) &gt;= ((height Empty) - 3)) 
+                 ((height V) &gt;= 0) 
+                 (? ((Myaset.eq (set_of l) (Myaset.cup (set_of V) (Myaset.sng e0)))))&#125;) |
+  (V = _'83)&#125;</pre>]"><span class="Cnonalphakeyword">(</span>x'<span class="Cnonalphakeyword">,</span> d'<span class="Cnonalphakeyword">,</span> l'<span class="Cnonalphakeyword">)</span></a> <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (t:&#123;«t» t. Empty +
+               Node(e0:&#123;'aM | (x &gt;= V)  (x != V)&#125; ,
+                    e1:int ,
+                    e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                       ((height V) &gt;= 0)  ((height V) &gt;= 0)&#125; ,
+                    e3:&#123;«‹› ,‹(V &gt; e0)  (e0 &lt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                       ((height V) &lt;= ((height e2) + 2)) 
+                       ((height V) &gt;= ((height e2) - 2)) 
+                       ((height V) &gt;= 0) 
+                       ((height V) &gt;= ((height e2) - 2)) 
+                       ((height V) &lt;= ((height e2) + 2)) 
+                       ((height V) &gt;= ((height e2) - 3)) 
+                       ((height V) &lt;= ((height e2) + 3)) 
+                       ((height V) &gt;= 0)&#125; ,
+                    e4:&#123;int |
+                       (0 &lt;= V) 
+                       (V != 0) 
+                       (V =
+                       (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                        (height e3)) + 1)) 
+                       (V &gt;= 0) 
+                       (V =
+                       (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                        (height e3)) + 1))&#125;) |
+     ((height V) &gt;= 0)  ((height V) &gt;= 0)  ((height V) &gt; 0)&#125;) -&gt;
+  tuple. rec(e0:&#123;'aM | (x &gt;= V)  (x != V)  (? ((Myaset.mem V (set_of t))))&#125; ,
+             e1:int ,
+             e2:&#123;«t» t. Empty +
+                          Node(e0:&#123;'aM |
+                                  (x &gt;= V) 
+                                  (x != V) 
+                                  (V &gt; e0) 
+                                  (e0 &lt;= V) 
+                                  (e0 != V)&#125; ,
+                               e1:int ,
+                               e2:&#123;«‹› ,‹(V &lt; e0) 
+                                                (e0 &gt;= V) 
+                                                (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                                  ((height V) &gt;= 0)  ((height V) &gt;= 0)&#125; ,
+                               e3:&#123;«‹› ,‹(V &gt; e0) 
+                                                (V &gt; e0) 
+                                                (e0 &lt;= V) 
+                                                (e0 != V) 
+                                                (e0 &lt;= V) 
+                                                (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                                  ((height V) &lt;= ((height e2) + 2)) 
+                                  ((height V) &gt;= ((height e2) - 2)) 
+                                  ((height V) &gt;= 0) 
+                                  ((height V) &gt;= ((height e2) - 2)) 
+                                  ((height V) &lt;= ((height e2) + 2)) 
+                                  ((height V) &gt;= ((height e2) - 3)) 
+                                  ((height V) &lt;= ((height e2) + 3)) 
+                                  ((height V) &gt;= 0)&#125; ,
+                               e4:&#123;int |
+                                  (0 &lt;= V) 
+                                  (V != 0) 
+                                  (V =
+                                  (if (((height e2) &gt;= (height e3))) then (
+                                   (height e2)) else ((height e3)) + 1)) 
+                                  (V &gt;= 0) 
+                                  (V =
+                                  (if (((height e2) &gt;= (height e3))) then (
+                                   (height e2)) else ((height e3)) + 1))&#125;) |
+                ((height V) &lt;= ((height t) + 1)) 
+                ((height V) &lt;= (height t)) 
+                ((height V) &gt;= ((height t) - 1)) 
+                ((height V) &gt;= 0) 
+                ((height V) &lt;= ((height t) - 0)) 
+                ((height V) &lt;= ((height t) + 0)) 
+                ((height V) &gt;= ((height t) - 1)) 
+                ((height V) &lt;= ((height t) + 1)) 
+                ((height V) &gt;= ((height t) - 2)) 
+                ((height V) &lt;= ((height t) + 2)) 
+                ((height V) &gt;= ((height t) - 3)) 
+                ((height V) &lt;= ((height t) + 3)) 
+                ((height V) &gt;= ((height Empty) - 0)) 
+                ((height V) &gt;= ((height Empty) + 0)) 
+                ((height V) &gt;= ((height Empty) - 1)) 
+                ((height V) &gt;= ((height Empty) - 2)) 
+                ((height V) &gt;= ((height Empty) - 3)) 
+                ((height V) &gt;= 0) 
+                (? ((Myaset.eq (set_of t) (Myaset.cup (set_of V) (Myaset.sng e0)))))&#125;)</pre>]">remove_min_binding</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+            Node(e0:'aM ,
+                 e1:int ,
+                 e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                    ((height V) &gt;= 0)  ((height V) &gt;= 0)&#125; ,
+                 e3:&#123;«‹› ,‹(V &gt; e0)  (e0 &lt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                    ((height V) &lt;= ((height e2) + 2)) 
+                    ((height V) &gt;= ((height e2) - 2)) 
+                    ((height V) &gt;= 0) 
+                    ((height V) &gt;= ((height e2) - 2)) 
+                    ((height V) &lt;= ((height e2) + 2)) 
+                    ((height V) &gt;= ((height e2) - 3)) 
+                    ((height V) &lt;= ((height e2) + 3)) 
+                    ((height V) &gt;= 0)&#125; ,
+                 e4:&#123;int |
+                    (0 &lt;= V) 
+                    (V != 0) 
+                    (V =
+                    (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                     (height e3)) + 1)) 
+                    (V &gt;= 0) 
+                    (V =
+                    (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                     (height e3)) + 1))&#125;) |
+  (V = l)&#125;</pre>]">l</a> <span class="Cin">in</span>
+<span class="Clinenum">  76:</span><span class="Cbackground"> </span>          <span class="Cnonalphakeyword">(</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x')&#125;</pre>]">x'</a><span class="Cnonalphakeyword">,</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = d')&#125;</pre>]">d'</a><span class="Cnonalphakeyword">,</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;'aM | (x' &lt;= V)  (x' != V)&#125;) -&gt;
   (d:int) -&gt;
   (l:&#123;«t» t. Empty +
                Node(e0:&#123;'aM | (x' &lt;= V)  (x' != V)  (x &gt;= V)  (x != V)&#125; ,
@@ -4408,9 +4617,63 @@ code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hov
   ((height V) &gt;= 0) 
   ((height V) &gt; 0) 
   (? ((Myaset.eq (set_of V) (Myaset.cup (Myaset.sng x) (Myaset.cup (set_of l) 
-                                                       (set_of r))))))&#125;</pre>]">
-<span class="Clinenum">  79:</span><span class="Cbackground"> </span></a>  <span class="Cmatch">match</span> t1 <span class="Cwith">with</span>
-<span class="Clinenum">  80:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (m:'aP) -&gt;
+                                                       (set_of r))))))&#125;</pre>]">bal</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x)&#125;</pre>]">x</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = d)&#125;</pre>]">d</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+            Node(e0:&#123;'aM |
+                    (x &gt;= V)  (x != V)  (V &gt; x')  (x' &lt;= V)  (x' != V)&#125; ,
+                 e1:int ,
+                 e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                    ((height V) &gt;= 0)  ((height V) &gt;= 0)&#125; ,
+                 e3:&#123;«‹› ,‹(V &gt; e0) 
+                                  (V &gt; x') 
+                                  (x' &lt;= V) 
+                                  (x' != V) 
+                                  (e0 &lt;= V) 
+                                  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                    ((height V) &lt;= ((height e2) + 2)) 
+                    ((height V) &gt;= ((height e2) - 2)) 
+                    ((height V) &gt;= 0) 
+                    ((height V) &gt;= ((height e2) - 2)) 
+                    ((height V) &lt;= ((height e2) + 2)) 
+                    ((height V) &gt;= ((height e2) - 3)) 
+                    ((height V) &lt;= ((height e2) + 3)) 
+                    ((height V) &gt;= 0)&#125; ,
+                 e4:&#123;int |
+                    (0 &lt;= V) 
+                    (V != 0) 
+                    (V =
+                    (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                     (height e3)) + 1)) 
+                    (V &gt;= 0) 
+                    (V =
+                    (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                     (height e3)) + 1))&#125;) |
+  (V = l')&#125;</pre>]">l'</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+            Node(e0:'aM ,
+                 e1:int ,
+                 e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                    ((height V) &gt;= 0)  ((height V) &gt;= 0)&#125; ,
+                 e3:&#123;«‹› ,‹(V &gt; e0)  (e0 &lt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                    ((height V) &lt;= ((height e2) + 2)) 
+                    ((height V) &gt;= ((height e2) - 2)) 
+                    ((height V) &gt;= 0) 
+                    ((height V) &gt;= ((height e2) - 2)) 
+                    ((height V) &lt;= ((height e2) + 2)) 
+                    ((height V) &gt;= ((height e2) - 3)) 
+                    ((height V) &lt;= ((height e2) + 3)) 
+                    ((height V) &gt;= 0)&#125; ,
+                 e4:&#123;int |
+                    (0 &lt;= V) 
+                    (V != 0) 
+                    (V =
+                    (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                     (height e3)) + 1)) 
+                    (V &gt;= 0) 
+                    (V =
+                    (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                     (height e3)) + 1))&#125;) |
+  (V = r)&#125;</pre>]">r</a><span class="Cnonalphakeyword">)</span>
+<span class="Clinenum">  77:</span><span class="Cbackground"> </span>
+<span class="Clinenum">  78:</span><span class="Cbackground"> </span><span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (m:'aP) -&gt;
   (t1:&#123;«t» t. Empty +
                 Node(e0:&#123;'aP | (m &gt;= V)  (m != V)&#125; ,
                      e1:int ,
@@ -4523,8 +4786,8 @@ code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hov
   ((height V) &gt;= ((height Empty) - 2)) 
   ((height V) &gt;= ((height Empty) - 3)) 
   ((height V) &gt;= 0) 
-  (? ((Myaset.eq (set_of V) (Myaset.cup (set_of t2) (set_of t1)))))&#125;</pre>]"><span class="Cconstructor">Empty</span></a> <span class="Cnonalphakeyword">-&gt;</span> t2
-<span class="Clinenum">  81:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <span class="Cconstructor">Node</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+  (? ((Myaset.eq (set_of V) (Myaset.cup (set_of t2) (set_of t1)))))&#125;</pre>]">merge</a> m t1 t2 <span class="Cnonalphakeyword">=</span>
+<span class="Clinenum">  79:</span><span class="Cbackground"> </span>  <span class="Cmatch">match</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
             Node(e0:&#123;'aM | (m &gt;= V)  (m != V)&#125; ,
                  e1:int ,
                  e2:&#123;«‹› ,‹(V &lt; e0) 
@@ -4552,8 +4815,8 @@ code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hov
                     (V =
                     (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
                      (height e3)) + 1))&#125;) |
-  (V = t1)&#125;</pre>]"><span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">_</span></a><span class="Cnonalphakeyword">,</span> <span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">,</span> ll<span class="Cnonalphakeyword">,</span> lr<span class="Cnonalphakeyword">,</span> h1<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">-&gt;</span> 
-<span class="Clinenum">  82:</span><span class="Cbackground"> </span>      <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+  (V = t1)&#125;</pre>]">t1</a> <span class="Cwith">with</span>
+<span class="Clinenum">  80:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
             Node(e0:&#123;'aM | (m &gt;= V)  (m != V)&#125; ,
                  e1:int ,
                  e2:&#123;«‹› ,‹(V &lt; e0) 
@@ -4581,7 +4844,7 @@ code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hov
                     (V =
                     (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
                      (height e3)) + 1))&#125;) |
-  (V = t1)&#125;</pre>]"><span class="Cmatch">match</span></a> t2<a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+  (V = t1)&#125;</pre>]"><span class="Cconstructor">Empty</span></a> <span class="Cnonalphakeyword">-&gt;</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
             Node(e0:&#123;'aM | (m &lt;= V)  (m != V)&#125; ,
                  e1:int ,
                  e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
@@ -4609,8 +4872,8 @@ code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hov
                     (V =
                     (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
                      (height e3)) + 1))&#125;) |
-  (V = t2)&#125;</pre>]"> </a><span class="Cwith">with</span>
-<span class="Clinenum">  83:</span><span class="Cbackground"> </span>      <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+  (V = t2)&#125;</pre>]">t2</a>
+<span class="Clinenum">  81:</span><span class="Cbackground"> </span>  <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
             Node(e0:&#123;'aM | (m &gt;= V)  (m != V)&#125; ,
                  e1:int ,
                  e2:&#123;«‹› ,‹(V &lt; e0) 
@@ -4638,8 +4901,8 @@ code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hov
                     (V =
                     (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
                      (height e3)) + 1))&#125;) |
-  (V = t1)&#125;</pre>]"><span class="Cbar">|</span> <span class="Cconstructor">Empty</span> <span class="Cnonalphakeyword">-&gt;</span> t1
-<span class="Clinenum">  84:</span><span class="Cbackground"> </span></a>      <span class="Cbar">|</span> <span class="Cconstructor">Node</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+  (V = t1)&#125;</pre>]"><span class="Cconstructor">Node</span><span class="Cnonalphakeyword">(</span><span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">,</span> <span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">,</span> ll<span class="Cnonalphakeyword">,</span> lr<span class="Cnonalphakeyword">,</span> h1<span class="Cnonalphakeyword">)</span></a> <span class="Cnonalphakeyword">-&gt;</span> 
+<span class="Clinenum">  82:</span><span class="Cbackground"> </span>      <span class="Cmatch">match</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
             Node(e0:&#123;'aM | (m &lt;= V)  (m != V)&#125; ,
                  e1:int ,
                  e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
@@ -4667,8 +4930,8 @@ code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hov
                     (V =
                     (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
                      (height e3)) + 1))&#125;) |
-  (V = t2)&#125;</pre>]"><span class="Cnonalphakeyword">(</span>r</a><span class="Cnonalphakeyword">,</span> <span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">,</span> rl<span class="Cnonalphakeyword">,</span> rr<span class="Cnonalphakeyword">,</span> h2<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">-&gt;</span>
-<span class="Clinenum">  85:</span><span class="Cbackground"> </span>          <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+  (V = t2)&#125;</pre>]">t2</a> <span class="Cwith">with</span>
+<span class="Clinenum">  83:</span><span class="Cbackground"> </span>      <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
             Node(e0:&#123;'aM | (m &lt;= V)  (m != V)&#125; ,
                  e1:int ,
                  e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
@@ -4696,7 +4959,7 @@ code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hov
                     (V =
                     (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
                      (height e3)) + 1))&#125;) |
-  (V = t2)&#125;</pre>]"><span class="Clet">let</span></a> <span class="Cnonalphakeyword">(</span>x<span class="Cnonalphakeyword">,</span><a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+  (V = t2)&#125;</pre>]"><span class="Cconstructor">Empty</span></a> <span class="Cnonalphakeyword">-&gt;</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
             Node(e0:&#123;'aM | (m &gt;= V)  (m != V)&#125; ,
                  e1:int ,
                  e2:&#123;«‹› ,‹(V &lt; e0) 
@@ -4724,8 +4987,8 @@ code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hov
                     (V =
                     (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
                      (height e3)) + 1))&#125;) |
-  (V = t1)&#125;</pre>]"> d</a><span class="Cnonalphakeyword">,</span> t2'<span class="Cnonalphakeyword">)</span> <span class="Cnonalphakeyword">=</span> remove_min_binding t2 <span class="Cin">in</span>
-<span class="Clinenum">  86:</span><span class="Cbackground"> </span>            <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+  (V = t1)&#125;</pre>]">t1</a>
+<span class="Clinenum">  84:</span><span class="Cbackground"> </span>      <span class="Cbar">|</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
             Node(e0:&#123;'aM | (m &lt;= V)  (m != V)&#125; ,
                  e1:int ,
                  e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
@@ -4753,8 +5016,238 @@ code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hov
                     (V =
                     (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
                      (height e3)) + 1))&#125;) |
-  (V = t2)&#125;</pre>]">bal x d t1 t2'
-<span class="Clinenum">  87:</span><span class="Cbackground"> </span></a>            <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+  (V = t2)&#125;</pre>]"><span class="Cconstructor">Node</span><span class="Cnonalphakeyword">(</span>r<span class="Cnonalphakeyword">,</span> <span class="Cnonalphakeyword">_</span><span class="Cnonalphakeyword">,</span> rl<span class="Cnonalphakeyword">,</span> rr<span class="Cnonalphakeyword">,</span> h2<span class="Cnonalphakeyword">)</span></a> <span class="Cnonalphakeyword">-&gt;</span>
+<span class="Clinenum">  85:</span><span class="Cbackground"> </span>          <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;tuple. rec(e0:&#123;'aM | (m &lt;= V)  (m != V)  (? ((Myaset.mem V (set_of t2))))&#125; ,
+              e1:int ,
+              e2:&#123;«t» t. Empty +
+                           Node(e0:&#123;'aM |
+                                   (m &lt;= V) 
+                                   (m != V) 
+                                   (V &gt; e0) 
+                                   (e0 &lt;= V) 
+                                   (e0 != V)&#125; ,
+                                e1:int ,
+                                e2:&#123;«‹› ,‹(V &lt; e0) 
+                                                 (e0 &gt;= V) 
+                                                 (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                                   ((height V) &gt;= 0)  ((height V) &gt;= 0)&#125; ,
+                                e3:&#123;«‹› ,‹(V &gt; e0) 
+                                                 (V &gt; e0) 
+                                                 (e0 &lt;= V) 
+                                                 (e0 != V) 
+                                                 (e0 &lt;= V) 
+                                                 (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                                   ((height V) &lt;= ((height e2) + 2)) 
+                                   ((height V) &gt;= ((height e2) - 2)) 
+                                   ((height V) &gt;= 0) 
+                                   ((height V) &gt;= ((height e2) - 2)) 
+                                   ((height V) &lt;= ((height e2) + 2)) 
+                                   ((height V) &gt;= ((height e2) - 3)) 
+                                   ((height V) &lt;= ((height e2) + 3)) 
+                                   ((height V) &gt;= 0)&#125; ,
+                                e4:&#123;int |
+                                   (0 &lt;= V) 
+                                   (V != 0) 
+                                   (V =
+                                   (if (((height e2) &gt;= (height e3))) then (
+                                    (height e2)) else ((height e3)) + 1)) 
+                                   (V &gt;= 0) 
+                                   (V =
+                                   (if (((height e2) &gt;= (height e3))) then (
+                                    (height e2)) else ((height e3)) + 1))&#125;) |
+                 ((height V) &lt;= ((height t2) + 1)) 
+                 ((height V) &lt;= (height t2)) 
+                 ((height V) &gt;= ((height t2) - 1)) 
+                 ((height V) &gt;= 0) 
+                 ((height V) &lt;= ((height t2) - 0)) 
+                 ((height V) &lt;= ((height t2) + 0)) 
+                 ((height V) &gt;= ((height t2) - 1)) 
+                 ((height V) &lt;= ((height t2) + 1)) 
+                 ((height V) &gt;= ((height t2) - 2)) 
+                 ((height V) &lt;= ((height t2) + 2)) 
+                 ((height V) &gt;= ((height t2) - 3)) 
+                 ((height V) &lt;= ((height t2) + 3)) 
+                 ((height V) &gt;= ((height Empty) - 0)) 
+                 ((height V) &gt;= ((height Empty) + 0)) 
+                 ((height V) &gt;= ((height Empty) - 1)) 
+                 ((height V) &gt;= ((height Empty) - 2)) 
+                 ((height V) &gt;= ((height Empty) - 3)) 
+                 ((height V) &gt;= 0) 
+                 (? ((Myaset.eq (set_of t2) (Myaset.cup (set_of V) (Myaset.sng e0)))))&#125;) |
+  (V = _'91)&#125;</pre>]"><span class="Cnonalphakeyword">(</span>x<span class="Cnonalphakeyword">,</span> d<span class="Cnonalphakeyword">,</span> t2'<span class="Cnonalphakeyword">)</span></a> <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (t:&#123;«t» t. Empty +
+               Node(e0:&#123;'aM | (m &lt;= V)  (m != V)&#125; ,
+                    e1:int ,
+                    e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                       ((height V) &gt;= 0)  ((height V) &gt;= 0)&#125; ,
+                    e3:&#123;«‹› ,‹(V &gt; e0)  (e0 &lt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                       ((height V) &lt;= ((height e2) + 2)) 
+                       ((height V) &gt;= ((height e2) - 2)) 
+                       ((height V) &gt;= 0) 
+                       ((height V) &gt;= ((height e2) - 2)) 
+                       ((height V) &lt;= ((height e2) + 2)) 
+                       ((height V) &gt;= ((height e2) - 3)) 
+                       ((height V) &lt;= ((height e2) + 3)) 
+                       ((height V) &gt;= 0)&#125; ,
+                    e4:&#123;int |
+                       (0 &lt;= V) 
+                       (V != 0) 
+                       (V =
+                       (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                        (height e3)) + 1)) 
+                       (V &gt;= 0) 
+                       (V =
+                       (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                        (height e3)) + 1))&#125;) |
+     ((height V) &gt;= 0)  ((height V) &gt;= 0)  ((height V) &gt; 0)&#125;) -&gt;
+  tuple. rec(e0:&#123;'aM | (m &lt;= V)  (m != V)  (? ((Myaset.mem V (set_of t))))&#125; ,
+             e1:int ,
+             e2:&#123;«t» t. Empty +
+                          Node(e0:&#123;'aM |
+                                  (m &lt;= V) 
+                                  (m != V) 
+                                  (V &gt; e0) 
+                                  (e0 &lt;= V) 
+                                  (e0 != V)&#125; ,
+                               e1:int ,
+                               e2:&#123;«‹› ,‹(V &lt; e0) 
+                                                (e0 &gt;= V) 
+                                                (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                                  ((height V) &gt;= 0)  ((height V) &gt;= 0)&#125; ,
+                               e3:&#123;«‹› ,‹(V &gt; e0) 
+                                                (V &gt; e0) 
+                                                (e0 &lt;= V) 
+                                                (e0 != V) 
+                                                (e0 &lt;= V) 
+                                                (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                                  ((height V) &lt;= ((height e2) + 2)) 
+                                  ((height V) &gt;= ((height e2) - 2)) 
+                                  ((height V) &gt;= 0) 
+                                  ((height V) &gt;= ((height e2) - 2)) 
+                                  ((height V) &lt;= ((height e2) + 2)) 
+                                  ((height V) &gt;= ((height e2) - 3)) 
+                                  ((height V) &lt;= ((height e2) + 3)) 
+                                  ((height V) &gt;= 0)&#125; ,
+                               e4:&#123;int |
+                                  (0 &lt;= V) 
+                                  (V != 0) 
+                                  (V =
+                                  (if (((height e2) &gt;= (height e3))) then (
+                                   (height e2)) else ((height e3)) + 1)) 
+                                  (V &gt;= 0) 
+                                  (V =
+                                  (if (((height e2) &gt;= (height e3))) then (
+                                   (height e2)) else ((height e3)) + 1))&#125;) |
+                ((height V) &lt;= ((height t) + 1)) 
+                ((height V) &lt;= (height t)) 
+                ((height V) &gt;= ((height t) - 1)) 
+                ((height V) &gt;= 0) 
+                ((height V) &lt;= ((height t) - 0)) 
+                ((height V) &lt;= ((height t) + 0)) 
+                ((height V) &gt;= ((height t) - 1)) 
+                ((height V) &lt;= ((height t) + 1)) 
+                ((height V) &gt;= ((height t) - 2)) 
+                ((height V) &lt;= ((height t) + 2)) 
+                ((height V) &gt;= ((height t) - 3)) 
+                ((height V) &lt;= ((height t) + 3)) 
+                ((height V) &gt;= ((height Empty) - 0)) 
+                ((height V) &gt;= ((height Empty) + 0)) 
+                ((height V) &gt;= ((height Empty) - 1)) 
+                ((height V) &gt;= ((height Empty) - 2)) 
+                ((height V) &gt;= ((height Empty) - 3)) 
+                ((height V) &gt;= 0) 
+                (? ((Myaset.eq (set_of t) (Myaset.cup (set_of V) (Myaset.sng e0)))))&#125;)</pre>]">remove_min_binding</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+            Node(e0:&#123;'aM | (m &lt;= V)  (m != V)&#125; ,
+                 e1:int ,
+                 e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                    ((height V) &gt;= 0)  ((height V) &gt;= 0)&#125; ,
+                 e3:&#123;«‹› ,‹(V &gt; e0) 
+                                  (e0 &lt;= V) 
+                                  (e0 != V) 
+                                  (m &lt;= V) 
+                                  (m != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                    ((height V) &lt;= ((height e2) + 2)) 
+                    ((height V) &gt;= ((height e2) - 2)) 
+                    ((height V) &gt;= 0) 
+                    ((height V) &gt;= ((height e2) - 2)) 
+                    ((height V) &lt;= ((height e2) + 2)) 
+                    ((height V) &gt;= ((height e2) - 3)) 
+                    ((height V) &lt;= ((height e2) + 3)) 
+                    ((height V) &gt;= 0)&#125; ,
+                 e4:&#123;int |
+                    (0 &lt;= V) 
+                    (V != 0) 
+                    (V =
+                    (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                     (height e3)) + 1)) 
+                    (V &gt;= 0) 
+                    (V =
+                    (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                     (height e3)) + 1))&#125;) |
+  (V = t2)&#125;</pre>]">t2</a> <span class="Cin">in</span>
+<span class="Clinenum">  86:</span><span class="Cbackground"> </span>            <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;'aM | (m != V)&#125;) -&gt;
+  (d:int) -&gt;
+  (l:&#123;«t» t. Empty +
+               Node(e0:&#123;'aM | (m != V)  (x &gt;= V)  (x != V)&#125; ,
+                    e1:int ,
+                    e2:&#123;«‹› ,‹(V &lt; e0) 
+                                     (e0 &gt;= V) 
+                                     (e0 != V) 
+                                     (x &gt;= V) 
+                                     (x != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                       ((height V) &gt;= 0)  ((height V) &gt;= 0)&#125; ,
+                    e3:&#123;«‹› ,‹(V &gt; e0)  (e0 &lt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                       ((height V) &lt;= ((height e2) + 2)) 
+                       ((height V) &gt;= ((height e2) - 2)) 
+                       ((height V) &gt;= 0) 
+                       ((height V) &gt;= ((height e2) - 2)) 
+                       ((height V) &lt;= ((height e2) + 2)) 
+                       ((height V) &gt;= ((height e2) - 3)) 
+                       ((height V) &lt;= ((height e2) + 3)) 
+                       ((height V) &gt;= 0)&#125; ,
+                    e4:&#123;int |
+                       (0 &lt;= V) 
+                       (V != 0) 
+                       (V =
+                       (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                        (height e3)) + 1)) 
+                       (V &gt;= 0) 
+                       (V =
+                       (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                        (height e3)) + 1))&#125;) |
+     ((height V) &gt;= 0)  ((height V) &gt;= 0)&#125;) -&gt;
+  (r:&#123;«t» t. Empty +
+               Node(e0:&#123;'aM | (m != V)  (x &lt;= V)  (x != V)&#125; ,
+                    e1:int ,
+                    e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                       ((height V) &gt;= 0)  ((height V) &gt;= 0)&#125; ,
+                    e3:&#123;«‹› ,‹(V &gt; e0) 
+                                     (e0 &lt;= V) 
+                                     (e0 != V) 
+                                     (x &lt;= V) 
+                                     (x != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                       ((height V) &lt;= ((height e2) + 2)) 
+                       ((height V) &gt;= ((height e2) - 2)) 
+                       ((height V) &gt;= 0) 
+                       ((height V) &gt;= ((height e2) - 2)) 
+                       ((height V) &lt;= ((height e2) + 2)) 
+                       ((height V) &gt;= ((height e2) - 3)) 
+                       ((height V) &lt;= ((height e2) + 3)) 
+                       ((height V) &gt;= 0)&#125; ,
+                    e4:&#123;int |
+                       (0 &lt;= V) 
+                       (V != 0) 
+                       (V =
+                       (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                        (height e3)) + 1)) 
+                       (V &gt;= 0) 
+                       (V =
+                       (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                        (height e3)) + 1))&#125;) |
+     ((height V) &gt;= 0) 
+     ((height V) &gt;= ((height l) - 3)) 
+     ((height V) &lt;= ((height l) + 3)) 
+     ((height V) &gt;= 0)&#125;) -&gt;
+  &#123;«t» t. Empty +
             Node(e0:&#123;'aM | (m != V)&#125; ,
                  e1:int ,
                  e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
@@ -4779,71 +5272,95 @@ code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hov
                     (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
                      (height e3)) + 1))&#125;) |
   ((height V) &gt;= 0) 
-  ((height V) &gt;= ((height t1) - 0)) 
-  ((height V) &gt;= ((height t1) + 0)) 
-  ((height V) &gt;= ((height t1) - 1)) 
-  ((height V) &gt;= ((height t1) - 2)) 
-  ((height V) &gt;= ((height t1) - 3)) 
+  ((height V) &gt;=
+  if ((((height l) &lt;= ((height r) + 2)) and 
+        ((height l) &gt;= ((height r) - 2)))) then (if (((height l) &gt;=
+                                                     (height r))) then (
+                                                 ((height l) + 1)) else (
+                                                 ((height r) + 1))) else (
+  if (((height l) &gt;= (height r))) then ((height l)) else ((height r)))) 
+  ((height V) &gt;=
+  (if (((height l) &lt;= (height r))) then ((height l)) else ((height r)) + 1)) 
+  ((height V) &gt;=
+  (if (((height l) &lt;= (height r))) then ((height l)) else ((height r)) + 0)) 
+  ((height V) &lt;=
+  (if (((height l) &gt;= (height r))) then ((height l)) else ((height r)) + 1)) 
+  ((height V) &gt;=
+  (if (((height l) &gt;= (height r))) then ((height l)) else ((height r)) + 0)) 
+  ((height V) &gt;= ((height r) - 0)) 
+  ((height V) &gt;= ((height r) + 0)) 
+  ((height V) &gt;= ((height r) - 1)) 
+  ((height V) &gt;= ((height r) - 2)) 
+  ((height V) &gt;= ((height r) - 3)) 
+  ((height V) &gt;= ((height l) - 0)) 
+  ((height V) &gt;= ((height l) + 0)) 
+  ((height V) &gt;= ((height l) - 1)) 
+  ((height V) &gt;= ((height l) - 2)) 
+  ((height V) &gt;= ((height l) - 3)) 
   ((height V) &gt;= 0) 
   ((height V) &gt; 0) 
-  ((height V) &lt;= ((height t1) + 3)) 
-  ((height V) &gt;=
-  (if (((height t1) &lt;= (height t2))) then ((height t1)) else ((height t2)) + 1)) 
-  ((height V) &gt;=
-  (if (((height t1) &lt;= (height t2))) then ((height t1)) else ((height t2)) + 0)) 
-  ((height V) &lt;=
-  (if (((height t1) &gt;= (height t2))) then ((height t1)) else ((height t2)) + 1)) 
-  ((height V) &gt;=
-  (if (((height t1) &gt;= (height t2))) then ((height t1)) else ((height t2)) + 0)) 
-  ((height V) &gt;= ((height rr) - 0)) 
-  ((height V) &gt;= ((height rr) + 0)) 
-  ((height V) &gt;= ((height rr) - 1)) 
-  ((height V) &gt;= ((height rr) + 1)) 
-  ((height V) &gt;= ((height rr) - 2)) 
-  ((height V) &gt;= ((height rr) - 3)) 
-  ((height V) &gt;= ((height rl) - 0)) 
-  ((height V) &gt;= ((height rl) + 0)) 
-  ((height V) &gt;= ((height rl) - 1)) 
-  ((height V) &gt;= ((height rl) + 1)) 
-  ((height V) &gt;= ((height rl) - 2)) 
-  ((height V) &gt;= ((height rl) - 3)) 
-  ((height V) &gt;= ((height lr) - 0)) 
-  ((height V) &gt;= ((height lr) + 0)) 
-  ((height V) &gt;= ((height lr) - 1)) 
-  ((height V) &gt;= ((height lr) + 1)) 
-  ((height V) &gt;= ((height lr) - 2)) 
-  ((height V) &gt;= ((height lr) - 3)) 
-  ((height V) &gt;= ((height ll) - 0)) 
-  ((height V) &gt;= ((height ll) + 0)) 
-  ((height V) &gt;= ((height ll) - 1)) 
-  ((height V) &gt;= ((height ll) + 1)) 
-  ((height V) &gt;= ((height ll) - 2)) 
-  ((height V) &gt;= ((height ll) - 3)) 
-  ((height V) &gt;= ((height t2) - 0)) 
-  ((height V) &gt;= ((height t2) + 0)) 
-  ((height V) &gt;= ((height t2) - 1)) 
-  ((height V) &gt;= ((height t2) - 2)) 
-  ((height V) &gt;= ((height t2) - 3)) 
-  ((height V) &lt;= ((height t2) + 3)) 
-  ((height V) &gt;= ((height Empty) - 0)) 
-  ((height V) &gt;= ((height Empty) + 0)) 
-  ((height V) &gt;= ((height Empty) - 1)) 
-  ((height V) &gt;= ((height Empty) + 1)) 
-  ((height V) &gt;= ((height Empty) - 2)) 
-  ((height V) &gt;= ((height Empty) - 3)) 
-  (rr != V) 
-  (rl != V) 
-  (lr != V) 
-  (ll != V) 
-  (Empty != V) 
-  (rr != V) 
-  (rl != V) 
-  (lr != V) 
-  (ll != V) 
-  (Empty != V) 
-  (? ((Myaset.eq (set_of V) (Myaset.cup (set_of t2) (set_of t1)))))&#125;</pre>]">
+  (? ((Myaset.eq (set_of V) (Myaset.cup (Myaset.sng x) (Myaset.cup (set_of l) 
+                                                       (set_of r))))))&#125;</pre>]">bal</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x)&#125;</pre>]">x</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;int | (V = d)&#125;</pre>]">d</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+            Node(e0:&#123;'aM | (m &gt;= V)  (m != V)&#125; ,
+                 e1:int ,
+                 e2:&#123;«‹› ,‹(V &lt; e0) 
+                                  (e0 &gt;= V) 
+                                  (e0 != V) 
+                                  (m &gt;= V) 
+                                  (m != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                    ((height V) &gt;= 0)  ((height V) &gt;= 0)&#125; ,
+                 e3:&#123;«‹› ,‹(V &gt; e0)  (e0 &lt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                    ((height V) &lt;= ((height e2) + 2)) 
+                    ((height V) &gt;= ((height e2) - 2)) 
+                    ((height V) &gt;= 0) 
+                    ((height V) &gt;= ((height e2) - 2)) 
+                    ((height V) &lt;= ((height e2) + 2)) 
+                    ((height V) &gt;= ((height e2) - 3)) 
+                    ((height V) &lt;= ((height e2) + 3)) 
+                    ((height V) &gt;= 0)&#125; ,
+                 e4:&#123;int |
+                    (0 &lt;= V) 
+                    (V != 0) 
+                    (V =
+                    (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                     (height e3)) + 1)) 
+                    (V &gt;= 0) 
+                    (V =
+                    (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                     (height e3)) + 1))&#125;) |
+  (V = t1)&#125;</pre>]">t1</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+            Node(e0:&#123;'aM | (m &lt;= V)  (m != V)  (V &gt; x)  (x &lt;= V)  (x != V)&#125; ,
+                 e1:int ,
+                 e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                    ((height V) &gt;= 0)  ((height V) &gt;= 0)&#125; ,
+                 e3:&#123;«‹› ,‹(V &gt; e0) 
+                                  (V &gt; x) 
+                                  (x &lt;= V) 
+                                  (x != V) 
+                                  (e0 &lt;= V) 
+                                  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                    ((height V) &lt;= ((height e2) + 2)) 
+                    ((height V) &gt;= ((height e2) - 2)) 
+                    ((height V) &gt;= 0) 
+                    ((height V) &gt;= ((height e2) - 2)) 
+                    ((height V) &lt;= ((height e2) + 2)) 
+                    ((height V) &gt;= ((height e2) - 3)) 
+                    ((height V) &lt;= ((height e2) + 3)) 
+                    ((height V) &gt;= 0)&#125; ,
+                 e4:&#123;int |
+                    (0 &lt;= V) 
+                    (V != 0) 
+                    (V =
+                    (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                     (height e3)) + 1)) 
+                    (V &gt;= 0) 
+                    (V =
+                    (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                     (height e3)) + 1))&#125;) |
+  (V = t2')&#125;</pre>]">t2'</a>
+<span class="Clinenum">  87:</span><span class="Cbackground"> </span>            
 <span class="Clinenum">  88:</span><span class="Cbackground"> </span><span class="Ccomment">(* a ghost function for verification that instantiates all universally embedded</span>
-<span class="Clinenum">  89:</span><span class="Cbackground"> </span><span class="Ccomment"> * facts about t *)</span></a>
+<span class="Clinenum">  89:</span><span class="Cbackground"> </span><span class="Ccomment"> * facts about t *)</span>
 <span class="Clinenum">  90:</span><span class="Cbackground"> </span><span class="Clet">let</span> <span class="Crec">rec</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:'aP) -&gt;
   (t:&#123;«t» t. Empty +
                Node(e0:&#123;'aP | (x != V)&#125; ,
@@ -6349,9 +6866,129 @@ code,pre { color:black }a.Cannot { color:black;text-decoration:none }.Cannot:hov
                      (height e3)) + 1))&#125;) |
   (V = l)&#125;</pre>]">l</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x)&#125;</pre>]">x</a>
 <span class="Clinenum"> 120:</span><span class="Cbackground"> </span>        <span class="Celse">else</span>
-<span class="Clinenum"> 121:</span><span class="Cbackground"> </span>          <span class="Clet">let</span> xx <span class="Cnonalphakeyword">=</span> nfind x l <span class="Cin">in</span>
-<span class="Clinenum"> 122:</span><span class="Cbackground"> </span>          find r x
-<span class="Clinenum"> 123:</span><span class="Cbackground"> </span></pre>
+<span class="Clinenum"> 121:</span><span class="Cbackground"> </span>          <span class="Clet">let</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;unit. () | (V = _'120)&#125;</pre>]">xx</a> <span class="Cnonalphakeyword">=</span> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (x:&#123;'aM |
+     (V = x) 
+     (? ((Myaset.mem V (set_of t)))) 
+     (d &lt;= V) 
+     (d != V) 
+     (x &gt;= V) 
+     (x &lt;= V)&#125;) -&gt;
+  (t:&#123;«t» t. Empty +
+               Node(e0:&#123;'aM |
+                       (d &gt;= V) 
+                       (d != V) 
+                       (x &gt;= V) 
+                       (x != V) 
+                       (x &gt;= V) 
+                       (x != V) 
+                       (x != V)&#125; ,
+                    e1:int ,
+                    e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                       ((height V) &gt;= 0)  ((height V) &gt;= 0)&#125; ,
+                    e3:&#123;«‹› ,‹(V &gt; e0)  (e0 &lt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                       ((height V) &lt;= ((height e2) + 2)) 
+                       ((height V) &gt;= ((height e2) - 2)) 
+                       ((height V) &gt;= 0) 
+                       ((height V) &gt;= ((height e2) - 2)) 
+                       ((height V) &lt;= ((height e2) + 2)) 
+                       ((height V) &gt;= ((height e2) - 3)) 
+                       ((height V) &lt;= ((height e2) + 3)) 
+                       ((height V) &gt;= 0)&#125; ,
+                    e4:&#123;int |
+                       (0 &lt;= V) 
+                       (V != 0) 
+                       (V =
+                       (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                        (height e3)) + 1)) 
+                       (V &gt;= 0) 
+                       (V =
+                       (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                        (height e3)) + 1))&#125;) |
+     ((height V) &gt;= 0)  ((height V) &gt;= 0)&#125;) -&gt;
+  &#123;unit. () |
+  ((true or  (? ((Myaset.un V)))) and  (-. (? ((Myaset.mem x (set_of t))))))&#125;</pre>]">nfind</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x)&#125;</pre>]">x</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+            Node(e0:'aM ,
+                 e1:int ,
+                 e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                    ((height V) &gt;= 0)  ((height V) &gt;= 0)&#125; ,
+                 e3:&#123;«‹› ,‹(V &gt; e0)  (e0 &lt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                    ((height V) &lt;= ((height e2) + 2)) 
+                    ((height V) &gt;= ((height e2) - 2)) 
+                    ((height V) &gt;= 0) 
+                    ((height V) &gt;= ((height e2) - 2)) 
+                    ((height V) &lt;= ((height e2) + 2)) 
+                    ((height V) &gt;= ((height e2) - 3)) 
+                    ((height V) &lt;= ((height e2) + 3)) 
+                    ((height V) &gt;= 0)&#125; ,
+                 e4:&#123;int |
+                    (0 &lt;= V) 
+                    (V != 0) 
+                    (V =
+                    (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                     (height e3)) + 1)) 
+                    (V &gt;= 0) 
+                    (V =
+                    (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                     (height e3)) + 1))&#125;) |
+  (V = l)&#125;</pre>]">l</a> <span class="Cin">in</span>
+<span class="Clinenum"> 122:</span><span class="Cbackground"> </span>          <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  (t:&#123;«t» t. Empty +
+               Node(e0:&#123;'aM | (d &lt;= V)  (d != V)&#125; ,
+                    e1:int ,
+                    e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                       ((height V) &gt;= 0)  ((height V) &gt;= 0)&#125; ,
+                    e3:&#123;«‹› ,‹(V &gt; e0)  (e0 &lt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                       ((height V) &lt;= ((height e2) + 2)) 
+                       ((height V) &gt;= ((height e2) - 2)) 
+                       ((height V) &gt;= 0) 
+                       ((height V) &gt;= ((height e2) - 2)) 
+                       ((height V) &lt;= ((height e2) + 2)) 
+                       ((height V) &gt;= ((height e2) - 3)) 
+                       ((height V) &lt;= ((height e2) + 3)) 
+                       ((height V) &gt;= 0)&#125; ,
+                    e4:&#123;int |
+                       (0 &lt;= V) 
+                       (V != 0) 
+                       (V =
+                       (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                        (height e3)) + 1)) 
+                       (V &gt;= 0) 
+                       (V =
+                       (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                        (height e3)) + 1))&#125;) |
+     ((height V) &gt;= 0)  ((height V) &gt;= 0)&#125;) -&gt;
+  (x:&#123;'aM | (d &lt;= V)  (d != V)  (? ((Myaset.mem V (set_of t))))&#125;) -&gt;
+  &#123;'aM |
+  (d &lt;= V) 
+  (d != V) 
+  (? ((Myaset.mem V (set_of t)))) 
+  (V = x) 
+  (x &gt;= V) 
+  (x &lt;= V)&#125;</pre>]">find</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;«t» t. Empty +
+            Node(e0:'aM ,
+                 e1:int ,
+                 e2:&#123;«‹› ,‹(V &lt; e0)  (e0 &gt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                    ((height V) &gt;= 0)  ((height V) &gt;= 0)&#125; ,
+                 e3:&#123;«‹› ,‹(V &gt; e0)  (e0 &lt;= V)  (e0 != V) ,⊤ ,⊤ ,⊤ ,⊤›» t |
+                    ((height V) &lt;= ((height e2) + 2)) 
+                    ((height V) &gt;= ((height e2) - 2)) 
+                    ((height V) &gt;= 0) 
+                    ((height V) &gt;= ((height e2) - 2)) 
+                    ((height V) &lt;= ((height e2) + 2)) 
+                    ((height V) &gt;= ((height e2) - 3)) 
+                    ((height V) &lt;= ((height e2) + 3)) 
+                    ((height V) &gt;= 0)&#125; ,
+                 e4:&#123;int |
+                    (0 &lt;= V) 
+                    (V != 0) 
+                    (V =
+                    (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                     (height e3)) + 1)) 
+                    (V &gt;= 0) 
+                    (V =
+                    (if (((height e2) &gt;= (height e3))) then ((height e2)) else (
+                     (height e3)) + 1))&#125;) |
+  (V = r)&#125;</pre>]">r</a> <a href="javascript:;" style="text-decoration:none" class="Cannot" title="[cssbody=[annotbody] fade=[off] header=[] body=[<pre>  &#123;'aM | (V = x)&#125;</pre>]">x</a>
+</pre>
 
 <hr>
 <p>

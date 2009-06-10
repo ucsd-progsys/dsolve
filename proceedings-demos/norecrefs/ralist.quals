@@ -33,7 +33,6 @@ qualif MLQ(_V) : (_V = (x - 1))
 qualif MLQ(_V) : (_V = (x - y))
 qualif MLQ(_V) : (_V = (x / y))
 qualif MLQ(_V) : (_V >= 0)
-(*qualif FALSE(v) : (1=0)*)
 (* from the mlq *)
 
 qualif A(v) : sz l { * *} v
