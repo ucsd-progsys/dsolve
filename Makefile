@@ -13,7 +13,8 @@ LIBZ3=-cclib -lz3#-gmp
 LINKFLAGS= -ccopt "-Iexternal/z3/ocaml -Lexternal/z3/lib" $(FLAGS) \
           -I external/ocamlgraph/ \
 	  -cclib -lstdc++ $(LIBZ3) -cclib -lz3stubs \
-          -I external/ocamlgraph/ -I external/z3/ocaml -I external/z3/bin 
+          -I external/ocamlgraph/ -I external/z3/ocaml -I external/z3/bin \
+					-I external/fixpoint
 
 INCLUDES=-I external/z3/ocaml/ -I external/ocamlgraph/ \
          -I utils -I parsing -I typing -I liquid
@@ -48,13 +49,15 @@ LIQUID=liquid/qualmod.cmo liquid/lightenv.cmo \
 	liquid/qualdecl.cmo \
   liquid/builtins.cmo liquid/message.cmo \
   liquid/theoremProverZ3.cmo liquid/theoremProver.cmo liquid/wellformed.cmo \
-  liquid/constraint.cmo liquid/measure.cmo \
-  liquid/qualifymod.cmo \
+  liquid/constraint.cmo liquid/dsolveconstraint.cmo \ 
+	liquid/measure.cmo liquid/qualifymod.cmo \
   liquid/qdebug.cmo liquid/normalize.cmo \
   liquid/qdump.cmo liquid/liqerrors.cmo \
 	liquid/mlqmod.cmo liquid/liquid.cmo
 
-LIQOBJS=$(UTILS) $(PARSING) $(TYPING) $(LIQUID)
+DSOLVE2FIX=dsolve2fix/predglue.cmo dsolve2fix/consglue.cmo \
+
+LIQOBJS=$(UTILS) $(PARSING) $(TYPING) $(LIQUID) $(DSOLVE2FIX)
 
 default: liquid.opt
 
