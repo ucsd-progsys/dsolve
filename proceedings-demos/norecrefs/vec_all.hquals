@@ -24,7 +24,6 @@ qualif LVARV(v)(A: 'a t) : v { * * } length ~A
 qualif LVARVV(v)(A: 'a t) : length v { * * } length ~A
 qualif SUB(v) : length v = j - i
 qualif SETAPPEND(_v) : length _v = (length v > i ? length v : i + 1)
-qualif TOARR(v) : length t = Marray.length v
 qualif LPLUSONE(v) : length v { * * } length t {< -, + >} 1
 qualif ISEMPTY(v) : ((? v) iff (height t = 0 or length t = 0))
 qualif Ph(v): v = (height [l, e0] >= height [r, e3] ? height [l, e0] : height [r, e3]) + 1

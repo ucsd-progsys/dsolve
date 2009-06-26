@@ -21,7 +21,7 @@ let rec fsort_of_dprover_t = function
   | Pparsetree.Fun ts -> F.Func (List.map fsort_of_dprover ts)
   | Pparsetree.Pprover_abs ("int") -> F.Int 
   | Pparsetree.Pprover_abs ("bool") -> F.Bool
-  | Pparsetree.Pprover_abs s -> Misc.assertf "Unhandled sort: %s" s
+  | Pparsetree.Pprover_abs s -> F.Unint s
 
 let rec f_of_dexpr = function
   | D.PInt i            -> F.eCon i 
@@ -50,4 +50,5 @@ and f_of_dpred = function
   | D.Iff (p1, p2) ->
       let p1, p2 = f_of_dpred p1, f_of_dpred p2 in 
       F.pAtom (F.pImp p1 p2) (F.pImp p2 p1)
+
 
