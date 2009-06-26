@@ -62,7 +62,7 @@ let rec fsort_of_dframe = function
       if Path.same Predef.path_bool p then F.Bool
       else if Path.same Predef.path_int p then F.Int
       else F.Unint (string_of_frame fr)
-
+(*
 let f_of_d_envt env =
   Lightenv.map 
         
@@ -77,4 +77,4 @@ let f_of_drefcons envt = function
     (* type of vv is is in envt *)
   | D.WFRef  (envt, r, _) -> 
     let r = unify_vv_dreft vv r in
-    
+ *)   
