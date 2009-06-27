@@ -69,8 +69,8 @@ and origin =
   | Cstr of labeled_constraint
 
 type refinement_constraint =
-  | SubRef of F.refinement (* F.t *) Le.t * guard_t * F.refinement * F.simple_refinement * (subref_id option)
-  | WFRef of F.t Le.t * F.simple_refinement * (subref_id option)
+  | SubRef of Frame.refinement (* F.t *) Lightenv.t * guard_t * Frame.refinement * Frame.simple_refinement * (subref_id option)
+  | WFRef of Frame.t Lightenv.t * Frame.simple_refinement * (subref_id option)
 
 (**************************************************************)
 (********************** Miscutil. Constants ***********************)

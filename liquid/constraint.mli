@@ -21,13 +21,18 @@
  *
  *)
 
-type fc_id 
+type fc_id
+type subref_id = int
 
 type guard_t = (Path.t * bool) list
 
 type frame_constraint =
   | SubFrame of Frame.t Lightenv.t * guard_t * Frame.t * Frame.t
   | WFFrame of Frame.t Lightenv.t * Frame.t
+
+type refinement_constraint =
+  | SubRef of Frame.refinement (* F.t *) Lightenv.t * guard_t * Frame.refinement * Frame.simple_refinement * (subref_id option)
+  | WFRef of Frame.t Lightenv.t * Frame.simple_refinement * (subref_id option)
 
 type labeled_constraint = {
   lc_cstr: frame_constraint;
