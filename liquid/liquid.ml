@@ -24,7 +24,7 @@
 open Config
 open Format
 open Liqerrors
-open Misc
+open Miscutil
 open Types
 open Clflags
 open Gc
@@ -129,7 +129,7 @@ let add_uninterpreted_constructors tenv fenv (id, td) =
     | _ -> fenv
 
 let process_sourcefile env fenv fname =
-  let bname = Misc.chop_extension_if_any fname in
+  let bname = Miscutil.chop_extension_if_any fname in
   let (qname, iname) = (bname ^ ".quals", bname ^ ".mlq") in
   try
     (* We need to pull out uninterpreted functions from the MLQ in order to typecheck. *)
@@ -153,7 +153,7 @@ let process_sourcefile env fenv fname =
      report_error std_formatter x; exit 1
 
 let process_file (env, fenv) fname =
-  match Misc.get_extension fname with
+  match Miscutil.get_extension fname with
     | Some "ml" ->
         (* odd things may happen if multiple files are run through here *)
         process_sourcefile env fenv fname;

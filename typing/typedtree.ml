@@ -14,7 +14,7 @@
 
 (* Abstract syntax tree after typing *)
 
-open Misc
+open Miscutil
 open Asttypes
 open Types
 

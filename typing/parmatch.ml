@@ -14,7 +14,7 @@
 
 (* Detection of partial matches and unused match cases. *)
 
-open Misc
+open Miscutil
 open Asttypes
 open Types
 open Typedtree

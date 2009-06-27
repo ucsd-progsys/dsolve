@@ -106,7 +106,7 @@ let dump_frame pp loc fr =
 
 let dump_frames sourcefile fmap =
   if !Cf.dump_frames then
-    let filename = Misc.chop_extension_if_any sourcefile ^ ".annot" in
+    let filename = Miscutil.chop_extension_if_any sourcefile ^ ".annot" in
     let pp = formatter_of_out_channel (open_out filename) in
       FrameLog.iter (dump_frame pp) fmap
 
@@ -360,7 +360,7 @@ and elem_qualifier fexpr n =
 
 and constrain_tuple (env, guard, f) es =
   let (fs, subexp_cs) = constrain_subexprs env guard es in
-  let f'              = F.tuple_of_frames fs (F.mk_refinement [] (Misc.mapi elem_qualifier es) []) in
+  let f'              = F.tuple_of_frames fs (F.mk_refinement [] (Miscutil.mapi elem_qualifier es) []) in
     (* We can't just use f' directly because we might need substitutions to make the new
        tuple self-contained (e.g., to refer to e0 instead of some local var) *)
     (f, [WFFrame(env, f); SubFrame (env, guard, f', f)], subexp_cs)

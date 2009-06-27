@@ -193,7 +193,7 @@ module Prover : PROVER =
 (***************************************************************************************)
 
     let z3Var_memo env me s =
-      Misc.do_memo me.vart
+      Miscutil.do_memo me.vart
       (fun () -> 
         let t = getVarType me s env in
         let sym = Z3.mk_string_symbol me.c (fresh "z3v") in
@@ -215,7 +215,7 @@ module Prover : PROVER =
 (***************************************************************************************)
 
     let z3Fun env me p t k = 
-      Misc.do_memo me.funt
+      Miscutil.do_memo me.funt
       (fun () ->
         let sym = Z3.mk_string_symbol me.c (fresh "z3f") in
         let (ts, ret) = z3ArgTypes me t in

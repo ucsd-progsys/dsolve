@@ -27,7 +27,7 @@ let preprocess sourcefile =
                                 pp (Filename.quote sourcefile) tmpfile
       in
       if Ccomp.command comm <> 0 then begin
-        Misc.remove_file tmpfile;
+        Miscutil.remove_file tmpfile;
         raise Error;
       end;
       tmpfile
@@ -35,13 +35,13 @@ let preprocess sourcefile =
 let remove_preprocessed inputfile =
   match !Clflags.preprocessor with
     None -> ()
-  | Some _ -> Misc.remove_file inputfile
+  | Some _ -> Miscutil.remove_file inputfile
 
 let remove_preprocessed_if_ast inputfile =
   match !Clflags.preprocessor with
     None -> ()
   | Some _ ->
-      if inputfile <> !Location.input_name then Misc.remove_file inputfile
+      if inputfile <> !Location.input_name then Miscutil.remove_file inputfile
 
 (* Parse a file or get a dumped syntax tree in it *)
 
@@ -59,7 +59,7 @@ let file ppf inputfile parse_fun ast_magic =
       else false
     with
       Outdated_version ->
-        Misc.fatal_error "Ocaml and preprocessor have incompatible versions"
+        Miscutil.fatal_error "Ocaml and preprocessor have incompatible versions"
     | _ -> false
   in
   let ast =

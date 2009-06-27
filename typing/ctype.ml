@@ -14,7 +14,7 @@
 
 (* Operations on core types *)
 
-open Misc
+open Miscutil
 open Asttypes
 open Types
 open Btype
@@ -171,7 +171,7 @@ module TypePairs =
  end)
 
                   (**********************************************)
-                  (*  Miscellaneous operations on object types  *)
+                  (*  Miscutilellaneous operations on object types  *)
                   (**********************************************)
 
 
@@ -317,7 +317,7 @@ let rec class_type_arity =
 
 
                   (*******************************************)
-                  (*  Miscellaneous operations on row types  *)
+                  (*  Miscutilellaneous operations on row types  *)
                   (*******************************************)
 
 let sort_row_fields = Sort.list (fun (p,_) (q,_) -> p < q)
@@ -3043,7 +3043,7 @@ let subtype env ty1 ty2 =
       (List.rev cstrs)
 
                               (*******************)
-                              (*  Miscellaneous  *)
+                              (*  Miscutilellaneous  *)
                               (*******************)
 
 (* Utility for printing. The resulting type is not used in computation. *)

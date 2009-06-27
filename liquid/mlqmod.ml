@@ -83,7 +83,7 @@ let rec translate_pframe dopt env fenv pf =
   and transl_constr l fs id r =
     let (ls, fs) = List.split fs in
     let id = match id with Some id -> Ident.create id | None -> if C.empty_list fs then C.dummy_id else C.abstr_elem_id () in
-    let ls = Misc.mapi
+    let ls = Miscutil.mapi
       (fun l i -> match l with Some l -> Ident.create l | None -> C.tuple_elem_id i) ls in
     let params = List.map transl_pframe_rec fs in
     let (path, decl) = lookup l in

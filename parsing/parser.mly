@@ -1955,7 +1955,7 @@ toplevel_directive:
   | SHARP ident TRUE            { Ptop_dir($2, Pdir_bool true) }
 ;
 
-/* Miscellaneous */
+/* Miscutilellaneous */
 
 name_tag:
     BACKQUOTE ident                             { $2 }

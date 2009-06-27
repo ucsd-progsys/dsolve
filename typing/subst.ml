@@ -14,7 +14,7 @@
 
 (* Substitutions *)
 
-open Misc
+open Miscutil
 open Path
 open Types
 open Btype

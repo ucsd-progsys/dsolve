@@ -14,7 +14,7 @@
 
 (**** Typing of type definitions ****)
 
-open Misc
+open Miscutil
 open Asttypes
 open Parsetree
 open Primitive

@@ -14,7 +14,7 @@
 
 (* Type-checking of the module language *)
 
-open Misc
+open Miscutil
 open Longident
 open Path
 open Asttypes
@@ -785,7 +785,7 @@ and simplify_signature sg =
 let type_implementation sourcefile outputprefix modulename initial_env ast =
   Typecore.reset_delayed_checks ();
   let (str, sg, finalenv) =
-    Misc.try_finally (fun () -> type_structure initial_env ast)
+    Miscutil.try_finally (fun () -> type_structure initial_env ast)
                      (fun () -> Stypes.dump (outputprefix ^ ".annot"))
   in
   let simple_sg = simplify_signature sg in
@@ -795,7 +795,7 @@ let type_implementation sourcefile outputprefix modulename initial_env ast =
     (str, Tcoerce_none)   (* result is ignored by Compile.implementation *)
   end else begin
     let sourceintf =
-      Misc.chop_extension_if_any sourcefile ^ !Config.interface_suffix in
+      Miscutil.chop_extension_if_any sourcefile ^ !Config.interface_suffix in
     if Sys.file_exists sourceintf then begin
       let intf_file =
         try

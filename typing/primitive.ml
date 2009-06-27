@@ -14,7 +14,7 @@
 
 (* Description of primitive functions *)
 
-open Misc
+open Miscutil
 
 type description =
   { prim_name: string;         (* Name of primitive  or C function *)

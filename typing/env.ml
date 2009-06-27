@@ -15,7 +15,7 @@
 (* Environment handling *)
 
 open Config
-open Misc
+open Miscutil
 open Asttypes
 open Longident
 open Path

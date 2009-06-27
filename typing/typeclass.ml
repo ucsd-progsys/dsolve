@@ -12,7 +12,7 @@
 
 (* $Id: typeclass.ml,v 1.89 2006/12/27 14:41:23 garrigue Exp $ *)
 
-open Misc
+open Miscutil
 open Parsetree
 open Asttypes
 open Path
@@ -1189,7 +1189,7 @@ let class_infos define_class kind
       raise(Error(cl.pci_loc, Virtual_class(true, mets, vals)));
   end;
 
-  (* Misc. *)
+  (* Miscutil. *)
   let arity = Ctype.class_type_arity typ in
   let pub_meths =
     let (fields, _) =

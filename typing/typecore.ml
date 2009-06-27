@@ -14,7 +14,7 @@
 
 (* Typechecking for the core language *)
 
-open Misc
+open Miscutil
 open Asttypes
 open Parsetree
 open Types

@@ -35,7 +35,7 @@ let parse_sharp_line s =
     if !f1 < String.length s then
       filename := String.sub s (!f1 + 1) (!f2 - !f1 - 1)
   with Failure _ | Invalid_argument _ ->
-    Misc.fatal_error "Linenum.parse_sharp_line"
+    Miscutil.fatal_error "Linenum.parse_sharp_line"
 }
 
 rule skip_line = parse

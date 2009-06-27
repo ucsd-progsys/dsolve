@@ -14,12 +14,13 @@ LINKFLAGS= -ccopt "-Iexternal/z3/ocaml -Lexternal/z3/lib" $(FLAGS) \
           -I external/ocamlgraph/ \
 	  -cclib -lstdc++ $(LIBZ3) -cclib -lz3stubs \
           -I external/ocamlgraph/ -I external/z3/ocaml -I external/z3/bin \
-					-I external/fixpoint
+					-I external/fixpoint/_build
 
 INCLUDES=-I external/z3/ocaml/ -I external/ocamlgraph/ \
-         -I utils -I parsing -I typing -I liquid
+         -I utils -I parsing -I typing -I liquid \
+				 -I external/fixpoint/_build
 
-UTILS=utils/misc.cmo utils/config.cmo \
+UTILS=utils/miscutil.cmo utils/config.cmo \
   utils/clflags.cmo utils/terminfo.cmo utils/ccomp.cmo utils/warnings.cmo \
   utils/tbl.cmo utils/consistbl.cmo utils/heap.cmo utils/bstats.cmo \
 	utils/trie.cmo utils/mystats.cmo
@@ -49,15 +50,14 @@ LIQUID=liquid/qualmod.cmo liquid/lightenv.cmo \
 	liquid/qualdecl.cmo \
   liquid/builtins.cmo liquid/message.cmo \
   liquid/theoremProverZ3.cmo liquid/theoremProver.cmo liquid/wellformed.cmo \
-  liquid/constraint.cmo liquid/dsolveconstraint.cmo \ 
+  liquid/constraint.cmo \
+	liquid/predglue.cmo liquid/consglue.cmo \
 	liquid/measure.cmo liquid/qualifymod.cmo \
   liquid/qdebug.cmo liquid/normalize.cmo \
   liquid/qdump.cmo liquid/liqerrors.cmo \
 	liquid/mlqmod.cmo liquid/liquid.cmo
 
-DSOLVE2FIX=dsolve2fix/predglue.cmo dsolve2fix/consglue.cmo \
-
-LIQOBJS=$(UTILS) $(PARSING) $(TYPING) $(LIQUID) $(DSOLVE2FIX)
+LIQOBJS=$(UTILS) $(PARSING) $(TYPING) $(LIQUID)
 
 default: liquid.opt
 
@@ -65,7 +65,7 @@ liquid.byte: $(LIQOBJS)
 	$(CAMLC) $(LINKFLAGS) -custom -o liquid.byte str.cma unix.cma nums.cma graph.cma $(LIQOBJS)
 
 liquid.opt: $(LIQOBJS:.cmo=.cmx)
-	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt $(LIBDIR)/libcamlidl.a str.cmxa unix.cmxa nums.cmxa z3.cmxa graph.cmxa $(LIQOBJS:.cmo=.cmx)
+	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt $(LIBDIR)/libcamlidl.a str.cmxa unix.cmxa nums.cmxa z3.cmxa graph.cmxa fix.cmxa $(LIQOBJS:.cmo=.cmx)
 
 .PHONY: tests
 tests:

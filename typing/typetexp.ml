@@ -14,7 +14,7 @@
 
 (* Typechecking of type expressions for the core language *)
 
-open Misc
+open Miscutil
 open Parsetree
 open Types
 open Ctype

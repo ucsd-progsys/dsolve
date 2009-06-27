@@ -20,7 +20,7 @@ type t =
 let rec flat accu = function
     Lident s -> s :: accu
   | Ldot(lid, s) -> flat (s :: accu) lid
-  | Lapply(l1, l2) -> Misc.fatal_error "Longident.flat"
+  | Lapply(l1, l2) -> Miscutil.fatal_error "Longident.flat"
 
 let flatten lid = flat [] lid
 

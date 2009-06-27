@@ -14,7 +14,7 @@
 
 (* Inclusion checks for the core language *)
 
-open Misc
+open Miscutil
 open Asttypes
 open Path
 open Types
@@ -104,10 +104,10 @@ let type_declarations env id decl1 decl2 =
       (_, Type_abstract) -> true
     | (Type_variant (cstrs1, priv1), Type_variant (cstrs2, priv2)) ->
         private_flags priv1 priv2 &&
-        Misc.for_all2
+        Miscutil.for_all2
           (fun (cstr1, arg1) (cstr2, arg2) ->
             cstr1 = cstr2 &&
-            Misc.for_all2
+            Miscutil.for_all2
               (fun ty1 ty2 ->
                 Ctype.equal env true (ty1::decl1.type_params)
                                      (ty2::decl2.type_params))
@@ -116,7 +116,7 @@ let type_declarations env id decl1 decl2 =
     | (Type_record(labels1,rep1,priv1), Type_record(labels2,rep2,priv2)) ->
         private_flags priv1 priv2 &&
         rep1 = rep2 &&
-        Misc.for_all2
+        Miscutil.for_all2
           (fun (lbl1, mut1, ty1) (lbl2, mut2, ty2) ->
             lbl1 = lbl2 && mut1 = mut2 &&
             Ctype.equal env true (ty1::decl1.type_params)
@@ -150,7 +150,7 @@ let type_declarations env id decl1 decl2 =
 (* Inclusion between exception declarations *)
 
 let exception_declarations env ed1 ed2 =
-  Misc.for_all2 (fun ty1 ty2 -> Ctype.equal env false [ty1] [ty2]) ed1 ed2
+  Miscutil.for_all2 (fun ty1 ty2 -> Ctype.equal env false [ty1] [ty2]) ed1 ed2
 
 (* Inclusion between class types *)
 let encode_val (mut, ty) rem =

@@ -32,7 +32,7 @@ module C = Common
 module PM = C.PathMap
 module T = Typetexp
 module Pat = Pattern
-module M = Misc
+module M = Miscutil
 module P = Predicate
 module Le = Lightenv
 
@@ -723,10 +723,10 @@ let abstract_of_params_with_labels labels p params varis id r =
 
 let abstract_of_params p params varis r =
   let id = if C.empty_list params then C.dummy_id else C.abstr_elem_id () in
-  Fabstract (p, C.combine3 (Misc.mapi (fun _ i -> C.tuple_elem_id i) params) params varis, id, r)
+  Fabstract (p, C.combine3 (Miscutil.mapi (fun _ i -> C.tuple_elem_id i) params) params varis, id, r)
 
 let tuple_of_frames fs r =
-  record_of_params path_tuple (Misc.mapi (fun f i -> (C.tuple_elem_id i, f, Covariant)) fs) r
+  record_of_params path_tuple (Miscutil.mapi (fun f i -> (C.tuple_elem_id i, f, Covariant)) fs) r
 
 (******************************************************************************)
 (**************************** Function application ****************************)
@@ -803,7 +803,7 @@ let fresh_constructor env fresh ty name cstr =
   let _           = Ctype.end_def () in
   let _           = List.iter Ctype.generalize args; Ctype.generalize res in
   let _           = close_constructor res args; Ctype.unify env res ty in
-  let ids         = Misc.mapi (fun _ i -> C.tuple_elem_id i) args in
+  let ids         = Miscutil.mapi (fun _ i -> C.tuple_elem_id i) args in
   let fs          = List.map fresh args in
   let vs          = List.map (fun _ -> Covariant) fs in
     (cstr.cstr_tag, (name, C.combine3 ids fs vs))

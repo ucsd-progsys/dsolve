@@ -35,7 +35,7 @@ let build_diversion lst =
       end)
     lst;
   close_out oc;
-  at_exit (fun () -> Misc.remove_file responsefile);
+  at_exit (fun () -> Miscutil.remove_file responsefile);
   "@" ^ responsefile
 
 let quote_files lst =
@@ -58,7 +58,7 @@ let compile_file name =
          (Filename.quote name))
 
 let create_archive archive file_list =
-  Misc.remove_file archive;
+  Miscutil.remove_file archive;
   let quoted_archive = Filename.quote archive in
   match Config.ccomp_type with
     "msvc" ->
@@ -79,7 +79,7 @@ let expand_libname name =
     let libname =
       "lib" ^ String.sub name 2 (String.length name - 2) ^ Config.ext_lib in
     try
-      Misc.find_in_path !Config.load_path libname
+      Miscutil.find_in_path !Config.load_path libname
     with Not_found ->
       libname
   end
@@ -107,6 +107,6 @@ let merge_manifest exefile =
       command (Printf.sprintf "mt -nologo -outputresource:%s -manifest %s"
                               (Filename.quote exefile)
                               (Filename.quote manfile)) in
-    Misc.remove_file manfile;
+    Miscutil.remove_file manfile;
     retcode
   end

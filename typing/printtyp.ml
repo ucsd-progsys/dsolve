@@ -14,7 +14,7 @@
 
 (* Printing functions *)
 
-open Misc
+open Miscutil
 open Ctype
 open Format
 open Longident
