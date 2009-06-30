@@ -151,6 +151,13 @@ let do_memo t f arg key =
     let _ = Hashtbl.replace t key rv in
     rv
 
+let do_bimemo fmemo rmemo f args key =
+  try Hashtbl.find fmemo key with Not_found ->
+    let rv = f args in
+    let _ = Hashtbl.replace fmemo key rv in
+    let _ = Hashtbl.replace rmemo rv key in
+    rv
+
 let rec map_partial f = function
   | []          -> []
   | x::xs       -> (match f x with 

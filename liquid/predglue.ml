@@ -1,11 +1,17 @@
 module D = Predicate
 module Pa = Path
 
-
 module F = Ast
 
-let str_of_path p = Pa.unique_name p
+let str_to_path = Hashtbl.create 37
+let path_to_str = Hashtbl.create 37
+
+let str_of_path p =
+  Common.do_bimemo path_to_str str_to_path Pa.unique_name p p
 let sy_of_path p = F.Symbol.of_string (str_of_path p)
+
+let path_of_str s = Hashtbl.find str_to_path s
+let path_of_sy s = path_of_str (F.Symbol.to_string s)
 
 let f_of_dbop = function
   | D.Plus -> F.Plus

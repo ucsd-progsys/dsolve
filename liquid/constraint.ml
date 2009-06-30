@@ -958,3 +958,26 @@ let solve qs env consts cs =
     C.cprintf C.ol_solve_error "@[Ref_constraints@ still@ unsatisfied:@\n@]";
     List.iter (fun (c, b) -> C.cprintf C.ol_solve_error "@[%a@.@\n@]" (pprint_ref None) c) unsat;
   (solution_map s, List.map snd unsat)
+
+let prep_fixsolve qs env consts cs =
+  (*let _  = dump_constraints cs in
+  let _  = dump_unsplit cs in*)
+  (* split constraints *)
+  let cs = split cs in
+  (* build maximum typing envt *)
+  let max_env = List.fold_left 
+    (fun env (v, c, _) -> Lightenv.combine (frame_env c.lc_cstr) env) Lightenv.empty cs in
+  (* massage constraints *)
+  let lcs = List.map (fun (v, c, cstr) -> (set_labeled_constraint c (make_val_env v max_env), cstr)) cs in
+  (* instantiate qualifiers *)
+  let qs = instantiate_per_environment env consts lcs qs in
+  let sri = make_ref_index lcs in
+  let s = make_initial_solution (List.combine (strip_origins lcs) qs) in
+  (*let _ = dump_solution s in
+  let _ = dump_solving sri s 0 in*)
+  (* massage initial solution *)
+  let _ = solve_wf sri s in
+  (*let _ = C.cprintf C.ol_solve "@[AFTER@ WF@]@." in
+  let _ = dump_solving sri s 1 in
+  let _ = dump_solution s in*)
+  (max_env, cs, s) 
