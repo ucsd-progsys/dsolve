@@ -342,9 +342,11 @@ liquid/constraint.cmx: liquid/wellformed.cmx typing/types.cmx \
     utils/bstats.cmx liquid/constraint.cmi 
 liquid/dsolveConstraint.cmo: liquid/constraint.cmi 
 liquid/dsolveConstraint.cmx: liquid/constraint.cmx 
-liquid/fixsolve.cmo: external/fixpoint/_build/solve.cmi liquid/constraint.cmi \
+liquid/fixsolve.cmo: external/fixpoint/_build/solve.cmi \
+    external/fixpoint/_build/fixConstraint.cmi liquid/constraint.cmi \
     liquid/consglue.cmi external/fixpoint/_build/ast.cmi 
-liquid/fixsolve.cmx: external/fixpoint/_build/solve.cmx liquid/constraint.cmx \
+liquid/fixsolve.cmx: external/fixpoint/_build/solve.cmx \
+    external/fixpoint/_build/fixConstraint.cmx liquid/constraint.cmx \
     liquid/consglue.cmx external/fixpoint/_build/ast.cmx 
 liquid/frame.cmo: typing/typetexp.cmi typing/types.cmi typing/typedtree.cmi \
     liquid/qualifier.cmi typing/predicate.cmi liquid/pattern.cmi \
@@ -463,17 +465,17 @@ liquid/qualifymod.cmo: liquid/wellformed.cmi typing/types.cmi \
     liquid/pattern.cmi typing/path.cmi parsing/parsetree.cmi \
     utils/miscutil.cmo liquid/measure.cmo parsing/longident.cmi \
     parsing/location.cmi liquid/lightenv.cmo typing/ident.cmi \
-    liquid/frame.cmi typing/env.cmi liquid/constraint.cmi typing/common.cmo \
-    utils/clflags.cmi liquid/builtins.cmo typing/btype.cmi utils/bstats.cmi \
-    parsing/asttypes.cmi liquid/qualifymod.cmi 
+    liquid/frame.cmi liquid/fixsolve.cmo typing/env.cmi liquid/constraint.cmi \
+    typing/common.cmo utils/clflags.cmi liquid/builtins.cmo typing/btype.cmi \
+    utils/bstats.cmi parsing/asttypes.cmi liquid/qualifymod.cmi 
 liquid/qualifymod.cmx: liquid/wellformed.cmx typing/types.cmx \
     typing/typedtree.cmx typing/stypes.cmx typing/predicate.cmx \
     liquid/pattern.cmx typing/path.cmx parsing/parsetree.cmi \
     utils/miscutil.cmx liquid/measure.cmx parsing/longident.cmx \
     parsing/location.cmx liquid/lightenv.cmx typing/ident.cmx \
-    liquid/frame.cmx typing/env.cmx liquid/constraint.cmx typing/common.cmx \
-    utils/clflags.cmx liquid/builtins.cmx typing/btype.cmx utils/bstats.cmx \
-    parsing/asttypes.cmi liquid/qualifymod.cmi 
+    liquid/frame.cmx liquid/fixsolve.cmx typing/env.cmx liquid/constraint.cmx \
+    typing/common.cmx utils/clflags.cmx liquid/builtins.cmx typing/btype.cmx \
+    utils/bstats.cmx parsing/asttypes.cmi liquid/qualifymod.cmi 
 liquid/qualmod.cmo: typing/typedtree.cmi parsing/parsetree.cmi 
 liquid/qualmod.cmx: typing/typedtree.cmx parsing/parsetree.cmi 
 liquid/theoremProver.cmo: liquid/theoremProverZ3.cmo typing/predicate.cmi \

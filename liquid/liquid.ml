@@ -241,7 +241,7 @@ let main () =
      "-dsmeasures", Arg.Set dsmeasures, "don't strip measure names";
      "-no-timing", Arg.Unit Bstats.dont_time, "don't do any profiling";
      "-vgc", Arg.Int (fun c -> (get ()).verbose <- c), "verbose garbage collector";
-     "-v", Arg.Int (fun c -> Common.verbose_level := c), 
+     "-v", Arg.Int (fun c -> Common.verbose_level := c; Constants.verbose_level := c), 
               "<level> Set degree of analyzer verbosity:\n\
                \032    0      No output\n\
                \032    1      +Verbose errors\n\

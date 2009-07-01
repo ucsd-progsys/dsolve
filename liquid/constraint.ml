@@ -215,6 +215,9 @@ let env_to_refenv env =
       | Some r -> Le.add x r acc) 
     env Le.empty
 
+let env_to_empty_refenv env =
+  Le.fold (fun x f acc -> Le.add x [] acc) env Le.empty
+    
 let simplify_frame gm x f = 
   if not (Le.mem x gm) then f else
     let pos = Le.find x gm in
@@ -967,6 +970,8 @@ let prep_fixsolve qs env consts cs =
   (* build maximum typing envt *)
   let max_env = List.fold_left 
     (fun env (v, c, _) -> Lightenv.combine (frame_env c.lc_cstr) env) Lightenv.empty cs in
+  let _ = C.cprintf C.ol_insane "===@.Pruned Maximum Environment@.%a@.===@." pprint_fenv_shp max_env in
+  let _ = printf "%a@.@." (pprint_raw_fenv true) max_env(*; assert false*) in
   (* massage constraints *)
   let lcs = List.map (fun (v, c, cstr) -> (set_labeled_constraint c (make_val_env v max_env), cstr)) cs in
   (* instantiate qualifiers *)

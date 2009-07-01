@@ -75,3 +75,7 @@ val prep_fixsolve:
         Qualifier.t list Sol.t
 
 val guard_predicate: unit -> guard_t -> Predicate.t
+val env_to_empty_refenv: Frame.t Lightenv.t -> Frame.refinement Lightenv.t
+val env_to_refenv: Frame.t Lightenv.t -> Frame.refinement Lightenv.t
+val environment_preds: (Path.t -> Qualifier.t list) -> Frame.refinement Lightenv.t -> Predicate.t list
+val refinement_preds: (Path.t -> Qualifier.t list) -> Predicate.pexpr -> Frame.refinement -> Predicate.t list
