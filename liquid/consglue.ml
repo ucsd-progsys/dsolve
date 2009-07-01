@@ -19,6 +19,15 @@ let d_vv = Pred.Var C.qual_test_var
 
 (************************** FRAMES **********************************)
 
+let untSt = "Unint"
+
+let tagSt = Ast.Sort.Func [Ast.Sort.Unint untSt; Ast.Sort.Int]
+let tagSy = Pg.sy_of_path Pred.tag_function
+let ftag  = (empty_syvv, tagSt, [])
+  (*[F.Conc (A.pAtom (A.eVar empty_syvv, A.Eq, A.eApp (tagSy, [A.eVar empty_syvv])))])*)
+
+let inject_tag env = Asm.add tagSy ftag env
+
 let rec string_of_frame = function
   | Fr.Fsum (p, _, _, _)
   | Fr.Frec (p, _, _) 
@@ -28,17 +37,23 @@ let rec string_of_frame = function
       Pg.str_of_path p
   | Fr.Fabstract (p, params, id, _) ->
       (*"(" ^ (String.concat " " (List.map (fun (_, f, _) -> string_of_frame f) params)) ^ ") " ^ (Pg.str_of_path p)*)
-      Pg.str_of_path p
+      (*Pg.str_of_path p*)
+      untSt (* for compatibility with the tag function *)
 
-let rec fsort_of_dframe = function
+let rec fsort_of_dframe fr =
+  match fr with
   | Fr.Fsum (p, _, _, _)
   | Fr.Frec (p, _, _) 
-  | Fr.Fvar (p, _, _, _) -> Ast.Sort.Unint (Pg.str_of_path p)
-  | Fr.Farrow (_, f1, f2) -> Ast.Sort.Func [fsort_of_dframe f1; fsort_of_dframe f2]
-  | (Fr.Fabstract (p, params, id, _)) as fr ->
+  | Fr.Fvar (p, _, _, _) -> Ast.Sort.Unint (string_of_frame fr)
+  | Fr.Farrow (_, f1, f2) -> Ast.Sort.Func (collapse fr)
+  | Fr.Fabstract (p, params, id, _) ->
       if Path.same Predef.path_bool p then Ast.Sort.Bool
       else if Path.same Predef.path_int p then Ast.Sort.Int
       else Ast.Sort.Unint (string_of_frame fr)
+
+and collapse = function
+  | Fr.Farrow (_, f1, f2) -> fsort_of_dframe f1 :: collapse f2
+  | s -> [fsort_of_dframe s]
 
   (* returns an empty but appropriately sorted reft
    * that is only appropriate for wf cons *)
