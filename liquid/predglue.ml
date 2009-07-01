@@ -7,7 +7,6 @@ let str_to_path = Hashtbl.create 37
 let path_to_str = Hashtbl.create 37
 
 let str_of_path p =
-  let _ = if Pa.unique_name p = "e0_736" then assert false else () in
   Common.do_bimemo path_to_str str_to_path Pa.unique_name p p
 let sy_of_path p = F.Symbol.of_string (str_of_path p)
 

@@ -14,6 +14,8 @@ module Asm = Ast.Symbol.SMap
 let empty_vv = Path.mk_persistent "VV"
 let empty_syvv = Pg.sy_of_path empty_vv
 
+let empty_sol = (fun _ -> [])
+let d_vv = Pred.Var C.qual_test_var
 
 (************************** FRAMES **********************************)
 
@@ -25,7 +27,8 @@ let rec string_of_frame = function
   | Fr.Fabstract (p, [], id, _) ->
       Pg.str_of_path p
   | Fr.Fabstract (p, params, id, _) ->
-      "(" ^ (String.concat " " (List.map (fun (_, f, _) -> string_of_frame f) params)) ^ ") " ^ (Pg.str_of_path p)
+      (*"(" ^ (String.concat " " (List.map (fun (_, f, _) -> string_of_frame f) params)) ^ ") " ^ (Pg.str_of_path p)*)
+      Pg.str_of_path p
 
 let rec fsort_of_dframe = function
   | Fr.Fsum (p, _, _, _)
@@ -70,13 +73,12 @@ let frefas_of_dsreft (subs, q) =
   | Fr.Qconst q -> F.Conc (fpred_of_dqual subs q)
   | Fr.Qvar k -> F.Kvar (fsubs, Pg.sy_of_path k)]
 
-let frefas_of_drefexpr ((subs, (cs, ks)): Fr.refexpr) : F.refa list =
-  let fsubs = f_of_dsubs subs in
-  let cs = List.map (fun q -> F.Conc (fpred_of_dqual subs q)) cs in
-  let ks = List.map (fun k -> F.Kvar (fsubs, Pg.sy_of_path k)) ks in
-  List.append cs ks
+let frefas_of_drefexpr ((subs, (_, ks)): Fr.refexpr) : F.refa list =
+  List.map (fun k -> F.Kvar (f_of_dsubs subs, Pg.sy_of_path k)) ks
 
-let frefas_of_dreft : Fr.refinement -> F.refa list = (C.flap frefas_of_drefexpr)
+let frefas_of_dreft reft =
+  let consts = Pg.f_of_dpred (Pred.big_and (D.refinement_preds empty_sol (Pred.Var empty_vv) reft)) in
+  (F.Conc consts) :: C.flap frefas_of_drefexpr reft
 
 let freft_of_dsreft vv vvt sreft =
   F.make_reft (Pg.sy_of_path vv) (fsort_of_dframe vvt) (frefas_of_dsreft (unify_vv_dsreft vv sreft))
