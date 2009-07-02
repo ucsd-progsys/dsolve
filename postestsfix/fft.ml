@@ -17,18 +17,16 @@ let fft px py n = (* n must be a power of 2! *)
     if n2 <= 2 then () else (* the case n2 = 2 is treated below *)
     let e = two_pi /. (float_of_int n2) in
     let e3 = 3.0 *. e in
-    let a = ref 0.0 in
-    let a3 = ref 0.0 in
     let forbod j = 
     (*for j = 1 to n4 do*)
-      let cc1 = cos !a in
-      let ss1 = sin !a in
-      let cc3 = cos !a3 in
-      let ss3 = sin !a3 in
-      let b_a = !a in
-      let b_a3 = !a3 in
-      let none_ = a := b_a +. e in 
-      let none_ = a3 := b_a3 +. e3 in
+      let a = 0.0 in
+      let a3 = 0.0 in
+      let cc1 = cos a in
+      let ss1 = sin a in
+      let cc3 = cos a3 in
+      let ss3 = sin a3 in
+      let a = a +. e in (* we know literally nothing about a, a3 *)
+      let a3 = a3 +. e3 in (* so not carrying them through the loop is sound *)
       let rec loop1 i0 i1 i2 i3 id =
         if i3 > n then () else (* out_of_bounds *)
         let g_px_i0 = Array.get px i0 in

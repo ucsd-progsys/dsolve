@@ -8,7 +8,7 @@ let dotprod v1 v2 =
 				let get_v2_i = Array.get v2 i in
 				let get_prod_i = get_v1_i * get_v2_i in
 				let get_prod_i_plus_sum = get_prod_i + sum in
-				loop (i + 1) (get_prod_i + sum)) 
+				loop (i+1) (get_prod_i + sum)) 
 		else sum
     in loop 0
 
