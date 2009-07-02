@@ -57,7 +57,7 @@ let freft_of_dframe fr = F.make_reft dsyvv (fsort_of_dframe fr) []
 (************************** REFINEMENTS ****************************)
 
 let f_of_dsubs subs =
-  List.map (fun (p, e) -> (Pg.sy_of_path p, Pg.f_of_dexpr e)) subs
+  List.rev_map (fun (p, e) -> (Pg.sy_of_path p, Pg.f_of_dexpr e)) subs
 
 let unify_dqual (x, v, p) =
   let sub var = if Path.same var v then Pred.Var dvv else Pred.Var var in
