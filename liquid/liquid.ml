@@ -239,6 +239,7 @@ let main () =
      "-check-mlq", Arg.Set ck_mlq, "warn about possible errors in the local mlq";
      "-summarize", Arg.String (fun s -> summarize := Some s), "dump a summary of source to filename";
      "-dsmeasures", Arg.Set dsmeasures, "don't strip measure names";
+     "-fix", Arg.Set use_fixpoint, "use fixpoint solver instead of dsolve to solve constraints";
      "-no-timing", Arg.Unit Bstats.dont_time, "don't do any profiling";
      "-vgc", Arg.Int (fun c -> (get ()).verbose <- c), "verbose garbage collector";
      "-v", Arg.Int (fun c -> Common.verbose_level := c; Constants.verbose_level := c), 

@@ -9,47 +9,41 @@ module Pred = Predicate
 module Fr = Frame
 
 module A = Ast
-module Asm = Ast.Symbol.SMap
+module S = A.Sort
+module Sy = A.Symbol
+module Asm = Sy.SMap
+module Le = Lightenv
 
-let empty_vv = Path.mk_persistent "VV"
-let empty_syvv = Pg.sy_of_path empty_vv
+let dvv = Path.mk_persistent "VV"
+let dsyvv = Pg.sy_of_path dvv
 
 let empty_sol = (fun _ -> [])
-let d_vv = Pred.Var C.qual_test_var
 
 (************************** FRAMES **********************************)
 
-let untSt = "Unint"
-
-let tagSt = Ast.Sort.Func [Ast.Sort.Unint untSt; Ast.Sort.Int]
+let tagSt = S.Func [S.Int; S.Int]
 let tagSy = Pg.sy_of_path Pred.tag_function
-let ftag  = (empty_syvv, tagSt, [])
-  (*[F.Conc (A.pAtom (A.eVar empty_syvv, A.Eq, A.eApp (tagSy, [A.eVar empty_syvv])))])*)
+let ftag  = (dsyvv, tagSt, [])
 
 let inject_tag env = Asm.add tagSy ftag env
+
+(* everything not an A.Bool is an A.Int *)
 
 let rec string_of_frame = function
   | Fr.Fsum (p, _, _, _)
   | Fr.Frec (p, _, _) 
+  | Fr.Fabstract (p, _, _, _)
   | Fr.Fvar (p, _, _, _) -> Pg.str_of_path p
   | Fr.Farrow (_, f1, f2) -> (string_of_frame f1) ^ "->" ^ (string_of_frame f2)
-  | Fr.Fabstract (p, [], id, _) ->
-      Pg.str_of_path p
-  | Fr.Fabstract (p, params, id, _) ->
-      (*"(" ^ (String.concat " " (List.map (fun (_, f, _) -> string_of_frame f) params)) ^ ") " ^ (Pg.str_of_path p)*)
-      (*Pg.str_of_path p*)
-      untSt (* for compatibility with the tag function *)
 
 let rec fsort_of_dframe fr =
   match fr with
   | Fr.Fsum (p, _, _, _)
   | Fr.Frec (p, _, _) 
-  | Fr.Fvar (p, _, _, _) -> Ast.Sort.Unint (string_of_frame fr)
-  | Fr.Farrow (_, f1, f2) -> Ast.Sort.Func (collapse fr)
-  | Fr.Fabstract (p, params, id, _) ->
-      if Path.same Predef.path_bool p then Ast.Sort.Bool
-      else if Path.same Predef.path_int p then Ast.Sort.Int
-      else Ast.Sort.Unint (string_of_frame fr)
+  | Fr.Fvar (p, _, _, _)
+  | Fr.Fabstract (p, _, _, _) ->
+      if Path.same Predef.path_bool p then S.Bool else S.Int
+  | Fr.Farrow (_, f1, f2) -> S.Func (collapse fr)
 
 and collapse = function
   | Fr.Farrow (_, f1, f2) -> fsort_of_dframe f1 :: collapse f2
@@ -57,7 +51,7 @@ and collapse = function
 
   (* returns an empty but appropriately sorted reft
    * that is only appropriate for wf cons *)
-let freft_of_dframe fr = F.make_reft empty_syvv (fsort_of_dframe fr) []
+let freft_of_dframe fr = F.make_reft dsyvv (fsort_of_dframe fr) []
 
 
 (************************** REFINEMENTS ****************************)
@@ -65,44 +59,47 @@ let freft_of_dframe fr = F.make_reft empty_syvv (fsort_of_dframe fr) []
 let f_of_dsubs subs =
   List.map (fun (p, e) -> (Pg.sy_of_path p, Pg.f_of_dexpr e)) subs
 
-let unify_vv_dqual vv (x, v, p) =
-  let sub var = if Path.same var v then Pred.Var vv else Pred.Var var in
-  (x, vv, Pred.map_vars sub p)
+let unify_dqual (x, v, p) =
+  let sub var = if Path.same var v then Pred.Var dvv else Pred.Var var in
+  (x, dvv, Pred.map_vars sub p)
 
-let unify_vv_dsreft vv ((subs, q) as sreft) =
+let unify_dsreft ((subs, q) as sreft) =
   match q with
-  | Fr.Qconst q -> (subs, Fr.Qconst (unify_vv_dqual vv q))
+  | Fr.Qconst q -> (subs, Fr.Qconst (unify_dqual q))
   | Fr.Qvar _ -> sreft
 
-let unify_vv_drefexpr vv (subs, (cs, ks)) =
-  (subs, (List.map (fun q -> unify_vv_dqual vv q) cs, ks))
+let unify_drefexpr (subs, (cs, ks)) =
+  (subs, (List.map (fun q -> unify_dqual q) cs, ks))
 
-let unify_vv_dreft vv reft = List.map (unify_vv_drefexpr vv) reft
+let unify_dreft reft = List.map unify_drefexpr reft
 
 let fpred_of_dqual subs (_, _, p) =
-  Pg.f_of_dpred (Pred.apply_substs [] p)
+  Pg.f_of_dpred (Pred.apply_substs subs p)
+
+let dqual_of_fpred p =
+  (Path.mk_ident "pred", dvv, Pg.d_of_fpred p)
 
 let frefas_of_dsreft (subs, q) =
-  let fsubs = f_of_dsubs subs in 
   [match q with
   | Fr.Qconst q -> F.Conc (fpred_of_dqual subs q)
-  | Fr.Qvar k -> F.Kvar (fsubs, Pg.sy_of_path k)]
+  | Fr.Qvar k -> F.Kvar (f_of_dsubs subs, Pg.sy_of_path k)]
 
-let frefas_of_drefexpr ((subs, (_, ks)): Fr.refexpr) : F.refa list =
+let frefas_of_drefexpr (subs, (_, ks)) =
   List.map (fun k -> F.Kvar (f_of_dsubs subs, Pg.sy_of_path k)) ks
 
 let frefas_of_dreft reft =
-  let consts = Pg.f_of_dpred (Pred.big_and (D.refinement_preds empty_sol (Pred.Var empty_vv) reft)) in
+  let consts =
+    Pg.f_of_dpred (Pred.big_and (D.refinement_preds empty_sol (Pred.Var dvv) reft)) in
   (F.Conc consts) :: C.flap frefas_of_drefexpr reft
 
-let freft_of_dsreft vv vvt sreft =
-  F.make_reft (Pg.sy_of_path vv) (fsort_of_dframe vvt) (frefas_of_dsreft (unify_vv_dsreft vv sreft))
+let freft_of_dsreft vvt sreft =
+  F.make_reft dsyvv (fsort_of_dframe vvt) (frefas_of_dsreft (unify_dsreft sreft))
 
-let f_of_sortdreft vv vvs reft =
-  F.make_reft (Pg.sy_of_path vv) vvs (frefas_of_dreft (unify_vv_dreft vv reft))
+let f_of_sortdreft vvs reft =
+  F.make_reft dsyvv vvs (frefas_of_dreft (unify_dreft reft))
 
-let f_of_dreft vv vvt reft =
-  f_of_sortdreft vv (fsort_of_dframe vvt) reft
+let f_of_dreft vvt reft =
+  f_of_sortdreft (fsort_of_dframe vvt) reft
 
 (************************** ENVIRONMENTS ***************************)
 
@@ -111,11 +108,11 @@ let fsort_of_reft (_, s, _) = s
 let f_of_drenvt env ftenv =
   Lightenv.fold (fun p r e ->
     let s = Pg.sy_of_path p in
-    Asm.add s (f_of_sortdreft empty_vv (fsort_of_reft (Asm.find s ftenv)) r) e) env ftenv
+    Asm.add s (f_of_sortdreft (fsort_of_reft (Asm.find s ftenv)) r) e) env ftenv
 
 let f_of_denvt env =
   Lightenv.fold (fun p fr e -> 
-    let p = if Path.same p C.qual_test_var then empty_vv else p in
+    let p = if Path.same p C.qual_test_var then dvv else p in
     Asm.add (Pg.sy_of_path p) (freft_of_dframe fr) e) env Asm.empty
 
 (************************** CONSTRAINTS ****************************)
@@ -123,17 +120,16 @@ let f_of_denvt env =
 let f_of_dsubcon vvt fmax_envt = function
   | D.SubRef (renvt, gd, r1, r2, id) -> 
     let gd = Pg.f_of_dpred (D.guard_predicate () gd) in
-    (*let vv = Path.mk_ident "VV" in*)
-    let vv = empty_vv in
-    let (r1, r2) = (f_of_dreft vv vvt r1, freft_of_dsreft vv vvt r2) in
+    let (r1, r2) = (f_of_dreft vvt r1, freft_of_dsreft vvt r2) in
     Some (F.make_t (f_of_drenvt renvt fmax_envt) gd r1 r2 id)
   | _ -> None
 
-let f_of_dsubcons fmax_envt cons = C.maybe_list (List.map (fun (vvt, _, con) -> f_of_dsubcon vvt fmax_envt con) cons)
+let f_of_dsubcons fmax_envt cons =
+  C.maybe_list (List.map (fun (vvt, _, con) -> f_of_dsubcon vvt fmax_envt con) cons)
 
 let f_of_dwfcon vvt max_envt = function
   | D.WFRef  (envt, r, id) -> 
-    let reft = freft_of_dsreft (Path.mk_ident "VV") vvt r in
+    let reft = freft_of_dsreft vvt r in
     Some (F.make_wf (f_of_denvt envt) reft id)
   | _ -> None
 
@@ -141,12 +137,16 @@ let f_of_dwfcons vvt max_envt cons = C.maybe_list (List.map (f_of_dwfcon vvt max
 
 (************************** SOLUTIONS ******************************)
 
-let f_of_dsol sol =
-  let p q = fpred_of_dqual [] (unify_vv_dqual empty_vv q) in
+let f_of_dsoln soln =
+  let p q = fpred_of_dqual [] (unify_dqual q) in
   D.Sol.fold (fun k qs s ->
-    snd (F.sol_add s (Pg.sy_of_path k) (List.map p qs))) sol Asm.empty
+    snd (F.sol_add s (Pg.sy_of_path k) (List.map p qs))) soln Asm.empty
 
-(*let d_of_fsol sol =
-  Asm.fold (fun k qs s ->
-    D.Sol.replace (Pg.path_of_sy) (Lis
-    *)
+ (* translates fixsoln into dsolve-land lazily:
+  * assuming that all value variables are dvv *)
+let d_of_fsoln soln =
+  let q = dqual_of_fpred in
+  let rv = 
+    Asm.fold (fun k ps s ->
+      Le.add (Pg.path_of_sy k) (List.map q ps) s) soln Le.empty in
+  D.sol_of_solmap rv

@@ -27,7 +27,6 @@ module Sol :
     type key = Common.ComparablePath.t
     val find : 'a t -> key -> 'a
     val fold : (key -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b
-
   end
 
 type fc_id
@@ -66,14 +65,22 @@ val solve:
 
 val formals_addn: Frame.qvar list -> unit
 
+val dsolver:
+  Frame.t Lightenv.t ->
+    (Frame.t * labeled_constraint * refinement_constraint) list ->
+      Qualifier.t list Sol.t -> Qualifier.t list Sol.t
+
 (* for fixpoint *)
-val prep_fixsolve: 
+val solve_with_solver:
   Parsetree.qualifier_declaration list -> Env.t ->
     int list -> labeled_constraint list ->
-    Frame.t Lightenv.t *
-      (Frame.t * labeled_constraint * refinement_constraint) list *
-        Qualifier.t list Sol.t
+  (* solver *)
+  (Frame.t Lightenv.t ->
+    (Frame.t * labeled_constraint * refinement_constraint) list ->
+      Qualifier.t list Sol.t -> Qualifier.t list Sol.t) ->
+  ((Common.ComparablePath.t -> Qualifier.t list) * (labeled_constraint list))
 
+val sol_of_solmap: Qualifier.t list Lightenv.t -> Qualifier.t list Sol.t
 val guard_predicate: unit -> guard_t -> Predicate.t
 val env_to_empty_refenv: Frame.t Lightenv.t -> Frame.refinement Lightenv.t
 val env_to_refenv: Frame.t Lightenv.t -> Frame.refinement Lightenv.t

@@ -2,6 +2,9 @@ module D = Predicate
 module Pa = Path
 
 module F = Ast
+module Fp = F.Predicate
+module Fe = F.Expression
+module Fs = F.Sort
 
 let str_to_path = Hashtbl.create 37
 let path_to_str = Hashtbl.create 37
@@ -21,6 +24,12 @@ let f_of_dbop = function
   | D.Times -> F.Times
   | D.Div -> F.Div
 
+let d_of_fbop = function
+  | F.Plus -> D.Plus
+  | F.Minus -> D.Minus
+  | F.Times -> D.Times
+  | F.Div -> D.Div
+
 let f_of_dbrel = function
   | D.Eq -> F.Eq
   | D.Ne -> F.Ne
@@ -29,12 +38,30 @@ let f_of_dbrel = function
   | D.Lt -> F.Lt
   | D.Le -> F.Le
 
+let d_of_fbrel = function
+  | F.Eq -> D.Eq
+  | F.Ne -> D.Ne
+  | F.Gt -> D.Gt
+  | F.Ge -> D.Ge
+  | F.Lt -> D.Lt
+  | F.Le -> D.Le
+
 let rec fsort_of_dprover_t = function
-  | Parsetree.Pprover_array (t1, t2) -> F.Sort.Array (fsort_of_dprover_t t1, fsort_of_dprover_t t2)
-  | Parsetree.Pprover_fun ts -> F.Sort.Func (List.map fsort_of_dprover_t ts)
-  | Parsetree.Pprover_abs ("int") -> F.Sort.Int 
-  | Parsetree.Pprover_abs ("bool") -> F.Sort.Bool
-  | Parsetree.Pprover_abs s -> F.Sort.Unint s
+  | Parsetree.Pprover_array (t1, t2) ->
+      Fs.Array (fsort_of_dprover_t t1, fsort_of_dprover_t t2)
+  | Parsetree.Pprover_fun ts ->
+      Fs.Func (List.map fsort_of_dprover_t ts)
+  | Parsetree.Pprover_abs ("int") -> Fs.Int 
+  | Parsetree.Pprover_abs ("bool") -> Fs.Bool
+  | Parsetree.Pprover_abs s -> Fs.Unint s
+
+let rec dprover_t_of_fsort = function
+  | Fs.Int -> Parsetree.Pprover_abs ("int")
+  | Fs.Bool -> Parsetree.Pprover_abs ("bool")
+  | Fs.Unint s -> Parsetree.Pprover_abs s
+  | Fs.Array (t1, t2) ->
+      Parsetree.Pprover_array (dprover_t_of_fsort t1, dprover_t_of_fsort t2)
+  | Fs.Func ts -> Parsetree.Pprover_fun (List.map dprover_t_of_fsort ts)
 
 let rec f_of_dexpr = function
   | D.PInt i            -> F.eCon (F.Constant.Int i) 
@@ -64,3 +91,29 @@ and f_of_dpred = function
       let p1, p2 = f_of_dpred p1, f_of_dpred p2 in 
       F.pAnd [F.pImp (p1, p2); F.pImp (p2, p1)]
 
+let rec d_of_fexpr e =
+  match Fe.unwrap e with  
+  | F.Con (F.Constant.Int i) -> D.PInt i
+  | F.Var v                  -> D.Var (path_of_sy v)
+  | F.App (fn, rgs)          -> D.FunApp (path_of_sy fn, List.map d_of_fexpr rgs)
+  | F.Bin (e1, bop, e2)      -> D.Binop (d_of_fexpr e1, d_of_fbop bop, d_of_fexpr e2)
+  | F.Ite (p, e1, e2)        -> D.Ite (d_of_fpred p, d_of_fexpr e1, d_of_fexpr e2)
+  | F.Fld (fn, e)            -> D.Field (path_of_sy fn, d_of_fexpr e)
+
+and d_of_fpred p =
+  match Fp.unwrap p with
+  | F.True                   -> D.True
+  | F.False                  -> D.Not (D.True)
+  | F.And ps                 ->
+      List.fold_left (fun a p -> D.And (d_of_fpred p, a)) D.True ps
+  | F.Or ps                  ->
+      List.fold_left (fun a p -> D.Or (d_of_fpred p, a)) (D.Not (D.True)) ps
+  | F.Not p                  -> D.Not (d_of_fpred p)
+  | F.Imp (p1, p2)           -> D.Implies (d_of_fpred p1, d_of_fpred p2)
+  | F.Bexp e                 -> D.Boolexp (d_of_fexpr e)
+  | F.Atom (e1, rel, e2)     ->
+      D.Atom (d_of_fexpr e1, d_of_fbrel rel, d_of_fexpr e2)
+  | F.Forall (ss, p)         ->
+      let ss =
+        List.map (fun (s, st) -> (path_of_sy s, dprover_t_of_fsort st)) ss in 
+      D.Forall (ss, d_of_fpred p)

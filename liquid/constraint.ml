@@ -806,6 +806,11 @@ let make_initial_solution cs =
   let _ = BS.time "elements" (List.iter (fun k -> Sol.replace s k (QSet.elements (Sol.find s' k)))) l in
   s
 
+let sol_of_solmap (soln: Qualifier.t list Le.t) =
+  let s = Sol.create 108 in
+  Le.iter (fun k qs -> Sol.replace s k qs) soln;
+  s
+
 (**************************************************************)
 (****************** Debug/Profile Information *****************)
 (**************************************************************)
@@ -916,6 +921,14 @@ let solve_wf sri s =
   iter_ref_constraints sri 
   (function WFRef _ as c -> ignore (refine sri s c) | _ -> ())
 
+let test_sol sri s =
+  let _ = dump_solution s in
+  let unsat = BS.time "testing solution" (unsat_constraints sri) s in
+  if List.length unsat > 0 then
+    C.cprintf C.ol_solve_error "@[Ref_constraints@ still@ unsatisfied:@\n@]";
+    List.iter (fun (c, b) -> C.cprintf C.ol_solve_error "@[%a@.@\n@]" (pprint_ref None) c) unsat;
+  (solution_map s, List.map snd unsat)
+
 let solve qs env consts cs = 
   (*let _  = JS.doTime := true in*)
   let cs = if !Cf.simpguard then List.map simplify_fc cs else cs in
@@ -943,7 +956,6 @@ let solve qs env consts cs =
   let sri = BS.time "making ref index" make_ref_index cs in
   let s = BS.time "make initial sol" make_initial_solution (List.combine (strip_origins cs) qs) in
   (*let _ = JS.print stdout "JanStats"; flush stdout in*)
-
   let _ = dump_solution s in
   let _ = dump_solving sri s 0 in
   let _ = BS.time "solving wfs" (solve_wf sri) s in
@@ -953,36 +965,51 @@ let solve qs env consts cs =
   let w = make_initial_worklist sri in
   let _ = BS.time "solving sub" (solve_sub sri s) w in
   let _ = dump_solving sri s 2 in
-  let _ = dump_solution s in
   let _ = TP.reset () in
-  let unsat = BS.time "testing solution" (unsat_constraints sri) s in
-  (*let sat = List.for_all (fun x -> x) (BS.time "testing solution" (List.map (refine sri s)) cs') in*)
-  if List.length unsat > 0 then 
-    C.cprintf C.ol_solve_error "@[Ref_constraints@ still@ unsatisfied:@\n@]";
-    List.iter (fun (c, b) -> C.cprintf C.ol_solve_error "@[%a@.@\n@]" (pprint_ref None) c) unsat;
-  (solution_map s, List.map snd unsat)
+  test_sol sri s
 
-let prep_fixsolve qs env consts cs =
-  (*let _  = dump_constraints cs in
-  let _  = dump_unsplit cs in*)
-  (* split constraints *)
-  let cs = split cs in
-  (* build maximum typing envt *)
+let dsolver max_env cs s =
+  (* redo some work to keep interfaces simple *)
+  let cs  = List.map (fun (v, c, cstr) -> (set_labeled_constraint c (make_val_env v max_env), cstr)) cs in
+  let sri = make_ref_index cs in
+  let w   = make_initial_worklist sri in
+  let _   = BS.time "solving sub" (solve_sub sri s) w in
+  let _   = TP.reset () in
+  s
+
+let solve_with_solver qs env consts cs solver = 
+  (*let _  = JS.doTime := true in*)
+  let cs = if !Cf.simpguard then List.map simplify_fc cs else cs in
+  let _  = dump_constraints cs in
+  let _  = dump_unsplit cs in
+  let cs = BS.time "splitting constraints" split cs in
   let max_env = List.fold_left 
-    (fun env (v, c, _) -> Lightenv.combine (frame_env c.lc_cstr) env) Lightenv.empty cs in
-  let _ = C.cprintf C.ol_insane "===@.Pruned Maximum Environment@.%a@.===@." pprint_fenv_shp max_env in
-  let _ = printf "%a@.@." (pprint_raw_fenv true) max_env(*; assert false*) in
-  (* massage constraints *)
+    (fun env (v, c, _) -> Le.combine (frame_env c.lc_cstr) env) Le.empty cs in
+(*  let _ = C.cprintf C.ol_insane "===@.Pruned Maximum Environment@.%a@.===@." pprint_fenv_shp max_env in
+  let _ = printf "%a@.@." (pprint_raw_fenv true) max_env; assert false in*)
   let lcs = List.map (fun (v, c, cstr) -> (set_labeled_constraint c (make_val_env v max_env), cstr)) cs in
-  (* instantiate qualifiers *)
-  let qs = instantiate_per_environment env consts lcs qs in
-  let sri = make_ref_index lcs in
-  let s = make_initial_solution (List.combine (strip_origins lcs) qs) in
-  (*let _ = dump_solution s in
-  let _ = dump_solving sri s 0 in*)
-  (* massage initial solution *)
-  let _ = solve_wf sri s in
-  (*let _ = C.cprintf C.ol_solve "@[AFTER@ WF@]@." in
+  (* let cs = if !Cf.esimple then 
+               BS.time "e-simplification" (List.map esimple) cs else cs in *)
+  (*let _ = printf "Qualifier@ patterns@.";
+    List.map (fun (_, {Parsetree.pqual_pat_desc = (_, _, p)}) -> printf "%a@." P.pprint_pattern p) qs in*)
+  let qs = BS.time "instantiating quals" (instantiate_per_environment env consts lcs) qs in
+  (*let qs = List.map (fun qs -> List.filter Qualifier.may_not_be_tautology qs) qs in*)
+  let _ = if C.ck_olev C.ol_solve then
+          C.cprintf C.ol_solve "@[%i@ instantiation@ queries@ %i@ misses@]@." (List.length lcs) !tr_misses in
+  let _ = if C.ck_olev C.ol_solve then
+          C.cprintf C.ol_solve_stats "@[%i@ qualifiers@ generated@]@." (List.length (List.flatten qs)) in
+  let _ = if C.ck_olev C.ol_insane then
+          dump_qualifiers (List.combine (strip_origins lcs) qs) in
+(*let _ = assert false in*)
+  let sri = BS.time "making ref index" make_ref_index lcs in
+  let s = BS.time "make initial sol" make_initial_solution (List.combine (strip_origins lcs) qs) in
+  (*let _ = JS.print stdout "JanStats"; flush stdout in*)
+  let _ = dump_solution s in
+  let _ = dump_solving sri s 0 in
+  let _ = BS.time "solving wfs" (solve_wf sri) s in
+  let _ = C.cprintf C.ol_solve "@[AFTER@ WF@]@." in
   let _ = dump_solving sri s 1 in
-  let _ = dump_solution s in*)
-  (max_env, cs, s) 
+  let _ = dump_solution s in
+  let s = solver max_env cs s in
+  let _ = dump_solving sri s 2 in
+  test_sol sri s

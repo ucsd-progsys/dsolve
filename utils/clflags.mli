@@ -83,6 +83,7 @@ val no_recvarrefs: bool ref
 val ck_mlq: bool ref
 val summarize: string option ref
 val dsmeasures: bool ref
+val use_fixpoint: bool ref
 val no_simple_subs: bool ref
 val builtins_file: string option ref
 val less_qualifs: bool ref

@@ -91,6 +91,7 @@ and no_recvarrefs = ref false           (* no top-level refinements on recvars *
 and ck_mlq = ref false                  (* do a quick incomplete check over the mlq constraints *)
 and summarize = ref None                (* dump a summary of program to disk and terminate *)
 and dsmeasures = ref false              (* don't strip measure names *)
+and use_fixpoint = ref false            (* use fixpoint to solve constraints *)
 
 and verbose = ref false                 (* -verb *)
 let keep_asm_file = ref false           (* -S *)
