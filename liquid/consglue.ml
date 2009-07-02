@@ -127,13 +127,14 @@ let f_of_dsubcon vvt fmax_envt = function
 let f_of_dsubcons fmax_envt cons =
   C.maybe_list (List.map (fun (vvt, _, con) -> f_of_dsubcon vvt fmax_envt con) cons)
 
-let f_of_dwfcon vvt max_envt = function
+let f_of_dwfcon vvt = function
   | D.WFRef  (envt, r, id) -> 
     let reft = freft_of_dsreft vvt r in
     Some (F.make_wf (f_of_denvt envt) reft id)
   | _ -> None
 
-let f_of_dwfcons vvt max_envt cons = C.maybe_list (List.map (f_of_dwfcon vvt max_envt) cons)
+let f_of_dwfcons cons =
+  C.maybe_list (List.map (fun (vvt, _, con) -> f_of_dwfcon vvt con) cons)
 
 (************************** SOLUTIONS ******************************)
 

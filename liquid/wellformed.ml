@@ -123,7 +123,7 @@ let pred_is_well_typed env p =
   | P.Atom (p1, rel, p2) -> (* filter ALL bool rel expressions for fixpoint *)
       let p1_shp = get_expr_shape env p1 in
       let p2_shp = get_expr_shape env p2 in
-        if same_shape p1_shp p2_shp (*&& (rel = P.Eq || rel = P.Ne)*) && not(expr_shape_is_bool env p1) then 
+        if same_shape p1_shp p2_shp (*&& (rel = P.Eq || rel = P.Ne)*) && not(same_shape p1_shp uBool) then 
           true
         (*else if expr_shape_is_bool env p1 then
           raise IllFormed

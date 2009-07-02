@@ -23,16 +23,16 @@ import common, sys, time, os, os.path
 import itertools as it
 import dsolve
 
-testdirs = [("postests", 0), ("negtests", 1)]
+testdirs = [("postestsfix", 0), ("negtests", 1)]
 
 def runtest(file, expected_status):
   include = "theories"
-  status = dsolve.gen_quals(file, True, "-I " + include)
+  status = dsolve.gen_quals(file, False, "-I " + include)
   if status != 0: 
     print "Qualgen failed on %s" % file
     sys.exit(2)
   start = time.time()
-  status = dsolve.solve_quals(file, True, False, True, ["-v", "0", "-fix", "-simpguard", "-no-simple", "-no-timing", "-I", include])
+  status = dsolve.solve_quals(file, True, False, True, ["-v", "0", "-fix", "-simpguard", "-no-recrefs", "-no-simple", "-no-timing", "-I", include])
   #if status == 2: sys.exit(2)
   print "%f seconds" % (time.time() - start)
 
