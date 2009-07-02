@@ -56,6 +56,15 @@ def solve_quals(file,bare,time,quiet,flags):
   else: time = []
   return common.logged_sys_call(time + solve + flags + [("%s.ml" % bname)], out)
 
+def solve_quals_logged(file,outfile,bare,time,quiet,flags):
+  bname = file[:-3]
+  os.system("rm -f %s.annot" % bname)
+  if quiet: out = null
+  else: out = None
+  if time: time = ["time"]
+  else: time = []
+  return common.logged_sys_call(time + solve + flags + [("%s.ml" % bname)], out)
+
 def main():
   argc = len(sys.argv)
   if argc == 1:

@@ -9,16 +9,18 @@ CAMLDEP=ocamldep
 DEPFLAGS=$(INCLUDES)
 COMPFLAGS=$(FLAGS) -g -dtypes -warn-error A $(INCLUDES)
 LIBZ3=-cclib -lz3#-gmp
+LIBFIX=external/fixpoint/_build #path to fixpoint objects
+LIBMISC=external/misc/_build #path to misc objects
 
 LINKFLAGS= -ccopt "-Iexternal/z3/ocaml -Lexternal/z3/lib" $(FLAGS) \
           -I external/ocamlgraph/ \
 	  -cclib -lstdc++ $(LIBZ3) -cclib -lz3stubs \
           -I external/ocamlgraph/ -I external/z3/ocaml -I external/z3/bin \
-					-I external/fixpoint/_build -I external/misc/_build
+					-I $(LIBFIX) -I $(LIBMISC)
 
 INCLUDES=-I external/z3/ocaml/ -I external/ocamlgraph/ \
          -I utils -I parsing -I typing -I liquid \
-				 -I external/fixpoint/_build -I external/misc/_build
+				 -I $(LIBFIX) -I $(LIBMISC)
 
 UTILS=utils/miscutil.cmo utils/config.cmo \
   utils/clflags.cmo utils/terminfo.cmo utils/ccomp.cmo utils/warnings.cmo \
