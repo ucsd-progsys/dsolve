@@ -87,7 +87,7 @@ let rec pprint_pexpr ppf = function
   | Var x ->
       fprintf ppf "%s" (C.path_name x)
   | FunApp (f, pexp) ->
-      fprintf ppf "@[(%s %a)@]" (strip_meas (C.path_name f)) (Common.pprint_many false "" pprint_pexpr) pexp
+      fprintf ppf "@[(%s %a)@]" (strip_meas (C.path_name f)) (C.pprint_many false "" pprint_pexpr) pexp
   | Binop (p, op, q) ->
       let opstr = match op with
         | Plus -> "+"
@@ -116,11 +116,11 @@ and pprint ppf = function
   | Implies (p, q) ->
       fprintf ppf "@[(%a ->@;<1 2>%a)@]" pprint p pprint q
   | Forall (p, q) ->
-      let p = List.map (fun (n, t) -> (Common.path_name n) ^ ": " ^ (C.prover_t_to_s t)) p in
-      fprintf ppf "@[(forall@ (%a.@ %a))@]" (Common.pprint_many false "," Common.pprint_str) p pprint q
+      let p = List.map (fun (n, t) -> (C.path_name n) ^ ": " ^ (C.prover_t_to_s t)) p in
+      fprintf ppf "@[(forall@ (%a.@ %a))@]" (C.pprint_many false "," C.pprint_str) p pprint q
   | Exists (p, q) ->
-      let p = List.map (fun (n, t) -> (Common.path_name n) ^ ": " ^ (C.prover_t_to_s t)) p in
-      fprintf ppf "@[(exists@ (%a.@ %a))@]" (Common.pprint_many false "," (Common.pprint_str)) p pprint q
+      let p = List.map (fun (n, t) -> (C.path_name n) ^ ": " ^ (C.prover_t_to_s t)) p in
+      fprintf ppf "@[(exists@ (%a.@ %a))@]" (C.pprint_many false "," (C.pprint_str)) p pprint q
   | Boolexp e ->
       fprintf ppf "@[(? (%a))@]" pprint_pexpr e
 

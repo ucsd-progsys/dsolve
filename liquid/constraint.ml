@@ -889,8 +889,10 @@ let dump_solving sri s step =
 
 let dump_solution s =
   if C.ck_olev C.ol_solve then
-    Sol.iter (fun p r -> C.cprintf C.ol_solve "@[%s: %a@]@."
-              (Path.unique_name p) (Oprint.print_list Q.pprint C.space) r) s
+    let bs = Sol.fold (fun p r l -> (p, r) :: l) s [] in
+    let bs = List.sort (fun (p, _) (p', _) -> compare p p') bs in
+    List.iter (fun (p, r) -> C.cprintf C.ol_solve "@[%s: %a@]@."
+              (Path.unique_name p) (Oprint.print_list Q.pprint C.space) r) bs
   else ()
 
 let dump_qualifiers cqs =

@@ -14,7 +14,7 @@ module Sy = A.Symbol
 module Asm = Sy.SMap
 module Le = Lightenv
 
-let dvv = Path.mk_persistent "VV"
+let dvv = C.qual_test_var
 let dsyvv = Pg.sy_of_path dvv
 
 let empty_sol = (fun _ -> [])
