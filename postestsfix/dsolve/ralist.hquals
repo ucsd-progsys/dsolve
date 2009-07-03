@@ -1,0 +1,13 @@
+qualif FALSE(v) : (1=0)
+(* from the mlq *)
+
+qualif A(v) : sz l { * *} v
+qualif AA(v) : sz v = ~A
+qualif ZERO(v) : sz v { * * } 0
+
+(* not from the mlq *)
+
+qualif B(v) : sz v = sz ~A {< +, - >} [0, 1]
+qualif ZEROC(v) : v { * * } 0
+qualif N(v) : v { * * } ~A 
+

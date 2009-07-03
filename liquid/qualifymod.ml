@@ -360,7 +360,7 @@ and elem_qualifier fexpr n =
 
 and constrain_tuple (env, guard, f) es =
   let (fs, subexp_cs) = constrain_subexprs env guard es in
-  let f'              = F.tuple_of_frames fs (F.mk_refinement [] (Miscutil.mapi elem_qualifier es) []) in
+  let f'              = F.tuple_of_frames fs (*F.mk_refinement [] (Miscutil.mapi elem_qualifier es) []*) [] in
     (* We can't just use f' directly because we might need substitutions to make the new
        tuple self-contained (e.g., to refer to e0 instead of some local var) *)
     (f, [WFFrame(env, f); SubFrame (env, guard, f', f)], subexp_cs)

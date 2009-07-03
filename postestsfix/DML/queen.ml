@@ -1,6 +1,6 @@
 (* TODO: add all the printing back in *)
 
-let abs x = if x < 0 then let y = 0 - x in y else x 
+let abs x = if x < 0 then (-x) else x 
 
 let queen _1_size =
 begin
@@ -60,11 +60,14 @@ begin
 	in loop 0
 end 
 
-let driver = 
-  let _none = Random.init 555 in
-  let sz = Random.int 10 in
-  let sz_plus = sz + 1 in
-    queen sz_plus 
+let driver x = 
+  let _ = Random.init 555 in
+  if x > 0 then
+    let sz = Random.int x in
+    if sz > 0 then
+      queen sz
+    else ()
+ else ()
 
 
 
