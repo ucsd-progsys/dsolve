@@ -63,10 +63,13 @@ LIQOBJS=$(UTILS) $(PARSING) $(TYPING) $(LIQUID)
 
 default: liquid.opt
 
+fix.cmxa:
+	cd external/fixpoint && make
+
 liquid.byte: $(LIQOBJS)
 	$(CAMLC) $(LINKFLAGS) -custom -o liquid.byte str.cma unix.cma nums.cma graph.cma $(LIQOBJS)
 
-liquid.opt: $(LIQOBJS:.cmo=.cmx)
+liquid.opt: $(LIQOBJS:.cmo=.cmx) fix.cmxa
 	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt $(LIBDIR)/libcamlidl.a str.cmxa unix.cmxa nums.cmxa z3.cmxa graph.cmxa fix.cmxa $(LIQOBJS:.cmo=.cmx)
 
 .PHONY: tests
