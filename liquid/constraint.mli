@@ -58,26 +58,20 @@ val pprint_fenv : Format.formatter -> Frame.t Lightenv.t -> unit
 
 val fresh_fc_id : unit -> fc_id 
 
-val solve: 
-  Parsetree.qualifier_declaration list -> Env.t ->
-    int list -> labeled_constraint list ->
-    ((Common.ComparablePath.t -> Qualifier.t list) * (labeled_constraint list))
-
 val formals_addn: Frame.qvar list -> unit
 
 val dsolver:
   Frame.t Lightenv.t ->
     (Frame.t * labeled_constraint * refinement_constraint) list ->
-      Qualifier.t list Sol.t -> Qualifier.t list Sol.t
+      Qualifier.t list Sol.t -> Qualifier.t list -> Qualifier.t list Sol.t
 
-(* for fixpoint *)
 val solve_with_solver:
   Parsetree.qualifier_declaration list -> Env.t ->
     int list -> labeled_constraint list ->
   (* solver *)
   (Frame.t Lightenv.t ->
     (Frame.t * labeled_constraint * refinement_constraint) list ->
-      Qualifier.t list Sol.t -> Qualifier.t list Sol.t) ->
+      Qualifier.t list Sol.t -> Qualifier.t list -> Qualifier.t list Sol.t) ->
   ((Common.ComparablePath.t -> Qualifier.t list) * (labeled_constraint list))
 
 val sol_of_solmap: Qualifier.t list Lightenv.t -> Qualifier.t list Sol.t

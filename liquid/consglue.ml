@@ -11,6 +11,7 @@ module Fr = Frame
 module A = Ast
 module S = A.Sort
 module Sy = A.Symbol
+module Q = A.Qualifier
 module Asm = Sy.SMap
 module Le = Lightenv
 
@@ -104,6 +105,19 @@ let f_of_sortdreft vvs reft =
 
 let f_of_dreft vvt reft =
   f_of_sortdreft (fsort_of_dframe vvt) reft
+
+
+(*************************** QUALIFIERS ****************************)
+
+  (* qualifier translation before dsolve does wf is _incomplete_
+   * because dsolve does not type the value variable.
+   * use dsolve's initial solution for best results. *)
+let f_of_dqual q =
+  let ss = [S.Int; S.Bool; untSrt] in (* this is the crux *)
+  List.map (fun s -> Q.create (Some dsyvv) s (fpred_of_dqual [] (unify_dqual q))) ss 
+
+let f_of_dquals qs =
+  C.flap f_of_dqual qs
 
 (************************** ENVIRONMENTS ***************************)
 
