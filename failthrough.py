@@ -23,7 +23,7 @@ import common, sys, time, os, os.path
 import itertools as it
 import dsolve
 
-testdirs = [("postestsfix", 0), ("negtests", 1)]
+testdirs = [("postestsfix", 0)]
 
 def runtest(file, expected_status):
   include = "theories"
@@ -41,7 +41,7 @@ def runtest(file, expected_status):
     print "\033[1;32mSUCCESS!\033[1;0m\n"
   else:
     print "\033[1;31mFAILURE :(\033[1;0m\n"
-  if not(ok):
+  if ok:
     (_, _, f) = file.rpartition("/")
     os.system("mv /tmp/fix.in.fq %s/%s.in.fq" % (sys.argv[1], f))
     os.system("mv /tmp/fix.out.fq %s/%s.out.fq" % (sys.argv[1], f))

@@ -1,12 +1,14 @@
+module Big = Bigarray.Array2
+
 let sub2 data i j = 
-  Bigarray.Array2.get data i j 
+  Big.get data i j 
 
 let update2 data i j x = 
-  Bigarray.Array2.set data i j x
+  Big.set data i j x
 
 let fillar arr2 fill =
-  let d1 = Bigarray.Array2.dim1 arr2 in
-  let d2 = Bigarray.Array2.dim2 arr2 in
+  let d1 = Big.dim1 arr2 in
+  let d2 = Big.dim2 arr2 in
   let rec loop i =
     let i' = i + 1 in 
       if i < d1 
@@ -15,7 +17,7 @@ let fillar arr2 fill =
           let j' = j + 1 in
            if j < d2 then
              let elt = fill () in
-             (Bigarray.Array2.set arr2 i j elt; loopi j')
+             (Big.set arr2 i j elt; loopi j')
            else
              ()
         in loopi 0
@@ -24,11 +26,11 @@ let fillar arr2 fill =
   in loop 0
 
 let matmul a b =
-  let p = Bigarray.Array2.dim1 a in
-  let q = Bigarray.Array2.dim2 a in
-  let r = Bigarray.Array2.dim2 b in
+  let p = Big.dim1 a in
+  let q = Big.dim2 a in
+  let r = Big.dim2 b in
 
-  let cdata = Bigarray.Array2.create Bigarray.int Bigarray.c_layout p r in
+  let cdata = Big.create Bigarray.int Bigarray.c_layout p r in
   let zero _none = 0 in
   let _none = fillar cdata zero in
 
@@ -68,8 +70,8 @@ let driver =
   let r = Random.int 10 in
   let r = r + 1 in
   let rand _none = Random.int 100 in
-  let av = Bigarray.Array2.create Bigarray.int Bigarray.c_layout p q in
-  let bv = Bigarray.Array2.create Bigarray.int Bigarray.c_layout q r in 
+  let av = Big.create Bigarray.int Bigarray.c_layout p q in
+  let bv = Big.create Bigarray.int Bigarray.c_layout q r in 
     fillar av rand; fillar bv rand; matmul av bv;;
 
 

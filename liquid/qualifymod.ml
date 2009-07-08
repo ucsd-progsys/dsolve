@@ -433,6 +433,7 @@ let constrain_structure tenv initfenv initquals str =
     | (Tstr_value (recflag, bindings))::srem ->
         let (fenv, cstrs') = constrain_bindings fenv [] recflag bindings in
           constrain_rec quals fenv (cstrs @ cstrs') srem
+    | (Tstr_module _)::srem
     | (Tstr_type _)::srem ->
         constrain_rec quals fenv cstrs srem
     | _ -> assert false

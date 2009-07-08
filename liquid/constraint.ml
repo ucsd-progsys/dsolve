@@ -948,8 +948,8 @@ let solve_with_solver qs env consts cs solver =
   let cs = BS.time "splitting constraints" split cs in
   let max_env = List.fold_left 
     (fun env (v, c, _) -> Le.combine (frame_env c.lc_cstr) env) Le.empty cs in
-(*  let _ = C.cprintf C.ol_insane "===@.Pruned Maximum Environment@.%a@.===@." pprint_fenv_shp max_env in
-  let _ = printf "%a@.@." (pprint_raw_fenv true) max_env; assert false in*)
+(*  let _ = C.cprintf C.ol_insane "===@.Pruned Maximum Environment@.%a@.===@." pprint_fenv_shp max_env in *)
+  let _ = C.cprintf C.ol_insane "===@.Maximum@ Environment@.@.%a@.@." (pprint_raw_fenv true) max_env in
   let lcs = List.map (fun (v, c, cstr) -> (set_labeled_constraint c (make_val_env v max_env), cstr)) cs in
   (* let cs = if !Cf.esimple then 
                BS.time "e-simplification" (List.map esimple) cs else cs in *)
