@@ -66,6 +66,7 @@ let rec dprover_t_of_fsort = function
   | Fs.Array (t1, t2) ->
       Parsetree.Pprover_array (dprover_t_of_fsort t1, dprover_t_of_fsort t2)
   | Fs.Func ts -> Parsetree.Pprover_fun (List.map dprover_t_of_fsort ts)
+  | Fs.Ptr -> Parsetree.Pprover_abs ("ptr")
 
 let rec f_of_dexpr = function
   | D.PInt i            -> F.eCon (F.Constant.Int i) 
