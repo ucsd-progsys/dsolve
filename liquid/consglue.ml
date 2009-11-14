@@ -139,7 +139,7 @@ let f_of_dsubcon vvt fmax_envt = function
   | D.SubRef (renvt, gd, r1, r2, id) -> 
     let gd = Pg.f_of_dpred (D.guard_predicate () gd) in
     let (r1, r2) = (f_of_dreft vvt r1, freft_of_dsreft vvt r2) in
-    Some (F.make_t (f_of_drenvt renvt fmax_envt) gd r1 r2 id)
+    Some (F.make_t (f_of_drenvt renvt fmax_envt) gd r1 r2 id [])
   | _ -> None
 
 let f_of_dsubcons fmax_envt cons =
