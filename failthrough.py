@@ -23,7 +23,11 @@ import common, sys, time, os, os.path
 import itertools as it
 import dsolve
 
-testdirs = [("postestsfix", 0)]
+
+#srcdirs = [("postestsfix", 0)]
+srcdirs = [(sys.argv[1], 0)]
+dstdir  = sys.argv[2]
+
 
 def runtest(file, expected_status):
   include = "theories"
@@ -43,8 +47,8 @@ def runtest(file, expected_status):
     print "\033[1;31mFAILURE :(\033[1;0m\n"
   if ok:
     (_, _, f) = file.rpartition("/")
-    os.system("mv /tmp/fix.in.fq %s/%s.in.fq" % (sys.argv[1], f))
-    os.system("mv /tmp/fix.out.fq %s/%s.out.fq" % (sys.argv[1], f))
+    os.system("mv /tmp/fix.in.fq %s/%s.in.fq" % (dstdir, f))
+    os.system("mv /tmp/fix.out.fq %s/%s.out.fq" % (dstdir, f))
   return (file, ok)
 
 def runtests(dir, expected_status):
@@ -52,7 +56,7 @@ def runtests(dir, expected_status):
   files = it.chain(*[[os.path.join(dir, file) for file in files] for dir, dirs, files in os.walk(dir)])
   return [runtest(file, expected_status) for file in files if file.endswith(".ml")]
 
-results   = [runtests(dir, expected_status) for (dir, expected_status) in testdirs]
+results   = [runtests(dir, expected_status) for (dir, expected_status) in srcdirs]
 failed    = [result[0] for result in it.chain(*results) if result[1] == False]
 failcount = len(failed)
 if failcount == 0:
