@@ -91,13 +91,19 @@ clean: partialclean
 	 done);
 	rm -f liquid.byte liquid.opt
 
-libclean: z3clean graphclean
+libclean: z3clean graphclean miscclean fixpointclean
 
 z3clean:
 	cd external/z3/ocaml; ./clean.sh
 
 graphclean:
 	cd external/ocamlgraph && make clean
+
+miscclean:
+	cd external/misc && make clean
+
+fixpointclean:
+	cd external/fixpoint && make clean
 
 distclean: clean
 	(for d in ./ utils parsing typing tests liquid; \
@@ -181,7 +187,13 @@ z3lib:
 graphlib:
 	cd external/ocamlgraph; ./configure --libdir $(LIBDIR); $(MAKE) all;
 
-libs: z3lib graphlib
+misclib:
+	cd external/misc; $(MAKE)
+
+fixpointlib:
+	cd external/fixpoint; $(MAKE)
+
+libs: z3lib graphlib misclib fixpointlib
 
 world: liquid.opt
 
