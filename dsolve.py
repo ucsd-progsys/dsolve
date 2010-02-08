@@ -19,14 +19,19 @@
 # ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION
 # TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-import sys, os, os.path, common
+import sys, os, os.path, common, tempfile
 
 d_pats= "default_patterns"
 solve = "./liquid.opt -dframes".split()
 flags = []
-tname = "/tmp/qual.scratch"
-tname2 = "/tmp/summary.scratch"
 null  = open("/dev/null", "w")
+
+# TODO: Ensure that these files get deleted?
+(handle, tname) = tempfile.mkstemp()
+os.close(handle)
+(handle, tname2) = tempfile.mkstemp()
+os.close(handle)
+del handle
 
 def cat_files(files,outfile):
   os.system("rm -f %s" % outfile)
