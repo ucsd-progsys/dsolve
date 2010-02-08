@@ -1,12 +1,12 @@
 [submodule "external/ocamlgraph"]
 	path = external/ocamlgraph
-	url = /git/external/ocamlgraph.git
+	url = ssh://meatwad.ucsd.edu/git/external/ocamlgraph.git
 [submodule "external/z3"]
 	path = external/z3
-	url = /git/external/z3.git
+	url = ssh://meatwad.ucsd.edu/git/external/z3.git
 [submodule "external/misc"]
 	path = external/misc
-	url = /git/external/misc.git
+	url = ssh://meatwad.ucsd.edu/git/external/misc.git
 [submodule "external/fixpoint"]
 	path = external/fixpoint
-	url = /git/external/fixpoint.git
+	url = ssh://meatwad.ucsd.edu/git/external/fixpoint.git
