@@ -1,12 +1,12 @@
 [submodule "external/ocamlgraph"]
 	path = external/ocamlgraph
-	url = /git/external/ocamlgraph.git/.git
+	url = /git/external/ocamlgraph.git
 [submodule "external/z3"]
 	path = external/z3
-	url = /git/external/z3.git/.git
+	url = /git/external/z3.git
 [submodule "external/misc"]
 	path = external/misc
-	url = /git/external/misc.git/.git
+	url = /git/external/misc.git
 [submodule "external/fixpoint"]
 	path = external/fixpoint
-	url = /git/external/fixpoint.git/.git
+	url = /git/external/fixpoint.git
