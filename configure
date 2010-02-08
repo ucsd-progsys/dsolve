@@ -147,8 +147,17 @@ case "$bindir" in
    *) echo "BINDIR=$bindir" >> Makefile;;
 esac
 case "$libdir" in
-  "") echo 'LIBDIR=$(PREFIX)/lib/ocaml' >> Makefile
-      libdir="$prefix/lib/ocaml";;
+  "") libdir=`ocamlc -v | sed -n 's/.*: //p'`
+      case "$libdir" in
+        "") echo "Unable to auto-detect ocaml libdir." 1>&2
+            echo "Please specify it manually with the --libdir option." 1>&2
+            exit 2;;
+        /*) ;;
+         *) echo "Unable to auto-detect ocaml libdir." 1>&2
+            echo "Please specify it manually with the --libdir option." 1>&2
+            exit 2;;
+      esac
+      echo "LIBDIR=$libdir" >> Makefile;;
    *) echo "LIBDIR=$libdir" >> Makefile;;
 esac
 echo 'STUBLIBDIR=$(LIBDIR)/stublibs' >> Makefile
