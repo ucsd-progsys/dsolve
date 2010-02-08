@@ -7,6 +7,7 @@
 **.scratch
 **~
 _build
+config.make
 config/Makefile
 config/m.h
 config/s.h
