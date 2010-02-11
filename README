@@ -22,12 +22,7 @@ To compile dsolve:
 
 2. Run ./configure && make libs && make
 
-NOTE: Be sure that the files in external/z3/lib are in your library
-      path!  One way to do this is to run
-
-        export LD_LIBRARY_PATH=[path to dsolve]/external/z3/lib:$LD_LIBRARY_PATH
-
-4. (Optional) Run the regression test suite via
+3. (Optional) Run the regression test suite via
 
      make tests
 
