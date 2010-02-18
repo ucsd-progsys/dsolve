@@ -5,8 +5,7 @@ To check out dsolve from git:
 
 1. git clone meatwad.ucsd.edu:/git/dsolve
 2. cd dsolve
-3. git submodule init
-4. git submodule update
+3. ./getsubmodules.sh
 
 Compiling dsolve
 ================
