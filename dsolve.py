@@ -62,21 +62,12 @@ def solve_quals(file,bare,time,quiet,flags):
   else: time = []
   return common.logged_sys_call(time + solve + flags + [("%s.ml" % bname)], out)
 
-def solve_quals_logged(file,outfile,bare,time,quiet,flags):
-  bname = file[:-3]
-  os.system("rm -f %s.annot" % bname)
-  if quiet: out = null
-  else: out = None
-  if time: time = ["time"]
-  else: time = []
-  return common.logged_sys_call(time + solve + flags + [("%s.ml" % bname)], out)
-
 def main():
   argc = len(sys.argv)
   if argc == 1:
     print ("Usage: %s [flags] [sourcefile]" % sys.argv[0])
     sys.exit(0)
-  if sys.argv[1] == "-help":
+  if sys.argv[1] == "-help" or sys.argv[1] == "--help":
     os.system("./liquid.opt -help")
     sys.exit(0)
   bare = (sys.argv[1] == "-bare")
