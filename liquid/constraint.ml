@@ -160,9 +160,7 @@ let pprint_raw_fenv shp ppf env =
   Le.iter (fun p f -> fprintf ppf "@[%s@ ::@ %a@]@." (C.path_name p) F.pprint (if shp then F.shape f else f)) env; fprintf ppf "==="
 
 let pprint_fenv_pred so ppf env =
-  (* match so with
-  | Some s -> P.pprint ppf (P.big_and (environment_preds (solution_map s) env))
-  | _ -> *) Le.iter (fun x t -> pprint_local_binding F.pprint ppf (x, t)) env
+  Le.iter (fun x t -> pprint_local_binding F.pprint ppf (x, t)) env
 
 let pprint_renv_pred f so ppf env =
   match so with
@@ -584,9 +582,6 @@ let close_over_env env s ps =
   close_rec [] ps 
 
 let refine_sol_update s k qs qs' = 
-  (* C.cprintf C.ol_refine "@[%s : %d --> %d %a@.@]" 
-    (Path.unique_name k) (List.length qs) (List.length qs')
-    (Oprint.print_list Q.pprint C.space) qs'; *)
   BS.time "sol replace" (Sol.replace s k) qs';
   not (C.same_length qs qs')
 
@@ -639,21 +634,10 @@ let check_tp senv lhs_ps x2 =
 let bound_in_env senv p =
   List.for_all (fun x -> Le.mem x senv) (P.vars p)
 
-(*
-let check_env_bindings senv lhs_ps rhs_ps =
-  let chl = List.for_all (bound_in_env senv) lhs_ps in
-  let chr = List.for_all (bound_in_env senv) rhs_ps in
-  if not (chl && chr) then
-    (printf "@[lhs: %a@]@.@." P.pprint (P.big_and lhs_ps);
-     printf "@[rhs: %a@]@.@." P.pprint (P.big_and rhs_ps);
-     Printf.printf "bad env bindings (l=%b, r=%b)!!! " chl chr)
-*)
-
 let refine_tp senv s env g r1 sub2s k2 =
   let sm = solution_map s in
   let lhs_ps  = lhs_preds sm env g r1 in
   let rhs_qps = rhs_cands sm sub2s k2 in
-(*  let _       = check_env_bindings senv lhs_ps (List.map snd rhs_qps) in *)
   let rhs_qps' =
     if List.exists P.is_contra lhs_ps 
     then (stat_matches := !stat_matches + (List.length rhs_qps); rhs_qps) 
@@ -662,7 +646,6 @@ let refine_tp senv s env g r1 sub2s k2 =
       let lhsm    = List.fold_left (fun pm p -> PM.add p true pm) PM.empty lhs_ps in
       let (x1,x2) = List.partition (fun (_,p) -> PM.mem p lhsm) rhs_qps in
       let _       = stat_matches := !stat_matches + (List.length x1) in 
-      (*let x2      = List.filter (fun (_,p) -> bound_in_env senv p) x2 in*)
       match x2 with [] -> x1 | _ -> x1 @ (check_tp senv lhs_ps x2) in
   refine_sol_update s k2 rhs_qps (List.map fst rhs_qps') 
 
@@ -700,7 +683,6 @@ let refine sri s c =
 let sat sri s c = 
   match c with
   | SubRef (env,g,r1, (sub2s, F.Qvar k2), _)  ->
-      (*not (refine_tp (get_ref_fenv sri c) s env g r1 sub2s k2)*)
       true
   | SubRef (env, g, r1, sr2, _) as c ->
       let sm     = solution_map s in
@@ -731,7 +713,6 @@ let instantiate_quals_in_env tr mlenv consts qs =
         let (vs, (env, envl, quoi)) = TR.find_maximal envl' tr (fun (_, _, quoi) -> C.maybe_bool !quoi) in
         match !quoi with
           | Some qs -> 
-            (*TR.iter_path envl' tr (fun (_, _, quoi) -> if C.maybe_bool !quoi then () else quoi := Some qs);*)
             quoi := Some qs;
             List.iter (fun (_, _, q) -> if C.maybe_bool !q then () else q := Some qs) vs; qs
           | None -> 
@@ -821,9 +802,6 @@ let dump_ref_constraints sri =
     iter_ref_constraints sri (fun c -> printf "@[%a@.@]" (pprint_ref None) c);
     printf "@[SCC Ranked Refinement Constraints@.@\n@]";
     sort_iter_ref_constraints sri (fun c -> printf "@[%a@.@]" (pprint_ref None) c);
-    (*printf "@[Refinement Constraint Origins@.@.@]";
-    iter_ref_origs sri 
-      (fun i c -> printf "@[o(%i)@]@." i; Le.iter (fun p _ -> printf "@[%s@]@." (Path.unique_name p)) (frame_env c.lc_cstr))*)  
   end
 
 let dump_ref_vars sri =
@@ -941,20 +919,14 @@ let dsolver max_env cs s _ =
   s
 
 let solve_with_solver qs env consts cs solver = 
-  (*let _  = JS.doTime := true in*)
   let cs = if !Cf.simpguard then List.map simplify_fc cs else cs in
   let _  = dump_constraints cs in
   let _  = dump_unsplit cs in
   let cs = BS.time "splitting constraints" split cs in
   let max_env = List.fold_left 
     (fun env (v, c, _) -> Le.combine (frame_env c.lc_cstr) env) Le.empty cs in
-(*  let _ = C.cprintf C.ol_insane "===@.Pruned Maximum Environment@.%a@.===@." pprint_fenv_shp max_env in *)
   let _ = C.cprintf C.ol_insane "===@.Maximum@ Environment@.@.%a@.@." (pprint_raw_fenv true) max_env in
   let lcs = List.map (fun (v, c, cstr) -> (set_labeled_constraint c (make_val_env v max_env), cstr)) cs in
-  (* let cs = if !Cf.esimple then 
-               BS.time "e-simplification" (List.map esimple) cs else cs in *)
-  (*let _ = printf "Qualifier@ patterns@.";
-    List.map (fun (_, {Parsetree.pqual_pat_desc = (_, _, p)}) -> printf "%a@." P.pprint_pattern p) qs in*)
   let qs = BS.time "instantiating quals" (instantiate_per_environment env consts lcs) qs in
   let _ = if C.ck_olev C.ol_solve then
           C.cprintf C.ol_solve "@[%i@ instantiation@ queries@ %i@ misses@]@." (List.length lcs) !tr_misses in
