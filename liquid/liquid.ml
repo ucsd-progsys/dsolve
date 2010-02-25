@@ -143,7 +143,6 @@ let process_sourcefile env fenv fname =
         dump_summary bname (str, env, menv, mlqenv, fenv) (C.maybe !summarize)
       else
         let (deps, consts, tyquals)  = load_qualfile std_formatter qname in
-        (*let _ = List.iter (fun (_, {Parsetree.pqual_pat_desc = (_, _, p)}) -> printf "%a@." P.pprint_pattern p) tyquals in*)
         let (env, menv', fenv, _)    = load_dep_mlqfiles bname deps env fenv mlqenv in
         let (fenv, mlqenv, tyquals)  = M.proc_premeas env (List.rev_append menv menv') fenv mlqenv tyquals in
         let fenv = MLQ.scrub_and_push_axioms fenv in
