@@ -109,10 +109,14 @@ and d_of_fpred p =
   match Fp.unwrap p with
   | F.True                   -> D.True
   | F.False                  -> D.Not (D.True)
-  | F.And ps                 ->
-      List.fold_left (fun a p -> D.And (d_of_fpred p, a)) D.True ps
-  | F.Or ps                  ->
-      List.fold_left (fun a p -> D.Or (d_of_fpred p, a)) (D.Not (D.True)) ps
+  | F.And []                 -> D.True
+  | F.And [p]                -> d_of_fpred p
+  | F.And (p :: ps)          ->
+      List.fold_left (fun a p -> D.And (d_of_fpred p, a)) (d_of_fpred p) ps
+  | F.Or []                  -> D.Not (D.True)
+  | F.Or [p]                 -> d_of_fpred p
+  | F.Or (p :: ps)           ->
+      List.fold_left (fun a p -> D.Or (d_of_fpred p, a)) (d_of_fpred p) ps
   | F.Not p                  -> D.Not (d_of_fpred p)
   | F.Imp (p1, p2)           -> D.Implies (d_of_fpred p1, d_of_fpred p2)
   | F.Bexp e                 -> D.Boolexp (d_of_fexpr e)
