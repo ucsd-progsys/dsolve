@@ -58,23 +58,15 @@ val dump_constraints: bool ref
 val dump_ref_constraints: bool ref
 val dump_ref_vars: bool ref
 val print_subs: bool ref
-val dump_qexprs: bool ref
-val dump_qualifs: bool ref
 val dump_queries: bool ref
 val dump_frames: bool ref
 val raw_frames: bool ref
 val dump_graph: bool ref
-val log_queries: bool ref
 val check_queries: bool ref
-val brief_quals: bool ref
 val esimple: bool ref
 val no_simple: bool ref
 val verify_simple: bool ref
-val use_list: bool ref
-val kill_simplify: bool ref  
 val always_use_backup_prover: bool ref
-val use_qprover : bool ref
-val qpdump : bool ref
 val cache_queries: bool ref 
 val psimple: bool ref
 val simpguard : bool ref
@@ -84,8 +76,6 @@ val ck_mlq: bool ref
 val summarize: string option ref
 val dsmeasures: bool ref
 val use_fixpoint: bool ref
-val no_simple_subs: bool ref
-val builtins_file: string option ref
 val less_qualifs: bool ref
 val no_anormal: bool ref
 val keep_asm_file : bool ref
