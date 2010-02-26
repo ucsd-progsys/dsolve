@@ -1,0 +1,3 @@
+val create : iv: 'b -> (i: int, {v: 'b | v = iv}) t
+val set    : (i1: int, 'b) t -> k: int -> sv: 'b[k/i1] -> (i2: int, 'b[i2/i1]) t
+val get    : (i1: int, 'b) t -> k: int -> 'b[k/i1]
