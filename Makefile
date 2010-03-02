@@ -13,13 +13,13 @@ LIBFIX=external/fixpoint/_build #path to fixpoint objects
 LIBMISC=external/misc/_build #path to misc objects
 
 LINKFLAGS= -ccopt "-Iexternal/z3/ocaml -Lexternal/z3/lib" $(FLAGS) \
-          -I external/ocamlgraph/ \
+	  -I external/ocamlgraph/ \
 	  -cclib -lstdc++ $(LIBZ3) -cclib -lz3stubs \
-          -I external/ocamlgraph/ -I external/z3/ocaml -I external/z3/bin \
+	  -I external/ocamlgraph/ -I external/z3/ocaml -I external/z3/bin \
 					-I $(LIBFIX) -I $(LIBMISC)
 
 INCLUDES=-I external/z3/ocaml/ -I external/ocamlgraph/ \
-         -I utils -I parsing -I typing -I liquid \
+	 -I utils -I parsing -I typing -I liquid \
 				 -I $(LIBFIX) -I $(LIBMISC)
 
 UTILS=utils/miscutil.cmo utils/config.cmo \
@@ -113,28 +113,28 @@ distclean: clean
 
 utils/config.ml: utils/config.mlp config/Makefile
 	@rm -f utils/config.ml
-	sed -e 's|%%LIBDIR%%|$(LIBDIR)|' \
-            -e 's|%%BYTERUN%%|$(BINDIR)/ocamlrun|' \
-            -e 's|%%CCOMPTYPE%%|cc|' \
-            -e 's|%%BYTECC%%|$(BYTECC) $(BYTECCCOMPOPTS) $(SHAREDCCCOMPOPTS)|' \
-            -e 's|%%BYTELINK%%|$(BYTECC) $(BYTECCLINKOPTS)|' \
-            -e 's|%%NATIVECC%%|$(NATIVECC) $(NATIVECCCOMPOPTS)|' \
-            -e 's|%%NATIVELINK%%|$(NATIVECC) $(NATIVECCLINKOPTS)|' \
-            -e 's|%%PARTIALLD%%|$(PARTIALLD) $(NATIVECCLINKOPTS)|' \
-            -e 's|%%PACKLD%%|$(PARTIALLD) $(NATIVECCLINKOPTS) -o |' \
-            -e 's|%%BYTECCLIBS%%|$(BYTECCLIBS)|' \
-            -e 's|%%NATIVECCLIBS%%|$(NATIVECCLIBS)|' \
-            -e 's|%%RANLIBCMD%%|$(RANLIBCMD)|' \
-            -e 's|%%CC_PROFILE%%|$(CC_PROFILE)|' \
-            -e 's|%%ARCH%%|$(ARCH)|' \
-            -e 's|%%MODEL%%|$(MODEL)|' \
-            -e 's|%%SYSTEM%%|$(SYSTEM)|' \
-            -e 's|%%EXT_OBJ%%|.o|' \
-            -e 's|%%EXT_ASM%%|.s|' \
-            -e 's|%%EXT_LIB%%|.a|' \
-            -e 's|%%EXT_DLL%%|.so|' \
-            -e 's|%%SYSTHREAD_SUPPORT%%|$(SYSTHREAD_SUPPORT)|' \
-            utils/config.mlp > utils/config.ml
+	sed -e 's|%%LIBDIR%%|$(DSOLVELIBDIR)|' \
+	    -e 's|%%BYTERUN%%|$(BINDIR)/ocamlrun|' \
+	    -e 's|%%CCOMPTYPE%%|cc|' \
+	    -e 's|%%BYTECC%%|$(BYTECC) $(BYTECCCOMPOPTS) $(SHAREDCCCOMPOPTS)|' \
+	    -e 's|%%BYTELINK%%|$(BYTECC) $(BYTECCLINKOPTS)|' \
+	    -e 's|%%NATIVECC%%|$(NATIVECC) $(NATIVECCCOMPOPTS)|' \
+	    -e 's|%%NATIVELINK%%|$(NATIVECC) $(NATIVECCLINKOPTS)|' \
+	    -e 's|%%PARTIALLD%%|$(PARTIALLD) $(NATIVECCLINKOPTS)|' \
+	    -e 's|%%PACKLD%%|$(PARTIALLD) $(NATIVECCLINKOPTS) -o |' \
+	    -e 's|%%BYTECCLIBS%%|$(BYTECCLIBS)|' \
+	    -e 's|%%NATIVECCLIBS%%|$(NATIVECCLIBS)|' \
+	    -e 's|%%RANLIBCMD%%|$(RANLIBCMD)|' \
+	    -e 's|%%CC_PROFILE%%|$(CC_PROFILE)|' \
+	    -e 's|%%ARCH%%|$(ARCH)|' \
+	    -e 's|%%MODEL%%|$(MODEL)|' \
+	    -e 's|%%SYSTEM%%|$(SYSTEM)|' \
+	    -e 's|%%EXT_OBJ%%|.o|' \
+	    -e 's|%%EXT_ASM%%|.s|' \
+	    -e 's|%%EXT_LIB%%|.a|' \
+	    -e 's|%%EXT_DLL%%|.so|' \
+	    -e 's|%%SYSTHREAD_SUPPORT%%|$(SYSTHREAD_SUPPORT)|' \
+	    utils/config.mlp > utils/config.ml
 	@chmod -w utils/config.ml
 
 partialclean::
@@ -193,7 +193,15 @@ misclib:
 fixpointlib:
 	cd external/fixpoint; $(MAKE)
 
-libs: z3lib graphlib misclib fixpointlib
+# build the OCaml bootstrap compiler
+LIBFILES=*.cmi
+coldstart:
+	cd byterun; $(MAKE) all
+	cp byterun/ocamlrun$(EXE) boot/ocamlrun$(EXE)
+	cd stdlib; $(MAKE) COMPILER=../boot/ocamlc all
+	cd stdlib; cp $(LIBFILES) ../boot; cp $(LIBFILES) ../theories
+
+libs: z3lib graphlib misclib fixpointlib coldstart
 
 world: liquid.opt
 
