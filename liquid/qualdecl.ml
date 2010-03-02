@@ -6,6 +6,7 @@ module Le = Lightenv
 module F = Frame
 module Ft = Format
 module BS = Bstats
+open Parsetree
 
 let rel_star = [Ge; Le; Ne]
 let op_star = [Plus; Minus; Times; Div]
@@ -178,6 +179,11 @@ let strip_bool = function Boolexp e -> e | _ -> assert false
 
 let transl_patpredexp_map f g exp = List.rev_map strip_bool (transl_patpred_map f g
   {ppredpat_desc = Ppredpat_boolexp exp; ppredpat_loc = Location.none})
+
+let transl_patpredorexp_map f g patorexp  =
+  match patorexp.ppredpatorexp_desc with
+  | Ppredexp e -> List.map (fun e -> Pexpr e) (transl_patpredexp_map f g e)
+  | Ppredpat t -> List.map (fun p -> Pt p) (transl_patpred_map f g t)
 
 let expand_qualpat_about consts env mlenv (_, qual) =
   let (v, tys, pat) = qual.pqual_pat_desc in

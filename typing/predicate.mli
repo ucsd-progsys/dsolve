@@ -57,9 +57,14 @@ and t =
   | Implies of t * t
   | Boolexp of pexpr
 
+type t_or_pexpr =
+    Pexpr of pexpr
+  | Pt of t
+
 val pprint_rel: binrel -> string
 val pprint: formatter -> t -> unit
 val pprint_pexpr: formatter -> pexpr -> unit
+val pprint_t_or_pexpr: formatter -> t_or_pexpr -> unit
 val pprint_pattern: formatter -> Parsetree.predicate_pattern -> unit
 val pprint_pattern_pexpr: formatter -> Parsetree.predpatexp -> unit
 
@@ -68,6 +73,9 @@ val pexp_map_funs: (Path.t -> Path.t) -> pexpr -> pexpr
 
 val map_vars: (Path.t -> pexpr) -> t -> t
 val map_funs: (Path.t -> Path.t) -> t -> t
+
+val pred_or_pexp_map_vars: (Path.t -> pexpr) -> t_or_pexpr -> t_or_pexpr 
+val pred_or_pexp_map_funs: (Path.t -> Path.t) -> t_or_pexpr -> t_or_pexpr
 
 val tag_function: Path.t
 val tag: pexpr -> pexpr

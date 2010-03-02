@@ -62,6 +62,10 @@ and t =
   | Implies of t * t
   | Boolexp of pexpr
 
+type t_or_pexpr =
+    Pexpr of pexpr
+  | Pt of t
+
 let pprint_rel = function
     Eq -> "="
   | Ne -> "!="
@@ -123,6 +127,10 @@ and pprint ppf = function
       fprintf ppf "@[(exists@ (%a.@ %a))@]" (C.pprint_many false "," (C.pprint_str)) p pprint q
   | Boolexp e ->
       fprintf ppf "@[(? (%a))@]" pprint_pexpr e
+
+let pprint_t_or_pexpr ppf = function
+  | Pexpr e -> pprint_pexpr ppf e
+  | Pt t -> pprint ppf t
 
 let rec pprint_pattern ppf p =
   match p.ppredpat_desc with
@@ -291,6 +299,10 @@ let rec map_vars f p =
   let f     = function x when not (List.mem x bound) -> f x | y -> Var y in
     map_subexps (pexp_map (map_var f)) (map_subpreds (map_vars f) p)
 
+let pred_or_pexp_map_vars f = function
+  | Pexpr e -> Pexpr (pexp_map_vars f e)
+  | Pt t -> Pt (map_vars f t)
+
 let map_fun f = function
   | FunApp (fn, e) -> FunApp (f fn, e)
   | e              -> e
@@ -300,6 +312,10 @@ let pexp_map_funs f e =
 
 let map_funs f pred =
   map (map_fun f) pred
+
+let pred_or_pexp_map_funs f = function
+  | Pexpr e -> Pexpr (pexp_map_funs f e)
+  | Pt t -> Pt (map_funs f t)
 
 let subst v x pred =
   map_vars (fun y -> if Path.same x y then v else Var y) pred

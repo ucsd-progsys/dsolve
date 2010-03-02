@@ -28,6 +28,10 @@ let mkpredpat d =
   { ppredpat_desc = d; ppredpat_loc = symbol_rloc() }
 let mkpredpatexp d =
   { ppredpatexp_desc = d; ppredpatexp_loc = symbol_rloc() }
+let mkpredpatorexp_exp e =
+  { ppredpatorexp_desc = Ppredexp e; ppredpatorexp_loc = symbol_rloc() }
+let mkpredpatorexp_pred p =
+  { ppredpatorexp_desc = Ppredpat p; ppredpatorexp_loc = symbol_rloc() }
 let mkpat d =
   { ppat_desc = d; ppat_loc = symbol_rloc() }
 let mkexp d =
@@ -1686,8 +1690,14 @@ opt_measure_constructor_list:
   | BAR measure_constructor opt_measure_constructor_list       { $2 :: $3 } 
 
 measure_constructor:
-    constr_longident opt_measure_args MINUSGREATER qual_expr   { ((String.concat "." (Longident.flatten $1)), $2, $4) }
-  | measure_arg COLONCOLON measure_arg MINUSGREATER qual_expr { ("::", [$1; $3], $5) }
+    constr_longident opt_measure_args MINUSGREATER qual_expr
+    { ((String.concat "." (Longident.flatten $1)), $2, mkpredpatorexp_exp $4) }
+  | measure_arg COLONCOLON measure_arg MINUSGREATER qual_expr 
+    { ("::", [$1; $3], mkpredpatorexp_exp $5) }
+  | constr_longident opt_measure_args MINUSGREATER qualifier_pattern
+    { (String.concat "." (Longident.flatten $1), $2, mkpredpatorexp_pred $4) }
+  | measure_arg COLONCOLON measure_arg MINUSGREATER qualifier_pattern
+    { ("::", [$1; $3], mkpredpatorexp_pred $5) }
 
 opt_measure_args:
     /* empty */                                                { [] }

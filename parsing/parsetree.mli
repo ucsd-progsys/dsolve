@@ -172,11 +172,19 @@ and predpatexp_desc =
   | Ppredpatexp_field of string * predpatexp
   | Ppredpatexp_ite of predicate_pattern * predpatexp * predpatexp
 
+and predpatorexp =
+  { ppredpatorexp_desc: predpatorexp_desc;
+    ppredpatorexp_loc: Location.t }
+
+and predpatorexp_desc =
+    Ppredpat of predicate_pattern
+  | Ppredexp of predpatexp
+
 (* Signature structure *)
                                    
 and predicate_alias = string * predicate_alias_declaration
 
-and cstr = string * string option list * predpatexp
+and cstr = string * string option list * predpatorexp
 
 and liquid_decl =
     LvalDecl of string * litframe

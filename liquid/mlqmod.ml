@@ -122,7 +122,7 @@ let load_nrval dopt env fenv (s, pf) =
     QF.add_nrframe pf; Le.add p pf fenv
   with Not_found -> failwith (Printf.sprintf "mlq: val %s does not correspond to program value" s)
 
-let map_constructor_args dopt env (name, mlname) (cname, args, cpred) =
+let map_constructor_args dopt env (name, mlname) (cname, args, cpredorexp) =
   let cname = lookup (fun s -> let dc = maybe_add_pref dopt s in ignore (Env.lookup_constructor (Longident.parse dc) env); dc) cname cname in
   let dargs = C.maybe_list args in
   let argmap = List.combine dargs (List.map (fun s -> Path.mk_ident s) dargs) in
@@ -131,9 +131,10 @@ let map_constructor_args dopt env (name, mlname) (cname, args, cpred) =
     let l_assoc s = [List.assoc s argmap] in
       lookup3_f l_assoc (C.compose l_env (maybe_add_pref dopt)) l_env (fun x -> assert false) s in
   let ffun s = lookup (fun s -> let s = maybe_add_pref dopt (Path.name s) in C.lookup_path s env) s s in
-  (*let x = Qualdecl.transl_patpredexp_map fvar fvar cpred in (* DEBUG *)
-  let _ = List.rev_map (fun p -> printf "%a@.@." P.pprint_pexpr p) x in (* DEBUG *)*)
-  let pred = P.pexp_map_funs ffun (C.ex_one "metavariable or ident set used in measure" (Qualdecl.transl_patpredexp_map fvar fvar cpred)) in
+  let pred =
+    P.pred_or_pexp_map_funs ffun 
+     (C.ex_one "metavariable or ident set used in measure"
+      (Qualdecl.transl_patpredorexp_map fvar fvar cpredorexp)) in
   let args = List.map (function Some s -> Some (List.assoc s argmap) | None -> None) args in
     Mcstr(cname, (args, (maybe_add_pref dopt name, pred)))
 

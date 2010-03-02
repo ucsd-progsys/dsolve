@@ -9,7 +9,7 @@ module F = Frame
 module Le = Lightenv
 module Qd = Qualdecl
 
-type mdef = (string * P.pexpr) 
+type mdef = (string * P.t_or_pexpr) 
 type m = (constructor_tag * Path.t option list * mdef) list 
 type t = m Le.t
 type pre_measure = (string * (Path.t option list * mdef))
@@ -80,10 +80,15 @@ let mk_pred v mps (_, ps, ms) =
   let _ = if List.length ps != List.length mps then failwith "argument arity mismatch" in
   let ps = List.combine ps mps in
   let var_map v = (try match (List.assoc (Some v) ps) with Some s -> s | _ -> raise (Failure "") with Not_found -> P.Var v) in
-  let (s, e) = ms in
+  let (s, p_or_e) = ms in
   try 
-    let e = P.pexp_map_vars var_map e in
-      P.Atom(P.FunApp(get_path s, [P.Var v]), P.Eq, e) 
+    let p_or_e = P.pred_or_pexp_map_vars var_map p_or_e in
+    let s_of_v = P.FunApp(get_path s, [P.Var v]) in
+    match p_or_e with
+    | P.Pexpr e ->
+        P.Atom(s_of_v, P.Eq, e) 
+    | P.Pt t ->
+        P.Iff(P.Boolexp(s_of_v), t)
   with Failure _ -> P.True
 
 let mk_pred_list v mps mcstrs =
@@ -108,11 +113,7 @@ let mk_single_gd menv (vp, p, tag, ps) =
 let mk_guard env vp cpats =
   let preds = C.map_partial (mk_single_gd !bms) cpats in
   let preds = C.flap P.conjuncts preds in
-  (*let _ = List.iter (fun p -> printf "@[%a@]@." P.pprint p) preds in
-  let _ = printf "@.ENTER@." in*)
   let preds = List.filter (Wellformed.pred_well_formed env) preds in
-  (*let _ = List.iter (fun p -> printf "@[%a@]@." P.pprint p) preds in
-  let _ = printf "@.EXIT@." in*)
     P.big_and preds
 
 (* assumes no subs *)
@@ -123,6 +124,9 @@ let map_pred_funs f (v, p) =
 
 let map_exp_funs f (v, p) =
   (v, P.pexp_map_funs f p)
+
+let map_funs f (v, p_or_e) =
+  (v, P.pred_or_pexp_map_funs f p_or_e)
 
 let transl_pred names =
   map_pred_funs (fun x -> C.sub_from_list names x) 
@@ -135,7 +139,7 @@ let transl_qualpat names q =
 
 let pprint_menv ppf menv =
   List.iter (function | Mname(a,b) -> fprintf ppf "@[Name:@ (%s,@ %s)@]@." a b
-                      | Mcstr(c, (ps, px)) -> fprintf ppf "@[Cstr:@ (%s,@ (.,@ %a))@]@." c P.pprint_pexpr (snd px)) menv
+                      | Mcstr(c, (ps, px)) -> fprintf ppf "@[Cstr:@ (%s,@ (.,@ %a))@]@." c P.pprint_t_or_pexpr (snd px)) menv
 
 let proc_premeas env menv fenv ifenv quals =
   let (mnames, mcstrs) = (filter_names menv, filter_cstrs menv) in
@@ -144,7 +148,7 @@ let proc_premeas env menv fenv ifenv quals =
   let subpaths = List.map (fun (x, y) -> (C.lookup_path x env, get_path y)) subs in
   let fenv = Le.map (transl_frame subpaths) fenv in
   let ifenv = Le.map (transl_frame subpaths) ifenv in
-  let mcstrs = List.map (fun (c, (ps, cstr)) -> (c, (ps, map_exp_funs (C.sub_from_list subpaths) cstr))) mcstrs in
+  let mcstrs = List.map (fun (c, (ps, cstr)) -> (c, (ps, map_funs (C.sub_from_list subpaths) cstr))) mcstrs in
   let _ = C.cprintf C.ol_dump_meas "Measures:@.%a" pprint_menv ((List.map (fun (a, (b, c)) -> Mcstr(a, (b, c))) mcstrs)) in
   let _ = mk_measures env mcstrs in
     (fenv, ifenv, quals)
