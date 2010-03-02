@@ -19,6 +19,7 @@ configure_options="$*"
 prefix=`dirname \`dirname \\\`which ocamlc\\\`\``
 bindir=''
 libdir=''
+dsolvelibdir=`pwd`/stdlib
 mandir=''
 manext=1
 host_type=unknown
@@ -161,6 +162,7 @@ case "$libdir" in
    *) echo "LIBDIR=$libdir" >> Makefile;;
 esac
 echo 'STUBLIBDIR=$(LIBDIR)/stublibs' >> Makefile
+echo "DSOLVELIBDIR=$dsolvelibdir" >> Makefile
 case "$mandir" in
   "") echo 'MANDIR=$(PREFIX)/man' >> Makefile
       mandir="$prefix/man";;
@@ -728,7 +730,7 @@ fi
 # Write the OS type (Unix or Cygwin)
 
 echo "#define OCAML_OS_TYPE \"$ostype\"" >> s.h
-echo "#define OCAML_STDLIB_DIR \"$libdir\"" >> s.h
+echo "#define OCAML_STDLIB_DIR \"$dsolvelibdir\"" >> s.h
 
 # Use 64-bit file offset if possible
 

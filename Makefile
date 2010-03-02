@@ -113,7 +113,7 @@ distclean: clean
 
 utils/config.ml: utils/config.mlp config/Makefile
 	@rm -f utils/config.ml
-	sed -e 's|%%LIBDIR%%|$(LIBDIR)|' \
+	sed -e 's|%%LIBDIR%%|$(DSOLVELIBDIR)|' \
 	    -e 's|%%BYTERUN%%|$(BINDIR)/ocamlrun|' \
 	    -e 's|%%CCOMPTYPE%%|cc|' \
 	    -e 's|%%BYTECC%%|$(BYTECC) $(BYTECCCOMPOPTS) $(SHAREDCCCOMPOPTS)|' \
