@@ -200,6 +200,7 @@ coldstart:
 	cp byterun/ocamlrun$(EXE) boot/ocamlrun$(EXE)
 	cd stdlib; $(MAKE) COMPILER=../boot/ocamlc all
 	cd stdlib; cp $(LIBFILES) ../boot; cp $(LIBFILES) ../theories
+	cd theories; $(MAKE) COMPILER=../boot/ocamlc all
 
 libs: z3lib graphlib misclib fixpointlib coldstart
 
