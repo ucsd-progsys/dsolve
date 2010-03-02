@@ -194,7 +194,7 @@ fixpointlib:
 	cd external/fixpoint; $(MAKE)
 
 # build the OCaml bootstrap compiler
-LIBFILES=stdlib.cma std_exit.cmo *.cmi camlheader
+LIBFILES=*.cmi
 coldstart:
 	cd byterun; $(MAKE) all
 	cp byterun/ocamlrun$(EXE) boot/ocamlrun$(EXE)
