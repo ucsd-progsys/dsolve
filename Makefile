@@ -198,14 +198,8 @@ LIBFILES=stdlib.cma std_exit.cmo *.cmi camlheader
 coldstart:
 	cd byterun; $(MAKE) all
 	cp byterun/ocamlrun$(EXE) boot/ocamlrun$(EXE)
-	cd yacc; $(MAKE) all
-	cp yacc/ocamlyacc$(EXE) boot/ocamlyacc$(EXE)
 	cd stdlib; $(MAKE) COMPILER=../boot/ocamlc all
 	cd stdlib; cp $(LIBFILES) ../boot; cp $(LIBFILES) ../theories
-	if test -f boot/libcamlrun.a; then :; else \
-	  ln -s ../byterun/libcamlrun.a boot/libcamlrun.a; fi
-	if test -d stdlib/caml; then :; else \
-	  ln -s ../byterun stdlib/caml; fi
 
 libs: z3lib graphlib misclib fixpointlib coldstart
 
