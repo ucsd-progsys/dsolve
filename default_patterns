@@ -1,7 +1,5 @@
 qualif I(_V) : _V { * * } ^
 qualif Int_rel_array_id(_V) : Array.length _V { * * } ^
-qualif Int_rel_bigarray1_id(_V) : Big.dim1 _V { * * } [0,1]
-qualif Int_rel_bigarray2_id(_V) : Big.dim2 _V { * * } [0,1]
 qualif Id_rel_id_int(_V)(A:int) : _V { * * } ~A
 qualif Id_eq_id(_V) : _V = ~A
 qualif Id_rel_array_id(_V)(A:int) : ~A { * * } Array.length _V
