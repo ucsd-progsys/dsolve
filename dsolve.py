@@ -25,7 +25,11 @@ d_pats= "default_patterns"
 solve = "./liquid.opt -dframes".split()
 flags = []
 null  = open("/dev/null", "w")
-os.environ["LD_LIBRARY_PATH"] = "%s/external/z3/lib/:%s" % (sys.path[0], os.environ["LD_LIBRARY_PATH"] if "LD_LIBRARY_PATH" in os.environ else "")
+ld_library_path = ""
+if "LD_LIBRARY_PATH" in os.environ:
+  ld_library_path = os.environ["LD_LIBRARY_PATH"]
+os.environ["LD_LIBRARY_PATH"] = "%s/external/z3/lib/:%s" % (sys.path[0], ld_library_path)
+del ld_library_path
 
 # TODO: Ensure that these files get deleted?
 (handle, tname) = tempfile.mkstemp()
