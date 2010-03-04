@@ -70,6 +70,8 @@ val always_use_backup_prover: bool ref
 val cache_queries: bool ref 
 val psimple: bool ref
 val simpguard : bool ref
+
+val hide_rectypes: bool ref
 val no_recrefs: bool ref
 val no_recvarrefs: bool ref
 val ck_mlq: bool ref

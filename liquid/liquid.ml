@@ -225,6 +225,7 @@ let main () =
      "-simpguard", Arg.Set simpguard, "simplify guard (remove iff)";
      "-no-recrefs", Arg.Set no_recrefs, "true out recursive refinements";
      "-no-recvarrefs", Arg.Set no_recvarrefs, "true out top-level recvar refinements";
+     "-hide-rectypes", Arg.Set hide_rectypes, "hide rectype in annots";
      "-minsol", Arg.Set minsol, "compute minimum solutions";
      "-check-mlq", Arg.Set ck_mlq, "warn about possible errors in the local mlq";
      "-summarize", Arg.String (fun s -> summarize := Some s), "dump a summary of source to filename";

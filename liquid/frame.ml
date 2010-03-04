@@ -531,9 +531,15 @@ let rec pprint ppf = function
       wrap_refined r ppf 
       (fun ppf -> fprintf ppf "'%s%s%a" (C.path_name a) (level_suffix level) 
                   (C.pprint_many false "" (fun ppf (s, s') -> fprintf ppf "[%s/%s]" s s')) s)
+  
   | Fsum (path, None, cs, r) -> (* vanilla sum *)
       wrap_refined r ppf 
       (fun ppf -> fprintf ppf "%s. @[<hv 0>%a@]" (C.path_name path) print_sum cs)
+   
+  | Fsum (path, _ , _, r) when !Clflags.hide_rectypes ->
+      wrap_refined r ppf 
+      (fun ppf -> fprintf ppf " %s " (C.path_name path))
+
   | Fsum (path, Some (rp, rr), cs, r) -> (* rec sum: not printing rr *)
       let la, ra  = "«", "»" in 
       wrap_refined r ppf 
