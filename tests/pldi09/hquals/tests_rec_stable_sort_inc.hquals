@@ -1,1 +1,0 @@
-qualif EQ(v) :  ~A { <=, >= } v

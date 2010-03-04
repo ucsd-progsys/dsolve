@@ -1,4 +1,0 @@
-qualif A(v): v = len ~A
-qualif D(v): len v = len ~A 
-qualif E(v): len v = len ~A {< +, - >} len ~B
-qualif EQ(v) : ~A { >=, <= } v
