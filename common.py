@@ -39,3 +39,8 @@ def str_to_bool(str):
   if str == "False":
     return False
   return True
+
+def cat_files(files,outfile):
+  os.system("rm -f %s" % outfile)
+  for f in files: os.system("cat %s 1>> %s 2> /dev/null" % (f,outfile))
+

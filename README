@@ -63,6 +63,14 @@ For more options, run:
 
   ./dsolve.py -help
 
+To add options "permanently" for an ML source file, add a line:
+
+  (* DSOLVE [options] *)
+
+at the start of the ML source file. See postests/mapreduce_hash.ml
+for an example.
+
+
 
 Defining Qualifiers
 ===================

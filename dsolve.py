@@ -22,7 +22,8 @@
 import sys, os, os.path, common, tempfile
 
 d_pats= "default_patterns"
-solve = "./liquid.opt -dframes".split()
+solve = "./liquid.opt"
+
 flags = []
 null  = open("/dev/null", "w")
 ld_library_path = ""
@@ -38,9 +39,11 @@ os.close(handle)
 os.close(handle)
 del handle
 
-def cat_files(files,outfile):
-  os.system("rm -f %s" % outfile)
-  for f in files: os.system("cat %s 1>> %s 2> /dev/null" % (f,outfile))
+def get_options(src):
+  xs = [x.strip() for x in common.read_lines(src) if "(* DSOLVE" in x ]
+  ss = ' '.join([' '] + [x[9:-2] for x in xs])
+  xs = ['-'+ x.strip() for x in ss.split(' -') if x.strip()]
+  return xs
 
 def gen_quals(src,bare,flags):
   bname = src[:-3]
@@ -50,8 +53,8 @@ def gen_quals(src,bare,flags):
     files = [hname]
   else:
     files = [hname, d_pats]
-  cat_files(files, tname)
-  gen  = ("./liquid.opt %s -summarize" % (flags)).split()
+  common.cat_files(files, tname)
+  gen  = ("%s %s -summarize" % (solve, flags)).split()
   succ = common.logged_sys_call(gen + [tname2, fname])
   split= ("./depsplit %s %s %s" % (tname, tname2, qname)).split()
   common.logged_sys_call(split)
@@ -64,7 +67,7 @@ def solve_quals(file,bare,time,quiet,flags):
   else: out = None
   if time: time = ["time"]
   else: time = []
-  return common.logged_sys_call(time + solve + flags + [("%s.ml" % bname)], out)
+  return common.logged_sys_call(time + [solve, "-dframes"] + flags + [("%s.ml" % bname)], out)
 
 def main():
   argc = len(sys.argv)
@@ -72,7 +75,7 @@ def main():
     print ("Usage: %s [flags] [sourcefile]" % sys.argv[0])
     sys.exit(0)
   if sys.argv[1] == "-help" or sys.argv[1] == "--help":
-    os.system("./liquid.opt -help")
+    os.system("%s -help" % (solve))
     sys.exit(0)
   bare = (sys.argv[1] == "-bare")
   if bare:
@@ -85,13 +88,14 @@ def main():
   time = (sys.argv[1] == "-time")
   if time:
     sys.argv.pop(1)
-  flags = sys.argv[1:-1]
-  fn = sys.argv[len(sys.argv) - 1]
-  gen_succ = gen_quals(fn, bare, include)
+  src      = sys.argv[len(sys.argv) - 1]
+  flags    = sys.argv[1:-1] 
+  flags   += get_options(src)
+  gen_succ = gen_quals(src, bare, include)
   if (gen_succ != 0):
     print "Qualifier generation failed"
     sys.exit(gen_succ)
-  sys.exit(solve_quals(fn,bare,time,False,flags))
+  sys.exit(solve_quals(src, bare, time, False, flags))
 
 if __name__ == "__main__":
   print "dsolve 0.1: Copyright (c) 2008-10 The Regents of the University of California, all rights reserved\n"

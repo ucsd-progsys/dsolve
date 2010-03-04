@@ -1,4 +1,4 @@
- type ('a, 'b) boolean = 
+type ('a, 'b) boolean = 
   | True of 'a
   | False of 'b
 
