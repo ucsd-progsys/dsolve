@@ -1,0 +1,9 @@
+measure ok =
+  | Const i 	  -> true 
+  | Lam (x,e) 	  -> true 
+  | Pair (e1, e2) -> (?(ok e1)) and (?(ok e2))
+  | Var x 	  -> (-. true) 
+  | Plus (e1, e2) -> (-. true) 
+  | App (e1, e2)  -> (-. true) 
+  | Fst e 	  -> (-. true) 
+  | Snd e 	  -> (-. true) 
