@@ -88,7 +88,10 @@ let mk_pred v mps (_, ps, ms) =
     | P.Pexpr e ->
         P.Atom(s_of_v, P.Eq, e) 
     | P.Pt t ->
-        P.Iff(P.Boolexp(s_of_v), t)
+        match t with
+        | P.True -> P.Boolexp(s_of_v)
+        | P.Not(P.True) -> P.Not (P.Boolexp(s_of_v))
+        | _ -> P.Iff(P.Boolexp(s_of_v), t)
   with Failure _ -> P.True
 
 let mk_pred_list v mps mcstrs =
