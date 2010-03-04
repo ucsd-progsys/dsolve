@@ -3,8 +3,8 @@
 let show x = ()
 
 let nonnull = function
-  | x::xs -> 1 
-  | []    -> 0 
+  | x::xs -> true 
+  | []    -> false 
 
 (**********************************************************************)
 (* STEP 1: MAP (expand each input into key-value list) ****************)
