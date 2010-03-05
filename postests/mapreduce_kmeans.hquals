@@ -1,0 +1,3 @@
+qualif BND(v): v < Array.length ~A
+qualif NZA(v): 0 < Array.length v
+
