@@ -8,9 +8,9 @@ val succ: x: int -> {v: int | v = x + 1}
 val pred: x: int -> {v: int | v = x - 1}
 
 val (mod): x: int -> y: {y: int | y != 0} -> {v: int |
-                                                  (x >= 0 := v >= 0)
-                                              and (((x >= 0 and y >= 0) := v >= 0)
-                                              and ((y > 0 := v < y)
+                                                  (x >= 0 => v >= 0)
+                                              and (((x >= 0 and y >= 0) => v >= 0)
+                                              and ((y > 0 => v < y)
                                               and v = x - (y * (x / y))))}
 
 val abs: int -> {v: int | v >= 0}
@@ -33,6 +33,6 @@ val not: x: bool -> {v: bool | ((? v) iff (-. (? x)))}
 
 (* Bitwise operators *)
 val (lsr): x: int -> y: int -> {v: int | 0 <= v}
-val (land): x: int -> y: int -> {v: int | ((x >= 0) and (y >= 0)) := (v >= 0 and (v <= x and v <= y))}
+val (land): x: int -> y: int -> {v: int | ((x >= 0) and (y >= 0)) => (v >= 0 and (v <= x and v <= y))}
 
 val ignore: 'a -> unit
