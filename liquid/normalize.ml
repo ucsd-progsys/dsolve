@@ -115,6 +115,8 @@ let mk_dummy desc loc = {pexp_desc = desc; pexp_loc = loc}
 let mk_dum_ident id loc = mk_dummy (mk_ident id) loc
 let mk_ident_loc id loc = {pexp_desc = mk_ident id; pexp_loc = loc}
 
+let un = mk_dummy (Pexp_construct (Longident.Lident "()", None, false)) dummy
+
 let elim_anys p =
   let rec elim_rec p =
     let np = 
@@ -218,6 +220,8 @@ let normalize exp =
         let (e_b, b) = resolve_in_exp_never (norm_in e1) in 
         let init = mk_ifthenelse e_b (norm_out e2) (norm_out e3) in
          rw_expr (List.fold_left (wrap Nonrecursive) init b)
+     | Pexp_ifthenelse(e1, e2, None) ->
+         norm_out (rw_expr (Pexp_ifthenelse(e1, e2, Some un)))
      | Pexp_tuple(es) ->
         proc_list es mk_tuple
      | Pexp_array(es) ->
@@ -346,6 +350,8 @@ let normalize exp =
         let (this, e_this, lo_this) = 
           (fresh_name (), mk_ifthenelse e_b (norm_out e2) (norm_out e3), dummy) in
          (this, Some (rw_expr e_this), lo_this)::b
+     | Pexp_ifthenelse(e1, e2, None) ->
+         norm_in (rw_expr (Pexp_ifthenelse(e1, e2, Some un)))
      | Pexp_record(es, None) ->
         let ee = List.map (fun (s, e) -> norm_in e) es in
         let se = List.map (fun e -> List.hd e) ee in
