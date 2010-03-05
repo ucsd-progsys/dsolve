@@ -28,8 +28,8 @@ UTILS=utils/miscutil.cmo utils/config.cmo \
 	utils/trie.cmo utils/mystats.cmo
 
 PARSING=parsing/linenum.cmo parsing/location.cmo parsing/longident.cmo \
-  parsing/syntaxerr.cmo parsing/parser.cmo \
-  parsing/lexer.cmo parsing/parse.cmo parsing/printast.cmo \
+  parsing/syntaxerr.cmo parsing/parser.cmo parsing/mlqparser.cmo \
+  parsing/lexer.cmo parsing/mlqlexer.cmo parsing/parse.cmo parsing/printast.cmo \
   parsing/pparse.cmo
 
 TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
@@ -145,23 +145,22 @@ partialclean::
 
 beforedepend:: utils/config.ml
 
-parsing/parser.mli parsing/parser.ml: parsing/parser.mly
-	$(CAMLYACC) $(YACCFLAGS) parsing/parser.mly
+# The parser
 
 partialclean::
 	rm -f parsing/parser.mli parsing/parser.ml parsing/parser.output
+	rm -f parsing/mlqparser.mli parsing/mlqparser.ml parsing/mlqparser.output
 
 beforedepend:: parsing/parser.mli parsing/parser.ml
+beforedepend:: parsing/mlqparser.mli parsing/mlqparser.ml
 
 # The lexer
 
-parsing/lexer.ml: parsing/lexer.mll
-	$(CAMLLEX) parsing/lexer.mll
-
 partialclean::
 	rm -f parsing/lexer.ml
+	rm -f parsing/mlqlexer.ml
 
-beforedepend:: parsing/lexer.ml
+beforedepend:: parsing/lexer.ml parsing/mlqlexer.ml
 
 # The auxiliary lexer for counting line numbers
 
@@ -183,6 +182,12 @@ beforedepend:: parsing/linenum.ml
 
 .ml.cmx:
 	$(CAMLOPT) $(COMPFLAGS) -c $<
+
+%.mli %.ml: %.mly
+	$(CAMLYACC) $(YACCFLAGS) $<
+
+%.ml: %.mll
+	$(CAMLLEX) $<
 
 z3lib:
 	cd external/z3/ocaml; ./build.sh $(LIBDIR)

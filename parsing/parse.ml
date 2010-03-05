@@ -38,7 +38,7 @@ let maybe_skip_phrase lexbuf =
 
 let wrap parsing_fun lexbuf =
   try
-    let ast = parsing_fun Lexer.token lexbuf in
+    let ast = parsing_fun lexbuf in
     Parsing.clear_parser();
     ast
   with
@@ -58,9 +58,9 @@ let wrap parsing_fun lexbuf =
       raise(Syntaxerr.Error(Syntaxerr.Other loc))
 ;;
 
-let implementation = wrap Parser.implementation
-and interface = wrap Parser.interface
-and liquid_interface = wrap Parser.liquid_interface
-and toplevel_phrase = wrap Parser.toplevel_phrase
-and use_file = wrap Parser.use_file
-and qualifier_patterns = wrap Parser.qualifier_patterns
+let implementation = wrap (Parser.implementation Lexer.token)
+and interface = wrap (Parser.interface Lexer.token)
+and liquid_interface = wrap (Mlqparser.liquid_interface Mlqlexer.token)
+and toplevel_phrase = wrap (Parser.toplevel_phrase Lexer.token)
+and use_file = wrap (Parser.use_file Lexer.token)
+and qualifier_patterns = wrap (Parser.qualifier_patterns Lexer.token)
