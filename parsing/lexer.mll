@@ -359,6 +359,7 @@ rule token = parse
   | "*"  { STAR }
   | ","  { COMMA }
   | "->" { MINUSGREATER }
+  | "=>" { EQUALGREATER } (* this is a dsolve specific token *)
   | "."  { DOT }
   | ".." { DOTDOT }
   | ":"  { COLON }
