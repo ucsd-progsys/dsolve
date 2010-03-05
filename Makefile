@@ -91,7 +91,7 @@ clean: partialclean
 	 done);
 	rm -f liquid.byte liquid.opt
 
-libclean: z3clean graphclean miscclean fixpointclean
+libclean: z3clean graphclean miscclean fixpointclean theoryclean
 
 z3clean:
 	cd external/z3/ocaml; ./clean.sh
@@ -104,6 +104,9 @@ miscclean:
 
 fixpointclean:
 	cd external/fixpoint && make clean
+
+theoryclean:
+	cd theories; rm *.cmi
 
 distclean: clean
 	(for d in ./ utils parsing typing tests liquid; \
