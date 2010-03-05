@@ -1,3 +1,0 @@
-measure nonnull = 
-  | x::xs -> true 
-  | []    -> (-. true)
