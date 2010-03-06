@@ -36,42 +36,13 @@ exception Error of error * Location.t;;
 let keyword_table =
   create_hashtable 149 [
     "and", AND;
-    "as", AS;
-    "assert", ASSERT;
-    "assume", ASSUME;
-    "begin", BEGIN;
-    "class", CLASS;
-    "constraint", CONSTRAINT;
-    "do", DO;
-    "done", DONE;
-    "downto", DOWNTO;
     "else", ELSE;
-    "end", END;
-    "exception", EXCEPTION;
-    "external", EXTERNAL;
     "false", FALSE;
     "for", FOR;
-    "fun", FUN;
-    "function", FUNCTION;
-    "functor", FUNCTOR;
     "if", IF;
-    "in", IN;
-    "include", INCLUDE;
-    "inherit", INHERIT;
-    "initializer", INITIALIZER;
-    "lazy", LAZY;
-    "let", LET;
-    "match", MATCH;
-    "method", METHOD;
-    "module", MODULE;
     "mutable", MUTABLE;
-    "new", NEW;
-    "object", OBJECT;
     "of", OF;
-    "open", OPEN;
     "or", OR;
-(*  "parser", PARSER; *)
-    "private", PRIVATE;
     "qualif", QUALIF;
     "const_ints", INTS;
     "mdep", MODULE_DEPENDENCY;
@@ -79,13 +50,8 @@ let keyword_table =
     "predicate", PREDICATE;
     "measure", MEASURE;
     "refinement", REFINEMENT;
-    "rec", REC;
-    "sig", SIG;
-    "struct", STRUCT;
     "then", THEN;
-    "to", TO;
     "true", TRUE;
-    "try", TRY;
     "type", TYPE;
     "uninterpreted", UNINTERPRETED;
     "forall", FORALL;
@@ -94,10 +60,6 @@ let keyword_table =
     "iff", IFF;
     "val", VAL;
     "nrval", NON_REFINED_VAL;
-    "virtual", VIRTUAL;
-    "when", WHEN;
-    "while", WHILE;
-    "with", WITH;
 
     "mod", INFIXOP3("mod");
     "land", INFIXOP3("land");
@@ -364,8 +326,6 @@ rule token = parse
   | ".." { DOTDOT }
   | ":"  { COLON }
   | "::" { COLONCOLON }
-  | ":=" { COLONEQUAL }
-  | ":>" { COLONGREATER }
   | ";"  { SEMI }
   | ";;" { SEMISEMI }
   | "<"  { LESS }

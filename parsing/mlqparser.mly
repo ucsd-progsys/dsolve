@@ -32,166 +32,8 @@ let mkpredpatorexp_exp e =
   { ppredpatorexp_desc = Ppredexp e; ppredpatorexp_loc = symbol_rloc() }
 let mkpredpatorexp_pred p =
   { ppredpatorexp_desc = Ppredpat p; ppredpatorexp_loc = symbol_rloc() }
-let mkpat d =
-  { ppat_desc = d; ppat_loc = symbol_rloc() }
-let mkexp d =
-  { pexp_desc = d; pexp_loc = symbol_rloc() }
-let mkmty d =
-  { pmty_desc = d; pmty_loc = symbol_rloc() }
-let mksig d =
-  { psig_desc = d; psig_loc = symbol_rloc() }
-let mkmod d =
-  { pmod_desc = d; pmod_loc = symbol_rloc() }
-let mkstr d =
-  { pstr_desc = d; pstr_loc = symbol_rloc() }
 let mkfield d =
   { pfield_desc = d; pfield_loc = symbol_rloc() }
-let mkclass d =
-  { pcl_desc = d; pcl_loc = symbol_rloc() }
-let mkcty d =
-  { pcty_desc = d; pcty_loc = symbol_rloc() }
-let reloc_pat x = { x with ppat_loc = symbol_rloc () };;
-let reloc_exp x = { x with pexp_loc = symbol_rloc () };;
-
-let mkoperator name pos =
-  { pexp_desc = Pexp_ident(Lident name); pexp_loc = rhs_loc pos }
-
-(*
-  Ghost expressions and patterns:
-  expressions and patterns that do not appear explicitely in the
-  source file they have the loc_ghost flag set to true.
-  Then the profiler will not try to instrument them and the
-  -stypes option will not try to display their type.
-
-  Every grammar rule that generates an element with a location must
-  make at most one non-ghost element, the topmost one.
-
-  How to tell whether your location must be ghost:
-  A location corresponds to a range of characters in the source file.
-  If the location contains a piece of code that is syntactically
-  valid (according to the documentation), and corresponds to the
-  AST node, then the location must be real; in all other cases,
-  it must be ghost.
-*)
-let ghexp d = { pexp_desc = d; pexp_loc = symbol_gloc () };;
-let ghpat d = { ppat_desc = d; ppat_loc = symbol_gloc () };;
-let ghtyp d = { ptyp_desc = d; ptyp_loc = symbol_gloc () };;
-
-let mkassert e =
-  match e with
-  | {pexp_desc = Pexp_construct (Lident "false", None, false) } ->
-         mkexp (Pexp_assertfalse)
-  | _ -> mkexp (Pexp_assert (e))
-;;
-
-let mkinfix arg1 name arg2 =
-  mkexp(Pexp_apply(mkoperator name 2, ["", arg1; "", arg2]))
-
-let neg_float_string f =
-  if String.length f > 0 && f.[0] = '-'
-  then String.sub f 1 (String.length f - 1)
-  else "-" ^ f
-
-let mkuminus name arg =
-  match name, arg.pexp_desc with
-  | "-", Pexp_constant(Const_int n) ->
-      mkexp(Pexp_constant(Const_int(-n)))
-  | "-", Pexp_constant(Const_int32 n) ->
-      mkexp(Pexp_constant(Const_int32(Int32.neg n)))
-  | "-", Pexp_constant(Const_int64 n) ->
-      mkexp(Pexp_constant(Const_int64(Int64.neg n)))
-  | "-", Pexp_constant(Const_nativeint n) ->
-      mkexp(Pexp_constant(Const_nativeint(Nativeint.neg n)))
-  | _, Pexp_constant(Const_float f) ->
-      mkexp(Pexp_constant(Const_float(neg_float_string f)))
-  | _ ->
-      mkexp(Pexp_apply(mkoperator ("~" ^ name) 1, ["", arg]))
-
-let rec mktailexp = function
-    [] ->
-      ghexp(Pexp_construct(Lident "[]", None, false))
-  | e1 :: el ->
-      let exp_el = mktailexp el in
-      let l = {loc_start = e1.pexp_loc.loc_start;
-               loc_end = exp_el.pexp_loc.loc_end;
-               loc_ghost = true}
-      in
-      let arg = {pexp_desc = Pexp_tuple [e1; exp_el]; pexp_loc = l} in
-      {pexp_desc = Pexp_construct(Lident "::", Some arg, false); pexp_loc = l}
-
-let rec mktailpat = function
-    [] ->
-      ghpat(Ppat_construct(Lident "[]", None, false))
-  | p1 :: pl ->
-      let pat_pl = mktailpat pl in
-      let l = {loc_start = p1.ppat_loc.loc_start;
-               loc_end = pat_pl.ppat_loc.loc_end;
-               loc_ghost = true}
-      in
-      let arg = {ppat_desc = Ppat_tuple [p1; pat_pl]; ppat_loc = l} in
-      {ppat_desc = Ppat_construct(Lident "::", Some arg, false); ppat_loc = l}
-
-let ghstrexp e =
-  { pstr_desc = Pstr_eval e; pstr_loc = {e.pexp_loc with loc_ghost = true} }
-
-let array_function str name =
-  Ldot(Lident str, (if !Clflags.fast then "unsafe_" ^ name else name))
-
-let rec deep_mkrangepat c1 c2 =
-  if c1 = c2 then ghpat(Ppat_constant(Const_char c1)) else
-  ghpat(Ppat_or(ghpat(Ppat_constant(Const_char c1)),
-                deep_mkrangepat (Char.chr(Char.code c1 + 1)) c2))
-
-let rec mkrangepat c1 c2 =
-  if c1 > c2 then mkrangepat c2 c1 else
-  if c1 = c2 then mkpat(Ppat_constant(Const_char c1)) else
-  reloc_pat (deep_mkrangepat c1 c2)
-
-let syntax_error () =
-  raise Syntaxerr.Escape_error
-
-let unclosed opening_name opening_num closing_name closing_num =
-  raise(Syntaxerr.Error(Syntaxerr.Unclosed(rhs_loc opening_num, opening_name,
-                                           rhs_loc closing_num, closing_name)))
-
-let bigarray_function str name =
-  Ldot(Ldot(Lident "Bigarray", str), name)
-
-let bigarray_untuplify = function
-    { pexp_desc = Pexp_tuple explist} -> explist
-  | exp -> [exp]
-
-let bigarray_get arr arg =
-  match bigarray_untuplify arg with
-    [c1] ->
-      mkexp(Pexp_apply(ghexp(Pexp_ident(bigarray_function "Array1" "get")),
-                       ["", arr; "", c1]))
-  | [c1;c2] ->
-      mkexp(Pexp_apply(ghexp(Pexp_ident(bigarray_function "Array2" "get")),
-                       ["", arr; "", c1; "", c2]))
-  | [c1;c2;c3] ->
-      mkexp(Pexp_apply(ghexp(Pexp_ident(bigarray_function "Array3" "get")),
-                       ["", arr; "", c1; "", c2; "", c3]))
-  | coords ->
-      mkexp(Pexp_apply(ghexp(Pexp_ident(bigarray_function "Genarray" "get")),
-                       ["", arr; "", ghexp(Pexp_array coords)]))
-
-let bigarray_set arr arg newval =
-  match bigarray_untuplify arg with
-    [c1] ->
-      mkexp(Pexp_apply(ghexp(Pexp_ident(bigarray_function "Array1" "set")),
-                       ["", arr; "", c1; "", newval]))
-  | [c1;c2] ->
-      mkexp(Pexp_apply(ghexp(Pexp_ident(bigarray_function "Array2" "set")),
-                       ["", arr; "", c1; "", c2; "", newval]))
-  | [c1;c2;c3] ->
-      mkexp(Pexp_apply(ghexp(Pexp_ident(bigarray_function "Array3" "set")),
-                       ["", arr; "", c1; "", c2; "", c3; "", newval]))
-  | coords ->
-      mkexp(Pexp_apply(ghexp(Pexp_ident(bigarray_function "Genarray" "set")),
-                       ["", arr;
-                        "", ghexp(Pexp_array coords);
-                        "", newval]))
 
 (* Convenience for liquid interfaces *)
 
@@ -237,57 +79,35 @@ let mktrue_record a = mkrecord a ptrue
 %token AMPERAMPER
 %token AMPERSAND
 %token AND
-%token AS
-%token ASSERT
-%token ASSUME
 %token BACKQUOTE
 %token BAR
 %token BARBAR
 %token BARRBRACKET
-%token BEGIN
 %token <char> CHAR
-%token CLASS
 %token COLON
 %token COLONCOLON
-%token COLONEQUAL
-%token COLONGREATER
 %token COMMA
-%token CONSTRAINT
-%token DO
-%token DONE
 %token DOT
 %token DOTDOT
-%token DOWNTO
 %token ELSE
-%token END
 %token EOF
 %token EQUAL
-%token EXCEPTION
-%token EXTERNAL
 %token FALSE
 %token <string> FLOAT
 %token FOR
-%token FUN
-%token FUNCTION
-%token FUNCTOR
 %token GREATER
 %token GREATERRBRACE
 %token GREATERRBRACKET
 %token IF
-%token IN
-%token INCLUDE
 %token <string> INFIXOP0
 %token <string> INFIXOP1
 %token <string> INFIXOP2
 %token <string> INFIXOP3
 %token <string> INFIXOP4
-%token INHERIT
-%token INITIALIZER
 %token <int> INT
 %token <int32> INT32
 %token <int64> INT64
 %token <string> LABEL
-%token LAZY
 %token LBRACE
 %token LBRACELESS
 %token LBRACKET
@@ -296,28 +116,20 @@ let mktrue_record a = mkrecord a ptrue
 %token LBRACKETGREATER
 %token LESS
 %token LESSMINUS
-%token LET
 %token <string> LIDENT
 %token LPAREN
-%token MATCH
-%token METHOD
 %token MINUS
 %token MINUSDOT
 %token MINUSGREATER
 %token EQUALGREATER
-%token MODULE
 %token MUTABLE
 %token <nativeint> NATIVEINT
-%token NEW
-%token OBJECT
 %token OF
-%token OPEN
 %token <string> OPTLABEL
 %token OR
 /* %token PARSER */
 %token PLUS
 %token <string> PREFIXOP
-%token PRIVATE
 %token QUALIF
 %token INTS
 %token MODULE_DEPENDENCY
@@ -330,20 +142,15 @@ let mktrue_record a = mkrecord a ptrue
 %token QUOTE
 %token RBRACE
 %token RBRACKET
-%token REC
 %token RPAREN
 %token SEMI
 %token SEMISEMI
 %token SHARP
-%token SIG
 %token STAR
 %token <string> STRING
-%token STRUCT
 %token THEN
 %token TILDE
-%token TO
 %token TRUE
-%token TRY
 %token TYPE
 %token <string> UIDENT
 %token UNDERSCORE
@@ -354,10 +161,6 @@ let mktrue_record a = mkrecord a ptrue
 %token IFF
 %token VAL
 %token NON_REFINED_VAL
-%token VIRTUAL
-%token WHEN
-%token WHILE
-%token WITH
 
 /* Precedences and associativities.
 
@@ -382,12 +185,8 @@ conflicts.
 The precedences must be listed from low to high.
 */
 
-%nonassoc IN
 %nonassoc below_SEMI
 %nonassoc SEMI                          /* below EQUAL ({lbl=...; lbl=...}) */
-%nonassoc LET                           /* above SEMI ( ...; let ... in ...) */
-%nonassoc below_WITH
-%nonassoc FUNCTION WITH                 /* below BAR  (match ... with ...) */
 %nonassoc AND             /* above WITH (module rec A: SIG with ... and ...) */
 %nonassoc THEN                          /* below ELSE (if ... then ...) */
 %nonassoc ELSE                          /* (if ... then ... else ...) */
@@ -420,7 +219,7 @@ The precedences must be listed from low to high.
 /* Finally, the first tokens of simple_expr are above everything else. */
 %nonassoc BACKQUOTE BEGIN CHAR FALSE FLOAT INT INT32 INT64
           LBRACE LBRACELESS LBRACKET LBRACKETBAR LIDENT LPAREN
-          NEW NATIVEINT PREFIXOP STRING TRUE UIDENT
+          NATIVEINT PREFIXOP STRING TRUE UIDENT
 
 
 /* Entry points */
@@ -1048,10 +847,6 @@ constr_longident:
   | FALSE                                       { Lident "false" }
   | TRUE                                        { Lident "true" }
 ;
-label_longident:
-    LIDENT                                      { Lident $1 }
-  | mod_longident DOT LIDENT                    { Ldot($1, $3) }
-;
 type_longident:
     LIDENT                                      { Lident $1 }
   | mod_ext_longident DOT LIDENT                { Ldot($1, $3) }
@@ -1064,14 +859,6 @@ mod_ext_longident:
     UIDENT                                      { Lident $1 }
   | mod_ext_longident DOT UIDENT                { Ldot($1, $3) }
   | mod_ext_longident LPAREN mod_ext_longident RPAREN { Lapply($1, $3) }
-;
-mty_longident:
-    ident                                       { Lident $1 }
-  | mod_ext_longident DOT ident                 { Ldot($1, $3) }
-;
-clty_longident:
-    LIDENT                                      { Lident $1 }
-  | mod_ext_longident DOT LIDENT                { Ldot($1, $3) }
 ;
 class_longident:
     LIDENT                                      { Lident $1 }
