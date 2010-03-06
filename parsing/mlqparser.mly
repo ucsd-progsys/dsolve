@@ -427,6 +427,9 @@ quant_id_list:
 
 qualifier_pattern:
     TRUE                                    { mkpredpat Ppredpat_true }                    
+  | FALSE                                   
+      { let tru = mkpredpat Ppredpat_true in
+        mkpredpat (Ppredpat_not tru) }
   | qualifier_pattern AND qualifier_pattern { mkpredpat (Ppredpat_and($1, $3)) }
   | qualifier_pattern OR qualifier_pattern  { mkpredpat (Ppredpat_or($1, $3)) }
   | qualifier_pattern EQUALGREATER qualifier_pattern { mkpredpat (Ppredpat_implies($1, $3)) }

@@ -2,8 +2,8 @@ measure ok =
   | Const i 	  -> true 
   | Lam (x,e) 	  -> true 
   | Pair (e1, e2) -> (?(ok e1)) and (?(ok e2))
-  | Var x 	  -> (not true) 
-  | Plus (e1, e2) -> (not true) 
-  | App (e1, e2)  -> (not true) 
-  | Fst e 	  -> (not true) 
-  | Snd e 	  -> (not true) 
+  | Var x 	  -> false
+  | Plus (e1, e2) -> false 
+  | App (e1, e2)  -> false 
+  | Fst e 	  -> false
+  | Snd e 	  -> false
