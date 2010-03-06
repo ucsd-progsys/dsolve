@@ -2,4 +2,4 @@ qualif CMP(v)(A: int): v { * * } ~A
 
 (*qualif S(v) : set_of v = Myaset.empty*)
 qualif S(v) : sz v > 1
-(*qualif S(v)     : (-. ? (Myaset.mem x (set_of h)))*)
+(*qualif S(v)     : (not ? (Myaset.mem x (set_of h)))*)

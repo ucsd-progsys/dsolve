@@ -124,6 +124,7 @@ let mktrue_record a = mkrecord a ptrue
 %token EQUALGREATER
 %token MUTABLE
 %token <nativeint> NATIVEINT
+%token NOT
 %token OF
 %token <string> OPTLABEL
 %token OR
@@ -431,7 +432,7 @@ qualifier_pattern:
   | qualifier_pattern EQUALGREATER qualifier_pattern { mkpredpat (Ppredpat_implies($1, $3)) }
   | LPAREN qualifier_pattern MINUSGREATER qualifier_pattern RPAREN
       { mkpredpat (Ppredpat_implies($2, $4)) }
-  | MINUSDOT qualifier_pattern              { mkpredpat (Ppredpat_not($2)) }              
+  | NOT qualifier_pattern              { mkpredpat (Ppredpat_not($2)) }              
   | LPAREN qualifier_pattern RPAREN         { $2 }
   | LPAREN qualifier_pattern IFF qualifier_pattern RPAREN
       { mkpredpat (Ppredpat_iff($2, $4)) } 
@@ -565,6 +566,8 @@ liquid_decl:
 liquid_val_decl:
     VAL val_longident COLON liquid_type           
       { (String.concat "." (Longident.flatten $2), $4) }
+  | VAL NOT COLON liquid_type
+      { ("not", $4) }
 
 liquid_nrval_decl:
     NON_REFINED_VAL val_longident COLON liquid_type           

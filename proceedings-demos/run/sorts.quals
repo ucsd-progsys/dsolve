@@ -6,7 +6,7 @@ qualif MLQ(_V) : (((x >= 0) and  (y >= 0)) -> ((_V >= 0) and  ((_V <= x) and  (_
 qualif MLQ(_V) : (((x >= 0) and  (y >= 0)) -> (_V >= 0))
 qualif MLQ(_V) : ((? (_V)) iff ((? (x)) and  (? (y))))
 qualif MLQ(_V) : ((? (_V)) iff ((? (x)) or  (? (y))))
-qualif MLQ(_V) : ((? (_V)) iff (-. (? (x))))
+qualif MLQ(_V) : ((? (_V)) iff (not (? (x))))
 qualif MLQ(_V) : ((? (_V)) iff (x != y))
 qualif MLQ(_V) : ((? (_V)) iff (x < y))
 qualif MLQ(_V) : ((? (_V)) iff (x <= y))

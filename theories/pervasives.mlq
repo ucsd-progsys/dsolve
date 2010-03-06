@@ -29,7 +29,7 @@ val (<=): x: 'a -> y: 'a -> {v: bool | ((? v) iff (x <= y))}
 val (&&): x: bool -> y: bool -> {v: bool | ((? v) iff ((? x) and (? y)))}
 val (||): x: bool -> y: bool -> {v: bool | ((? v) iff ((? x) or (? y)))}
 val (or): x: bool -> y: bool -> {v: bool | ((? v) iff ((? x) or (? y)))}
-val not: x: bool -> {v: bool | ((? v) iff (-. (? x)))}
+val not: x: bool -> {v: bool | ((? v) iff (not (? x)))}
 
 (* Bitwise operators *)
 val (lsr): x: int -> y: int -> {v: int | 0 <= v}

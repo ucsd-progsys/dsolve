@@ -112,7 +112,7 @@ and pprint ppf = function
   | Iff (px, q) ->
       fprintf ppf "@[(%a@ iff@;<1 2>%a)@]" pprint px pprint q
   | Not p ->
-      fprintf ppf "@[(-. %a)@]" pprint p
+      fprintf ppf "@[(not %a)@]" pprint p
   | And (p, q) ->
       fprintf ppf "@[(%a@ and@;<1 2>@;<1 2>%a)@]" pprint p pprint q
   | Or (p, q) ->
@@ -151,7 +151,7 @@ let rec pprint_pattern ppf p =
   | Ppredpat_iff (px, q) ->
       fprintf ppf "@[(%a@ iff@;<1 2>%a)@]" pprint_pattern px pprint_pattern q
   | Ppredpat_not p ->
-      fprintf ppf "@[(-.@ %a)@]" pprint_pattern p
+      fprintf ppf "@[(not@ %a)@]" pprint_pattern p
   | Ppredpat_and (p, q) ->
       fprintf ppf "@[(%a@ and@;<1 2>@;<1 2>%a)@]" pprint_pattern p pprint_pattern q
   | Ppredpat_or (p, q) ->

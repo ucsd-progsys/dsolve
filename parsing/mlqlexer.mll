@@ -59,6 +59,7 @@ let keyword_table =
     "axiom", AXIOM;
     "iff", IFF;
     "val", VAL;
+    "not", NOT;
     "nrval", NON_REFINED_VAL;
 
     "mod", INFIXOP3("mod");

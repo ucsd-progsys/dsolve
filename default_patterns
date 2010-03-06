@@ -9,4 +9,4 @@ qualif Id_rel_bigarray1_id(_V)(A:int) : ~A { * * } Big.dim1 _V
 qualif FALSE(_V): 1 = 0
 
 qualif BOOL(v): ? v
-qualif BOOL(v): -. (? v)
+qualif BOOL(v): not (? v)
