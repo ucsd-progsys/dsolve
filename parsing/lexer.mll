@@ -72,13 +72,6 @@ let keyword_table =
     "or", OR;
 (*  "parser", PARSER; *)
     "private", PRIVATE;
-    "qualif", QUALIF;
-    "const_ints", INTS;
-    "mdep", MODULE_DEPENDENCY;
-    "embed", EMBED;
-    "predicate", PREDICATE;
-    "measure", MEASURE;
-    "refinement", REFINEMENT;
     "rec", REC;
     "sig", SIG;
     "struct", STRUCT;
@@ -87,13 +80,7 @@ let keyword_table =
     "true", TRUE;
     "try", TRY;
     "type", TYPE;
-    "uninterpreted", UNINTERPRETED;
-    "forall", FORALL;
-    "exists", EXISTS;
-    "axiom", AXIOM;
-    "iff", IFF;
     "val", VAL;
-    "nrval", NON_REFINED_VAL;
     "virtual", VIRTUAL;
     "when", WHEN;
     "while", WHILE;
@@ -359,7 +346,6 @@ rule token = parse
   | "*"  { STAR }
   | ","  { COMMA }
   | "->" { MINUSGREATER }
-  | "=>" { EQUALGREATER } (* this is a dsolve specific token *)
   | "."  { DOT }
   | ".." { DOTDOT }
   | ":"  { COLON }
