@@ -94,6 +94,22 @@ Syntax
 
 Qualifiers can include the following constructs:
 
+* Logical constants *
+qualif A(v): true
+qualif B(v): false
+
+* Logical connectives *
+qualif A(v): true && false
+qualif B(v): true || false
+qualif C(v): not true
+
+* Boolean Variables *
+qualif A(v): (? v)
+
+  "v is a program variable of boolean type such that v is equal to true"
+
+** Non-Boolean Variables and Expressions **
+
 * Integer Literals, Identifiers, and Operators *
 qualif IsXPlus3(v): v >= x + 3
 
@@ -129,6 +145,12 @@ qualif C(v)(A:int, B:int^) : ~A + v + ~B = ^
   The type grammar can't handle ADTs or records.  However, you can
   define these as user types in the program source and then reference
   the type name in the pattern.
+
+* Anonymous Metavariables *
+qualif D(v) : v = _ + _
+
+  Each instance of _ is a new anonymous, unique metavariable.
+
 
 
 Defining Liquid Interfaces 
