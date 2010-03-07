@@ -689,7 +689,6 @@ let instantiate_qualifiers vars fr =
    [f'] and changing constant qualifiers appropriately.
    [f] and [f'] are expected to be of the same shape; also, [f]
    must be completely unlabeled (as frames are after creation by fresh). *)
-(* pmr: this flag needs to be removed!! *)
 let label_like f f' =
   let rec label vars f f' = match (f, f') with
     | (Fvar _, Fvar (_, _, s, _)) ->
@@ -899,6 +898,7 @@ let kill_top_recref env t f = match f with
   | Fsum (_, Some _, _, _) -> set_recref (mk_recref null_refinement env t) f
   | _                      -> f
 
+(* UGLY HACK ON UGLY HACK *)
 let fresh_with_var_fun_get_instantiation env freshf t =
   let tbl = Hashtbl.create 17 in
   let t   = C.copy_type t in
@@ -938,8 +938,24 @@ let fresh_with_labels env ty f =
 let fresh_without_vars env ty =
   fresh_with_var_fun env (fun _ -> empty_refinement) ty
 
-let fresh_without_vars_get_instantiation env ty =
-  fresh_with_var_fun_get_instantiation env (fun _ -> empty_refinement) ty
+let frame_var = function
+  | Fvar (p, _, _, _) -> p
+  | _                 -> failwith "Frame is not var"
+
+(* UGLY HACK *)
+let fresh_constructed_params_no_vars env path paramfs =
+  match List.split (Env.constructors_of_type path (Env.find_type path env)) with
+    | (_, cstr :: _) ->
+        let _, res = Ctype.instance_constructor cstr in
+          begin match res.desc with
+            | Tconstr (_, paramts, _) ->
+                let _      = assert (List.length paramts = List.length paramfs) in
+                let f, tbl = fresh_with_var_fun_get_instantiation env (fun _ -> empty_refinement) res in
+                let subst  = List.map2 (fun pt pf -> (frame_var (Hashtbl.find tbl pt), pf)) paramts paramfs in
+                  map (function Fvar _ as fv -> List.assoc (frame_var fv) subst | fm -> fm) f
+            | _ -> assert false
+          end
+    | _ -> failwith "Freshed type has no constructors!"
 
 let rec build_uninterpreted name params = function
   | Farrow (_, f, f') ->

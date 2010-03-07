@@ -111,9 +111,9 @@ val apply: t -> Predicate.pexpr list -> t
 val fresh_binder: unit -> pattern_desc
 val fresh: Env.t -> type_expr -> t
 val fresh_without_vars: Env.t -> type_expr -> t
-val fresh_without_vars_get_instantiation: Env.t -> type_expr -> t * (type_expr, t) Hashtbl.t
 val fresh_false: Env.t -> type_expr -> t
 val fresh_with_labels: Env.t -> type_expr -> t -> t
+val fresh_constructed_params_no_vars: Env.t -> Path.t -> t list -> t
 val fresh_uninterpreted: Env.t -> type_expr -> Path.t -> t
 val uninterpreted_constructors: Env.t -> type_expr -> (string * t) list
 val instantiate: t Lightenv.t -> t -> t -> t

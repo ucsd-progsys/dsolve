@@ -8,8 +8,8 @@ val matrix_multiply:
   a: {v: {v: float array | Array.length v = n} array | Array.length = m} ->
      {v: float array | Array.length v = m} 
 
-val map_reduce: ('a -> ('b * 'c) list) -> 
-		('b -> 'b -> 'b) ->
-		('a list) ->
+val map_reduce: 'a list ->
+                ('a -> ('b * 'c) list) -> 
+                ('c -> 'c -> 'c) ->
 		('b * 'c) list
 
