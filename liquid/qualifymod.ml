@@ -459,7 +459,11 @@ let maybe_cstr_from_unlabel_frame fenv p f =
   then
     let f' = Le.find p fenv in
     try Some (SubFrame (fenv, [], f', F.label_like f f'))
-      with Failure s -> printf "@[Failure@ %s:@ %a@ <>@ %a@]@." s F.pprint f F.pprint f'; assert false
+      with
+        | Failure s -> printf "@[Failure@ %s:@ %a@ <>@ %a@]@." s F.pprint f F.pprint f'; assert false
+        | F.LabelLikeFailure (sf, sf') ->
+            printf "@[Type Mismatch Error:@.MLQ Contains:\n\t%a@.Type is:\n\t%a.@.Subtype\t%a does not match %a.@.@]"
+            F.pprint f F.pprint f' F.pprint sf F.pprint sf'; assert false
   else
     None 
 
