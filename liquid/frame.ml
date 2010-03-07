@@ -899,9 +899,7 @@ let kill_top_recref env t f = match f with
   | Fsum (_, Some _, _, _) -> set_recref (mk_recref null_refinement env t) f
   | _                      -> f
 
-(* Create a fresh frame with the same shape as the type of [exp] using
-   [fresh_ref_var] to create new refinement variables. *)
-let fresh_with_var_fun env freshf t =
+let fresh_with_var_fun_get_instantiation env freshf t =
   let tbl = Hashtbl.create 17 in
   let t   = C.copy_type t in
   (* Negative type levels wreak havoc with the unify, etc. functions used in fresh_constr *)
@@ -921,7 +919,10 @@ let fresh_with_var_fun env freshf t =
           Hashtbl.replace tbl t (Frec (rp, rr, if !Clflags.no_recvarrefs then null_refinement else empty_refinement));
           let res = kill_top_recref env t (fresh_rec fm env (rp, rr) level t) in
             Hashtbl.replace tbl t res; res
-  in flip_frame_levels (map_refinements (place_freshref freshf) (fm t))
+  in (flip_frame_levels (map_refinements (place_freshref freshf) (fm t)), tbl)
+
+let fresh_with_var_fun env freshf t =
+  fst (fresh_with_var_fun_get_instantiation env freshf t)
 
 (* Create a fresh frame with the same shape as the given type
    [ty]. Uses type environment [env] to find type declarations. *)
@@ -936,6 +937,9 @@ let fresh_with_labels env ty f =
 
 let fresh_without_vars env ty =
   fresh_with_var_fun env (fun _ -> empty_refinement) ty
+
+let fresh_without_vars_get_instantiation env ty =
+  fresh_with_var_fun_get_instantiation env (fun _ -> empty_refinement) ty
 
 let rec build_uninterpreted name params = function
   | Farrow (_, f, f') ->
