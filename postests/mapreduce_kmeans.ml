@@ -94,5 +94,5 @@ let kmeans n dist plus div xs ya =
   end
 *)
 
-let matrix_multiply m n a x = assert false
+let matrix_multiply (m: int) (n: int) (a: float array array) = (assert false: float array)
 
