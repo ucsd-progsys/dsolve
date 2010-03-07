@@ -93,3 +93,6 @@ let kmeans n dist plus div xs ya =
     |> List.iter (fun (i, y') -> ya.(i) <- y')                     
   end
 *)
+
+let matrix_multiply m n a x = assert false
+
