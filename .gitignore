@@ -12,6 +12,17 @@ config/Makefile
 config/m.h
 config/s.h
 external/*
+boot/ocamlrun
+byterun/jumptbl.h
+byterun/ld.conf
+byterun/ocamlrun
+byterun/primitives
+byterun/prims.c
+byterun/version.h
+parsing/mlqlexer.ml
+parsing/mlqparser.ml
+parsing/mlqparser.mli
+parsing/mlqparser.output
 parsing/lexer.ml
 parsing/linenum.ml
 parsing/parser.ml
