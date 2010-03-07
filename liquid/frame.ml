@@ -74,6 +74,8 @@ and variance = Covariant | Contravariant | Invariant
 
 let path_tuple = Path.mk_ident "tuple"
 
+exception LabelLikeFailure of t * t
+
 (**************************************************************)
 (**************** Type environments ***************************)
 (**************************************************************)
@@ -708,7 +710,7 @@ let label_like f f' =
     | (Farrow (p1, f1, f1'), Farrow (p2, f2, f2')) ->
         let vars' = List.map (fun (x, y) -> (Ident.name x, Path.Pident y)) (Pattern.bind_vars p1 p2) @ vars in
           Farrow (p2, label vars f1 f2, label vars' f1' f2')
-    | _ -> printf "Can't label %a like %a" pprint f pprint f'; assert false
+    | _ -> printf "@[Can't label %a like %a@.@]" pprint f pprint f'; raise (LabelLikeFailure(f, f'))
   and label_constrs_like vars cs1 cs2 =
     List.map2 (constr_app_params2 (label_params_like vars)) cs1 cs2
   and label_params_like vars ps1 ps2 = match (ps1, ps2) with

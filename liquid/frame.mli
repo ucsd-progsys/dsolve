@@ -58,6 +58,8 @@ and constr = constructor_tag * (string * param list)
 
 and variance = Covariant | Contravariant | Invariant
 
+exception LabelLikeFailure of t * t
+
 val mutable_variance: Asttypes.mutable_flag -> variance
 
 val generic_level: int
