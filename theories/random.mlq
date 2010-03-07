@@ -1,1 +1,1 @@
-val int: m: {m: int | m > 0} -> {r: int | 0 <= r and r < m}
+val int: m: {m: int | m > 0} -> {r: int | 0 <= r && r < m}

@@ -3,7 +3,7 @@
 (*embed map for ('a, 'b) t*)
 
 axiom get : forall (i: int, j: int, w: int, a: int. (w = get (set a i j w) i j))
-axiom set : forall (i: int, j: int, k: int, l: int, w: int, a: int. (i = j or k = l) or (get (set a j k w) i l = get a i l))
+axiom set : forall (i: int, j: int, k: int, l: int, w: int, a: int. (i = j || k = l) || (get (set a j k w) i l = get a i l))
 
 
 val set: x: ('a, 'b, 'c) t -> i1: 'a -> i2: 'b[i1/e0] -> i3: 'c[i1/e0][i2/e1] -> {v: (o1: 'a, o2: 'b[o1/e0], {v: 'c[o1/e0][o2/e1] | v = get supr o1 o2}) t | v = set x i1 i2 i3}
@@ -18,4 +18,4 @@ val fold: ('a, 'b, 'c) t -> ('d -> i1: 'a -> i2: 'b[i1/e0] -> 'c[i1/e0][i2/e1] -
 
 val empty: ('a, 'b, 'c) t
 
-val init: n1: int -> n2: int -> (i1: int -> i2: int -> 'a) ->  ({v: int | v < n1 and v >= 0}, {v: int | v < n2 and v >= 0}, {v: 'a[e0/i1][e1/i2] | v = get supr n1 n2}) t
+val init: n1: int -> n2: int -> (i1: int -> i2: int -> 'a) ->  ({v: int | v < n1 && v >= 0}, {v: int | v < n2 && v >= 0}, {v: 'a[e0/i1][e1/i2] | v = get supr n1 n2}) t

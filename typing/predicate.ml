@@ -114,9 +114,9 @@ and pprint ppf = function
   | Not p ->
       fprintf ppf "@[(not %a)@]" pprint p
   | And (p, q) ->
-      fprintf ppf "@[(%a@ and@;<1 2>@;<1 2>%a)@]" pprint p pprint q
+      fprintf ppf "@[(%a@ &&@;<1 2>@;<1 2>%a)@]" pprint p pprint q
   | Or (p, q) ->
-      fprintf ppf "@[(%a@ or@;<1 2>@;<1 2>%a)@]" pprint p pprint q
+      fprintf ppf "@[(%a@ ||@;<1 2>@;<1 2>%a)@]" pprint p pprint q
   | Implies (p, q) ->
       fprintf ppf "@[(%a =>@;<1 2>%a)@]" pprint p pprint q
   | Forall (p, q) ->
@@ -153,9 +153,9 @@ let rec pprint_pattern ppf p =
   | Ppredpat_not p ->
       fprintf ppf "@[(not@ %a)@]" pprint_pattern p
   | Ppredpat_and (p, q) ->
-      fprintf ppf "@[(%a@ and@;<1 2>@;<1 2>%a)@]" pprint_pattern p pprint_pattern q
+      fprintf ppf "@[(%a@ &&@;<1 2>@;<1 2>%a)@]" pprint_pattern p pprint_pattern q
   | Ppredpat_or (p, q) ->
-      fprintf ppf "@[(%a@ or@;<1 2>@;<1 2>%a)@]" pprint_pattern p pprint_pattern q
+      fprintf ppf "@[(%a@ ||@;<1 2>@;<1 2>%a)@]" pprint_pattern p pprint_pattern q
   | Ppredpat_implies (p, q) ->
       fprintf ppf "@[(%a ->@;<1 2>%a)@]" pprint_pattern p pprint_pattern q
   | Ppredpat_forall (p, q) ->

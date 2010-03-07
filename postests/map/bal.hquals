@@ -1,6 +1,6 @@
 qualif FALSE(v) : (1=0)
 qualif H(v)     : v = height ~A
-qualif BAL(v)   : (height v >= (height l <= height r + 2 and height l >= height r - 2 ? 
+qualif BAL(v)   : (height v >= (height l <= height r + 2 && height l >= height r - 2 ? 
 (height l >= height r ? height l + 1 : height r + 1) : (height l >= height r ? height l : height r)))
 qualif H(v)     : height v { <=, >= } (height [l, t1] { <=, >= } height [r, t2] ? height [l, t1] : height [r, t2]) + [0, 1]
 

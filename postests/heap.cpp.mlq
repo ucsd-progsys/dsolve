@@ -7,7 +7,7 @@
 #define R(p)   [[], [v: p, v: true, v: true], [v: p, v: true, v: true]]
 #define UR     R(true)
 #define SR     R(v <= e0)
-#define BR(b)  R(v <= d and v <= b)
+#define BR(b)  R(v <= d && v <= b)
 #define HP     UR [z: t . || e0: 'a, e1: SR z, {e2: SR z | SAME(e1, e2)} || e0: 'a, e1: SR z, {e2: SR z | DIFF(e1, e2)}]
 #define BHP(b) UR [z: t . || d: 'a, e1: BR(b) z, {e2: BR(b) z | SAME(e1, e2)} || d: 'a, e1: BR(b) z, {e2: BR(b) z | DIFF(e1, e2)}]
 
@@ -35,10 +35,10 @@ measure max =
   | Diff (x, _, _) -> x
 
 val empty: HP
-val add: x: 'a -> h: HP -> {v: HP | SEQ(S(v), CUP(S(h), SNG(x))) and DIFF(v, h)}
-val maximum: h: {v: HP | H(v) > 0} -> 'a * {v: BHP(e0) | ((MEM(e0, S(v))) and v = h) and e0 = M(v)}
-val extract_last: h: {v: HP | H(v) > 0} -> {v: 'a | (H(h) = 1 -> v = M(h))} * {v: HP | (SEQ(S(h), CUP(S(v), SNG(e0))) and H(v) = H(h) - 1) and (H(h) > 1 -> M(h) = M(v))}
-val descent: x: 'a -> h: {v: HP | H(v) > 0} -> {v: 'a | MEM(v, S(h)) and v = M(h)} * {v: HP | (SEQ(CUP(S(h), SNG(x)), CUP(S(v), SNG(e0))) and MEM(x, S(v))) and SAME(v, h)}
-val remove: h: {v: HP | H(v) > 0} -> {v: 'a | MEM(v, S(h)) and v = M(h)} * {v: HP | H(v) = H(h) - 1 and SEQ(S(h), CUP(SNG(e0), S(v)))}
+val add: x: 'a -> h: HP -> {v: HP | SEQ(S(v), CUP(S(h), SNG(x))) && DIFF(v, h)}
+val maximum: h: {v: HP | H(v) > 0} -> 'a * {v: BHP(e0) | ((MEM(e0, S(v))) && v = h) && e0 = M(v)}
+val extract_last: h: {v: HP | H(v) > 0} -> {v: 'a | (H(h) = 1 -> v = M(h))} * {v: HP | (SEQ(S(h), CUP(S(v), SNG(e0))) && H(v) = H(h) - 1) && (H(h) > 1 -> M(h) = M(v))}
+val descent: x: 'a -> h: {v: HP | H(v) > 0} -> {v: 'a | MEM(v, S(h)) && v = M(h)} * {v: HP | (SEQ(CUP(S(h), SNG(x)), CUP(S(v), SNG(e0))) && MEM(x, S(v))) && SAME(v, h)}
+val remove: h: {v: HP | H(v) > 0} -> {v: 'a | MEM(v, S(h)) && v = M(h)} * {v: HP | H(v) = H(h) - 1 && SEQ(S(h), CUP(SNG(e0), S(v)))}
 val iter: f: ('a -> 'b) -> h: HP -> unit
 val fold: f: ('a -> 'b -> 'b) -> h: HP -> b: 'b -> 'b

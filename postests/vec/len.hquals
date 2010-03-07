@@ -15,7 +15,7 @@ qualif SETAPPEND(_v) : length _v = (length v > i ? length v : i + 1)
 qualif TOARR(v) : length t = Array.length v
 
 qualif LPLUSONE(v) : length v { * * } length t {< -, + >} 1
-qualif ISEMPTY(v) : v = (height t = 0 or length t = 0 ? 1 : 0)
+qualif ISEMPTY(v) : v = (height t = 0 || length t = 0 ? 1 : 0)
 
 (* not from the mlq *)
 

@@ -11,13 +11,13 @@ val fold: ('a, 'b) t -> ('c -> k: 'a -> 'b[k/e0] -> 'c) -> 'c -> 'c
 
 val empty: ('a, 'b) t
 
-val init: n: int -> (m: int -> 'a) ->  ({v: int | v < n and v >= 0}, {v: 'a[e0/m] | v = get supr n}) t
+val init: n: int -> (m: int -> 'a) ->  ({v: int | v < n && v >= 0}, {v: 'a[e0/m] | v = get supr n}) t
 
 (*axiom make: forall (i: int, n: int, w: int.  (w = get (make n w) i))*)
 
 (*embed map for ('a, 'b) t*)
 
 axiom get : forall (i: int, w: int, a: int. (w = get (set a i w) i))
-axiom set : forall (i: int, j: int, w: int, a: int. (i = j) or (get (set a j w) i = get a i))
+axiom set : forall (i: int, j: int, w: int, a: int. (i = j) || (get (set a j w) i = get a i))
 
 

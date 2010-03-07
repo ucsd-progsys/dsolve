@@ -430,8 +430,8 @@ qualifier_pattern:
   | FALSE                                   
       { let tru = mkpredpat Ppredpat_true in
         mkpredpat (Ppredpat_not tru) }
-  | qualifier_pattern AND qualifier_pattern { mkpredpat (Ppredpat_and($1, $3)) }
-  | qualifier_pattern OR qualifier_pattern  { mkpredpat (Ppredpat_or($1, $3)) }
+  | qualifier_pattern AMPERAMPER qualifier_pattern { mkpredpat (Ppredpat_and($1, $3)) }
+  | qualifier_pattern BARBAR qualifier_pattern  { mkpredpat (Ppredpat_or($1, $3)) }
   | qualifier_pattern EQUALGREATER qualifier_pattern { mkpredpat (Ppredpat_implies($1, $3)) }
   | LPAREN qualifier_pattern MINUSGREATER qualifier_pattern RPAREN
       { mkpredpat (Ppredpat_implies($2, $4)) }

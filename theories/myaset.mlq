@@ -25,13 +25,13 @@ embed set for int set
 
 axiom seq : forall (x: set, y: set. ((? eq x y) iff (forall (z: int. ((? mem z x) iff (? mem z y))))))
 axiom emp : forall (x: int. not (? mem x empty))
-axiom cup : forall (x: int, y: set, z: set. (? mem x (cup y z) iff (? mem x y or ? mem x z)))
-axiom cap : forall (x: int, y: set, z: set. (? mem x (cap y z) iff (? mem x y and ? mem x z)))
+axiom cup : forall (x: int, y: set, z: set. (? mem x (cup y z) iff (? mem x y || ? mem x z)))
+axiom cap : forall (x: int, y: set, z: set. (? mem x (cap y z) iff (? mem x y && ? mem x z)))
 
 (* a bug in z3? *)
 axiom disj: forall (x: set, y: set, z: set. (? eq empty (cap y z) -> (? mem x y -> (not (? mem x z)))))
 
-axiom mns : forall (x: int, y: set, z: set. (? mem x (mns y z) iff (? mem x y and (not(? mem x z)))))
+axiom mns : forall (x: int, y: set, z: set. (? mem x (mns y z) iff (? mem x y && (not(? mem x z)))))
 
 axiom sng : forall (x: int, y: int. (? mem x (sng y) iff x = y))
 axiom eeq : forall (x: set, y: set. ((x = y) iff (forall (z: int. ((? mem z x) iff (? mem z y))))))

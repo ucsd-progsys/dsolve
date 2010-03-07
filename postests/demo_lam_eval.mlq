@@ -1,7 +1,7 @@
 measure ok =
   | Const i 	  -> true 
   | Lam (x,e) 	  -> true 
-  | Pair (e1, e2) -> (?(ok e1)) and (?(ok e2))
+  | Pair (e1, e2) -> (?(ok e1)) && (?(ok e2))
   | Var x 	  -> false
   | Plus (e1, e2) -> false 
   | App (e1, e2)  -> false 

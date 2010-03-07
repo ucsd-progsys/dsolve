@@ -1,8 +1,8 @@
-val length: a: 'a array -> {v: int | v >= 0 and (v = length a)}
-val set: a: 'a array -> y: {y: int | 0 <= y and y < length a} -> 'a -> unit
-val get: a: 'a array -> y: {y: int | 0 <= y and y < length a} -> 'a
+val length: a: 'a array -> {v: int | v >= 0 && (v = length a)}
+val set: a: 'a array -> y: {y: int | 0 <= y && y < length a} -> 'a -> unit
+val get: a: 'a array -> y: {y: int | 0 <= y && y < length a} -> 'a
 val make: n: {n: int | n >= 0} -> 'a -> {a: 'a array | length a = n}
 val create: n: {n: int | n >= 0} -> 'a -> {a: 'a array | length a = n}
-val init: n: {n: int | n >= 0} -> (i: {i: int | 0 <= i and i < n} -> 'a) -> {a: 'a array | length a = n}
+val init: n: {n: int | n >= 0} -> (i: {i: int | 0 <= i && i < n} -> 'a) -> {a: 'a array | length a = n}
 val copy: a: 'a array -> {b: 'a array | length a = length b}
 val map: ('a -> 'b) -> a: 'a array -> {b: 'b array | length a = length b}

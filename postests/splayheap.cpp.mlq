@@ -34,12 +34,12 @@ val deleteMin2: SHP -> ('a * R(e0 <= v) HP)
 val to_list2  : SHP -> 'a list*)
 
 
-val empty     : {v: SHP | S(v) = 0 and SO(v) = Myset.empty} 
+val empty     : {v: SHP | S(v) = 0 && SO(v) = Myset.empty} 
 val isEmpty   : t: SHP -> {v: bool | (*? v -> S(t) = 0*) true }
-val insert    : x: 'a -> t: SHP -> {v: SHP | S(v) = S(t) + 1 and SEQ(SO(v), CUP(SO(t), SNG(x)))}
-val merge     : h: SHP -> t: SHP -> {v: SHP | S(v) = S(h) + S(t) and SEQ(SO(v), CUP(SO(t), SO(h)))}
+val insert    : x: 'a -> t: SHP -> {v: SHP | S(v) = S(t) + 1 && SEQ(SO(v), CUP(SO(t), SNG(x)))}
+val merge     : h: SHP -> t: SHP -> {v: SHP | S(v) = S(h) + S(t) && SEQ(SO(v), CUP(SO(t), SO(h)))}
 val findMin2  : t: {v: SHP | S(v) > 0} -> ('a * {v: R(e0 <= v) HP | v = t})
 val deleteMin : t: {v: SHP | S(v) > 0} -> {v: SHP | S(v) = S(t) - 1}
-val deleteMin2: t: {v: SHP | S(v) > 0} -> ('a * {v: R(e0 <= v) HP | S(v) = S(t) - 1 and SEQ(SO(t), CUP(SO(v), SNG(e0)))})
+val deleteMin2: t: {v: SHP | S(v) > 0} -> ('a * {v: R(e0 <= v) HP | S(v) = S(t) - 1 && SEQ(SO(t), CUP(SO(v), SNG(e0)))})
 val to_list2  : SHP -> 'a list
 

@@ -9,9 +9,9 @@ val pred: x: int -> {v: int | v = x - 1}
 
 val (mod): x: int -> y: {y: int | y != 0} -> {v: int |
                                                   (x >= 0 => v >= 0)
-                                              and (((x >= 0 and y >= 0) => v >= 0)
-                                              and ((y > 0 => v < y)
-                                              and v = x - (y * (x / y))))}
+                                              && (((x >= 0 && y >= 0) => v >= 0)
+                                              && ((y > 0 => v < y)
+                                              && v = x - (y * (x / y))))}
 
 val abs: int -> {v: int | v >= 0}
 
@@ -26,13 +26,13 @@ val (>=): x: 'a -> y: 'a -> {v: bool | ((? v) iff (x >= y))}
 val (<=): x: 'a -> y: 'a -> {v: bool | ((? v) iff (x <= y))}
 
 (* Logical operators *)
-val (&&): x: bool -> y: bool -> {v: bool | ((? v) iff ((? x) and (? y)))}
-val (||): x: bool -> y: bool -> {v: bool | ((? v) iff ((? x) or (? y)))}
-val (or): x: bool -> y: bool -> {v: bool | ((? v) iff ((? x) or (? y)))}
+val (&&): x: bool -> y: bool -> {v: bool | ((? v) iff ((? x) && (? y)))}
+val (||): x: bool -> y: bool -> {v: bool | ((? v) iff ((? x) || (? y)))}
+val (or): x: bool -> y: bool -> {v: bool | ((? v) iff ((? x) || (? y)))}
 val not: x: bool -> {v: bool | ((? v) iff (not (? x)))}
 
 (* Bitwise operators *)
 val (lsr): x: int -> y: int -> {v: int | 0 <= v}
-val (land): x: int -> y: int -> {v: int | ((x >= 0) and (y >= 0)) => (v >= 0 and (v <= x and v <= y))}
+val (land): x: int -> y: int -> {v: int | ((x >= 0) && (y >= 0)) => (v >= 0 && (v <= x && v <= y))}
 
 val ignore: 'a -> unit

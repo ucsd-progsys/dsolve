@@ -7,13 +7,13 @@
 #define MAX(x, y) ITE(x >= y, x, y)
 #define MIN(x, y) ITE(x >= y, y, x)
 #define MAXP(x, y, n) ITE(x >= y, x, y) + n
-#define ISHEIGHT(e2, e3, v) ((v = MAXP(H(e2), H(e3), 1)) and v >= 0)
-#define HBTWN(v, p1, p2) (H(v) >= (p1) and H(v) <= (p2))
+#define ISHEIGHT(e2, e3, v) ((v = MAXP(H(e2), H(e3), 1)) && v >= 0)
+#define HBTWN(v, p1, p2) (H(v) >= (p1) && H(v) <= (p2))
 #define HGE0(v) (H(v) >= 0)
-#define BALW(e2, v, n) (H(v) <= H(e2) + n and H(v) >= H(e2) - n)
+#define BALW(e2, v, n) (H(v) <= H(e2) + n && H(v) >= H(e2) - n)
 #define RGDTREE(ty, v, r) {v: TREE(z, R(e0, z, HGE0(e0)), e1: int, e2: ty, \
-                               R(e3, z, BALW(e0, e3, 2) and HGE0(e3)), e4: int, \
-                               {e5: int | ISHEIGHT(e0, e3, e5)}) | (HGE0(v) and (r))}
+                               R(e3, z, BALW(e0, e3, 2) && HGE0(e3)), e4: int, \
+                               {e5: int | ISHEIGHT(e0, e3, e5)}) | (HGE0(v) && (r))}
 #define UGDTREE(ty) RGDTREE(ty, v, true)
 
 measure height =
@@ -36,7 +36,7 @@ val get: i: {v: int | v >= 0} -> t: RGDTREE('a, v, H(v) > 0) -> 'a
 
 val set: i: {v: int | v >= 0} -> 'a -> t: RGDTREE('a, v, H(v) > 0) -> RGDTREE('a, v, H(v) = H(t))
           
-val append: 'a -> t: UGDTREE('a) -> RGDTREE('a, v, (H(v) <= H(t) + 1 and H(t) >= H(t) - 1))
+val append: 'a -> t: UGDTREE('a) -> RGDTREE('a, v, (H(v) <= H(t) + 1 && H(t) >= H(t) - 1))
 
 
 val setappend: 'a -> 'a -> i: {v: int | v >= 0} -> t: RGDTREE('a, v, HGE0(v)) -> 
@@ -62,21 +62,21 @@ val sub: i: {v: int | v >= 0} -> j: {v: int | v >= i} ->
 val iteri: t: UGDTREE('a) -> ({v: int | 0 <= v} -> 'a -> 'b) -> unit
 
 
-val rangeiteri: i: int -> j: int -> t: UGDTREE('a) -> ({v: int | v >= i and v <= j} -> 'a -> unit) -> unit
+val rangeiteri: i: int -> j: int -> t: UGDTREE('a) -> ({v: int | v >= i && v <= j} -> 'a -> unit) -> unit
 
 
-val revrangeiteri: i: int -> j: int -> t: UGDTREE('a) -> ({v: int | v >= i and v <= j} -> 'a -> unit) -> unit
+val revrangeiteri: i: int -> j: int -> t: UGDTREE('a) -> ({v: int | v >= i && v <= j} -> 'a -> unit) -> unit
 
 
 val mapi: t: UGDTREE('a) -> ({v: int | 0 <= v} -> 'a -> 'b) -> UGDTREE('b) 
 
 val foldi: t: UGDTREE('a) -> ({v: int | 0 <= v} -> 'a -> 'b -> 'b) -> 'b -> 'b  
 
-val rangefoldi: i: int -> j: int -> t: UGDTREE('a) -> ({v: int | v >= i and v <= j} -> 'a -> 'b -> 'b) -> 'b -> 'b
+val rangefoldi: i: int -> j: int -> t: UGDTREE('a) -> ({v: int | v >= i && v <= j} -> 'a -> 'b -> 'b) -> 'b -> 'b
 
 val revfoldi: t: UGDTREE('a) -> ({v: int | 0 <= v} -> 'a -> 'b -> 'b) -> 'b -> 'b  
 
-val revrangefoldi: i: int -> j: int -> t: UGDTREE('a) -> ({v: int | v >= i and v <= j} -> 'a -> 'b -> 'b) -> 'b -> 'b
+val revrangefoldi: i: int -> j: int -> t: UGDTREE('a) -> ({v: int | v >= i && v <= j} -> 'a -> 'b -> 'b) -> 'b -> 'b
 
 val to_array: t: UGDTREE('a) -> {v: 'a array | true}
 

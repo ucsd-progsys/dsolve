@@ -1,7 +1,7 @@
 #define MAX(x, y)      (x >= y ? x : y)
 #define H(v)           (height (v))
 #define HG0(v)         (H(v) >= 0)
-#define BALW(e2, v, n) (H(v) <= H(e2) + n and H(v) >= H(e2) - n)
+#define BALW(e2, v, n) (H(v) <= H(e2) + n && H(v) >= H(e2) - n)
 
 #define S(v)      (set_of v)
 #define CUP(x, y) (Myaset.cup x y)
@@ -13,9 +13,9 @@
 #define RHO(p)           [[], [v: p, v: true, v: true, v: true, v: true]]
 #define TRHO             RHO(true)
 #define LT               {e2: RHO(v < e0) z | HG0(e2)}
-#define RT               {e3: RHO(v > e0) z | BALW(e2, e3, 2) and HG0(e3)}
-#define TREE             [z: t . || e0: 'a, e1: int, LT, RT, {e4: int | ((e4 = MAX(H(e2), H(e3)) + 1) and e4 >= 0)}]
-#define RGDTREE(v, t, r) {v : t TREE | HG0(v) and (r)}
+#define RT               {e3: RHO(v > e0) z | BALW(e2, e3, 2) && HG0(e3)}
+#define TREE             [z: t . || e0: 'a, e1: int, LT, RT, {e4: int | ((e4 = MAX(H(e2), H(e3)) + 1) && e4 >= 0)}]
+#define RGDTREE(v, t, r) {v : t TREE | HG0(v) && (r)}
 #define RTGDTREE(v, r)   RGDTREE(v, TRHO, r)
 #define UTGDTREE         RTGDTREE(v, true)
 
@@ -27,9 +27,9 @@ measure set_of =
     Empty -> Myaset.empty
   | Node (d, _, l, r, _) -> Myaset.cup (Myaset.sng d) (Myaset.cup (set_of l) (set_of r))
 
-val add: x: 'a -> int -> t: UTGDTREE -> RTGDTREE(v, (H(v) <= H(t) + 1 and H(v) >= H(t)) and SEQ(S(v), CUP(S(t), SNG(x))))
+val add: x: 'a -> int -> t: UTGDTREE -> RTGDTREE(v, (H(v) <= H(t) + 1 && H(v) >= H(t)) && SEQ(S(v), CUP(S(t), SNG(x))))
 
-val remove: x: 'a -> t: UTGDTREE -> RTGDTREE(v, (H(v) >= H(t) - 1 and H(v) <= H(t)) and SEQ(S(v), MNS(S(t), SNG(x))))
+val remove: x: 'a -> t: UTGDTREE -> RTGDTREE(v, (H(v) >= H(t) - 1 && H(v) <= H(t)) && SEQ(S(v), MNS(S(t), SNG(x))))
 
 val find: t: UTGDTREE -> x: {v: 'a | MEM(v, t)} -> {v: 'a | v = x}
 

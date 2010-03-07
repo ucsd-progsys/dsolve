@@ -25,7 +25,7 @@ measure height =
 (*
 
 val restore_right: e: 'a -> l: GBT -> r: {v: RBT | height v = height l} -> GBT
-val restore_left: e: 'a -> l: RBT -> r: {v: RBT | NOP(v) and height v = height l} -> GBT
+val restore_left: e: 'a -> l: RBT -> r: {v: RBT | NOP(v) && height v = height l} -> GBT
 val ins1: key: 'a -> d: GBT -> RBT
 
 *)

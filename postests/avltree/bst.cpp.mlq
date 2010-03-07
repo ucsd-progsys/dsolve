@@ -4,7 +4,7 @@
 #define TT  	[[], RV(true), RV(true)]
 #define H0(x)	(height x >= 0)
 #define HD(x,y)	(x = 1 + height y)
-#define BND(f,x,y)	(f x <= f y and f y <= 1 + f x)
+#define BND(f,x,y)	(f x <= f y && f y <= 1 + f x)
 
 #define TREE(rhol1, l1, rhor1, r1, h1, rhol2, l2, rhor2, r2, h2)  \
            TT [z: avl . || e0: 'a, {e1: rhol1 z | l1}, {e2: rhor1 z | r1}, {e3: int | h1} \

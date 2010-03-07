@@ -1,7 +1,7 @@
 mdep Myaset
 
 qualif FALSE(v) : (1 = 0)
-qualif BAL(v)   : (height v >= (height l <= height r + 2 and height l >= height r - 2 ? 
+qualif BAL(v)   : (height v >= (height l <= height r + 2 && height l >= height r - 2 ? 
 (height l >= height r ? height l + 1 : height r + 1) : (height l >= height r ? height l : height r)))
 qualif H(v)     : height v { <=, >= } (height [l, t1] { <=, >= } height [r, t2] ? height [l, t1] : height [r, t2]) + [0, 1]
 
@@ -15,7 +15,7 @@ qualif COMP(v)  : ~A { * * } v
 qualif COMP(v)(A: 'a t)  : ~A { =, != } v 
 qualif H(v)(A: 'a t)     : v = height ~A
 
-qualif S(v)  : (true or (? Myaset.un v)) and (not (? (Myaset.mem x (set_of t))))
+qualif S(v)  : (true || (? Myaset.un v)) && (not (? (Myaset.mem x (set_of t))))
 qualif S(v)  : (? Myaset.eq (set_of v) (Myaset.cup (Myaset.sng x) (Myaset.cup (set_of l) (set_of r))))
 qualif S(v)  : (? Myaset.eq (set_of v) (Myaset.cup (set_of t2) (set_of t1)))
 qualif S(v)  : (? Myaset.eq (set_of [t2, l, t]) (Myaset.cup (set_of v) (Myaset.sng e0)))

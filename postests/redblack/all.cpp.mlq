@@ -5,7 +5,7 @@
 #define EBLK(v) color v <= 1
 #define RED(v)  color v = 2
 #define NOP(v)  color v <= 2
-#define MRED(v) (EBLK(v) or EBLK(e1)) and (RED(v) or RED(e1))
+#define MRED(v) (EBLK(v) || EBLK(e1)) && (RED(v) || RED(e1))
 #define HINV(v) height v = height e1
 
 #define LR(e0) [v: v < e0, v: true, v: true]
@@ -13,9 +13,9 @@
 #define RR(e0) [v: v > e0, v: true, v: true]
 #define RN(e0) [[], RR(e0), RR(e0), RR(e0)]
 
-#define DN e0: 'a, {e1: LN(e0) z | EBLK(e1)}, {e2: RN(e0) z | EBLK(e2) and HINV(e2)}
-#define N  e0: 'a, {e1: LN(e0) z | NOP(e1)}, {e2: RN(e0) z | NOP(e2) and HINV(e2)}
-#define PN e0: 'a, {e1: LN(e0) z | NOP(e1)}, {e2: RN(e0) z | NOP(e2) and ((MRED(e2)) and HINV(e2))}
+#define DN e0: 'a, {e1: LN(e0) z | EBLK(e1)}, {e2: RN(e0) z | EBLK(e2) && HINV(e2)}
+#define N  e0: 'a, {e1: LN(e0) z | NOP(e1)}, {e2: RN(e0) z | NOP(e2) && HINV(e2)}
+#define PN e0: 'a, {e1: LN(e0) z | NOP(e1)}, {e2: RN(e0) z | NOP(e2) && ((MRED(e2)) && HINV(e2))}
 
 #define RBT R [z: dict . || N || DN || PN]
 #define GBT {v: R [z: dict . || N || DN || PN] | NOP(v)}
@@ -37,7 +37,7 @@ measure height =
 (*
 
 val restore_right: e: 'a -> l: GBT -> r: {v: RBT | height v = height l} -> GBT
-val restore_left: e: 'a -> l: RBT -> r: {v: RBT | NOP(v) and height v = height l} -> GBT
+val restore_left: e: 'a -> l: RBT -> r: {v: RBT | NOP(v) && height v = height l} -> GBT
 val ins1: key: 'a -> d: GBT -> RBT
 
 *)

@@ -1,2 +1,2 @@
-qualif DEPVAL(_V): ((_V != 0) -> ((0 <= ~A) and (~A < ~B)))
+qualif DEPVAL(_V): ((_V != 0) -> ((0 <= ~A) && (~A < ~B)))
 qualif Id_rel_id_int(_V)(A:int) : _V { * * } ~A

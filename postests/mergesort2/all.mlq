@@ -13,5 +13,5 @@ measure set_of =
 
 val mergesort2: xs:
   [[], [v: true, v: true]] [t: list . || e0: 'a, e1: [[], [v: true, v: true]] t] ->
-  {v : [[], [v: true, v: true]] [t: list . || e0: 'a, e1: [[], [v: e0 <= v, v: true]] t] | len v = len xs and (? Myset.eq (Myset.of_list v) (Myset.of_list xs))}
+  {v : [[], [v: true, v: true]] [t: list . || e0: 'a, e1: [[], [v: e0 <= v, v: true]] t] | len v = len xs && (? Myset.eq (Myset.of_list v) (Myset.of_list xs))}
   

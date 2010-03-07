@@ -1,11 +1,11 @@
 (*qualif FALSE(v) : 1 = 0*)
 
 (* Color quals *)
-qualif WHENPURPLE(v):     (color v <= 2) or (color ~A = 2)
+qualif WHENPURPLE(v):     (color v <= 2) || (color ~A = 2)
 
 (* the following count as one - consider that we had an xor operator *)
-qualif MAYBERED(v):       color v <= 1 or color e1 <= 1
-qualif MAYBERED(v):       color v = 2 or color e1 = 2
+qualif MAYBERED(v):       color v <= 1 || color e1 <= 1
+qualif MAYBERED(v):       color v = 2 || color e1 = 2
 
 (** From the MLQ **)
 

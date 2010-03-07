@@ -9,6 +9,6 @@ val add: 'a -> int -> TREE -> TREE
 val remove_min_binding: t: TREE -> 'a * int * RGDTREE(v, true)
 
 val merge: m: 'a -> t1: RGDTREE(v, RHO(v < m), true) -> t2: RGDTREE(v, RHO(v > m), BALW(t1, v, 2)) ->
-  RTGDTREE(v, H(v) <= MAX(H(t1), H(t2)) + 1 and H(v) >= MAX(H(t1), H(t2)))
+  RTGDTREE(v, H(v) <= MAX(H(t1), H(t2)) + 1 && H(v) >= MAX(H(t1), H(t2)))
 *)
 val remove: 'a -> t: TREE -> TREE
