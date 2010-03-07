@@ -20,6 +20,10 @@ open Asttypes
 open Longident
 open Parsetree
 
+let fresh =
+  let c = ref 0 in
+  (fun () -> let r = !c in incr c; r)
+
 let mktyp d =
   { ptyp_desc = d; ptyp_loc = symbol_rloc() }
 let mkqpat d =
@@ -497,6 +501,8 @@ qual_term:
     { mkpredpatexp (Ppredpatexp_var($2)) }
   | TILDE UIDENT /* var */
     { mkpredpatexp (Ppredpatexp_mvar($2)) } 
+  | UNDERSCORE   /* anonymous var */
+    { mkpredpatexp (Ppredpatexp_mvar("A_" ^ (string_of_int (fresh ())))) } 
   | INT
     { mkpredpatexp (Ppredpatexp_int([$1])) }
   | INFIXOP1  /* wild int @ */
