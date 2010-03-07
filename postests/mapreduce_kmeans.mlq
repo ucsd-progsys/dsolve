@@ -1,3 +1,9 @@
 measure nonnull = 
   | x::xs -> true 
   | []    -> (not (true))
+
+val map_reduce: ('a -> ('b * 'c) list) -> 
+		('b -> 'b -> 'b) ->
+		('a list) ->
+		('b * 'c) list
+
