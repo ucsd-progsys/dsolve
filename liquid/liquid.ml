@@ -168,17 +168,12 @@ let main () =
        let dir = expand_directory Config.standard_library dir in
        include_dirs := dir :: !include_dirs),
            "<dir>  Add <dir> to the list of include directories";
-     "-init", Arg.String (fun s -> init_file := Some s),
-           "<file>  Load <file> instead of default init file";
      "-labels", Arg.Clear classic, " Labels commute (default)";
-     "-noassert", Arg.Set noassert, " Do not compile assertion checks";
      "-nolabels", Arg.Set classic, " Ignore labels and do not commute";
-     "-noprompt", Arg.Set noprompt, " Suppress all prompts";
      "-nostdlib", Arg.Set no_std_include,
            " do not add default directory to the list of include directories";
      "-principal", Arg.Set principal, " Check principality of type inference";
      "-rectypes", Arg.Set recursive_types, " Allow arbitrary recursive types";
-     "-unsafe", Arg.Set fast, " No bound checking on array and string access";
      "-w", Arg.String (Warnings.parse_options false),
            "<flags>  Enable or disable warnings according to <flags>:\n\
        \032    A/a enable/disable all warnings\n\
@@ -202,25 +197,18 @@ let main () =
          \032    default setting is a (all warnings are non-fatal)";
 
      "-dparsetree", Arg.Set dump_parsetree, " (undocumented)";
-     "-drawlambda", Arg.Set dump_rawlambda, " (undocumented)";
      "-dlambda", Arg.Set dump_lambda, " (undocumented)";
-     "-dinstr", Arg.Set dump_instr, " (undocumented)";
      "-dconstrs", Arg.Set dump_constraints, "print out frame constraints";
      "-drconstrs", Arg.Set dump_ref_constraints, "print out refinement constraints";
      "-dsubs", Arg.Set print_subs, "print subs and unsubbed predicates";
      "-drvars", Arg.Set dump_ref_vars, "print out variables associated with refinement constraints";
      "-dqueries", Arg.Set dump_queries, "print out all theorem prover queries and their results";
-     "-dframes", Arg.Set dump_frames, "place frames in an annotation file";
      "-draw", Arg.Set raw_frames, "use raw frame templates in annotation file";
      "-dgraph", Arg.Set dump_graph, "dump constraints.dot";
-     "-cqueries", Arg.Set check_queries, "use a backup prover to check all queries";
-     "-esimple", Arg.Set esimple, "simplify e-variables for rectypes";
      "-no-simple", Arg.Set no_simple, "do not propagate in simple constraints";
      "-verify-simple", Arg.Set verify_simple, "verify simple constraint propagation against theorem prover result";
-     "-bprover", Arg.Set always_use_backup_prover, "always use backup prover";
      "-lqualifs", Arg.Set less_qualifs, "only collect formal parameter identifiers";
      "-no-anormal", Arg.Set no_anormal, "don't rewrite the AST for a-normality";
-     "-cacheq", Arg.Set cache_queries, "cache theorem prover queries";
      "-psimple", Arg.Set psimple, "prioritize simple constraints";
      "-simpguard", Arg.Set simpguard, "simplify guard (remove iff)";
      "-no-recrefs", Arg.Set no_recrefs, "true out recursive refinements";
@@ -232,7 +220,6 @@ let main () =
      "-dsmeasures", Arg.Set dsmeasures, "don't strip measure names";
      "-fix", Arg.Set use_fixpoint, "use fixpoint solver instead of dsolve to solve constraints";
      "-no-timing", Arg.Unit Bstats.dont_time, "don't do any profiling";
-     "-vgc", Arg.Int (fun c -> (get ()).verbose <- c), "verbose garbage collector";
      "-v", Arg.Int (fun c -> Common.verbose_level := c; Constants.verbose_level := c), 
               "<level> Set degree of analyzer verbosity:\n\
                \032    0      No output\n\
