@@ -203,6 +203,7 @@ let main () =
      "-dsubs", Arg.Set print_subs, "print subs and unsubbed predicates";
      "-drvars", Arg.Set dump_ref_vars, "print out variables associated with refinement constraints";
      "-dqueries", Arg.Set dump_queries, "print out all theorem prover queries and their results";
+     "-dframes", Arg.Set dump_frames, "place frames in an annotation file";
      "-draw", Arg.Set raw_frames, "use raw frame templates in annotation file";
      "-dgraph", Arg.Set dump_graph, "dump constraints.dot";
      "-no-simple", Arg.Set no_simple, "do not propagate in simple constraints";
