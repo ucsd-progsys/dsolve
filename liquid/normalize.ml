@@ -27,6 +27,8 @@ open Format
 
 module C = Common
 
+exception NormalizationFailure of expression * Location.t * string
+
 let wrap_printable exp = (Ptop_def([{pstr_desc = (Pstr_eval exp); pstr_loc = Location.none}])) 
 let dummy = Location.none
 
@@ -158,6 +160,7 @@ let normalize exp =
      let init = skel lbls in
       rw_expr (List.fold_left (wrap Nonrecursive) init (List.concat (List.rev lss)))
     in
+    let loc = exp.pexp_loc in
 
     match exp.pexp_desc with
      | Pexp_constant(_) 
@@ -268,7 +271,7 @@ let normalize exp =
         let (lbl, _, lo) = List.hd ls in
         let init = mk_match (mk_ident_loc lbl lo) npel in
           rw_expr (List.fold_left (wrap Nonrecursive) init ls)
-     | e -> printf "@[Bad expr to norm_out:@\n%a@]" Qdebug.pprint_expression exp; flush stdout; assert false
+     | e -> raise (NormalizationFailure (exp, loc, "norm_out"))
 
   and norm_in exp = 
     let rw_expr desc = {pexp_desc = desc; pexp_loc = exp.pexp_loc} in
@@ -372,7 +375,7 @@ let normalize exp =
          let ls = norm_in e in
          let (lbl, _, lo) = List.hd ls in
           (fresh_name (), Some (rw_expr (mk_match (mk_ident_loc lbl lo) npel)), loc)::ls
-     | e -> printf "@[Bad expr to norm_in:@\n%a@]" Printast.top_phrase (wrap_printable exp); assert false
+     | e -> raise (NormalizationFailure (exp, loc, "norm_in"))
   in
   norm_out exp
 
