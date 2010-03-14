@@ -121,6 +121,10 @@ let constr_app_params2 f (t, (n, ps1)) (_, (_, ps2)) =
 let constrs_tag_params t cs =
   snd (List.assoc t cs)
 
+let record_field f n = match f with
+  | Fsum (_, _, [c], _) -> List.nth (constr_param_frames c) n
+  | _                   -> failwith "record_field called on non-record"
+
 (**************************************************************)
 (************************* Iterators **************************) 
 (**************************************************************)
