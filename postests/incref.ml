@@ -1,21 +1,27 @@
 (* This works *)
-let x = ref 0
-let _ = assert (!x >= 0)
+let (<~) = (:=)
+let w = ref 0
+let _ = w <~ !w + 1
+let _ = assert (!w >= 0)
 
-(* This works *)
-let asgn = (:=)
-let z = ref 0
-let _ = asgn z !z
-let _ = assert (!z >= 0)
-
-(* This fails *) 
+(* This fails 
 let y = ref 0
 let _ = y := !y
 let _ = assert (!y >= 0)
+*)
 
-(* This fails *)
-let (<~) = (:=)
-let w = ref 0
-let _ = asgn w !w
-let _ = assert (!w >= 0)
+
+let rec ffor i j f = 
+  if i < j then begin
+    f i;
+    ffor (i+1) j f
+  end
+
+let min_index a =
+  let min = ref 0 in
+  ffor 0 (Array.length a) begin fun i ->
+    if a.(i) < a.(!min) then 
+      min <~ i
+  end;
+  !min
 

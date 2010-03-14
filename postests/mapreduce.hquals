@@ -1,1 +1,3 @@
-qualif POS(v): len v > 0 
+qualif LTLen(v): v <  Array.length _
+qualif LT(v)   : v <  _
+qualif GE(v)   : v >= _

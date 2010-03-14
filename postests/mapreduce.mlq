@@ -1,3 +1,21 @@
-measure len =
-  | [] 	    -> 0
-  | x :: xs -> 1 + len xs
+measure nonnull = 
+  | x::xs -> true 
+  | []    -> false 
+
+
+val matrix_multiply: 
+  m: {v: int| v > 0 } -> 
+  n: {v: int| v > 0 } -> 
+  a: {v: {v: float array | Array.length v = n} array | Array.length v = m} ->
+  x: {v: float array | Array.length v = n} -> 
+     {v: float array | Array.length v = m} 
+
+
+val kmeans:
+  n   : int ->
+  dist: ('a -> 'a -> 'b) ->
+  plus: ('a -> 'a -> 'a) ->
+  div : ('a -> {v: int | v != 0} -> 'a) ->
+  xs  : 'a list ->
+  ctra: {v: 'a array | 0 < Array.length v}  ->
+  unit
