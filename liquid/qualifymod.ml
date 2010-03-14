@@ -225,8 +225,10 @@ and constrain_field (env, guard, _) expr label_desc =
   in (fieldframe, [WFFrame (env, fieldframe)], cstrs)
 
 and constrain_setfield (env, guard, f) expr label_desc expr' =
-  let _ = assert false in
-  (B.uUnit, [], [])
+  let (recframe, cstrs1) = constrain expr env guard in
+  let (setframe, cstrs2) = constrain expr' env guard in
+  let fieldframe         = F.record_field (F.unfold_applying recframe) label_desc.lbl_pos in
+    (B.uUnit, [SubFrame (env, guard, setframe, fieldframe)], cstrs1 @ cstrs2)
 
 and constrain_if (env, guard, f) e1 e2 e3 =
   let (f1, cstrs1) = constrain e1 env guard in
