@@ -36,7 +36,6 @@ val use_vmthreads : bool ref
 val noassert : bool ref
 val verbose : bool ref
 val noprompt : bool ref
-val init_file : string option ref
 val use_prims : string ref
 val use_runtime : string ref
 val principal : bool ref
@@ -62,12 +61,8 @@ val dump_queries: bool ref
 val dump_frames: bool ref
 val raw_frames: bool ref
 val dump_graph: bool ref
-val check_queries: bool ref
-val esimple: bool ref
 val no_simple: bool ref
 val verify_simple: bool ref
-val always_use_backup_prover: bool ref
-val cache_queries: bool ref 
 val psimple: bool ref
 val simpguard : bool ref
 
