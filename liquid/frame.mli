@@ -27,13 +27,14 @@ open Format
 open Asttypes
 
 type substitution = Path.t * Predicate.pexpr
-type dep_sub = string * string
+type dep_sub      = string * string
 
-type qvar = Path.t
-type refexpr = substitution list * (Qualifier.t list * qvar list)
+type qvar       = Path.t
+type refexpr    = substitution list * (Qualifier.t list * qvar list)
 type refinement = refexpr list
 
-type recref = refinement list list
+type 'a prerecref = 'a list list
+type recref       = refinement prerecref
 
 type qexpr =
   | Qconst of Qualifier.t
@@ -45,18 +46,21 @@ val empty_refinement: refinement
 val const_refinement: Qualifier.t list -> refinement
 val false_refinement: refinement
 
-type t =
-  | Fvar of Path.t * int * dep_sub list * refinement
-  | Frec of Path.t * recref * refinement
-  | Fsum of Path.t * (Path.t * recref) option * constr list * refinement
-  | Fabstract of Path.t * param list * Ident.t * refinement
-  | Farrow of pattern_desc * t * t
+type ('a, 'b) preframe =
+  | Fvar      of Path.t * int * dep_sub list * 'a
+  | Frec      of Path.t * 'b prerecref * 'a
+  | Fsum      of Path.t * (Path.t * 'b prerecref) option * ('a, 'b) preconstr list * 'a
+  | Fabstract of Path.t * ('a, 'b) preparam list * Ident.t * 'a
+  | Farrow    of pattern_desc * ('a, 'b) preframe * ('a, 'b) preframe
 
-and param = Ident.t * t * variance
+and ('a, 'b) preparam  = Ident.t * ('a, 'b) preframe * variance
+and ('a, 'b) preconstr = constructor_tag * (string * ('a, 'b) preparam list)
+and variance           = Covariant | Contravariant | Invariant
 
-and constr = constructor_tag * (string * param list)
+type param  = (refinement, refinement) preparam
+type constr = (refinement, refinement) preconstr
 
-and variance = Covariant | Contravariant | Invariant
+type t = (refinement, refinement) preframe
 
 exception LabelLikeFailure of t * t
 
