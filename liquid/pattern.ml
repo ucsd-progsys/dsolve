@@ -30,6 +30,19 @@ module C = Common
 
 let pattern_descs = List.map (fun p -> p.pat_desc)
 
+let rec foldvars f b p = match p with
+  | Tpat_var _                                 -> f b p
+  | Tpat_tuple pats | Tpat_construct (_, pats) -> List.fold_left (foldvars f) (f b p) (pattern_descs pats)
+  | Tpat_any                                   -> b
+  | _                                          -> assert false
+
+let skolemize_pattern_fold s = function
+  | Tpat_var x -> (x, Ident.create "_skolemized_pattern_") :: s
+  | _          -> s
+
+let skolemize_pattern p =
+  foldvars skolemize_pattern_fold [] p
+
 let _bind_vars = function
   | (Tpat_any, _)                   -> ([], [])
   | (Tpat_var x, Tpat_var y)        -> ([], [(x, y)])
@@ -38,27 +51,13 @@ let _bind_vars = function
   | (Tpat_tuple p1s, Tpat_tuple p2s)
   | (Tpat_construct (_, p1s), Tpat_construct (_, p2s)) ->
       (List.combine (pattern_descs p1s) (pattern_descs p2s), [])
-  | _ -> raise (Failure "Pattern bind")
+  | (p, _) -> ([], skolemize_pattern p)
 
 let bind_vars p1 p2 = C.expand _bind_vars [(p1, p2)] []
 
 let substitution p1 p2 =
   let vars = bind_vars p1 p2 in
     List.map (fun (x, y) -> (Path.Pident x, Predicate.Var (Path.Pident y))) vars
-
-let rec fold f b p = match p with
-  | Tpat_any
-  | Tpat_var _ -> f b p
-  | Tpat_tuple pats ->
-      let b = List.fold_left (fold f) b (pattern_descs pats) in f b p
-  | _ -> assert false
-
-let null_binding_fold b = function
-  | Tpat_var x -> (Path.Pident x, P.Var (Path.mk_ident "z")) :: b
-  | _ -> b
-
-let null_binding b pat =
-  fold null_binding_fold b pat
 
 let bind_pexpr pat pexp =
   let rec bind_rec subs (pat, pexp) =
