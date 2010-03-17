@@ -97,7 +97,7 @@ let dump_default_qualifiers (str, env, menv, ifenv) deps qname =
   let ids = List.filter (fun s -> not(C.tmpstring s)) ids in
 
   let mnms = snd (List.split (M.filter_names menv)) in
-  let np n p = P.Atom(P.Var vid, P.Eq, P.FunApp(Path.mk_ident n, [P.Var (Path.mk_ident p)])) in 
+  let np n p = P.Atom(P.Var vid, P.Eq, P.FunApp(Path.mk_ident n, [P.Var (Path.mk_ident "_")])) in 
   (* TODO: instead of ids just write mvars -- change qs to patterns *)
   let mnms = C.tflap2 (mnms, ids) np in
   let cstrs = M.filter_cstrs menv in

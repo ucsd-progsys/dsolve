@@ -35,6 +35,7 @@ module M   = Measure
 module C   = Common
 module Le  = Lightenv
 module P   = Predicate
+module Nm  = Normalize
 
 let usage = "Usage: liquid <options> [source-files]\noptions are:"
 
@@ -114,7 +115,14 @@ let load_valfile ppf env fenv fname =
     
 let load_sourcefile ppf env fenv sourcefile =
   let str = Pparse.file ppf sourcefile Parse.implementation ast_impl_magic_number in 
-  let str = if !Clflags.no_anormal then str else Normalize.normalize_structure str in
+  let str =
+    if !Clflags.no_anormal then
+      str
+    else
+      try Nm.normalize_structure str with
+       Nm.NormalizationFailure (e, t, m) ->
+         Format.printf "@[Normalization failed at %a(%s) %a@.@]"
+         Location.print t m Qdebug.pprint_expression e; assert false in
   let str = print_if ppf Clflags.dump_parsetree Printast.implementation str in
   let (str, _, env) = type_implementation env str in
     (str, env, fenv)
