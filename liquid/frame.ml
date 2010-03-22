@@ -129,14 +129,20 @@ let record_field f n = match f with
 (************************* Iterators **************************) 
 (**************************************************************)
 
+let apply_params_frames f ps =
+  List.map (fun (p, fr, v) -> (p, f fr, v)) ps
+
+let apply_constrs_params_frames f cs =
+  List.map (constr_app_params (apply_params_frames f)) cs
+
 let rec map f = function
   | (Fvar _ | Frec _) as fr  -> f fr
-  | Fsum (p, ro, cs, r)      -> f (Fsum (p, ro, List.map (constr_app_params (map_params f)) cs, r))
+  | Fsum (p, ro, cs, r)      -> f (Fsum (p, ro,  apply_constrs_params_frames (map f) cs, r))
   | Fabstract (p, ps, id, r) -> f (Fabstract (p, map_params f ps, id, r))
   | Farrow (x, f1, f2)       -> f (Farrow (x, map f f1, map f f2))
 
 and map_params f ps =
-  List.map (fun (p, fr, v) -> (p, map f fr, v)) ps
+  apply_params_frames (map f) ps
 
 let rec map_labels f fr = 
   map (map_label_map f) fr
