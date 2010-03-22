@@ -22,8 +22,8 @@ let solver fname max_env cs soln qs =
   (* solve with fixpoint *)
   let (solver, _) = Solve.create [] fsort_max_env [] 0 [] fcs fwfs [] in
   let bname       = Miscutil.chop_extension_if_any fname in
-  let _           = Solve.save (bname ^ ".in.fq") solver soln in
+  let _           = Solve.save (bname ^ ".ml.in.fq") solver soln in
   let (soln, _)   = Solve.solve solver soln in
   let _           = Format.printf "@[FinSoln:@\n%a@]" FCo.print_soln soln in
-  let _           = Solve.save (bname ^ ".out.fq") solver soln in
+  let _           = Solve.save (bname ^ ".ml.out.fq") solver soln in
   Cg.d_of_fsoln soln
