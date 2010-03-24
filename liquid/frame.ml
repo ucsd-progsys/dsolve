@@ -147,7 +147,8 @@ let apply_constrs_params_frames f cs =
   List.map (constr_app_params (apply_params_frames f)) cs
 
 let rec map f = function
-  | (Fvar _ | Frec _) as fr             -> f fr
+  | Fvar _ as fr                        -> f fr
+  | Frec (p, tas, rr, r)                -> f (Frec (p, List.map (map f) tas, rr, r))
   | Fsum (p, cs, r)                     -> f (Fsum (p,  apply_constrs_params_frames (map f) cs, r))
   | Finductive (p, tfs, tas, rr, cs, r) -> f (Finductive (p, tfs, List.map (map f) tas, rr, apply_constrs_params_frames (map f) cs, r))
   | Fabstract (p, ps, id, r)            -> f (Fabstract (p, map_params f ps, id, r))
@@ -199,25 +200,32 @@ let recref_iter f rr =
   List.iter f (List.flatten rr)
 
 let rec refinement_fold f l = function
-  | Frec (_, _, rr, r) -> f r (recref_fold f rr l)
-  | Fvar (_, _, s, r) -> f r l
-  | Fsum (_, cs, r) ->
-      (* pmr: abstract out the following *)
-      f r (List.fold_left (refinement_fold f) l (C.flap constr_param_frames cs))
-  | Finductive (_, _, _, rr, cs, r) ->
-      f r (List.fold_left (refinement_fold f) (recref_fold f rr l) (C.flap constr_param_frames cs))
-  | Fabstract (_, ps, _, r) ->
-      f r (List.fold_left (refinement_fold f) l (params_frames ps))
-  | Farrow (_, f1, f2) ->
-      refinement_fold f (refinement_fold f l f1) f2
+  | Frec (_, tas, rr, r)              -> l |> refinement_fold_list f tas |> recref_fold f rr |> f r
+  | Fvar (_, _, _, r)                 -> f r l
+  | Fsum (_, cs, r)                   -> l |> refinement_fold_list f (C.flap constr_param_frames cs) |> f r
+  | Fabstract (_, ps, _, r)           -> l |> refinement_fold_list f (params_frames ps) |> f r
+  | Farrow (_, f1, f2)                -> refinement_fold f (refinement_fold f l f1) f2
+  | Finductive (_, _, tas, rr, cs, r) ->
+      l
+   |> refinement_fold_list f tas
+   |> refinement_fold_list f (C.flap constr_param_frames cs)
+   |> recref_fold f rr
+   |> f r
+
+and refinement_fold_list f fs l =
+  List.fold_left (refinement_fold f) l fs
 
 let rec refinement_iter f = function
-  | Frec (_, _, rr, r)              -> recref_iter f rr; f r
-  | Fvar (_, _, s, r)               -> f r
-  | Fsum (_, cs, r)                 -> f r; List.iter (refinement_iter f) (C.flap constr_param_frames cs)
-  | Finductive (_, _, _, rr, cs, r) -> recref_iter f rr; List.iter (refinement_iter f) (C.flap constr_param_frames cs); f r
-  | Fabstract (_, ps, _, r)         -> List.iter (refinement_iter f) (params_frames ps); f r
-  | Farrow (_, f1, f2)              -> refinement_iter f f1; refinement_iter f f2
+  | Frec (_, tas, rr, r)              -> List.iter (refinement_iter f) tas; recref_iter f rr; f r
+  | Fvar (_, _, s, r)                 -> f r
+  | Fsum (_, cs, r)                   -> f r; List.iter (refinement_iter f) (C.flap constr_param_frames cs)
+  | Fabstract (_, ps, _, r)           -> List.iter (refinement_iter f) (params_frames ps); f r
+  | Farrow (_, f1, f2)                -> refinement_iter f f1; refinement_iter f f2
+  | Finductive (_, _, tas, rr, cs, r) ->
+      List.iter (refinement_iter f) tas;
+      recref_iter f rr;
+      List.iter (refinement_iter f) (C.flap constr_param_frames cs);
+      f r
 
 (******************************************************************************)
 (*************************** Type level manipulation **************************)
@@ -277,14 +285,14 @@ let apply_refinement r = function
   | Finductive (p, tfs, tas, rr, cs, _) -> Finductive (p, tfs, tas, rr, cs, r)
   | Fabstract (p, ps, id, _)            -> Fabstract (p, ps, id, r)
   | Frec (p, tas, rr, _)                -> Frec (p, tas, rr, r)
-  | f                                   -> f
+  | Farrow _ as f                       -> f
 
   (*need to apply subs when refinement is pulled somehow..*)
 let get_refinement = function
   | Fvar (_, _, _, r) | Fsum (_, _, r)
   | Finductive (_, _, _, _, _, r)
   | Frec (_, _, _, r) | Fabstract (_, _, _, r) -> Some r
-  | _                                          -> None
+  | Farrow _                                   -> None
 
 let append_refinement res' f =
   match get_refinement f with
