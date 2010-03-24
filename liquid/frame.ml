@@ -629,19 +629,21 @@ let replace_recvar p tfs rr cs = function
   | Frec (rp, tas, rr', r) when Path.same p rp -> Finductive (p, tfs, tas, merge_recrefs rr rr', cs, r)
   | f                                          -> f
 
-(* lift with inner definition *)
-let rec replace_typevars merge_refinements vmap = function
-  | Fvar (p, _, dsubs, r) as f ->
-      begin try
-        merge_refinements r (List.assoc p vmap)
-      with Not_found ->
-        f
-      end
-  | Fsum (p, cs, r)                     -> Fsum (p, apply_constrs_params_frames (replace_typevars merge_refinements vmap) cs, r)
-  | Finductive (p, tfs, tas, rr, cs, r) -> Finductive (p, tfs, List.map (replace_typevars merge_refinements vmap) tas, rr, cs, r)
-  | Frec (p, tas, rr, r)                -> Frec (p, List.map (replace_typevars merge_refinements vmap) tas, rr, r)
-  | Fabstract (p, ps, id, r)            -> Fabstract (p, apply_params_frames (replace_typevars merge_refinements vmap) ps, id, r)
-  | Farrow (pat, f, f')                 -> Farrow (pat, replace_typevars merge_refinements vmap f, replace_typevars merge_refinements vmap f')
+let rec replace_typevars merge_refinements vmap f =
+  let rec replace_aux = function
+    | Fvar (p, _, dsubs, r) as f ->
+        begin try
+          (* pmr: how to apply dsubs? *)
+          merge_refinements r (List.assoc p vmap)
+        with Not_found ->
+          f
+        end
+    | Fsum (p, cs, r)                     -> Fsum (p, apply_constrs_params_frames replace_aux cs, r)
+    | Finductive (p, tfs, tas, rr, cs, r) -> Finductive (p, tfs, List.map replace_aux tas, rr, cs, r)
+    | Frec (p, tas, rr, r)                -> Frec (p, List.map replace_aux tas, rr, r)
+    | Fabstract (p, ps, id, r)            -> Fabstract (p, apply_params_frames replace_aux ps, id, r)
+    | Farrow (pat, f, f')                 -> Farrow (pat, replace_aux f, replace_aux f')
+  in replace_aux f
 
 (* need two types of unfold:
    - with propagating recrefs (normal use)
@@ -778,15 +780,15 @@ let label_like f f' =
     | (x :: xs, []) -> raise (Failure "Label_like param mismatch")
   in label [] f f'
 
-let sum_of_params path ps r =
-  Fsum (path, [(Cstr_constant 0, ("rec", ps))], r)
-
 let abstract_of_params_with_labels labels p params varis id r =
   Fabstract (p, C.combine3 labels params varis, id, r)
 
 let abstract_of_params p params varis r =
   let id = if C.empty_list params then C.dummy_id else C.abstr_elem_id () in
   Fabstract (p, C.combine3 (Miscutil.mapi (fun _ i -> C.tuple_elem_id i) params) params varis, id, r)
+
+let sum_of_params path ps r =
+  Fsum (path, [(Cstr_constant 0, ("rec", ps))], r)
 
 let tuple_of_frames fs r =
   sum_of_params path_tuple (Miscutil.mapi (fun f i -> (C.tuple_elem_id i, f, Covariant)) fs) r
