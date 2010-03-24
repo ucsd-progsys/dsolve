@@ -891,14 +891,14 @@ let translate_type env t =
     let _, cds   = List.split (Env.constructors_of_type p (Env.find_type p env)) in
     let rr       = mk_constr_recref cdecls in
     let vstack   = (p,  rr) :: vstack in
-      Finductive (p, tfps, tas, rr, List.map2 (transl_constructor vstack tfs) names cds, r)
+    let cs       = List.map2 (transl_constructor vstack tfs) names cds in
+      Finductive (p, tfps, tas, rr, cs, r)
 
   and transl_constructor vstack tfs name cstr =
-    let args, res = Ctype.instance_constructor cstr in
-    let tfps      = res |> tconstr_params |> transl_formals vstack in
-    let fs        = args |> List.map (replace_formals tfps tfs <.> transl vstack DontRefine) in
-    let vs        = List.map (fun _ -> Covariant) fs in
-    let ids       = Miscutil.mapi (fun _ i -> C.tuple_elem_id i) args in
+    let cfps = cstr.cstr_res |> tconstr_params |> transl_formals vstack in
+    let fs   = cstr.cstr_args |> List.map (replace_formals cfps tfs <.> transl vstack DontRefine) in
+    let vs   = List.map (fun _ -> Covariant) fs in
+    let ids  = Miscutil.mapi (fun _ i -> C.tuple_elem_id i) fs in
       (cstr.cstr_tag, (name, C.combine3 ids fs vs))
 
   in transl [] Refine t
