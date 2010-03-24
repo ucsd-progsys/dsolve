@@ -867,24 +867,20 @@ let translate_type env t =
         Frec (p, tas, List.assoc p vstack, r)
       with Not_found ->
         let ty_decl = Env.find_type p env in
-        let tfs     = List.map (fun _ -> fresh_fvar generic_level DontRefine) tyl in
+        let tfs     = List.map (transl vstack DontRefine) ty_decl.type_params in
         let tfps    = List.map frame_var tfs in
           match ty_decl.type_kind with
             | Type_abstract              -> abstract_of_params p tas (List.map translate_variance ty_decl.type_variance) r
-            | Type_record (fields, _, _) -> transl_record vstack r p fields tfps tfs tas ty_decl.type_params
+            | Type_record (fields, _, _) -> transl_record vstack r p fields tfps tas
             | Type_variant (cdecls, _)   -> transl_variant vstack r p cdecls tfps tfs tas
 
   and transl_formals vstack tys =
     List.map (fun t -> frame_var (transl vstack DontRefine t)) tys
 
-  and transl_record vstack r p fields tfps tfs tas tformals =
-    let names, mutas, fldtys = C.split3 fields in
-    let fldtys, formaltys    = Ctype.instance_lists fldtys tformals in
-    let tfps'                = transl_formals vstack formaltys in
-    let fields               = C.combine3 names mutas fldtys in 
-    let rr                   = mk_record_recref fields in
-    let vstack               = (p, rr) :: vstack in
-    let ps                   = fields |> List.map (transl_field vstack) |> apply_params_frames (replace_formals tfps' tfs) in
+  and transl_record vstack r p fields tfps tas =
+    let rr     = mk_record_recref fields in
+    let vstack = (p, rr) :: vstack in
+    let ps     = List.map (transl_field vstack) fields in
       Finductive (p, tfps, tas, rr, [(Cstr_constant 0, ("rec", ps))], r)
 
   and transl_field vstack (name, muta, t) =
