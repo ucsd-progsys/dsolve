@@ -52,7 +52,7 @@ let rec translate_pframe dopt env fenv pf =
   let rec transl_pframe_rec pf =
     match pf with
     | PFvar (a, subs, r) -> F.Fvar (getvar a, F.generic_level, subs, transl_pref r)
-    | PFrec (a, rr, r) -> F.Frec (getvar a, transl_recref rr, transl_pref r)
+    | PFrec (a, rr, r) -> assert false (* F.Frec (getvar a, transl_recref rr, transl_pref r) *)
     | PFsum (l, rro, cs, r) -> transl_sum l rro cs r
     | PFconstr (l, fs, i, r) -> transl_constr l fs i r
     | PFarrow (v, a, b) ->
@@ -68,9 +68,9 @@ let rec translate_pframe dopt env fenv pf =
     | PFrecord (fs, r) -> transl_record fs r
   and transl_sum l rro cs r =
     let (path, decl) = lookup l in
-    let cstrs = snd (List.split (Env.constructors_of_type path (Env.find_type path env))) in
-    let rro = match rro with None -> None | Some (rvar, rr) -> Some (getvar rvar, transl_recref rr) in
-      F.Fsum (path, rro, transl_cstrs (List.combine cs cstrs), transl_pref r)
+    let (* cstrs *) _ = snd (List.split (Env.constructors_of_type path (Env.find_type path env))) in
+    let (* rro *) _ = match rro with None -> None | Some (rvar, rr) -> Some (getvar rvar, transl_recref rr) in
+      (* F.Fsum (path, rro, transl_cstrs (List.combine cs cstrs), transl_pref r) *) assert false
   and transl_cstrs = function
     | []                  -> []
     | (ps, cstr) :: cstrs -> (cstr.cstr_tag, ("", transl_params ps)) :: transl_cstrs cstrs
@@ -101,7 +101,7 @@ let rec translate_pframe dopt env fenv pf =
   and transl_record fs r =
     let ps = List.map (fun (f, s, m) -> (Ident.create s, transl_pframe_rec f, F.mutable_variance m)) fs in
     let path = Path.mk_ident "_anon_record" in
-      F.record_of_params path ps (transl_pref r)
+      F.sum_of_params path ps (transl_pref r) (* pmr: TODO *)
   in transl_pframe_rec pf
 
 let load_val dopt env fenv (s, pf) =

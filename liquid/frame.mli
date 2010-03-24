@@ -46,21 +46,22 @@ val empty_refinement: refinement
 val const_refinement: Qualifier.t list -> refinement
 val false_refinement: refinement
 
-type ('a, 'b) preframe =
-  | Fvar      of Path.t * int * dep_sub list * 'a
-  | Frec      of Path.t * 'b prerecref * 'a
-  | Fsum      of Path.t * (Path.t * 'b prerecref) option * ('a, 'b) preconstr list * 'a
-  | Fabstract of Path.t * ('a, 'b) preparam list * Ident.t * 'a
-  | Farrow    of pattern_desc * ('a, 'b) preframe * ('a, 'b) preframe
+type 'a preframe =
+  | Fvar       of Path.t * int * dep_sub list * 'a
+  | Fsum       of Path.t * 'a preconstr list * 'a
+  | Finductive of Path.t * Path.t list * 'a preframe list * 'a prerecref * 'a preconstr list * 'a
+  | Frec       of Path.t * 'a preframe list * 'a prerecref * 'a
+  | Fabstract  of Path.t * 'a preparam list * Ident.t * 'a
+  | Farrow     of pattern_desc * 'a preframe * 'a preframe
 
-and ('a, 'b) preparam  = Ident.t * ('a, 'b) preframe * variance
-and ('a, 'b) preconstr = constructor_tag * (string * ('a, 'b) preparam list)
-and variance           = Covariant | Contravariant | Invariant
+and 'a preparam  = Ident.t * 'a preframe * variance
+and 'a preconstr = constructor_tag * (string * 'a preparam list)
+and variance     = Covariant | Contravariant | Invariant
 
-type param  = (refinement, refinement) preparam
-type constr = (refinement, refinement) preconstr
+type param  = refinement preparam
+type constr = refinement preconstr
 
-type t = (refinement, refinement) preframe
+type t = refinement preframe
 
 exception LabelLikeFailure of t * t
 
@@ -74,7 +75,7 @@ val find_by_name: t Lightenv.t -> string -> t
 val prune_env_funs: t Lightenv.t -> Path.t list
 val prune_background: 'a Lightenv.t -> 'a Lightenv.t
 
-val record_of_params: Path.t -> param list -> refinement -> t
+val sum_of_params: Path.t -> param list -> refinement -> t
 val tuple_of_frames: t list -> refinement -> t
 val abstract_of_params_with_labels: 
   Ident.t list -> Path.t -> t list -> variance list -> Ident.t -> refinement -> t
@@ -108,10 +109,8 @@ val subti: t -> t -> bool * (Path.t * Path.t) list * (Path.t * t) list
 val subtis: t -> t -> bool
 val map_inst: (Path.t * Path.t) list -> (Path.t * t) list -> t -> t
 (*val translate_pframe: string option -> Env.t -> (string * (string * Parsetree.predicate_pattern)) list -> Parsetree.litframe -> t*)
-val replace_recvar: t -> t -> t
 
 val unfold: t -> t
-val unfold_applying: t -> t
 
 val apply: t -> Predicate.pexpr list -> t
 
