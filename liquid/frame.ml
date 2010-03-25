@@ -371,6 +371,9 @@ let find_tag rs =
 (************************* Shapes *****************************) 
 (**************************************************************)
 
+let recref_shape rr =
+  map_recref (fun _ -> empty_refinement) rr
+
 let shape f =
   map_refinements (fun _ -> empty_refinement) f
 
@@ -645,10 +648,6 @@ let rec replace_typevars merge_refinements vmap f =
     | Farrow (pat, f, f')                 -> Farrow (pat, replace_aux f, replace_aux f')
   in replace_aux f
 
-(* need two types of unfold:
-   - with propagating recrefs (normal use)
-   - propagating just the shape of the type, no recrefs (constraint use)
-*)
 let unfold = function
   | Finductive (p, tfs, tas, rr, cs, r) ->
        Fsum (p, cs, r)
@@ -656,11 +655,15 @@ let unfold = function
     |> map (replace_recvar p tfs rr cs)
     |> replace_typevars append_refinement (List.combine tfs tas)
   | f -> f
-(*
+
 let unfold_with_shape = function
   | Finductive (p, tfs, tas, rr, cs, r) ->
-  | f                                -> f
-*)
+       Fsum (p, cs, r)
+    |> apply_recref rr
+    |> map (replace_recvar p tfs (recref_shape rr) (apply_constrs_params_frames shape cs))
+    |> replace_typevars append_refinement (List.combine tfs tas)
+  | f -> f
+
 (**************************************************************)
 (********* Polymorphic and qualifier instantiation ************) 
 (**************************************************************)
@@ -927,7 +930,7 @@ let place_freshref freshf = function
 
 let fresh_with_var_fun freshf env t =
   t |> translate_type env |> map_refinements (place_freshref freshf) >>
-  Format.printf "Freshing type@.%a@.Got@.%a@." Printtyp.type_scheme t pprint
+      fun f ->  Format.printf "Freshing type@.%a@.Got@.%a@.Unfolds to@.%a@.@." Printtyp.type_scheme t pprint f pprint (unfold_with_shape f)
 
 let fresh              = fresh_with_var_fun fresh_refinementvar
 let fresh_false        = fresh_with_var_fun (fun _ -> false_refinement)
