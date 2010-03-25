@@ -323,6 +323,9 @@ let refexpr_apply_subs subs' (subs, qexprs) =
   | (qconsts, [])    -> (subs, (eager_apply subs' qconsts, []))
   | (qconsts, qvars) -> (subs' @ subs, qexprs)
 
+let refinement_apply_subs subs r =
+  List.map (refexpr_apply_subs subs) r
+
 let apply_subs subs f =
   map_refexprs (refexpr_apply_subs subs) f
 
@@ -614,18 +617,9 @@ let rec pprint_fenv ppf fenv =
 let rec apply_refs rs ps =
   List.map2 (fun r (i, f, v) -> (i, append_refinement r f, v)) rs ps
 
-let rec rename_params_aux sub = function
-  | []              -> []
-  | (i, f, v) :: ps ->
-      let (ip, i') = (Path.Pident i, Ident.create (Ident.name i)) in
-        (i', apply_subs sub f, v) :: rename_params_aux ((ip, P.Var (Path.Pident i')) :: sub) ps
-
-let rename_params ps =
-  rename_params_aux [] ps
-
 let apply_recref_constrs rr cs =
-   List.map2 (fun rs -> constr_app_params (apply_refs rs <+> rename_params)) rr cs
- 
+   List.map2 (fun rs -> constr_app_params (apply_refs rs)) rr cs
+
 let apply_recref rr = function
   | Fsum (p, cs, r) -> Fsum (p, apply_recref_constrs rr cs, r)
   | _               -> assert false
@@ -637,6 +631,20 @@ let replace_params ps fs =
 let replace_recvar p ps rr cs = function
   | Frec (rp, tas, rr', r) when Path.same p rp -> Finductive (p, replace_params ps tas, merge_recrefs rr rr', cs, r)
   | f                                          -> f
+
+let rec rename_aux sub rs1 rs2 ps = match rs1, rs2, ps with
+  | [], [], []                            -> ([], [], [])
+  | r1 :: rs1, r2 :: rs2, (i, f, v) :: ps ->
+      let ip, i'       = (Path.Pident i, Ident.create (Ident.name i)) in
+      let rs1, rs2, ps = rename_aux ((ip, P.Var (Path.Pident i')) :: sub) rs1 rs2 ps in
+        (refinement_apply_subs sub r1 :: rs1, refinement_apply_subs sub r2 :: rs1, (i', apply_subs sub f, v) :: ps)
+  | _ -> assert false
+
+let rename_params rr1 rr2 cs =
+  C.map3 begin fun rs1 rs2 (t, (n, ps)) ->
+    let rs1, rs2, ps = rename_aux [] rs1 rs2 ps in
+      (rs1, rs2, (t, (n, ps)))
+  end rr1 rr2 cs |> Misc.split3
 
 let rec replace_typevars merge_refinements vmap f =
   let rec replace_aux = function
@@ -657,21 +665,29 @@ let rec replace_typevars merge_refinements vmap f =
 let replace_params ps f =
   replace_typevars append_refinement (List.map (fun (i, f, _) -> (i, f)) ps) f
 
+let unfold_aux rename p ps rr cs r rps rrr rcs =
+  let rr, rrr, cs = rename rr rrr cs in
+       Fsum (p, cs, r)
+    |> map (replace_recvar p rps rrr rcs)
+    |> apply_recref rr
+    |> replace_params ps
+
 let unfold = function
   | Finductive (p, ps, rr, cs, r) ->
-       Fsum (p, cs, r)
-    |> map (replace_recvar p ps rr cs)
-    |> apply_recref rr
-    |> replace_params ps
+      unfold_aux rename_params p ps rr cs r ps rr cs
   | f -> f
 
-(* pmr: parameters can probably be shapeified as well --- see how many uses there are *)
 let unfold_with_shape = function
   | Finductive (p, ps, rr, cs, r) ->
-       Fsum (p, cs, r)
-    |> map (replace_recvar p ps (recref_shape rr) (apply_constrs_params_frames shape cs))
-    |> apply_recref rr
-    |> replace_params ps
+      unfold_aux rename_params p ps rr cs r ps (recref_shape rr) (apply_constrs_params_frames shape cs)
+  | f -> f
+
+let dont_rename rr1 rr2 cs =
+  (rr1, rr2, cs)
+
+let unfold_with_shape_no_rename = function
+  | Finductive (p, ps, rr, cs, r) ->
+      unfold_aux dont_rename p ps rr cs r ps (recref_shape rr) (apply_constrs_params_frames shape cs)
   | f -> f
 
 (**************************************************************)
