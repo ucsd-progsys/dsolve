@@ -140,7 +140,7 @@ let rec constrain e env guard =
       | (Texp_match (e, pexps, partial), _) -> constrain_match environment e pexps partial
       | (Texp_function ([(pat, e')], _), _) -> constrain_function environment pat e'
       | (Texp_ident (id, _), F.Fsum(_, _, _))
-      | (Texp_ident (id, _), F.Finductive(_, _, _, _, _, _))
+      | (Texp_ident (id, _), F.Finductive(_, _, _, _, _))
       | (Texp_ident (id, _), F.Fabstract(_, _, _, _))
       | (Texp_ident (id, _), F.Fvar _) ->
           constrain_base_identifier environment id e

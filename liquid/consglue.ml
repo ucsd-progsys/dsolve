@@ -33,7 +33,7 @@ let inject_tag env = Asm.add tagSy ftag env
 
 let rec string_of_frame = function
   | Fr.Fsum (p, _, _)
-  | Fr.Finductive (p, _, _, _, _, _)
+  | Fr.Finductive (p, _, _, _, _)
   | Fr.Frec (p, _, _, _) 
   | Fr.Fabstract (p, _, _, _) ->
       if Path.same Predef.path_bool p then "bool" else
@@ -44,7 +44,7 @@ let rec string_of_frame = function
 let rec fsort_of_dframe fr =
   match fr with
   | Fr.Fsum (p, _, _)
-  | Fr.Finductive (p, _, _, _, _, _)
+  | Fr.Finductive (p, _, _, _, _)
   | Fr.Frec (p, _, _, _) 
   | Fr.Fabstract (p, _, _, _) ->
       if Path.same Predef.path_bool p then S.Bool else

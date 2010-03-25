@@ -49,7 +49,7 @@ val false_refinement: refinement
 type 'a preframe =
   | Fvar       of Ident.t * int * dep_sub list * 'a
   | Fsum       of Path.t * 'a preconstr list * 'a
-  | Finductive of Path.t * Ident.t list * 'a preframe list * 'a prerecref * 'a preconstr list * 'a
+  | Finductive of Path.t * 'a preparam list * 'a prerecref * 'a preconstr list * 'a
   | Frec       of Path.t * 'a preframe list * 'a prerecref * 'a
   | Fabstract  of Path.t * 'a preparam list * Ident.t * 'a
   | Farrow     of pattern_desc * 'a preframe * 'a preframe
