@@ -47,9 +47,9 @@ val const_refinement: Qualifier.t list -> refinement
 val false_refinement: refinement
 
 type 'a preframe =
-  | Fvar       of Path.t * int * dep_sub list * 'a
+  | Fvar       of Ident.t * int * dep_sub list * 'a
   | Fsum       of Path.t * 'a preconstr list * 'a
-  | Finductive of Path.t * Path.t list * 'a preframe list * 'a prerecref * 'a preconstr list * 'a
+  | Finductive of Path.t * Ident.t list * 'a preframe list * 'a prerecref * 'a preconstr list * 'a
   | Frec       of Path.t * 'a preframe list * 'a prerecref * 'a
   | Fabstract  of Path.t * 'a preparam list * Ident.t * 'a
   | Farrow     of pattern_desc * 'a preframe * 'a preframe
@@ -104,10 +104,10 @@ val shape: t -> t
 val is_shape: t -> bool
 val params_ids: param list -> Ident.t list
 val same_shape: t -> t -> bool
-val subt: t -> t -> (Path.t * Path.t) list -> (Path.t * t) list -> bool * (Path.t * Path.t) list * (Path.t * t) list
-val subti: t -> t -> bool * (Path.t * Path.t) list * (Path.t * t) list
+val subt: t -> t -> (Ident.t * Ident.t) list -> (Ident.t * t) list -> bool * (Ident.t * Ident.t) list * (Ident.t * t) list
+val subti: t -> t -> bool * (Ident.t * Ident.t) list * (Ident.t * t) list
 val subtis: t -> t -> bool
-val map_inst: (Path.t * Path.t) list -> (Path.t * t) list -> t -> t
+val map_inst: (Ident.t * Ident.t) list -> (Ident.t * t) list -> t -> t
 (*val translate_pframe: string option -> Env.t -> (string * (string * Parsetree.predicate_pattern)) list -> Parsetree.litframe -> t*)
 
 val unfold: t -> t

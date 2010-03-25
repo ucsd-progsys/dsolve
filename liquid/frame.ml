@@ -67,9 +67,9 @@ type refinement_placeholder =
 (**************************************************************)
 
 type 'a preframe =
-  | Fvar       of Path.t * int * dep_sub list * 'a
+  | Fvar       of Ident.t * int * dep_sub list * 'a
   | Fsum       of Path.t * 'a preconstr list * 'a
-  | Finductive of Path.t * Path.t list * 'a preframe list * 'a prerecref * 'a preconstr list * 'a
+  | Finductive of Path.t * Ident.t list * 'a preframe list * 'a prerecref * 'a preconstr list * 'a
   | Frec       of Path.t * 'a preframe list * 'a prerecref * 'a
   | Fabstract  of Path.t * 'a preparam list * Ident.t * 'a
   | Farrow     of pattern_desc * 'a preframe * 'a preframe
@@ -181,7 +181,7 @@ let map_recref f rr =
 
 let rec map_refinements f = function
   | Frec (p, tas, rr, r)                -> Frec (p, List.map (map_refinements f) tas, map_recref f rr, f r)
-  | Fvar (p, level, s, r)               -> Fvar (p, level, s, f r)
+  | Fvar (id, level, s, r)              -> Fvar (id, level, s, f r)
   | Fsum (p, cs, r)                     -> Fsum (p, apply_constrs_params_frames (map_refinements f) cs, f r)
   | Finductive (p, tfs, tas, rr, cs, r) -> Finductive (p, tfs, List.map (map_refinements f) tas, map_recref f rr, apply_constrs_params_frames (map_refinements f) cs, f r)
   | Fabstract (p, ps, id, r)            -> Fabstract (p, apply_params_frames (map_refinements f) ps, id, f r)
@@ -249,9 +249,9 @@ let end_def () =
   incr current_level
 
 let generalize_map = function
-  | Fvar (p, level, s, r) ->
+  | Fvar (id, level, s, r) ->
       let level = if level < !current_level then generic_level else level in
-        Fvar (p, level, s, r)
+        Fvar (id, level, s, r)
   | f -> f
 
 let generalize f =
@@ -280,7 +280,7 @@ let false_refinement =
   mk_refinement [] [(Path.mk_ident "false", Path.mk_ident "V", P.Not (P.True))] []
 
 let apply_refinement r = function
-  | Fvar (p, level, s, _)               -> Fvar (p, level, s, r)
+  | Fvar (id, level, s, _)              -> Fvar (id, level, s, r)
   | Fsum (p, cs, _)                     -> Fsum (p, cs, r)
   | Finductive (p, tfs, tas, rr, cs, _) -> Finductive (p, tfs, tas, rr, cs, r)
   | Fabstract (p, ps, id, _)            -> Fabstract (p, ps, id, r)
@@ -384,17 +384,18 @@ let is_shape f =
 
 let same_shape t1 t2 =
   let vars = ref [] in
-  let ismapped p q = try snd (List.find (fun (p', _) -> Path.same p p') !vars) = q with
+  let ismapped p q =
+    try snd (List.find (fun (id', _) -> Ident.equal p id') !vars) = q with
       Not_found -> vars := (p, q) :: !vars; true in
   let rec sshape = function
       (Fsum(p, cs, _), Fsum(p', cs', _)) ->
         Path.same p p' && params_sshape (C.flap constr_params cs) (C.flap constr_params cs')
     | (Fabstract(p, ps, _, _), Fabstract(p', ps', _, _)) ->
         Path.same p p' && params_sshape ps ps'
-    | (Fvar (p, _, _, _), Fvar (p', _, _, _)) ->
-        ismapped p p'
+    | (Fvar (id, _, _, _), Fvar (id', _, _, _)) ->
+        ismapped id id'
     | (Frec (p, tas, _, _), Frec (p', tas', _, _)) ->
-        ismapped p p' && C.same_length tas tas' && List.for_all sshape (List.combine tas tas')
+        Path.same p p' && C.same_length tas tas' && List.for_all sshape (List.combine tas tas')
     | (Farrow(_, i, o), Farrow(_, i', o')) ->
         sshape (i, i') && sshape (o, o')
     | t -> false
@@ -402,7 +403,7 @@ let same_shape t1 t2 =
     C.same_length ps qs && List.for_all sshape (List.combine (params_frames ps) (params_frames qs))
   in sshape (t1, t2)
        
-let fid () = Path.mk_ident "p"
+let fid () = Ident.create "p"
 let maybe_assoc p l =
   try
     Some (List.assoc p l) 
@@ -456,10 +457,10 @@ let rec subt t1 t2 eq inst =
         (* s_rec (f2, t1) *)
     | (_, Frec(_, _, _, _)) ->
         (*assert*) false (* assume that the LHS is folded up *)
-    | (Fvar(p1, _, _, _), Fvar(p2, _, _, _)) ->
-        equiv p1 p2
-    | (Fvar(p, _, _, _), _) -> 
-        ismapped p f2
+    | (Fvar(id1, _, _, _), Fvar(id2, _, _, _)) ->
+        equiv id1 id2
+    | (Fvar(id, _, _, _), _) -> 
+        ismapped id f2
     | (Farrow(_, i, o), Farrow(_, i', o')) ->
         s_rec(i, i') && s_rec(o, o')
     | t -> false 
@@ -482,7 +483,7 @@ let map_inst eq inst f =
       Some (List.assoc p inst)
     with Not_found -> None in
   let m_inst = function
-    | Fvar (p, _, _, _) as ofr -> (match mapped p with Some fr -> fr | None -> ofr)
+    | Fvar (id, _, _, _) as ofr -> (match mapped id with Some fr -> fr | None -> ofr)
     | fr -> fr in 
   map m_inst f
 
@@ -564,9 +565,9 @@ let rec pprint ppf = function
   | Frec (path, tas, rr, r) ->
       wrap_refined r ppf 
       (fun ppf -> fprintf ppf "@[%a (%a) %s@]" pprint_recref rr (C.pprint_many true "," pprint) tas (C.path_name path))
-  | Fvar (a, level, s, r) ->
+  | Fvar (id, level, s, r) ->
       wrap_refined r ppf 
-      (fun ppf -> fprintf ppf "'%s%s%a" (C.path_name a) (level_suffix level) 
+      (fun ppf -> fprintf ppf "'%s%s%a" (C.ident_name id) (level_suffix level) 
                   (C.pprint_many false "" (fun ppf (s, s') -> fprintf ppf "[%s/%s]" s s')) s)  
   | Fsum (path, cs, r) ->
       wrap_refined r ppf 
@@ -578,7 +579,7 @@ let rec pprint ppf = function
   | Finductive (path, tfs, tas, rr, cs, r) ->
       let la, ra  = "«", "»" in 
       wrap_refined r ppf 
-      (fun ppf -> fprintf ppf "<%a> %s@[%a |-> %a@] %s%s. @[<hv 0>%a@]" pprint_recref rr la  (C.pprint_many false "," (fun ppf p -> Format.fprintf ppf "%s" (Path.unique_name p))) tfs (C.pprint_many false "," pprint) tas (C.path_name path) ra print_sum cs)
+      (fun ppf -> fprintf ppf "<%a> %s@[%a |-> %a@] %s%s. @[<hv 0>%a@]" pprint_recref rr la  (C.pprint_many false "," (fun ppf id -> Format.fprintf ppf "%s" (C.ident_name id))) tfs (C.pprint_many false "," pprint) tas (C.path_name path) ra print_sum cs)
   | Farrow (pat, f, f') -> 
       fprintf ppf "@[<hv 0>(%a:%a) ->@ %a@]" pprint_pattern pat pprint f pprint f'
   | Fabstract (path, [], id, r) ->
@@ -634,10 +635,10 @@ let replace_recvar p tfs rr cs = function
 
 let rec replace_typevars merge_refinements vmap f =
   let rec replace_aux = function
-    | Fvar (p, _, dsubs, r) as f ->
+    | Fvar (id, _, dsubs, r) as f ->
         begin try
           (* pmr: how to apply dsubs? *)
-          merge_refinements r (List.assoc p vmap)
+          merge_refinements r (List.assoc id vmap)
         with Not_found ->
           f
         end
@@ -684,8 +685,8 @@ let dep_sub_to_sub binds scbinds env (s, s') =
     with Not_found -> failwith (sprintf "Could not bind dependent substitution %s to paths" s)
 
 let apply_dep_subs subs = function
-    Fvar (p, i, _, r) -> Fvar (p, i, subs, r)
-  | _                 -> assert false
+    Fvar (id, i, _, r) -> Fvar (id, i, subs, r)
+  | _                  -> assert false
 
 let instantiate_dep_subs vars subs =
   let c i =
@@ -702,8 +703,8 @@ let instantiate env fr ftemplate =
     try List.assoc p !vars with Not_found -> vars := (p, ft) :: !vars; ft in
   let rec inst scbinds f ft =
     match (f, ft) with
-      | (Fvar (p, level, s, r), _) when level = generic_level ->
-          let instf = vmap p ft in 
+      | (Fvar (id, level, s, r), _) when level = generic_level ->
+          let instf = vmap id ft in 
           let subs  = List.map (dep_sub_to_sub !binds scbinds env) s in
           apply_subs subs (append_refinement r instf)
       | (Fvar _, _) ->
@@ -825,7 +826,7 @@ let fresh_refinementvar () =
   mk_refinement [] [] [Path.mk_ident "k"]
 
 let fresh_fvar level r =
-  Fvar (Path.mk_ident "a", level, [], r)
+  Fvar (Ident.create "a", level, [], r)
 
 let mk_constr_recref cstrs =
   List.map begin
@@ -851,8 +852,8 @@ let tconstr_params t =
     | _                  -> assert false
 
 let frame_var = function
-  | Fvar (p, _, _, _) -> p
-  | _                 -> failwith "frame_var called with non-var frame"
+  | Fvar (id, _, _, _) -> id
+  | _                  -> failwith "frame_var called with non-var frame"
 
 let replace_formals fps fs =
   replace_typevars (fun _ f -> f) (List.combine fps fs)

@@ -36,8 +36,8 @@ let nativize_core_type dopt env ty =
 
 let rec translate_pframe dopt env fenv pf =
   let vars = ref [] in
-  let getvar a = try List.find (fun b -> Path.name b = a) !vars
-                   with Not_found -> let a = Path.mk_ident a in
+  let getvar a = try List.find (fun b -> Ident.name b = a) !vars
+                   with Not_found -> let a = Ident.create a in
                    let _ = vars := a::!vars in
                      a in
   let transl_lident l = match dopt with Some d -> Longident.parse (C.append_pref d (C.l_to_s l)) | None -> l in 
@@ -59,8 +59,8 @@ let rec translate_pframe dopt env fenv pf =
         let pat = match v with
             Some id ->
               let id = Ident.create id in
-              if List.mem (Path.Pident id) !vars then failwith "Redefined variable";
-                vars := Path.Pident id :: !vars; Tt.Tpat_var id
+              if List.mem id !vars then failwith "Redefined variable";
+                vars := id :: !vars; Tt.Tpat_var id
           | None -> F.fresh_binder () in
         F.Farrow (pat, transl_pframe_rec a, transl_pframe_rec b)
     | PFtuple (fs, r) -> 
