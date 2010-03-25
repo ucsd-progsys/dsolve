@@ -611,18 +611,20 @@ let rec pprint_fenv ppf fenv =
 (********************************** Unfolding *********************************)
 (******************************************************************************)
 
-let rec apply_refs rs ps = match (rs, ps) with
-  | (r :: rs, (i, f, v) :: ps) ->
+let rec apply_refs rs ps =
+  List.map2 (fun r (i, f, v) -> (i, append_refinement r f, v)) rs ps
+
+let rec rename_params_aux sub = function
+  | []              -> []
+  | (i, f, v) :: ps ->
       let (ip, i') = (Path.Pident i, Ident.create (Ident.name i)) in
-      let sub      = (ip, P.Var (Path.Pident i')) in
-      let ps       = List.map (fun (i, f, v) -> (i, apply_subs [sub] f, v)) ps in
-      let rs       = List.map (List.map (refexpr_apply_subs [sub])) rs in
-        (i', append_refinement r f, v) :: apply_refs rs ps
-  | ([], []) -> []
-  | _        -> assert false
+        (i', apply_subs sub f, v) :: rename_params_aux ((ip, P.Var (Path.Pident i')) :: sub) ps
+
+let rename_params ps =
+  rename_params_aux [] ps
 
 let apply_recref_constrs rr cs =
-   List.map2 (fun rs -> constr_app_params (apply_refs rs)) rr cs
+   List.map2 (fun rs -> constr_app_params (apply_refs rs <+> rename_params)) rr cs
  
 let apply_recref rr = function
   | Fsum (p, cs, r) -> Fsum (p, apply_recref_constrs rr cs, r)
@@ -658,16 +660,17 @@ let replace_params ps f =
 let unfold = function
   | Finductive (p, ps, rr, cs, r) ->
        Fsum (p, cs, r)
-    |> apply_recref rr
     |> map (replace_recvar p ps rr cs)
+    |> apply_recref rr
     |> replace_params ps
   | f -> f
 
+(* pmr: parameters can probably be shapeified as well --- see how many uses there are *)
 let unfold_with_shape = function
   | Finductive (p, ps, rr, cs, r) ->
        Fsum (p, cs, r)
-    |> apply_recref rr
     |> map (replace_recvar p ps (recref_shape rr) (apply_constrs_params_frames shape cs))
+    |> apply_recref rr
     |> replace_params ps
   | f -> f
 
