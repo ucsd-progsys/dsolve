@@ -968,9 +968,14 @@ let fresh_without_vars = fresh_with_var_fun (fun _ -> empty_refinement)
 let fresh_with_labels env ty f =
   label_like (fresh env ty) f
 
-(* UGLY HACK *)
-let fresh_constructed_params_no_vars env path paramfs =
-  assert false
+let fresh_variant_with_params env path paramfs =
+  match List.split (Env.constructors_of_type path (Env.find_type path env)) with
+    | (_, cstr :: _) ->
+        begin match fresh_without_vars env cstr.cstr_res with
+          | Finductive (p, ps, rr, cs, r) -> Finductive (p, replace_params ps paramfs, rr, cs, r)
+          | _                             -> assert false
+        end
+    | _ -> assert false
 
 let rec build_uninterpreted name params = function
   | Farrow (_, f, f') ->
