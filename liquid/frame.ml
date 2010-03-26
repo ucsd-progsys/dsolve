@@ -662,7 +662,7 @@ let rec replace_typevars merge_refinements vmap f =
     | Farrow (pat, f, f')           -> Farrow (pat, replace_aux f, replace_aux f')
   in replace_aux f
 
-let replace_params ps f =
+let replace_type_params ps f =
   replace_typevars append_refinement (List.map (fun (i, f, _) -> (i, f)) ps) f
 
 let unfold_aux rename p ps rr cs r rps rrr rcs =
@@ -670,24 +670,25 @@ let unfold_aux rename p ps rr cs r rps rrr rcs =
        Fsum (p, cs, r)
     |> map (replace_recvar p rps rrr rcs)
     |> apply_recref rr
-    |> replace_params ps
+    |> replace_type_params ps
 
 let unfold = function
-  | Finductive (p, ps, rr, cs, r) ->
-      unfold_aux rename_params p ps rr cs r ps rr cs
-  | f -> f
+  | Finductive (p, ps, rr, cs, r) -> unfold_aux rename_params p ps rr cs r ps rr cs
+  | f                             -> f
 
 let unfold_with_shape = function
   | Finductive (p, ps, rr, cs, r) ->
-      unfold_aux rename_params p ps rr cs r ps (recref_shape rr) (apply_constrs_params_frames shape cs)
+      let ps = apply_params_frames shape ps in
+        unfold_aux rename_params p ps rr cs r ps (recref_shape rr) (apply_constrs_params_frames shape cs)
   | f -> f
 
 let dont_rename rr1 rr2 cs =
   (rr1, rr2, cs)
 
-let unfold_with_shape_no_rename = function
+let wf_unfold = function
   | Finductive (p, ps, rr, cs, r) ->
-      unfold_aux dont_rename p ps rr cs r ps (recref_shape rr) (apply_constrs_params_frames shape cs)
+      let ps = apply_params_frames shape ps in
+        unfold_aux dont_rename p ps rr cs r ps (recref_shape rr) (apply_constrs_params_frames shape cs)
   | f -> f
 
 (**************************************************************)

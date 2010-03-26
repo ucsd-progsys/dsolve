@@ -111,6 +111,8 @@ val map_inst: (Ident.t * Ident.t) list -> (Ident.t * t) list -> t -> t
 (*val translate_pframe: string option -> Env.t -> (string * (string * Parsetree.predicate_pattern)) list -> Parsetree.litframe -> t*)
 
 val unfold: t -> t
+val unfold_with_shape: t -> t
+val wf_unfold: t -> t
 
 val apply: t -> Predicate.pexpr list -> t
 
