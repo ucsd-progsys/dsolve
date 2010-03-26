@@ -23,6 +23,7 @@
 
 open Format
 open Wellformed
+open Misc.Ops
 module F = Frame
 module Le = Lightenv
 module Pat = Pattern
@@ -288,18 +289,18 @@ let rec split_sub_params c tenv env g ps1 ps2 = match (ps1, ps2) with
   | ([], []) -> []
   | _ -> assert false
 
-let bind_tags_pr (t, f) cs r env =
+let bind_tags_pr po f cs r env =
   let is_recvar = function
-      (Some (p, _), F.Frec (p', _, _, _)) -> p' = p
+      (Some p, F.Frec (p', _, _, _)) -> p' = p
     | _ -> false in
   let k (a, b, _) =
-    (C.i2p a, if is_recvar (t, b) then f else b) in
+    (C.i2p a, if is_recvar (po, b) then f else b) in
   match F.find_tag r with
       Some tag -> (Le.addn (List.map k (F.constrs_tag_params tag cs)) env, Some tag)
     | None -> (env, None)
 
-let bind_tags (t, f) cs r env = 
-  fst (bind_tags_pr (t, f) cs r env)
+let bind_tags po f cs r env = 
+  fst (bind_tags_pr po f cs r env)
 
 let sum_subs bs cs tag =
   let paths xs = match tag with
@@ -329,17 +330,13 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
   | (F.Frec _, F.Frec _) ->
       ([], [])
   | (F.Fsum(_, cs1, r1), F.Fsum(_, cs2, r2)) ->
-      let _ = assert false in
-      let (penv, tag) = bind_tags_pr (None, f1) cs1 r1 env in
+      let (penv, tag) = bind_tags_pr None f1 cs1 r1 env in
       let subs        = sum_subs cs1 cs2 tag in
       (C.flap2 (split_sub_params c tenv env g) (List.map F.constr_params cs1) (List.map F.constr_params cs2),
        split_sub_ref c penv g r1 (List.map (F.refexpr_apply_subs subs) r2))
-(*   | (F.Fsum(_, (\* Some (_, rr1), *\) cs1, r1), F.Fsum(_, (\* Some (_, rr2), *\) cs2, r2)) -> *)
-(*       assert false *)
-(*       let (shp1, shp2) = (F.shape f1, F.shape f2) in *)
-(*       let (f1, f2)     = (F.replace_recvar (F.apply_recref rr1 f1) shp1,  *)
-(*                           F.replace_recvar (F.apply_recref rr2 f2) shp2) in *)
-(*         (lequate_cs env g c F.Covariant f1 f2, []) *)
+  | (F.Finductive (_, ps1, _, _, _), F.Finductive (_, ps2, _, _, _)) ->
+      (lequate_cs env g c F.Covariant (F.unfold_with_shape f1) (F.unfold_with_shape f2) @
+         C.flap2 (fun (_, f1, v) (_, f2, _) -> lequate_cs env g c v f1 f2) ps1 ps2, [])
   | (F.Fabstract(_, ps1, id1, r1), F.Fabstract(_, ps2, id2, r2)) ->
       let f2 = F.apply_subs [(Path.Pident id2, P.Var (Path.Pident id1))] f2 in (* an extra sub will be applied at the
                                                                                 * toplevel refinement, but OK *)
@@ -367,19 +364,12 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
   match f with
   | f when F.is_shape f ->
       ([], [])
+  | F.Finductive (p, ps, rr, cs, r) ->
+      (make_wff c tenv env (F.wf_unfold f) :: (ps |> F.params_frames |> List.map (make_wff c tenv env)),
+       split_wf_ref f c (bind_tags (Some p) f cs r env) r)
   | F.Fsum (_, cs, r) ->
-      assert false
-(*       (C.flap (split_wf_params c tenv env) (List.map F.constr_params cs), *)
-(*        split_wf_ref f c (bind_tags (t, f) cs r env) r) *)
-(*   | F.Fsum (p, (\* (Some (_, rr) as t), *\) cs, r) -> *)
-(*       assert false *)
-(*       (\* This deviates from the paper's cons rule because we instantiate qualifiers using *)
-(*          the split constraints.  This would result in qualifiers with idents that don't *)
-(*          actually appear in the program or tuple labels appearing in the recursive *)
-(*          refinements as a result of rho-application's renaming. *\) *)
-(*       let shp     = F.shape f in *)
-(*       let (f', f'') = (F.replace_recvar f shp, F.apply_recref rr shp) in *)
-(*         ([make_wff c tenv env (F.apply_refinement F.empty_refinement f'); make_wff c tenv env f''], split_wf_ref f c (bind_tags (t, f) cs r env) r) *)
+     (C.flap (split_wf_params c tenv env <.> F.constr_params) cs,
+      split_wf_ref f c (bind_tags None f cs r env) r)
   | F.Fabstract (_, ps, id, r) ->
       (split_wf_params c tenv (Le.add (Path.Pident id) f env) ps, split_wf_ref f c env r)
   | F.Farrow (p, f, f') ->
@@ -388,7 +378,6 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
       ([], split_wf_ref f c env r)
   | F.Frec _ ->
       ([], [])
-  | _ -> assert false
 
 let split cs =
   assert (List.for_all (fun c -> None <> c.lc_id) cs);
