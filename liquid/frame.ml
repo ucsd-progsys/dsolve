@@ -948,18 +948,12 @@ let translate_type env t =
 (******************************************************************************)
 (******************************** Fresh Frames ********************************)
 (******************************************************************************)
-
-(* UGLY HACK ON UGLY HACK *)
-let fresh_with_var_fun_get_instantiation env freshf t =
-  assert false
-
 let place_freshref freshf = function
   | Refine     -> freshf ()
   | DontRefine -> empty_refinement
 
 let fresh_with_var_fun freshf env t =
-  t |> translate_type env |> map_refinements (place_freshref freshf) >>
-      fun f ->  Format.printf "Freshing type@.%a@.Got@.%a@.Unfolds to@.%a@.@." Printtyp.type_scheme t pprint f pprint (unfold f)
+  t |> translate_type env |> map_refinements (place_freshref freshf)
 
 let fresh              = fresh_with_var_fun fresh_refinementvar
 let fresh_false        = fresh_with_var_fun (fun _ -> false_refinement)
