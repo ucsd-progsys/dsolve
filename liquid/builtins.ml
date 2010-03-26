@@ -40,13 +40,16 @@ let uChar = mk_abstract Predef.path_char []
 let mk_string qs = mk_abstract Predef.path_string qs
 let uString      = mk_string []
 
-let mk_bool qs = F.Fsum (Predef.path_bool, [(T.Cstr_constant 0, ("true", [])); (T.Cstr_constant 1, ("false", []))], F.const_refinement qs)
-let uBool      = mk_bool []
+let mk_bool qs = F.Finductive (Predef.path_bool, [],
+                               [[F.empty_refinement]; [F.empty_refinement]],
+                               [(T.Cstr_constant 0, ("true", [])); (T.Cstr_constant 1, ("false", []))],
+                               F.const_refinement qs)
+let uBool = mk_bool []
 
 let array_contents_id = Ident.create "contents"
 let mk_array f qs     = F.Fabstract (Predef.path_array, [(array_contents_id, f, F.Invariant)], C.abstr_elem_id (), F.const_refinement qs)
 
-let mk_unit qs     = F.Fsum (Predef.path_unit, [(T.Cstr_constant 0, ("()", []))], F.const_refinement qs)
+let mk_unit qs     = F.Finductive (Predef.path_unit, [], [[]], [(T.Cstr_constant 0, ("()", []))], F.const_refinement qs)
 let uUnit          = mk_unit []
 let rUnit name v p = mk_unit [(Path.mk_ident name, v, p)]
 
