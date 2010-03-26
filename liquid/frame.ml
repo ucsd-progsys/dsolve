@@ -637,7 +637,7 @@ let rec rename_aux sub rs1 rs2 ps = match rs1, rs2, ps with
   | r1 :: rs1, r2 :: rs2, (i, f, v) :: ps ->
       let ip, i'       = (Path.Pident i, Ident.create (Ident.name i)) in
       let rs1, rs2, ps = rename_aux ((ip, P.Var (Path.Pident i')) :: sub) rs1 rs2 ps in
-        (refinement_apply_subs sub r1 :: rs1, refinement_apply_subs sub r2 :: rs1, (i', apply_subs sub f, v) :: ps)
+        (refinement_apply_subs sub r1 :: rs1, refinement_apply_subs sub r2 :: rs2, (i', apply_subs sub f, v) :: ps)
   | _ -> assert false
 
 let rename_params rr1 rr2 cs =
