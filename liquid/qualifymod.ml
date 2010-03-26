@@ -132,7 +132,7 @@ let rec constrain e env guard =
    try
     match (e.exp_desc, freshf) with
       | (Texp_constant const_typ, F.Fabstract(path, [], _, _)) -> constrain_constant path const_typ
-      | (Texp_construct (cstrdesc, args), F.Fsum _) -> constrain_constructed environment cstrdesc args e
+      | (Texp_construct (cstrdesc, args), F.Finductive _) -> constrain_constructed environment cstrdesc args e
       | (Texp_record (labeled_exprs, None), _) -> constrain_record environment labeled_exprs
       | (Texp_field (expr, label_desc), _) -> constrain_field environment expr label_desc
       | (Texp_setfield (expr, label_desc, expr'), _) -> constrain_setfield environment expr label_desc expr'
