@@ -922,8 +922,7 @@ let translate_type env t =
 
   and transl_record vstack r p fields fps =
     let rr     = mk_record_recref fields in
-    let vstack = (p, rr) :: vstack in
-    let ps     = List.map (transl_field vstack) fields in
+    let ps     = List.map (transl_field <| (p, rr) :: vstack) fields in
       Finductive (p, fps, rr, [(Cstr_constant 0, ("rec", ps))], r)
 
   and transl_field vstack (name, muta, t) =
@@ -933,8 +932,7 @@ let translate_type env t =
     let names, _ = List.split cdecls in
     let _, cds   = List.split (Env.constructors_of_type p (Env.find_type p env)) in
     let rr       = mk_constr_recref cdecls in
-    let vstack   = (p,  rr) :: vstack in
-    let cs       = List.map2 (transl_constructor vstack fs) names cds in
+    let cs       = List.map2 (transl_constructor ((p,  rr) :: vstack) fs) names cds in
       Finductive (p, fps, rr, cs, r)
 
   and transl_constructor vstack tfs name cstr =
