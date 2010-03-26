@@ -787,8 +787,8 @@ let label_like f f' =
         instantiate_qualifiers vars f
     | (Fsum (p, cs1, r), Fsum (_, cs2, _)) ->
         Fsum (p, label_constrs_like vars cs1 cs2, instantiate_ref_qualifiers vars r)
-    | (Finductive (p, ps1, rr, cs1, r), Finductive (_, ps2, _, cs2, _)) ->
-        Finductive (p, label_params_like vars ps1 ps2, instantiate_recref_qualifiers vars rr,
+    | (Finductive (p, ps, rr, cs1, r), Finductive (_, _, _, cs2, _)) ->
+        Finductive (p, ps, instantiate_recref_qualifiers vars rr,
                  label_constrs_like vars cs1 cs2, instantiate_ref_qualifiers vars r)
     | (Fabstract (p, ps, id, r), Fabstract (_, ps', id', _)) ->
         let vars' = (Ident.name id, Path.Pident id') :: vars in
