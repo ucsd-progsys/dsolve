@@ -305,7 +305,7 @@ and instantiate_id id f env tenv =
     try
       Le.find id env
     with Not_found ->
-      Frame.fresh_without_vars tenv ((Env.find_value id tenv).val_type)
+      Frame.fresh_builtin tenv ((Env.find_value id tenv).val_type)
   in
     F.instantiate env env_f f
 

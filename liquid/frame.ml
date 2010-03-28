@@ -257,6 +257,13 @@ let generalize_map = function
 let generalize f =
   map generalize_map f
 
+let flip_levels_map = function
+  | Fvar (id, level, s, r) -> Fvar (id, -level, s, r)
+  | f                      -> f
+
+let flip_levels f =
+  map (flip_levels_map) f
+
 (**************************************************************)
 (****************** Refinement manipulation *******************) 
 (**************************************************************)
@@ -963,6 +970,7 @@ let fresh_with_var_fun freshf env t =
 let fresh              = fresh_with_var_fun fresh_refinementvar
 let fresh_false        = fresh_with_var_fun (fun _ -> false_refinement)
 let fresh_without_vars = fresh_with_var_fun (fun _ -> empty_refinement)
+let fresh_builtin env  = fresh_without_vars env <+> flip_levels
 
 let fresh_with_labels env ty f =
   label_like (fresh env ty) f
