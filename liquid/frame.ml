@@ -725,8 +725,8 @@ let instantiate_dep_subs vars subs =
 let instantiate env fr ftemplate =
   let binds = ref [] in
   let vars  = ref [] in
-  let vmap p ft =
-    try List.assoc p !vars with Not_found -> vars := (p, ft) :: !vars; ft in
+  let vmap id ft =
+    try List.assoc id !vars with Not_found -> vars := (id, ft) :: !vars; ft in
   let rec inst scbinds f ft =
     match (f, ft) with
       | (Fvar (id, level, s, r), _) when level = generic_level ->
@@ -745,7 +745,7 @@ let instantiate env fr ftemplate =
       | (Fsum (p, cs, r), Fsum(p', cs', _)) ->
           Fsum (p, List.map2 (constr_app_params2 (inst_params scbinds)) cs cs', r)
       | (Finductive (p, ps, rr, cs, r), Finductive (_, ps', _, _, _)) ->
-          Finductive (p, inst_params scbinds ps ps', rr, cs, r)
+          Finductive (p, inst_tparams scbinds ps ps', rr, cs, r)
       | (Fabstract(p, ps, id, r), Fabstract(_, ps', _, _)) ->
           let _ = binds := (Bid id) :: !binds in
           Fabstract (p, inst_params ((Bid id) :: scbinds) ps ps', id, r)
@@ -758,6 +758,8 @@ let instantiate env fr ftemplate =
       binds := (Bid p) :: !binds;
       ((ps @ [(p, inst scbinds f f', v)]), (Bid p) :: scbinds) in
     fst (List.fold_left2 bind_param ([], scbinds) ps ps')
+  and inst_tparams scbinds ps ps' =
+    List.fold_right2 (fun (p, f, v) (_, f', _) ps -> (p, inst scbinds f f', v) :: ps) ps ps' []
   in inst [] fr ftemplate
 
 let instantiate_refexpr_qualifiers vars (subs, (qconsts, qvars)) =
@@ -893,10 +895,10 @@ let translate_type env t =
       try
         Hashtbl.find tbl t
       with Not_found ->
-        t |> transl_rec vstack r t.level >> Hashtbl.add tbl t
+        t |> transl_rec vstack r >> Hashtbl.add tbl t
 
-  and transl_rec vstack r level t = match t.desc with
-    | Tvar                 -> fresh_fvar level r
+  and transl_rec vstack r t = match t.desc with
+    | Tvar                 -> fresh_fvar t.level r
     | Tarrow(_, t1, t2, _) -> Farrow (fresh_binder (), transl vstack r t1, transl vstack r t2)
     | Ttuple ts            -> tuple_of_frames (List.map (transl vstack r) ts) r
     | Tconstr(p, tyl, _)   -> transl_constr vstack r p tyl
@@ -943,7 +945,10 @@ let translate_type env t =
     let ids  = Miscutil.mapi (fun _ i -> C.tuple_elem_id i) fs in
       (cstr.cstr_tag, (name, C.combine3 ids fs vs))
 
-  in transl [] Refine t
+  in
+  let _ = reset_binders () in
+
+    transl [] Refine t
 
 (******************************************************************************)
 (******************************** Fresh Frames ********************************)
