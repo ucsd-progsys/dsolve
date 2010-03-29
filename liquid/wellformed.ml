@@ -41,7 +41,7 @@ let abstract_app_shape paths out_shape in_shapes =
           then out_shape else raise IllFormed
 
 let builtin_fun_app_shapes =
-  [((Path.name P.tag_function), (function [Fsum _] -> uInt | _ -> raise IllFormed))]
+  [((Path.name P.tag_function), (function [Fsum _] | [Finductive _] -> uInt | _ -> raise IllFormed))]
 
 let check_and_inst f f1 f2 eq' inst' =
   let (sub, eq, inst) = subt f1 f2 eq' inst' in
