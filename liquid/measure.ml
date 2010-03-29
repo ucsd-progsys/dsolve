@@ -38,8 +38,9 @@ let add (p, ((tag, args, (nm, _)) as r)) menv =
   Lightenv.add p (r :: cs) menv
 
 let sum_path = function
-  | F.Fsum (p, _, _) -> p
-  | _                -> assert false
+  | F.Fsum (p, _, _)             -> p
+  | F.Finductive (p, _, _, _, _) -> p
+  | _                            -> assert false
 
 let rewrite_pred_funs subf r = C.app_snd (P.pexp_map_funs subf) r
 
