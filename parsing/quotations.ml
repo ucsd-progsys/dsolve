@@ -17,6 +17,7 @@ let extract_desc = function
 
 let extract_expr_from_val = function
   | Pstr_value (_, ps) -> snd (List.hd ps)
+  | Pstr_eval e -> e  
   | _ -> assert false
 
 let error_on_none msg = function

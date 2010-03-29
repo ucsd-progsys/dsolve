@@ -404,41 +404,42 @@ let (|>) x f = f x
 
 let ffor = {pstr_desc = Quotations.quote
   "let rec ffor u i e b =
-     let b1 = u && (i < e) in
-     let b2 = not(u) && (i > e) in 
-     let i_m = i - 1 in let i_p = i + 1 in
-     let ite = if u then i_p else i_m in
-     if (b1 || b2) then
-       b i; ffor u ite e b
+     if ((u && (i<e)) || (not(u) && (i>e))) then
+       (b i; ffor u (if u then (i+1) else (i-1)) e b)
      else
        ()"; pstr_loc = Location.none}
 
+let lit s      = "\"" ^ s ^ "\""
 let body_token = "__ins_body"
 let i_token    = "__ins_i"
 let e_token    = "__ins_e"
 
 let body iter u =
   let u = if u then "true" else "false" in
-   "let body _i = let " ^ iter ^ " = ref _i in \"" ^ body_token ^ "\" in
-   ffor " ^ u ^ " " ^ i_token ^ " " ^ e_token ^ " body"
+   "let body " ^ iter ^ " = " ^ lit body_token ^ " in
+   ffor " ^ u ^ " " ^ lit i_token ^ " " ^ lit e_token ^ " body"
 
 let desugar_for_desc = function
   | Pexp_for (iter, i, e, u, b) -> 
     let u = (function Upto -> true | Downto -> false) u in
     let replace_token token expr = function
-      | Pexp_constant (Const_string token) -> expr.pexp_desc
+      | Pexp_constant (Const_string s) when s = token -> expr.pexp_desc
       | e -> e in
-    Quotations.quote_expr (body iter u)              |>
-    Quotations.map_expr (replace_token i_token i)    |>
-    Quotations.map_expr (replace_token e_token e)    |>
-    Quotations.map_expr (replace_token body_token b) |>
+    Quotations.quote_expr    (body iter u)                |>
+    (fun {pexp_desc = x; pexp_loc = _} -> x)              |>
+    Quotations.map_expr_desc (replace_token i_token i)    |>
+    Quotations.map_expr_desc (replace_token e_token e)    |>
+    Quotations.map_expr_desc (replace_token body_token b) |>
     (fun x -> Some x)
   | _ -> None
 
-let desugar_for_exp desugared ({pexp_desc = desc; pexp_loc = loc} as exp) =
+let desugar_for_desc desugared desc =
   match desugar_for_desc desc with
-  | Some desc -> desugared := true; desc 
-  | None      -> exp
+  | Some x -> desugared := true; x
+  | None -> desc
+
+let desugar_for_exp desugared exp =
+  Quotations.map_expr (desugar_for_desc desugared) exp
 
 let desugar_forloops sstr = 
   let desugared = ref false in

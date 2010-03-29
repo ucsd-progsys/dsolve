@@ -119,6 +119,7 @@ let load_sourcefile ppf env fenv sourcefile =
     if !Clflags.no_anormal then
       str
     else
+      let _ = Qdebug.pprint_structure_list std_formatter (Nm.desugar_forloops str) in
       try Nm.normalize_structure (Nm.desugar_forloops str) with
        Nm.NormalizationFailure (e, t, m) ->
          Format.printf "@[Normalization failed at %a(%s) %a@.@]"

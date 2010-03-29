@@ -26,3 +26,4 @@ open Format
 
 val pprint_expression: formatter -> Parsetree.expression -> unit
 val pprint_structure: formatter -> Parsetree.structure_item -> unit
+val pprint_structure_list: formatter -> Parsetree.structure -> unit
