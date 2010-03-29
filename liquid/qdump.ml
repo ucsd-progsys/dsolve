@@ -84,6 +84,14 @@ let env_bound_ids env =
       (fun p -> is := List.rev_append (Typedtree.pat_desc_bound_idents p) !is) f)
         env; !is
 
+let generalize_pred pred =
+  let gen x =
+    if Path.name x = "_V" then
+      P.Var x
+    else
+      P.Var (C.s_to_p ("~" ^ (String.capitalize (Path.name x)))) in
+  P.map_vars gen pred
+
 let dump_default_qualifiers (str, env, menv, ifenv) deps qname =
   let qf = formatter_of_out_channel (open_out qname) in
   let _ = pp_set_margin qf 1230912 in
@@ -103,11 +111,12 @@ let dump_default_qualifiers (str, env, menv, ifenv) deps qname =
   let cstrs = M.filter_cstrs menv in
   let pv vs = List.map (function Some v -> Some (P.Var v) | None -> None) vs in
   let mexprs = List.map (fun (a, (b, c)) -> (M.mk_pred vid (pv b) (a, b, c))) cstrs in
+  let mexprs = List.map generalize_pred mexprs in
   let mqs = (List.fold_left (fun q e -> add ("Measure", "_V", e) q) QS.empty (mexprs @ mnms)) in
  
   let conj r l = List.rev_append (F.refinement_conjuncts (fun _ -> []) (P.Var vid) r) l in
   let fpreds = Le.flaplist (fun _ f -> F.refinement_fold conj [] f) ifenv in
-  let fpreds = C.flap P.conjuncts fpreds in
+  let fpreds = List.map generalize_pred (C.flap P.conjuncts fpreds) in
   let fqs = List.fold_left (fun q e -> add ("MLQ", "_V", e) q) QS.empty fpreds in
 
   let initqs = add ("FALSE", "_V", P.Atom(P.PInt(1), P.Eq, P.PInt(0))) QS.empty in

@@ -333,6 +333,8 @@ let l_is_id id = function
   | Longident.Lident s -> s = id
   | _ -> false
 
+let s_to_p s = Path.Pident (Ident.create s)
+
 let int_of_tag = function
     Cstr_constant n -> 2*n
   | Cstr_block n -> 2*n+1

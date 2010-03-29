@@ -403,5 +403,3 @@ let is_taut = function
 let is_contra = 
   let falses = [Not True; Atom (PInt 0, Eq, PInt 1); Atom (PInt 1, Eq, PInt 0)] in
   fun p -> List.mem p falses 
-
-
