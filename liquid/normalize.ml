@@ -379,8 +379,6 @@ let normalize exp =
   in
   norm_out exp
 
-
-
 let rec normalize_structure sstr =
  let _ = if Common.ck_olev Common.ol_normalized then Format.set_margin 170 in
   match sstr with
@@ -396,3 +394,64 @@ let rec normalize_structure sstr =
           value :: (normalize_structure srem) 
     | p :: srem -> 
         p :: (normalize_structure srem) 
+
+
+(* NORMALIZATION PRE-PASSES *)
+
+(* desugar for loops *)
+
+let (|>) x f = f x
+
+let ffor = {pstr_desc = Quotations.quote
+  "let rec ffor u i e b =
+     let b1 = u && (i < e) in
+     let b2 = not(u) && (i > e) in 
+     let i_m = i - 1 in let i_p = i + 1 in
+     let ite = if u then i_p else i_m in
+     if (b1 || b2) then
+       b i; ffor u ite e b
+     else
+       ()"; pstr_loc = Location.none}
+
+let body_token = "__ins_body"
+let i_token    = "__ins_i"
+let e_token    = "__ins_e"
+
+let body iter u =
+  let u = if u then "true" else "false" in
+   "let body _i = let " ^ iter ^ " = ref _i in \"" ^ body_token ^ "\" in
+   ffor " ^ u ^ " " ^ i_token ^ " " ^ e_token ^ " body"
+
+let desugar_for_desc = function
+  | Pexp_for (iter, i, e, u, b) -> 
+    let u = (function Upto -> true | Downto -> false) u in
+    let replace_token token expr = function
+      | Pexp_constant (Const_string token) -> expr.pexp_desc
+      | e -> e in
+    Quotations.quote_expr (body iter u)              |>
+    Quotations.map_expr (replace_token i_token i)    |>
+    Quotations.map_expr (replace_token e_token e)    |>
+    Quotations.map_expr (replace_token body_token b) |>
+    (fun x -> Some x)
+  | _ -> None
+
+let desugar_for_exp desugared ({pexp_desc = desc; pexp_loc = loc} as exp) =
+  match desugar_for_desc desc with
+  | Some desc -> desugared := true; desc 
+  | None      -> exp
+
+let desugar_forloops sstr = 
+  let desugared = ref false in
+  let rec des_rec = function
+    | [] -> []
+    | {pstr_desc = (Pstr_eval exp); pstr_loc = loc} :: srem ->
+        {pstr_desc = Pstr_eval (desugar_for_exp desugared exp); pstr_loc = loc}
+        :: des_rec srem
+    | {pstr_desc = Pstr_value (recursive, pl); pstr_loc = loc} :: srem ->
+        let pl = List.map (fun (p, e) -> (p, desugar_for_exp desugared e)) pl in
+        {pstr_desc = Pstr_value (recursive, pl); pstr_loc = loc}
+        :: des_rec srem
+    | p :: srem ->
+        p :: des_rec srem in
+  des_rec sstr |>
+  (fun x -> if !desugared then ffor :: x else x)
