@@ -346,6 +346,9 @@ let has_kvars f =
     (fun r -> if not (C.empty_list (refinement_qvars r)) then raise Found; r)
       f); false with Found -> true
 
+let recref_shape rr =
+  map_recref (fun _ -> empty_refinement) rr
+
 (**************************************************************)
 (*********** Conversions to/from simple refinements ***********)
 (**************************************************************)
@@ -381,121 +384,11 @@ let find_tag rs =
 (************************* Shapes *****************************) 
 (**************************************************************)
 
-let recref_shape rr =
-  map_recref (fun _ -> empty_refinement) rr
-
 let shape f =
   map_refinements (fun _ -> empty_refinement) f
 
 let is_shape f =
   refinement_fold (fun r b -> refinement_is_empty r && b) true f
-
-(* known bug: these don't treat constructor names properly. *)
-
-let same_shape t1 t2 =
-  let vars = ref [] in
-  let ismapped p q =
-    try snd (List.find (fun (id', _) -> Ident.equal p id') !vars) = q with
-      Not_found -> vars := (p, q) :: !vars; true in
-  let rec sshape = function
-      (Fsum(p, cs, _), Fsum(p', cs', _)) ->
-        Path.same p p' && params_sshape (C.flap constr_params cs) (C.flap constr_params cs')
-    | (Fabstract(p, ps, _, _), Fabstract(p', ps', _, _)) ->
-        Path.same p p' && params_sshape ps ps'
-    | (Fvar (id, _, _, _), Fvar (id', _, _, _)) ->
-        ismapped id id'
-    | (Frec (p, tas, _, _), Frec (p', tas', _, _)) ->
-        Path.same p p' && C.same_length tas tas' && List.for_all sshape (List.combine tas tas')
-    | (Farrow(_, i, o), Farrow(_, i', o')) ->
-        sshape (i, i') && sshape (o, o')
-    | t -> false
-  and params_sshape ps qs =
-    C.same_length ps qs && List.for_all sshape (List.combine (params_frames ps) (params_frames qs))
-  in sshape (t1, t2)
-       
-let fid () = Ident.create "p"
-let maybe_assoc p l =
-  try
-    Some (List.assoc p l) 
-  with Not_found -> None
-
-let rec subt t1 t2 eq inst =
-  (* yes, i inlined a union find :( *)
-  let map = ref inst in
-  let pmap = ref eq in
-  let get_ind p =
-    try
-      List.assoc p !pmap
-    with Not_found -> 
-      let p' = fid () in 
-      let _ = pmap := (p, p') :: !pmap in
-        p' in
-  let get_set p =
-    let p' = get_ind p in
-    List.filter (fun (x, y) -> y = p') !pmap in
-  let ismapped p f =
-    let p' = get_ind p in
-    try
-      same_shape (List.assoc p' !map) f
-    with Not_found -> (map := (p', f) :: !map; true) in
-  let join p' q' =
-    pmap := ((List.map (fun (x, _) -> (x, p')) (get_set q')) @ !pmap) in
-  let equiv p q =
-    let p' = get_ind p in
-    let q' = get_ind q in
-    if p' = q' then true else
-      match (maybe_assoc p' !map, maybe_assoc q' !map) with
-          (Some f1, Some f2) -> 
-          if same_shape f1 f2 then
-            let _ = join p' q' in true
-            else false
-        | (None, Some f) | (Some f, None) ->
-          let _ = map := ((p', f) :: !map) in
-          let _ = join p' q' in true
-        | (None, None) ->
-          let _ = join p' q' in true in
-  let rec s_rec (f1, f2) = 
-    match (f1, f2) with
-    | (Fsum(p, cs, _), Fsum(p', cs', _)) ->
-        Path.same p p' && p_s (C.flap constr_params cs) (C.flap constr_params cs')
-    | (Fabstract(p, ps, _, _), Fabstract(p', ps', _, _)) ->
-        Path.same p p' && p_s ps ps'
-    | (Frec(p, tas, rr, _), Frec(p', tas', rr', _)) ->
-        rr = rr' && Path.same p p' && C.same_length tas tas' && List.for_all s_rec (List.combine tas tas')
-    | (Frec(_, _, _, _), _) ->
-        false
-        (* s_rec (f2, t1) *)
-    | (_, Frec(_, _, _, _)) ->
-        (*assert*) false (* assume that the LHS is folded up *)
-    | (Fvar(id1, _, _, _), Fvar(id2, _, _, _)) ->
-        equiv id1 id2
-    | (Fvar(id, _, _, _), _) -> 
-        ismapped id f2
-    | (Farrow(_, i, o), Farrow(_, i', o')) ->
-        s_rec(i, i') && s_rec(o, o')
-    | t -> false 
-  and p_s ps qs =
-    List.for_all s_rec (List.combine (params_frames ps) (params_frames qs)) in
-  (s_rec (t1, t2), !pmap, !map) (* relies on deterministic o of eval *)
-
-let subti t1 t2 =
-  subt t1 t2 [] []
-
-let subtis t1 t2 =
-  (fun (x, _, _) -> x) (subti t1 t2)
-
-let map_inst eq inst f =
-  let get_ind p =
-    try List.assoc p eq with Not_found -> p in
-  let mapped p =
-    let p = get_ind p in
-    try
-      Some (List.assoc p inst)
-    with Not_found -> None in
-  let m_inst = function
-    | Fvar (id, _, _, _) as ofr -> (match mapped id with Some fr -> fr | None -> ofr)
-    | fr -> fr in 
-  map m_inst f
 
 (**************************************************************)
 (******************** Frame pretty printers *******************)
@@ -697,6 +590,124 @@ let wf_unfold = function
       let ps = apply_params_frames shape ps in
         unfold_aux dont_rename p ps rr cs r ps (recref_shape rr) (apply_constrs_params_frames shape cs)
   | f -> f
+
+(******************************************************************************)
+(******************************* Shape Checking *******************************)
+(******************************************************************************)
+
+(* known bug: these don't treat constructor names properly. *)
+
+let same_shape t1 t2 =
+  let vars = ref [] in
+  let ismapped p q =
+    try snd (List.find (fun (id', _) -> Ident.equal p id') !vars) = q with
+      Not_found -> vars := (p, q) :: !vars; true in
+  let rec sshape = function
+      (Fsum(p, cs, _), Fsum(p', cs', _)) ->
+        Path.same p p' && params_sshape (C.flap constr_params cs) (C.flap constr_params cs')
+    | (Finductive (p, ps, _, _, _), Finductive (p', ps', _, _, _)) ->
+        Path.same p p' && params_sshape ps ps'
+    | (Fabstract(p, ps, _, _), Fabstract(p', ps', _, _)) ->
+        Path.same p p' && params_sshape ps ps'
+    | (Fvar (id, _, _, _), Fvar (id', _, _, _)) ->
+        ismapped id id'
+    | (Frec (p, tas, _, _), Frec (p', tas', _, _)) ->
+        Path.same p p' && C.same_length tas tas' && List.for_all sshape (List.combine tas tas')
+    | (Farrow(_, i, o), Farrow(_, i', o')) ->
+        sshape (i, i') && sshape (o, o')
+    | ((Finductive _ as fi), (Fsum _ as fs))
+    | ((Fsum _ as fs), (Finductive _ as fi)) ->
+        sshape (unfold fi, fs)
+    | t -> false
+  and params_sshape ps qs =
+    C.same_length ps qs && List.for_all sshape (List.combine (params_frames ps) (params_frames qs))
+  in sshape (t1, t2)
+       
+let fid () = Ident.create "p"
+let maybe_assoc p l =
+  try
+    Some (List.assoc p l) 
+  with Not_found -> None
+
+let rec subt t1 t2 eq inst =
+  (* yes, i inlined a union find :( *)
+  let map = ref inst in
+  let pmap = ref eq in
+  let get_ind p =
+    try
+      List.assoc p !pmap
+    with Not_found -> 
+      let p' = fid () in 
+      let _ = pmap := (p, p') :: !pmap in
+        p' in
+  let get_set p =
+    let p' = get_ind p in
+    List.filter (fun (x, y) -> y = p') !pmap in
+  let ismapped p f =
+    let p' = get_ind p in
+    try
+      same_shape (List.assoc p' !map) f
+    with Not_found -> (map := (p', f) :: !map; true) in
+  let join p' q' =
+    pmap := ((List.map (fun (x, _) -> (x, p')) (get_set q')) @ !pmap) in
+  let equiv p q =
+    let p' = get_ind p in
+    let q' = get_ind q in
+    if p' = q' then true else
+      match (maybe_assoc p' !map, maybe_assoc q' !map) with
+          (Some f1, Some f2) -> 
+          if same_shape f1 f2 then
+            let _ = join p' q' in true
+            else false
+        | (None, Some f) | (Some f, None) ->
+          let _ = map := ((p', f) :: !map) in
+          let _ = join p' q' in true
+        | (None, None) ->
+          let _ = join p' q' in true in
+  let rec s_rec (f1, f2) = 
+    match (f1, f2) with
+    | (Fsum(p, cs, _), Fsum(p', cs', _)) ->
+        Path.same p p' && p_s (C.flap constr_params cs) (C.flap constr_params cs')
+    | (Finductive (p, ps, _, cs, r), Finductive (p', ps', _, _, _)) ->
+        Path.same p p' && p_s ps ps'
+    | (Fabstract(p, ps, _, _), Fabstract(p', ps', _, _)) ->
+        Path.same p p' && p_s ps ps'
+    | (Frec(p, tas, rr, _), Frec(p', tas', rr', _)) ->
+        rr = rr' && Path.same p p' && C.same_length tas tas' && List.for_all s_rec (List.combine tas tas')
+    | (Frec(_, _, _, _), _) ->
+        false
+        (* s_rec (f2, t1) *)
+    | (_, Frec(_, _, _, _)) ->
+        (*assert*) false (* assume that the LHS is folded up *)
+    | (Fvar(id1, _, _, _), Fvar(id2, _, _, _)) ->
+        equiv id1 id2
+    | (Fvar(id, _, _, _), _) -> 
+        ismapped id f2
+    | (Farrow(_, i, o), Farrow(_, i', o')) ->
+        s_rec(i, i') && s_rec(o, o')
+    | t -> false 
+  and p_s ps qs =
+    List.for_all s_rec (List.combine (params_frames ps) (params_frames qs)) in
+  (s_rec (t1, t2), !pmap, !map) (* relies on deterministic o of eval *)
+
+let subti t1 t2 =
+  subt t1 t2 [] []
+
+let subtis t1 t2 =
+  (fun (x, _, _) -> x) (subti t1 t2)
+
+let map_inst eq inst f =
+  let get_ind p =
+    try List.assoc p eq with Not_found -> p in
+  let mapped p =
+    let p = get_ind p in
+    try
+      Some (List.assoc p inst)
+    with Not_found -> None in
+  let m_inst = function
+    | Fvar (id, _, _, _) as ofr -> (match mapped id with Some fr -> fr | None -> ofr)
+    | fr -> fr in 
+  map m_inst f
 
 (**************************************************************)
 (********* Polymorphic and qualifier instantiation ************) 
