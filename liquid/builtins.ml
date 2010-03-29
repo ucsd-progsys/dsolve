@@ -41,7 +41,7 @@ let mk_string qs = mk_abstract Predef.path_string qs
 let uString      = mk_string []
 
 let mk_bool qs = F.Finductive (Predef.path_bool, [],
-                               [[F.empty_refinement]; [F.empty_refinement]],
+                               [[]; []],
                                [(T.Cstr_constant 0, ("true", [])); (T.Cstr_constant 1, ("false", []))],
                                F.const_refinement qs)
 let uBool = mk_bool []
