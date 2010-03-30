@@ -942,8 +942,8 @@ let translate_type env t =
     List.map (fun t -> frame_var (transl vstack DontRefine t)) tys
 
   and transl_record vstack r p fields fps =
-    let rr     = mk_record_recref fields in
-    let ps     = List.map (transl_field <| (p, rr) :: vstack) fields in
+    let rr = mk_record_recref fields in
+    let ps = List.map (transl_field <| (p, rr) :: vstack) fields in
       Finductive (p, fps, rr, [(Cstr_constant 0, ("rec", ps))], r)
 
   and transl_field vstack (name, muta, t) =
