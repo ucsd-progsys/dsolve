@@ -957,7 +957,7 @@ let translate_type env t =
 
   and transl_constructor vstack tfs name cstr =
     let cfps = cstr.cstr_res |> tconstr_params |> transl_formals vstack in
-    let fs   = cstr.cstr_args |> List.map (replace_formals cfps tfs <.> transl vstack DontRefine) in
+    let fs   = cstr.cstr_args |>: (replace_formals cfps tfs <.> transl vstack DontRefine) in
     let vs   = List.map (fun _ -> Covariant) fs in
     let ids  = Miscutil.mapi (fun _ i -> C.tuple_elem_id i) fs in
       (cstr.cstr_tag, (name, C.combine3 ids fs vs))
