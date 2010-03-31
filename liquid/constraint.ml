@@ -335,8 +335,7 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       (C.flap2 (split_sub_params c tenv env g) (List.map F.constr_params cs1) (List.map F.constr_params cs2),
        split_sub_ref c penv g r1 (List.map (F.refexpr_apply_subs subs) r2))
   | (F.Finductive (_, ps1, _, _, _), F.Finductive (_, ps2, _, _, _)) ->
-      (lequate_cs env g c F.Covariant (F.unfold_with_shape f1) (F.unfold_with_shape f2) @
-         C.flap2 (fun (_, f1, v) (_, f2, _) -> lequate_cs env g c v f1 f2) ps1 ps2, [])
+      (lequate_cs env g c F.Covariant (F.unfold_with_shape f1) (F.unfold_with_shape f2), [])
   | (F.Fabstract(_, ps1, id1, r1), F.Fabstract(_, ps2, id2, r2)) ->
       let f2 = F.apply_subs [(Path.Pident id2, P.Var (Path.Pident id1))] f2 in (* an extra sub will be applied at the
                                                                                 * toplevel refinement, but OK *)
