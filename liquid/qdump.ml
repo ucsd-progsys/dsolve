@@ -90,7 +90,10 @@ let generalize_pred pred =
       P.Var x
     else
       P.Var (C.s_to_p ("~" ^ (String.capitalize (Path.name x)))) in
-  P.map_vars gen pred
+  if !Clflags.dont_gen_mlq_preds then
+    pred
+  else
+    P.map_vars gen pred
 
 let dump_default_qualifiers (str, env, menv, ifenv) deps qname =
   let qf = formatter_of_out_channel (open_out qname) in

@@ -228,6 +228,7 @@ let main () =
      "-summarize", Arg.String (fun s -> summarize := Some s), "dump a summary of source to filename";
      "-dsmeasures", Arg.Set dsmeasures, "don't strip measure names";
      "-fix", Arg.Set use_fixpoint, "use fixpoint solver instead of dsolve to solve constraints";
+     "-dontgenmlq", Arg.Set dont_gen_mlq_preds, "don't generalize qualifiers mined from mlq files";
      "-no-timing", Arg.Unit Bstats.dont_time, "don't do any profiling";
      "-v", Arg.Int (fun c -> Common.verbose_level := c; Constants.verbose_level := c), 
               "<level> Set degree of analyzer verbosity:\n\

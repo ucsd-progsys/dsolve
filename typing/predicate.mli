@@ -68,8 +68,14 @@ val pprint_t_or_pexpr: formatter -> t_or_pexpr -> unit
 val pprint_pattern: formatter -> Parsetree.predicate_pattern -> unit
 val pprint_pattern_pexpr: formatter -> Parsetree.predpatexp -> unit
 
+val pexp_map: (pexpr -> pexpr) -> pexpr -> pexpr
+val pexp_iter: (pexpr -> unit) -> pexpr -> unit
+
 val pexp_map_vars: (Path.t -> pexpr) -> pexpr -> pexpr 
 val pexp_map_funs: (Path.t -> Path.t) -> pexpr -> pexpr
+
+val map: (pexpr -> pexpr) -> t -> t
+val iter: (pexpr -> unit) -> t -> unit 
 
 val map_vars: (Path.t -> pexpr) -> t -> t
 val map_funs: (Path.t -> Path.t) -> t -> t
@@ -114,4 +120,5 @@ val transl_rel: Asttypes.pred_rel -> binrel
 
 val conjuncts: t -> t list
 val is_taut: t -> bool
+val contains_div_by_zero: t -> bool
 val is_contra: t -> bool
