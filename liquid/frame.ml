@@ -937,9 +937,6 @@ let translate_type env t =
             | Type_record (fields, _, _) -> transl_record vstack r p fields fps
             | Type_variant (cdecls, _)   -> transl_variant vstack r p cdecls fps formals
 
-  and transl_formals vstack tys =
-    List.map (fun t -> frame_var (transl vstack DontRefine t)) tys
-
   and transl_record vstack r p fields fps =
     let rr = mk_record_recref fields in
     let ps = List.map (transl_field <| (p, rr) :: vstack) fields in
@@ -956,7 +953,7 @@ let translate_type env t =
       Finductive (p, fps, rr, cs, r)
 
   and transl_constructor vstack tfs name cstr =
-    let cfps = cstr.cstr_res |> tconstr_params |> transl_formals vstack in
+    let cfps = cstr.cstr_res |> tconstr_params |>: (transl vstack DontRefine <+> frame_var) in
     let fs   = cstr.cstr_args |>: (replace_formals cfps tfs <.> transl vstack DontRefine) in
     let vs   = List.map (fun _ -> Covariant) fs in
     let ids  = Miscutil.mapi (fun _ i -> C.tuple_elem_id i) fs in
