@@ -874,10 +874,9 @@ let fresh_refinementvar () =
 let fresh_fvar level r =
   Fvar (Ident.create "a", level, [], r)
 
-let mk_constr_recref cstrs =
-  List.map begin
-    fun (_, params) -> List.map (fun _ -> if !Clflags.no_recrefs then DontRefine else Refine) params
-  end cstrs
+let mk_constr_recref r cstrs =
+  let r = if !Clflags.no_recrefs then DontRefine else r in
+    List.map (fun (_, params) -> List.map (fun _ -> r) params) cstrs
 
 let mk_record_recref fields =
   [List.map (fun _ -> Refine) fields]
@@ -948,13 +947,14 @@ let translate_type env t =
   and transl_variant vstack r p cdecls fps fs =
     let names, _ = List.split cdecls in
     let _, cds   = List.split (Env.constructors_of_type p (Env.find_type p env)) in
-    let rr       = mk_constr_recref cdecls in
-    let cs       = List.map2 (transl_constructor ((p,  rr) :: vstack) fs) names cds in
+    let rr       = mk_constr_recref DontRefine cdecls in
+    let recrr    = mk_constr_recref Refine cdecls in
+    let cs       = List.map2 (transl_constructor ((p, recrr) :: vstack) fs) names cds in
       Finductive (p, fps, rr, cs, r)
 
   and transl_constructor vstack tfs name cstr =
     let cfps = cstr.cstr_res |> tconstr_params |>: (transl vstack DontRefine <+> frame_var) in
-    let fs   = cstr.cstr_args |>: (replace_formals cfps tfs <.> transl vstack DontRefine) in
+    let fs   = cstr.cstr_args |>: (replace_formals cfps tfs <.> transl vstack Refine) in
     let vs   = List.map (fun _ -> Covariant) fs in
     let ids  = Miscutil.mapi (fun _ i -> C.tuple_elem_id i) fs in
       (cstr.cstr_tag, (name, C.combine3 ids fs vs))
