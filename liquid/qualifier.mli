@@ -35,3 +35,4 @@ val instantiate_about: Path.t list Common.StringMap.t -> 'a Lightenv.t -> t -> t
 val pprint: formatter -> t -> unit
 val map_pred: (Path.t * Predicate.t -> Path.t * Predicate.t) -> t -> t
 val may_not_be_tautology: t -> bool
+val no_div_by_zero: t -> bool

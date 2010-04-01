@@ -164,3 +164,6 @@ let rec pprint_structure ppf str =
   | Pstr_value(recursive, pl) ->
       fprintf ppf "@[let%a@ %a@]" pprint_rec recursive pprint_binds pl
   | _ -> assert false
+
+let rec pprint_structure_list ppf sstr =
+  List.iter (fun str -> pprint_structure ppf str) sstr

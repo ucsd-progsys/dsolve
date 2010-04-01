@@ -30,7 +30,7 @@ UTILS=utils/miscutil.cmo utils/config.cmo \
 PARSING=parsing/linenum.cmo parsing/location.cmo parsing/longident.cmo \
   parsing/syntaxerr.cmo parsing/parser.cmo parsing/mlqparser.cmo \
   parsing/lexer.cmo parsing/mlqlexer.cmo parsing/parse.cmo parsing/printast.cmo \
-  parsing/pparse.cmo
+  parsing/pparse.cmo parsing/quotations.cmo
 
 TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/primitive.cmo typing/types.cmo \
@@ -113,6 +113,9 @@ distclean: clean
 	 do rm -f $$d/*.annot $$d/*~ $$d/*.quals $$d/*.pyc $$d/*.dot; \
 	 done);
 	rm -rf .git
+
+testclean:
+	rm -f postests/*.annot postests/*.quals
 
 utils/config.ml: utils/config.mlp config/Makefile
 	@rm -f utils/config.ml

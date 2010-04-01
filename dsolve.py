@@ -91,6 +91,8 @@ def main():
   src      = sys.argv[len(sys.argv) - 1]
   flags    = sys.argv[1:-1] 
   flags   += get_options(src)
+  if "-dontgenmlq" in flags:
+    include += " -dontgenmlq" 
   gen_succ = gen_quals(src, bare, include)
   if (gen_succ != 0):
     print "Qualifier generation failed"

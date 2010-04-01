@@ -33,9 +33,9 @@ type t = Path.t * Path.t * Predicate.t
 
 let compare = compare
 
-let pprint ppf (_, _, pred) = Predicate.pprint ppf pred
+let pprint ppf (_, _, pred) = pprint ppf pred
 
-let apply x (_, y, p) = Predicate.subst x y p
+let apply x (_, y, p) = subst x y p
 
 (* The user specifies qualifiers as open predicates - i.e., the variables named
    in the qualifier may not yet be in scope at the time of definition.  But
@@ -53,11 +53,11 @@ let apply x (_, y, p) = Predicate.subst x y p
 let instantiate varmap (path, valu, pred) =
   (* Don't instantiate the bound variable *)
   let varmap = (Path.ident_name_crash valu, valu) :: varmap in
-    try Some (path, valu, Predicate.instantiate_named_vars varmap pred)
+    try Some (path, valu, instantiate_named_vars varmap pred)
     with Not_found -> None
 
 let vars (path, valu, pred) =
-  C.maybe_list (List.map (fun x -> if Path.same x valu then None else Some (Path.ident_name_crash x)) (Predicate.vars pred))
+  C.maybe_list (List.map (fun x -> if Path.same x valu then None else Some (Path.ident_name_crash x)) (vars pred))
 
 let fix_bound_vars vm ps =
   let paths = fst (List.split ps) in
@@ -118,4 +118,7 @@ let map_pred f (p, v, pred) =
     (p, v', pred')
 
 let may_not_be_tautology (p, v, pred) =
-  not (Predicate.is_taut pred)
+  not (is_taut pred)
+
+let no_div_by_zero (p, v, pred) =
+  not (contains_div_by_zero pred)

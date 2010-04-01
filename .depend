@@ -25,6 +25,7 @@ parsing/parser.cmi: parsing/parsetree.cmi
 parsing/parsetree.cmi: parsing/longident.cmi parsing/location.cmi \
     parsing/asttypes.cmi 
 parsing/printast.cmi: parsing/parsetree.cmi 
+parsing/quotations.cmi: parsing/parsetree.cmi 
 parsing/syntaxerr.cmi: parsing/location.cmi 
 parsing/lexer.cmo: utils/warnings.cmi parsing/parser.cmi utils/miscutil.cmo \
     parsing/location.cmi 
@@ -42,12 +43,10 @@ parsing/mlqlexer.cmo: utils/warnings.cmi parsing/mlqparser.cmi \
     utils/miscutil.cmo parsing/location.cmi 
 parsing/mlqlexer.cmx: utils/warnings.cmx parsing/mlqparser.cmx \
     utils/miscutil.cmx parsing/location.cmx 
-parsing/mlqparser.cmo: parsing/syntaxerr.cmi parsing/parsetree.cmi \
-    parsing/longident.cmi parsing/location.cmi utils/clflags.cmi \
-    parsing/asttypes.cmi parsing/mlqparser.cmi 
-parsing/mlqparser.cmx: parsing/syntaxerr.cmx parsing/parsetree.cmi \
-    parsing/longident.cmx parsing/location.cmx utils/clflags.cmx \
-    parsing/asttypes.cmi parsing/mlqparser.cmi 
+parsing/mlqparser.cmo: parsing/parsetree.cmi parsing/longident.cmi \
+    parsing/location.cmi parsing/asttypes.cmi parsing/mlqparser.cmi 
+parsing/mlqparser.cmx: parsing/parsetree.cmi parsing/longident.cmx \
+    parsing/location.cmx parsing/asttypes.cmi parsing/mlqparser.cmi 
 parsing/parse.cmo: parsing/syntaxerr.cmi parsing/parser.cmi \
     parsing/mlqparser.cmi parsing/mlqlexer.cmo parsing/location.cmi \
     parsing/lexer.cmo parsing/parse.cmi 
@@ -68,6 +67,10 @@ parsing/printast.cmo: parsing/parsetree.cmi parsing/longident.cmi \
     parsing/location.cmi parsing/asttypes.cmi parsing/printast.cmi 
 parsing/printast.cmx: parsing/parsetree.cmi parsing/longident.cmx \
     parsing/location.cmx parsing/asttypes.cmi parsing/printast.cmi 
+parsing/quotations.cmo: parsing/parsetree.cmi parsing/parse.cmi \
+    parsing/quotations.cmi 
+parsing/quotations.cmx: parsing/parsetree.cmi parsing/parse.cmx \
+    parsing/quotations.cmi 
 parsing/syntaxerr.cmo: parsing/location.cmi parsing/syntaxerr.cmi 
 parsing/syntaxerr.cmx: parsing/location.cmx parsing/syntaxerr.cmi 
 typing/btype.cmi: typing/types.cmi typing/path.cmi parsing/asttypes.cmi 
@@ -311,6 +314,7 @@ liquid/constraint.cmi: liquid/qualifier.cmi typing/predicate.cmi \
 liquid/frame.cmi: typing/types.cmi typing/typedtree.cmi liquid/qualifier.cmi \
     typing/predicate.cmi typing/path.cmi liquid/lightenv.cmo typing/ident.cmi \
     typing/env.cmi parsing/asttypes.cmi 
+liquid/normalize.cmi: parsing/parsetree.cmi parsing/location.cmi 
 liquid/pattern.cmi: typing/types.cmi typing/typedtree.cmi \
     typing/predicate.cmi typing/path.cmi typing/ident.cmi liquid/frame.cmi 
 liquid/predglue.cmi: typing/predicate.cmi typing/path.cmi \
@@ -350,11 +354,11 @@ liquid/constraint.cmx: liquid/wellformed.cmx typing/types.cmx \
     typing/env.cmx typing/common.cmx utils/clflags.cmx liquid/builtins.cmx \
     utils/bstats.cmx liquid/constraint.cmi 
 liquid/fixsolve.cmo: external/fixpoint/_build/solve.cmi typing/predicate.cmi \
-    liquid/lightenv.cmo liquid/frame.cmi \
+    utils/miscutil.cmo liquid/lightenv.cmo liquid/frame.cmi \
     external/fixpoint/_build/fixConstraint.cmi liquid/constraint.cmi \
     liquid/consglue.cmo typing/common.cmo external/fixpoint/_build/ast.cmi 
 liquid/fixsolve.cmx: external/fixpoint/_build/solve.cmx typing/predicate.cmx \
-    liquid/lightenv.cmx liquid/frame.cmx \
+    utils/miscutil.cmx liquid/lightenv.cmx liquid/frame.cmx \
     external/fixpoint/_build/fixConstraint.cmx liquid/constraint.cmx \
     liquid/consglue.cmx typing/common.cmx external/fixpoint/_build/ast.cmx 
 liquid/frame.cmo: typing/typetexp.cmi typing/types.cmi typing/typedtree.cmi \
@@ -383,22 +387,22 @@ liquid/liqerrors.cmx: typing/typetexp.cmx typing/typemod.cmx \
     typing/env.cmx typing/ctype.cmx liquid/liqerrors.cmi 
 liquid/liquid.cmo: utils/warnings.cmi typing/types.cmi typing/typemod.cmi \
     typing/typecore.cmi liquid/qualifymod.cmi typing/qualgen.cmo \
-    liquid/qdump.cmo parsing/printast.cmi typing/predicate.cmi \
-    parsing/pparse.cmi typing/path.cmi parsing/parse.cmi liquid/normalize.cmo \
-    liquid/mlqmod.cmo utils/miscutil.cmo liquid/measure.cmo \
-    liquid/liqerrors.cmi liquid/lightenv.cmo typing/ident.cmi \
-    liquid/frame.cmi typing/env.cmi liquid/constraint.cmi \
-    external/misc/_build/constants.cmo utils/config.cmi typing/common.cmo \
-    utils/clflags.cmi utils/bstats.cmi 
+    liquid/qdump.cmo liquid/qdebug.cmi parsing/printast.cmi \
+    typing/predicate.cmi parsing/pparse.cmi typing/path.cmi parsing/parse.cmi \
+    liquid/normalize.cmi liquid/mlqmod.cmo utils/miscutil.cmo \
+    liquid/measure.cmo parsing/location.cmi liquid/liqerrors.cmi \
+    liquid/lightenv.cmo typing/ident.cmi liquid/frame.cmi typing/env.cmi \
+    liquid/constraint.cmi external/misc/_build/constants.cmo utils/config.cmi \
+    typing/common.cmo utils/clflags.cmi utils/bstats.cmi 
 liquid/liquid.cmx: utils/warnings.cmx typing/types.cmx typing/typemod.cmx \
     typing/typecore.cmx liquid/qualifymod.cmx typing/qualgen.cmx \
-    liquid/qdump.cmx parsing/printast.cmx typing/predicate.cmx \
-    parsing/pparse.cmx typing/path.cmx parsing/parse.cmx liquid/normalize.cmx \
-    liquid/mlqmod.cmx utils/miscutil.cmx liquid/measure.cmx \
-    liquid/liqerrors.cmx liquid/lightenv.cmx typing/ident.cmx \
-    liquid/frame.cmx typing/env.cmx liquid/constraint.cmx \
-    external/misc/_build/constants.cmx utils/config.cmx typing/common.cmx \
-    utils/clflags.cmx utils/bstats.cmx 
+    liquid/qdump.cmx liquid/qdebug.cmx parsing/printast.cmx \
+    typing/predicate.cmx parsing/pparse.cmx typing/path.cmx parsing/parse.cmx \
+    liquid/normalize.cmx liquid/mlqmod.cmx utils/miscutil.cmx \
+    liquid/measure.cmx parsing/location.cmx liquid/liqerrors.cmx \
+    liquid/lightenv.cmx typing/ident.cmx liquid/frame.cmx typing/env.cmx \
+    liquid/constraint.cmx external/misc/_build/constants.cmx utils/config.cmx \
+    typing/common.cmx utils/clflags.cmx utils/bstats.cmx 
 liquid/measure.cmo: liquid/wellformed.cmi typing/types.cmi \
     typing/typedtree.cmi liquid/qualmod.cmo liquid/qualifier.cmi \
     liquid/qualdecl.cmo typing/predicate.cmi typing/path.cmi \
@@ -417,20 +421,20 @@ liquid/mlqmod.cmo: typing/typetexp.cmi typing/types.cmi typing/typedtree.cmi \
     typing/path.cmi parsing/parsetree.cmi parsing/parse.cmi \
     utils/miscutil.cmo liquid/measure.cmo parsing/longident.cmi \
     parsing/location.cmi typing/ident.cmi liquid/frame.cmi typing/env.cmi \
-    typing/ctype.cmi utils/config.cmi liquid/builtins.cmo 
+    utils/config.cmi liquid/builtins.cmo 
 liquid/mlqmod.cmx: typing/typetexp.cmx typing/types.cmx typing/typedtree.cmx \
     liquid/theoremProverZ3.cmx liquid/theoremProver.cmx liquid/qualifymod.cmx \
     liquid/qualdecl.cmx typing/predicate.cmx parsing/pparse.cmx \
     typing/path.cmx parsing/parsetree.cmi parsing/parse.cmx \
     utils/miscutil.cmx liquid/measure.cmx parsing/longident.cmx \
     parsing/location.cmx typing/ident.cmx liquid/frame.cmx typing/env.cmx \
-    typing/ctype.cmx utils/config.cmx liquid/builtins.cmx 
-liquid/normalize.cmo: liquid/qdebug.cmi parsing/printast.cmi \
+    utils/config.cmx liquid/builtins.cmx 
+liquid/normalize.cmo: parsing/quotations.cmi liquid/qdebug.cmi \
     parsing/parsetree.cmi parsing/longident.cmi parsing/location.cmi \
-    typing/common.cmo parsing/asttypes.cmi 
-liquid/normalize.cmx: liquid/qdebug.cmx parsing/printast.cmx \
+    typing/common.cmo parsing/asttypes.cmi liquid/normalize.cmi 
+liquid/normalize.cmx: parsing/quotations.cmx liquid/qdebug.cmx \
     parsing/parsetree.cmi parsing/longident.cmx parsing/location.cmx \
-    typing/common.cmx parsing/asttypes.cmi 
+    typing/common.cmx parsing/asttypes.cmi liquid/normalize.cmi 
 liquid/pattern.cmo: typing/types.cmi typing/typedtree.cmi \
     typing/predicate.cmi typing/path.cmi utils/miscutil.cmo typing/ident.cmi \
     typing/ctype.cmi typing/common.cmo liquid/pattern.cmi 

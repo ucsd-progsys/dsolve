@@ -283,6 +283,12 @@ and map_subexps f = function
 and map f p =
   map_subexps (pexp_map f) (map_subpreds (map f) p)
 
+let iter f p =
+  ignore (map (fun x -> f x; x) p)
+
+let pexp_iter f e =
+  ignore (pexp_map (fun x -> f x; x) e)
+
 let map_var f = function
   | Var x -> f x
   | e     -> e
@@ -400,8 +406,10 @@ let is_taut = function
   | True -> true
   | _ -> false
 
+let contains_div_by_zero p =
+  let b = ref false in
+  iter (function Binop (_, Div, PInt 0) -> b := true | _ -> ()) p; !b
+
 let is_contra = 
   let falses = [Not True; Atom (PInt 0, Eq, PInt 1); Atom (PInt 1, Eq, PInt 0)] in
   fun p -> List.mem p falses 
-
-

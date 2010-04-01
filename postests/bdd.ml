@@ -1,3 +1,5 @@
+(* DSOLVE -dontgenmlq *)
+
 (* Binary Decision Diagrams, adapted from code by Jean-Christophe Filliatre *)
 let myfail s = 
   print_string s; 

@@ -119,7 +119,7 @@ let load_sourcefile ppf env fenv sourcefile =
     if !Clflags.no_anormal then
       str
     else
-      try Nm.normalize_structure str with
+      try Nm.normalize_structure (Nm.desugar_forloops str) with
        Nm.NormalizationFailure (e, t, m) ->
          Format.printf "@[Normalization failed at %a(%s) %a@.@]"
          Location.print t m Qdebug.pprint_expression e; assert false in
@@ -228,6 +228,7 @@ let main () =
      "-summarize", Arg.String (fun s -> summarize := Some s), "dump a summary of source to filename";
      "-dsmeasures", Arg.Set dsmeasures, "don't strip measure names";
      "-fix", Arg.Set use_fixpoint, "use fixpoint solver instead of dsolve to solve constraints";
+     "-dontgenmlq", Arg.Set dont_gen_mlq_preds, "don't generalize qualifiers mined from mlq files";
      "-no-timing", Arg.Unit Bstats.dont_time, "don't do any profiling";
      "-v", Arg.Int (fun c -> Common.verbose_level := c; Constants.verbose_level := c), 
               "<level> Set degree of analyzer verbosity:\n\

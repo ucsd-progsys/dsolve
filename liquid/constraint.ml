@@ -739,6 +739,13 @@ let instantiate_per_environment mlenv consts cs qs =
   let tr = List.fold_left (fun t (ev, el) -> TR.add el (ev, el, ref None) t) TR.empty envvs in
   BS.time "instquals" (List.rev_map (instantiate_quals_in_env tr mlenv consts qs)) envvs
 
+let filter_quals qss =
+  let valid q =
+    Qualifier.may_not_be_tautology q &&
+    Qualifier.no_div_by_zero q in
+  List.map (fun qs -> List.filter valid qs) qss
+
+
 (**************************************************************)
 (************************ Initial Solution ********************)
 (**************************************************************)
@@ -928,6 +935,7 @@ let solve_with_solver qs env consts cs solver =
   let _ = C.cprintf C.ol_insane "===@.Maximum@ Environment@.@.%a@.@." (pprint_raw_fenv true) max_env in
   let lcs = List.map (fun (v, c, cstr) -> (set_labeled_constraint c (make_val_env v max_env), cstr)) cs in
   let qs = BS.time "instantiating quals" (instantiate_per_environment env consts lcs) qs in
+  let qs = BS.time "filter quals"         filter_quals qs in
   let _ = if C.ck_olev C.ol_solve then
           C.cprintf C.ol_solve "@[%i@ instantiation@ queries@ %i@ misses@]@." (List.length lcs) !tr_misses in
   let _ = if C.ck_olev C.ol_solve then
