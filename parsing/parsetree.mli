@@ -208,9 +208,8 @@ and prover_t =
 
 and litframe =
     PFvar of string * subs * refinement
-  | PFrec of string * recref * refinement
-  | PFsum of Longident.t * (string * recref) option * constr list * refinement
-  | PFconstr of Longident.t * (string option * litframe) list * string option * refinement
+  | PFsum of Longident.t * recref option * (string * litframe) list * constr list * refinement
+  | PFconstr of Longident.t * recref option * (string option * litframe) list * string option * refinement
   | PFarrow of string option * litframe * litframe
   | PFtuple of litframe list * refinement
   | PFrecord of (litframe * string * mutable_flag) list * refinement

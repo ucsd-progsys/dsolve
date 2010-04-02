@@ -2,6 +2,6 @@ measure len =
     [] -> 0
   | x :: xs -> 1 + len xs
 
-val quicksort: l:
-  [[], [v: true, v: true]] [t: list . || e0: 'a, e1: [[], [v: true, v: true]] t] ->
-  {v : [[], [v: true, v: true]] [t: list . || e0: 'a, e1: [[], [v: e0 <= v, v: true]] t] | len v = len l}
+val quicksort:
+  l: [(b: 'a) list . || e0: 'b, e1: 'b list] ->
+  {v : [(b: 'a) list . || e0: 'b, e1: [[], [v: e0 <= v, v: true]] 'b list] | len v = len l}

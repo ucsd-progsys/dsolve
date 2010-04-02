@@ -58,7 +58,7 @@ let nativize_core_type dopt env ty =
      (lookup (fun s -> let s = Longident.parse (maybe_add_pref dopt (C.l_to_s l)) in 
        ignore (Env.lookup_type s env); s) l l)) ty
 
-let rec translate_pframe dopt env fenv pf =
+let translate_pframe dopt env fenv pf =
   let vars = ref [] in
   let getvar a = try List.find (fun b -> Ident.name b = a) !vars
                    with Not_found -> let a = Ident.create a in
@@ -73,12 +73,11 @@ let rec translate_pframe dopt env fenv pf =
     let r = Qd.transl_pref (fun x -> try [C.lookup_path x env] with Not_found -> [Path.mk_ident x]) x in
     (*let _ = List.iter (fun (_, (r, _)) -> List.iter (fun r -> printf "%a@." Qualifier.pprint r) r) r in*)
     r in
-  let rec transl_pframe_rec pf =
+  let rec transl_pframe_rec cstack pf =
     match pf with
     | PFvar (a, subs, r) -> F.Fvar (getvar a, F.generic_level, subs, transl_pref r)
-    | PFrec (a, rr, r) -> assert false (* F.Frec (getvar a, transl_recref rr, transl_pref r) *)
-    | PFsum (l, rro, cs, r) -> transl_sum l rro cs r
-    | PFconstr (l, fs, i, r) -> transl_constr l fs i r
+    | PFsum (l, rro, ps, cs, r) -> transl_sum cstack l rro ps cs r
+    | PFconstr (l, rro, fs, i, r) -> transl_constr cstack l rro fs i r
     | PFarrow (v, a, b) ->
         let pat = match v with
             Some id ->
@@ -86,46 +85,56 @@ let rec translate_pframe dopt env fenv pf =
               if List.mem id !vars then failwith "Redefined variable";
                 vars := id :: !vars; Tt.Tpat_var id
           | None -> F.fresh_binder () in
-        F.Farrow (pat, transl_pframe_rec a, transl_pframe_rec b)
+        F.Farrow (pat, transl_pframe_rec cstack a, transl_pframe_rec cstack b)
     | PFtuple (fs, r) -> 
-        F.tuple_of_frames (List.map transl_pframe_rec fs) (transl_pref r)
-    | PFrecord (fs, r) -> transl_record fs r
-  and transl_sum l rro cs r =
-    let (path, decl) = lookup l in
-    let (* cstrs *) _ = snd (List.split (Env.constructors_of_type path (Env.find_type path env))) in
-    let (* rro *) _ = match rro with None -> None | Some (rvar, rr) -> Some (getvar rvar, transl_recref rr) in
-      (* F.Fsum (path, rro, transl_cstrs (List.combine cs cstrs), transl_pref r) *) assert false
-  and transl_cstrs = function
-    | []                  -> []
-    | (ps, cstr) :: cstrs -> (cstr.cstr_tag, ("", transl_params ps)) :: transl_cstrs cstrs
-  and transl_params = function
-    | [] -> []
-        (* pmr: need real variance here *)
-    | (id, f) :: ps -> (Ident.create id, transl_pframe_rec f, F.Covariant) :: transl_params ps
+        F.tuple_of_frames (List.map (transl_pframe_rec cstack) fs) (transl_pref r)
+    | PFrecord (fs, r) -> transl_record cstack fs r
+  and transl_sum cstack l prr ps cs r =
+    let path, decl = lookup l in
+    let rr         = transl_recref_opt decl prr in
+    let ps         = List.map (transl_tyformal cstack) ps in
+    let cstrs      = snd (List.split (Env.constructors_of_type path (Env.find_type path env))) in
+      F.Finductive (path, ps, rr, transl_cstrs (path :: cstack) (List.combine cs cstrs), transl_pref r)
+  and transl_tyformal cstack (id, pf) =
+    (getvar id, transl_pframe_rec cstack pf, F.Covariant)
+  and transl_cstrs cstack cs =
+    List.map (fun (ps, cstr) -> (cstr.cstr_tag, ("", transl_params cstack ps))) cs
+  and transl_params cstack ps =
+    List.map (fun (id, f) -> (Ident.create id, transl_pframe_rec cstack f, F.Covariant)) ps
   and transl_recref rr =
     List.map (fun rs -> List.map transl_pref rs) rr
-  and transl_constr l fs id r =
+  and transl_recref_opt decl = function
+    | Some rr -> transl_recref rr
+    | None    ->
+        match decl.type_kind with
+          | Type_abstract               -> assert false
+          | Type_record  (fields, _, _) -> [List.map (fun _ -> F.empty_refinement) fields]
+          | Type_variant (cdecls, _)    -> List.map (snd <+> List.map (fun _ -> F.empty_refinement)) cdecls
+  and transl_constr cstack l rro fs id r =
     let (ls, fs) = List.split fs in
     let id = match id with Some id -> Ident.create id | None -> if C.empty_list fs then C.dummy_id else C.abstr_elem_id () in
     let ls = Miscutil.mapi
       (fun l i -> match l with Some l -> Ident.create l | None -> C.tuple_elem_id i) ls in
-    let params = List.map transl_pframe_rec fs in
+    let params = List.map (transl_pframe_rec cstack) fs in
     let (path, decl) = lookup l in
-    let _ = if List.length fs != decl.type_arity then
-      raise (T.Error(Location.none, T.Type_arity_mismatch(l, decl.type_arity, List.length fs))) in
-    let varis = List.map F.translate_variance decl.type_variance in
-      match decl.type_kind with 
-          Type_abstract ->
-            F.abstract_of_params_with_labels ls path params varis id (transl_pref r)
-        | Type_record(fields, _, _) ->
-            (* fresh_record (fresh_without_vars env) path fields *) assert false
-        | Type_variant _ ->
-            params |> F.fresh_variant_with_params env path |> F.apply_refinement (transl_pref r)
-  and transl_record fs r =
-    let ps = List.map (fun (f, s, m) -> (Ident.create s, transl_pframe_rec f, F.mutable_variance m)) fs in
+      if List.exists (Path.same path) cstack then
+        F.Frec (path, params, transl_recref_opt decl rro, transl_pref r)
+      else
+        let _ = if List.length fs != decl.type_arity then
+          raise (T.Error(Location.none, T.Type_arity_mismatch(l, decl.type_arity, List.length fs))) in
+        let varis = List.map F.translate_variance decl.type_variance in
+          match decl.type_kind with 
+              Type_abstract ->
+                F.abstract_of_params_with_labels ls path params varis id (transl_pref r)
+            | Type_record(fields, _, _) ->
+                (* fresh_record (fresh_without_vars env) path fields *) assert false
+            | Type_variant _ ->
+                params |> F.fresh_variant_with_params env path |> F.apply_refinement (transl_pref r)
+  and transl_record cstack fs r =
+    let ps = List.map (fun (f, s, m) -> (Ident.create s, transl_pframe_rec cstack f, F.mutable_variance m)) fs in
     let path = Path.mk_ident "_anon_record" in
       F.sum_of_params path ps (transl_pref r) (* pmr: TODO *)
-  in transl_pframe_rec pf
+  in transl_pframe_rec [] pf
 
 let load_val dopt env fenv (s, pf) =
   try
