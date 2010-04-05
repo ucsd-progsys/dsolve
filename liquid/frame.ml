@@ -1003,7 +1003,7 @@ let rec build_uninterpreted name params = function
         apply_refinement r f
 
 let fresh_uninterpreted env ty name =
-  build_uninterpreted name [] (fresh_without_vars env ty)
+  build_uninterpreted name [] (fresh_builtin env ty)
 
 (******************************************************************************)
 (**************************** Constructor embedding ***************************)
