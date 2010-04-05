@@ -653,16 +653,16 @@ measure_arg:
 liquid_type_list: /* this must be before liquid_type to resolve reduce/reduces */
     liquid_type1 STAR liquid_type_list
       { $1 :: $3 }
-  | liquid_type1                        %prec below_STAR
-      { [$1] }
+  | liquid_type1 STAR liquid_type1              %prec below_STAR
+      { [$1; $3] }
 
 liquid_type:                             
-    liquid_type_list 
-      { match $1 with [st] -> st | _ -> mktrue_tuple $1  }
-  | LBRACE LIDENT COLON liquid_type1 STAR liquid_type_list BAR predicate RBRACE
-      { mktuple ($4::$6) ($2, $8) }
+    LPAREN liquid_type_list RPAREN
+      { mktrue_tuple $2 }
   | LBRACKET LIDENT COLON liquid_type1 RBRACKET
       { inj_name $2 $4 }
+  | liquid_type1
+      { $1 }
 
 liquid_type1:
     LBRACE LIDENT COLON liquid_type2 BAR predicate RBRACE 
@@ -699,8 +699,6 @@ liquid_type2:
 liquid_type3:
     LBRACKET LPAREN liquid_param_list RPAREN type_longident DOT liquid_constr_list RBRACKET
       { mktrue_sum $5 None $3 $7 }
-  | liquid_recref LBRACKET LPAREN liquid_param_list RPAREN type_longident DOT liquid_constr_list RBRACKET
-      { mktrue_sum $6 (Some $1) $4 $8 }
   | liquid_record
       { mktrue_record $1 }
 
