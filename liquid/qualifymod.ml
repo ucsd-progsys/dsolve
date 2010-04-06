@@ -208,16 +208,15 @@ and compare_labels ({lbl_pos = n}, _) ({lbl_pos = m}, _) =
   compare n m
 
 and constrain_record (env, guard, f) labeled_exprs =
-  assert false
-(*   let (_, sorted_exprs)                = List.split (List.sort compare_labels labeled_exprs) in *)
-(*   let (p, ps)                          = match f with F.Fsum(p, [(_, (_, ps))], _) -> (p, ps) | _ -> assert false in *)
-(*   let (fs, subexp_cs)                  = constrain_subexprs env guard sorted_exprs in *)
-(*   let to_field (id, _, v) f            = (id, f, v) in *)
-(*   let field_qualifier (id, _, _) fexpr = B.field_eq_qualifier id (expression_to_pexpr fexpr) in *)
-(*   let params                           = List.map2 to_field ps fs in *)
-(*   let field_refs                       = F.mk_refinement [] (List.map2 field_qualifier ps sorted_exprs) [] in *)
-(*   let f'                               = (\* F.sum_of_params p params field_refs *\) assert false (\* pmr: TODO *\) in *)
-(*     (constrain_fold (env, guard, f) f' F.empty_refinement F.empty_refinement [] subexp_cs) *)
+  let (_, sorted_exprs)                = List.split (List.sort compare_labels labeled_exprs) in
+  let (p, ps)                          = match f with F.Finductive(p, _, _, [(_, (_, ps))], _) -> (p, ps) | _ -> assert false in
+  let (fs, subexp_cs)                  = constrain_subexprs env guard sorted_exprs in
+  let to_field (id, _, v) f            = (id, f, v) in
+  let field_qualifier (id, _, _) fexpr = B.field_eq_qualifier id (expression_to_pexpr fexpr) in
+  let params                           = List.map2 to_field ps fs in
+  let field_refs                       = F.mk_refinement [] (List.map2 field_qualifier ps sorted_exprs) [] in
+  let f'                               = F.sum_of_params p params field_refs in
+    (constrain_fold (env, guard, f) f' F.empty_refinement F.empty_refinement [] subexp_cs)
 
 and constrain_field (env, guard, _) expr label_desc =
   let (recframe, cstrs)       = constrain expr env guard in
