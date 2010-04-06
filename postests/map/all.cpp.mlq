@@ -11,12 +11,10 @@
 #define MNS(x, y) (Myaset.mns x y)
 
 #define RHO(p) [[], [v: p, v: true, v: true, v: true, v: true]]
-#define TRHO RHO(true)
-#define LT {e2: RHO(v < e0) z | HG0(e2)}
-#define RT {e3: RHO(v > e0) z | BALW(e2, e3, 2) && HG0(e3)}
-#define TREE [z: t . || e0: 'a, e1: int, LT, RT, {e4: int | ((e4 = MAX(height(e2), height(e3)) + 1) && e4 >= 0)}]
-#define RGDTREE(v, t, r) {v : t TREE | HG0(v) && (r)}
-#define RTGDTREE(v, r) RGDTREE(v, TRHO, r)
+#define LT {e2: RHO(v < e0) 'b t | HG0(e2)}
+#define RT {e3: RHO(v > e0) 'b t | BALW(e2, e3, 2) && HG0(e3)}
+#define TREE [(b: 'a) t . || e0: 'b, e1: int, LT, RT, {e4: int | ((e4 = MAX(height(e2), height(e3)) + 1) && e4 >= 0)}]
+#define RTGDTREE(v, r) {v : TREE | HG0(v) && (r)}
 #define UTGDTREE RTGDTREE(v, true)
 
 measure height =
