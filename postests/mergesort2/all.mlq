@@ -11,7 +11,7 @@ measure set_of =
     Nil -> Myset.empty
   | Cons(xs, xss') -> Myset.cup (Myset.of_list xs) (set_of xss')
 
-val mergesort2: xs:
-  [[], [v: true, v: true]] [t: list . || e0: 'a, e1: [[], [v: true, v: true]] t] ->
-  {v : [[], [v: true, v: true]] [t: list . || e0: 'a, e1: [[], [v: e0 <= v, v: true]] t] | len v = len xs && (? Myset.eq (Myset.of_list v) (Myset.of_list xs))}
+val mergesort2:
+  xs: [(b: 'a) list . || e0: 'b, e1: 'b list] ->
+  {v : [(b: 'a) list . || e0: 'b, e1: [[], [v: e0 <= v, v: true]] 'b list] | len v = len xs && (? Myset.eq (Myset.of_list v) (Myset.of_list xs))}
   
