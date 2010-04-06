@@ -8,12 +8,12 @@
 #define MRED(v) (EBLK(v) || EBLK(e1)) && (RED(v) || RED(e1))
 #define HINV(v) height v = height e1
 
-#define DN e0: 'a, {e1: R z | EBLK(e1)}, {e2: R z | EBLK(e2)}
-#define N  e0: 'a, {e1: R z | NOP(e1)}, {e2: R z | NOP(e2)}
-#define PN e0: 'a, {e1: R z | NOP(e1)}, {e2: R z | NOP(e2) && (MRED(e2))}
+#define DN e0: 'a, {e1: R 'a dict | EBLK(e1)}, {e2: R 'a dict | EBLK(e2)}
+#define N  e0: 'a, {e1: R 'a dict | NOP(e1)}, {e2: R 'a dict | NOP(e2)}
+#define PN e0: 'a, {e1: R 'a dict | NOP(e1)}, {e2: R 'a dict | NOP(e2) && (MRED(e2))}
 
-#define RBT R [z: dict . || N || DN || PN]
-#define GBT {v: R [z: dict . || N || DN || PN] | NOP(v)}
+#define RBT R [(a: 'b) dict . || N || DN || PN]
+#define GBT {v: [(a: 'b) dict . || N || DN || PN] | NOP(v)}
 
 measure color =
   | Empty -> 0
