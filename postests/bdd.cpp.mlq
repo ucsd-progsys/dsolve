@@ -1,7 +1,6 @@
 #define BND(v)  {v: int | (0 <= v) && (v < 1000)}
-#define RR      [[v:true],[v:true],[v:true,v:true,v:true,v:true]]
-#define SUB(v)  {v:RR z | (e1 < var v) && (var v <= 1000)}
-#define BDD     RR [z: bdd. e0: int || e0:int || e0: int, BND(e1), SUB(e2), SUB(e3)]
+#define SUB(v)  {v: bdd | (e1 < var v) && (var v <= 1000)}
+#define BDD     [() bdd . e0: int || e0:int || e0: int, BND(e1), SUB(e2), SUB(e3)]
 #define TT(p)   {v:BDD | (0 <= var v && var v <= 1000) && (p) }    
 #define VART 	BND(v)
 

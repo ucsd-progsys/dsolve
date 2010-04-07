@@ -1,8 +1,7 @@
 #define RHO(p) [[], [v: p, v: true, v: true, v: true, v: true]]
-#define T RHO(true)
-#define LT e2: RHO(v < e0) z
-#define RT e3: RHO(v > e0) z
-#define TREE T [z: t . || e0: 'a, e1: int, LT, RT, e4: int]
+#define LT e2: RHO(v < e0) 'b t
+#define RT e3: RHO(v > e0) 'b t
+#define TREE [(b: 'a) t . || e0: 'b, e1: int, LT, RT, e4: int]
 
 val add: 'a -> int -> TREE -> TREE
 (*

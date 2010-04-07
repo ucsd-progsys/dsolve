@@ -6,6 +6,6 @@ measure llen =
     Nil -> 0
   | Cons(xs, xss) -> len xs + llen xss
 
-val mergesort2: l:
-  [[], [v: true, v: true]] [t: list . || e0: 'a, e1: [[], [v: true, v: true]] t] ->
-  {v : [[], [v: true, v: true]] [t: list . || e0: 'a, e1: [[], [v: true, v: true]] t] | len v = len l}
+val mergesort2:
+  l: [(b: 'a) list . || e0: 'b, e1: 'b list] ->
+  {v : [(b: 'a) list . || e0: 'b, e1: 'b list] | len v = len l}

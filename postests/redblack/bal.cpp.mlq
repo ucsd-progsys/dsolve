@@ -2,11 +2,11 @@
 
 (* Color, balance, BST interfaces *)
 
-#define DN e0: 'a, e1: R z, e2: R z
-#define N  e0: 'a, e1: R z, e2: R z
-#define PN e0: 'a, e1: R z, e2: R z
+#define DN e0: 'a, e1: R 'a dict, e2: R 'a dict
+#define N  e0: 'a, e1: R 'a dict, e2: R 'a dict
+#define PN e0: 'a, e1: R 'a dict, e2: R 'a dict
 
-#define RBT R [z: dict . || N || DN || PN]
+#define RBT [(a: 'b) dict . || N || DN || PN]
 
 measure color =
   | Empty -> 0

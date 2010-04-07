@@ -41,7 +41,7 @@ let abstract_app_shape paths out_shape in_shapes =
           then out_shape else raise IllFormed
 
 let builtin_fun_app_shapes =
-  [((Path.name P.tag_function), (function [Fsum _] -> uInt | _ -> raise IllFormed))]
+  [((Path.name P.tag_function), (function [Fsum _] | [Finductive _] -> uInt | _ -> raise IllFormed))]
 
 let check_and_inst f f1 f2 eq' inst' =
   let (sub, eq, inst) = subt f1 f2 eq' inst' in
@@ -95,7 +95,7 @@ let pred_is_well_typed env p =
         raise IllFormed
   | P.Field (name, r) ->
       begin match get_expr_shape env r with
-        | Fsum (_, _, [(_, (_, fs))], _) ->
+        | Fsum (_, [(_, (_, fs))], _) ->
             (* pmr: maybe we need to switch to ids for this *)
             let is_referenced_field (name2, _, _) = Path.same name (Path.Pident name2) in
               if List.exists is_referenced_field fs then
