@@ -119,7 +119,7 @@ val fresh_with_labels: Env.t -> type_expr -> t -> t
 val fresh_constructed_params_no_vars: Env.t -> Path.t -> t list -> t
 val fresh_uninterpreted: Env.t -> type_expr -> Path.t -> t
 val uninterpreted_constructors: Env.t -> type_expr -> (string * t) list
-val instantiate: t Lightenv.t -> t -> t -> t
+val instantiate: t Lightenv.t -> t -> t -> t * t list
 val instantiate_qualifiers: (string * Path.t) list -> t -> t
 val bind: pattern_desc -> t -> (Path.t * t) list
 val env_bind: t Lightenv.t -> pattern_desc -> t -> t Lightenv.t
