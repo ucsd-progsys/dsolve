@@ -1,3 +1,5 @@
+(* DSOLVE -dontgenmlq *)
+
 type 'a t =
     Empty
       (* meaning: node of left el, left n.els, element, right el, right n. els, heigth *)

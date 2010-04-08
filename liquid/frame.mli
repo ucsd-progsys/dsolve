@@ -27,13 +27,14 @@ open Format
 open Asttypes
 
 type substitution = Path.t * Predicate.pexpr
-type dep_sub = string * string
+type dep_sub      = string * string
 
-type qvar = Path.t
-type refexpr = substitution list * (Qualifier.t list * qvar list)
+type qvar       = Path.t
+type refexpr    = substitution list * (Qualifier.t list * qvar list)
 type refinement = refexpr list
 
-type recref = refinement list list
+type 'a prerecref = 'a list list
+type recref       = refinement prerecref
 
 type qexpr =
   | Qconst of Qualifier.t
@@ -45,18 +46,22 @@ val empty_refinement: refinement
 val const_refinement: Qualifier.t list -> refinement
 val false_refinement: refinement
 
-type t =
-  | Fvar of Path.t * int * dep_sub list * refinement
-  | Frec of Path.t * recref * refinement
-  | Fsum of Path.t * (Path.t * recref) option * constr list * refinement
-  | Fabstract of Path.t * param list * Ident.t * refinement
-  | Farrow of pattern_desc * t * t
+type 'a preframe =
+  | Fvar       of Ident.t * int * dep_sub list * 'a
+  | Fsum       of Path.t * 'a preconstr list * 'a
+  | Finductive of Path.t * 'a preparam list * 'a prerecref * 'a preconstr list * 'a
+  | Frec       of Path.t * 'a preframe list * 'a prerecref * 'a
+  | Fabstract  of Path.t * 'a preparam list * Ident.t * 'a
+  | Farrow     of pattern_desc * 'a preframe * 'a preframe
 
-and param = Ident.t * t * variance
+and 'a preparam  = Ident.t * 'a preframe * variance
+and 'a preconstr = constructor_tag * (string * 'a preparam list)
+and variance     = Covariant | Contravariant | Invariant
 
-and constr = constructor_tag * (string * param list)
+type param  = refinement preparam
+type constr = refinement preconstr
 
-and variance = Covariant | Contravariant | Invariant
+type t = refinement preframe
 
 exception LabelLikeFailure of t * t
 
@@ -70,7 +75,7 @@ val find_by_name: t Lightenv.t -> string -> t
 val prune_env_funs: t Lightenv.t -> Path.t list
 val prune_background: 'a Lightenv.t -> 'a Lightenv.t
 
-val record_of_params: Path.t -> param list -> refinement -> t
+val sum_of_params: Path.t -> param list -> refinement -> t
 val tuple_of_frames: t list -> refinement -> t
 val abstract_of_params_with_labels: 
   Ident.t list -> Path.t -> t list -> variance list -> Ident.t -> refinement -> t
@@ -99,15 +104,15 @@ val shape: t -> t
 val is_shape: t -> bool
 val params_ids: param list -> Ident.t list
 val same_shape: t -> t -> bool
-val subt: t -> t -> (Path.t * Path.t) list -> (Path.t * t) list -> bool * (Path.t * Path.t) list * (Path.t * t) list
-val subti: t -> t -> bool * (Path.t * Path.t) list * (Path.t * t) list
+val subt: t -> t -> (Ident.t * Ident.t) list -> (Ident.t * t) list -> bool * (Ident.t * Ident.t) list * (Ident.t * t) list
+val subti: t -> t -> bool * (Ident.t * Ident.t) list * (Ident.t * t) list
 val subtis: t -> t -> bool
-val map_inst: (Path.t * Path.t) list -> (Path.t * t) list -> t -> t
+val map_inst: (Ident.t * Ident.t) list -> (Ident.t * t) list -> t -> t
 (*val translate_pframe: string option -> Env.t -> (string * (string * Parsetree.predicate_pattern)) list -> Parsetree.litframe -> t*)
-val replace_recvar: t -> t -> t
 
 val unfold: t -> t
-val unfold_applying: t -> t
+val unfold_with_shape: t -> t
+val wf_unfold: t -> t
 
 val apply: t -> Predicate.pexpr list -> t
 
@@ -116,8 +121,9 @@ val fresh: Env.t -> type_expr -> t
 val fresh_without_vars: Env.t -> type_expr -> t
 val fresh_false: Env.t -> type_expr -> t
 val fresh_with_labels: Env.t -> type_expr -> t -> t
-val fresh_constructed_params_no_vars: Env.t -> Path.t -> t list -> t
+val fresh_variant_with_params: Env.t -> Path.t -> t list -> t
 val fresh_uninterpreted: Env.t -> type_expr -> Path.t -> t
+val fresh_builtin: Env.t -> type_expr -> t
 val uninterpreted_constructors: Env.t -> type_expr -> (string * t) list
 val instantiate: t Lightenv.t -> t -> t -> t * t list
 val instantiate_qualifiers: (string * Path.t) list -> t -> t

@@ -1,3 +1,5 @@
+(* DSOLVE -dontgenmlq *)
+
 type 'a t =
     Empty
   | Node of 'a * int * 'a t * 'a t * int

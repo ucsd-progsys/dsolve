@@ -1,3 +1,5 @@
+(* DSOLVE -dontgenmlq *)
+
 (* Adapted from an example of Dunfield, Xi, and Pfenning
  * http://type-refinements.info/stardust/thesis/examples/redblack-full.rml
  *)

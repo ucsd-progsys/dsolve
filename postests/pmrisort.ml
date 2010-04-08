@@ -24,5 +24,4 @@ let rec check l =
 let test l =
   let l'  = insert_sort l in
   let l'' = rev l' [] in
-  ()
-  (* check (insert_sort l)*)
+    check (insert_sort l)

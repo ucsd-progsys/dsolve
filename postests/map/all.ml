@@ -1,3 +1,5 @@
+(* DSOLVE -dontgenmlq *)
+
 (* Adapted from OCaml's Map module by Xavier Leroy
  * http://camlcvs.inria.fr/cgi-bin/cvsweb/~checkout~/ocaml/stdlib/map.ml?rev=1.15.6.2;content-type=text%2Fplain
  *)

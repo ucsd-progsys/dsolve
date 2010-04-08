@@ -5,10 +5,10 @@
 #define SNG(v) (Myset.sng v)
 
 #define R(p)   [[], [v: p, v: true, v: true]]
-#define DHP    [z: t . || e0: 'a, e1: R(v < e0) z, e2: R(v > e0) z]
-#define HP     [z: t . || e0: 'a, e1: R(v <= e0) z, e2: R(v >= e0) z]
-#define DSHP   R(true) DHP
-#define SHP    R(true) HP
+#define DHP    [(b: 'a) t . || e0: 'b, e1: R(v < e0) 'b t, e2: R(v > e0) 'b t]
+#define HP     [(b: 'a) t . || e0: 'b, e1: R(v <= e0) 'b t, e2: R(v >= e0) 'b t]
+#define DSHP   DHP
+#define SHP    HP
 
 #define MEM(v, s)    (? Myset.mem v (set_of s))
 #define DISJ(t, s)   (? Myset.eq (Myset.cap (set_of t) (set_of s)) Myset.empty)
@@ -38,8 +38,8 @@ val empty     : {v: SHP | S(v) = 0 && SO(v) = Myset.empty}
 val isEmpty   : t: SHP -> {v: bool | (*? v -> S(t) = 0*) true }
 val insert    : x: 'a -> t: SHP -> {v: SHP | S(v) = S(t) + 1 && SEQ(SO(v), CUP(SO(t), SNG(x)))}
 val merge     : h: SHP -> t: SHP -> {v: SHP | S(v) = S(h) + S(t) && SEQ(SO(v), CUP(SO(t), SO(h)))}
-val findMin2  : t: {v: SHP | S(v) > 0} -> ('a * {v: R(e0 <= v) HP | v = t})
+val findMin2  : t: {v: SHP | S(v) > 0} -> ('a * {v: SHP | v = t})
 val deleteMin : t: {v: SHP | S(v) > 0} -> {v: SHP | S(v) = S(t) - 1}
-val deleteMin2: t: {v: SHP | S(v) > 0} -> ('a * {v: R(e0 <= v) HP | S(v) = S(t) - 1 && SEQ(SO(t), CUP(SO(v), SNG(e0)))})
+val deleteMin2: t: {v: SHP | S(v) > 0} -> ('a * {v: SHP | S(v) = S(t) - 1 && SEQ(SO(t), CUP(SO(v), SNG(e0)))})
 val to_list2  : SHP -> 'a list
 
