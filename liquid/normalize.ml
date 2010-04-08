@@ -25,6 +25,8 @@ open Parsetree
 open Asttypes
 open Format
 
+open Misc.Ops
+
 module C = Common
 
 exception NormalizationFailure of expression * Location.t * string
@@ -400,59 +402,30 @@ let rec normalize_structure sstr =
 
 (* desugar for loops *)
 
-let (|>) x f = f x
+let desugar_for_desc wrap_loc = function
+  | Pexp_for (i, s, e, u, b) ->
+    let body = wrap_loc (Pexp_function
+      ("", None, [({ ppat_desc = Ppat_var i; ppat_loc = Location.none }, b)])) in
+    let ffor = Pexp_ident (Longident.parse
+      ((function Upto -> "Dsolve.iter_up" | Downto -> "Dsolve.iter_down") u)) |>
+      wrap_loc in
+    Pexp_apply (ffor, [("", s); ("", e); ("", body)])
+  | d -> d
 
-let ffor = {pstr_desc = Quotations.quote
-  "let rec ffor u i e b =
-     if ((u && (i<e)) || (not(u) && (i>e))) then
-       (b i; ffor u (if u then (i+1) else (i-1)) e b)
-     else
-       ()"; pstr_loc = Location.none}
-
-let lit s      = "\"" ^ s ^ "\""
-let body_token = "__ins_body"
-let i_token    = "__ins_i"
-let e_token    = "__ins_e"
-
-let body iter u =
-  let u = if u then "true" else "false" in
-   "let body " ^ iter ^ " = " ^ lit body_token ^ " in
-   ffor " ^ u ^ " " ^ lit i_token ^ " " ^ lit e_token ^ " body"
-
-let desugar_for_desc = function
-  | Pexp_for (iter, i, e, u, b) -> 
-    let u = (function Upto -> true | Downto -> false) u in
-    let replace_token token expr = function
-      | Pexp_constant (Const_string s) when s = token -> expr.pexp_desc
-      | e -> e in
-    Quotations.quote_expr    (body iter u)                |>
-    (fun {pexp_desc = x; pexp_loc = _} -> x)              |>
-    Quotations.map_expr_desc (replace_token i_token i)    |>
-    Quotations.map_expr_desc (replace_token e_token e)    |>
-    Quotations.map_expr_desc (replace_token body_token b) |>
-    (fun x -> Some x)
-  | _ -> None
-
-let desugar_for_desc desugared desc =
-  match desugar_for_desc desc with
-  | Some x -> desugared := true; x
-  | None -> desc
-
-let desugar_for_exp desugared exp =
-  Quotations.map_expr (desugar_for_desc desugared) exp
+let desugar_for_exp exp =
+  let wrap_loc desc = { pexp_desc = desc; pexp_loc = exp.pexp_loc } in
+  Quotations.map_expr (desugar_for_desc wrap_loc) exp
 
 let desugar_forloops sstr = 
-  let desugared = ref false in
   let rec des_rec = function
     | [] -> []
     | {pstr_desc = (Pstr_eval exp); pstr_loc = loc} :: srem ->
-        {pstr_desc = Pstr_eval (desugar_for_exp desugared exp); pstr_loc = loc}
+        {pstr_desc = Pstr_eval (desugar_for_exp exp); pstr_loc = loc}
         :: des_rec srem
     | {pstr_desc = Pstr_value (recursive, pl); pstr_loc = loc} :: srem ->
-        let pl = List.map (fun (p, e) -> (p, desugar_for_exp desugared e)) pl in
+        let pl = List.map (fun (p, e) -> (p, desugar_for_exp e)) pl in
         {pstr_desc = Pstr_value (recursive, pl); pstr_loc = loc}
         :: des_rec srem
     | p :: srem ->
         p :: des_rec srem in
-  des_rec sstr |>
-  (fun x -> if !desugared then ffor :: x else x)
+  des_rec sstr

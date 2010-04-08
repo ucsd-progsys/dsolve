@@ -1,5 +1,3 @@
 
-(* for loop desugaring *)
-
-val ffor_up   : s: int -> e: int -> (i: {v: int | v >= s && v < e} -> unit)
-val ffor_down : s: int -> e: int -> (i: {v: int | v <= s && v > e} -> unit)
+val iter_up   : s: int -> e: int -> (i: {v: int | v >= s && v < e} -> unit) -> unit
+val iter_down : s: int -> e: int -> (i: {v: int | v <= s && v > e} -> unit) -> unit
