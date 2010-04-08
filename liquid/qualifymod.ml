@@ -121,8 +121,8 @@ let label_constraint exp fc =
 let expression_to_pexpr e =
   match e.exp_desc with
     | Texp_constant (Const_int n) -> P.PInt n
-    | Texp_ident (id, _) -> P.Var id
-    | _ -> P.Var (Path.mk_ident "dummy")
+    | Texp_ident (id, _)          -> P.Var id
+    | _                           -> P.skolem ()
 
 let rec constrain e env guard =
   let _ = Frame.initialize_type_expr_levels e.exp_type in

@@ -85,12 +85,14 @@ module Prover : PROVER =
     let iofb = Path.mk_ident "_IOFB"
     let div = Path.mk_ident "_DIV"
     let tag = P.tag_function
+    let skolem = P.skolem_function
 
     let builtins = [
             (tag, Func [Unint "obj"; Int]);
             (div, Func [Int; Int; Int]);
             (iofb, Func [Bool; Int]);
             (bofi, Func [Int; Bool]);
+            (skolem, Func [Int; Unint "skolem_constant"])
     ]
 
     let abs p = F.Fabstract(p, [], Ident.create "", F.empty_refinement)

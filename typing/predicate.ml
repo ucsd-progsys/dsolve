@@ -240,6 +240,11 @@ let (?.) e = Boolexp e
 let tag_function = Path.mk_ident "__tag"
 let tag x = FunApp(tag_function, [x])
 
+let skolem_function = Path.mk_ident "__skolem"
+let skolem =
+  let sk = ref 0 in fun () ->
+    incr sk; FunApp(skolem_function, [PInt !sk])
+
 let find_const c =
   C.int_of_tag (Env.lookup_constructor (Longident.Lident c) Env.initial).cstr_tag
 
