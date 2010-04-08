@@ -1,3 +1,5 @@
+(* DSOLVE -dontgenmlq *)
+
 type 'a avl = 
   | E 
   | Bl of 'a * 'a avl * 'a avl * int (* lh bigger: height v <= height e1 <= 1 + height v  *)

@@ -1,3 +1,5 @@
+(* DSOLVE -dontgenmlq *)
+
 let rec len xs = 
   match xs with 
   | [] -> 0

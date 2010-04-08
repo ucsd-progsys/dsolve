@@ -1,3 +1,5 @@
+(* DSOLVE -dontgenmlq *)
+
 (* merge sort, adapted from an example of Xi and Pfenning
  * http://www.cs.bu.edu/~hwxi/DML/DML/examples/mergesort2.dml
  *)

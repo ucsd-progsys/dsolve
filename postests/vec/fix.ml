@@ -1,3 +1,5 @@
+(* DSOLVE -dontgenmlq *)
+
 (* Adapted from the Vec library by Luca de Alfaro
  * http://www.dealfaro.com/home/code/vec/vec.ml
  *)

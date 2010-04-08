@@ -1,5 +1,6 @@
 (* Splay Heaps: Okasaki's "Purely Functional Data Structures" p.50 Fig. 5.5. *)
 
+(* DSOLVE -dontgenmlq *)
 (* run with -no-simple *)
 
 let myfail s = 
