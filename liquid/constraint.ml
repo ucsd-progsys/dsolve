@@ -364,8 +364,7 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
   | f when F.is_shape f ->
       ([], [])
   | F.Finductive (p, ps, rr, cs, r) ->
-      (make_wff c tenv env (F.wf_unfold f) :: (ps |> F.params_frames |> List.map (make_wff c tenv env)),
-       split_wf_ref f c (bind_tags (Some p) f cs r env) r)
+      (make_wff c tenv env (F.wf_unfold f) :: (ps |> F.params_frames |>: make_wff c tenv env), [])
   | F.Fsum (_, cs, r) ->
      (C.flap (split_wf_params c tenv env <.> F.constr_params) cs,
       split_wf_ref f c (bind_tags None f cs r env) r)
