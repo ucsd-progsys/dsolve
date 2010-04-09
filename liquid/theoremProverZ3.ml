@@ -176,7 +176,7 @@ module Prover : PROVER =
     let getVarType me s env =
       let fr = try (Le.find s env) with
                  Not_found -> let p = Path.unique_name s in
-                   (eprintf "@[Warning:@ type@ of@ %s@ not@ found@ at@ TP@]@." p; Builtins.uUnit) in
+                   (eprintf "@[Warning:@ type@ of@ %s@ not@ found@ at@ TP@]@." p; assert false) in
       try frame_to_type me fr
         with Not_found -> unint
 
