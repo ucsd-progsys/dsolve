@@ -464,6 +464,8 @@ let pprint_recref ppf rr =
 let level_suffix l = 
   if l = generic_level then "P" else "M"
 
+let simple_paths = [Predef.path_bool; Predef.path_unit; Predef.path_option]
+
 let rec pprint ppf = function
   | Frec (path, tas, rr, r) ->
       wrap_refined r ppf 
@@ -471,14 +473,16 @@ let rec pprint ppf = function
   | Fvar (id, level, s, r) ->
       wrap_refined r ppf 
       (fun ppf -> fprintf ppf "'%s%s%a" (C.ident_name id) (level_suffix level) 
-                  (C.pprint_many false "" (fun ppf (s, s') -> fprintf ppf "[%s/%s]" s s')) s)  
+                  (C.pprint_many false "" (fun ppf (s, s') -> fprintf ppf "[%s/%s]" s s')) s)
+  | Fsum (path, _, r) when List.exists (Path.same path) simple_paths ->
+      pprint_sum_simple ppf path [] r
+  | Finductive (path, ps, _, _, r) when !Clflags.hide_rectypes || List.exists (Path.same path) simple_paths ->
+      pprint_sum_simple ppf path ps r
+  | Fsum (path, [(_, (_, ps))], r) when Path.same path path_tuple ->
+      wrap_refined r ppf (fun ppf -> fprintf ppf "%a" print_prd ps)
   | Fsum (path, cs, r) ->
       wrap_refined r ppf 
       (fun ppf -> fprintf ppf "%s. @[<hv 0>%a@]" (C.path_name path) print_sum cs)
-  | Finductive (path, ps, _, cs, r) when !Clflags.hide_rectypes ->
-      let la, ra  = "«", "»" in 
-      wrap_refined r ppf 
-      (fun ppf -> fprintf ppf "%s%a %s%s" la print_prd ps (C.path_name path) ra)
   | Finductive (path, ps, rr, cs, r) ->
       let la, ra  = "«", "»" in 
       wrap_refined r ppf 
@@ -503,6 +507,11 @@ and print_prd ppf = function
 
 and pprint_constructor ppf (_, (n, ps)) = 
    fprintf ppf "%s%a" n print_prd ps
+
+and pprint_sum_simple ppf path ps r =
+  let la, ra  = "«", "»" in 
+    wrap_refined r ppf 
+      (fun ppf -> fprintf ppf "%s%a %s%s" la print_prd ps (C.path_name path) ra)
 
 and print_bind ppf (name, f, _) = 
    fprintf ppf "%s:%a" (C.ident_name name) pprint f
