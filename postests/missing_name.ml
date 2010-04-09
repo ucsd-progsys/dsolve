@@ -4,20 +4,15 @@ type dict =
   | Red of dict * dict
 
 let restore_right arg = match arg with
-  | Black (lt, Red (rl, rr)) -> Black(Red(lt, rl), rr)
+  | Black (lt, Red (rl, rr)) -> Black(Red(lt, rl), Empty)
   | d -> assert false
 
-let rec ins1 key d = match d with
-  | Black(left, right) -> restore_right (Black (left, ins1 key right))
+let rec ins1 d = match d with
+  | Black(left, right) -> restore_right (Black (left, ins1 right))
   | _                  -> Red (Empty, Empty)
 
-let insert dict key =
-  let dict = ins1 key dict in
-    match dict with
-      | Red (_, rt) -> rt
-      | dict        -> assert false
-
-let test_insert x x' =
-  let a = Black (Empty, Empty) in
-  let b = insert a x' in
-    ()
+let dict = ins1 (Black (Empty, Empty))
+let _ =
+  match dict with
+    | Red (_, rt) -> rt
+    | dict        -> assert false
