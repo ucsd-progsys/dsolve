@@ -79,13 +79,13 @@ let translate_pframe dopt env fenv pf =
     | PFsum (l, rro, ps, cs, r) -> transl_sum cstack l rro ps cs r
     | PFconstr (l, rro, fs, i, r) -> transl_constr cstack l rro fs i r
     | PFarrow (v, a, b) ->
-        let pat = match v with
+        let x = match v with
             Some id ->
               let id = Ident.create id in
               if List.mem id !vars then failwith "Redefined variable";
-                vars := id :: !vars; Tt.Tpat_var id
+                vars := id :: !vars; id
           | None -> F.fresh_binder () in
-        F.Farrow (pat, transl_pframe_rec cstack a, transl_pframe_rec cstack b)
+        F.Farrow (x, transl_pframe_rec cstack a, transl_pframe_rec cstack b)
     | PFtuple (fs, r) -> 
         F.tuple_of_frames (List.map (transl_pframe_rec cstack) fs) (transl_pref r)
     | PFrecord (fs, r) -> transl_record cstack fs r

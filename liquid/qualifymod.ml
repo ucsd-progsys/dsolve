@@ -280,21 +280,27 @@ and constrain_match (env, guard, f) e pexps partial =
   let (cstrs, subcstrs)    = List.split cases in
     (f, WFFrame (env, f) :: cstrs, List.concat (matchcstrs :: subcstrs))
 
+and pat_var pat =
+  match Pattern.get_patvar_desc pat.pat_desc with
+    | Some (Path.Pident id) -> id
+    | _                     -> F.fresh_binder ()
+
 and constrain_function (env, guard, f) pat e' =
   match f with
     | F.Farrow (_, f, unlabelled_f') ->
         let _ = F.refinement_iter 
           (fun r -> Constraint.formals_addn (F.refinement_qvars r)) f in
         let env' = F.env_bind env pat.pat_desc f in
+        let x    = pat_var pat in
         begin match e'.exp_desc with
           | Texp_function ([(pat', e')], _) ->
               let (f', cs, lcs) = constrain_function (env', guard, unlabelled_f') pat' e' in
-              let f             = F.Farrow (pat.pat_desc, f, f') in
+              let f             = F.Farrow (x, f, f') in
                 (f, WFFrame (env, f) :: cs, lcs)
           | _ ->
               let (f'', cstrs) = constrain e' env' guard in
               let f'           = F.label_like unlabelled_f' f'' in
-              let f            = F.Farrow (pat.pat_desc, f, f') in
+              let f            = F.Farrow (x, f, f') in
                 (f, [WFFrame (env, f); SubFrame (env', guard, f'', f')], cstrs)
         end
     | _ -> assert false
