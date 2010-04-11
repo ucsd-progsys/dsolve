@@ -72,8 +72,7 @@ def solve_quals(file,bare,time,quiet,flags):
   return common.logged_sys_call(time + [solve, "-dframes"] + flags + [("%s.ml" % bname)], out)
 
 def main():
-  argc = len(sys.argv)
-  if argc == 1:
+  if len(sys.argv) == 1:
     print ("Usage: %s [flags] [sourcefile]" % sys.argv[0])
     sys.exit(0)
   if sys.argv[1] == "-help" or sys.argv[1] == "--help":
@@ -92,7 +91,7 @@ def main():
     sys.argv.pop(1)
   src      = sys.argv[len(sys.argv) - 1]
   flags    = sys.argv[1:-1] 
-  gen_succ = gen_quals(src, bare, include)
+  gen_succ = gen_quals(src, bare, " ".join(flags))
   if (gen_succ != 0):
     print "Qualifier generation failed"
     sys.exit(gen_succ)

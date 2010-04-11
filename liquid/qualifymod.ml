@@ -307,7 +307,7 @@ and instantiate_id id f env tenv =
       Frame.fresh_builtin tenv ((Env.find_value id tenv).val_type)
   in
   let f, insts = F.instantiate env env_f f in
-    (f, List.map (fun f -> WFFrame (env, f)) insts)
+    (f, List.map (fun (f, binds) -> WFFrame (Le.addn binds env, f)) insts)
 
 and constrain_base_identifier (env, _, f) id e =
   let refn =

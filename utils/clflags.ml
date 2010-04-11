@@ -78,6 +78,7 @@ and ck_mlq = ref false                  (* do a quick incomplete check over the 
 and summarize = ref None                (* dump a summary of program to disk and terminate *)
 and dsmeasures = ref false              (* don't strip measure names *)
 and use_fixpoint = ref false            (* use fixpoint to solve constraints *)
+and dont_mine_mlq_preds = ref false     (* don't mine qualifiers from mlq files *)
 and dont_gen_mlq_preds = ref false      (* don't generalize qualifiers mined from mlqs *)
 
 let keep_asm_file = ref false           (* -S *)

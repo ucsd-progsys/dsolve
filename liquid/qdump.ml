@@ -123,7 +123,11 @@ let dump_default_qualifiers (str, env, menv, ifenv) deps qname =
   let fqs = List.fold_left (fun q e -> add ("MLQ", "_V", e) q) QS.empty fpreds in
 
   let initqs = add ("FALSE", "_V", P.Atom(P.PInt(1), P.Eq, P.PInt(0))) QS.empty in
-  let qs = QS.union (QS.union fqs mqs) initqs in
+  let qs =
+    if !Clflags.dont_mine_mlq_preds then
+      initqs
+    else
+      QS.union (QS.union fqs mqs) initqs in
   dump_deps qf deps; dump_intset qf ints;
   dump_comment_list qf "Program Identifiers" ids;
   dump_qset qf qs; pp_print_flush qf ()
