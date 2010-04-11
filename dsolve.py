@@ -54,6 +54,7 @@ def gen_quals(src,bare,flags):
   else:
     files = [hname, d_pats]
   common.cat_files(files, tname)
+  flags += " " + " ".join(get_options(src))
   gen  = ("%s %s -summarize" % (solve, flags)).split()
   succ = common.logged_sys_call(gen + [tname2, fname])
   split= ("./depsplit %s %s %s" % (tname, tname2, qname)).split()
@@ -63,6 +64,7 @@ def gen_quals(src,bare,flags):
 def solve_quals(file,bare,time,quiet,flags):
   bname = file[:-3]
   os.system("rm -f %s.annot" % bname)
+  flags += get_options(file)
   if quiet: out = null
   else: out = None
   if time: time = ["time"]
@@ -90,9 +92,6 @@ def main():
     sys.argv.pop(1)
   src      = sys.argv[len(sys.argv) - 1]
   flags    = sys.argv[1:-1] 
-  flags   += get_options(src)
-  if "-dontgenmlq" in flags:
-    include += " -dontgenmlq" 
   gen_succ = gen_quals(src, bare, include)
   if (gen_succ != 0):
     print "Qualifier generation failed"

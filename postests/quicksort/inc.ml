@@ -1,3 +1,5 @@
+(* DSOLVE -dontgenmlq *)
+
  type ('a, 'b) boolean = 
   | True of 'a
   | False of 'b

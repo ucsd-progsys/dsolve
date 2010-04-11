@@ -27,6 +27,8 @@
    Then it can be proved that [2^(h-1) <= n <= 2^h] when [n] is the
    number of elements and [h] the height of the tree. *)
 
+(* DSOLVE -dontgenmlq *)
+
 type 'a t =
   | Empty
   | Same of 'a * 'a t * 'a t (* same number of elements on both sides *)

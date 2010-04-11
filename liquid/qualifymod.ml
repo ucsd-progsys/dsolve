@@ -121,8 +121,8 @@ let label_constraint exp fc =
 let expression_to_pexpr e =
   match e.exp_desc with
     | Texp_constant (Const_int n) -> P.PInt n
-    | Texp_ident (id, _) -> P.Var id
-    | _ -> P.Var (Path.mk_ident "dummy")
+    | Texp_ident (id, _)          -> P.Var id
+    | _                           -> P.skolem ()
 
 let rec constrain e env guard =
   let _ = Frame.initialize_type_expr_levels e.exp_type in
@@ -132,14 +132,15 @@ let rec constrain e env guard =
    try
     match (e.exp_desc, freshf) with
       | (Texp_constant const_typ, F.Fabstract(path, [], _, _)) -> constrain_constant path const_typ
-      | (Texp_construct (cstrdesc, args), F.Fsum _) -> constrain_constructed environment cstrdesc args e
+      | (Texp_construct (cstrdesc, args), F.Finductive _) -> constrain_constructed environment cstrdesc args e
       | (Texp_record (labeled_exprs, None), _) -> constrain_record environment labeled_exprs
       | (Texp_field (expr, label_desc), _) -> constrain_field environment expr label_desc
       | (Texp_setfield (expr, label_desc, expr'), _) -> constrain_setfield environment expr label_desc expr'
       | (Texp_ifthenelse (e1, e2, Some e3), _) -> constrain_if environment e1 e2 e3
       | (Texp_match (e, pexps, partial), _) -> constrain_match environment e pexps partial
       | (Texp_function ([(pat, e')], _), _) -> constrain_function environment pat e'
-      | (Texp_ident (id, _), F.Fsum(_, _, _, _))
+      | (Texp_ident (id, _), F.Fsum(_, _, _))
+      | (Texp_ident (id, _), F.Finductive(_, _, _, _, _))
       | (Texp_ident (id, _), F.Fabstract(_, _, _, _))
       | (Texp_ident (id, _), F.Fvar _) ->
           constrain_base_identifier environment id e
@@ -189,18 +190,18 @@ and get_cstrrefs env path tag name args shp =
 and constrain_constructed (env, guard, f) cstrdesc args e =
   let shp = F.fresh_false e.exp_env e.exp_type in
   match F.unfold shp with
-  | F.Fsum (path, ro, cstrs, _) ->
+  | F.Fsum (path, cstrs, _) ->
       let tag                     = cstrdesc.cstr_tag in
       let (name, _)               = List.assoc tag cstrs in
       let (lhsref, rhsref, wfref) = get_cstrrefs env path tag name args shp in
       let (argframes, argcs)      = constrain_subexprs env guard args in
       let cstrs                   = List.map (fun (t, (n, ps)) -> (t, (n, if t = tag then replace_params ps argframes else ps))) cstrs in
-      let f'                      = F.Fsum (path, ro, cstrs, lhsref) in
+      let f'                      = F.Fsum (path, cstrs, lhsref) in
         (constrain_fold (env, guard, f) f' rhsref wfref [] argcs)
   | _ -> assert false
 
 and constrain_fold (env, guard, f) f'' rhsref wfref cstrs subcstrs =
-  let f' = F.unfold_applying f in
+  let f' = F.unfold f in
     (F.append_refinement rhsref f, WFFrame (env, (F.append_refinement wfref f)) :: SubFrame (env, guard, f'', f') :: cstrs, subcstrs)
 
 and compare_labels ({lbl_pos = n}, _) ({lbl_pos = m}, _) =
@@ -208,26 +209,26 @@ and compare_labels ({lbl_pos = n}, _) ({lbl_pos = m}, _) =
 
 and constrain_record (env, guard, f) labeled_exprs =
   let (_, sorted_exprs)                = List.split (List.sort compare_labels labeled_exprs) in
-  let (p, ps)                          = match f with F.Fsum(p, _, [(_, (_, ps))], _) -> (p, ps) | _ -> assert false in
+  let (p, ps)                          = match f with F.Finductive(p, _, _, [(_, (_, ps))], _) -> (p, ps) | _ -> assert false in
   let (fs, subexp_cs)                  = constrain_subexprs env guard sorted_exprs in
   let to_field (id, _, v) f            = (id, f, v) in
   let field_qualifier (id, _, _) fexpr = B.field_eq_qualifier id (expression_to_pexpr fexpr) in
   let params                           = List.map2 to_field ps fs in
   let field_refs                       = F.mk_refinement [] (List.map2 field_qualifier ps sorted_exprs) [] in
-  let f'                               = F.record_of_params p params field_refs in
+  let f'                               = F.sum_of_params p params field_refs in
     (constrain_fold (env, guard, f) f' F.empty_refinement F.empty_refinement [] subexp_cs)
 
 and constrain_field (env, guard, _) expr label_desc =
   let (recframe, cstrs)       = constrain expr env guard in
-  let (fieldname, fieldframe) = match F.unfold_applying recframe with
-    | F.Fsum (_, _, [(_, (_, ps))], _) -> let (i, f, _) = List.nth ps label_desc.lbl_pos in (i, f)
+  let (fieldname, fieldframe) = match F.unfold recframe with
+    | F.Fsum (_, [(_, (_, ps))], _) -> let (i, f, _) = List.nth ps label_desc.lbl_pos in (i, f)
     | _ -> assert false
   in (fieldframe, [WFFrame (env, fieldframe)], cstrs)
 
 and constrain_setfield (env, guard, f) expr label_desc expr' =
   let (recframe, cstrs1) = constrain expr env guard in
   let (setframe, cstrs2) = constrain expr' env guard in
-  let fieldframe         = F.record_field (F.unfold_applying recframe) label_desc.lbl_pos in
+  let fieldframe         = F.record_field (F.unfold recframe) label_desc.lbl_pos in
     (B.uUnit, [SubFrame (env, guard, setframe, fieldframe)], cstrs1 @ cstrs2)
 
 and constrain_if (env, guard, f) e1 e2 e3 =
@@ -303,7 +304,7 @@ and instantiate_id id f env tenv =
     try
       Le.find id env
     with Not_found ->
-      Frame.fresh_without_vars tenv ((Env.find_value id tenv).val_type)
+      Frame.fresh_builtin tenv ((Env.find_value id tenv).val_type)
   in
     F.instantiate env env_f f
 

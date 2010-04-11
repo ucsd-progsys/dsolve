@@ -1,7 +1,6 @@
 #define TRUEREF [[], [v: true, v: true, v: true, v: true, v: true, v: true]]
-#define R(name, rec, ref) {name: TRUEREF rec | ref}
-#define U(name, rec) name: TRUEREF rec
-#define TREE(rec, l, ll, d, r, lr, h) TRUEREF [rec: t . || l, ll, d, r, lr, h]
+#define R(name, ref) {name: 'a t | ref}
+#define TREE(l, ll, d, r, lr, h) [(a: 'b) t . || l, ll, d, r, lr, h]
 #define H(x) height x
 #define L(v) length v
 #define ITE(x, y, z) (x ? y : z)
@@ -15,11 +14,10 @@
 #define LSUM(v, l, r) LSUMP(v, l, r, 0)
 #define HGE0(v) (H(v) >= 0 && L(v) >= 0)
 #define BALW(e2, v, n) (H(v) <= H(e2) + n && H(v) >= H(e2) - n)
-#define RGDTREE(ty, v, r) {v: TREE(z, R(e0, z, HGE0(e0)), {e1: int | ISLEN(e1, e0)}, e2: ty, \
-                               R(e3, z, BALW(e0, e3, 2) && HGE0(e3)), {e4: int | ISLEN(e4, e3)}, \
+#define RGDTREE(ty, v, r) {v: TREE(R(e0, HGE0(e0)), {e1: int | ISLEN(e1, e0)}, e2: ty, \
+                               R(e3, BALW(e0, e3, 2) && HGE0(e3)), {e4: int | ISLEN(e4, e3)}, \
                                {e5: int | ISHEIGHT(e0, e3, e5)}) | (HGE0(v) && (r))}
 #define UGDTREE(ty) RGDTREE(ty, v, true)
-#define TAG(x) __tag x
 #define TRUE 2
 #define FALSE 0
 
@@ -39,7 +37,7 @@ val create: 'a -> n: {v: int | v >= 0} -> RGDTREE('a, v, L(v) = n)
 *)
 val empty: RGDTREE('a, v, H(v) = 0 && L(v) = 0)
 
-val is_empty: t: UGDTREE('a) -> {v: bool | TAG(v) = (H(t) = 0 || L(t) = 0 ? TRUE: FALSE)}
+val is_empty: t: UGDTREE('a) -> bool
 
 val singleton: 'a -> RGDTREE('a, v, H(v) = 1 && L(v) = 1)
 

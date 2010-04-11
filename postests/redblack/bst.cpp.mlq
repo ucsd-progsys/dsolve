@@ -5,12 +5,12 @@
 #define RR(e0) [v: v > e0, v: true, v: true]
 #define RN(e0) [[], RR(e0), RR(e0), RR(e0)]
 
-#define DN e0: 'a, e1: LN(e0) z, e2: RN(e0) z
-#define N  e0: 'a, e1: LN(e0) z, e2: RN(e0) z
-#define PN e0: 'a, e1: LN(e0) z, e2: RN(e0) z
+#define DN e0: 'a, e1: LN(e0) 'a dict, e2: RN(e0) 'a dict
+#define N  e0: 'a, e1: LN(e0) 'a dict, e2: RN(e0) 'a dict
+#define PN e0: 'a, e1: LN(e0) 'a dict, e2: RN(e0) 'a dict
 
-#define RBT R [z: dict . || N || DN || PN]
-#define GBT R [z: dict . || N || DN || PN]
+#define RBT [(a: 'b) dict . || N || DN || PN]
+#define GBT [(a: 'b) dict . || N || DN || PN]
 
 (*
 

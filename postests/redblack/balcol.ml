@@ -1,3 +1,5 @@
+(* DSOLVE -dontgenmlq *)
+
 type 'a dict =
     Empty
   | Black of 'a * 'a dict * 'a dict

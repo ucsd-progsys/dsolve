@@ -32,23 +32,25 @@ let ftag  = (dsyvv, tagSt, [])
 let inject_tag env = Asm.add tagSy ftag env
 
 let rec string_of_frame = function
-  | Fr.Fsum (p, _, _, _)
-  | Fr.Frec (p, _, _) 
-  | Fr.Fabstract (p, _, _, _)
-  | Fr.Fvar (p, _, _, _) -> (*Pg.str_of_path p*)
+  | Fr.Fsum (p, _, _)
+  | Fr.Finductive (p, _, _, _, _)
+  | Fr.Frec (p, _, _, _) 
+  | Fr.Fabstract (p, _, _, _) ->
       if Path.same Predef.path_bool p then "bool" else
       if Path.same Predef.path_int p then "int" else untStr
   | Fr.Farrow (_, f1, f2) -> (string_of_frame f1) ^ "->" ^ (string_of_frame f2)
+  | Fr.Fvar (_, _, _, _) -> untStr
 
 let rec fsort_of_dframe fr =
   match fr with
-  | Fr.Fsum (p, _, _, _)
-  | Fr.Frec (p, _, _) 
-  | Fr.Fvar (p, _, _, _)
+  | Fr.Fsum (p, _, _)
+  | Fr.Finductive (p, _, _, _, _)
+  | Fr.Frec (p, _, _, _) 
   | Fr.Fabstract (p, _, _, _) ->
       if Path.same Predef.path_bool p then S.Bool else
       if Path.same Predef.path_int p then S.Int else S.Unint (string_of_frame fr)
   | Fr.Farrow (_, f1, f2) -> S.Func (collapse fr)
+  | Fr.Fvar (_, _, _, _) -> S.Unint (string_of_frame fr)
 
 and collapse = function
   | Fr.Farrow (_, f1, f2) -> fsort_of_dframe f1 :: collapse f2

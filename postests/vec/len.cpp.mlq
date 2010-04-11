@@ -1,7 +1,6 @@
 #define TRUEREF [[], [v: true, v: true, v: true, v: true, v: true, v: true]]
-#define R(name, rec, ref) {name: TRUEREF rec | ref}
-#define U(name, rec) name: TRUEREF rec
-#define TREE(rec, l, ll, d, r, lr, h) TRUEREF [rec: t . || l, ll, d, r, lr, h]
+#define R(name, ref) {name: 'a t | ref}
+#define TREE(l, ll, d, r, lr, h) [(a: 'b) t . || l, ll, d, r, lr, h]
 #define L(v) length v
 #define ITE(x, y, z) (x ? y : z)
 #define MAX(x, y) ITE(x >= y, x, y)
@@ -11,8 +10,8 @@
 #define LSUMP(v, l, r, n) (L(v) = L(l) + L(r) + n)
 #define LSUM(v, l, r) LSUMP(v, l, r, 0)
 #define HGE0(v) (L(v) >= 0)
-#define RGDTREE(ty, v, r) {v: TREE(z, R(e0, z, HGE0(e0)), {e1: int | ISLEN(e1, e0)}, e2: ty, \
-                               R(e3, z, HGE0(e3)), {e4: int | ISLEN(e4, e3)}, \
+#define RGDTREE(ty, v, r) {v: TREE(R(e0, HGE0(e0)), {e1: int | ISLEN(e1, e0)}, e2: ty, \
+                               R(e3, HGE0(e3)), {e4: int | ISLEN(e4, e3)}, \
                                e5: int) | (HGE0(v) && (r))}
 #define UGDTREE(ty) RGDTREE(ty, v, true)
 
@@ -41,7 +40,7 @@ val setappend: 'a -> 'a -> i: {v: int | v >= 0} -> t: RGDTREE('a, v, HGE0(v) && 
 val concat: t1: UGDTREE('a) -> t2: UGDTREE('a) -> RGDTREE('a, v, LSUM(v, t1, t2))
  
 
-val pop: i: {v: int | v >= 0} -> t: RGDTREE('a, v, L(v) > i) -> 'a * RGDTREE('a, v, L(v) = L(t) - 1)
+val pop: i: {v: int | v >= 0} -> t: RGDTREE('a, v, L(v) > i) -> ('a * RGDTREE('a, v, L(v) = L(t) - 1))
 
 
 val remove: i: {v: int | v >= 0} -> t: RGDTREE('a, v, L(v) > i) -> RGDTREE('a, v, L(v) = L(t) - 1)

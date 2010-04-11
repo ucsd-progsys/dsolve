@@ -44,15 +44,14 @@ let mkfield d =
 let rw_frame f nr =
     match f with
       PFvar(s, b, r) -> PFvar(s, b, nr)
-    | PFrec(s, rr, _) -> PFrec(s, rr, nr)
-    | PFsum(l, rro, cs, _) -> PFsum(l, rro, cs, nr)
-    | PFconstr(s, f, i, r) -> PFconstr(s, f, i, nr)
+    | PFsum(l, rro, ps, cs, _) -> PFsum(l, rro, ps, cs, nr)
+    | PFconstr(s, rro, f, i, r) -> PFconstr(s, rro, f, i, nr)
     | PFarrow _ -> assert false
     | PFtuple(a, r) -> PFtuple(a, nr)
     | PFrecord(a, r) -> PFrecord(a, nr)
 
 let inj_name s = function
-    | PFconstr (a, b, _, r) -> PFconstr (a, b, Some s, r)
+    | PFconstr (a, b, c, _, r) -> PFconstr (a, b, c, Some s, r)
     | f -> f
 
 let ptrue = ("", {ppredpat_desc = Ppredpat_true; 
@@ -62,17 +61,15 @@ let mk_implies a b =
   let pre = mkpredpat (Ppredpat_not(a)) in
     mkpredpat (Ppredpat_or(pre, b))
 
-let mkconstr a b r = PFconstr (a, b, None, r)
-let mksum p rro cs r = PFsum (p, rro, cs, r)
+let mkconstr a b rro r = PFconstr (a, rro, b, None, r)
+let mksum p rro ps cs r = PFsum (p, rro, ps, cs, r)
 let mkvar a b r = PFvar (a, b, r)
-let mkrecvar a rr r = PFrec (a, rr, r)
 let mkarrow v a b = PFarrow (v, a, b)
 let mktuple a r = PFtuple (a, r)
 let mkrecord a r = PFrecord (a, r)
-let mktrue_constr a b = mkconstr a b ptrue
-let mktrue_sum p rro cs = mksum p rro cs ptrue
+let mktrue_constr a b rro = mkconstr a b rro ptrue
+let mktrue_sum p rro ps cs = mksum p rro ps cs ptrue
 let mktrue_var a b = mkvar a b ptrue
-let mktrue_recvar a rr = mkrecvar a rr ptrue
 let mktrue_tuple a = mktuple a ptrue
 let mktrue_record a = mkrecord a ptrue
 
@@ -83,12 +80,14 @@ let mktrue_record a = mkrecord a ptrue
 %token AMPERAMPER
 %token AMPERSAND
 %token AND
+%token AS
 %token BACKQUOTE
 %token BAR
 %token BARBAR
 %token BARRBRACKET
 %token <char> CHAR
 %token COLON
+%token COLONEQUAL
 %token COLONCOLON
 %token COMMA
 %token DOT
@@ -654,16 +653,16 @@ measure_arg:
 liquid_type_list: /* this must be before liquid_type to resolve reduce/reduces */
     liquid_type1 STAR liquid_type_list
       { $1 :: $3 }
-  | liquid_type1                        %prec below_STAR
-      { [$1] }
+  | liquid_type1 STAR liquid_type1              %prec below_STAR
+      { [$1; $3] }
 
 liquid_type:                             
-    liquid_type_list 
-      { match $1 with [st] -> st | _ -> mktrue_tuple $1  }
-  | LBRACE LIDENT COLON liquid_type1 STAR liquid_type_list BAR predicate RBRACE
-      { mktuple ($4::$6) ($2, $8) }
+    LPAREN liquid_type_list RPAREN
+      { mktrue_tuple $2 }
   | LBRACKET LIDENT COLON liquid_type1 RBRACKET
       { inj_name $2 $4 }
+  | liquid_type1
+      { $1 }
 
 liquid_type1:
     LBRACE LIDENT COLON liquid_type2 BAR predicate RBRACE 
@@ -682,24 +681,24 @@ subs_opt:
 liquid_type2:
     QUOTE LIDENT subs_opt                                 /* tyvar */
       { mktrue_var $2 $3 }
-  | liquid_recref LIDENT                                  /* recursive tyvar */
-      { mktrue_recvar $2 $1 }
   | LPAREN liquid_type_comma_list RPAREN %prec below_IDENT 
       { match $2 with [stn] -> snd stn | _ -> raise Parse_error } 
   | type_longident                                       /* base_type */
-      { mktrue_constr $1 [] }
+      { mktrue_constr $1 [] None }
   | liquid_type type_longident                           /* simple constructed */
-      { mktrue_constr $2 [(None, $1)] }
+      { mktrue_constr $2 [(None, $1)] None }
+  | liquid_recref liquid_type type_longident                           /* simple constructed */
+      { mktrue_constr $3 [(None, $2)] (Some $1) }
   | LPAREN liquid_type_comma_list RPAREN type_longident  /* multi-param constructed */
-      { mktrue_constr $4 $2 }
+      { mktrue_constr $4 $2 None }
+  | liquid_recref LPAREN liquid_type_comma_list RPAREN type_longident  /* multi-param constructed */
+      { mktrue_constr $5 $3 (Some $1) }
   | liquid_type3
       { $1 }
 
 liquid_type3:
-    LBRACKET type_longident DOT liquid_constr_list RBRACKET
-      { mktrue_sum $2 None $4 }
-  | liquid_recref LBRACKET LIDENT COLON type_longident DOT liquid_constr_list RBRACKET
-      { mktrue_sum $5 (Some ($3, $1)) $7 }
+    LBRACKET LPAREN liquid_param_list RPAREN type_longident DOT liquid_constr_list RBRACKET
+      { mktrue_sum $5 None $3 $7 }
   | liquid_record
       { mktrue_record $1 }
 
