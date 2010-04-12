@@ -81,7 +81,7 @@ let env_bound_ids env =
   let is = ref [] in
   Le.iter 
     (fun _ f -> F.iter_labels 
-      (fun p -> is := List.rev_append (Typedtree.pat_desc_bound_idents p) !is) f)
+      (fun p -> is := p :: !is) f)
         env; !is
 
 let generalize_pred pred =
