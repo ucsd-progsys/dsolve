@@ -316,13 +316,9 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
       ([], [])
   | (f1, f2) when f1 = f2 ->
       ([], [])
-  | ((F.Farrow (p1, f1, f1') as fd), (F.Farrow (p2, f2, f2') as ff)) ->
-      let subs = if not (Pat.same p1 p2) then 
-        try subst_to p1 p2 
-          with Failure s -> printf "@[Failure:@ %s@ %a@ <:@ %a@]" s
-            F.pprint fd F.pprint ff; assert false
-          else [] in
-      let env' = F.env_bind env p2 f2 in
+  | (F.Farrow (x1, f1, f1'), F.Farrow (x2, f2, f2')) ->
+      let subs = if not (Ident.same x1 x2) then [(C.i2p x1, P.Var (C.i2p x2))] else [] in
+      let env' = Le.add (C.i2p x2) f2 env in
       let f1'  = F.apply_subs subs f1' in
         (lequate_cs env g c F.Covariant f2 f1 @ lequate_cs env' g c F.Covariant f1' f2', [])
   | (F.Fvar (_, _, s, r1), F.Fvar (_, _, s', r2)) ->
@@ -364,15 +360,14 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
   | f when F.is_shape f ->
       ([], [])
   | F.Finductive (p, ps, rr, cs, r) ->
-      (make_wff c tenv env (F.wf_unfold f) :: (ps |> F.params_frames |> List.map (make_wff c tenv env)),
-       split_wf_ref f c (bind_tags (Some p) f cs r env) r)
+      (make_wff c tenv env (F.wf_unfold f) :: (ps |> F.params_frames |>: make_wff c tenv env), [])
   | F.Fsum (_, cs, r) ->
      (C.flap (split_wf_params c tenv env <.> F.constr_params) cs,
       split_wf_ref f c (bind_tags None f cs r env) r)
   | F.Fabstract (_, ps, id, r) ->
       (split_wf_params c tenv (Le.add (Path.Pident id) f env) ps, split_wf_ref f c env r)
-  | F.Farrow (p, f, f') ->
-      ([make_wff c tenv env f; make_wff c tenv (F.env_bind env p f) f'], [])
+  | F.Farrow (x, f, f') ->
+      ([make_wff c tenv env f; make_wff c tenv (Le.add (C.i2p x) f env) f'], [])
   | F.Fvar (_, _, s, r) ->
       ([], split_wf_ref f c env r)
   | F.Frec _ ->
