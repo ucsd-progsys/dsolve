@@ -3,12 +3,11 @@ type dict =
   | Black of dict * dict
   | Red of dict * dict
 
-let restore_right arg = match arg with
-  | Black (lt, Red (rl, _)) -> Black (Red (lt, rl), Empty)
-  | _                       -> assert false
+let rec ins d = match d with
+  | Black (_, right) ->
+      begin match (Black (Empty, ins right)) with
+        | Black (lt, Red (rl, _)) -> Black (Red (lt, rl), Empty)
+      end
+  | _ -> Red (Empty, Empty)
 
-let rec ins1 d = match d with
-  | Black (_, right) -> restore_right (Black (Empty, ins1 right))
-  | _                -> Red (Empty, Empty)
-
-let _ = ins1 (Black (Empty, Empty))
+let _ = ins (Black (Empty, Empty))
