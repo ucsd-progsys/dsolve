@@ -52,7 +52,7 @@ type 'a preframe =
   | Finductive of Path.t * 'a preparam list * 'a prerecref * 'a preconstr list * 'a
   | Frec       of Path.t * 'a preframe list * 'a prerecref * 'a
   | Fabstract  of Path.t * 'a preparam list * Ident.t * 'a
-  | Farrow     of pattern_desc * 'a preframe * 'a preframe
+  | Farrow     of Ident.t * 'a preframe * 'a preframe
 
 and 'a preparam  = Ident.t * 'a preframe * variance
 and 'a preconstr = constructor_tag * (string * 'a preparam list)
@@ -96,7 +96,7 @@ val translate_variance: (bool * bool * bool) -> variance
 val constr_params: constr -> param list
 val constrs_tag_params: constructor_tag -> constr list -> param list
 val record_field: t -> int -> t
-val iter_labels: (pattern_desc -> unit) -> t -> unit
+val iter_labels: (Ident.t -> unit) -> t -> unit
 val map_refexprs: (refexpr -> refexpr) -> t -> t
 val map_qualifiers: (Qualifier.t -> Qualifier.t) -> t -> t
 val params_frames: param list -> t list
@@ -116,7 +116,7 @@ val wf_unfold: t -> t
 
 val apply: t -> Predicate.pexpr list -> t
 
-val fresh_binder: unit -> pattern_desc
+val fresh_binder: unit -> Ident.t
 val fresh: Env.t -> type_expr -> t
 val fresh_without_vars: Env.t -> type_expr -> t
 val fresh_false: Env.t -> type_expr -> t

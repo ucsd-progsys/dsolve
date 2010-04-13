@@ -85,12 +85,14 @@ module Prover : PROVER =
     let iofb = Path.mk_ident "_IOFB"
     let div = Path.mk_ident "_DIV"
     let tag = P.tag_function
+    let skolem = P.skolem_function
 
     let builtins = [
             (tag, Func [Unint "obj"; Int]);
             (div, Func [Int; Int; Int]);
             (iofb, Func [Bool; Int]);
             (bofi, Func [Int; Bool]);
+            (skolem, Func [Int; Unint "skolem_constant"])
     ]
 
     let abs p = F.Fabstract(p, [], Ident.create "", F.empty_refinement)
@@ -174,7 +176,7 @@ module Prover : PROVER =
     let getVarType me s env =
       let fr = try (Le.find s env) with
                  Not_found -> let p = Path.unique_name s in
-                   (eprintf "@[Warning:@ type@ of@ %s@ not@ found@ at@ TP@]@." p; Builtins.uUnit) in
+                   (eprintf "@[Warning:@ type@ of@ %s@ not@ found@ at@ TP@]@." p; assert false) in
       try frame_to_type me fr
         with Not_found -> unint
 

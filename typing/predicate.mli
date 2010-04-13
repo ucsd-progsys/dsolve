@@ -86,6 +86,9 @@ val pred_or_pexp_map_funs: (Path.t -> Path.t) -> t_or_pexpr -> t_or_pexpr
 val tag_function: Path.t
 val tag: pexpr -> pexpr
 
+val skolem_function : Path.t
+val skolem          : unit -> pexpr
+
 val big_and: t list -> t
 val big_or: t list -> t
 val equals: (pexpr * pexpr) -> t

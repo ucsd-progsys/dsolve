@@ -72,7 +72,7 @@ type 'a preframe =
   | Finductive of Path.t * 'a preparam list * 'a prerecref * 'a preconstr list * 'a
   | Frec       of Path.t * 'a preframe list * 'a prerecref * 'a
   | Fabstract  of Path.t * 'a preparam list * Ident.t * 'a
-  | Farrow     of pattern_desc * 'a preframe * 'a preframe
+  | Farrow     of Ident.t * 'a preframe * 'a preframe
 
 and 'a preparam  = Ident.t * 'a preframe * variance
 and 'a preconstr = constructor_tag * (string * 'a preparam list)
@@ -163,14 +163,12 @@ let rec map_labels f fr =
 and map_label_map f = function
     Farrow (x, a, b) -> Farrow (f x, a, b)
   | Fabstract (p, ps, id, r) ->
-      let id = if C.empty_list ps then id else
-        (List.hd (Typedtree.pat_desc_bound_idents (f (Tpat_var id)))) in
+      let id = if C.empty_list ps then id else f id in
         Fabstract(p, map_param_labels f ps, id, r)
   | fr -> fr
 
 and map_param_labels f ps =
-  let i2p i = Tpat_var i in
-    List.map (fun (i, fr, v) -> (List.hd (Typedtree.pat_desc_bound_idents (f (i2p i))), map_labels f fr, v)) ps  
+  List.map (fun (i, fr, v) -> (f i, map_labels f fr, v)) ps  
 
 let rec iter_labels f fr =
   let f' p = f p; p in
@@ -464,6 +462,8 @@ let pprint_recref ppf rr =
 let level_suffix l = 
   if l = generic_level then "P" else "M"
 
+let simple_paths = [Predef.path_bool; Predef.path_unit; Predef.path_option]
+
 let rec pprint ppf = function
   | Frec (path, tas, rr, r) ->
       wrap_refined r ppf 
@@ -471,20 +471,22 @@ let rec pprint ppf = function
   | Fvar (id, level, s, r) ->
       wrap_refined r ppf 
       (fun ppf -> fprintf ppf "'%s%s%a" (C.ident_name id) (level_suffix level) 
-                  (C.pprint_many false "" (fun ppf (s, s') -> fprintf ppf "[%s/%s]" s s')) s)  
+                  (C.pprint_many false "" (fun ppf (s, s') -> fprintf ppf "[%s/%s]" s s')) s)
+  | Fsum (path, _, r) when List.exists (Path.same path) simple_paths ->
+      pprint_sum_simple ppf path [] r
+  | Finductive (path, ps, _, _, r) when !Clflags.hide_rectypes || List.exists (Path.same path) simple_paths ->
+      pprint_sum_simple ppf path ps r
+  | Fsum (path, [(_, (_, ps))], r) when Path.same path path_tuple ->
+      wrap_refined r ppf (fun ppf -> fprintf ppf "%a" print_prd ps)
   | Fsum (path, cs, r) ->
       wrap_refined r ppf 
       (fun ppf -> fprintf ppf "%s. @[<hv 0>%a@]" (C.path_name path) print_sum cs)
-  | Finductive (path, ps, _, cs, r) when !Clflags.hide_rectypes ->
-      let la, ra  = "«", "»" in 
-      wrap_refined r ppf 
-      (fun ppf -> fprintf ppf "%s%a %s%s" la print_prd ps (C.path_name path) ra)
   | Finductive (path, ps, rr, cs, r) ->
       let la, ra  = "«", "»" in 
       wrap_refined r ppf 
       (fun ppf -> fprintf ppf "<%a> %s%a %s%s. @[<hv 0>%a@]" pprint_recref rr la print_prd ps (C.path_name path) ra print_sum cs)
-  | Farrow (pat, f, f') -> 
-      fprintf ppf "@[<hv 0>(%a:%a) ->@ %a@]" pprint_pattern pat pprint f pprint f'
+  | Farrow (x, f, f') -> 
+      fprintf ppf "@[<hv 0>(%s:%a) ->@ %a@]" (C.ident_name x) pprint f pprint f'
   | Fabstract (path, [], id, r) ->
       wrap_refined r ppf 
       (fun ppf -> fprintf ppf "@[%s@]" (C.path_name path)) 
@@ -503,6 +505,11 @@ and print_prd ppf = function
 
 and pprint_constructor ppf (_, (n, ps)) = 
    fprintf ppf "%s%a" n print_prd ps
+
+and pprint_sum_simple ppf path ps r =
+  let la, ra  = "«", "»" in 
+    wrap_refined r ppf 
+      (fun ppf -> fprintf ppf "%s%a %s%s" la print_prd ps (C.path_name path) ra)
 
 and print_bind ppf (name, f, _) = 
    fprintf ppf "%s:%a" (C.ident_name name) pprint f
@@ -712,15 +719,10 @@ let map_inst eq inst f =
 (********* Polymorphic and qualifier instantiation ************) 
 (**************************************************************)
 
-type bind = Bpat of pattern_desc | Bid of Ident.t
-
 let dep_sub_to_sub binds scbinds env (s, s') =
-  let i2sub i = (Ident.name i, C.i2p i) in
-  let bind = function
-    | Bpat p -> List.map i2sub (Typedtree.pat_desc_bound_idents p)
-    | Bid i -> [i2sub i] in
-  let binds = C.flap bind binds in
-  let scbinds = C.flap bind scbinds in
+  let bind i = (Ident.name i, C.i2p i) in
+  let binds = List.map bind binds in
+  let scbinds = List.map bind scbinds in
   let c i =
     try List.assoc i binds
       with Not_found -> Le.find_path i env in
@@ -754,26 +756,26 @@ let instantiate env fr ftemplate =
           f
       | (Frec (p, tas1, rr, r), Frec (_, tas2, _, _)) ->
           Frec (p, List.map2 (inst scbinds) tas1 tas2, rr, r)
-      | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
+      | (Farrow (x, f1, f1'), Farrow (_, f2, f2')) ->
           let nf1 = inst scbinds f1 f2 in
-          let _   = binds := (Bpat l) :: !binds in
-          let nf2 = inst ((Bpat l) :: scbinds) f1' f2' in
-          Farrow (l, nf1, nf2)
+          let _   = binds := x :: !binds in
+          let nf2 = inst (x :: scbinds) f1' f2' in
+          Farrow (x, nf1, nf2)
       | (Fsum (p, cs, r), Fsum(p', cs', _)) ->
           Fsum (p, List.map2 (constr_app_params2 (inst_params scbinds)) cs cs', r)
       | (Finductive (p, ps, rr, cs, r), Finductive (_, ps', _, _, _)) ->
           Finductive (p, inst_tparams scbinds ps ps', rr, cs, r)
       | (Fabstract(p, ps, id, r), Fabstract(_, ps', _, _)) ->
-          let _ = binds := (Bid id) :: !binds in
-          Fabstract (p, inst_params ((Bid id) :: scbinds) ps ps', id, r)
+          let _ = binds := id :: !binds in
+          Fabstract (p, inst_params (id :: scbinds) ps ps', id, r)
       | (f1, f2) ->
           fprintf std_formatter "@[Unsupported@ types@ for@ instantiation:@;<1 2>%a@;<1 2>%a@]@."
 	    pprint f1 pprint f2;
 	    raise (Failure ("Instantiate"))
   and inst_params scbinds ps ps' =
     let bind_param (ps, scbinds) (p, f, v) (_, f', _) =
-      binds := (Bid p) :: !binds;
-      ((ps @ [(p, inst scbinds f f', v)]), (Bid p) :: scbinds) in
+      binds := p :: !binds;
+      ((ps @ [(p, inst scbinds f f', v)]), p :: scbinds) in
     fst (List.fold_left2 bind_param ([], scbinds) ps ps')
   and inst_tparams scbinds ps ps' =
     List.fold_right2 (fun (p, f, v) (_, f', _) ps -> (p, inst scbinds f f', v) :: ps) ps ps' [] in
@@ -813,9 +815,9 @@ let label_like f f' =
     | (Fabstract (p, ps, id, r), Fabstract (_, ps', id', _)) ->
         let vars' = (Ident.name id, Path.Pident id') :: vars in
           Fabstract (p, label_params_like vars' ps ps', id', instantiate_ref_qualifiers vars r)
-    | (Farrow (p1, f1, f1'), Farrow (p2, f2, f2')) ->
-        let vars' = List.map (fun (x, y) -> (Ident.name x, Path.Pident y)) (Pattern.bind_vars p1 p2) @ vars in
-          Farrow (p2, label vars f1 f2, label vars' f1' f2')
+    | (Farrow (x1, f1, f1'), Farrow (x2, f2, f2')) ->
+        let vars' = (Ident.name x1, C.i2p x2) :: vars in
+          Farrow (x2, label vars f1 f2, label vars' f1' f2')
     | _ -> printf "@[Can't label %a like %a@.@]" pprint f pprint f'; raise (LabelLikeFailure(f, f'))
   and label_constrs_like vars cs1 cs2 =
     List.map2 (constr_app_params2 (label_params_like vars)) cs1 cs2
@@ -847,7 +849,7 @@ let tuple_of_frames fs r =
 (******************************************************************************)
 
 let apply_once f e = match f with
-  | Farrow (p, f, f') -> apply_subs (Pattern.bind_pexpr p e) f'
+  | Farrow (x, f, f') -> apply_subs [(C.i2p x, e)] f'
   | _                 -> invalid_arg "apply called with non-function argument"
 
 let apply f es =
@@ -889,7 +891,7 @@ let next_binder = ref first_binder
 let reset_binders () = next_binder := first_binder
 
 let fresh_binder () =
-  incr next_binder; Tpat_var (Ident.create (Char.escaped (Char.chr !next_binder)))
+  incr next_binder; Ident.create (Char.escaped (Char.chr !next_binder))
 
 let tconstr_params t =
   match (repr t).desc with
@@ -994,7 +996,7 @@ let fresh_variant_with_params env path paramfs =
 let rec build_uninterpreted name params = function
   | Farrow (_, f, f') ->
       let lab = Ident.create "x" in
-        Farrow (Tpat_var lab, f, build_uninterpreted name (lab :: params) f')
+        Farrow (lab, f, build_uninterpreted name (lab :: params) f')
   | f ->
       let args = List.rev_map (fun p -> P.Var (Path.Pident p)) params in
       let v    = Path.mk_ident "v" in
@@ -1011,7 +1013,7 @@ let fresh_uninterpreted env ty name =
 
 let mk_unint_constructor f n ps =
   let frames = params_frames ps in
-    build_uninterpreted n [] (List.fold_right (fun f f' -> Farrow (Tpat_var (Ident.create ""), f, f')) frames f)
+    build_uninterpreted n [] (List.fold_right (fun f f' -> Farrow (Ident.create "x", f, f')) frames f)
 
 let uninterpreted_constructors env ty =
   let f = fresh_without_vars env ty in
