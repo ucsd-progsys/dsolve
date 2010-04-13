@@ -777,11 +777,7 @@ let instantiate env fr ftemplate =
     fst (List.fold_left2 bind_param ([], scbinds) ps ps')
   and inst_tparams scbinds ps ps' =
     List.fold_right2 (fun (p, f, v) (_, f', _) ps -> (p, inst scbinds f f', v) :: ps) ps ps' [] in
-  let res   = inst [] fr ftemplate in
-  (* TODO: Return, for each variable, a list of bindings that should be added to the environment
-     to check WF of delayed substitutions. *)
-  let insts = List.map snd !vars in
-    (res, insts)
+  inst [] fr ftemplate
 
 let instantiate_refexpr_qualifiers vars (subs, (qconsts, qvars)) =
   (subs, (List.map (fun q -> match Qualifier.instantiate vars q with Some q -> q | None -> q) qconsts, qvars))

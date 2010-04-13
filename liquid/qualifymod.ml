@@ -306,18 +306,19 @@ and instantiate_id id f env tenv =
     with Not_found ->
       Frame.fresh_builtin tenv ((Env.find_value id tenv).val_type)
   in
-  let f, insts = F.instantiate env env_f f in
-    (f, List.map (fun f -> WFFrame (env, f)) insts)
+    F.instantiate env env_f f
 
 and constrain_base_identifier (env, _, f) id e =
   let refn =
     if Le.mem id env then B.equality_refinement (expression_to_pexpr e) else F.empty_refinement in
-  let f, wfs = instantiate_id id f env e.exp_env in
-    (F.apply_refinement refn f, wfs, [])
+  let f' = instantiate_id id f env e.exp_env in
+  let f  = F.label_like f f' in
+    (F.apply_refinement refn f', [WFFrame (env, f)], [])
 
 and constrain_identifier (env, _, f) id tenv =
-  let f, wfs = instantiate_id id f env tenv in
-    (f, wfs, [])
+  let f' = instantiate_id id f env tenv in
+  let f  = F.label_like f f' in
+    (f', [WFFrame(env, f)], [])
 
 and apply_once env guard (f, cstrs, subexp_cstrs) e = match (f, e) with
   | (F.Farrow (p, f1, _), (Some arg, _)) ->
