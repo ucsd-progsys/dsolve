@@ -278,14 +278,13 @@ let params_apply_substitutions subs ps =
 
 let rec split_sub_params c tenv env g ps1 ps2 = match (ps1, ps2) with
   | ((i, f, v)::ps1, (i', f', _)::ps2) ->
-      let (pi, pi') = (TT.Tpat_var i, TT.Tpat_var i') in
+      let (pi, pi')    = (C.i2p i, C.i2p i') in
       let (env', subs) = begin match v with
-        | F.Covariant | F.Invariant -> (F.env_bind env pi f, subst_to pi' pi)
-        | F.Contravariant           -> (F.env_bind env pi' f', subst_to pi pi')
+        | F.Covariant | F.Invariant -> (Le.add pi f env, [(pi', P.Var pi)])
+        | F.Contravariant           -> (Le.add pi' f' env, [(pi, P.Var pi')])
       end
       in lequate_cs env g c v f f' @
            split_sub_params c tenv env' g ps1 (params_apply_substitutions subs ps2)
-
   | ([], []) -> []
   | _ -> assert false
 
