@@ -29,6 +29,8 @@ open Types
 open Clflags
 open Gc
 
+open Misc.Ops
+
 module F   = Frame
 module MLQ = Mlqmod
 module M   = Measure
@@ -114,18 +116,17 @@ let load_valfile ppf env fenv fname =
   with Not_found -> failwith (Printf.sprintf "builtins: val %s does not correspond to library value" fname)
     
 let load_sourcefile ppf env fenv sourcefile =
-  let str = Pparse.file ppf sourcefile Parse.implementation ast_impl_magic_number in 
-  let str =
-    if !Clflags.no_anormal then
-      str
-    else
-      try Nm.normalize_structure (Nm.desugar_forloops str) with
+  Pparse.file ppf sourcefile Parse.implementation ast_impl_magic_number |>
+  Nm.desugar_forloops |>
+  (fun x ->
+    if !Clflags.no_anormal && !Clflags.summarize = None then x else
+      try Nm.normalize_structure x with
        Nm.NormalizationFailure (e, t, m) ->
          Format.printf "@[Normalization failed at %a(%s) %a@.@]"
-         Location.print t m Qdebug.pprint_expression e; assert false in
-  let str = print_if ppf Clflags.dump_parsetree Printast.implementation str in
-  let (str, _, env) = type_implementation env str in
-    (str, env, fenv)
+         Location.print t m Qdebug.pprint_expression e; assert false) |>
+  print_if ppf Clflags.dump_parsetree Printast.implementation |>
+  (fun x -> let (str, _, env) = type_implementation env x in
+    (str, env, fenv))
 
 let dump_env env = printf "(Pruned background env)@.%a@." Constraint.pprint_fenv env
 
@@ -204,7 +205,7 @@ let main () =
          \032    (see option -w for the list of flags)\n\
          \032    default setting is a (all warnings are non-fatal)";
 
-     "-dparsetree", Arg.Set dump_parsetree, " (undocumented)";
+     "-dparsetree", Arg.Set dump_parsetree, "prints the (possibly normalized) parsetree";
      "-dlambda", Arg.Set dump_lambda, " (undocumented)";
      "-dconstrs", Arg.Set dump_constraints, "print out frame constraints";
      "-drconstrs", Arg.Set dump_ref_constraints, "print out refinement constraints";
@@ -228,6 +229,7 @@ let main () =
      "-summarize", Arg.String (fun s -> summarize := Some s), "dump a summary of source to filename";
      "-dsmeasures", Arg.Set dsmeasures, "don't strip measure names";
      "-fix", Arg.Set use_fixpoint, "use fixpoint solver instead of dsolve to solve constraints";
+     "-dontminemlq", Arg.Set dont_mine_mlq_preds, "don't mine qualifiers from mlq files";
      "-dontgenmlq", Arg.Set dont_gen_mlq_preds, "don't generalize qualifiers mined from mlq files";
      "-no-timing", Arg.Unit Bstats.dont_time, "don't do any profiling";
      "-v", Arg.Int (fun c -> Common.verbose_level := c; Constants.verbose_level := c), 

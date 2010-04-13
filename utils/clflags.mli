@@ -73,6 +73,7 @@ val ck_mlq: bool ref
 val summarize: string option ref
 val dsmeasures: bool ref
 val use_fixpoint: bool ref
+val dont_mine_mlq_preds: bool ref
 val dont_gen_mlq_preds: bool ref
 val less_qualifs: bool ref
 val no_anormal: bool ref

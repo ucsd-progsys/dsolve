@@ -13,14 +13,15 @@ LIBFIX=external/fixpoint/_build #path to fixpoint objects
 LIBMISC=external/misc/_build #path to misc objects
 
 LINKFLAGS= -ccopt "-Iexternal/z3/ocaml -Lexternal/z3/lib" $(FLAGS) \
+	  -I $(LIBMISC) \
 	  -I external/ocamlgraph/ \
 	  -cclib -lstdc++ $(LIBZ3) -cclib -lz3stubs \
 	  -I external/ocamlgraph/ -I external/z3/ocaml -I external/z3/bin \
-					-I $(LIBFIX) -I $(LIBMISC)
+					-I $(LIBFIX)
 
-INCLUDES=-I external/z3/ocaml/ -I external/ocamlgraph/ \
+INCLUDES=  -I $(LIBMISC) -I external/z3/ocaml/ -I external/ocamlgraph/ \
 	 -I utils -I parsing -I typing -I liquid \
-				 -I $(LIBFIX) -I $(LIBMISC)
+				 -I $(LIBFIX) 
 
 UTILS=utils/miscutil.cmo utils/config.cmo \
   utils/clflags.cmo utils/terminfo.cmo utils/ccomp.cmo utils/warnings.cmo \
