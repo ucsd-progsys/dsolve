@@ -188,7 +188,6 @@ and cstr = string * string option list * predpatorexp
 
 and liquid_decl =
     LvalDecl of string * litframe
-  | LnrvalDecl of string * litframe
   | LmeasDecl of (string * string) * cstr list
   | LunintDecl of string * core_type
   | LembedDecl of core_type * prover_t

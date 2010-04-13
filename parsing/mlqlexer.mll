@@ -60,7 +60,6 @@ let keyword_table =
     "iff", IFF;
     "val", VAL;
     "not", NOT;
-    "nrval", NON_REFINED_VAL;
 
     "mod", INFIXOP3("mod");
     "land", INFIXOP3("land");
