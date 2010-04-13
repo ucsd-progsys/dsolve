@@ -1,4 +1,1 @@
-qualif FALSE(v) : 1 = 0
-(* qualif TCOMP(v) : v { * * } e0 *)
-qualif COMP(v)  : ~A { * * } v
-qualif INTLIT(v): ^ { * * } v
+qualif COMP(v)  : ~A = v
