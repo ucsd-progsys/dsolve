@@ -3,11 +3,12 @@ type dict =
   | Black of dict * dict
   | Red of dict * dict
 
-let rec ins d = match d with
-  | Black (_, right) ->
-      begin match Black (Empty, ins right) with
+let rec ins d =
+  if d > 0 then
+      begin match Black (Empty, ins (d - 1)) with
         | Black (lt, Red (rl, _)) -> Black (Red (lt, rl), Empty)
       end
-  | _ -> Red (Empty, Empty)
+  else
+    Red (Empty, Empty)
 
-let _ = ins (Black (Empty, Empty))
+let _ = ins 10
