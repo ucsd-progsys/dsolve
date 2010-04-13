@@ -709,75 +709,23 @@ let map_inst eq inst f =
   map m_inst f
 
 (**************************************************************)
-(********************* Pattern binding ************************) 
-(**************************************************************)
-
-let rec bind pat frame =
-  let _bind = function
-    | (Tpat_any, _) ->
-        ([], [])
-    | (Tpat_var x, f) ->
-        ([], [(Path.Pident x, f)])
-    | (Tpat_alias (p, x), f) ->
-        ([(p.pat_desc, f)], [(Path.Pident x, f)])
-    | (Tpat_tuple pats, Fsum (_, [(_, (_, ps))], _)) ->
-        ([], bind_params (Pattern.pattern_descs pats) ps)
-    | (Tpat_construct (cstrdesc, pats), f) ->
-        begin match unfold f with
-          | Fsum (p, cfvs, _) ->
-              ([], bind_params (Pattern.pattern_descs pats) (constrs_tag_params cstrdesc.cstr_tag cfvs))
-          | _ -> assert false
-        end
-    | _ -> assert false
-  in C.expand _bind [(pat, frame)] []
-
-and bind_param (subs, binds) (i, f, _) pat =
-  let f = apply_subs subs f in
-  let subs =
-    match pat with
-      | Tpat_var x -> (Path.Pident i, P.Var (Path.Pident x)) :: subs
-      | _          -> subs
-  in (subs, bind pat f @ binds)
-
-and bind_params pats params  =
-  snd (List.fold_left2 bind_param ([], []) params pats)
-
-let env_bind env pat frame =
-  Lightenv.addn (bind pat frame) env
-
-
-(**************************************************************)
 (********* Polymorphic and qualifier instantiation ************) 
 (**************************************************************)
 
-type dbind = Bpat of pattern_desc * t | Bid of Ident.t * t
+type bind = Bpat of pattern_desc | Bid of Ident.t
 
-let dbinds_to_names dbinds =
+let dep_sub_to_sub binds scbinds env (s, s') =
   let i2sub i = (Ident.name i, C.i2p i) in
-  let to_names = function
-    | Bpat (p, _) -> List.map i2sub (Typedtree.pat_desc_bound_idents p)
-    | Bid (i, _) -> [i2sub i] in
-  C.flap to_names dbinds
- 
-let dep_sub_to_sub dbinds scdbinds env (s, s') =
-  let dbinds = dbinds_to_names dbinds in
-  let scdbinds =dbinds_to_names scdbinds in
+  let bind = function
+    | Bpat p -> List.map i2sub (Typedtree.pat_desc_bound_idents p)
+    | Bid i -> [i2sub i] in
+  let binds = C.flap bind binds in
+  let scbinds = C.flap bind scbinds in
   let c i =
-    try List.assoc i dbinds
+    try List.assoc i binds
       with Not_found -> Le.find_path i env in
-  try (c s', P.Var (List.assoc s scdbinds))
+  try (c s', P.Var (List.assoc s scbinds))
     with Not_found -> failwith (sprintf "Could not bind dependent substitution %s to paths" s)
-
-let dbinds_to_env dbinds =
-  let to_env env = function
-    | Bpat (p, f) -> env_bind env p f
-    | Bid  (i, f) -> Le.add (C.i2p i) f env in
-  List.fold_left to_env Le.empty dbinds
-  
-let sub_to_type_binding dbinds env (p, _) =
-  let denv = dbinds_to_env dbinds in
-    try (p, Le.find p denv)
-      with Not_found -> (p, Le.find p env)
 
 let apply_dep_subs subs = function
     Fvar (id, i, _, r) -> Fvar (id, i, subs, r)
@@ -793,19 +741,14 @@ let instantiate_dep_subs vars subs =
    one is undefined and unimportant. *)
 let instantiate env fr ftemplate =
   let binds = ref [] in
-  let varbinds = ref [] in
   let vars  = ref [] in
   let vmap id ft =
     try List.assoc id !vars with Not_found -> vars := (id, ft) :: !vars; ft in
-  let tmap id tybinds =
-    let newbinds = try tybinds @ List.assoc id !varbinds with Not_found -> tybinds in
-    varbinds := (id, newbinds) :: !varbinds in
   let rec inst scbinds f ft =
     match (f, ft) with
       | (Fvar (id, level, s, r), _) when level = generic_level ->
-          let subs  = List.map (dep_sub_to_sub !binds scbinds env) s in
           let instf = vmap id ft in 
-          let _     = List.map (sub_to_type_binding !binds env) subs |> tmap id in
+          let subs  = List.map (dep_sub_to_sub !binds scbinds env) s in
           apply_subs subs (append_refinement r instf)
       | (Fvar _, _) ->
           f
@@ -813,30 +756,31 @@ let instantiate env fr ftemplate =
           Frec (p, List.map2 (inst scbinds) tas1 tas2, rr, r)
       | (Farrow (l, f1, f1'), Farrow (_, f2, f2')) ->
           let nf1 = inst scbinds f1 f2 in
-          let _   = binds := (Bpat (l, f1)) :: !binds in
-          let nf2 = inst ((Bpat (l, f1)) :: scbinds) f1' f2' in
+          let _   = binds := (Bpat l) :: !binds in
+          let nf2 = inst ((Bpat l) :: scbinds) f1' f2' in
           Farrow (l, nf1, nf2)
       | (Fsum (p, cs, r), Fsum(p', cs', _)) ->
           Fsum (p, List.map2 (constr_app_params2 (inst_params scbinds)) cs cs', r)
       | (Finductive (p, ps, rr, cs, r), Finductive (_, ps', _, _, _)) ->
           Finductive (p, inst_tparams scbinds ps ps', rr, cs, r)
       | (Fabstract(p, ps, id, r), Fabstract(_, ps', _, _)) ->
-          let _ = binds := (Bid (id, f)) :: !binds in
-          Fabstract (p, inst_params ((Bid (id, f)) :: scbinds) ps ps', id, r)
+          let _ = binds := (Bid id) :: !binds in
+          Fabstract (p, inst_params ((Bid id) :: scbinds) ps ps', id, r)
       | (f1, f2) ->
           fprintf std_formatter "@[Unsupported@ types@ for@ instantiation:@;<1 2>%a@;<1 2>%a@]@."
 	    pprint f1 pprint f2;
 	    raise (Failure ("Instantiate"))
   and inst_params scbinds ps ps' =
     let bind_param (ps, scbinds) (p, f, v) (_, f', _) =
-      binds := (Bid (p, f)) :: !binds;
-      ((ps @ [(p, inst scbinds f f', v)]), (Bid (p, f)) :: scbinds) in
+      binds := (Bid p) :: !binds;
+      ((ps @ [(p, inst scbinds f f', v)]), (Bid p) :: scbinds) in
     fst (List.fold_left2 bind_param ([], scbinds) ps ps')
   and inst_tparams scbinds ps ps' =
     List.fold_right2 (fun (p, f, v) (_, f', _) ps -> (p, inst scbinds f f', v) :: ps) ps ps' [] in
   let res   = inst [] fr ftemplate in
-  let insts =
-    List.map (fun (id, f) -> (f, List.assoc id !varbinds)) !vars in 
+  (* TODO: Return, for each variable, a list of bindings that should be added to the environment
+     to check WF of delayed substitutions. *)
+  let insts = List.map snd !vars in
     (res, insts)
 
 let instantiate_refexpr_qualifiers vars (subs, (qconsts, qvars)) =
@@ -912,7 +856,6 @@ let apply_once f e = match f with
 
 let apply f es =
   List.fold_left apply_once f es
-
 
 (******************************************************************************)
 (***************************** ML Type Translation ****************************)
@@ -1079,6 +1022,43 @@ let uninterpreted_constructors env ty =
     match unfold f with
       | Fsum (_, cs, _) -> List.map (fun (_, (n, ps)) -> (n, mk_unint_constructor f (Path.mk_persistent n) ps)) cs
       | _               -> invalid_arg "uninterpreted_constructors called with non-sum type"
+
+(**************************************************************)
+(********************* Pattern binding ************************) 
+(**************************************************************)
+
+let rec bind pat frame =
+  let _bind = function
+    | (Tpat_any, _) ->
+        ([], [])
+    | (Tpat_var x, f) ->
+        ([], [(Path.Pident x, f)])
+    | (Tpat_alias (p, x), f) ->
+        ([(p.pat_desc, f)], [(Path.Pident x, f)])
+    | (Tpat_tuple pats, Fsum (_, [(_, (_, ps))], _)) ->
+        ([], bind_params (Pattern.pattern_descs pats) ps)
+    | (Tpat_construct (cstrdesc, pats), f) ->
+        begin match unfold f with
+          | Fsum (p, cfvs, _) ->
+              ([], bind_params (Pattern.pattern_descs pats) (constrs_tag_params cstrdesc.cstr_tag cfvs))
+          | _ -> assert false
+        end
+    | _ -> assert false
+  in C.expand _bind [(pat, frame)] []
+
+and bind_param (subs, binds) (i, f, _) pat =
+  let f = apply_subs subs f in
+  let subs =
+    match pat with
+      | Tpat_var x -> (Path.Pident i, P.Var (Path.Pident x)) :: subs
+      | _          -> subs
+  in (subs, bind pat f @ binds)
+
+and bind_params pats params  =
+  snd (List.fold_left2 bind_param ([], []) params pats)
+
+let env_bind env pat frame =
+  Lightenv.addn (bind pat frame) env
 
 (**************************************************************)
 (******************** Logical embedding ***********************) 

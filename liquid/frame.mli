@@ -125,7 +125,7 @@ val fresh_variant_with_params: Env.t -> Path.t -> t list -> t
 val fresh_uninterpreted: Env.t -> type_expr -> Path.t -> t
 val fresh_builtin: Env.t -> type_expr -> t
 val uninterpreted_constructors: Env.t -> type_expr -> (string * t) list
-val instantiate: t Lightenv.t -> t -> t -> t * (t * (Path.t * t) list) list
+val instantiate: t Lightenv.t -> t -> t -> t * t list
 val instantiate_qualifiers: (string * Path.t) list -> t -> t
 val bind: pattern_desc -> t -> (Path.t * t) list
 val env_bind: t Lightenv.t -> pattern_desc -> t -> t Lightenv.t
