@@ -24,7 +24,7 @@ CAMLOPT=$(RUNTIME) $(OPTCOMPILER)
 OPTCOMPFLAGS=-warn-error A -nostdlib -g
 CAMLDEP=../boot/ocamlrun ../tools/ocamldep
 
-OBJS=hash2.cmi myhash.cmi mymap2.cmi myset.cmi store2.cmi \
+OBJS=dsolve.cmi hash2.cmi myhash.cmi mymap2.cmi myset.cmi store2.cmi \
 deparray.cmi myaset.cmi mylist.cmi mymap.cmi mystore.cmi store.cmi
 
 .PHONY: all
