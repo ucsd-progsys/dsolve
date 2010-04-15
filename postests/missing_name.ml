@@ -6,4 +6,5 @@ type dict =
 
 let _ =
   match Black (Empty, Black (Empty, Empty)) with
-    | Black (_, Black (rl, lt)) -> Black (lt, rl)
+    | Black (_, Black (y, z)) -> y
+(* But | Black (x, Black (y, z)) -> y works! *)
