@@ -429,3 +429,35 @@ let desugar_forloops sstr =
     | p :: srem ->
         p :: des_rec srem in
   des_rec sstr
+
+(* eliminate Ppat_any *)
+
+let elim_any_desc wrap_loc = function
+  | Pexp_match (e, pel) ->
+      let pel = List.map (fun (p, e) -> (elim_anys p, e)) pel in
+      Pexp_match (e, pel)
+  | Pexp_let (r, pes, e2) ->
+      let pes = List.map (fun (p, e) -> (elim_anys p, e)) pes in
+      Pexp_let (r, pes, e2)
+  | Pexp_function (l, el, ps) ->
+      let ps = List.map (fun (p, e) -> (elim_anys p, e)) ps in
+      Pexp_function (l, el, ps)
+  | d -> d
+
+let elim_any_exp exp =
+  let wrap_loc desc = { pexp_desc = desc; pexp_loc = exp.pexp_loc } in
+  Quotations.map_expr (elim_any_desc wrap_loc) exp
+
+let eliminate_anys sstr =
+  let rec elim_rec = function
+    | [] -> []
+    | {pstr_desc = (Pstr_eval exp); pstr_loc = loc} :: srem ->
+        {pstr_desc = Pstr_eval (elim_any_exp exp); pstr_loc = loc}
+        :: elim_rec srem
+    | {pstr_desc = Pstr_value (recursive, pl); pstr_loc = loc} :: srem ->
+        let pl = List.map (fun (p, e) -> (elim_anys p, elim_any_exp e)) pl in
+        {pstr_desc = Pstr_value (recursive, pl); pstr_loc = loc}
+        :: elim_rec srem
+    | p :: srem ->
+        p :: elim_rec srem in
+  elim_rec sstr

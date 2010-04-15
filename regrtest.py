@@ -27,7 +27,7 @@ testdirs = [("postests", 0), ("negtests", 1)]
 
 def runtest(file, expected_status):
   include = "theories"
-  status = dsolve.gen_quals(file, True, "-I " + include)
+  status = dsolve.gen_quals(file, True, "-I " + include + " -dontminemlq")
   if status != 0: 
     print "Qualgen failed on %s" % file
     sys.exit(2)
