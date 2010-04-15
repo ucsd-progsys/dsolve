@@ -8,7 +8,7 @@ type dict =
 let rec ins d =
   if d then
     match Black (Empty, ins false) with
-      | Black (lt, Red (rl, _)) -> Black (Red (lt, rl), Empty)
+      | Black (_, Red (rl, lt)) -> Red (lt, rl)
   else
     Red (Empty, Empty)
 
