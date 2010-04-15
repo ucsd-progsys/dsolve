@@ -118,6 +118,7 @@ let load_valfile ppf env fenv fname =
 let load_sourcefile ppf env fenv sourcefile =
   Pparse.file ppf sourcefile Parse.implementation ast_impl_magic_number |>
   Nm.desugar_forloops |>
+  Nm.eliminate_anys |>
   (fun x ->
     if !Clflags.no_anormal && !Clflags.summarize = None then x else
       try Nm.normalize_structure x with
