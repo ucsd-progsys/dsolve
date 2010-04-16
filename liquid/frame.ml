@@ -1033,27 +1033,33 @@ let rec bind pat frame =
         ([], [(Path.Pident x, f)])
     | (Tpat_alias (p, x), f) ->
         ([(p.pat_desc, f)], [(Path.Pident x, f)])
-    | (Tpat_tuple pats, Fsum (_, [(_, (_, ps))], _)) ->
-        ([], bind_params (Pattern.pattern_descs pats) ps)
+    | (Tpat_tuple pats, Fsum (_, ([(tag, _)] as cvfs), _)) ->
+        ([], bind_constructor tag cvfs (Pattern.pattern_descs pats))
     | (Tpat_construct (cstrdesc, pats), f) ->
         begin match unfold f with
           | Fsum (p, cfvs, _) ->
-              ([], bind_params (Pattern.pattern_descs pats) (constrs_tag_params cstrdesc.cstr_tag cfvs))
+              ([], bind_constructor cstrdesc.cstr_tag cfvs (Pattern.pattern_descs pats))
           | _ -> assert false
         end
     | _ -> assert false
   in C.expand _bind [(pat, frame)] []
 
-and bind_param (subs, binds) (i, f, _) pat =
-  let f = apply_subs subs f in
-  let subs =
-    match pat with
-      | Tpat_alias (_, x) | Tpat_var x -> (Path.Pident i, P.Var (Path.Pident x)) :: subs
-      | _                              -> assert false
-  in (subs, bind pat f @ binds)
+and bind_params_sub subs (i, f, _) pat =
+  match pat with
+    | Tpat_alias (_, x) | Tpat_var x -> (Path.Pident i, P.Var (Path.Pident x)) :: subs
+    | _                              -> assert false
 
-and bind_params pats params  =
-  snd (List.fold_left2 bind_param ([], []) params pats)
+and bind_params_subs subs pats params =
+  List.fold_left2 bind_params_sub subs params pats
+
+and skolemize_params_subs subs ps =
+  List.fold_left (fun subs (i, _, _) -> (Path.Pident i, P.skolem ()) :: subs) subs ps
+
+and bind_constructor tag cfvs pats =
+  let subs = List.fold_left begin fun subs (tag', (_, ps)) ->
+    if tag' = tag then bind_params_subs subs pats ps else skolemize_params_subs subs ps
+  end [] cfvs
+  in cfvs |> constrs_tag_params tag |> params_frames |>: apply_subs subs |> C.flap2 bind pats
 
 let env_bind env pat frame =
   Lightenv.addn (bind pat frame) env
