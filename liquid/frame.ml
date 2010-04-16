@@ -1028,7 +1028,7 @@ let uninterpreted_constructors env ty =
 let rec bind pat frame =
   let _bind = function
     | (Tpat_any, _) ->
-        assert false
+        ([], [])
     | (Tpat_var x, f) ->
         ([], [(Path.Pident x, f)])
     | (Tpat_alias (p, x), f) ->
@@ -1049,7 +1049,7 @@ and bind_param (subs, binds) (i, f, _) pat =
   let subs =
     match pat with
       | Tpat_alias (_, x) | Tpat_var x -> (Path.Pident i, P.Var (Path.Pident x)) :: subs
-      | _                              -> assert false
+      | _                              -> (Path.Pident i, P.skolem ()) :: subs
   in (subs, bind pat f @ binds)
 
 and bind_params pats params  =
