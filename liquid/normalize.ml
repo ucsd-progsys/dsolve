@@ -121,17 +121,27 @@ let mk_ident_loc id loc = {pexp_desc = mk_ident id; pexp_loc = loc}
 
 let un = mk_dummy (Pexp_construct (Longident.Lident "()", None, false)) dummy
 
+let mk_alias p =
+  Ppat_alias (p, fresh_name_s ())
+
 let elim_anys p =
   let rec elim_rec p =
     let np = 
       match p.ppat_desc with
-      | Ppat_construct (_, Some {ppat_desc = Ppat_any}, _) -> p.ppat_desc
-      | Ppat_any -> Ppat_var (fresh_name_s ())
-      | Ppat_tuple (pl) -> Ppat_tuple (List.map elim_rec pl)
+      | Ppat_any                     -> Ppat_var (fresh_name_s ())
+      | Ppat_var _ | Ppat_constant _ -> p.ppat_desc
+      | Ppat_alias (p', x)           -> Ppat_alias (elim_rec p', x)
+      | Ppat_constraint (p, t)       -> Ppat_constraint (elim_rec p, t)
+      | Ppat_or (p1, p2)             -> Ppat_or (elim_rec p1, elim_rec p2)
+      | Ppat_tuple (pl)              ->
+          mk_alias ({ppat_desc = Ppat_tuple (List.map elim_rec pl); ppat_loc = p.ppat_loc})
+      | Ppat_construct (id, Some ({ppat_desc = Ppat_tuple (pl)} as pt), b) ->
+          mk_alias {ppat_desc = Ppat_construct (id, Some ({pt with ppat_desc = Ppat_tuple (List.map elim_rec pl)}), b);
+                    ppat_loc = p.ppat_loc}
       | Ppat_construct (id, p', b) -> 
-          let p' = match p' with Some p -> Some (elim_rec p) | None -> None in
-          Ppat_alias({ppat_desc = Ppat_construct(id, p', b); ppat_loc = p.ppat_loc}, fresh_name_s ())
-      | p -> p in
+          let p' = match p' with Some {ppat_desc = Ppat_any} -> p' | Some p -> Some (elim_rec p) | None -> None in
+            mk_alias {ppat_desc = Ppat_construct(id, p', b); ppat_loc = p.ppat_loc}
+      | p -> assert false in
     {ppat_desc = np; ppat_loc = p.ppat_loc} in
   elim_rec p
  

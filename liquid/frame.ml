@@ -531,19 +531,19 @@ let apply_recref rr = function
   | Fsum (p, cs, r) -> Fsum (p, apply_recref_constrs rr cs, r)
   | _               -> assert false
 
-let rec rename_aux sub rs1 rs2 ps = match rs1, rs2, ps with
-  | [], [], []                            -> ([], [], [])
-  | r1 :: rs1, r2 :: rs2, (i, f, v) :: ps ->
-      let ip, i'       = (Path.Pident i, Ident.create (Ident.name i)) in
-      let rs1, rs2, ps = rename_aux ((ip, P.Var (Path.Pident i')) :: sub) rs1 rs2 ps in
-        (refinement_apply_subs sub r1 :: rs1, refinement_apply_subs sub r2 :: rs2, (i', apply_subs sub f, v) :: ps)
+let rec rename_aux sub rs ps = match rs, ps with
+  | [], []                   -> ([], [])
+  | r :: rs, (i, f, v) :: ps ->
+      let ip, i' = (Path.Pident i, Ident.create (Ident.name i)) in
+      let rs, ps = rename_aux ((ip, P.Var (Path.Pident i')) :: sub) rs ps in
+        (refinement_apply_subs sub r :: rs, (i', apply_subs sub f, v) :: ps)
   | _ -> assert false
 
-let rename_params rr1 rr2 cs =
-  C.map3 begin fun rs1 rs2 (t, (n, ps)) ->
-    let rs1, rs2, ps = rename_aux [] rs1 rs2 ps in
-      (rs1, rs2, (t, (n, ps)))
-  end rr1 rr2 cs |> Misc.split3
+let rename_params rr cs =
+  List.map2 begin fun rs (t, (n, ps)) ->
+    let rs, ps = rename_aux [] rs ps in
+      (rs, (t, (n, ps)))
+  end rr cs |> List.split
 
 let rec replace_typevars merge_refinements vmap f =
   let rec replace_aux = function
@@ -573,7 +573,7 @@ let replace_recvar p ps rr cs = function
   | f -> f
 
 let unfold_aux rename p ps rr cs r rps rrr rcs =
-  let rr, rrr, cs = rename rr rrr cs in
+  let rr, cs = rename rr cs in
        Fsum (p, cs, r)
     |> map (replace_recvar p rps rrr rcs)
     |> apply_recref rr
@@ -588,8 +588,8 @@ let unfold_with_shape = function
       unfold_aux rename_params p ps rr cs r (apply_params_frames shape ps) (recref_shape rr) (apply_constrs_params_frames shape cs)
   | f -> f
 
-let dont_rename rr1 rr2 cs =
-  (rr1, rr2, cs)
+let dont_rename rr cs =
+  (rr, cs)
 
 let wf_unfold = function
   | Finductive (p, ps, rr, cs, r) ->
@@ -1028,7 +1028,7 @@ let uninterpreted_constructors env ty =
 let rec bind pat frame =
   let _bind = function
     | (Tpat_any, _) ->
-        assert false
+        ([], [])
     | (Tpat_var x, f) ->
         ([], [(Path.Pident x, f)])
     | (Tpat_alias (p, x), f) ->
@@ -1049,7 +1049,7 @@ and bind_param (subs, binds) (i, f, _) pat =
   let subs =
     match pat with
       | Tpat_alias (_, x) | Tpat_var x -> (Path.Pident i, P.Var (Path.Pident x)) :: subs
-      | _                              -> assert false
+      | _                              -> (Path.Pident i, P.skolem ()) :: subs
   in (subs, bind pat f @ binds)
 
 and bind_params pats params  =
