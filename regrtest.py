@@ -26,10 +26,8 @@ import dsolve
 testdirs = [("postests", 0), ("negtests", 1)]
 
 def runtest(file, expected_status):
-  # pmr: do we need to explicitly include theories?  Seems we shouldn't...
-  include = "theories"
   start = time.time()
-  status = dsolve.run(True, ["-bare", "-v", "0", "-no-simple", "-no-timing", "-I", include, file])
+  status = dsolve.run(True, ["-bare", "-v", "0", "-no-simple", "-no-timing", file])
   print "%f seconds" % (time.time() - start)
 
   ok = (status == expected_status)
