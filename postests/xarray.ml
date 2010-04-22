@@ -1,10 +1,4 @@
-
-(*
-let rec ffor i j f =
-  if i <= j
-  then (f i; ffor (i+1) j f)
-  else ()
-*)
+(* DSOLVE -bare *)
 
 let init l f =
   if l = 0 then [||] else
