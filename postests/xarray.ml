@@ -147,14 +147,16 @@ let rec list_length accu = function
   | h::t -> list_length (succ accu) t
 ;;
 
-(* let of_list l = match l with *)
-(*     [] -> [||] *)
-(*   | hd::tl -> *)
-(*       let a = Array.create (len l) hd in *)
-(*       let rec fill i l = match l with *)
-(*           [] -> a *)
-(*         | hd::tl -> Array.set a x i) hd; fill (i+1) tl in *)
-(*       fill 1 tl *)
+let of_list l = match l with
+    [] -> [||]
+  | hd::tl ->
+      let a = Array.create (len l) hd in
+      let rec fill i l = match l with
+          [] -> a
+        | hd::tl ->
+            let z = len tl in
+              Array.unsafe_set a i hd; fill (i+1) tl in
+      fill 1 tl
 
 (*
 let fold_left f x a =
