@@ -1,4 +1,4 @@
-(* DSOLVE -dontgenmlq *)
+(* DSOLVE -bare -dontgenmlq *)
 
 (* Binary Decision Diagrams, adapted from code by Jean-Christophe Filliatre *)
 let myfail s = 
@@ -59,8 +59,9 @@ let t = create 100003
 let add t x = () (* SLICE *)
 
 let hashcons_node v l h =
-  let index = (hash_node v l h) mod (Array.length t.table) in
-  let bucket = Array.unsafe_get t.table index in
+  let table = t.table in
+  let index = (hash_node v l h) mod (Array.length table) in
+  let bucket = Array.unsafe_get table index in
   let sz = Weak.length bucket in
   let rec loop i =
     if i >= sz then begin
