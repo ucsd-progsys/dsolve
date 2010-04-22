@@ -1,0 +1,3 @@
+qualif T(v): _ + (len v) {* *} (Array.length _) - 1
+qualif T(v): _ + (len v) {* *} (Array.length _)
+qualif T(v): v >= [-1]
