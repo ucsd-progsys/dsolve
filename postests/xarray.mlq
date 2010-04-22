@@ -2,7 +2,7 @@ val init: l: {v: int | v >= 0} -> ({v:int| (0 <= v) && (v < l)} -> 'a) -> {v: 'a
 val make_matrix : sx: {v: int | v >= 0} -> sy: {v: int | v >= 0} -> 'a -> {v: {v: 'a array | Array.length v = sy} array | Array.length v = sx}
 val create_matrix: sx: {v: int | v >= 0} -> sy: {v: int | v >= 0} -> 'a -> {v: {v: 'a array | Array.length v = sy} array | Array.length v = sx}
 val copy : a: 'a array -> {v: 'a array | Array.length v = Array.length a}
-val append : a1: 'a array -> a2: 'a array -> {v: 'a array | Array.length v = Array.length a1 + Array.length a2}
+val append : a1: {a1: 'a array | Array.length a1 >= 0} -> a2: {a2: 'a array | Array.length a2 >= 0} -> {v: 'a array | Array.length v = Array.length a1 + Array.length a2}
 (* how to say something meaningful about concat? do we need a witness? *)
 val concat : al: 'a array list -> 'a array
 val sub : a: 'a array -> ofs: {v: int | v >= 0} -> len: {v: int | v >= 0 && ofs <= Array.length a - v} -> {v: 'a array | Array.length v = len}
@@ -16,4 +16,4 @@ val mapi : a: 'a array -> f: ({v: int | v >= 0 && v < Array.length a} -> 'a -> '
 measure len = [] -> 0 | h::t -> 1+len t
 
 val to_list : a: {v: 'a array | Array.length v >= 0} -> {v: 'a list | len v = Array.length a}
-(*val of_list : a: 'a list -> {v: 'a array | Array.length v = len a}*)
+(* val of_list : a: 'a list -> {v: 'a array | Array.length v = len a} *)
