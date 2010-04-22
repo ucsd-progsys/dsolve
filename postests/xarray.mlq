@@ -15,7 +15,5 @@ val mapi : a: 'a array -> f: ({v: int | v >= 0 && v < Array.length a} -> 'a -> '
 
 measure len = [] -> 0 | h::t -> 1+len t
 
-val to_list : a: 'a array -> {v: 'a list | len v = Array.length a}
-(*
-val of_list : a: 'a list -> {v: 'a array | Array.length v = len a}
-*)
+val to_list : a: {v: 'a array | Array.length v >= 0} -> {v: 'a list | len v = Array.length a}
+(*val of_list : a: 'a list -> {v: 'a array | Array.length v = len a}*)

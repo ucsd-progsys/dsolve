@@ -1,3 +1,4 @@
+
 (*
 let rec ffor i j f =
   if i <= j
@@ -133,10 +134,13 @@ let rec len l =
 
 let to_list a =
   let rec tolist i res =
-    if i < 0 then res else tolist (i - 1) (Array.unsafe_get a i :: res) in
-  tolist (Array.length a - 1) []
+    if i < 0 then
+      res
+    else
+      tolist (i - 1) ((fun (x:'a list) -> x) (Array.unsafe_get a i :: res)) in
+  tolist (Array.length a - 1) ((fun x -> x) [])
 
-(*
+
 (* Cannot use List.length here because the List module depends on Array. *)
 let rec list_length accu = function
   | [] -> accu
