@@ -41,25 +41,24 @@ def gen_quals(src,flags):
   bname = src[:-3]
   (fname,qname,hname) = (bname+".ml", bname+".quals", bname+".hquals")
   os.system("rm -f %s" % qname)
-  if "-bare" in flags and os.path.exists(hname):
-    files = [hname]
-  else:
-    files = [hname, d_pats]
+  files = []
+  if os.path.exists(hname):
+    files += [hname]
+  if not "-bare" in flags:
+    files += [d_pats]
   common.cat_files(files, tname)
   flags += " " + " ".join(get_options(src))
   gen  = ("%s %s -summarize" % (solve, flags)).split()
-  succ = common.logged_sys_call(gen + [tname2, fname])
+  succ = common.logged_sys_call(gen + [tname2, fname], True)
   split= ("./depsplit %s %s %s" % (tname, tname2, qname)).split()
-  common.logged_sys_call(split)
+  common.logged_sys_call(split, True)
   return succ
 
 def solve_quals(file,quiet,flags):
   bname = file[:-3]
   os.system("rm -f %s.annot" % bname)
   flags += get_options(file)
-  if quiet: out = open("/dev/null", "w")
-  else: out = None
-  return common.logged_sys_call([solve, "-dframes"] + flags + [("%s.ml" % bname)], out)
+  return common.logged_sys_call([solve, "-dframes"] + flags + [("%s.ml" % bname)], quiet)
 
 def get_options(src):
   xs = [x.strip() for x in common.read_lines(src) if "(* DSOLVE" in x ]
@@ -67,15 +66,15 @@ def get_options(src):
   xs = ['-'+ x.strip() for x in ss.split(' -') if x.strip()]
   return xs
 
-def run(quiet, args):
-  if len(args) == 1:
+def run(quiet, flags):
+  if len(flags) == 0:
     print ("Usage: %s [flags] [sourcefile]" % sys.argv[0])
     sys.exit(0)
-  if "-help" in sys.argv or "--help" in sys.argv:
+  if "-help" in flags or "--help" in flags:
     os.system("%s -help" % (solve))
-    sys.exit(0)
-  src      = args[len(args) - 1]
-  flags    = args[1:-1]
+    return 0
+  src   = flags[len(flags) - 1]
+  flags = flags[:-1]
   flags.extend(get_options(src))
   gen_succ = gen_quals(src, " ".join(flags))
   if (gen_succ != 0):
@@ -85,4 +84,4 @@ def run(quiet, args):
 
 if __name__ == "__main__":
   print "dsolve 0.1: Copyright (c) 2008-10 The Regents of the University of California, all rights reserved\n"
-  sys.exit(run(False, sys.argv))
+  sys.exit(run(False, sys.argv[1:]))

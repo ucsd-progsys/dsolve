@@ -31,9 +31,13 @@ def write_line(name,line):
   f.write(line)
   f.close()
 
-def logged_sys_call(args, out=None, err=None):
+def logged_sys_call(args, quiet):
   print "exec: " + " ".join(args)
-  return subprocess.call(args, stdout=out, stderr=err)
+  if quiet:
+    out = open("/dev/null", "w")
+  else:
+    out = None
+  return subprocess.call(args, stdout=out, stderr=None)
 
 def str_to_bool(str):
   if str == "False":
