@@ -1,0 +1,2 @@
+qualif I(_V) : _V { * * } ^
+qualif Id_rel_id_int(_V)(A:int) : _V { * * } ~A
