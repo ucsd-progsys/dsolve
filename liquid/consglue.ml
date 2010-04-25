@@ -13,7 +13,7 @@ module S = A.Sort
 module Sy = A.Symbol
 module Q = A.Qualifier
 module Asm = Sy.SMap
-module Le = Lightenv
+module Le = Liqenv
 
 let dvv = C.qual_test_var
 let dsyvv = Pg.sy_of_path dvv
@@ -126,12 +126,12 @@ let f_of_dquals qs =
 let fsort_of_reft (_, s, _) = s
 
 let f_of_drenvt env ftenv =
-  Lightenv.fold (fun p r e ->
+  Liqenv.fold (fun p r e ->
     let s = Pg.sy_of_path p in
     Asm.add s (f_of_sortdreft (fsort_of_reft (Asm.find s ftenv)) r) e) env ftenv
 
 let f_of_denvt env =
-  Lightenv.fold (fun p fr e -> 
+  Liqenv.fold (fun p fr e -> 
     let p = if Path.same p C.qual_test_var then dvv else p in
     Asm.add (Pg.sy_of_path p) (freft_of_dframe fr) e) env Asm.empty
 

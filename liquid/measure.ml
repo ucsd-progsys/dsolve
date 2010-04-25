@@ -6,7 +6,7 @@ open Ctype
 module P = Predicate
 module C = Common
 module F = Frame
-module Le = Lightenv
+module Le = Liqenv
 module Qd = Qualdecl
 
 type mdef = (string * P.t_or_pexpr) 
@@ -35,7 +35,7 @@ let add (p, ((tag, args, (nm, _)) as r)) menv =
   let cs = try Le.find p menv with Not_found -> [] in
   let _  = if List.exists (fun (x, y, z) -> let (nm', _) = z in tag = x && nm = nm') cs then
       failwith (Printf.sprintf "measure redef %s for path %s" nm (Path.name p)) in
-  Lightenv.add p (r :: cs) menv
+  Liqenv.add p (r :: cs) menv
 
 let sum_path = function
   | F.Fsum (p, _, _)             -> p

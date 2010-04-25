@@ -35,12 +35,12 @@ type subref_id = int
 type guard_t = (Path.t * bool) list
 
 type frame_constraint =
-  | SubFrame of Frame.t Lightenv.t * guard_t * Frame.t * Frame.t
-  | WFFrame of Frame.t Lightenv.t * Frame.t
+  | SubFrame of Frame.t Liqenv.t * guard_t * Frame.t * Frame.t
+  | WFFrame of Frame.t Liqenv.t * Frame.t
 
 type refinement_constraint =
-  | SubRef of Frame.refinement (* F.t *) Lightenv.t * guard_t * Frame.refinement * Frame.simple_refinement * (subref_id option)
-  | WFRef of Frame.t Lightenv.t * Frame.simple_refinement * (subref_id option)
+  | SubRef of Frame.refinement (* F.t *) Liqenv.t * guard_t * Frame.refinement * Frame.simple_refinement * (subref_id option)
+  | WFRef of Frame.t Liqenv.t * Frame.simple_refinement * (subref_id option)
 
 type labeled_constraint = {
   lc_cstr: frame_constraint;
@@ -54,14 +54,14 @@ and origin =
   | Assert of Location.t
   | Cstr of labeled_constraint
 
-val pprint_fenv : Format.formatter -> Frame.t Lightenv.t -> unit
+val pprint_fenv : Format.formatter -> Frame.t Liqenv.t -> unit
 
 val fresh_fc_id : unit -> fc_id 
 
 val formals_addn: Frame.qvar list -> unit
 
 val dsolver:
-  Frame.t Lightenv.t ->
+  Frame.t Liqenv.t ->
     (Frame.t * labeled_constraint * refinement_constraint) list ->
       Qualifier.t list Sol.t -> Qualifier.t list -> Qualifier.t list Sol.t
 
@@ -69,14 +69,14 @@ val solve_with_solver:
   Parsetree.qualifier_declaration list -> Env.t ->
     int list -> labeled_constraint list ->
   (* solver *)
-  (Frame.t Lightenv.t ->
+  (Frame.t Liqenv.t ->
     (Frame.t * labeled_constraint * refinement_constraint) list ->
       Qualifier.t list Sol.t -> Qualifier.t list -> Qualifier.t list Sol.t) ->
   ((Common.ComparablePath.t -> Qualifier.t list) * (labeled_constraint list))
 
-val sol_of_solmap: Qualifier.t list Lightenv.t -> Qualifier.t list Sol.t
+val sol_of_solmap: Qualifier.t list Liqenv.t -> Qualifier.t list Sol.t
 val guard_predicate: unit -> guard_t -> Predicate.t
-val env_to_empty_refenv: Frame.t Lightenv.t -> Frame.refinement Lightenv.t
-val env_to_refenv: Frame.t Lightenv.t -> Frame.refinement Lightenv.t
-val environment_preds: (Path.t -> Qualifier.t list) -> Frame.refinement Lightenv.t -> Predicate.t list
+val env_to_empty_refenv: Frame.t Liqenv.t -> Frame.refinement Lightenv.t
+val env_to_refenv: Frame.t Liqenv.t -> Frame.refinement Lightenv.t
+val environment_preds: (Path.t -> Qualifier.t list) -> Frame.refinement Liqenv.t -> Predicate.t list
 val refinement_preds: (Path.t -> Qualifier.t list) -> Predicate.pexpr -> Frame.refinement -> Predicate.t list

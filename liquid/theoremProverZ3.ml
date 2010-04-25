@@ -29,7 +29,7 @@ open Predef
 module P = Predicate
 module C = Common
 module F = Frame
-module Le = Lightenv
+module Le = Liqenv
 
 (***************************************************************)
 

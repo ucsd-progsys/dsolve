@@ -30,7 +30,7 @@ module P = Predicate
 module C = Common
 module M = Measure
 module F = Frame
-module Le = Lightenv
+module Le = Liqenv
 module B = Buffer
 module Qg = Qualgen
 

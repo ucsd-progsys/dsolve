@@ -3,7 +3,7 @@ module P = Predicate
 module F = Frame
 module Co = Constraint
 module FCo = FixConstraint
-module Le = Lightenv
+module Le = Liqenv
 
 module Cg = Consglue
 

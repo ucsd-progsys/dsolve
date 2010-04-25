@@ -25,7 +25,7 @@ open Format
 open Wellformed
 open Misc.Ops
 module F = Frame
-module Le = Lightenv
+module Le = Liqenv
 module Pat = Pattern
 module P = Predicate
 module T = Types
@@ -70,8 +70,8 @@ and origin =
   | Cstr of labeled_constraint
 
 type refinement_constraint =
-  | SubRef of Frame.refinement (* F.t *) Lightenv.t * guard_t * Frame.refinement * Frame.simple_refinement * (subref_id option)
-  | WFRef of Frame.t Lightenv.t * Frame.simple_refinement * (subref_id option)
+  | SubRef of Frame.refinement (* F.t *) Liqenv.t * guard_t * Frame.refinement * Frame.simple_refinement * (subref_id option)
+  | WFRef of Frame.t Liqenv.t * Frame.simple_refinement * (subref_id option)
 
 (**************************************************************)
 (********************** Miscutil. Constants ***********************)

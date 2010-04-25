@@ -35,7 +35,7 @@ module F   = Frame
 module MLQ = Mlqmod
 module M   = Measure
 module C   = Common
-module Le  = Lightenv
+module Le  = Liqenv
 module P   = Predicate
 module Nm  = Normalize
 
@@ -112,7 +112,7 @@ let load_valfile ppf env fenv fname =
     let tag = (P.tag_function, F.Fvar(Ident.create "", 0, [], F.empty_refinement)) in
     let f = (fun (k, v) -> (C.lookup_path k env, F.label_like v v)) in
     let kvl = tag :: (List.map f kvl) in
-      (env, Lightenv.addn kvl fenv)
+      (env, Liqenv.addn kvl fenv)
   with Not_found -> failwith (Printf.sprintf "builtins: val %s does not correspond to library value" fname)
     
 let load_sourcefile ppf env fenv sourcefile =
@@ -247,7 +247,7 @@ let main () =
   ] file_argument usage;
   init_path ();
   let env = initial_env () in
-    ignore (List.fold_left process_file (env, Lightenv.empty) !filenames)
+    ignore (List.fold_left process_file (env, Liqenv.empty) !filenames)
 
 let _ = 
   main (); exit 0

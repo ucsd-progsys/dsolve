@@ -48,7 +48,7 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/qualgen.cmo \
   typing/typemod.cmo
 
-LIQUID=liquid/qualmod.cmo liquid/lightenv.cmo \
+LIQUID=liquid/qualmod.cmo liquid/liqenv.cmo \
   liquid/qualifier.cmo liquid/pattern.cmo liquid/frame.cmo \
 	liquid/qualdecl.cmo \
   liquid/builtins.cmo liquid/message.cmo \
