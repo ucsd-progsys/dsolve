@@ -73,7 +73,7 @@ val path_tuple: Path.t
 
 val find_by_name: t Liqenv.t -> string -> t
 val prune_env_funs: t Liqenv.t -> Path.t list
-val prune_background: 'a Liqenv.t -> 'a Lightenv.t
+val prune_background: 'a Liqenv.t -> 'a Liqenv.t
 
 val sum_of_params: Path.t -> param list -> refinement -> t
 val tuple_of_frames: t list -> refinement -> t
@@ -128,7 +128,7 @@ val uninterpreted_constructors: Env.t -> type_expr -> (string * t) list
 val instantiate: t Liqenv.t -> t -> t -> t
 val instantiate_qualifiers: (string * Path.t) list -> t -> t
 val bind: pattern_desc -> t -> (Path.t * t) list
-val env_bind: t Liqenv.t -> pattern_desc -> t -> t Lightenv.t
+val env_bind: t Liqenv.t -> pattern_desc -> t -> t Liqenv.t
 val refexpr_apply_subs: substitution list -> refexpr -> refexpr
 val apply_subs: substitution list -> t -> t
 val label_like: t -> t -> t
