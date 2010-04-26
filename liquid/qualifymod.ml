@@ -132,25 +132,21 @@ let rec constrain e env guard =
    try
     match (e.exp_desc, freshf) with
       | (Texp_constant const_typ, F.Fabstract(path, [], _, _)) -> constrain_constant path const_typ
-      | (Texp_construct (cstrdesc, args), F.Finductive _) -> constrain_constructed environment cstrdesc args e
-      | (Texp_record (labeled_exprs, None), _) -> constrain_record environment labeled_exprs
-      | (Texp_field (expr, label_desc), _) -> constrain_field environment expr label_desc
-      | (Texp_setfield (expr, label_desc, expr'), _) -> constrain_setfield environment expr label_desc expr'
-      | (Texp_ifthenelse (e1, e2, Some e3), _) -> constrain_if environment e1 e2 e3
-      | (Texp_match (e, pexps, partial), _) -> constrain_match environment e pexps partial
-      | (Texp_function ([(pat, e')], _), _) -> constrain_function environment pat e'
-      | (Texp_ident (id, _), F.Fsum(_, _, _))
-      | (Texp_ident (id, _), F.Finductive(_, _, _, _, _))
-      | (Texp_ident (id, _), F.Fabstract(_, _, _, _))
-      | (Texp_ident (id, _), F.Fvar _) ->
-          constrain_base_identifier environment id e
-      | (Texp_ident (id, _), _) -> constrain_identifier environment id e.exp_env
-      | (Texp_apply (e1, exps), _) -> constrain_application environment e1 exps
-      | (Texp_let (recflag, bindings, body_exp), t) -> constrain_let environment recflag bindings body_exp
-      | (Texp_array es, _) -> constrain_array environment e.exp_env es
-      | (Texp_sequence (e1, e2), _) -> constrain_sequence environment e1 e2
-      | (Texp_tuple es, _) -> constrain_tuple environment es
-      | (Texp_assertfalse, _) -> constrain_assertfalse environment e.exp_env e.exp_type
+      | (Texp_construct (cstrdesc, args), F.Finductive _)      -> constrain_constructed environment cstrdesc args e
+      | (Texp_record (labeled_exprs, None), _)                 -> constrain_record environment labeled_exprs
+      | (Texp_field (expr, label_desc), _)                     -> constrain_field environment expr label_desc
+      | (Texp_setfield (expr, label_desc, expr'), _)           -> constrain_setfield environment expr label_desc expr'
+      | (Texp_ifthenelse (e1, e2, Some e3), _)                 -> constrain_if environment e1 e2 e3
+      | (Texp_match (e, pexps, partial), _)                    -> constrain_match environment e pexps partial
+      | (Texp_function ([(pat, e')], _), _)                    -> constrain_function environment pat e'
+      | (Texp_ident (id, _), F.Farrow _)                       -> constrain_identifier environment id e.exp_env
+      | (Texp_ident (id, _), _)                                -> constrain_base_identifier environment id e
+      | (Texp_apply (e1, exps), _)                             -> constrain_application environment e1 exps
+      | (Texp_let (recflag, bindings, body_exp), t)            -> constrain_let environment recflag bindings body_exp
+      | (Texp_array es, _)                                     -> constrain_array environment e.exp_env es
+      | (Texp_sequence (e1, e2), _)                            -> constrain_sequence environment e1 e2
+      | (Texp_tuple es, _)                                     -> constrain_tuple environment es
+      | (Texp_assertfalse, _)                                  -> constrain_assertfalse environment e.exp_env e.exp_type
       | ((Texp_assert e) as form, _)
       | ((Texp_assume e) as form, _) ->
           constrain_guard environment form e
