@@ -2,7 +2,7 @@ open Predicate
 open Parsetree
 
 module C = Common
-module Le = Lightenv
+module Le = Liqenv
 module F = Frame
 module Ft = Format
 module BS = Bstats

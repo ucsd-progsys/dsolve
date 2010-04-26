@@ -32,6 +32,6 @@ val report_error: Format.formatter -> error -> unit
 val report_errors: Format.formatter -> (Location.t * error) list -> unit 
 
 val qualify_implementation:
-  string -> Frame.t Lightenv.t -> Frame.t Lightenv.t -> Env.t -> Parsetree.qualifier_declaration list -> int list -> Typedtree.structure -> unit
+  string -> Frame.t Liqenv.t -> Frame.t Liqenv.t -> Env.t -> Parsetree.qualifier_declaration list -> int list -> Typedtree.structure -> unit
 
 val add_nrframe: Frame.t -> unit

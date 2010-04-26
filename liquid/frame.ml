@@ -36,7 +36,7 @@ module T = Typetexp
 module Pat = Pattern
 module M = Miscutil
 module P = Predicate
-module Le = Lightenv
+module Le = Liqenv
 
 (**************************************************************)
 (************** Type definitions: Refinements *****************)
@@ -515,7 +515,7 @@ and print_bind ppf (name, f, _) =
    fprintf ppf "%s:%a" (C.ident_name name) pprint f
  
 let rec pprint_fenv ppf fenv =
-  Lightenv.maplist (fun k v -> printf "@[%s:@ %a@]@." (C.path_name k) pprint v) fenv
+  Liqenv.maplist (fun k v -> printf "@[%s:@ %a@]@." (C.path_name k) pprint v) fenv
 
 (******************************************************************************)
 (********************************** Unfolding *********************************)
@@ -1056,7 +1056,7 @@ and bind_params pats params  =
   snd (List.fold_left2 bind_param ([], []) params pats)
 
 let env_bind env pat frame =
-  Lightenv.addn (bind pat frame) env
+  Liqenv.addn (bind pat frame) env
 
 (**************************************************************)
 (******************** Logical embedding ***********************) 

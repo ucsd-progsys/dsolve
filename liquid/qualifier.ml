@@ -27,7 +27,7 @@ open Predicate
 module C = Common
 module BS = Bstats
 module JS = Mystats
-module Le = Lightenv
+module Le = Liqenv
 
 type t = Path.t * Path.t * Predicate.t
 

@@ -26,7 +26,7 @@ open Frame
 
 module P = Predicate
 module TP = TheoremProverZ3.Prover
-module Le = Lightenv
+module Le = Liqenv
 
 exception IllFormed
 
