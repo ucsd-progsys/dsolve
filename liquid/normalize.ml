@@ -144,7 +144,17 @@ let elim_anys p =
       | p -> assert false in
     {ppat_desc = np; ppat_loc = p.ppat_loc} in
   elim_rec p
- 
+
+let rec expand_or_pats p =
+  match p.ppat_desc with
+    | Ppat_var _ | Ppat_constant _    -> [p]
+    | Ppat_construct (_, None, _)     -> [p]
+    | Ppat_alias (p', x)              -> p' |> expand_or_pats |>: fun p' -> {p with ppat_desc = Ppat_alias (p', x)}
+    | Ppat_constraint (p', t)         -> p' |> expand_or_pats |>: fun p' -> {p with ppat_desc = Ppat_constraint (p', t)}
+    | Ppat_or (p1, p2)                -> expand_or_pats p1 ++ expand_or_pats p2
+    | Ppat_tuple (pl)                 -> pl |>: expand_or_pats |> Misc.product |>: (List.rev <+> fun pl -> {p with ppat_desc = Ppat_tuple (pl)})
+    | Ppat_construct (id, Some p', b) -> p' |> expand_or_pats |>: fun p' -> {p with ppat_desc = Ppat_construct (id, Some p', b)}
+    | _                               -> assert false
 
 let resolve_in_exp_when f ls =
   let (lbl, lex, loc) = List.hd ls in
@@ -154,7 +164,6 @@ let resolve_in_exp_when f ls =
 
 let resolve_in_exp = resolve_in_exp_when (fun e -> true) 
 let resolve_in_exp_never = resolve_in_exp_when (fun e -> false)
- 
 
 let normalize exp =
  let rec norm_out exp =
@@ -278,12 +287,16 @@ let normalize exp =
         let ee = List.concat (List.rev ee) in
           rw_expr (List.fold_left (wrap Nonrecursive) init ee)
      | Pexp_match(e, pel) ->
-        let npel = List.map (fun (p, e) -> (elim_anys p, norm_out e)) pel in
+        let npel = List.fold_left norm_case [] pel |> List.rev |> List.concat in
         let ls = norm_in e in
         let (lbl, _, lo) = List.hd ls in
         let init = mk_match (mk_ident_loc lbl lo) npel in
           rw_expr (List.fold_left (wrap Nonrecursive) init ls)
      | e -> raise (NormalizationFailure (exp, loc, "norm_out"))
+
+ and norm_case pels (p, e) =
+   let p, e = (elim_anys p, norm_out e) in
+     (p |> expand_or_pats |>: fun p -> (p, e)) :: pels
 
   and norm_in exp = 
     let rw_expr desc = {pexp_desc = desc; pexp_loc = exp.pexp_loc} in
@@ -383,7 +396,7 @@ let normalize exp =
         let init = rw_expr (mk_setfield lhs s rhs) in
           (fresh_name (), Some init, loc) :: (rrs @ lls)
      | Pexp_match(e, pel) ->
-         let npel = List.map (fun (p, e) -> (elim_anys p, norm_out e)) pel in
+         let npel = List.fold_left norm_case [] pel |> List.rev |> List.concat in
          let ls = norm_in e in
          let (lbl, _, lo) = List.hd ls in
           (fresh_name (), Some (rw_expr (mk_match (mk_ident_loc lbl lo) npel)), loc)::ls
