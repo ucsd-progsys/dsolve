@@ -152,21 +152,21 @@ let of_list l = match l with
               Array.unsafe_set a i hd; fill (i+1) tl in
       fill 1 tl
 
-(*
 let fold_left f x a =
   let r = ref x in
-  for i = 0 to length a - 1 do
-    r := f !r (unsafe_get a i)
+  for i = 0 to Array.length a - 1 do
+    r := f !r (Array.unsafe_get a i)
   done;
   !r
 
 let fold_right f a x =
   let r = ref x in
-  for i = length a - 1 downto 0 do
-    r := f (unsafe_get a i) !r
+  for i = Array.length a - 1 downto 0 do
+    r := f (Array.unsafe_get a i) !r
   done;
   !r
 
+(*
 exception Bottom of int;;
 let sort cmp a =
   let maxson l i =

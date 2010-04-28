@@ -17,3 +17,6 @@ measure len = [] -> 0 | h::t -> 1+len t
 
 val to_list : a: {v: 'a array | Array.length v >= 0} -> {v: 'a list | len v = Array.length a}
 (* val of_list : a: 'a list -> {v: 'a array | Array.length v = len a} *)
+
+val fold_left : f: ('a -> 'b -> 'a) -> x: 'a -> a: 'b array -> 'a
+val fold_right : f: ('b -> 'a -> 'a) -> a: 'b array -> x: 'a -> 'a
