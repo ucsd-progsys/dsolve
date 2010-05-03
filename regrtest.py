@@ -44,16 +44,15 @@ class Worker(threading.Thread):
     self.testqueue = testqueue
 
   def run(self):
-    while True:
+    while not self.testqueue.empty():
       (file, expected_status) = self.testqueue.get()
       self.results.append(runtest(file, expected_status))
       self.testqueue.task_done()
 
 def queuetests(testqueue, dir, expected_status):
-  for (dir, expected_status) in testdirs:
-    files = it.chain(*[[os.path.join(dir, file) for file in files if file.endswith(".ml")] for dir, dirs, files in os.walk(dir)])
-    for file in files:
-      testqueue.put((file, expected_status))
+  files = it.chain(*[[os.path.join(dir, file) for file in files if file.endswith(".ml")] for dir, dirs, files in os.walk(dir)])
+  for file in files:
+    testqueue.put((file, expected_status))
 
 def parseopts():
   parser = optparse.OptionParser()
@@ -66,6 +65,7 @@ options = parseopts()
 testqueue = Queue.Queue()
 for dir, expected_status in testdirs:
   queuetests(testqueue, dir, expected_status)
+print "Queued %d tests" % (testqueue.qsize())
 
 print "Creating %d workers" % (options.threadcount)
 workers = [Worker(testqueue) for i in range(0, options.threadcount)]
