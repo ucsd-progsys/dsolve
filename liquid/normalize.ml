@@ -147,6 +147,7 @@ let elim_anys p =
 
 let rec expand_or_pats p =
   match p.ppat_desc with
+    | Ppat_any                        -> [p]
     | Ppat_var _ | Ppat_constant _    -> [p]
     | Ppat_construct (_, None, _)     -> [p]
     | Ppat_alias (p', x)              -> p' |> expand_or_pats |>: fun p' -> {p with ppat_desc = Ppat_alias (p', x)}
