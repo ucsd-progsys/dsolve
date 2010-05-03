@@ -49,9 +49,10 @@ def gen_quals(src,flags):
   common.cat_files(files, tname)
   flags += " " + " ".join(get_options(src))
   gen  = ("%s %s -summarize" % (solve, flags)).split()
-  succ = common.logged_sys_call(gen + [tname2, fname], True)
-  split= ("./depsplit %s %s %s" % (tname, tname2, qname)).split()
-  common.logged_sys_call(split, True)
+  succ = common.logged_sys_call(gen + [tname2, fname], False)
+  if succ == 0:
+    split= ("./depsplit %s %s %s" % (tname, tname2, qname)).split()
+    common.logged_sys_call(split, True)
   return succ
 
 def solve_quals(file,quiet,flags):
