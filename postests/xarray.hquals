@@ -2,3 +2,6 @@ qualif T(v): _ + (len v) {* *} (Array.length _) - 1
 qualif T(v): _ + (len v) {* *} (Array.length _)
 qualif T(v): v >= [-1]
 qualif A(v): Array.length v > 0
+
+qualif T(v): v {* *} (Array.length _) - _
+qualif T(v): v {* *} (Array.length _) - _ - _

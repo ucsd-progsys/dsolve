@@ -167,7 +167,8 @@ let fold_right f a x =
   !r
 
 (*
-exception Bottom of int;;
+type 'a fakebottom = Bottom of int | Ok of 'a
+
 let sort cmp a =
   let maxson l i =
     let i31 = i+i+i+1 in
@@ -175,30 +176,33 @@ let sort cmp a =
     if i31+2 < l then begin
       if cmp (get a i31) (get a (i31+1)) < 0 then x := i31+1;
       if cmp (get a !x) (get a (i31+2)) < 0 then x := i31+2;
-      !x
+      Ok !x
     end else
       if i31+1 < l && cmp (get a i31) (get a (i31+1)) < 0
-      then i31+1
-      else if i31 < l then i31 else raise (Bottom i)
+      then Ok (i31+1)
+      else if i31 < l then Ok i31 else Bottom i
   in
   let rec trickledown l i e =
-    let j = maxson l i in
-    if cmp (get a j) e > 0 then begin
-      set a i (get a j);
-      trickledown l j e;
-    end else begin
-      set a i e;
-    end;
+    match maxson l i with Bottom i -> Bottom i | Ok j -> 
+      if cmp (get a j) e > 0 then begin
+        set a i (get a j);
+        trickledown l j e
+      end else begin
+        set a i e;
+        Ok ()
+      end;
   in
-  let rec trickle l i e = try trickledown l i e with Bottom i -> set a i e in
+  let rec trickle l i e = match trickledown l i e with Ok _ -> () | Bottom i -> set a i e in
   let rec bubbledown l i =
-    let j = maxson l i in
+    match maxson l i with Bottom i -> Bottom i | Ok j -> 
     set a i (get a j);
     bubbledown l j
   in
-  let bubble l i = try bubbledown l i with Bottom i -> i in
+  let bubble l i = match bubbledown l i with Ok _ -> (assert (0=1); assert false) | Bottom i -> i in
   let rec trickleup i e =
     let father = (i - 1) / 3 in
+    let z = assert (i >= 0) in
+    let z = assert (father >= 0) in
     assert (i <> father);
     if cmp (get a father) e < 0 then begin
       set a i (get a father);
@@ -216,6 +220,7 @@ let sort cmp a =
   done;
   if l > 1 then (let e = (get a 1) in set a 1 (get a 0); set a 0 e);
 ;;
+*)
 
 let cutoff = 5;;
 let stable_sort cmp a =
@@ -223,31 +228,32 @@ let stable_sort cmp a =
     let src1r = src1ofs + src1len and src2r = src2ofs + src2len in
     let rec loop i1 s1 i2 s2 d =
       if cmp s1 s2 <= 0 then begin
-        set dst d s1;
+        Array.unsafe_set dst d s1;
         let i1 = i1 + 1 in
         if i1 < src1r then
-          loop i1 (get a i1) i2 s2 (d + 1)
+          loop i1 (Array.unsafe_get a i1) i2 s2 (d + 1)
         else
           blit src2 i2 dst (d + 1) (src2r - i2)
       end else begin
-        set dst d s2;
+        Array.unsafe_set dst d s2;
         let i2 = i2 + 1 in
         if i2 < src2r then
-          loop i1 s1 i2 (get src2 i2) (d + 1)
+          loop i1 s1 i2 (Array.unsafe_get src2 i2) (d + 1)
         else
           blit a i1 dst (d + 1) (src1r - i1)
       end
-    in loop src1ofs (get a src1ofs) src2ofs (get src2 src2ofs) dstofs;
+    in loop src1ofs (Array.unsafe_get a src1ofs) src2ofs (Array.unsafe_get src2 src2ofs) dstofs;
   in
   let isortto srcofs dst dstofs len =
     for i = 0 to len - 1 do
-      let e = (get a (srcofs + i)) in
-      let j = ref (dstofs + i - 1) in
-      while (!j >= dstofs && cmp (get dst !j) e > 0) do
-        set dst (!j + 1) (get dst !j);
-        decr j;
-      done;
-      set dst (!j + 1) e;
+      let e = (Array.unsafe_get a (srcofs + i)) in
+      let rec whileloop j =
+	if j >= dstofs && cmp (Array.unsafe_get dst j) e > 0 then begin
+	  Array.unsafe_set dst (j + 1) (Array.unsafe_get dst j);
+	  whileloop (j - 1)
+	end else
+	  Array.unsafe_set dst (j + 1) e
+      in whileloop (dstofs + i - 1)
     done;
   in
   let rec sortto srcofs dst dstofs len =
@@ -259,11 +265,11 @@ let stable_sort cmp a =
       merge (srcofs + l2) l1 dst (dstofs + l1) l2 dst dstofs;
     end;
   in
-  let l = length a in
+  let l = Array.length a in
   if l <= cutoff then isortto 0 a 0 l else begin
     let l1 = l / 2 in
     let l2 = l - l1 in
-    let t = make l2 (get a 0) in
+    let t = Array.make l2 (Array.unsafe_get a 0) in
     sortto l1 t 0 l2;
     sortto 0 a l2 l1;
     merge l2 l1 t 0 l2 a 0;
@@ -272,4 +278,3 @@ let stable_sort cmp a =
 
 let fast_sort = stable_sort;;
 
-*)
