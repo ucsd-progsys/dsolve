@@ -13,6 +13,12 @@ let str_of_path p =
   Common.do_bimemo path_to_str str_to_path Pa.unique_name p p
 let sy_of_path p = F.Symbol.of_string (str_of_path p)
 
+let sy_of_qvar k =
+  F.Symbol.of_string ("k" ^ string_of_int k)
+let qvar_of_sy sy =
+  let s = F.Symbol.to_string sy in
+    int_of_string (String.sub s 1 (String.length s - 1))
+
 let path_of_str s = Hashtbl.find str_to_path s
 let path_of_sy s =
   try path_of_str (F.Symbol.to_string s) with

@@ -24,7 +24,7 @@
 module Sol :
   sig
     type 'a t
-    type key = Common.ComparablePath.t
+    type key = Frame.qvar
     val find : 'a t -> key -> 'a
     val fold : (key -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b
   end
@@ -72,11 +72,11 @@ val solve_with_solver:
   (Frame.t Liqenv.t ->
     (Frame.t * labeled_constraint * refinement_constraint) list ->
       Qualifier.t list Sol.t -> Qualifier.t list -> Qualifier.t list Sol.t) ->
-  ((Common.ComparablePath.t -> Qualifier.t list) * (labeled_constraint list))
+  ((Frame.qvar -> Qualifier.t list) * (labeled_constraint list))
 
-val sol_of_solmap: Qualifier.t list Liqenv.t -> Qualifier.t list Sol.t
+val sol_of_solmap: Qualifier.t list Misc.IntMap.t -> Qualifier.t list Sol.t
 val guard_predicate: unit -> guard_t -> Predicate.t
 val env_to_empty_refenv: Frame.t Liqenv.t -> Frame.refinement Liqenv.t
 val env_to_refenv: Frame.t Liqenv.t -> Frame.refinement Liqenv.t
-val environment_preds: (Path.t -> Qualifier.t list) -> Frame.refinement Liqenv.t -> Predicate.t list
-val refinement_preds: (Path.t -> Qualifier.t list) -> Predicate.pexpr -> Frame.refinement -> Predicate.t list
+val environment_preds: (Frame.qvar -> Qualifier.t list) -> Frame.refinement Liqenv.t -> Predicate.t list
+val refinement_preds: (Frame.qvar -> Qualifier.t list) -> Predicate.pexpr -> Frame.refinement -> Predicate.t list

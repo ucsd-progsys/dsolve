@@ -6,4 +6,6 @@ val d_of_fexpr: Ast.expr -> Predicate.pexpr
 
 val sy_of_path: Path.t -> Ast.Symbol.t 
 val path_of_sy: Ast.Symbol.t -> Path.t
+val sy_of_qvar: Frame.qvar -> Ast.Symbol.t
+val qvar_of_sy: Ast.Symbol.t -> Frame.qvar
 val str_of_path: Path.t -> string 

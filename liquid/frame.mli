@@ -29,7 +29,7 @@ open Asttypes
 type substitution = Path.t * Predicate.pexpr
 type dep_sub      = string * string
 
-type qvar       = Path.t
+type qvar       = int
 type refexpr    = substitution list * (Qualifier.t list * qvar list)
 type refinement = refexpr list
 
@@ -132,11 +132,11 @@ val env_bind: t Liqenv.t -> pattern_desc -> t -> t Liqenv.t
 val refexpr_apply_subs: substitution list -> refexpr -> refexpr
 val apply_subs: substitution list -> t -> t
 val label_like: t -> t -> t
-val apply_solution: (Path.t -> Qualifier.t list) -> t -> t
+val apply_solution: (qvar -> Qualifier.t list) -> t -> t
 val refinement_conjuncts:
-  (Path.t -> Qualifier.t list) -> Predicate.pexpr -> refinement -> Predicate.t list
+  (qvar -> Qualifier.t list) -> Predicate.pexpr -> refinement -> Predicate.t list
 val refinement_predicate:
-  (Path.t -> Qualifier.t list) -> Predicate.pexpr -> refinement -> Predicate.t
+  (qvar -> Qualifier.t list) -> Predicate.pexpr -> refinement -> Predicate.t
 val refinement_qvars: refinement -> qvar list
 val apply_refinement: refinement -> t -> t
 val append_refinement: refinement -> t -> t
@@ -151,6 +151,6 @@ val ref_of_simple: simple_refinement -> refinement
 val refinement_fold : (refinement -> 'a -> 'a) -> 'a -> t -> 'a
 val refinement_iter : (refinement -> unit) -> t -> unit
 val predicate:
-  (Path.t -> Qualifier.t list) -> Predicate.pexpr -> t -> Predicate.t
+  (qvar -> Qualifier.t list) -> Predicate.pexpr -> t -> Predicate.t
 val conjuncts:
-  (Path.t -> Qualifier.t list) -> Predicate.pexpr -> t -> Predicate.t list
+  (qvar -> Qualifier.t list) -> Predicate.pexpr -> t -> Predicate.t list

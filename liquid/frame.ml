@@ -45,7 +45,7 @@ module Le = Liqenv
 type substitution = Path.t * P.pexpr
 type dep_sub      = string * string
 
-type qvar       = Path.t
+type qvar       = int
 type refexpr    = substitution list * (Qualifier.t list * qvar list)
 type refinement = refexpr list
 
@@ -412,9 +412,9 @@ let flatten_refinement res =
 
 let pprint_psub ppf (s, v) =
   if !Clflags.print_subs then
-    fprintf ppf "[%a] %s" (C.pprint_many false " " pprint_sub) s (C.path_name v) 
+    fprintf ppf "[%a] k%d" (C.pprint_many false " " pprint_sub) s v
   else
-    fprintf ppf "%s" (C.path_name v) 
+    fprintf ppf "k%d" v
 
 let pprint_refinement ppf res = 
   match flatten_refinement res with
@@ -804,7 +804,7 @@ let instantiate_qualifiers vars fr =
 let label_like f f' =
   let rec label vars f f' = match (f, f') with
     | (Fvar _, Fvar (_, _, s, _)) ->
-        instantiate_qualifiers vars (apply_dep_subs (instantiate_dep_subs vars s) f) 
+        instantiate_qualifiers vars (apply_dep_subs (instantiate_dep_subs vars s) f)
     | (Frec _, Frec _) ->
         instantiate_qualifiers vars f
     | (Fsum (p, cs1, r), Fsum (_, cs2, _)) ->
@@ -870,8 +870,11 @@ let mutable_variance = function
   | Mutable -> Invariant
   | _       -> Covariant
 
-let fresh_refinementvar () =
-  mk_refinement [] [] [Path.mk_ident "k"]
+let fresh_refinementvar =
+  let rvar = ref 0 in
+    fun () ->
+      incr rvar;
+      mk_refinement [] [] [!rvar]
 
 let fresh_fvar level r =
   Fvar (Ident.create "a", level, [], r)

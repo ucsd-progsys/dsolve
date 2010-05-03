@@ -34,11 +34,15 @@ module TP = TheoremProver
 module B = Builtins
 module Q = Qualifier
 module C = Common
-module VM = C.PathMap 
+module VM = Misc.IntMap
 module Cf = Clflags
 module QSet = Set.Make(Q)
 module NSet = Set.Make(String)
-module Sol = Hashtbl.Make(C.ComparablePath)
+module Sol = Hashtbl.Make(struct
+                            type t    = F.qvar
+                            let hash  = Hashtbl.hash
+                            let equal = (=)
+                          end)
 module BS = Bstats
 module JS = Mystats
 
@@ -109,7 +113,7 @@ let is_wfframe_constraint = function
 
 let solution_map s k = 
   C.do_catch 
-    (Printf.sprintf "ERROR: solution_map couldn't find: %s" (C.path_name k))
+    (Printf.sprintf "ERROR: solution_map couldn't find: k%d" k)
     (Sol.find s) k  
 
 let sref_map f r =
@@ -653,7 +657,7 @@ let refine sri s c =
       refine_tp (get_ref_fenv sri c) s env g r1 sub2s k2 
   | WFRef (env, (subs, F.Qvar k), Some id) ->
       let qs  = solution_map s k in
-      let _   = if C.ck_olev C.ol_dump_wfs then printf "@.@.@[WF: %s@]@." (Path.unique_name k) in
+      let _   = if C.ck_olev C.ol_dump_wfs then printf "@.@.@[WF: k%d@]@." k in
       let _   = if C.ck_olev C.ol_dump_wfs then printf "@[(Env)@ %a@]@." pprint_fenv_shp env in 
       let qs' = BS.time "filter wf" (List.filter (qual_wf sm env subs)) qs in
       let _   = if C.ck_olev C.ol_dump_wfs then List.iter (fun q -> printf "%a" Qualifier.pprint q) qs in
@@ -767,23 +771,20 @@ let make_initial_solution cs =
   let s' = Sol.create 100 in
   let l = ref [] in
   let _ = List.iter (function (SubRef (_, _, _, (_, F.Qvar k), _), qs) ->
-            let k' = Path.unique_ident_name_crash k in
-            (Hashtbl.replace srhs k' (); Sol.replace s k qs) | _ -> ()) cs in
+            (Hashtbl.replace srhs k (); Sol.replace s k qs) | _ -> ()) cs in
   let _ = List.iter (function (SubRef (_, _, r1, _, _), qs) ->
             List.iter (fun k ->
-              let k' = Path.unique_ident_name_crash k in
-              Hashtbl.replace slhs k' (); if not !Cf.minsol && is_formal k && not (Hashtbl.mem srhs k')
+              Hashtbl.replace slhs k (); if not !Cf.minsol && is_formal k && not (Hashtbl.mem srhs k)
               then Sol.replace s k [] else Sol.replace s k qs) (F.refinement_qvars r1) | _ -> ()) cs in
   let _ = List.iter (function (WFRef (_, (_, F.Qvar k), _), qs) ->
-            let k' = Path.unique_ident_name_crash k in
-            if Hashtbl.mem srhs k' || (Hashtbl.mem slhs k' && Sol.find s k != []) then BS.time "app_sol" (app_sol s s' l) k qs else Sol.replace s k [] | _ -> ()) cs in
+            if Hashtbl.mem srhs k || (Hashtbl.mem slhs k && Sol.find s k != []) then BS.time "app_sol" (app_sol s s' l) k qs else Sol.replace s k [] | _ -> ()) cs in
   let l = BS.time "sort and compact" C.sort_and_compact !l in
   let _ = BS.time "elements" (List.iter (fun k -> Sol.replace s k (QSet.elements (Sol.find s' k)))) l in
   s
 
-let sol_of_solmap (soln: Qualifier.t list Le.t) =
+let sol_of_solmap (soln: Qualifier.t list VM.t) =
   let s = Sol.create 108 in
-  Le.iter (fun k qs -> Sol.replace s k qs) soln;
+  VM.iter (fun k qs -> Sol.replace s k qs) soln;
   s
 
 (**************************************************************)
@@ -802,7 +803,7 @@ let dump_ref_vars sri =
   if !Cf.dump_ref_vars then
   (printf "@[Refinement Constraint Vars@.@\n@]";
   iter_ref_constraints sri (fun c -> printf "@[(%d)@ %s@.@]" (ref_id c) 
-    (match (ref_k c) with Some k -> Path.unique_name k | None -> "None")))
+    (match (ref_k c) with Some k -> string_of_int k | None -> "None")))
    
 let dump_constraints cs =
   if !Cf.dump_constraints then begin
@@ -863,8 +864,8 @@ let dump_solution s =
   if C.ck_olev C.ol_solve then
     let bs = Sol.fold (fun p r l -> (p, r) :: l) s [] in
     let bs = List.sort (fun (p, _) (p', _) -> compare p p') bs in
-    List.iter (fun (p, r) -> C.cprintf C.ol_solve "@[%s: %a@]@."
-              (Path.unique_name p) (Oprint.print_list Q.pprint C.space) r) bs
+    List.iter (fun (p, r) -> C.cprintf C.ol_solve "@[k%d: %a@]@."
+              p (Oprint.print_list Q.pprint C.space) r) bs
   else ()
 
 let dump_qualifiers cqs =

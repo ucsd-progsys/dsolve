@@ -14,6 +14,7 @@ module Sy = A.Symbol
 module Q = A.Qualifier
 module Asm = Sy.SMap
 module Le = Liqenv
+module IM = Misc.IntMap
 
 let dvv = C.qual_test_var
 let dsyvv = Pg.sy_of_path dvv
@@ -89,10 +90,10 @@ let dqual_of_fpred p =
 let frefas_of_dsreft (subs, q) =
   [match q with
   | Fr.Qconst q -> F.Conc (fpred_of_dqual subs q)
-  | Fr.Qvar k -> F.Kvar (f_of_dsubs subs, Pg.sy_of_path k)]
+  | Fr.Qvar k -> F.Kvar (f_of_dsubs subs, Pg.sy_of_qvar k)]
 
 let frefas_of_drefexpr (subs, (_, ks)) =
-  List.map (fun k -> F.Kvar (f_of_dsubs subs, Pg.sy_of_path k)) ks
+  List.map (fun k -> F.Kvar (f_of_dsubs subs, Pg.sy_of_qvar k)) ks
 
 let frefas_of_dreft reft =
   let consts =
@@ -161,7 +162,7 @@ let f_of_dwfcons cons =
 let f_of_dsoln soln =
   let p q = fpred_of_dqual [] (unify_dqual q) in
   D.Sol.fold (fun k qs s ->
-    snd (F.sol_add s (Pg.sy_of_path k) (List.map p qs))) soln Asm.empty
+    snd (F.sol_add s (Pg.sy_of_qvar k) (List.map p qs))) soln Asm.empty
 
  (* translates fixsoln into dsolve-land lazily:
   * assuming that all value variables are dvv *)
@@ -169,5 +170,5 @@ let d_of_fsoln soln =
   let q = dqual_of_fpred in
   let rv = 
     Asm.fold (fun k ps s ->
-      Le.add (Pg.path_of_sy k) (List.map q ps) s) soln Le.empty in
+      IM.add (Pg.qvar_of_sy k) (List.map q ps) s) soln IM.empty in
   D.sol_of_solmap rv
