@@ -30,13 +30,6 @@ if "LD_LIBRARY_PATH" in os.environ:
 os.environ["LD_LIBRARY_PATH"] = "%s/external/z3/lib/:%s" % (sys.path[0], ld_library_path)
 del ld_library_path
 
-# TODO: Ensure that these files get deleted?
-(handle, tname) = tempfile.mkstemp()
-os.close(handle)
-(handle, tname2) = tempfile.mkstemp()
-os.close(handle)
-del handle
-
 def gen_quals(src,flags):
   bname = src[:-3]
   (fname,qname,hname) = (bname+".ml", bname+".quals", bname+".hquals")
@@ -46,6 +39,14 @@ def gen_quals(src,flags):
     files += [hname]
   if not "-bare" in flags:
     files += [d_pats]
+
+  # TODO: Ensure that these files get deleted?
+  (handle, tname) = tempfile.mkstemp()
+  os.close(handle)
+  (handle, tname2) = tempfile.mkstemp()
+  os.close(handle)
+  del handle
+
   common.cat_files(files, tname)
   flags += " " + " ".join(get_options(src))
   gen  = ("%s %s -summarize" % (solve, flags)).split()

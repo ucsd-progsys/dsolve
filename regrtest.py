@@ -19,7 +19,7 @@
 # ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION
 # TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-import common, sys, time, os, os.path
+import common, sys, time, os, os.path, Queue, optparse, threading
 import itertools as it
 import dsolve
 
@@ -32,17 +32,49 @@ def runtest(file, expected_status):
 
   ok = (status == expected_status)
   if ok:
-    print "\033[1;32mSUCCESS!\033[1;0m\n"
+    print "\033[1;32mSUCCESS!\033[1;0m (%s)\n" % (file)
   else:
-    print "\033[1;31mFAILURE :(\033[1;0m\n"
+    print "\033[1;31mFAILURE :(\033[1;0m (%s) \n" % (file)
   return (file, ok)
 
-def runtests(dir, expected_status):
-  print "Running tests from %s/" % dir
-  files = it.chain(*[[os.path.join(dir, file) for file in files] for dir, dirs, files in os.walk(dir)])
-  return [runtest(file, expected_status) for file in files if file.endswith(".ml")]
+class Worker(threading.Thread):
+  def __init__(self, testqueue):
+    threading.Thread.__init__(self)
+    self.results   = list ()
+    self.testqueue = testqueue
 
-results   = [runtests(dir, expected_status) for (dir, expected_status) in testdirs]
+  def run(self):
+    while True:
+      (file, expected_status) = self.testqueue.get()
+      self.results.append(runtest(file, expected_status))
+      self.testqueue.task_done()
+
+def queuetests(testqueue, dir, expected_status):
+  for (dir, expected_status) in testdirs:
+    files = it.chain(*[[os.path.join(dir, file) for file in files if file.endswith(".ml")] for dir, dirs, files in os.walk(dir)])
+    for file in files:
+      testqueue.put((file, expected_status))
+
+def parseopts():
+  parser = optparse.OptionParser()
+  parser.add_option("-p", "--parallel", dest="threadcount", default=1, type=int, help="spawn n threads")
+  options, args = parser.parse_args()
+  return options
+
+options = parseopts()
+
+testqueue = Queue.Queue()
+for dir, expected_status in testdirs:
+  queuetests(testqueue, dir, expected_status)
+
+print "Creating %d workers" % (options.threadcount)
+workers = [Worker(testqueue) for i in range(0, options.threadcount)]
+for worker in workers:
+  worker.daemon = True
+  worker.start()
+testqueue.join()
+
+results   = [worker.results for worker in workers]
 failed    = [result[0] for result in it.chain(*results) if result[1] == False]
 failcount = len(failed)
 if failcount == 0:
