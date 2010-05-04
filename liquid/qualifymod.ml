@@ -485,18 +485,18 @@ let warn_invalid_mlq env p f =
           eprintf "@[Warning:@ %s@ ::@ [...]@ %a@ [...]@ may@ not@ be@ wf@]@." (Path.name p) F.pprint_refinement r) f
      
 let qualify_implementation sourcefile fenv' ifenv env qs consts str =
-  let _           = if !Clflags.ck_mlq then Le.iter (warn_invalid_mlq fenv') ifenv in
-  let _           = reset_framelog () in
-  let ( fenv, cs) = constrain_structure env fenv' str in
-  let nrcs        = get_nrcstrs env fenv in
-  let cs          = List.rev_append nrcs cs in
-  let cs          = (List.map (lbl_dummy_cstr env) (Le.maplistfilter (maybe_cstr_from_unlabel_frame fenv) ifenv)) @ cs in
-  let _           = pre_solve sourcefile in
-  let solver      = if !Clflags.use_fixpoint then Fixsolve.solver sourcefile else dsolver in
-  let (s, cs)     = solve_with_solver qs env consts cs solver in
-  let _           = post_solve () in
-  let flog        = if !Clflags.raw_frames then !flog else framemap_apply_solution s !flog in
-  let _           = dump_frames sourcefile flog in
+  let _          = if !Clflags.ck_mlq then Le.iter (warn_invalid_mlq fenv') ifenv in
+  let _          = reset_framelog () in
+  let (fenv, cs) = constrain_structure env fenv' str in
+  let nrcs       = get_nrcstrs env fenv in
+  let cs         = List.rev_append nrcs cs in
+  let cs         = (List.map (lbl_dummy_cstr env) (Le.maplistfilter (maybe_cstr_from_unlabel_frame fenv) ifenv)) @ cs in
+  let _          = pre_solve sourcefile in
+  let solver     = if !Clflags.use_fixpoint then Fixsolve.solver sourcefile else dsolver in
+  let (s, cs)    = solve_with_solver qs env consts cs solver in
+  let _          = post_solve () in
+  let flog       = if !Clflags.raw_frames then !flog else framemap_apply_solution s !flog in
+  let _          = dump_frames sourcefile flog in
     match cs with [] -> () | _ ->
       (Printf.printf "Errors encountered during type checking:\n\n";
        flush stdout; raise (Errors(List.map (make_frame_error s) cs)))
