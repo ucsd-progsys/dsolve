@@ -228,7 +228,7 @@ and constrain_setfield (env, guard, f) expr label_desc expr' =
 
 and constrain_if (env, guard, f) e1 e2 e3 =
   let (f1, cstrs1) = constrain e1 env guard in
-  let guardvar     = Path.mk_ident "guard" in
+  let guardvar     = Path.mk_ident "_'guard" in
   let env'         = Le.add guardvar f1 env in
   let guard2       = (guardvar, true)::guard in
   let (f2, cstrs2) = constrain e2 env' guard2 in
@@ -428,20 +428,20 @@ and constrain_bindings env guard recflag bindings =
 and constrain_subexprs env guard es =
   List.fold_right (fun e (fs, cs) -> let (f, cs') = constrain e env guard in (f :: fs, cs' @ cs)) es ([], [])
 
-let constrain_structure tenv initfenv initquals str =
-  let rec constrain_rec quals fenv cstrs = function
-    | [] -> (quals, fenv, cstrs)
+let constrain_structure tenv initfenv str =
+  let rec constrain_rec fenv cstrs = function
+    | []                      -> (fenv, cstrs)
     | (Tstr_eval exp) :: srem ->
         let (_, cstrs') = constrain exp fenv [] in
-          constrain_rec quals fenv (cstrs' @ cstrs) srem
+          constrain_rec fenv (cstrs' @ cstrs) srem
     | (Tstr_value (recflag, bindings))::srem ->
         let (fenv, cstrs') = constrain_bindings fenv [] recflag bindings in
-          constrain_rec quals fenv (cstrs @ cstrs') srem
+          constrain_rec fenv (cstrs @ cstrs') srem
     | (Tstr_module _)::srem
     | (Tstr_type _)::srem ->
-        constrain_rec quals fenv cstrs srem
+        constrain_rec fenv cstrs srem
     | _ -> assert false
-  in constrain_rec initquals initfenv [] str
+  in constrain_rec initfenv [] str
 
 (******************************************************************************)
 (***************************** Qualifying modules *****************************)
@@ -485,19 +485,18 @@ let warn_invalid_mlq env p f =
           eprintf "@[Warning:@ %s@ ::@ [...]@ %a@ [...]@ may@ not@ be@ wf@]@." (Path.name p) F.pprint_refinement r) f
      
 let qualify_implementation sourcefile fenv' ifenv env qs consts str =
-  let _              = if !Clflags.ck_mlq then Le.iter (warn_invalid_mlq fenv') ifenv in
-  let _              = reset_framelog () in
-  let (qs, fenv, cs) = constrain_structure env fenv' qs str in
-  let nrcs           = get_nrcstrs env fenv in
-  let cs             = List.rev_append nrcs cs in
-  let cs             = (List.map (lbl_dummy_cstr env) (Le.maplistfilter (maybe_cstr_from_unlabel_frame fenv) ifenv)) @ cs in
-  let _              = pre_solve sourcefile in
-  (*let (s,cs)         = Bstats.time "solving" (solve qs env consts) cs in*)
-  let solver         = if !Clflags.use_fixpoint then Fixsolve.solver sourcefile else dsolver in
-  let (s, cs)        = solve_with_solver qs env consts cs solver in
-  let _              = post_solve () in
-  let flog           = if !Clflags.raw_frames then !flog else framemap_apply_solution s !flog in
-  let _              = dump_frames sourcefile flog in
+  let _           = if !Clflags.ck_mlq then Le.iter (warn_invalid_mlq fenv') ifenv in
+  let _           = reset_framelog () in
+  let ( fenv, cs) = constrain_structure env fenv' str in
+  let nrcs        = get_nrcstrs env fenv in
+  let cs          = List.rev_append nrcs cs in
+  let cs          = (List.map (lbl_dummy_cstr env) (Le.maplistfilter (maybe_cstr_from_unlabel_frame fenv) ifenv)) @ cs in
+  let _           = pre_solve sourcefile in
+  let solver      = if !Clflags.use_fixpoint then Fixsolve.solver sourcefile else dsolver in
+  let (s, cs)     = solve_with_solver qs env consts cs solver in
+  let _           = post_solve () in
+  let flog        = if !Clflags.raw_frames then !flog else framemap_apply_solution s !flog in
+  let _           = dump_frames sourcefile flog in
     match cs with [] -> () | _ ->
       (Printf.printf "Errors encountered during type checking:\n\n";
        flush stdout; raise (Errors(List.map (make_frame_error s) cs)))
