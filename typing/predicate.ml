@@ -328,11 +328,23 @@ let pred_or_pexp_map_funs f = function
   | Pexpr e -> Pexpr (pexp_map_funs f e)
   | Pt t -> Pt (map_funs f t)
 
+let subst_var v x y =
+  if Path.same x y then v else Var y
+
+let chain_substs fsub subs f =
+  List.fold_right (fun (x, e) p -> fsub e x p) subs f
+
+let pexp_subst v x exp =
+  pexp_map_vars (subst_var v x) exp
+
+let pexp_apply_substs subs exp =
+  chain_substs pexp_subst subs exp
+
 let subst v x pred =
-  map_vars (fun y -> if Path.same x y then v else Var y) pred
+  map_vars (subst_var v x) pred
 
 let apply_substs subs pred =
-  let substitute (x, e) p = subst e x p in List.fold_right substitute subs pred
+  chain_substs subst subs pred
 
 let instantiate_named_vars subs pred =
   map_vars (fun y -> try Var (List.assoc (Path.ident_name_fail y) subs)

@@ -112,6 +112,7 @@ val (--): pexpr -> pexpr -> pexpr
 val (?.): pexpr -> t
 
 val subst: pexpr -> Path.t -> t -> t
+val pexp_apply_substs: (Path.t * pexpr) list -> pexpr -> pexpr
 val apply_substs: (Path.t * pexpr) list -> t -> t
 val vars: t -> Path.t list
 val exp_vars: pexpr -> Path.t list
