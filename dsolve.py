@@ -21,8 +21,9 @@
 
 import sys, os, os.path, common, tempfile
 
-d_pats= "default_patterns"
-solve = "./liquid.opt"
+path   = os.path.dirname(sys.argv[0])
+d_pats = "default_patterns"
+solve  = "%s/liquid.opt" % (path)
 
 ld_library_path = ""
 if "LD_LIBRARY_PATH" in os.environ:
@@ -52,7 +53,7 @@ def gen_quals(src,flags):
   gen  = ("%s %s -summarize" % (solve, flags)).split()
   succ = common.logged_sys_call(gen + [tname2, fname], False)
   if succ == 0:
-    split= ("./depsplit %s %s %s" % (tname, tname2, qname)).split()
+    split= ("%s/depsplit %s %s %s" % (path, tname, tname2, qname)).split()
     common.logged_sys_call(split, True)
   return succ
 
