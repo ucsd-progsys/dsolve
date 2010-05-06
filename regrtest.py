@@ -19,7 +19,7 @@
 # ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION
 # TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-import common, sys, time, os, os.path, Queue, optparse, threading
+import common, sys, time, os, os.path, optparse
 import itertools as it
 import external.misc.pmap as pmap
 import dsolve
@@ -38,28 +38,12 @@ def runtest((file, expected_status)):
     print "\033[1;31mFAILURE :(\033[1;0m (%s) \n" % (file)
   return (file, ok)
 
-class Worker(threading.Thread):
-  def __init__(self, testqueue):
-    threading.Thread.__init__(self)
-    self.results   = list ()
-    self.testqueue = testqueue
-
-  def run(self):
-    while not self.testqueue.empty():
-      (file, expected_status) = self.testqueue.get()
-      self.results.append(runtest(file, expected_status))
-      self.testqueue.task_done()
-
-def parseopts():
-  parser = optparse.OptionParser()
-  parser.add_option("-p", "--parallel", dest="threadcount", default=1, type=int, help="spawn n threads")
-  options, args = parser.parse_args()
-  return options
-
-options = parseopts()
-
 def dirtests(dir, expected_status):
   return it.chain(*[[(os.path.join(dir, file), expected_status) for file in files if file.endswith(".ml")] for dir, dirs, files in os.walk(dir)])
+
+parser = optparse.OptionParser()
+parser.add_option("-p", "--parallel", dest="threadcount", default=1, type=int, help="spawn n threads")
+options, args = parser.parse_args()
 
 alltests  = it.chain(*[dirtests(dir, expected_status) for dir, expected_status in testdirs])
 results   = pmap.map(options.threadcount, runtest, alltests)
