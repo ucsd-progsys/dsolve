@@ -21,11 +21,12 @@
 
 import common, sys, time, os, os.path, Queue, optparse, threading
 import itertools as it
+import external.misc.pmap as pmap
 import dsolve
 
 testdirs = [("postests", 0), ("negtests", 1)]
 
-def runtest(file, expected_status):
+def runtest((file, expected_status)):
   start = time.time()
   status = dsolve.run(True, ["-bare", "-v", "0", "-no-simple", "-no-timing", file])
   print "%f seconds" % (time.time() - start)
@@ -49,11 +50,6 @@ class Worker(threading.Thread):
       self.results.append(runtest(file, expected_status))
       self.testqueue.task_done()
 
-def queuetests(testqueue, dir, expected_status):
-  files = it.chain(*[[os.path.join(dir, file) for file in files if file.endswith(".ml")] for dir, dirs, files in os.walk(dir)])
-  for file in files:
-    testqueue.put((file, expected_status))
-
 def parseopts():
   parser = optparse.OptionParser()
   parser.add_option("-p", "--parallel", dest="threadcount", default=1, type=int, help="spawn n threads")
@@ -62,20 +58,12 @@ def parseopts():
 
 options = parseopts()
 
-testqueue = Queue.Queue()
-for dir, expected_status in testdirs:
-  queuetests(testqueue, dir, expected_status)
-print "Queued %d tests" % (testqueue.qsize())
+def dirtests(dir, expected_status):
+  return it.chain(*[[(os.path.join(dir, file), expected_status) for file in files if file.endswith(".ml")] for dir, dirs, files in os.walk(dir)])
 
-print "Creating %d workers" % (options.threadcount)
-workers = [Worker(testqueue) for i in range(0, options.threadcount)]
-for worker in workers:
-  worker.daemon = True
-  worker.start()
-testqueue.join()
-
-results   = [worker.results for worker in workers]
-failed    = [result[0] for result in it.chain(*results) if result[1] == False]
+alltests  = it.chain(*[dirtests(dir, expected_status) for dir, expected_status in testdirs])
+results   = pmap.map(options.threadcount, runtest, alltests)
+failed    = [result[0] for result in results if result[1] == False]
 failcount = len(failed)
 if failcount == 0:
   print "\n\033[1;32mPassed all tests! :D\033[1;0m"

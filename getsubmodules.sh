@@ -1,6 +1,5 @@
 #!/bin/sh
 
-mkdir external
 cd external
 git clone meatwad.ucsd.edu:/git/external/z3
 git clone meatwad.ucsd.edu:/git/external/fixpoint
