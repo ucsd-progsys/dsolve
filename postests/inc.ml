@@ -2,6 +2,7 @@ let show x  = x
 let fresh x = x + 1
 
 let n0 = 0                    
+(* pmr: WF check on n0 kills its qualifiers!! *)
 let n1 = fresh n0             
 let n2 = fresh n1
 
