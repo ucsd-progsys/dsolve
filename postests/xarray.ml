@@ -1,82 +1,82 @@
 (* DSOLVE -bare *)
 
-let init l f =
-  if l = 0 then [||] else
-   let res = Array.create l (f 0) in
-   for i = 1 to (pred l)  do
-     Array.unsafe_set res i (f i)
-   done;
-   res
+(* let init l f = *)
+(*   if l = 0 then [||] else *)
+(*    let res = Array.create l (f 0) in *)
+(*    for i = 1 to (pred l)  do *)
+(*      Array.unsafe_set res i (f i) *)
+(*    done; *)
+(*    res *)
 
-let make_matrix sx sy init =
-  let res = (Array.create sx (Array.create sy init)) (* [||] *)  in
-  for x = 0 to pred sx do
-    Array.unsafe_set res x (Array.create sy init)
-  done;
-  res
+(* let make_matrix sx sy init = *)
+(*   let res = (Array.create sx (Array.create sy init)) (\* [||] *\)  in *)
+(*   for x = 0 to pred sx do *)
+(*     Array.unsafe_set res x (Array.create sy init) *)
+(*   done; *)
+(*   res *)
 
-let create_matrix = make_matrix
+(* let create_matrix = make_matrix *)
 
-let copy a =
-  let l = Array.length a in
-  if l = 0 then [||] else begin
-    let res = Array.create l (Array.unsafe_get a 0) in
-    for i = 1 to pred l do
-      Array.unsafe_set res i (Array.unsafe_get a i)
-    done;
-    res
-  end
+(* let copy a = *)
+(*   let l = Array.length a in *)
+(*   if l = 0 then [||] else begin *)
+(*     let res = Array.create l (Array.unsafe_get a 0) in *)
+(*     for i = 1 to pred l do *)
+(*       Array.unsafe_set res i (Array.unsafe_get a i) *)
+(*     done; *)
+(*     res *)
+(*   end *)
 
-let append a1 a2 =
-  let l1 = Array.length a1 and l2 = Array.length a2 in
-  if l1 = 0 && l2 = 0 then [||] else begin
-    let r = Array.create (l1 + l2) (Array.unsafe_get (if l1 > 0 then a1 else a2) 0) in
-    for i = 0 to l1 - 1 do Array.unsafe_set r i (Array.unsafe_get a1 i) done;
-    for i = 0 to l2 - 1 do Array.unsafe_set r (i + l1) (Array.unsafe_get a2 i) done;
-    r
-  end
+(* let append a1 a2 = *)
+(*   let l1 = Array.length a1 and l2 = Array.length a2 in *)
+(*   if l1 = 0 && l2 = 0 then [||] else begin *)
+(*     let r = Array.create (l1 + l2) (Array.unsafe_get (if l1 > 0 then a1 else a2) 0) in *)
+(*     for i = 0 to l1 - 1 do Array.unsafe_set r i (Array.unsafe_get a1 i) done; *)
+(*     for i = 0 to l2 - 1 do Array.unsafe_set r (i + l1) (Array.unsafe_get a2 i) done; *)
+(*     r *)
+(*   end *)
 
-let concat_aux init al =
-  let rec size accu = function
-    | [] -> accu
-    | h::t -> size (accu + Array.length h) t
-  in
-  let res = Array.create (size 0 al) init in
-  let rec fill pos = function
-    | [] -> ()
-    | h::t ->
-        if (pos + Array.length h <= Array.length res) then begin 
-        for i = 0 to Array.length h - 1 do
-          Array.unsafe_set res (pos + i) (Array.unsafe_get h i);
-        done;
-        fill (pos + Array.length h) t;
-        end
-  in
-  fill 0 al;
-  res
-;;
+(* let concat_aux init al = *)
+(*   let rec size accu = function *)
+(*     | [] -> accu *)
+(*     | h::t -> size (accu + Array.length h) t *)
+(*   in *)
+(*   let res = Array.create (size 0 al) init in *)
+(*   let rec fill pos = function *)
+(*     | [] -> () *)
+(*     | h::t -> *)
+(*         if (pos + Array.length h <= Array.length res) then begin  *)
+(*         for i = 0 to Array.length h - 1 do *)
+(*           Array.unsafe_set res (pos + i) (Array.unsafe_get h i); *)
+(*         done; *)
+(*         fill (pos + Array.length h) t; *)
+(*         end *)
+(*   in *)
+(*   fill 0 al; *)
+(*   res *)
+(* ;; *)
 
-let concat al =
-  let rec find_init = function
-      [] -> [||]
-    | a :: rem ->
-        if Array.length a > 0 then concat_aux (Array.unsafe_get a 0) al else find_init rem
-  in find_init al
+(* let concat al = *)
+(*   let rec find_init = function *)
+(*       [] -> [||] *)
+(*     | a :: rem -> *)
+(*         if Array.length a > 0 then concat_aux (Array.unsafe_get a 0) al else find_init rem *)
+(*   in find_init al *)
 
 
-let sub a ofs len =
-  if ofs < 0 || len < 0 || ofs > Array.length a - len then invalid_arg "Array.sub"
-  else if len = 0 then [||]
-  else begin
-    let r = Array.create len (Array.unsafe_get a ofs) in
-    for i = 1 to len - 1 do Array.unsafe_set r i (Array.unsafe_get a (ofs + i)) done;
-    r
-  end
+(* let sub a ofs len = *)
+(*   if ofs < 0 || len < 0 || ofs > Array.length a - len then invalid_arg "Array.sub" *)
+(*   else if len = 0 then [||] *)
+(*   else begin *)
+(*     let r = Array.create len (Array.unsafe_get a ofs) in *)
+(*     for i = 1 to len - 1 do Array.unsafe_set r i (Array.unsafe_get a (ofs + i)) done; *)
+(*     r *)
+(*   end *)
 
-let fill a ofs len v =
-  if ofs < 0 || len < 0 || ofs > Array.length a - len
-  then invalid_arg "Array.fill"
-  else for i = ofs to ofs + len - 1 do Array.unsafe_set a i v done
+(* let fill a ofs len v = *)
+(*   if ofs < 0 || len < 0 || ofs > Array.length a - len *)
+(*   then invalid_arg "Array.fill" *)
+(*   else for i = ofs to ofs + len - 1 do Array.unsafe_set a i v done *)
 
 let show x = ()
 
@@ -95,76 +95,76 @@ let blit a1 ofs1 a2 ofs2 len =
       Array.unsafe_set a2 (ofs2 + i) (Array.unsafe_get a1 (ofs1 + i))
     done
 
-let iter f a =
-  for i = 0 to Array.length a - 1 do f(Array.unsafe_get a i) done
+(* let iter f a = *)
+(*   for i = 0 to Array.length a - 1 do f(Array.unsafe_get a i) done *)
 
-let map f a =
-  let l = Array.length a in
-  if l = 0 then [||] else begin
-    let r = Array.create l (f(Array.unsafe_get a 0)) in
-    for i = 1 to l - 1 do
-      Array.unsafe_set r i (f(Array.unsafe_get a i))
-    done;
-    r
-  end
+(* let map f a = *)
+(*   let l = Array.length a in *)
+(*   if l = 0 then [||] else begin *)
+(*     let r = Array.create l (f(Array.unsafe_get a 0)) in *)
+(*     for i = 1 to l - 1 do *)
+(*       Array.unsafe_set r i (f(Array.unsafe_get a i)) *)
+(*     done; *)
+(*     r *)
+(*   end *)
 
-let iteri a f =
-  for i = 0 to Array.length a - 1 do f i (Array.unsafe_get a i) done
+(* let iteri a f = *)
+(*   for i = 0 to Array.length a - 1 do f i (Array.unsafe_get a i) done *)
 
-let mapi a f =
-  let l = Array.length a in
-  if l = 0 then [||] else begin
-    let r = Array.create l (f 0 (Array.unsafe_get a 0)) in
-    for i = 1 to l - 1 do
-      Array.unsafe_set r i (f i (Array.unsafe_get a i))
-    done;
-    r
-  end
+(* let mapi a f = *)
+(*   let l = Array.length a in *)
+(*   if l = 0 then [||] else begin *)
+(*     let r = Array.create l (f 0 (Array.unsafe_get a 0)) in *)
+(*     for i = 1 to l - 1 do *)
+(*       Array.unsafe_set r i (f i (Array.unsafe_get a i)) *)
+(*     done; *)
+(*     r *)
+(*   end *)
 
-let rec len l =
-  match l with
-      [] -> 0
-    | h::t -> 1 + len t
+(* let rec len l = *)
+(*   match l with *)
+(*       [] -> 0 *)
+(*     | h::t -> 1 + len t *)
 
-let to_list a =
-  let rec tolist i res =
-    if i < 0 then
-      res
-    else
-      tolist (i - 1) (Array.unsafe_get a i :: res) in
-  tolist (Array.length a - 1) ((fun x -> x) [])
+(* let to_list a = *)
+(*   let rec tolist i res = *)
+(*     if i < 0 then *)
+(*       res *)
+(*     else *)
+(*       tolist (i - 1) (Array.unsafe_get a i :: res) in *)
+(*   tolist (Array.length a - 1) ((fun x -> x) []) *)
 
 
-(* Cannot use List.length here because the List module depends on Array. *)
-let rec list_length accu = function
-  | [] -> accu
-  | h::t -> list_length (succ accu) t
-;;
+(* (\* Cannot use List.length here because the List module depends on Array. *\) *)
+(* let rec list_length accu = function *)
+(*   | [] -> accu *)
+(*   | h::t -> list_length (succ accu) t *)
+(* ;; *)
 
-let of_list l = match l with
-    [] -> [||]
-  | hd::tl ->
-      let a = Array.create (len l) hd in
-      let rec fill i l = match l with
-          [] -> a
-        | hd::tl ->
-            let z = len tl in
-              Array.unsafe_set a i hd; fill (i+1) tl in
-      fill 1 tl
+(* let of_list l = match l with *)
+(*     [] -> [||] *)
+(*   | hd::tl -> *)
+(*       let a = Array.create (len l) hd in *)
+(*       let rec fill i l = match l with *)
+(*           [] -> a *)
+(*         | hd::tl -> *)
+(*             let z = len tl in *)
+(*               Array.unsafe_set a i hd; fill (i+1) tl in *)
+(*       fill 1 tl *)
 
-let fold_left f x a =
-  let r = ref x in
-  for i = 0 to Array.length a - 1 do
-    r := f !r (Array.unsafe_get a i)
-  done;
-  !r
+(* let fold_left f x a = *)
+(*   let r = ref x in *)
+(*   for i = 0 to Array.length a - 1 do *)
+(*     r := f !r (Array.unsafe_get a i) *)
+(*   done; *)
+(*   !r *)
 
-let fold_right f a x =
-  let r = ref x in
-  for i = Array.length a - 1 downto 0 do
-    r := f (Array.unsafe_get a i) !r
-  done;
-  !r
+(* let fold_right f a x = *)
+(*   let r = ref x in *)
+(*   for i = Array.length a - 1 downto 0 do *)
+(*     r := f (Array.unsafe_get a i) !r *)
+(*   done; *)
+(*   !r *)
 
 (*
 type 'a fakebottom = Bottom of int | Ok of 'a
@@ -248,10 +248,13 @@ let stable_sort cmp a =
     for i = 0 to len - 1 do
       let e = (Array.unsafe_get a (srcofs + i)) in
       let rec whileloop j =
-	if j >= dstofs && cmp (Array.unsafe_get dst j) e > 0 then begin
-	  Array.unsafe_set dst (j + 1) (Array.unsafe_get dst j);
-	  whileloop (j - 1)
-	end else
+	if j >= dstofs then begin
+          if cmp (Array.unsafe_get dst j) e > 0 then begin
+	    Array.unsafe_set dst (j + 1) (Array.unsafe_get dst j);
+	    whileloop (j - 1)
+          end else
+            Array.unsafe_set dst (j + 1) e
+        end else
 	  Array.unsafe_set dst (j + 1) e
       in whileloop (dstofs + i - 1)
     done;
@@ -266,15 +269,18 @@ let stable_sort cmp a =
     end;
   in
   let l = Array.length a in
+  let _ = show l in
   if l <= cutoff then isortto 0 a 0 l else begin
     let l1 = l / 2 in
     let l2 = l - l1 in
+    let _  = show l2 in
     let t = Array.make l2 (Array.unsafe_get a 0) in
+    let _ = show t in
     sortto l1 t 0 l2;
     sortto 0 a l2 l1;
     merge l2 l1 t 0 l2 a 0;
   end;
 ;;
 
-let fast_sort = stable_sort;;
+(* let fast_sort = stable_sort;; *)
 
