@@ -260,7 +260,7 @@ and mk_match_guarded_env env pat = function
   | P.Var v ->
       let cps = Pattern.constructor_patterns v pat in
       let env = List.fold_left (add_constructor_pattern pat.pat_env) env cps in
-        Le.add (Path.mk_ident "__measure_guard") (Builtins.rUnit "" (Path.mk_ident "") (M.mk_guard env v cps)) env
+        Le.add (Path.mk_ident "_'_measure_guard") (Builtins.rUnit "" (Path.mk_ident "") (M.mk_guard env v cps)) env
   | _ -> env
 
 and constrain_case (env, guard, f) matchf matche (pat, e) =
@@ -354,7 +354,7 @@ and constrain_array (env, guard, f) tenv elements =
 
 and constrain_sequence (env, guard, f) e1 e2 =
   let (f1, cs1) = constrain e1 env guard in
-  let env'      = Le.add (Path.mk_ident "seq") f1 env in
+  let env'      = Le.add (Path.mk_ident "_'seq") f1 env in
   let (f', cs2) = constrain e2 env' guard in
     (f, [WFFrame (env, f); SubFrame (env', guard, f', f)], cs1 @ cs2)
 
