@@ -21,6 +21,8 @@
 
 import optparse
 import dsolve
+import socket
+import time
 import external.misc.rtest as rtest
 
 testdirs = [("postests", 0), ("negtests", 1)]
@@ -36,5 +38,7 @@ parser = optparse.OptionParser()
 parser.add_option("-p", "--parallel", dest="threadcount", default=1, type=int, help="spawn n threads")
 options, args = parser.parse_args()
 
-runner = rtest.TestRunner (Config (testdirs, options.threadcount))
+now     = (time.asctime(time.localtime(time.time()))).replace(" ","_")
+logfile = "testlogs/results_%s_%s" % (socket.gethostname (), now)
+runner  = rtest.TestRunner (Config (testdirs, logfile, options.threadcount))
 runner.run ()
