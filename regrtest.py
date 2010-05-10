@@ -25,15 +25,16 @@ import external.misc.rtest as rtest
 
 testdirs = [("postests", 0), ("negtests", 1)]
 
-def run_test (file):
-  return dsolve.run(True, ["-bare", "-v", "0", "-no-simple", "-no-timing", file])
+class Config (rtest.TestConfig):
+  def run_test (self, file):
+    return dsolve.run(True, ["-bare", "-v", "0", "-no-simple", "-no-timing", file])
 
-def is_test (file):
-  return file.endswith (".ml")
+  def is_test (self, file):
+    return file.endswith (".ml")
 
 parser = optparse.OptionParser()
 parser.add_option("-p", "--parallel", dest="threadcount", default=1, type=int, help="spawn n threads")
 options, args = parser.parse_args()
 
-runner = rtest.TestRunner (run_test, is_test, options.threadcount)
-runner.run_directories (testdirs)
+runner = rtest.TestRunner (Config (testdirs, options.threadcount))
+runner.run ()
