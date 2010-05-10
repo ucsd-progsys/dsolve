@@ -19,38 +19,21 @@
 # ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION
 # TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-import common, sys, time, os, os.path, optparse
-import itertools as it
-import external.misc.pmap as pmap
+import optparse
 import dsolve
+import external.misc.rtest as rtest
 
 testdirs = [("postests", 0), ("negtests", 1)]
 
-def runtest((file, expected_status)):
-  start = time.time()
-  status = dsolve.run(True, ["-bare", "-v", "0", "-no-simple", "-no-timing", file])
-  print "%f seconds" % (time.time() - start)
+def run_test (file):
+  return dsolve.run(True, ["-bare", "-v", "0", "-no-simple", "-no-timing", file])
 
-  ok = (status == expected_status)
-  if ok:
-    print "\033[1;32mSUCCESS!\033[1;0m (%s)\n" % (file)
-  else:
-    print "\033[1;31mFAILURE :(\033[1;0m (%s) \n" % (file)
-  return (file, ok)
-
-def dirtests(dir, expected_status):
-  return it.chain(*[[(os.path.join(dir, file), expected_status) for file in files if file.endswith(".ml")] for dir, dirs, files in os.walk(dir)])
+def is_test (file):
+  return file.endswith (".ml")
 
 parser = optparse.OptionParser()
 parser.add_option("-p", "--parallel", dest="threadcount", default=1, type=int, help="spawn n threads")
 options, args = parser.parse_args()
 
-alltests  = it.chain(*[dirtests(dir, expected_status) for dir, expected_status in testdirs])
-results   = pmap.map(options.threadcount, runtest, alltests)
-failed    = [result[0] for result in results if result[1] == False]
-failcount = len(failed)
-if failcount == 0:
-  print "\n\033[1;32mPassed all tests! :D\033[1;0m"
-else:
-  print "\n\033[1;31mFailed %d tests:\033[1;0m %s" % (failcount, ", ".join(failed))
-sys.exit(failcount != 0)
+runner = rtest.TestRunner (run_test, is_test, options.threadcount)
+runner.run_directories (testdirs)
