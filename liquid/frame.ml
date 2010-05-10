@@ -91,13 +91,6 @@ exception LabelLikeFailure of t * t
 (**************** Type environments ***************************)
 (**************************************************************)
 
-(* this is a bit shady: we memoize by string only to save the compare*)
-exception Found_by_name of t
-
-let find_by_name env s =
-   try (Le.iter (fun p f -> if Path.name p = s then raise (Found_by_name f)) env; raise Not_found)
-    with Found_by_name t -> t 
-
 let prune_env_funs env = Le.fold (fun p f xs -> (function Farrow _ -> xs | _ -> p :: xs) f) env []
 
 let env_ignore_list = ["Pervasives"; "Open_"; "FP_"; "false"; "true"; "Array"; "String"; "Big"; "None"; "Some"; "Random"; "[]"; "()"]
@@ -292,7 +285,6 @@ let apply_refinement r = function
   | Frec (p, tas, rr, _)          -> Frec (p, tas, rr, r)
   | Farrow _ as f                 -> f
 
-  (*need to apply subs when refinement is pulled somehow..*)
 let get_refinement = function
   | Fvar (_, _, _, r) | Fsum (_, _, r)
   | Finductive (_, _, _, _, r)
@@ -339,7 +331,7 @@ let refinement_qvars r =
 
 exception Found
 
-let has_kvars f = 
+let has_qvars f = 
   try ignore (map_refinements 
     (fun r -> if not (C.empty_list (refinement_qvars r)) then raise Found; r)
       f); false with Found -> true
@@ -426,24 +418,6 @@ let pprint_refinement ppf res =
       fprintf ppf "@[<hv 0>%a%a@]" 
         (C.pprint_many true "" P.pprint) ps 
         (C.pprint_many false ""  pprint_psub) svs 
-
-let rec pprint_pattern ppf = function
-  | Tpat_any -> 
-      fprintf ppf "_"
-  | Tpat_var x -> 
-      fprintf ppf "%s" (C.ident_name x)
-  | Tpat_tuple pats -> 
-      fprintf ppf "(%a)" pprint_pattern_list pats 
-  | Tpat_construct (cstrdesc, pats) ->
-      begin match (repr cstrdesc.cstr_res).desc with
-        | Tconstr (p, _, _) -> 
-            fprintf ppf "%s(%a)" (Path.name p) pprint_pattern_list pats
-        | _ -> assert false end
-  | _ -> assert false
-
-and pprint_pattern_list ppf pats =
-  let ds = List.map (fun p -> p.pat_desc) pats in
-  C.pprint_many false "," pprint_pattern ppf ds 
 
 let wrap_refined r ppf pp =
   if List.for_all (function (_, ([], [])) -> true | _ -> false) r then
@@ -972,6 +946,7 @@ let translate_type env t =
 (******************************************************************************)
 (******************************** Fresh Frames ********************************)
 (******************************************************************************)
+
 let place_freshref freshf = function
   | Refine     -> freshf ()
   | DontRefine -> empty_refinement
@@ -983,9 +958,6 @@ let fresh              = fresh_with_var_fun fresh_refinementvar
 let fresh_false        = fresh_with_var_fun (fun _ -> false_refinement)
 let fresh_without_vars = fresh_with_var_fun (fun _ -> empty_refinement)
 let fresh_builtin env  = fresh_without_vars env <+> flip_levels
-
-let fresh_with_labels env ty f =
-  label_like (fresh env ty) f
 
 let fresh_variant_with_params env path paramfs =
   match List.split (Env.constructors_of_type path (Env.find_type path env)) with
@@ -1087,6 +1059,3 @@ let rec conjunct_fold cs s qual_expr f = match get_refinement f with
 
 let rec conjuncts s qexpr fr =
   conjunct_fold [] s qexpr fr
-
-let predicate s qexpr fr =
-  P.big_and (conjuncts s qexpr fr)
