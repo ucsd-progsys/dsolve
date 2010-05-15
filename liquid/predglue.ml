@@ -116,6 +116,7 @@ let rec d_of_fexpr e =
   | F.Bin (e1, bop, e2)      -> D.Binop (d_of_fexpr e1, d_of_fbop bop, d_of_fexpr e2)
   | F.Ite (p, e1, e2)        -> D.Ite (d_of_fpred p, d_of_fexpr e1, d_of_fexpr e2)
   | F.Fld (fn, e)            -> D.Field (path_of_sy fn, d_of_fexpr e)
+  | F.Cst _                  -> assert false
 
 and d_of_fpred p =
   match Fp.unwrap p with
