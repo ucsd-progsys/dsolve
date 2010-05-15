@@ -19,10 +19,7 @@
 # ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION
 # TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-import optparse
-import dsolve
-import socket
-import time
+import optparse, dsolve, socket, time
 import external.misc.rtest as rtest
 
 testdirs = [("postests", 0), ("negtests", 1)]
@@ -30,19 +27,20 @@ testdirs = [("postests", 0), ("negtests", 1)]
 class Config (rtest.TestConfig):
   def __init__ (self, dargs, testdirs, logfile, threadcount):
     rtest.TestConfig.__init__ (self, testdirs, logfile, threadcount)
-    self.dargs = dargs
+    self.dargs = dargs.split(" ")
 
   def run_test (self, file):
-    return dsolve.run(True, ["-bare", "-v", "0", "-no-simple", "-no-timing", file])
+    return dsolve.run(True, self.dargs + ["-bare", "-v", "0", "-no-simple", "-no-timing", file])
 
   def is_test (self, file):
     return file.endswith (".ml")
 
 parser = optparse.OptionParser()
 parser.add_option("-p", "--parallel", dest="threadcount", default=1, type=int, help="spawn n threads")
+parser.add_option("-o", "--opts", dest="opts", default="", type=str, help="additional arguments to dsolve")
 options, args = parser.parse_args()
 
 now     = (time.asctime(time.localtime(time.time()))).replace(" ","_")
 logfile = "testlogs/results_%s_%s" % (socket.gethostname (), now)
-runner  = rtest.TestRunner (Config (args, testdirs, logfile, options.threadcount))
+runner  = rtest.TestRunner (Config (options.opts, testdirs, logfile, options.threadcount))
 runner.run ()
