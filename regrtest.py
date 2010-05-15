@@ -28,6 +28,10 @@ import external.misc.rtest as rtest
 testdirs = [("postests", 0), ("negtests", 1)]
 
 class Config (rtest.TestConfig):
+  def __init__ (self, dargs, testdirs, logfile, threadcount):
+    rtest.TestConfig.__init__ (self, testdirs, logfile, threadcount)
+    self.dargs = dargs
+
   def run_test (self, file):
     return dsolve.run(True, ["-bare", "-v", "0", "-no-simple", "-no-timing", file])
 
@@ -40,5 +44,5 @@ options, args = parser.parse_args()
 
 now     = (time.asctime(time.localtime(time.time()))).replace(" ","_")
 logfile = "testlogs/results_%s_%s" % (socket.gethostname (), now)
-runner  = rtest.TestRunner (Config (testdirs, logfile, options.threadcount))
+runner  = rtest.TestRunner (Config (args, testdirs, logfile, options.threadcount))
 runner.run ()

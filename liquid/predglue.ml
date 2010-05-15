@@ -58,21 +58,27 @@ let d_of_fbrel = function
 
 let rec fsort_of_dprover_t = function
   | Parsetree.Pprover_array (t1, t2) ->
-      Fs.Array (fsort_of_dprover_t t1, fsort_of_dprover_t t2)
+      Fs.t_obj
   | Parsetree.Pprover_fun ts ->
-      Fs.Func (List.map fsort_of_dprover_t ts)
-  | Parsetree.Pprover_abs ("int") -> Fs.Int 
-  | Parsetree.Pprover_abs ("bool") -> Fs.Bool
-  | Parsetree.Pprover_abs s -> Fs.Unint s
+      Fs.t_func 0 (List.map fsort_of_dprover_t ts)
+  | Parsetree.Pprover_abs ("int") ->
+      Fs.t_int
+  | Parsetree.Pprover_abs ("bool") ->
+      Fs.t_bool
+  | Parsetree.Pprover_abs s ->
+      Fs.t_obj
 
-let rec dprover_t_of_fsort = function
-  | Fs.Int -> Parsetree.Pprover_abs ("int")
-  | Fs.Bool -> Parsetree.Pprover_abs ("bool")
-  | Fs.Unint s -> Parsetree.Pprover_abs s
-  | Fs.Array (t1, t2) ->
-      Parsetree.Pprover_array (dprover_t_of_fsort t1, dprover_t_of_fsort t2)
-  | Fs.Func ts -> Parsetree.Pprover_fun (List.map dprover_t_of_fsort ts)
-  | Fs.Ptr -> Parsetree.Pprover_abs ("ptr")
+let rec dprover_t_of_fsort sort = 
+  if Fs.is_bool sort then
+    Parsetree.Pprover_abs("bool")
+  else if Fs.t_int = sort then
+    Parsetree.Pprover_abs("int")
+  else if Fs.t_obj = sort then
+    Parsetree.Pprover_abs("unint")
+  else
+    match Fs.func_of_t sort with
+    | Some (ts, t) -> Parsetree.Pprover_fun (List.map dprover_t_of_fsort (ts @ [t]))
+    | None -> assert false (* somehow we have encountered a pointer sort *)
 
 let rec f_of_dexpr = function
   | D.PInt i            -> F.eCon (F.Constant.Int i) 

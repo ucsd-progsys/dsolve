@@ -24,9 +24,9 @@ let empty_sol = (fun _ -> [])
 (************************** FRAMES **********************************)
 
 let untStr = "unint"
-let untSrt = S.Unint untStr
+let untSrt = S.t_obj
 
-let tagSt = S.Func [untSrt; S.Int]
+let tagSt = S.t_func 0 [untSrt; S.t_int]
 let tagSy = Pg.sy_of_path Pred.tag_function
 let ftag  = (dsyvv, tagSt, [])
 
@@ -48,11 +48,12 @@ let rec fsort_of_dframe fr =
   | Fr.Finductive (p, _, _, _, _)
   | Fr.Frec (p, _, _, _) 
   | Fr.Fabstract (p, _, _, _) ->
-      if Path.same Predef.path_bool p then S.Bool else
-      if Path.same Predef.path_int p then S.Int else S.Unint (string_of_frame fr)
-  | Fr.Farrow (_, f1, f2) -> S.Func (collapse fr)
-  | Fr.Fvar (_, _, _, _) -> S.Unint (string_of_frame fr)
-
+      if Path.same Predef.path_bool p then S.t_bool else
+      if Path.same Predef.path_int p then S.t_int else S.t_obj
+  | Fr.Farrow (_, f1, f2) ->
+      let params = collapse fr in
+      S.t_func 0 params
+  | Fr.Fvar (_, _, _, _) -> S.t_obj
 and collapse = function
   | Fr.Farrow (_, f1, f2) -> fsort_of_dframe f1 :: collapse f2
   | s -> [fsort_of_dframe s]
@@ -116,8 +117,8 @@ let f_of_dreft vvt reft =
    * because dsolve does not type the value variable.
    * use dsolve's initial solution for best results. *)
 let f_of_dqual q =
-  let ss = [S.Int; S.Bool; untSrt] in (* this is the crux *)
-  List.map (fun s -> Q.create (Some dsyvv) s (fpred_of_dqual [] (unify_dqual q))) ss 
+  let ss = [S.t_int; S.t_bool; untSrt] in (* this is the crux *)
+  List.map (fun s -> Q.create dsyvv s (fpred_of_dqual [] (unify_dqual q))) ss 
 
 let f_of_dquals qs =
   C.flap f_of_dqual qs
