@@ -418,19 +418,19 @@ liquid/measure.cmx: liquid/wellformed.cmx typing/types.cmx \
 liquid/message.cmo: liquid/message.cmi 
 liquid/message.cmx: liquid/message.cmi 
 liquid/mlqmod.cmo: typing/typetexp.cmi typing/types.cmi typing/typedtree.cmi \
-    liquid/theoremProverZ3.cmo liquid/theoremProver.cmo liquid/qualifymod.cmi \
-    liquid/qualdecl.cmo typing/predicate.cmi parsing/pparse.cmi \
-    typing/path.cmi parsing/parsetree.cmi parsing/parse.cmi \
-    utils/miscutil.cmo utils/misc.cmi liquid/measure.cmo \
-    parsing/longident.cmi parsing/location.cmi typing/ident.cmi \
-    liquid/frame.cmi typing/env.cmi utils/config.cmi liquid/builtins.cmo 
+    liquid/theoremProver.cmo liquid/qualifymod.cmi liquid/qualdecl.cmo \
+    typing/predicate.cmi parsing/pparse.cmi typing/path.cmi \
+    parsing/parsetree.cmi parsing/parse.cmi utils/miscutil.cmo utils/misc.cmi \
+    liquid/measure.cmo parsing/longident.cmi parsing/location.cmi \
+    typing/ident.cmi liquid/frame.cmi typing/env.cmi utils/config.cmi \
+    liquid/builtins.cmo 
 liquid/mlqmod.cmx: typing/typetexp.cmx typing/types.cmx typing/typedtree.cmx \
-    liquid/theoremProverZ3.cmx liquid/theoremProver.cmx liquid/qualifymod.cmx \
-    liquid/qualdecl.cmx typing/predicate.cmx parsing/pparse.cmx \
-    typing/path.cmx parsing/parsetree.cmi parsing/parse.cmx \
-    utils/miscutil.cmx utils/misc.cmi liquid/measure.cmx \
-    parsing/longident.cmx parsing/location.cmx typing/ident.cmx \
-    liquid/frame.cmx typing/env.cmx utils/config.cmx liquid/builtins.cmx 
+    liquid/theoremProver.cmx liquid/qualifymod.cmx liquid/qualdecl.cmx \
+    typing/predicate.cmx parsing/pparse.cmx typing/path.cmx \
+    parsing/parsetree.cmi parsing/parse.cmx utils/miscutil.cmx utils/misc.cmi \
+    liquid/measure.cmx parsing/longident.cmx parsing/location.cmx \
+    typing/ident.cmx liquid/frame.cmx typing/env.cmx utils/config.cmx \
+    liquid/builtins.cmx 
 liquid/normalize.cmo: parsing/quotations.cmi liquid/qdebug.cmi \
     parsing/parsetree.cmi utils/misc.cmi parsing/longident.cmi \
     parsing/location.cmi typing/common.cmo parsing/asttypes.cmi \
