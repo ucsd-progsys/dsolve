@@ -72,13 +72,6 @@ let get_app_shape f env =
   with Not_found -> 
     app_to_fun [] [] (Le.find f env)
 
-let bind_quantified env ps =
-  try
-    let bindings = List.map (fun (p, tn) -> (p, TP.frame_of tn)) ps in
-      Le.addn bindings env
-  with Not_found ->
-    raise IllFormed
-
 let pred_is_well_typed env p =
   let rec get_expr_shape env = function
   | P.PInt _ -> uInt
@@ -129,7 +122,7 @@ let pred_is_well_typed env p =
         else raise IllFormed
   | P.Exists (ps, q)
   | P.Forall (ps, q) ->
-      if pred_shape_is_bool (bind_quantified env ps) q then true else raise IllFormed
+      false
   | P.Boolexp e ->
       expr_shape_is_bool env e
   and expr_shape_is_bool env e = same_shape (get_expr_shape env e) uBool in
