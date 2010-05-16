@@ -27,7 +27,10 @@ testdirs = [("postests", 0), ("negtests", 1)]
 class Config (rtest.TestConfig):
   def __init__ (self, dargs, testdirs, logfile, threadcount):
     rtest.TestConfig.__init__ (self, testdirs, logfile, threadcount)
-    self.dargs = dargs.split(" ")
+    if dargs != "":
+      self.dargs = dargs.split(" ")
+    else:
+      self.dargs = list()
 
   def run_test (self, file):
     return dsolve.run(True, self.dargs + ["-bare", "-v", "0", "-no-simple", "-no-timing", file])
