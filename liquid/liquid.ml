@@ -234,6 +234,7 @@ let main () =
      "-dontgenmlq", Arg.Set dont_gen_mlq_preds, "don't generalize qualifiers mined from mlq files";
      "-no-timing", Arg.Unit Bstats.dont_time, "don't do any profiling";
      "-bare", Arg.Unit (fun () -> ()), "don't use qualifiers from default_patterns";
+     "-nounint", Arg.Set dont_use_unint_cstrs, "don't use uninterpreted constructors in refinements";
      "-v", Arg.Int (fun c -> Common.verbose_level := c; Constants.verbose_level := c), 
               "<level> Set degree of analyzer verbosity:\n\
                \032    0      No output\n\

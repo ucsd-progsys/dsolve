@@ -174,13 +174,16 @@ and get_unint_cstrref env name args =
 
 and get_cstrref env path tag name args shp =
   let preds  = List.map expression_to_pexpr args in
-  let mref   = try F.const_refinement 
-                [M.assert_constructed_expr env preds (path, tag) shp] with Not_found -> [] in  
+  let mref   = try F.const_refinement
+                [M.assert_constructed_expr env preds (path, tag) shp] with Not_found -> [] in
   let tagref = B.tag_refinement path tag in
   let rhsref = mref @ tagref in
-    match get_unint_cstrref env name (List.map expression_to_pexpr args) with
-        Some ucr -> ucr @ rhsref
-      | None -> rhsref
+    if !Clflags.dont_use_unint_cstrs then
+      rhsref
+    else
+      match get_unint_cstrref env name (List.map expression_to_pexpr args) with
+          Some ucr -> ucr @ rhsref
+        | None -> rhsref
 
 and constrain_constructed (env, guard, f) cstrdesc args e =
   let shp = F.fresh_false e.exp_env e.exp_type in

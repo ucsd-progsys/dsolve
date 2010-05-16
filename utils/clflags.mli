@@ -65,6 +65,7 @@ val no_simple: bool ref
 val verify_simple: bool ref
 val psimple: bool ref
 val simpguard : bool ref
+val dont_use_unint_cstrs : bool ref
 
 val hide_rectypes: bool ref
 val no_recrefs: bool ref

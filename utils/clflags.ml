@@ -80,6 +80,7 @@ and dsmeasures = ref false              (* don't strip measure names *)
 and use_fixpoint = ref false            (* use fixpoint to solve constraints *)
 and dont_mine_mlq_preds = ref false     (* don't mine qualifiers from mlq files *)
 and dont_gen_mlq_preds = ref false      (* don't generalize qualifiers mined from mlqs *)
+and dont_use_unint_cstrs = ref false    (* don't tack on uninterpreted constructors in refinements (TEMPORARY) *)
 
 let keep_asm_file = ref false           (* -S *)
 let optimize_for_speed = ref true       (* -compact *)
