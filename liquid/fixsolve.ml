@@ -10,14 +10,13 @@ module Cg = Consglue
 module A = Ast
 module Asm = A.Symbol.SMap
 
-let solver fname max_env cs soln qs =
+let solver fname max_env cs soln =
  (* translate to fixpoint *)
   let fmax_env = Cg.inject_tag (Cg.f_of_denvt max_env) in
   let fsort_max_env = Asm.map Cg.fsort_of_reft fmax_env in
   let fcs = Cg.f_of_dsubcons fmax_env cs in
   let fwfs = Cg.f_of_dwfcons cs in
   let soln = Cg.f_of_dsoln soln in
-  (*let fqs = Cg.f_of_dquals qs in*)
   let _ = Format.printf "@[InitSoln:@\n%a@]" FCo.print_soln soln in
   (* solve with fixpoint *)
   let (solver, _) = Solve.create [] fsort_max_env [] 0 [] fcs fwfs [] in
