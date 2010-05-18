@@ -27,14 +27,11 @@ open Format
 open Types
 open Misc.Ops
 
-module Tt = Typedtree
 module F = Frame
 module M = Measure
 module P = Predicate
 module TP = TheoremProver
-module QF = Qualifymod
 module Qd = Qualdecl
-module Le = Le
 module T = Typetexp
 
 (* MLQs *)
