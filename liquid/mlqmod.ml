@@ -27,14 +27,11 @@ open Format
 open Types
 open Misc.Ops
 
-module Tt = Typedtree
 module F = Frame
 module M = Measure
 module P = Predicate
 module TP = TheoremProver
-module QF = Qualifymod
 module Qd = Qualdecl
-module Le = Le
 module T = Typetexp
 
 (* MLQs *)
@@ -58,7 +55,7 @@ let nativize_core_type dopt env ty =
      (lookup (fun s -> let s = Longident.parse (maybe_add_pref dopt (C.l_to_s l)) in 
        ignore (Env.lookup_type s env); s) l l)) ty
 
-let translate_pframe dopt env fenv pf =
+let translate_pframe dopt env pf =
   let vars = ref [] in
   let getvar a = try List.find (fun b -> Ident.name b = a) !vars
                    with Not_found -> let a = Ident.create a in
@@ -209,7 +206,7 @@ let scrub_axioms fenv =
 
 let load_rw dopt rw env menv' fenv decls =
   let load_decl (env, fenv, ifenv, menv) = function
-      LvalDecl(s, f) -> (env, fenv, load_val dopt env ifenv (s, translate_pframe dopt env fenv f), menv)
+      LvalDecl(s, f) -> (env, fenv, load_val dopt env ifenv (s, translate_pframe dopt env f), menv)
     | LmeasDecl (name, cstrs) -> (env, fenv, ifenv, List.rev_append (load_measure dopt env (name, cstrs)) menv)
     | LunintDecl (name, ty) -> load_unint name ty env fenv ifenv menv
     | LembedDecl (ty, psort) -> load_embed dopt ty psort env fenv ifenv menv
