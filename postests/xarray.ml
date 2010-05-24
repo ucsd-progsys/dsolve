@@ -80,7 +80,7 @@
 
 let show x = ()
 
-let blit a1 ofs1 a2 ofs2 len =
+let blit (a1: 'a array) (ofs1: int) (a2: 'a array) (ofs2: int) (len: int) =
   if len < 0 || ofs1 < 0 || ofs1 > Array.length a1 - len
              || ofs2 < 0 || ofs2 > Array.length a2 - len
   then invalid_arg "Array.blit"
@@ -226,7 +226,9 @@ let cutoff = 5;;
 let stable_sort cmp a =
   let merge src1ofs src1len src2 src2ofs src2len dst dstofs =
     let src1r = src1ofs + src1len and src2r = src2ofs + src2len in
+    (* note d - dstofs = (i1 - src1ofs) + (i2 - src2ofs) *)
     let rec loop i1 s1 i2 s2 d =
+      let _ = show d in
       if cmp s1 s2 <= 0 then begin
         Array.unsafe_set dst d s1;
         let i1 = i1 + 1 in
@@ -269,13 +271,10 @@ let stable_sort cmp a =
     end;
   in
   let l = Array.length a in
-  let _ = show l in
   if l <= cutoff then isortto 0 a 0 l else begin
     let l1 = l / 2 in
     let l2 = l - l1 in
-    let _  = show l2 in
     let t = Array.make l2 (Array.unsafe_get a 0) in
-    let _ = show t in
     sortto l1 t 0 l2;
     sortto 0 a l2 l1;
     merge l2 l1 t 0 l2 a 0;
