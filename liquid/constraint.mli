@@ -63,7 +63,7 @@ val formals_addn: Frame.qvar list -> unit
 val dsolver:
   Frame.t Liqenv.t ->
     (Frame.t * labeled_constraint * refinement_constraint) list ->
-      Qualifier.t list Sol.t -> Qualifier.t list -> Qualifier.t list Sol.t
+      Qualifier.t list Sol.t -> Qualifier.t list Sol.t
 
 val solve_with_solver:
   Parsetree.qualifier_declaration list -> Env.t ->
@@ -71,7 +71,7 @@ val solve_with_solver:
   (* solver *)
   (Frame.t Liqenv.t ->
     (Frame.t * labeled_constraint * refinement_constraint) list ->
-      Qualifier.t list Sol.t -> Qualifier.t list -> Qualifier.t list Sol.t) ->
+      Qualifier.t list Sol.t -> Qualifier.t list Sol.t) ->
   ((Frame.qvar -> Qualifier.t list) * (labeled_constraint list))
 
 val sol_of_solmap: Qualifier.t list Misc.IntMap.t -> Qualifier.t list Sol.t

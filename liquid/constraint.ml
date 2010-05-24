@@ -904,7 +904,7 @@ let test_sol sri s =
     List.iter (fun (c, b) -> C.cprintf C.ol_solve_error "@[%a@.@\n@]" (pprint_ref None) c) unsat;
   (solution_map s, List.map snd unsat)
 
-let dsolver max_env cs s _ =
+let dsolver max_env cs s =
   (* redo some work to keep interfaces simple *)
   let cs  = List.map (fun (v, c, cstr) -> (set_labeled_constraint c (make_val_env v max_env), cstr)) cs in
   let sri = make_ref_index cs in
@@ -938,6 +938,6 @@ let solve_with_solver qs env consts cs solver =
   let _ = C.cprintf C.ol_solve "@[AFTER@ WF@]@." in
   let _ = dump_solving sri s 1 in
   let _ = dump_solution s in
-  let s = solver max_env cs s (C.sort_and_compact (List.flatten qs)) in
+  let s = solver max_env cs s in
   let _ = dump_solving sri s 2 in
   test_sol sri s

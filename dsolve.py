@@ -49,7 +49,6 @@ def gen_quals(src,flags):
   del handle
 
   common.cat_files(files, tname)
-  flags += " " + " ".join(get_options(src))
   gen  = ("%s %s -summarize" % (solve, flags)).split()
   succ = common.logged_sys_call(gen + [tname2, fname], False)
   if succ == 0:
@@ -60,7 +59,6 @@ def gen_quals(src,flags):
 def solve_quals(file,quiet,flags):
   bname = file[:-3]
   os.system("rm -f %s.annot" % bname)
-  flags += get_options(file)
   return common.logged_sys_call([solve, "-dframes"] + flags + [("%s.ml" % bname)], quiet)
 
 def get_options(src):
