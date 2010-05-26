@@ -787,9 +787,11 @@ let label_like f f' =
         Finductive (p, apply_params_frames (instantiate_qualifiers vars) ps, instantiate_recref_qualifiers vars rr,
                     label_constrs_like vars cs1 cs2, instantiate_ref_qualifiers vars r)
     | (Fabstract (p, ps, id, r), Fabstract (_, ps', id', _)) ->
+        let id'   = C.same_name_id id' in
         let vars' = (Ident.name id, Path.Pident id') :: vars in
           Fabstract (p, label_params_like vars' ps ps', id', instantiate_ref_qualifiers vars r)
     | (Farrow (x1, f1, f1'), Farrow (x2, f2, f2')) ->
+        let x2    = C.same_name_id x2 in
         let vars' = (Ident.name x1, C.i2p x2) :: vars in
           Farrow (x2, label vars f1 f2, label vars' f1' f2')
     | _ -> printf "@[Can't label %a like %a@.@]" pprint f pprint f'; raise (LabelLikeFailure(f, f'))
@@ -799,6 +801,7 @@ let label_like f f' =
     | ([], []) -> []
     | ((i1, f1, v1) :: ps1, (i2, f2, _) :: ps2) ->
         let f1 = label vars f1 f2 in
+        let i2 = C.same_name_id i2 in
         let vars = (Ident.name i1, Path.Pident i2) :: vars in
           (i2, f1, v1) :: label_params_like vars ps1 ps2
     | ([], x :: xs)

@@ -216,6 +216,9 @@ let same_type q p = (Types.TypeOps.equal q p)
 
 let dummy () = Path.mk_ident ""
 
+let same_name_id id =
+  Ident.create (Ident.name id)
+
 let same_path_i p i = Path.unique_name p = Ident.unique_name i 
 
 let i2p i = Path.Pident i
