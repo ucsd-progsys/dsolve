@@ -22,8 +22,6 @@
 import optparse, dsolve, socket, time
 import external.misc.rtest as rtest
 
-testdirs = [("postests", 0), ("negtests", 1)]
-
 class Config (rtest.TestConfig):
   def __init__ (self, dargs, testdirs, logfile, threadcount):
     rtest.TestConfig.__init__ (self, testdirs, logfile, threadcount)
