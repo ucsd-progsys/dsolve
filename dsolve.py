@@ -64,7 +64,7 @@ def solve_quals(file,quiet,flags):
 def get_options(src):
   xs = [x.strip() for x in common.read_lines(src) if "(* DSOLVE" in x ]
   ss = ' '.join([' '] + [x[9:-2] for x in xs])
-  xs = ['-'+ x.strip() for x in ss.split(' -') if x.strip()]
+  xs = [x.strip() for x in ss.split(' ') if x.strip()]
   return xs
 
 def run(quiet, flags):
