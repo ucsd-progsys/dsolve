@@ -442,7 +442,7 @@ let print_scc_edge rm (u,v) =
   let (scc_u,_,_) = SIM.find u rm in
   let (scc_v,_,_) = SIM.find v rm in
   let tag = if scc_u > scc_v then "entry" else "inner" in
-  C.cprintf C.ol_solve "@[SCC@ edge@ %d@ (%s)@ %d@ ====> %d@\n@]" scc_v tag u v
+  C.cprintf C.ol_refine "@[SCC@ edge@ %d@ (%s)@ %d@ ====> %d@\n@]" scc_v tag u v
 
 let make_rank_map om cm =
   let get vm k = try VM.find k vm with Not_found -> [] in
@@ -535,7 +535,7 @@ let push_worklist =
       (fun w c -> 
         let id = get_ref_id c in
         if Hashtbl.mem sri.pend id then w else 
-          (C.cprintf C.ol_solve "@[Pushing@ %d at %d@\n@]" id !timestamp; 
+          (C.cprintf C.ol_refine "@[Pushing@ %d at %d@\n@]" id !timestamp; 
            Hashtbl.replace sri.pend id (); 
            WH.add (id,!timestamp,get_ref_rank sri c) w))
       w cs
@@ -885,7 +885,7 @@ let rec solve_sub sri s w =
    then C.cprintf C.ol_solve "@[num@ refines@ =@ %d@\n@]" !stat_refines);
   match pop_worklist sri w with (None,_) -> s | (Some c, w') ->
     let (r,b,fci) = get_ref_rank sri c in
-    let _ = C.cprintf C.ol_solve "@.@[Refining@ %d@ at iter@ %d in@ scc@ (%d,%b,%s):@]@."
+    let _ = C.cprintf C.ol_refine "@.@[Refining@ %d@ at iter@ %d in@ scc@ (%d,%b,%s):@]@."
             (get_ref_id c) !stat_refines r b (C.io_to_string fci) in
     let _ = if C.ck_olev C.ol_insane then dump_solution s in
     let w' = if BS.time "refine" (refine sri s) c 
