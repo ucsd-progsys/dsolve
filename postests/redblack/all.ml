@@ -39,8 +39,17 @@ let restore_right e lt r =
                          Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
                     | Black _   -> assert (0 = 1); assert false
                     | Purple _ -> assert (0 = 1); assert false
+                    | Empty    -> assert (0 = 1); assert false
                   end
               | Purple _ -> assert (0 = 1); assert false
+              | Empty    ->
+                  begin match rr with
+                    |  Red _ ->
+                         Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
+                    | Black _   -> assert (0 = 1); assert false
+                    | Purple _ -> assert (0 = 1); assert false
+                    | Empty    -> assert (0 = 1); assert false
+                  end
             end
         | Black _ ->
             begin match rl with
@@ -56,6 +65,7 @@ let restore_right e lt r =
       end
   | Red _   -> Black (e, lt, r)
   | Black _ -> Black (e, lt, r)
+  | Empty   -> Black (e, lt, r)
 
 let restore_left e l rt =
   match l with
@@ -88,6 +98,7 @@ let restore_left e l rt =
       end
   | Red _   -> Black (e, l, rt)
   | Black _ -> Black (e, l, rt)
+  | Empty   -> Black (e, l, rt)
 
 let rec ins1 key d = match d with
   | Black(key1, left, right) ->
