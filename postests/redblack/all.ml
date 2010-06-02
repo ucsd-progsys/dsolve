@@ -62,6 +62,16 @@ let restore_right e lt r =
               | Purple _ -> assert (0 = 1); assert false
             end
         | Purple _ -> assert (0 = 1); assert false
+        | Empty ->
+            begin match rl with
+              | Red (rle, rll, rlr) ->
+                  (* l is black, deep rotate *)
+                  Black (rle, Red (e, lt, rll), Red (re, rlr, rr))
+              | Black _   ->
+                  (* l is black, shallow rotate *)
+                  Black(re, Red(e, lt, rl), rr)
+              | Purple _ -> assert (0 = 1); assert false
+            end
       end
   | Red _   -> Black (e, lt, r)
   | Black _ -> Black (e, lt, r)
