@@ -77,31 +77,23 @@ let restore_right e lt r =
   | Black _ -> Black (e, lt, r)
   | Empty   -> Black (e, lt, r)
 
+let restore_left_red e l rt le ll lr re rl rr =
+  match ll with
+    | Red _    -> Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
+    | Black _  -> assert (0 = 1); assert false
+    | Purple _ -> assert (0 = 1); assert false
+    | Empty    -> assert (0 = 1); assert false
+
 let restore_left e l rt =
   match l with
   | Purple (le, ll, lr) ->
       begin match rt with
         | Red (re, rl, rr) ->
             begin match lr with
-              | Red _ ->
-                  Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
-              | Black _   ->
-                  begin match ll with
-                    | Red _ ->
-                        Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
-                    | Black _   -> assert (0 = 1); assert false
-                    | Purple _ -> assert (0 = 1); assert false
-                    | Empty -> assert (0 = 1); assert false
-                  end
+              | Red _    -> Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
+              | Black _  -> restore_left_red e l rt le ll lr re rl rr
               | Purple _ -> assert (0 = 1); assert false
-              | Empty ->
-                  begin match ll with
-                    | Red _ ->
-                        Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
-                    | Black _   -> assert (0 = 1); assert false
-                    | Purple _ -> assert (0 = 1); assert false
-                    | Empty -> assert (0 = 1); assert false
-                  end
+              | Empty    -> restore_left_red e l rt le ll lr re rl rr
             end
         | Black _ ->
             begin match lr with
