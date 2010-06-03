@@ -97,8 +97,17 @@ let restore_left e l rt =
                         Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
                     | Black _   -> assert (0 = 1); assert false
                     | Purple _ -> assert (0 = 1); assert false
+                    | Empty -> assert (0 = 1); assert false
                   end
               | Purple _ -> assert (0 = 1); assert false
+              | Empty ->
+                  begin match ll with
+                    | Red _ ->
+                        Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
+                    | Black _   -> assert (0 = 1); assert false
+                    | Purple _ -> assert (0 = 1); assert false
+                    | Empty -> assert (0 = 1); assert false
+                  end
             end
         | Black _ ->
             begin match lr with
