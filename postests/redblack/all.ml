@@ -25,6 +25,14 @@ let rec height = function
   | Black (_, l, r) -> (max (height l) (height r)) + 1
   | Purple (_, l, r) -> (max (height l) (height r))
 
+let restore_right_red e lt r rr le ll re lr rl rr =
+  match rr with
+    |  Red _ ->
+         Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
+    | Black _   -> assert (0 = 1); assert false
+    | Purple _ -> assert (0 = 1); assert false
+    | Empty    -> assert (0 = 1); assert false
+
 let restore_right e lt r =
   match r with
   | Purple (re, rl, rr) ->
@@ -33,23 +41,9 @@ let restore_right e lt r =
             begin match rl with
               | Red _ ->
                   Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
-              | Black _   ->
-                  begin match rr with
-                    |  Red _ ->
-                         Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
-                    | Black _   -> assert (0 = 1); assert false
-                    | Purple _ -> assert (0 = 1); assert false
-                    | Empty    -> assert (0 = 1); assert false
-                  end
+              | Black _   -> restore_right_red e lt r rr le ll re lr rl rr
               | Purple _ -> assert (0 = 1); assert false
-              | Empty    ->
-                  begin match rr with
-                    |  Red _ ->
-                         Red (e, Black (le, ll, lr), Black (re, rl, rr))     (* re-color *)
-                    | Black _   -> assert (0 = 1); assert false
-                    | Purple _ -> assert (0 = 1); assert false
-                    | Empty    -> assert (0 = 1); assert false
-                  end
+              | Empty    -> restore_right_red e lt r rr le ll re lr rl rr
             end
         | Black _ ->
             begin match rl with
