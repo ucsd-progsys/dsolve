@@ -118,8 +118,24 @@ let restore_left e l rt =
                   (* r is black, shallow rotate *)
                   Black (le, ll, Red (e, lr, rt))
               | Purple _ -> assert (0 = 1); assert false
+              | Empty ->
+                  (* r is black, shallow rotate *)
+                  Black (le, ll, Red (e, lr, rt))
             end
         | Purple _ -> assert (0 = 1); assert false
+        | Empty ->
+            begin match lr with
+              | Red (lre, lrl, lrr) ->
+                  (* r is black, deep rotate *)
+                  Black (lre, Red (le, ll, lrl), Red(e, lrr, rt))
+              | Black _   ->
+                  (* r is black, shallow rotate *)
+                  Black (le, ll, Red (e, lr, rt))
+              | Purple _ -> assert (0 = 1); assert false
+              | Empty ->
+                  (* r is black, shallow rotate *)
+                  Black (le, ll, Red (e, lr, rt))
+            end
       end
   | Red _   -> Black (e, l, rt)
   | Black _ -> Black (e, l, rt)
