@@ -59,6 +59,9 @@ let restore_right e lt r =
               | Black _   ->
                   (* l is black, shallow rotate *)
                   Black(re, Red(e, lt, rl), rr)
+              | Empty ->
+                  (* l is black, shallow rotate *)
+                  Black(re, Red(e, lt, rl), rr)
               | Purple _ -> assert (0 = 1); assert false
             end
         | Purple _ -> assert (0 = 1); assert false
@@ -68,6 +71,9 @@ let restore_right e lt r =
                   (* l is black, deep rotate *)
                   Black (rle, Red (e, lt, rll), Red (re, rlr, rr))
               | Black _   ->
+                  (* l is black, shallow rotate *)
+                  Black(re, Red(e, lt, rl), rr)
+              | Empty ->
                   (* l is black, shallow rotate *)
                   Black(re, Red(e, lt, rl), rr)
               | Purple _ -> assert (0 = 1); assert false
