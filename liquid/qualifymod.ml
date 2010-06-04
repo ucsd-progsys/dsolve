@@ -500,5 +500,5 @@ let qualify_implementation sourcefile fenv' ifenv env qs consts str =
   let flog       = if !Clflags.raw_frames then !flog else framemap_apply_solution s !flog in
   let _          = dump_frames sourcefile flog in
     match cs with [] -> () | _ ->
-      (Printf.printf "Errors encountered during type checking:\n\n";
+      (Printf.printf "%d errors encountered during type checking:\n\n" (List.length cs);
        flush stdout; raise (Errors(List.map (make_frame_error s) cs)))
