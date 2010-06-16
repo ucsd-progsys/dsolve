@@ -98,7 +98,7 @@ let env_ignore_list = ["Pervasives"; "Open_"; "FP_"; "false"; "true"; "Array"; "
 let prune_background env = Le.filter
   (fun p _ -> 
     let p = Path.name p in
-    List.for_all (fun pre -> not(Common.has_prefix pre p)) env_ignore_list && not(Common.tmpstring p)) env
+    List.for_all (fun pre -> not (Misc.is_prefix pre p)) env_ignore_list && not(Common.tmpstring p)) env
 
 (**************************************************************)
 (**************** Constructed type accessors ******************)
@@ -368,7 +368,7 @@ let find_tag_single ts r =
   (Misc.maybe_list (List.map maybe_tag_qualifier qs)) @ ts
 
 let find_tag rs =
-  C.only_one "too many tags in constructed value" (List.fold_left find_tag_single [] rs)
+  Misc.only_one "too many tags in constructed value" (List.fold_left find_tag_single [] rs)
 
 (**************************************************************)
 (************************* Shapes *****************************) 
@@ -812,7 +812,7 @@ let abstract_of_params_with_labels labels p params varis id r =
   Fabstract (p, Misc.combine3 labels params varis, id, r)
 
 let abstract_of_params p params varis r =
-  let id = if C.empty_list params then C.dummy_id else C.abstr_elem_id () in
+  let id = match params with [] -> C.dummy_id | _ -> C.abstr_elem_id () in
   Fabstract (p, Misc.combine3 (Miscutil.mapi (fun _ i -> C.tuple_elem_id i) params) params varis, id, r)
 
 let sum_of_params path ps r =
@@ -1048,7 +1048,7 @@ let apply_solution s f =
 
 let refexpr_conjuncts s qual_expr ((subs, qexprs) as r) =
   let (_, (quals, _)) = refexpr_apply_solution s r in
-    List.rev_map (C.compose (P.apply_substs subs) (Qualifier.apply qual_expr)) quals
+    List.rev_map ((P.apply_substs subs) <.> (Qualifier.apply qual_expr)) quals
 
 let refinement_conjuncts s qexpr res =
   Misc.flap (refexpr_conjuncts s qexpr) res

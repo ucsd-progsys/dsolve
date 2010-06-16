@@ -26,8 +26,8 @@ open Format
 open Parsetree
 open Asttypes
 
+module Co = Constants
 module P = Predicate
-module C = Common
 module M = Measure
 module F = Frame
 module Le = Liqenv
@@ -51,13 +51,6 @@ let add q qs =
   QS.add ((fun (a, b, c) -> (a, s_of_p b c)) q) qs
 
 let patf = ref ""
-            
-(*let expand_quals env qstrs prgids =
-  let expand_squal (name, pat) =
-    Qualdecl.transl_pattern_valu env prgids name pat
-  in
-  C.flap (expand_squal) qstrs 
-  *)
 
 let dump_qset ppf qs =
   QS.iter (fun (nm, q) -> fprintf ppf "@[qualif@ %s(%s)@ :@ %s@.@]" nm "_V" q) qs
@@ -89,7 +82,7 @@ let generalize_pred pred =
     if Path.name x = "_V" then
       P.Var x
     else
-      P.Var (C.s_to_p ("~" ^ (String.capitalize (Path.name x)))) in
+      P.Var (Common.s_to_p ("~" ^ (String.capitalize (Path.name x)))) in
   if !Clflags.dont_gen_mlq_preds then
     pred
   else
@@ -98,19 +91,19 @@ let generalize_pred pred =
 let dump_default_qualifiers (str, env, menv, ifenv) deps qname =
   let qf = formatter_of_out_channel (open_out qname) in
   let _ = pp_set_margin qf 1230912 in
-  let _ = C.verbose_level := C.ol_dquals in
+  let _ = Co.verbose_level := Co.ol_dquals in
 
   let prgids = Qg.bound_ids str in
   let (a, b, ids, ints) = prgids in
   let ints = Qg.CS.elements ints in
   let ids = List.fold_left (fun s i -> Qg.IS.add (Ident.name i) s) ids (env_bound_ids ifenv) in
   let ids = Qg.IS.elements ids in
-  let ids = List.filter (fun s -> not(C.tmpstring s)) ids in
+  let ids = List.filter (fun s -> not (Common.tmpstring s)) ids in
 
   let mnms = snd (List.split (M.filter_names menv)) in
   let np n p = P.Atom(P.Var vid, P.Eq, P.FunApp(Path.mk_ident n, [P.Var (Path.mk_ident "_")])) in 
   (* TODO: instead of ids just write mvars -- change qs to patterns *)
-  let mnms = C.tflap2 (mnms, ids) np in
+  let mnms = Misc.tflap2 (mnms, ids) np in
   let cstrs = M.filter_cstrs menv in
   let pv vs = List.map (function Some v -> Some (P.Var v) | None -> None) vs in
   let mexprs = List.map (fun (a, (b, c)) -> (M.mk_pred vid (pv b) (a, b, c))) cstrs in
@@ -119,7 +112,7 @@ let dump_default_qualifiers (str, env, menv, ifenv) deps qname =
  
   let conj r l = List.rev_append (F.refinement_conjuncts (fun _ -> []) (P.Var vid) r) l in
   let fpreds = Le.flaplist (fun _ f -> F.refinement_fold conj [] f) ifenv in
-  let fpreds = List.map generalize_pred (C.flap P.conjuncts fpreds) in
+  let fpreds = List.map generalize_pred (Misc.flap P.conjuncts fpreds) in
   let fqs = List.fold_left (fun q e -> add ("MLQ", "_V", e) q) QS.empty fpreds in
 
   let initqs = add ("FALSE", "_V", P.Atom(P.PInt(1), P.Eq, P.PInt(0))) QS.empty in

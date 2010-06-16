@@ -2,12 +2,13 @@ open Format
 open Types
 open Typedtree
 open Ctype
-
-module P = Predicate
-module C = Common
-module F = Frame
+module Co = Constants
+module P  = Predicate
+module F  = Frame
 module Le = Liqenv
 module Qd = Qualdecl
+
+open Misc.Ops
 
 type mdef = (string * P.t_or_pexpr) 
 type m = (constructor_tag * Path.t option list * mdef) list 
@@ -19,10 +20,10 @@ type meas_entry =
   | Mname of string * string
 
 let filter_cstrs es =
-  C.maybe_list (List.map (function Mcstr p -> Some p | _ -> None) es)
+  Misc.maybe_list (List.map (function Mcstr p -> Some p | _ -> None) es)
 
 let filter_names es =
-  C.maybe_list (List.map (function Mname (n, mn) -> Some (n, mn) | _ -> None ) es)
+  Misc.maybe_list (List.map (function Mname (n, mn) -> Some (n, mn) | _ -> None ) es)
 
 let (empty: t) = Le.empty
 
@@ -42,15 +43,15 @@ let sum_path = function
   | F.Finductive (p, _, _, _, _) -> p
   | _                            -> assert false
 
-let rewrite_pred_funs subf r = C.app_snd (P.pexp_map_funs subf) r
+let rewrite_pred_funs subf r = Misc.app_snd (P.pexp_map_funs subf) r
 
-let rewrite_pred_vars subf r = C.app_snd (P.pexp_map_vars (fun p -> P.Var (subf p))) r
+let rewrite_pred_vars subf r = Misc.app_snd (P.pexp_map_vars (fun p -> P.Var (subf p))) r
 
 let rewrite_pred subvars subfuns r = rewrite_pred_funs subfuns (rewrite_pred_vars subvars r)
 
 let transl_desc mlenv (c, (ps, r)) =
   try
-    let _  = if not(C.is_unique (C.maybe_list ps)) then failwith "Measure args not unique" in
+    let _  = if ps |> Misc.maybe_list |> Misc.is_unique |> not then failwith "Measure args not unique" in
     let c  = Env.lookup_constructor (Longident.parse c) mlenv in
     let _  = if List.length ps != c.cstr_arity then failwith "Wrong number of measure args" in
     let fr = F.fresh_without_vars mlenv c.cstr_res in
@@ -115,8 +116,8 @@ let mk_single_gd menv (vp, p, tag, ps) =
     None
 
 let mk_guard env vp cpats =
-  let preds = C.map_partial (mk_single_gd !bms) cpats in
-  let preds = C.flap P.conjuncts preds in
+  let preds = Misc.map_partial (mk_single_gd !bms) cpats in
+  let preds = Misc.flap P.conjuncts preds in
   let preds = List.filter (Wellformed.pred_well_formed env) preds in
     P.big_and preds
 
@@ -133,13 +134,15 @@ let map_funs f (v, p_or_e) =
   (v, P.pred_or_pexp_map_funs f p_or_e)
 
 let transl_pred names =
-  map_pred_funs (fun x -> C.sub_from_list names x) 
+  map_pred_funs (fun x -> Common.sub_from_list names x) 
 
 let transl_frame names f =
   F.map_refexprs (rewrite_refexpr (transl_pred names)) f
 
-let transl_qualpat names q =
-  Qualmod.qualpat_map_predpat (Qd.pat_map_funs (fun x -> C.s_to_l (C.sub_from_list names (C.l_to_s x)))) q
+let transl_qualpat names =
+  (Common.l_to_s <+> Common.sub_from_list names <+> Common.s_to_l)
+  |> Qd.pat_map_funs
+  |> Qualmod.qualpat_map_predpat 
 
 let pprint_menv ppf menv =
   List.iter (function | Mname(a,b) -> fprintf ppf "@[Name:@ (%s,@ %s)@]@." a b
@@ -147,13 +150,13 @@ let pprint_menv ppf menv =
 
 let proc_premeas env menv fenv ifenv quals =
   let (mnames, mcstrs) = (filter_names menv, filter_cstrs menv) in
-  let subs = C.list_assoc_flip mnames in
-  let quals = List.rev_map (C.app_snd (transl_qualpat subs)) quals in
-  let subpaths = List.map (fun (x, y) -> (C.lookup_path x env, get_path y)) subs in
+  let subs = Misc.list_assoc_flip mnames in
+  let quals = List.rev_map (Misc.app_snd (transl_qualpat subs)) quals in
+  let subpaths = List.map (fun (x, y) -> (Common.lookup_path x env, get_path y)) subs in
   let fenv = Le.map (transl_frame subpaths) fenv in
   let ifenv = Le.map (transl_frame subpaths) ifenv in
-  let mcstrs = List.map (fun (c, (ps, cstr)) -> (c, (ps, map_funs (C.sub_from_list subpaths) cstr))) mcstrs in
-  let _ = C.cprintf C.ol_dump_meas "Measures:@.%a" pprint_menv ((List.map (fun (a, (b, c)) -> Mcstr(a, (b, c))) mcstrs)) in
+  let mcstrs = List.map (fun (c, (ps, cstr)) -> (c, (ps, map_funs (Common.sub_from_list subpaths) cstr))) mcstrs in
+  let _ = Co.cprintf Co.ol_dump_meas "Measures:@.%a" pprint_menv ((List.map (fun (a, (b, c)) -> Mcstr(a, (b, c))) mcstrs)) in
   let _ = mk_measures env mcstrs in
     (fenv, ifenv, quals)
 

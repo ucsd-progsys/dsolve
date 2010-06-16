@@ -111,31 +111,11 @@ let tuple_elem_id i =
 let abstr_elem_id () =
   Ident.create "supr" (*^ string_of_int (get_unique ()))*)
 
-let compose f g a = f (g a)
-
-let int_of_bool b = if b then 1 else 0
-
-let ex_one s = function
-    [x] -> x
-  | _ :: _ -> failwith s
-  | _ -> failwith (s ^ ". empty")
-
-let only_one s = function
-    x :: [] -> Some x
-  | x :: xs -> failwith s
-  | [] -> None
-
-let maybe_one = function
-    [x] -> Some x
-  | _ -> None
-
-           (* let map_compose *)
 
 let rec maybe_list_from_singles = function
     x :: xs -> (match x with [a] -> Some a |  _ -> None) :: (maybe_list_from_singles xs)
   | [] -> []
 
-let empty_list = function [] -> true | _ -> false
 
 let maybe_bool = function
   Some _ -> true
@@ -144,9 +124,11 @@ let maybe_bool = function
 let all_defined xs =
   List.for_all maybe_bool xs
 
+  (*
 let has_prefix pre s =
   try String.sub s 0 (String.length pre) = pre
     with Invalid_argument _ -> false
+*)
 
 let sub_from_list subs s =
   try List.assoc s subs with Not_found -> s

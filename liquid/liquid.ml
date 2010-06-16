@@ -38,6 +38,7 @@ module C   = Common
 module Le  = Liqenv
 module P   = Predicate
 module Nm  = Normalize
+module Co = Constants
 
 let usage = "Usage: liquid <options> [source-files]\noptions are:"
 
@@ -85,15 +86,15 @@ let load_qualfile ppf qualfile =
 let load_dep_mlqfiles bname deps env fenv mlqenv =
   let pathnames = !Config.load_path in 
   let inames = List.map (fun s -> ((String.lowercase s) ^ ".mlq", s)) deps in
-  let inames = C.sort_and_compact inames in
+  let inames = Misc.sort_and_compact inames in
   let f (s, d) pns =
     let p = try Some (List.find (fun p -> Sys.file_exists (p ^ "/" ^ s)) pns)
-      with Not_found -> C.cprintf C.ol_warn_mlqs "@[WARNING:@ could@ not@ find@ %s@.@]" s; None in
+      with Not_found -> Co.cprintf Co.ol_warn_mlqs "@[WARNING:@ could@ not@ find@ %s@.@]" s; None in
       match p with
       | Some p -> Some (Pparse.file std_formatter (p ^ "/" ^ s) Parse.liquid_interface Config.ast_impl_magic_number, d)
       | None -> None in
   let mlqs = List.rev_map (fun xd -> f xd pathnames) inames in 
-  let mlqs = C.maybe_list mlqs in
+  let mlqs = Misc.maybe_list mlqs in
     MLQ.load_dep_sigs env fenv mlqs
 
 let dump_summary bname (str, env, menv, ifenv, fenv) qname = 
@@ -149,14 +150,14 @@ let process_sourcefile env fenv fname =
     let (str, env, fenv)      = load_sourcefile std_formatter env fenv fname in
     let fenv                  = List.fold_left (add_uninterpreted_constructors env) fenv (Env.types env) in
     let (env, menv, fenv, mlqenv) = MLQ.load_local_sig env fenv vals in
-      if C.maybe_bool !summarize then
-        dump_summary bname (str, env, menv, mlqenv, fenv) (C.maybe !summarize)
+      if Misc.maybe_bool !summarize then
+        dump_summary bname (str, env, menv, mlqenv, fenv) (Misc.maybe !summarize)
       else
         let (deps, consts, tyquals)  = load_qualfile std_formatter qname in
         let (env, menv', fenv, _)    = load_dep_mlqfiles bname deps env fenv mlqenv in
         let (fenv, mlqenv, tyquals)  = M.proc_premeas env (List.rev_append menv menv') fenv mlqenv tyquals in
         let fenv = MLQ.scrub_and_push_axioms fenv in
-        let _ = if C.ck_olev C.ol_dump_env then (dump_env fenv; dump_env mlqenv) else () in
+        let _ = if Co.ck_olev Co.ol_dump_env then (dump_env fenv; dump_env mlqenv) else () in
           analyze std_formatter fname (str, consts, tyquals, env, fenv, mlqenv)
    with x ->
      report_error std_formatter x; exit 1

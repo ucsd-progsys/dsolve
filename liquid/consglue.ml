@@ -13,6 +13,9 @@ module So = Ast.Sort
 module Sy = Ast.Symbol
 module Q  = Ast.Qualifier
 module SM = Ast.Symbol.SMap
+module Su = Ast.Subst
+
+open Misc.Ops
 
 let dvv = Common.qual_test_var
 let dsyvv = Pg.sy_of_path dvv
@@ -65,7 +68,8 @@ let freft_of_dframe fr = Cf.make_reft dsyvv (fsort_of_dframe fr) []
 (************************** REFINEMENTS ****************************)
 
 let f_of_dsubs subs =
-  List.rev_map (fun (p, e) -> (Pg.sy_of_path p, Pg.f_of_dexpr e)) subs
+  subs |> List.rev_map (fun (p, e) -> (Pg.sy_of_path p, Pg.f_of_dexpr e)) 
+       |> Su.of_list
 
 let unify_dqual (x, v, p) =
   let sub var = if Path.same var v then P.Var dvv else P.Var var in
