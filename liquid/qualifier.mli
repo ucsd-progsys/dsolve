@@ -31,7 +31,7 @@ val apply: Predicate.pexpr -> t -> Predicate.t
 
 val instantiate: (string * Path.t) list -> t -> t option
 val vars: t -> string list
-val instantiate_about: Path.t list Common.StringMap.t -> 'a Liqenv.t -> t -> t list
+val instantiate_about: Path.t list Misc.StringMap.t -> 'a Liqenv.t -> t -> t list
 val pprint: formatter -> t -> unit
 val map_pred: (Path.t * Predicate.t -> Path.t * Predicate.t) -> t -> t
 val may_not_be_tautology: t -> bool

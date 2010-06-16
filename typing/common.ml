@@ -38,140 +38,8 @@ end
 module PathMap = Map.Make(ComparablePath)
 
 let qual_test_var = Path.Pident (Ident.create_persistent "AA")
+
 let dummy_id = Ident.create_persistent ""
-
-let get_unique =
-  let cnt = ref 0 in
-  (fun () -> let rv = !cnt in incr cnt; rv)
-
-let flip f x y =
-  f y x
-
-let maybe = function Some x -> x | _ -> assert false
-
-let maybe_cons m xs = match m with
-  | None -> xs
-  | Some x -> x :: xs
-
-let maybe_list xs = List.fold_right maybe_cons xs []
-
-let list_assoc_flip xs = 
-  let r (x, y) = (y, x) in
-    List.map r xs
-
-let rec _fli f n b = function
-  | [] -> b
-  | x :: xs -> _fli f (n + 1) (f n b x) xs
-
-let fold_lefti f b lst =
-  _fli f 0 b lst
-
-let rec map3 f xs ys zs = match (xs, ys, zs) with
-  | ([], [], []) -> []
-  | (x :: xs, y :: ys, z :: zs) -> f x y z :: map3 f xs ys zs
-  | _ -> assert false
-
-let zip_partition xs bs =
-  let (xbs,xbs') = List.partition snd (List.combine xs bs) in
-  (List.map fst xbs, List.map fst xbs')
-
-let flap f xs = 
-  List.flatten (List.map f xs)
-
-let rec perms es =
-  match es with
-    | s :: [] ->
-        List.map (fun c -> [c]) s
-    | s :: es ->
-        flap (fun c -> List.map (fun d -> c :: d) (perms es)) s
-    | [] ->
-        []
-
-let flap2 f xs ys = 
-  List.flatten (List.map2 f xs ys)
-
-let flap3 f xs ys zs =
-  List.flatten (map3 f xs ys zs)
-
-let split3 lst =
-  List.fold_right (fun (x, y, z) (xs, ys, zs) -> (x :: xs, y :: ys, z :: zs)) lst ([], [], [])
-
-let combine3 xs ys zs =
-  map3 (fun x y z -> (x, y, z)) xs ys zs
-
-(* these do odd things with order for performance 
- * it is possible that fast is a misnomer *)
-let fast_flatten xs =
-  List.fold_left (fun x xs -> List.rev_append x xs) [] xs
-
-let fast_append v v' =
-  let (v, v') = if List.length v > List.length v' then (v', v) else (v, v') in
-  List.rev_append v v'
-
-let fast_flap f xs =
-  List.fold_left (fun xs x -> List.rev_append (f x) xs) [] xs
-
-let rec fast_unflat ys = function
-  | x :: xs -> fast_unflat ([x] :: ys) xs
-  | [] -> ys
-
-let rec rev_perms s = function
-  | [] -> s
-  | e :: es -> rev_perms 
-    (fast_flap (fun e -> List.rev_map (fun s -> e :: s) s) e) es 
-
-let rev_perms = function
-  | e :: es -> rev_perms (fast_unflat [] e) es
-  | es -> es 
-
-let tflap2 (e1, e2) f =
-  List.fold_left (fun bs b -> List.fold_left (fun aas a -> f a b :: aas) bs e1) [] e2
-
-let tflap3 (e1, e2, e3) f =
-  List.fold_left (fun cs c -> List.fold_left (fun bs b -> List.fold_left (fun aas a -> f a b c :: aas) bs e1) cs e2) [] e3
-
-let rec expand f xs ys =
-  match xs with
-  | [] -> ys
-  | x::xs ->
-      let (xs',ys') = f x in
-      expand f (List.rev_append xs' xs) (List.rev_append ys' ys)
-
-let do_catch s f x =
-  try f x with ex -> 
-     (Printf.printf "%s hits exn: %s \n" s (Printexc.to_string ex); raise ex) 
-
-let do_catch_ret s f x y = 
-  try f x with ex -> 
-     (Printf.printf "%s hits exn: %s \n" s (Printexc.to_string ex); y) 
-       
-let do_memo t f arg key =
-  try Hashtbl.find t key with Not_found ->
-    let rv = f arg in
-    let _ = Hashtbl.replace t key rv in
-    rv
-
-let do_bimemo fmemo rmemo f args key =
-  try Hashtbl.find fmemo key with Not_found ->
-    let rv = f args in
-    let _ = Hashtbl.replace fmemo key rv in
-    let _ = Hashtbl.replace rmemo rv key in
-    rv
-
-let rec map_partial f = function
-  | []          -> []
-  | x::xs       -> (match f x with 
-                    | None      -> map_partial f xs 
-                    | Some y    -> y::(map_partial f xs))
-  
-let mapfold f xs b = 
-  let rec _mf ys b = function
-    | [] -> 
-        (List.rev ys,b)
-    | x::xs -> 
-        let (y',b') = f x b in
-        _mf (y'::ys) b' xs in
-  _mf [] b xs
 
 let incpp ir = 
   incr ir;!ir
@@ -324,11 +192,11 @@ let strip_meas s =
 let append_pref p s =
   (p ^ "." ^ s)
 
-let app_fst f (a, b) = (f a, b)
+(*let app_fst f (a, b) = (f a, b)
 let app_snd f (a, b) = (a, f b)
 let app_pr f (a, b) = (f a, f b)
-
 let app_triple f (a, b, c) = (f a, f b, f c)
+*)
 
 let l_to_s l = String.concat "." (Longident.flatten l)
 let s_to_l s = Longident.parse s
@@ -392,7 +260,6 @@ let ck_olev l = l <= !verbose_level
 
 let cprintf l = if ck_olev l then F.printf else nprintf
 let ecprintf l = if ck_olev l then F.eprintf else nprintf
-
 let fcprintf ppf l = if ck_olev l then F.fprintf ppf else nprintf
 
 let icprintf printer l ppf = if ck_olev l then printer ppf else printer null_formatter
@@ -474,7 +341,7 @@ let scc_rank f ijs =
                  i (xs_to_string int_s_to_string xs)) a;
           cprintf ol_scc "@[@\n@]" in
   let sccs = array_to_index_list a in
-  flap (fun (i,vs) -> List.map (fun (j,_) -> (j,i)) vs) sccs
+  Misc.flap (fun (i,vs) -> List.map (fun (j,_) -> (j,i)) vs) sccs
 
 (*
 let g1 = [(1,2);(2,3);(3,1);(2,4);(3,4);(4,5)];;

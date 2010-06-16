@@ -24,7 +24,6 @@
 open Format
 open Predicate
 
-module C = Common
 module BS = Bstats
 module JS = Mystats
 module Le = Liqenv
@@ -57,12 +56,12 @@ let instantiate varmap (path, valu, pred) =
     with Not_found -> None
 
 let vars (path, valu, pred) =
-  C.maybe_list (List.map (fun x -> if Path.same x valu then None else Some (Path.ident_name_crash x)) (vars pred))
+  Misc.maybe_list (List.map (fun x -> if Path.same x valu then None else Some (Path.ident_name_crash x)) (vars pred))
 
 let fix_bound_vars vm ps =
   let paths = fst (List.split ps) in
   let names = List.map Path.name paths in
-    List.fold_left2 (fun vm n p -> C.StringMap.add n [p] vm) vm names paths
+    List.fold_left2 (fun vm n p -> Misc.StringMap.add n [p] vm) vm names paths
 
 (* in qualifier.ml to avoid an odd dependency problem that breaks the build *)
 let expand_about vm env p =
@@ -70,7 +69,7 @@ let expand_about vm env p =
       PInt x -> [PInt x]
     | Var p -> 
         (try let p = Path.ident_name_fail p in
-            List.rev_map (fun x -> Var x) (C.StringMap.find p vm)
+            List.rev_map (fun x -> Var x) (Misc.StringMap.find p vm)
         with Failure _ -> [Var p]
            | Not_found ->
                let p = Path.ident_name_crash p in
@@ -78,28 +77,28 @@ let expand_about vm env p =
                [Var (Le.find_path p env)] else raise Not_found)
     | FunApp (s, ps) ->
         let ess = List.map (e_rec vm) ps in
-          List.rev_map (fun x -> FunApp (s, x)) (C.rev_perms ess)
+          List.rev_map (fun x -> FunApp (s, x)) (Misc.rev_perms ess)
     | Binop (e1, b, e2) ->
-        C.tflap2 (e_rec vm e1, e_rec vm e2) (fun a c -> Binop (a, b, c))
+        Misc.tflap2 (e_rec vm e1, e_rec vm e2) (fun a c -> Binop (a, b, c))
     | Field (f, e1) ->
         List.rev_map (fun e -> Field(f, e)) (e_rec vm e1)
     | Ite (t, e1, e2) ->
-        C.tflap3 (t_rec vm t, e_rec vm e1, e_rec vm e2) (fun a b c -> Ite (a, b, c))
+        Misc.tflap3 (t_rec vm t, e_rec vm e1, e_rec vm e2) (fun a b c -> Ite (a, b, c))
 
   and t_rec vm = function
       True -> [True]
     | Atom(e1, b, e2) -> 
-        C.tflap2 (e_rec vm e1, e_rec vm e2) (fun a c -> Atom (a, b, c))
+        Misc.tflap2 (e_rec vm e1, e_rec vm e2) (fun a c -> Atom (a, b, c))
     | Iff(e, t) ->
-        C.tflap2 (t_rec vm e, t_rec vm t) (fun a b -> Iff (a, b))
+        Misc.tflap2 (t_rec vm e, t_rec vm t) (fun a b -> Iff (a, b))
     | Not t ->
         List.rev_map (fun a -> Not a) (t_rec vm t)
     | And (t1, t2) ->
-        C.tflap2 (t_rec vm t1, t_rec vm t2) (fun a b -> And (a, b))
+        Misc.tflap2 (t_rec vm t1, t_rec vm t2) (fun a b -> And (a, b))
     | Or (t1, t2) ->
-        C.tflap2 (t_rec vm t1, t_rec vm t2) (fun a b -> Or (a, b))
+        Misc.tflap2 (t_rec vm t1, t_rec vm t2) (fun a b -> Or (a, b))
     | Implies (t1, t2) ->
-        C.tflap2 (t_rec vm t1, t_rec vm t2) (fun a b -> Implies (a, b))
+        Misc.tflap2 (t_rec vm t1, t_rec vm t2) (fun a b -> Implies (a, b))
     | Forall (p, q) ->
         List.rev_map (fun a -> Forall (p, a)) (t_rec (fix_bound_vars vm p) q)
     | Exists (p, q) ->
@@ -109,7 +108,7 @@ let expand_about vm env p =
   t_rec vm p
 
 let instantiate_about vm env (path, valu, pred) = 
-  let vm = C.StringMap.add (Path.ident_name_crash valu) [valu] vm in
+  let vm = Misc.StringMap.add (Path.ident_name_crash valu) [valu] vm in
     try List.rev_map (fun x -> (path, valu, x)) (expand_about vm env pred)
     with Not_found -> []
 

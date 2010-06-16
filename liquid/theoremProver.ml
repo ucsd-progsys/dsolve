@@ -22,8 +22,8 @@
  *)
 
 (* Common theorem prover interface *)
+module C = Constants
 module P = Predicate
-module C = Common
 module Cl = Clflags
 module Prover = TheoremProverZ3.Prover
 module BS = Bstats
@@ -119,7 +119,7 @@ let rhsform = Format.formatter_of_buffer buftrhs
 (********************************************************************************)
 
 let push_axiom env p =
-  C.cprintf C.ol_axioms "@[Pushing@ axiom:@ %a@]@." P.pprint p; Prover.axiom env p
+  Constants.cprintf Constants.ol_axioms "@[Pushing@ axiom:@ %a@]@." P.pprint p; Prover.axiom env p
 
 (********************************************************************************)
 (************************************* API **************************************)
@@ -161,7 +161,7 @@ let set_and_filter env ps qs =
   let ps = List.rev_map fixdiv ps in
   (*let ps = BS.time "TP taut" (List.filter is_not_taut) ps in*)
   if BS.time "TP set" (Prover.set env) ps then (Prover.finish (); qs) else
-      let qs = List.rev_map (C.app_snd fixdiv) qs in
+      let qs = List.rev_map (Misc.app_snd fixdiv) qs in
       let (qs, qs') = List.partition (fun (_, q) -> is_not_taut q) qs in
         List.rev_append qs' (BS.time "TP filter" (Prover.filter env) qs)
 

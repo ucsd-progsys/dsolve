@@ -1,13 +1,9 @@
 module D = Constraint
 module C = Common
-
 module F = FixConstraint
-
 module Pg = Predglue
-
 module Pred = Predicate
 module Fr = Frame
-
 module A = Ast
 module S = A.Sort
 module Sy = A.Symbol
@@ -18,7 +14,6 @@ module IM = Misc.IntMap
 
 let dvv = C.qual_test_var
 let dsyvv = Pg.sy_of_path dvv
-
 let empty_sol = (fun _ -> [])
 
 (************************** FRAMES **********************************)
@@ -99,7 +94,7 @@ let frefas_of_drefexpr (subs, (_, ks)) =
 let frefas_of_dreft reft =
   let consts =
     Pg.f_of_dpred (Pred.big_and (D.refinement_preds empty_sol (Pred.Var dvv) reft)) in
-  (F.Conc consts) :: C.flap frefas_of_drefexpr reft
+  (F.Conc consts) :: Misc.flap frefas_of_drefexpr reft
 
 let freft_of_dsreft vvt sreft =
   F.make_reft dsyvv (fsort_of_dframe vvt) (frefas_of_dsreft (unify_dsreft sreft))
@@ -121,7 +116,7 @@ let f_of_dqual q =
   List.map (fun s -> Q.create dsyvv s (fpred_of_dqual [] (unify_dqual q))) ss 
 
 let f_of_dquals qs =
-  C.flap f_of_dqual qs
+  Misc.flap f_of_dqual qs
 
 (************************** ENVIRONMENTS ***************************)
 

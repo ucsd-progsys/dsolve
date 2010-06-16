@@ -10,16 +10,19 @@ let str_to_path = Hashtbl.create 37
 let path_to_str = Hashtbl.create 37
 
 let str_of_path p =
-  Common.do_bimemo path_to_str str_to_path Pa.unique_name p p
+  Misc.do_bimemo path_to_str str_to_path Pa.unique_name p p
 let sy_of_path p = F.Symbol.of_string (str_of_path p)
 
 let sy_of_qvar k =
   F.Symbol.of_string ("k" ^ string_of_int k)
+
 let qvar_of_sy sy =
   let s = F.Symbol.to_string sy in
     int_of_string (String.sub s 1 (String.length s - 1))
 
-let path_of_str s = Hashtbl.find str_to_path s
+let path_of_str s = 
+  Hashtbl.find str_to_path s
+
 let path_of_sy s =
   try path_of_str (F.Symbol.to_string s) with
     Not_found ->
@@ -136,6 +139,5 @@ and d_of_fpred p =
   | F.Atom (e1, rel, e2)     ->
       D.Atom (d_of_fexpr e1, d_of_fbrel rel, d_of_fexpr e2)
   | F.Forall (ss, p)         ->
-      let ss =
-        List.map (fun (s, st) -> (path_of_sy s, dprover_t_of_fsort st)) ss in 
+      let ss = List.map (fun (s, st) -> (path_of_sy s, dprover_t_of_fsort st)) ss in 
       D.Forall (ss, d_of_fpred p)

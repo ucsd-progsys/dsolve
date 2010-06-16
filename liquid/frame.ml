@@ -31,7 +31,7 @@ open Asttypes
 open Misc.Ops
 
 module C = Common
-module PM = C.PathMap
+module PM = Common.PathMap
 module T = Typetexp
 module Pat = Pattern
 module M = Miscutil
@@ -98,7 +98,7 @@ let env_ignore_list = ["Pervasives"; "Open_"; "FP_"; "false"; "true"; "Array"; "
 let prune_background env = Le.filter
   (fun p _ -> 
     let p = Path.name p in
-    List.for_all (fun pre -> not(C.has_prefix pre p)) env_ignore_list && not(C.tmpstring p)) env
+    List.for_all (fun pre -> not(Common.has_prefix pre p)) env_ignore_list && not(Common.tmpstring p)) env
 
 (**************************************************************)
 (**************** Constructed type accessors ******************)
@@ -156,7 +156,7 @@ let rec map_labels f fr =
 and map_label_map f = function
     Farrow (x, a, b) -> Farrow (f x, a, b)
   | Fabstract (p, ps, id, r) ->
-      let id = if C.empty_list ps then id else f id in
+      let id = match ps with [] -> id | _ -> f id in
         Fabstract(p, map_param_labels f ps, id, r)
   | fr -> fr
 
@@ -193,13 +193,13 @@ let recref_iter f rr =
 let rec refinement_fold f l = function
   | Frec (_, tas, rr, r)          -> l |> refinement_fold_list f tas |> recref_fold f rr |> f r
   | Fvar (_, _, _, r)             -> f r l
-  | Fsum (_, cs, r)               -> l |> refinement_fold_list f (C.flap constr_param_frames cs) |> f r
+  | Fsum (_, cs, r)               -> l |> refinement_fold_list f (Misc.flap constr_param_frames cs) |> f r
   | Fabstract (_, ps, _, r)       -> l |> refinement_fold_list f (params_frames ps) |> f r
   | Farrow (_, f1, f2)            -> refinement_fold f (refinement_fold f l f1) f2
   | Finductive (_, ps, rr, cs, r) ->
       l
    |> refinement_fold_list f (params_frames ps)
-   |> refinement_fold_list f (C.flap constr_param_frames cs)
+   |> refinement_fold_list f (Misc.flap constr_param_frames cs)
    |> recref_fold f rr
    |> f r
 
@@ -209,13 +209,13 @@ and refinement_fold_list f fs l =
 let rec refinement_iter f = function
   | Frec (_, tas, rr, r)          -> List.iter (refinement_iter f) tas; recref_iter f rr; f r
   | Fvar (_, _, s, r)             -> f r
-  | Fsum (_, cs, r)               -> f r; List.iter (refinement_iter f) (C.flap constr_param_frames cs)
+  | Fsum (_, cs, r)               -> f r; List.iter (refinement_iter f) (Misc.flap constr_param_frames cs)
   | Fabstract (_, ps, _, r)       -> List.iter (refinement_iter f) (params_frames ps); f r
   | Farrow (_, f1, f2)            -> refinement_iter f f1; refinement_iter f f2
   | Finductive (_, ps, rr, cs, r) ->
       List.iter (refinement_iter f) (params_frames ps);
       recref_iter f rr;
-      List.iter (refinement_iter f) (C.flap constr_param_frames cs);
+      List.iter (refinement_iter f) (Misc.flap constr_param_frames cs);
       f r
 
 (******************************************************************************)
@@ -313,7 +313,7 @@ let append_recref rr' f = match get_recref f with
   | None    -> f
 
 let eager_apply subs qs =
-  List.rev_map (Qualifier.map_pred (C.app_snd (P.apply_substs subs))) qs 
+  List.rev_map (Qualifier.map_pred (Misc.app_snd (P.apply_substs subs))) qs 
 
 let refexpr_apply_subs subs' (subs, qexprs) =
   match qexprs with
@@ -327,14 +327,14 @@ let apply_subs subs f =
   map_refexprs (refexpr_apply_subs subs) f
 
 let refinement_qvars r =
-  C.flap (fun (_, (_, qvars)) -> qvars) r
+  Misc.flap (fun (_, (_, qvars)) -> qvars) r
 
 exception Found
 
 let has_qvars f = 
   try ignore (map_refinements 
-    (fun r -> if not (C.empty_list (refinement_qvars r)) then raise Found; r)
-      f); false with Found -> true
+      (fun r -> (match refinement_qvars r with [] -> () | _ -> raise Found); r) f); false 
+  with Found -> true
 
 let recref_shape rr =
   map_recref (fun _ -> empty_refinement) rr
@@ -365,7 +365,7 @@ let maybe_tag_qualifier (_, v, pred) =
 
 let find_tag_single ts r =
   let (_, (qs, _)) = r in
-    (C.maybe_list (List.map maybe_tag_qualifier qs)) @ ts
+  (Misc.maybe_list (List.map maybe_tag_qualifier qs)) @ ts
 
 let find_tag rs =
   C.only_one "too many tags in constructed value" (List.fold_left find_tag_single [] rs)
@@ -584,7 +584,7 @@ let same_shape t1 t2 =
       Not_found -> vars := (p, q) :: !vars; true in
   let rec sshape = function
       (Fsum(p, cs, _), Fsum(p', cs', _)) ->
-        Path.same p p' && params_sshape (C.flap constr_params cs) (C.flap constr_params cs')
+        Path.same p p' && params_sshape (Misc.flap constr_params cs) (Misc.flap constr_params cs')
     | (Finductive (p, ps, _, _, _), Finductive (p', ps', _, _, _)) ->
         Path.same p p' && params_sshape ps ps'
     | (Fabstract(p, ps, _, _), Fabstract(p', ps', _, _)) ->
@@ -647,7 +647,7 @@ let rec subt t1 t2 eq inst =
   let rec s_rec (f1, f2) = 
     match (f1, f2) with
     | (Fsum(p, cs, _), Fsum(p', cs', _)) ->
-        Path.same p p' && p_s (C.flap constr_params cs) (C.flap constr_params cs')
+        Path.same p p' && p_s (Misc.flap constr_params cs) (Misc.flap constr_params cs')
     | (Finductive (p, ps, _, cs, r), Finductive (p', ps', _, _, _)) ->
         Path.same p p' && p_s ps ps'
     | (Fabstract(p, ps, _, _), Fabstract(p', ps', _, _)) ->
@@ -710,7 +710,7 @@ let apply_dep_subs subs = function
 let instantiate_dep_subs vars subs =
   let c i =
     try Path.name (List.assoc i vars) with Not_found -> i in
-  List.map (C.app_pr c) subs
+  List.map (Misc.map_pair c) subs
   
 (* Instantiate the tyvars in fr with the corresponding frames in ftemplate.
    If a variable occurs twice, it will only be instantiated with one frame; which
@@ -809,11 +809,11 @@ let label_like f f' =
   in label [] f f'
 
 let abstract_of_params_with_labels labels p params varis id r =
-  Fabstract (p, C.combine3 labels params varis, id, r)
+  Fabstract (p, Misc.combine3 labels params varis, id, r)
 
 let abstract_of_params p params varis r =
   let id = if C.empty_list params then C.dummy_id else C.abstr_elem_id () in
-  Fabstract (p, C.combine3 (Miscutil.mapi (fun _ i -> C.tuple_elem_id i) params) params varis, id, r)
+  Fabstract (p, Misc.combine3 (Miscutil.mapi (fun _ i -> C.tuple_elem_id i) params) params varis, id, r)
 
 let sum_of_params path ps r =
   Fsum (path, [(Cstr_constant 0, ("rec", ps))], r)
@@ -912,7 +912,7 @@ let translate_type env t =
         let fids    = List.map frame_var formals in
         let fs      = List.map (transl vstack r) tyl in
         let fvs     = List.map translate_variance ty_decl.type_variance in
-        let fps     = C.combine3 fids fs fvs in
+        let fps     = Misc.combine3 fids fs fvs in
           match ty_decl.type_kind with
             | Type_abstract              -> abstract_of_params p fs fvs r
             | Type_record (fields, _, _) -> transl_record vstack r p fields fps
@@ -939,7 +939,7 @@ let translate_type env t =
     let fs   = cstr.cstr_args |>: (replace_formals cfps tfs <.> transl vstack Refine) in
     let vs   = List.map (fun _ -> Covariant) fs in
     let ids  = Miscutil.mapi (fun _ i -> C.tuple_elem_id i) fs in
-      (cstr.cstr_tag, (name, C.combine3 ids fs vs))
+      (cstr.cstr_tag, (name, Misc.combine3 ids fs vs))
 
   in
   let _ = reset_binders () in
@@ -1020,7 +1020,7 @@ let rec bind pat frame =
           | _ -> assert false
         end
     | _ -> assert false
-  in C.expand _bind [(pat, frame)] []
+  in Misc.expand _bind [(pat, frame)] []
 
 and bind_param (subs, binds) (i, f, _) pat =
   let f = apply_subs subs f in
@@ -1041,7 +1041,7 @@ let env_bind env pat frame =
 (**************************************************************)
 
 let refexpr_apply_solution s (subs, (qconsts, qvars)) =
-  (subs, (qconsts @ C.flap s qvars, []))
+  (subs, (qconsts @ Misc.flap s qvars, []))
 
 let apply_solution s f =
   map_refexprs (refexpr_apply_solution s) f
@@ -1051,7 +1051,7 @@ let refexpr_conjuncts s qual_expr ((subs, qexprs) as r) =
     List.rev_map (C.compose (P.apply_substs subs) (Qualifier.apply qual_expr)) quals
 
 let refinement_conjuncts s qexpr res =
-  C.flap (refexpr_conjuncts s qexpr) res
+  Misc.flap (refexpr_conjuncts s qexpr) res
 
 let refinement_predicate s qvar refn =
   P.big_and (refinement_conjuncts s qvar refn)
