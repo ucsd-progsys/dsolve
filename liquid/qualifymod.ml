@@ -317,7 +317,7 @@ and constrain_base_identifier (env, _, f) id e =
   let refn =
     if Le.mem id env then B.equality_refinement (expression_to_pexpr e) else F.empty_refinement in
   let f, wfs = instantiate_id id f env e.exp_env in
-    (F.apply_refinement refn f, WFFrame (env, f) :: wfs, [])
+    (F.apply_refinement refn f, wfs, [])
 
 and constrain_identifier (env, _, f) id tenv =
   let f, wfs = instantiate_id id f env tenv in
