@@ -1,4 +1,5 @@
-let max2 (x:int) (y:int) = if x >= y then x else y
+let max2 (a:int) (b:int) = if a >= b then a else b
+
 let x  = read_int ()
 let y  = read_int ()
 let m2 = max2 x y
