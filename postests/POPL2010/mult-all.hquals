@@ -1,1 +1,0 @@
-qualif A(v)(A:int): ~A { <=, >=, <, > } v

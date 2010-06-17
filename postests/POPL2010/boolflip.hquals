@@ -1,3 +1,0 @@
-qualif A(v):  ?v
-qualif B(v): not (?v)
-qualif C(v)(A:bool): ((?v) iff not (? ~A))

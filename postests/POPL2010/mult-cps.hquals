@@ -1,3 +1,0 @@
-qualif A(v)(A:int): ~A { <=, >=, <, > } v
-qualif B(v)(A:int): 100 <= (v + ~A)
-qualif C(v)       : 100 <= v
