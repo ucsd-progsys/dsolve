@@ -1,0 +1,3 @@
+qualif L(v): ((?v) iff (0 { <, >= } _))
+qualif T(v): (?v)
+qualif F(v): (not (?v))
