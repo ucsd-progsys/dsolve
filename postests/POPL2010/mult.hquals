@@ -1,2 +1,1 @@
-qualif CMP(v)(A:int): ~A  <= v
-(* qualif CMP(v): 100 <= v *)
+qualif CMP(v)(A:int): ~A { <=, >= } v
