@@ -1,0 +1,5 @@
+
+qualif CMP(v)(A:int): ~A { <=, >=, <, > } v
+
+(* qualif LEQ(v)(A:int, B:int, C:int): (v <= ~A) || (v <= ~B) || (v <= ~C) *)
+
