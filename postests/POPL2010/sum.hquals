@@ -1,2 +1,2 @@
-(* qualif CMP(v)(A: int):     ~A { <=, < } v  *)
-qualif CMP(v):     _ { <=, < } v 
+qualif CMP(v)(A: int):     ~A { <=, < } v  
+(* qualif CMP(v):     _ { <=, < } v *)
