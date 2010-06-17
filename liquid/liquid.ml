@@ -230,7 +230,11 @@ let main () =
      "-check-mlq", Arg.Set ck_mlq, "warn about possible errors in the local mlq";
      "-summarize", Arg.String (fun s -> summarize := Some s), "dump a summary of source to filename";
      "-dsmeasures", Arg.Set dsmeasures, "don't strip measure names";
-     "-fix", Arg.Set use_fixpoint, "use fixpoint solver instead of dsolve to solve constraints";
+     
+     "-fix", Arg.Set use_fixpoint, "use fixpoint solver to solve constraints";
+     "-print-nontriv", Arg.Set Constants.print_nontriv, "print non-trivial bindings in each environment [false] (use with -fix)";
+     "-no-simplify-t", Arg.Clear Constants.simplify_t, "do not simplify constraints (use with -fix)";
+     
      "-dontminemlq", Arg.Set dont_mine_mlq_preds, "don't mine qualifiers from mlq files";
      "-dontgenmlq", Arg.Set dont_gen_mlq_preds, "don't generalize qualifiers mined from mlq files";
      "-no-timing", Arg.Unit Bstats.dont_time, "don't do any profiling";

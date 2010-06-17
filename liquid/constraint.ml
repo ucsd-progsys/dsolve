@@ -897,14 +897,18 @@ let rec solve_sub sri s w =
 let solve_wf sri s =
   iter_ref_constraints sri 
   (function WFRef _ as c -> ignore (refine sri s c) | _ -> ())
+ 
+let print_unsats = function
+  | [] -> ()
+  | cs -> C.cprintf C.ol_solve_error "Unsatisfied Constraints\n%a" (Misc.pprint_many true "\n" (pprint_ref None)) cs
 
-let test_sol sri s =
-  let _ = dump_solution s in
-  let unsat = BS.time "testing solution" (unsat_constraints sri) s in
-  if List.length unsat > 0 then
-    C.cprintf C.ol_solve_error "@[Ref_constraints@ still@ unsatisfied:@\n@]";
-    List.iter (fun (c, b) -> C.cprintf C.ol_solve_error "@[%a@.@\n@]" (pprint_ref None) c) unsat;
-  (solution_map s, List.map snd unsat)
+let test_sol sri s = 
+  s >> dump_solution
+    |> BS.time "testing solution" (unsat_constraints sri)
+    >> (fun xs -> try xs |> List.map fst |> print_unsats with _ -> ()) 
+    |> List.map snd
+    |> (fun xs -> (solution_map s, xs))
+
 
 let dsolver max_env cs s =
   (* redo some work to keep interfaces simple *)
