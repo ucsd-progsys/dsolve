@@ -44,20 +44,21 @@ let rec string_of_frame = function
   | Fr.Farrow (_, f1, f2) -> (string_of_frame f1) ^ "->" ^ (string_of_frame f2)
   | Fr.Fvar (_, _, _, _) -> untStr
 
-let rec fsort_of_dframe fr =
-  match fr with
-  | Fr.Fsum (p, _, _)
-  | Fr.Finductive (p, _, _, _, _)
-  | Fr.Frec (p, _, _, _) 
-  | Fr.Fabstract (p, _, _, _) ->
-      if Path.same Predef.path_bool p then So.t_bool else
-      if Path.same Predef.path_int p then So.t_int else So.t_obj
-  | Fr.Farrow (_, f1, f2) ->
-      let params = collapse fr in
-      So.t_func 0 params
-  | Fr.Fvar (_, _, _, _) -> So.t_obj
+let rec fsort_of_dframe = function
+  | Fr.Fsum (p, _, _) | Fr.Finductive (p, _, _, _, _) | Fr.Frec (p, _, _, _) | Fr.Fabstract (p, _, _, _) ->
+      if Path.same Predef.path_bool p then 
+        So.t_bool 
+      else if Path.same Predef.path_int p then 
+        So.t_int 
+      else So.t_obj
+  | Fr.Farrow (_, _, _) as fr ->
+      fr |> collapse |> So.t_func 0
+  | Fr.Fvar (_, _, _, _) -> 
+      So.t_obj
+
 and collapse = function
-  | Fr.Farrow (_, f1, f2) -> fsort_of_dframe f1 :: collapse f2
+  | Fr.Farrow (_, f1, f2) -> 
+      fsort_of_dframe f1 :: collapse f2
   | s -> [fsort_of_dframe s]
 
   (* returns an empty but appropriately sorted reft
@@ -176,3 +177,24 @@ let d_of_fsoln soln =
     SM.fold (fun k ps s ->
       IM.add (Pg.qvar_of_sy k) (List.map q ps) s) soln IM.empty in
   Cl.sol_of_solmap rv
+
+
+(****************************************************************)
+
+let solver fname max_env cs soln =
+  (* translate to fixpoint *)
+  let fmax_env = inject_tag (f_of_denvt max_env) in
+  let fsort_max_env = Sy.SMap.map fsort_of_reft fmax_env in
+  let fcs = f_of_dsubcons fmax_env cs in
+  let fwfs = f_of_dwfcons cs in
+  let soln = f_of_dsoln soln in
+  let _ = Format.printf "@[InitSoln:@\n%a@]" FixConstraint.print_soln soln in
+  (* solve with fixpoint *)
+  let (solver, _) = Solve.create [] fsort_max_env [] 0 [] fcs fwfs [] in
+  let bname       = Miscutil.chop_extension_if_any fname in
+  let _           = Solve.save (bname ^ ".ml.in.fq") solver soln in
+  let (soln, _)   = Solve.solve solver soln in
+  let _           = Format.printf "@[FinSoln:@\n%a@]" FixConstraint.print_soln soln in
+  let _           = Solve.save (bname ^ ".ml.out.fq") solver soln in
+  d_of_fsoln soln
+

@@ -909,9 +909,7 @@ let test_sol sri s =
     |> List.map snd
     |> (fun xs -> (solution_map s, xs))
 
-
 let dsolver max_env cs s =
-  (* redo some work to keep interfaces simple *)
   let cs  = List.map (fun (v, c, cstr) -> (set_labeled_constraint c (make_val_env v max_env), cstr)) cs in
   let sri = make_ref_index cs in
   let w   = make_initial_worklist sri in

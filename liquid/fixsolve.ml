@@ -1,17 +1,19 @@
+(*
 module C = Common
+
+module FCo = FixConstraint
+module A   = Ast
+module Asm = A.Symbol.SMap
+
 module P = Predicate
 module F = Frame
 module Co = Constraint
-module FCo = FixConstraint
 module Le = Liqenv
 
 module Cg = Consglue
 
-module A = Ast
-module Asm = A.Symbol.SMap
-
 let solver fname max_env cs soln =
- (* translate to fixpoint *)
+  (* translate to fixpoint *)
   let fmax_env = Cg.inject_tag (Cg.f_of_denvt max_env) in
   let fsort_max_env = Asm.map Cg.fsort_of_reft fmax_env in
   let fcs = Cg.f_of_dsubcons fmax_env cs in
@@ -26,3 +28,5 @@ let solver fname max_env cs soln =
   let _           = Format.printf "@[FinSoln:@\n%a@]" FCo.print_soln soln in
   let _           = Solve.save (bname ^ ".ml.out.fq") solver soln in
   Cg.d_of_fsoln soln
+
+  *)
