@@ -1,3 +1,0 @@
-qualif GEZ(v): v > e0
-qualif LEN15CLUB(v): len v = 15
-qualif LEN(v): v = len ~A
