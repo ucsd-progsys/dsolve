@@ -8,7 +8,7 @@ let rec bcopy_aux src des i m =
 
 let bcopy src des =
   let sz = Junkarray.length src in
-  bcopy_aux src des 0 sz
+  bcopy_aux src des 0 3 
 
 (********************* Driver **********************)
 
