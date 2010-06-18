@@ -908,15 +908,19 @@ let translate_type env t =
         Frec (p, tas, List.assoc p vstack, r)
       with Not_found ->
         let ty_decl = Env.find_type p env in
-        let formals = List.map (transl vstack DontRefine) ty_decl.type_params in
-        let fids    = List.map frame_var formals in
-        let fs      = List.map (transl vstack r) tyl in
-        let fvs     = List.map translate_variance ty_decl.type_variance in
-        let fps     = Misc.combine3 fids fs fvs in
-          match ty_decl.type_kind with
-            | Type_abstract              -> abstract_of_params p fs fvs r
-            | Type_record (fields, _, _) -> transl_record vstack r p fields fps
-            | Type_variant (cdecls, _)   -> transl_variant vstack r p cdecls fps formals
+          match ty_decl.type_manifest with
+            | None ->
+                let formals = List.map (transl vstack DontRefine) ty_decl.type_params in
+                let fids    = List.map frame_var formals in
+                let fs      = List.map (transl vstack r) tyl in
+                let fvs     = List.map translate_variance ty_decl.type_variance in
+                let fps     = Misc.combine3 fids fs fvs in
+                  begin match ty_decl.type_kind with
+                    | Type_abstract              -> abstract_of_params p fs fvs r
+                    | Type_record (fields, _, _) -> transl_record vstack r p fields fps
+                    | Type_variant (cdecls, _)   -> transl_variant vstack r p cdecls fps formals
+                  end
+            | Some t -> transl vstack Refine t
 
   and transl_record vstack r p fields fps =
     let rr = mk_record_recref fields in
