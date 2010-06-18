@@ -1,0 +1,8 @@
+mdep Myhash
+
+qualif LEQ(v): ~A { <, >, <=, >=} v
+
+(* 
+qualif LEQ(v): ~A { * * } v
+qualif LEQ(v): 0 { * * } v
+*)

@@ -1,0 +1,15 @@
+mdep Myset
+
+qualif OLL(v)(A: 'a list list): v = of_list2 ~A
+qualif FLA(v)(A: 'a list list): ? Myset.eq (Myset.of_list v) (of_list2 ~A)
+qualif MEM(v)(B: 'a list): v = Myset.mem ~A (Myset.of_list ~B)
+qualif SEQ(v)(A: 'a list): ? Myset.eq (Myset.of_list v)  (Myset.of_list ~A) 
+
+
+(* qualif LT(v) : v < ~A *)
+qualif NMM(v)(A: 'a list): -. (? Myset.mem v (Myset.of_list ~A)) 
+qualif NMM(v): -. (? Myset.mem x (Myset.of_list v)) 
+qualif DIF(v)(A: 'a list, B: 'a list): ? Myset.eq (Myset.of_list v)  (Myset.mns (Myset.of_list ~A) (Myset.of_list ~B))
+qualif APP(v)(A: 'a list, B: 'a list): ? Myset.eq (Myset.of_list v)  (Myset.cup (Myset.of_list ~A) (Myset.of_list ~B))
+qualif CUP(v)(A: 'a list, B: 'a list): ? Myset.eq (Myset.of_list ~A) (Myset.cup (Myset.of_list ~B) (Myset.of_list v))
+qualif DEL(v)(A: 'a list): ? Myset.eq (Myset.of_list v) (Myset.mns (Myset.of_list ~A) (Myset.sng ~B))

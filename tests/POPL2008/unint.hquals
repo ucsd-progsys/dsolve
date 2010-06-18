@@ -1,0 +1,2 @@
+qualif EV(v): v = valid ~A
+qualif IO(v): valid ~A = 1

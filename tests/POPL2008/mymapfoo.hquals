@@ -1,0 +1,10 @@
+(*qualif A(v)(A: int): v = ~A + 1
+qualif B(v): v > ~A
+qualif B(v): v > e0
+qualif C(v): v <= 100
+qualif D(v): v { * * } [5, 0]
+qualif D(v): v >= 1*)
+
+(*qualif G(v)(B: ('a, 'b) Mymap.store): ~A = Mymap.gett ~B ~C
+
+qualif G(v): ~A = Mymap.gett f ~C*)

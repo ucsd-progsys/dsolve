@@ -1,0 +1,2 @@
+qualif LEQ(v)(A: int): ~A { * * } v
+qualif LEQ(v): 0 { * * } v

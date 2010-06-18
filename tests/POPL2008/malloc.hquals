@@ -1,0 +1,4 @@
+mdep Mystore
+
+qualif LT(v) : ~A { * * } v
+qualif FRE(v): (Mystore.get ~A v) { * * } 0
