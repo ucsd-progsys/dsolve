@@ -24,6 +24,9 @@
 open Format
 open Wellformed
 open Misc.Ops
+
+module BS = Bstats
+module JS = Mystats
 module C = Constants
 module F = Frame
 module Le = Liqenv
@@ -36,6 +39,7 @@ module B = Builtins
 module Q = Qualifier
 module VM = Misc.IntMap
 module Cf = Clflags
+
 module QSet = Set.Make(Q)
 module NSet = Set.Make(String)
 module Sol = Hashtbl.Make(struct
@@ -43,8 +47,7 @@ module Sol = Hashtbl.Make(struct
                             let hash  = Hashtbl.hash
                             let equal = (=)
                           end)
-module BS = Bstats
-module JS = Mystats
+
 
 (**************************************************************)
 (**************** Type definitions: Constraints ***************) 
@@ -74,8 +77,8 @@ and origin =
   | Cstr of labeled_constraint
 
 type refinement_constraint =
-  | SubRef of Frame.refinement (* F.t *) Liqenv.t * guard_t * Frame.refinement * Frame.simple_refinement * (subref_id option)
-  | WFRef of Frame.t Liqenv.t * Frame.simple_refinement * (subref_id option)
+  | SubRef of F.refinement Le.t * guard_t * F.refinement * F.simple_refinement * (subref_id option)
+  | WFRef of F.t Le.t * F.simple_refinement * (subref_id option)
 
 (**************************************************************)
 (********************** Miscutil. Constants ***********************)
@@ -917,13 +920,34 @@ let dsolver max_env cs s =
   let _   = TP.reset () in
   s
 
+let pprint_tb = fun ppf (f, io) -> Format.fprintf ppf "@[%a in %a@]" F.pprint f Misc.pprint_int_o io
+
+let checkenv_of_cs cs = 
+  List.fold_left begin fun env (v, c, _) -> 
+    Le.fold begin fun k v env ->
+      let vs = try Le.find k env with _ -> [] in
+      Le.add k ((v,c.lc_id)::vs) env
+    end (frame_env c.lc_cstr) env
+  end Le.empty cs
+  |> Le.iter begin fun k (((v,_)::_) as vs) ->
+      if not (List.for_all (fst <+> F.same_shape v) vs) then (
+        Format.printf "DUPLICATE BINDINGS for %s \n%a" 
+        (Path.unique_name k)
+        (Misc.pprint_many true "\n" pprint_tb) vs;
+        assertf "ERROR: FUPLICATE BINDING"
+      )
+  end
+
+let env_of_cs cs =
+  cs >> checkenv_of_cs
+     |> List.fold_left (fun env (v, c, _) -> Le.combine (frame_env c.lc_cstr) env) Le.empty
+
 let solve_with_solver qs env consts cs solver = 
   let cs = if !Cf.simpguard then List.map simplify_fc cs else cs in
   let _  = dump_constraints cs in
   let _  = dump_unsplit cs in
   let cs = BS.time "splitting constraints" split cs in
-  let max_env = List.fold_left 
-    (fun env (v, c, _) -> Le.combine (frame_env c.lc_cstr) env) Le.empty cs in
+  let max_env = env_of_cs cs in
   let _ = C.cprintf C.ol_insane "===@.Maximum@ Environment@.@.%a@.@." (pprint_raw_fenv true) max_env in
   let lcs = List.map (fun (v, c, cstr) -> (set_labeled_constraint c (make_val_env v max_env), cstr)) cs in
   let qs = BS.time "instantiating quals" (instantiate_per_environment env consts lcs) qs in

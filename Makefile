@@ -7,7 +7,8 @@ YACCFLAGS=-v
 CAMLLEX=ocamllex
 CAMLDEP=ocamldep
 DEPFLAGS=$(INCLUDES)
-COMPFLAGS=$(FLAGS) -g -dtypes -warn-error A $(INCLUDES)
+WARNERR=#-warn-error A
+COMPFLAGS=$(FLAGS) -g -dtypes $(WARNERR) $(INCLUDES)
 LIBZ3=-cclib -lz3#-gmp
 LIBFIX=external/fixpoint/_build #path to fixpoint objects
 LIBMISC=external/misc/_build #path to misc objects
@@ -54,7 +55,7 @@ LIQUID=liquid/qualmod.cmo liquid/liqenv.cmo \
   liquid/builtins.cmo liquid/message.cmo \
   liquid/theoremProverZ3.cmo liquid/theoremProver.cmo liquid/wellformed.cmo \
   liquid/constraint.cmo liquid/predglue.cmo \
-	liquid/consglue.cmo liquid/fixsolve.cmo \
+	liquid/consglue.cmo \
 	liquid/measure.cmo liquid/qualifymod.cmo \
   liquid/qdebug.cmo liquid/normalize.cmo \
   liquid/qdump.cmo liquid/liqerrors.cmo \

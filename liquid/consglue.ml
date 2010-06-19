@@ -178,7 +178,6 @@ let d_of_fsoln soln =
       IM.add (Pg.qvar_of_sy k) (List.map q ps) s) soln IM.empty in
   Cl.sol_of_solmap rv
 
-
 (****************************************************************)
 
 let solver fname max_env cs soln =
