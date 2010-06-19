@@ -534,14 +534,14 @@ let push_worklist =
   let timestamp = ref 0 in
   fun sri w cs ->
     incr timestamp;
-    List.fold_left 
-      (fun w c -> 
-        let id = get_ref_id c in
-        if Hashtbl.mem sri.pend id then w else 
-          (C.cprintf C.ol_refine "@[Pushing@ %d at %d@\n@]" id !timestamp; 
-           Hashtbl.replace sri.pend id (); 
-           WH.add (id,!timestamp,get_ref_rank sri c) w))
-      w cs
+    List.fold_left begin fun w c -> 
+      let id = get_ref_id c in
+      if Hashtbl.mem sri.pend id then w else begin 
+        C.cprintf C.ol_refine "@[Pushing@ %d at %d@\n@]" id !timestamp; 
+        Hashtbl.replace sri.pend id (); 
+        WH.add (id,!timestamp,get_ref_rank sri c) w
+      end
+    end w cs
 
 (* API *)
 let pop_worklist sri w =
@@ -913,8 +913,8 @@ let test_sol sri s =
     |> (fun xs -> (solution_map s, xs))
 
 let dsolver max_env cs s =
-  let cs  = List.map (fun (v, c, cstr) -> (set_labeled_constraint c (make_val_env v max_env), cstr)) cs in
-  let sri = make_ref_index cs in
+  let sri = cs |> List.map (fun (v, c, cstr) -> (set_labeled_constraint c (make_val_env v max_env), cstr))
+               |> make_ref_index in
   let w   = make_initial_worklist sri in
   let _   = BS.time "solving sub" (solve_sub sri s) w in
   let _   = TP.reset () in
@@ -930,12 +930,11 @@ let checkenv_of_cs cs =
     end (frame_env c.lc_cstr) env
   end Le.empty cs
   |> Le.iter begin fun k (((v,_)::_) as vs) ->
-      if not (List.for_all (fst <+> F.same_shape v) vs) then (
-        Format.printf "DUPLICATE BINDINGS for %s \n%a" 
-        (Path.unique_name k)
-        (Misc.pprint_many true "\n" pprint_tb) vs;
-        assertf "ERROR: FUPLICATE BINDING"
-      )
+       if not (List.for_all (fst <+> F.same_shape v) vs) then begin
+         Format.printf "DUPLICATE BINDINGS for %s \n%a" 
+         (Path.unique_name k) (Misc.pprint_many true "\n" pprint_tb) vs;
+         assertf "ERROR: FUPLICATE BINDING"
+       end
   end
 
 let env_of_cs cs =
