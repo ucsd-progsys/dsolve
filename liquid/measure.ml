@@ -139,10 +139,13 @@ let transl_pred names =
 let transl_frame names f =
   F.map_refexprs (rewrite_refexpr (transl_pred names)) f
 
+let qualpat_map_predpat f q =
+  {q with Parsetree.pqual_pat_desc = Misc.app_thd3 f q.Parsetree.pqual_pat_desc}
+
 let transl_qualpat names =
   (Common.l_to_s <+> Common.sub_from_list names <+> Common.s_to_l)
   |> Qd.pat_map_funs
-  |> Qualmod.qualpat_map_predpat 
+  |> qualpat_map_predpat 
 
 let pprint_menv ppf menv =
   List.iter (function | Mname(a,b) -> fprintf ppf "@[Name:@ (%s,@ %s)@]@." a b

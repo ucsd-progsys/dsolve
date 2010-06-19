@@ -77,6 +77,7 @@ and origin =
   | Cstr of labeled_constraint
 
 type refinement_constraint =
+  (*| FixRef of FixConstraint.t *) 
   | SubRef of F.refinement Le.t * guard_t * F.refinement * F.simple_refinement * (subref_id option)
   | WFRef of F.t Le.t * F.simple_refinement * (subref_id option)
 
@@ -381,10 +382,11 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
 
 let split cs =
   assert (List.for_all (fun c -> None <> c.lc_id) cs);
-  Misc.expand (fun c -> 
+  Misc.expand begin fun c -> 
       match c.lc_cstr with 
       | SubFrame _ -> split_sub c 
-      | WFFrame _  -> split_wf c) cs []
+      | WFFrame _  -> split_wf c
+  end cs []
 
 (**************************************************************)
 (********************* Constraint Indexing ********************) 
@@ -929,7 +931,7 @@ let checkenv_of_cs cs =
       Le.add k ((v,c.lc_id)::vs) env
     end (frame_env c.lc_cstr) env
   end Le.empty cs
-  |> Le.iter begin fun k (((v,_)::_) as vs) ->
+  |> Le.iter begin fun k vs -> match vs with [] -> () | (v,_)::_ ->
        if not (List.for_all (fst <+> F.same_shape v) vs) then begin
          Format.printf "DUPLICATE BINDINGS for %s \n%a" 
          (Path.unique_name k) (Misc.pprint_many true "\n" pprint_tb) vs;

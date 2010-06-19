@@ -49,17 +49,15 @@ TYPING=typing/unused_var.cmo typing/ident.cmo typing/path.cmo \
   typing/qualgen.cmo \
   typing/typemod.cmo
 
-LIQUID=liquid/qualmod.cmo liquid/liqenv.cmo \
-  liquid/qualifier.cmo liquid/pattern.cmo liquid/frame.cmo \
-	liquid/qualdecl.cmo \
-  liquid/builtins.cmo liquid/message.cmo \
-  liquid/theoremProverZ3.cmo liquid/theoremProver.cmo liquid/wellformed.cmo \
-  liquid/constraint.cmo liquid/predglue.cmo \
-	liquid/consglue.cmo \
-	liquid/measure.cmo liquid/qualifymod.cmo \
-  liquid/qdebug.cmo liquid/normalize.cmo \
-  liquid/qdump.cmo liquid/liqerrors.cmo \
-	liquid/mlqmod.cmo liquid/liquid.cmo
+LIQUID=liquid/liqenv.cmo liquid/qualifier.cmo liquid/pattern.cmo \
+       liquid/frame.cmo liquid/qualdecl.cmo liquid/builtins.cmo \
+       liquid/message.cmo liquid/theoremProverZ3.cmo \
+       liquid/theoremProver.cmo liquid/wellformed.cmo \
+       liquid/constraint.cmo liquid/predglue.cmo \
+       liquid/consglue.cmo liquid/measure.cmo liquid/qualifymod.cmo \
+       liquid/qdebug.cmo liquid/normalize.cmo \
+       liquid/qdump.cmo liquid/liqerrors.cmo \
+       liquid/mlqmod.cmo liquid/liquid.cmo
 
 LIQOBJS=$(UTILS) $(PARSING) $(TYPING) $(LIQUID)
 
