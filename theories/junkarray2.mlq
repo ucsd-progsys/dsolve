@@ -1,0 +1,10 @@
+val length	: a:t -> {v: int | 0 <= v && v = a}
+val set		: a:t -> y:{y: int | 0 <= y && y < a} -> 'a -> unit
+val get		: a:t -> y:{y: int | 0 <= y && y < a} -> 'a
+val unsafe_set	: a:t -> y:{y: int | 0 <= y && y < a} -> 'a -> unit
+val unsafe_get	: a:t -> y:{y: int | 0 <= y && y < a} -> 'a
+val make	: n:{n: int | 0 <= n } -> 'a -> {a: t | a = n}
+val create	: n:{n: int | 0 <= n } -> 'a -> {a: t | a = n}
+val init	: n:{n: int | 0 <= n } -> (i: {i: int | 0 <= i && i < n} -> 'a) -> {a:t | a = n}
+val copy	: a:t -> {b:t | a = b}
+val map		: ('a -> 'b) -> a:t -> {b:t | a = b}
