@@ -77,7 +77,7 @@ and origin =
   | Cstr of labeled_constraint
 
 type refinement_constraint =
-  (*| FixRef of FixConstraint.t *) 
+  | FixRef of FixConstraint.t
   | SubRef of F.refinement Le.t * guard_t * F.refinement * F.simple_refinement * (subref_id option)
   | WFRef of F.t Le.t * F.simple_refinement * (subref_id option)
 
@@ -191,8 +191,7 @@ let pprint_io ppf = function
   | Some id -> fprintf ppf "(%d)" id
   | None    -> fprintf ppf "()"
 
-let pprint_ref so ppf = 
-  function
+let pprint_ref so ppf = function
   | SubRef (renv,g,r1,sr2,io) ->
       let renv = F.prune_background renv in
       fprintf ppf "@[%a@ Env:@ @[%a@];@;<1 2>Guard:@ %a@\n|-@;<1 2>%a@;<1 2><:@;<1 2>%a@]"
@@ -204,6 +203,9 @@ let pprint_ref so ppf =
       C.fcprintf ppf C.ol_dump_wfs "@[%a@ Env:@ @[%a@];@\n|-@;<1 2>%a@;<1 2>@]"
       pprint_io io (pprint_fenv_pred so) env 
       F.pprint_refinement (F.ref_of_simple sr)
+  | FixRef _ ->
+      assertf "pprint_ref: FixRef"
+
 
 let pprint_orig ppf = function
   | Loc l -> fprintf ppf "Loc@ %a" Location.print l
@@ -421,8 +423,10 @@ let get_ref_rank sri c =
 let get_ref_constraint sri i = 
   Misc.do_catch "ERROR: get_constraint" (SIM.find i) sri.cnst
 
-let lhs_ks = function WFRef _ -> assert false | SubRef (env,_,r,_,_) ->
-  Le.fold (fun _ f l -> F.refinement_qvars f @ l) env (F.refinement_qvars r)
+let lhs_ks = function 
+  | SubRef (env,_,r,_,_) -> 
+      Le.fold (fun _ f l -> F.refinement_qvars f @ l) env (F.refinement_qvars r)
+  | _ -> assertf "lhs_ks"  
 
 let rhs_k = function
   | SubRef (_,_,_,(_, F.Qvar k),_) -> Some k
@@ -454,10 +458,10 @@ let make_rank_map om cm =
   let upd id vm k = VM.add k (id::(get vm k)) vm in
   let km = 
     BS.time "step 1"
-    (SIM.fold 
-      (fun id c vm -> match c with WFRef _ -> vm 
-        | SubRef _ -> List.fold_left (upd id) vm (lhs_ks c))
-      cm) VM.empty in
+    (SIM.fold begin fun id c vm -> match c with 
+        | SubRef _ -> List.fold_left (upd id) vm (lhs_ks c) 
+        | _        -> vm 
+     end cm) VM.empty in
   let (dm,deps) = 
     BS.time "step 2"
     (SIM.fold
@@ -647,12 +651,14 @@ let refine_tp senv s env g r1 sub2s k2 =
       match x2 with [] -> x1 | _ -> x1 @ (check_tp senv lhs_ps x2) in
   refine_sol_update s k2 rhs_qps (List.map fst rhs_qps') 
 
+let refine_stat = function
+  | SubRef _ -> incr stat_sub_refines 
+  | WFRef _  -> incr stat_wf_refines
+  | _        -> assertf "refine_stat"
+
 let refine sri s c =
-  (incr stat_refines;
-   match c with 
-   | SubRef _ -> incr stat_sub_refines 
-   | WFRef _ -> incr stat_wf_refines); 
-  let sm = solution_map s in
+ let _  = incr stat_refines; refine_stat c in
+ let sm = solution_map s in
   match c with
   | SubRef (_, _, r1, ([], F.Qvar k2), _)
     when is_simple_constraint c && not (!Cf.no_simple || !Cf.verify_simple) ->
@@ -725,8 +731,10 @@ let instantiate_quals_in_env tr mlenv consts qs =
                 | None -> ()) in
             quoi := Some qs; qs)
 
-let constraint_env (_, c) =
-  match c with | SubRef (_, _, _, _, _) -> Le.empty | WFRef (e, _, _) -> e
+let constraint_env = function
+  | _, SubRef (_, _, _, _, _) -> Le.empty
+  | _, WFRef (e,_,_)          -> e
+  | _, FixRef _               -> assertf "constraint_env: FIXREF"
 
 (* Make copies of all the qualifiers where the free identifiers are replaced
    by the appropriate bound identifiers from all environments. *)

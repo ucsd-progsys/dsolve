@@ -39,8 +39,9 @@ type frame_constraint =
   | WFFrame of Frame.t Liqenv.t * Frame.t
 
 type refinement_constraint =
-  | SubRef of Frame.refinement (* F.t *) Liqenv.t * guard_t * Frame.refinement * Frame.simple_refinement * (subref_id option)
-  | WFRef of Frame.t Liqenv.t * Frame.simple_refinement * (subref_id option)
+  | FixRef of FixConstraint.t
+  | SubRef of Frame.refinement Liqenv.t * guard_t * Frame.refinement * Frame.simple_refinement * (subref_id option)
+  | WFRef  of Frame.t Liqenv.t * Frame.simple_refinement * (subref_id option)
 
 type labeled_constraint = {
   lc_cstr: frame_constraint;
