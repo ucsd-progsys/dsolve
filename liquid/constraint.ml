@@ -940,7 +940,7 @@ let checkenv_of_cs cs =
   end
 
 let env_of_cs cs =
-  cs >> checkenv_of_cs
+  cs >> (if !Cf.check_dupenv then checkenv_of_cs else ignore)
      |> List.fold_left (fun env (v, c, _) -> Le.combine (frame_env c.lc_cstr) env) Le.empty
 
 let solve_with_solver qs env consts cs solver = 

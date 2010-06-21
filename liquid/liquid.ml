@@ -115,20 +115,24 @@ let load_valfile ppf env fenv fname =
     let kvl = tag :: (List.map f kvl) in
       (env, Liqenv.addn kvl fenv)
   with Not_found -> failwith (Printf.sprintf "builtins: val %s does not correspond to library value" fname)
-    
+   
+let norm_sourcefile x = 
+  if !Clflags.no_anormal && !Clflags.summarize = None then x else
+    try Nm.normalize_structure x with Nm.NormalizationFailure (e, t, m) ->
+      (Format.printf "@[Normalization failed at %a(%s) %a@.@]"
+       Location.print t m Qdebug.pprint_expression e; assert false)
+
 let load_sourcefile ppf env fenv sourcefile =
-  Pparse.file ppf sourcefile Parse.implementation ast_impl_magic_number |>
-  Nm.desugar_forloops |>
-  Nm.eliminate_anys |>
-  (fun x ->
-    if !Clflags.no_anormal && !Clflags.summarize = None then x else
-      try Nm.normalize_structure x with
-       Nm.NormalizationFailure (e, t, m) ->
-         Format.printf "@[Normalization failed at %a(%s) %a@.@]"
-         Location.print t m Qdebug.pprint_expression e; assert false) |>
-  print_if ppf Clflags.dump_parsetree Printast.implementation |>
-  (fun x -> let (str, _, env) = type_implementation env x in
-    (str, env, fenv))
+  Pparse.file ppf sourcefile Parse.implementation ast_impl_magic_number 
+  |> Nm.desugar_forloops 
+  |> Nm.eliminate_anys 
+  |> (fun x -> if !Clflags.no_anormal && !Clflags.summarize = None then x else
+        try Nm.normalize_structure x with Nm.NormalizationFailure (e, t, m) ->
+          Format.printf "@[Normalization failed at %a(%s) %a@.@]"
+          Location.print t m Qdebug.pprint_expression e; assert false) 
+  |> print_if ppf Clflags.dump_parsetree Printast.implementation
+  |> type_implementation env
+  |> (fun (str, _, env) -> (str, env, fenv))
 
 let dump_env env = printf "(Pruned background env)@.%a@." Constraint.pprint_fenv env
 
@@ -234,6 +238,7 @@ let main () =
      "-fix", Arg.Set use_fixpoint, "use fixpoint solver to solve constraints";
      "-print-nontriv", Arg.Set Constants.print_nontriv, "print non-trivial bindings in each environment [false] (use with -fix)";
      "-no-simplify-t", Arg.Clear Constants.simplify_t, "do not simplify constraints (use with -fix)";
+     "-check-dupenv", Arg.Set Clflags.check_dupenv, "check for duplicate bindings in envs (use with -fix)";
      
      "-dontminemlq", Arg.Set dont_mine_mlq_preds, "don't mine qualifiers from mlq files";
      "-dontgenmlq", Arg.Set dont_gen_mlq_preds, "don't generalize qualifiers mined from mlq files";

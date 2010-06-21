@@ -25,7 +25,8 @@ OPTCOMPFLAGS=-warn-error A -nostdlib -g
 CAMLDEP=../boot/ocamlrun ../tools/ocamldep
 
 OBJS=dsolve.cmi hash2.cmi myhash.cmi mymap2.cmi myset.cmi store2.cmi \
-deparray.cmi myaset.cmi mylist.cmi mymap.cmi mystore.cmi store.cmi
+     deparray.cmi myaset.cmi mylist.cmi mymap.cmi mystore.cmi store.cmi \
+     junkarray.cmi junkarray2.cmi
 
 .PHONY: all
 all: $(OBJS)
