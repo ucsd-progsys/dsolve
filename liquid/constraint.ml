@@ -302,24 +302,13 @@ let rec split_sub_params c tenv env g ps1 ps2 = match ps1, ps2 with
   | ([], [])    -> []
   | _           -> assertf "split_sub_params"
 
-
-
-
-
-let bind_tags_pr po f cs r env =
-  let is_recvar = function 
-    | (Some p, F.Frec (p', _, _, _)) when p' = p -> true | _ -> false 
-  in
-  match F.find_tag r with 
-  | None     -> (env, None)
-  | Some tag -> F.constrs_tag_params tag cs 
-  (* HEREHEREHEREHERE -- fix UGLINESS *)
-                |> List.map (fun (a,b,_) -> (Co.i2p a, if is_recvar (po, b) then f else b))
-                |> Misc.flip Le.addn env 
-                |> (fun env' -> env', Some tag)
-
-let bind_tags po f cs r env = 
-  fst (bind_tags_pr po f cs r env)
+let bind_tags po f cs r env =
+  let is_recvar = function (Some p, F.Frec (p',_,_,_)) -> p' = p | _ -> false in
+  match F.find_tag r with None -> (env, None) | Some tag -> 
+    F.constrs_tag_params tag cs 
+    |> List.map (fun (a,b,_) -> (Co.i2p a, if is_recvar (po, b) then f else b))
+    |> Misc.flip Le.addn env 
+    |> (fun env' -> env', Some tag)
 
 let sum_subs bs cs tag =
   let paths xs = match tag with
@@ -335,47 +324,45 @@ let split_arrow env g c (x1, f1, f1') (x2, f2, f2') =
   (lequate_cs env g c F.Covariant f2 f1 @ lequate_cs env' g c F.Covariant f1' f2', [])
 
 let split_sum env tenv g c f1 (cs1, r1) (cs2, r2) = 
-  let penv, tag = bind_tags_pr None f1 cs1 r1 env in
+  let penv, tag = bind_tags None f1 cs1 r1 env in
   let subs      = sum_subs cs1 cs2 tag in
   let ps1, ps2  = Misc.map_pair (List.map F.constr_params) (cs1, cs2) in
   let cs        = Misc.flap2 (split_sub_params c tenv env g) ps1 ps2 in
   let rs        = List.map (F.refexpr_apply_subs subs) r2 |> split_sub_ref c penv g r1 in
   cs, rs
 
+let split_inductive env g c = 
+  Misc.map_pair F.unfold_with_shape 
+  <+> Misc.uncurry (lequate_cs env g c F.Covariant)
+  <+> (fun x -> x, [])
+
+let split_abstract env tenv g c (f1, f2) (id1, id2) = 
+  let f2 = F.apply_subs [(Path.Pident id2, P.Var (Path.Pident id1))] f2 in
+  (* an extra sub will be applied at the toplevel refinement, but OK *)
+  match f1, f2 with 
+  | F.Fabstract (_,ps1,id1,r1), F.Fabstract (_,ps2,_,r2) ->
+    (split_sub_params c tenv (Le.add (Path.Pident id1) f1 env) g ps1 ps2, 
+     split_sub_ref c env g r1 r2)
+  | _ -> assertf "split_abstract" 
+
 let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubFrame (env,g,f1,f2); lc_tenv = tenv} as c ->
   match (f1, f2) with
-  | (f1, f2) when F.is_shape f1 && F.is_shape f2 ->
+  | (_, _) when F.is_shape f1 && F.is_shape f2 ->
       ([], [])
-  | (f1, f2) when f1 = f2 ->
+  | (_, _) when f1 = f2 ->
+      ([], [])
+  | (F.Frec _, F.Frec _) ->
       ([], [])
   | (F.Farrow (x1, f1, f1'), F.Farrow (x2, f2, f2')) ->
       split_arrow env g c (x1, f1, f1') (x2, f2, f2')
   | (F.Fvar (_, _, s, r1), F.Fvar (_, _, s', r2)) ->
       ([], split_sub_ref c env g r1 r2)
-  | (F.Frec _, F.Frec _) ->
-      ([], [])
   | (F.Fsum (_, cs1, r1), F.Fsum (_, cs2, r2)) ->
      split_sum env tenv g c f1 (cs1, r1) (cs2, r2)
-(*
-      let penv, tag = bind_tags_pr None f1 cs1 r1 env in
-      let subs      = sum_subs cs1 cs2 tag in
-      let cs        = (cs1, cs2) 
-                      |> Misc.map_pair (List.map F.constr_params) 
-                      |> (fun (ps1, ps2) -> Misc.flap2 (split_sub_params c tenv env g) ps1 ps2)
-      in
-      let rs        = List.map (F.refexpr_apply_subs subs) r2 
-                      |> split_sub_ref c penv g r1 in
-      (cs, rs) *)
-  | (F.Finductive (_, ps1, _, _, _), F.Finductive (_, ps2, _, _, _)) ->
-      (lequate_cs env g c F.Covariant (F.unfold_with_shape f1) (F.unfold_with_shape f2), [])
-  | (F.Fabstract(_, ps1, id1, r1), F.Fabstract(_, ps2, id2, r2)) ->
-      let f2 = F.apply_subs [(Path.Pident id2, P.Var (Path.Pident id1))] f2 in (* an extra sub will be applied at the
-                                                                                * toplevel refinement, but OK *)
-      begin match f2 with
-        F.Fabstract(_, ps2, id2, r2) ->
-          (split_sub_params c tenv (Le.add (Path.Pident id1) f1 env) g ps1 ps2, 
-          split_sub_ref c env g r1 r2)
-        | _ -> assert false end
+  | (F.Finductive (_, _, _, _, _), F.Finductive (_, _, _, _, _)) ->
+      split_inductive env g c (f1, f2)
+  | (F.Fabstract(_,_,id1,_), F.Fabstract (_,_,id2,_)) ->
+      split_abstract env tenv g c (f1,f2) (id1,id2)
   | (_,_) -> 
       (printf "@[Can't@ split:@ %a@ <:@ %a@]" F.pprint f1 F.pprint f2; 
        assert false)
@@ -400,7 +387,7 @@ let split_wf = function {lc_cstr = SubFrame _} -> assert false | {lc_cstr = WFFr
       (make_wff c tenv env (F.wf_unfold f) :: (ps |> F.params_frames |>: make_wff c tenv env), [])
   | F.Fsum (_, cs, r) ->
      (Misc.flap (split_wf_params c tenv env <.> F.constr_params) cs,
-      split_wf_ref f c (bind_tags None f cs r env) r)
+      split_wf_ref f c (fst (bind_tags None f cs r env)) r)
   | F.Fabstract (_, ps, id, r) ->
       (split_wf_params c tenv (Le.add (Path.Pident id) f env) ps, split_wf_ref f c env r)
   | F.Farrow (x, f, f') ->
