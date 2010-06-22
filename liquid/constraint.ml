@@ -262,27 +262,15 @@ let subst_to lfrom lto = match (lfrom, lto) with
   | _ -> []
 
 let frame_env = function
-    SubFrame(env, _, _, _) -> env
+  | SubFrame(env, _, _, _) -> env
   | WFFrame(env, _) -> env
 
-let make_val_env vf env = function
-    SubFrame(_, g, f, f') -> SubFrame(Le.add qual_test_var vf env, g, f, f') 
-  | c -> c 
-
-let patch_env env = function
-    SubFrame(env', g, f, f') -> SubFrame(Le.combine env' env, g, f, f') | c -> c
-
-let set_env env = function
-    SubFrame(_, g, f, f') -> SubFrame(env, g, f, f') | c -> c
-
-let set_labeled_constraint c f =
-  {lc_cstr = f c.lc_cstr; lc_tenv = c.lc_tenv;
-   lc_orig = c.lc_orig; lc_id = c.lc_id}
-
-let set_labeled_constraint_env c env = set_labeled_constraint c (set_env env)
+let set_constraint_env c env = 
+  let c' = match c.lc_cstr with SubFrame(_,g,f,f') -> SubFrame(env, g, f, f') | x -> x in
+  {c with lc_cstr = c'}
 
 let split_sub_ref c env g r1 r2 =
-  let c = set_labeled_constraint_env c env in
+  let c = set_constraint_env c env in
   let v = match c.lc_cstr with SubFrame(_ , _, f, _) -> f | _ -> assert false in
   sref_map (fun sr -> (v, c, SubRef(env_to_refenv env, g, r1, sr, None))) r2
 
@@ -310,13 +298,15 @@ let bind_tags po f cs r env =
     |> Misc.flip Le.addn env 
     |> (fun env' -> env', Some tag)
 
-let sum_subs bs cs tag =
-  let paths xs = match tag with
-      Some tag -> List.map Co.i2p (F.params_ids (F.constrs_tag_params tag xs))
-    | None -> [] in
-  let mk_sub p1 p2 = (p1, P.Var p2) in
-  let (ps, qs) = (paths bs, paths cs) in
-    List.map2 mk_sub ps qs
+let sum_subs = function None -> (fun _ -> []) | Some tag -> 
+  (F.constrs_tag_params tag <+> F.params_ids <+> List.map Co.i2p)
+  |> Misc.map_pair
+  <+> Misc.uncurry (List.map2 (fun p1 p2 -> (p1, P.Var p2)))
+
+let sum_subs = function None -> (fun _ -> []) | Some tag -> 
+  (F.constrs_tag_params tag <+> F.params_ids <+> List.map Co.i2p)
+  |> Misc.map_pair
+  <+> Misc.uncurry (List.map2 (fun p1 p2 -> (p1, P.Var p2)))
 
 let split_arrow env g c (x1, f1, f1') (x2, f2, f2') = 
   let f1'  = if Ident.same x1 x2 then f1' else F.apply_subs [(Co.i2p x1, P.Var (Co.i2p x2))] f1' in
@@ -325,7 +315,7 @@ let split_arrow env g c (x1, f1, f1') (x2, f2, f2') =
 
 let split_sum env tenv g c f1 (cs1, r1) (cs2, r2) = 
   let penv, tag = bind_tags None f1 cs1 r1 env in
-  let subs      = sum_subs cs1 cs2 tag in
+  let subs      = sum_subs tag (cs1, cs2) in
   let ps1, ps2  = Misc.map_pair (List.map F.constr_params) (cs1, cs2) in
   let cs        = Misc.flap2 (split_sub_params c tenv env g) ps1 ps2 in
   let rs        = List.map (F.refexpr_apply_subs subs) r2 |> split_sub_ref c penv g r1 in
@@ -368,7 +358,7 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
        assert false)
 
 let split_wf_ref f c env r =
-  let c = set_labeled_constraint_env c env in
+  let c = set_constraint_env c env in
   sref_map (fun sr -> (f, c, WFRef(Le.add qual_test_var f env, sr, None))) r
 
 let make_wff c tenv env f =
@@ -937,7 +927,7 @@ let test_sol sri s =
     |> (fun xs -> (solution_map s, xs))
 
 let dsolver max_env cs s =
-  let sri = cs |> List.map (fun (v, c, cstr) -> (set_labeled_constraint c (make_val_env v max_env), cstr))
+  let sri = cs |> List.map (fun (v, c, cstr) -> (set_constraint_env c (Le.add qual_test_var v max_env), cstr))
                |> make_ref_index in
   let w   = make_initial_worklist sri in
   let _   = BS.time "solving sub" (solve_sub sri s) w in
@@ -972,7 +962,7 @@ let solve_with_solver qs env consts cs solver =
   let cs = BS.time "splitting constraints" split cs in
   let max_env = env_of_cs cs in
   let _ = C.cprintf C.ol_insane "===@.Maximum@ Environment@.@.%a@.@." (pprint_raw_fenv true) max_env in
-  let lcs = List.map (fun (v, c, cstr) -> (set_labeled_constraint c (make_val_env v max_env), cstr)) cs in
+  let lcs = List.map (fun (v, c, cstr) -> ( set_constraint_env c (Le.add qual_test_var v max_env), cstr)) cs in
   let qs = BS.time "instantiating quals" (instantiate_per_environment env consts lcs) qs in
   let qs = BS.time "filter quals"         filter_quals qs in
   let _ = if C.ck_olev C.ol_solve then
