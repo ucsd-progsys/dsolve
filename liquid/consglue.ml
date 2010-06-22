@@ -151,8 +151,9 @@ let f_of_dsubcon vvt fmax_envt = function
     Some (Cf.make_t (f_of_drenvt renvt fmax_envt) gd r1 r2 id [])
   | _ -> None
 
-let f_of_dsubcons fmax_envt cons =
-  Misc.maybe_list (List.map (fun (vvt, _, con) -> f_of_dsubcon vvt fmax_envt con) cons)
+let f_of_dsubcons fmax_envt cs =
+  cs |> List.map (fun (vvt, _, c) -> f_of_dsubcon vvt fmax_envt c)
+     |> Misc.maybe_list
 
 let f_of_dwfcon vvt = function
   | Cd.WFRef  (envt, r, id) -> 
@@ -184,7 +185,8 @@ let solver fname max_env cs soln =
   (* translate to fixpoint *)
   let fmax_env = inject_tag (f_of_denvt max_env) in
   let fsort_max_env = Sy.SMap.map fsort_of_reft fmax_env in
-  let fcs = f_of_dsubcons fmax_env cs in
+  (* let fcs  = f_of_dsubcons fmax_env cs in *)
+  let fcs  = List.map (function (_,_,Cd.FixRef c) -> c | _ ->assertf "Cg.solver") cs in
   let fwfs = f_of_dwfcons cs in
   let soln = f_of_dsoln soln in
   let _ = Format.printf "@[InitSoln:@\n%a@]" FixConstraint.print_soln soln in
