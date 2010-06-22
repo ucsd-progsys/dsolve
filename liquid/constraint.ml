@@ -270,11 +270,17 @@ let set_constraint_env c env =
   let c' = match c.lc_cstr with SubFrame(_,g,f,f') -> SubFrame(env, g, f, f') | x -> x in
   {c with lc_cstr = c'}
 
+(* HEREHEREHEREHERE: convert to FixConstraint.t *)
+let make_t env g r1 sr : FixConstraint.t = failwith "TBD make_t"
+
 let split_sub_ref c env g r1 r2 =
   let c = set_constraint_env c env in
   let v = match c.lc_cstr with SubFrame(_ , _, f, _) -> f | _ -> assert false in
-  (* HEREHEREHEREHERE: convert to FixConstraint.t *)
-  sref_map (fun sr -> (v, c, SubRef(env_to_refenv env, g, r1, sr, None))) r2
+  if !Clflags.use_fixpoint then 
+    sref_map (fun sr -> (v, c, FixRef (make_t env g r1 sr))) r2
+  else
+    sref_map (fun sr -> (v, c, SubRef(env_to_refenv env, g, r1, sr, None))) r2
+
 
 let params_apply_substitutions subs ps =
   List.map (fun (i, f, v) -> (i, F.apply_subs subs f, v)) ps

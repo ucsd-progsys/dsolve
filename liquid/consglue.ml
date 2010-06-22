@@ -181,10 +181,11 @@ let d_of_fsoln soln =
 
 (****************************************************************)
 
+
 let solver fname max_env cs soln =
   (* translate to fixpoint *)
-  let fmax_env = inject_tag (f_of_denvt max_env) in
-  let fsort_max_env = Sy.SMap.map fsort_of_reft fmax_env in
+  (* let fmax_env     = inject_tag (f_of_denvt max_env) in *)
+  let fsort_max_env = max_env |> f_of_denvt |> inject_tag |> Sy.SMap.map fsort_of_reft in
   (* let fcs  = f_of_dsubcons fmax_env cs in *)
   let fcs  = List.map (function (_,_,Cd.FixRef c) -> c | _ ->assertf "Cg.solver") cs in
   let fwfs = f_of_dwfcons cs in
