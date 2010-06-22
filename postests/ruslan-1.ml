@@ -3,11 +3,10 @@ let rec mlength l =
     | [] -> 0
     | _ :: t -> 1 + mlength t
 
-let test2 l2_1 x =
+let test2 l2_1 =
   match l2_1 with
     | [] ->
         assert (0 = (mlength l2_1) * (mlength l2_1));
-        assert (0 = (mlength l2_1) * (mlength l2_1));
-        0
-    | h :: t ->
-        0
+        assert (0 = (mlength l2_1) * (mlength l2_1))
+    | h :: t -> ()
+
