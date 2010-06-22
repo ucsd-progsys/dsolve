@@ -21,35 +21,33 @@
  *
  *)
 
-open Format
-open Wellformed
-open Misc.Ops
 
-module Co = Common
 module BS = Bstats
 module JS = Mystats
 module C = Constants
-module F = Frame
-module Le = Liqenv
-module Pat = Pattern
-module P = Predicate
 module T = Types
 module TT = Typedtree
 module TP = TheoremProver
 module B = Builtins
 module Q = Qualifier
-module VM = Misc.IntMap
+module IM = Misc.IntMap
 module Cf = Clflags
 
 module QSet = Set.Make(Q)
 module NSet = Set.Make(String)
-module Sol = Hashtbl.Make(struct
+
+(*module Sol = Hashtbl.Make(struct
                             type t    = F.qvar
                             let hash  = Hashtbl.hash
                             let equal = (=)
                           end)
+*)
+open Format
+open Wellformed
+open Misc.Ops
+open Consdef
 
-
+(*
 (**************************************************************)
 (**************** Type definitions: Constraints ***************) 
 (**************************************************************)
@@ -83,9 +81,8 @@ type refinement_constraint =
   | SubRef of F.refinement Le.t * guard_t * F.refinement * F.simple_refinement * (subref_id option)
   | WFRef of F.t Le.t * F.simple_refinement * (subref_id option)
 
-
 (**************************************************************)
-(********************** Miscutil. Constants *******************)
+(***************** Misc. Constants / Accessors ****************)
 (**************************************************************)
 
 let fresh_fc_id = 
@@ -127,9 +124,25 @@ let sref_map f r =
   let (qconsts, qvars) = F.ref_to_simples r in 
   List.map f (qconsts @ qvars)
 
+let guard_predicate () g = 
+  g |> List.map (fun (v,b) -> (P.(?.) (P.Var v), b))
+    |> List.map (fun (p,b) -> if b then p else P.Not p)
+    |> P.big_and
+
+let refinement_preds sm qexpr r =
+  F.refinement_conjuncts sm qexpr r
+
+let environment_preds sm env = 
+  List.flatten (Le.maplist (fun v r -> refinement_preds sm (P.Var v) r) env)
+
+let sol_of_solmap (soln: Qualifier.t list IM.t) =
+  Sol.create 108 >> (fun s -> IM.iter (fun k qs -> Sol.replace s k qs) soln)
+*)
+
 (**************************************************************)
 (**************************** Stats ***************************)
 (**************************************************************)
+
 let stat_unsat_lhs      = ref 0
 let stat_wf_refines     = ref 0
 let stat_sub_refines    = ref 0
@@ -139,22 +152,10 @@ let stat_imp_queries    = ref 0
 let stat_valid_queries  = ref 0
 let stat_matches        = ref 0
 let stat_tp_refines     = ref 0
+
 (**************************************************************)
 (********************** Pretty Printing ***********************)
 (**************************************************************)
-
-let guard_predicate () g = 
-  P.big_and 
-    (List.map 
-      (fun (v,b) -> let p = P.(?.) (P.Var v) in 
-         if b then p else P.Not p) 
-      g)
-
-let refinement_preds sm qexpr r =
-  F.refinement_conjuncts sm qexpr r
-
-let environment_preds sm env = 
-  List.flatten (Le.maplist (fun v r -> refinement_preds sm (P.Var v) r) env)
 
 let pprint_local_binding f ppf = function
   | (Path.Pident _ as k, v) -> 
@@ -209,7 +210,6 @@ let pprint_ref so ppf = function
   | _ ->
       assertf "pprint_ref: FixRef/WF"
 
-
 let pprint_orig ppf = function
   | Loc l -> fprintf ppf "Loc@ %a" Location.print l
   | Assert l -> fprintf ppf "Assert@ %a" Location.print l
@@ -258,7 +258,7 @@ let lequate_cs env g c variance f1 f2 = match variance with
   | F.Contravariant -> [make_lc c (SubFrame(env,g,f2,f1))]
 
 let subst_to lfrom lto = match (lfrom, lto) with
-  | (pfrom, pto) when not (Pat.same pfrom pto) -> Pat.substitution pfrom pto
+  | (pfrom, pto) when not (Pattern.same pfrom pto) -> Pattern.substitution pfrom pto
   | _ -> []
 
 let frame_env = function
@@ -458,14 +458,14 @@ let print_scc_edge rm (u,v) =
   C.cprintf C.ol_refine "@[SCC@ edge@ %d@ (%s)@ %d@ ====> %d@\n@]" scc_v tag u v
 
 let make_rank_map om cm =
-  let get vm k = try VM.find k vm with Not_found -> [] in
-  let upd id vm k = VM.add k (id::(get vm k)) vm in
+  let get vm k = try IM.find k vm with Not_found -> [] in
+  let upd id vm k = IM.add k (id::(get vm k)) vm in
   let km = 
     BS.time "step 1"
     (SIM.fold begin fun id c vm -> match c with 
         | SubRef _ -> List.fold_left (upd id) vm (lhs_ks c) 
         | _        -> vm 
-     end cm) VM.empty in
+     end cm) IM.empty in
   let (dm,deps) = 
     BS.time "step 2"
     (SIM.fold
@@ -799,11 +799,6 @@ let make_initial_solution cs =
             if Hashtbl.mem srhs k || (Hashtbl.mem slhs k && Sol.find s k != []) then BS.time "app_sol" (app_sol s s' l) k qs else Sol.replace s k [] | _ -> ()) cs in
   let l = BS.time "sort and compact" Misc.sort_and_compact !l in
   let _ = BS.time "elements" (List.iter (fun k -> Sol.replace s k (QSet.elements (Sol.find s' k)))) l in
-  s
-
-let sol_of_solmap (soln: Qualifier.t list VM.t) =
-  let s = Sol.create 108 in
-  VM.iter (fun k qs -> Sol.replace s k qs) soln;
   s
 
 (**************************************************************)

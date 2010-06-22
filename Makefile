@@ -53,7 +53,7 @@ LIQUID=liquid/liqenv.cmo liquid/qualifier.cmo liquid/pattern.cmo \
        liquid/frame.cmo liquid/qualdecl.cmo liquid/builtins.cmo \
        liquid/message.cmo liquid/theoremProverZ3.cmo \
        liquid/theoremProver.cmo liquid/wellformed.cmo \
-       liquid/constraint.cmo liquid/predglue.cmo \
+       liquid/consdef.cmo liquid/constraint.cmo liquid/predglue.cmo \
        liquid/consglue.cmo liquid/measure.cmo liquid/qualifymod.cmo \
        liquid/qdebug.cmo liquid/normalize.cmo \
        liquid/qdump.cmo liquid/liqerrors.cmo \

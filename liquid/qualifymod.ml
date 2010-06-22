@@ -26,7 +26,7 @@ open Typedtree
 open Parsetree
 open Btype
 open Types
-open Constraint
+open Consdef
 open Longident
 open Location
 open Format
@@ -494,8 +494,8 @@ let qualify_implementation sourcefile fenv' ifenv env qs consts str =
   let cs         = List.rev_append nrcs cs in
   let cs         = (List.map (lbl_dummy_cstr env) (Le.maplistfilter (maybe_cstr_from_unlabel_frame fenv) ifenv)) @ cs in
   let _          = pre_solve sourcefile in
-  let solver     = if !Clflags.use_fixpoint then Consglue.solver sourcefile else dsolver in
-  let (s, cs)    = solve_with_solver qs env consts cs solver in
+  let solver     = if !Clflags.use_fixpoint then Consglue.solver sourcefile else Constraint.dsolver in
+  let (s, cs)    = Constraint.solve_with_solver qs env consts cs solver in
   let _          = post_solve () in
   let flog       = if !Clflags.raw_frames then !flog else framemap_apply_solution s !flog in
   let _          = dump_frames sourcefile flog in
