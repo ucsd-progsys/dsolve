@@ -33,20 +33,21 @@ module Q = Qualifier
 module IM = Misc.IntMap
 module Cf = Clflags
 
+module Co  = Common
+module P   = Predicate
+module F   = Frame
+module Le  = Liqenv
+
 module QSet = Set.Make(Q)
 module NSet = Set.Make(String)
 
-(*module Sol = Hashtbl.Make(struct
-                            type t    = F.qvar
-                            let hash  = Hashtbl.hash
-                            let equal = (=)
-                          end)
-*)
+
 open Format
 open Wellformed
 open Misc.Ops
 open Consdef
 
+module SIM = Map.Make(struct type t = subref_id let compare = compare end)
 (*
 (**************************************************************)
 (**************** Type definitions: Constraints ***************) 

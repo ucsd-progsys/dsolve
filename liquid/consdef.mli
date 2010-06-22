@@ -21,15 +21,10 @@
  *
  *)
 
-module Sol :
-  sig
-    type 'a t
-    type key = Frame.qvar
-    val find : 'a t -> key -> 'a
-    val fold : (key -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b
-  end
+module Sol : Hashtbl.S with type key = Frame.qvar
 
-type fc_id
+type fc_id = int option
+
 type subref_id = int
 
 type guard_t = (Path.t * bool) list
@@ -57,7 +52,18 @@ and origin =
 
 val fresh_fc_id : unit -> fc_id 
 val sol_of_solmap: Qualifier.t list Misc.IntMap.t -> Qualifier.t list Sol.t
+val solution_map: 'a Sol.t -> Frame.qvar -> 'a 
 val guard_predicate: unit -> guard_t -> Predicate.t
 val environment_preds: (Frame.qvar -> Qualifier.t list) -> Frame.refinement Liqenv.t -> Predicate.t list
 val refinement_preds: (Frame.qvar -> Qualifier.t list) -> Predicate.pexpr -> Frame.refinement -> Predicate.t list
+val sref_map: (Frame.simple_refinement -> 'a) -> Frame.refinement -> 'a list
 
+val qual_test_var: Path.t
+val qual_test_expr: Predicate.pexpr
+val is_simple_constraint: refinement_constraint -> bool
+val is_simple_constraint2: refinement_constraint -> bool
+
+val is_subref_constraint: refinement_constraint -> bool
+val is_wfref_constraint: refinement_constraint -> bool
+val is_subframe_constraint: frame_constraint -> bool
+val is_wfframe_constraint: frame_constraint -> bool

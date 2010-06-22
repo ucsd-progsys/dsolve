@@ -43,7 +43,6 @@ open Misc.Ops
 type fc_id = int option 
 type subref_id = int 
 
-module SIM = Map.Make(struct type t = subref_id let compare = compare end)
 
 type guard_t = (Path.t * bool) list
 
@@ -77,8 +76,10 @@ let fresh_fc_id =
   let r = ref 0 in
   fun () -> incr r; Some (!r)
 
-(* Unique variable to qualify when testing sat, applicability of qualifiers...
+(* Unique variable to qualify when testing sat, 
+ * applicability of qualifiers...
  * this is passed into the solver *)
+
 let qual_test_var = Co.qual_test_var(*Path.mk_ident "AA"*)
 let qual_test_expr = P.Var qual_test_var
 
