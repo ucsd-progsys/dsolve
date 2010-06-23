@@ -227,9 +227,11 @@ let refenv_of_env env =
       | None   -> acc 
   end env Le.empty
 
+  (*
 let env_to_empty_refenv env =
   Le.fold (fun x f acc -> Le.add x [] acc) env Le.empty
-    
+  *)
+
 let simplify_frame gm x f = 
   if not (Le.mem x gm) then f else
     let pos = Le.find x gm in
@@ -274,7 +276,7 @@ let split_sub_ref fr c env g r1 r2 =
   let c = set_constraint_env c env in
   let v = match c.lc_cstr with SubFrame(_ , _, f, _) -> f | _ -> assert false in
   if !Clflags.use_fixpoint then 
-    sref_map (fun sr -> (v, c, FixRef (make_t env g fr r1 sr))) r2
+    sref_map (fun sr -> (v, c, FixRef (Consglue.make_t env g fr r1 sr))) r2
   else
     sref_map (fun sr -> (v, c, SubRef(refenv_of_env env, g, r1, sr, None))) r2
 
@@ -775,7 +777,7 @@ let strip_origins cs = snd (List.split cs)
 
 let formals = ref []
 let is_formal q = List.mem q !formals
-let formals_addn qs = formals := List.rev_append qs !formals
+let formals_addn qs = formals := qs ++ !formals
 
 let filter_wfs cs = List.filter (fun (r, _) -> match r with WFRef(_, _, _) -> true | _ -> false) cs
 let filter_subs cs = List.filter (fun (r, _) -> match r with SubRef(_, _, _, _, _) -> true | _ -> false) cs
@@ -955,7 +957,7 @@ let env_of_cs cs =
   cs >> (if !Cf.check_dupenv then checkenv_of_cs else ignore)
      |> List.fold_left (fun env (v, c, _) -> Le.combine (frame_env c.lc_cstr) env) Le.empty
 
-let solve_with_solver qs env consts cs solver = 
+let solve sourcefile env consts qs cs = 
   let cs = if !Cf.simpguard then List.map simplify_fc cs else cs in
   let _  = dump_constraints cs in
   let _  = dump_unsplit cs in
@@ -979,6 +981,6 @@ let solve_with_solver qs env consts cs solver =
   let _ = C.cprintf C.ol_solve "@[AFTER@ WF@]@." in
   let _ = dump_solving sri s 1 in
   let _ = dump_solution s in
-  let s = solver max_env cs s in
+  let s = if !Clflags.use_fixpoint then Consglue.solver sourcefile cs s else dsolver max_env cs s in
   let _ = dump_solving sri s 2 in
   test_sol sri s

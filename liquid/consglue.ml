@@ -27,7 +27,7 @@ let envt0    = [Pg.sy_of_path P.tag_function, Cf.make_reft vv_tag so_tag []]
                |> List.fold_left (fun env (n, r) -> SM.add n r env) SM.empty
 
 let dvv      = Common.qual_test_var
-let vv       = Sy.value_variable dvv
+let vv       = Pg.sy_of_path dvv
 
 
 (*****************************************************************************)
@@ -72,7 +72,7 @@ let unify_dreft = List.map unify_drefexpr
 (******************************** Refinements ********************************)
 (*****************************************************************************)
 
-let fpred_of_dqual = fun s -> Misc.thd3 <+> P.apply_substs s <+> Pg.f_of_dpred 
+let fpred_of_dqual = fun s -> thd3 <+> P.apply_substs s <+> Pg.f_of_dpred 
 
 let sub_of_dsubs =
   List.rev_map (fun (p, e) -> (Pg.sy_of_path p, Pg.f_of_dexpr e)) <+> Su.of_list
@@ -109,7 +109,7 @@ let reft_of_frame fr =
 (*****************************************************************************)
 
 let envt_of_denv env = 
-  Liqenv.fold begin p fr e ->
+  Liqenv.fold begin fun p fr e ->
     let x = Pg.sy_of_path p  in
     let r = reft_of_frame fr in
     SM.add x r e
@@ -128,19 +128,20 @@ let true_envt_of_denv env =
 (******************************* Constraints *********************************)
 (*****************************************************************************)
 
+(* API *)
 let make_t env g fr r1 sr: FixConstraint.t = 
   let env' = envt_of_denv env in
   let g'   = Pg.f_of_dpred (Cd.guard_predicate () g) in
   let t'   = sort_of_frame fr in
   let r1'  = reft_of_refinement t' r1 in
-  let r2   = reft_of_single_refinement t' sr in
+  let r2'  = reft_of_single_refinement t' sr in
   Cf.make_t env' g' r1' r2' None []
 
 let make_wf env fr r id =
   let env' = true_envt_of_denv env          in
   let t'   = sort_of_frame fr               in
   let r'   = reft_of_single_refinement t' r in
-  Cf.make_wf envt' r' id
+  Cf.make_wf env' r' id
 
 (* {{{
   
@@ -201,6 +202,7 @@ let d_of_fsoln soln =
 (********************************* Solver ***********************************)
 (****************************************************************************)
 
+(* API *)
 let solver fname cs s =
   (* translate to fixpoint *)
   let fcs  = cs |> List.map (function (_,_,Cd.FixRef c) -> c | _ -> assertf "Cg.solver") in
