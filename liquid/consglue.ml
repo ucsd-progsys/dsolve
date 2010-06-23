@@ -1,10 +1,8 @@
 
 module IM = Misc.IntMap
 module Le = Liqenv
-
 module Cd = Consdef
 
-module Pg = Predglue
 module P  = Predicate
 module F  = Frame
 
@@ -16,6 +14,159 @@ module SM = Ast.Symbol.SMap
 module Su = Ast.Subst
 
 open Misc.Ops
+
+(*****************************************************************************)
+(***************************** Paths and Symbols *****************************)
+(*****************************************************************************)
+
+let str_to_path = Hashtbl.create 37
+let path_to_str = Hashtbl.create 37
+
+let str_of_path p =
+  Misc.do_bimemo path_to_str str_to_path Path.unique_name p p
+let sy_of_path p = Sy.of_string (str_of_path p)
+
+let sy_of_qvar k =
+  Sy.of_string ("k" ^ string_of_int k)
+
+let qvar_of_sy sy =
+  let s = Sy.to_string sy in
+    int_of_string (String.sub s 1 (String.length s - 1))
+
+let path_of_str s = 
+  Hashtbl.find str_to_path s
+
+let path_of_sy s =
+  try path_of_str (Sy.to_string s) with
+    Not_found ->
+      (Printf.printf "\n%s\n" (Sy.to_string s);
+      assert false)
+
+let sy_of_persistent p = Sy.of_string (Path.name p)
+
+(*****************************************************************************)
+(*********************************** Sorts ***********************************)
+(*****************************************************************************)
+
+let rec fsort_of_dprover_t = function
+  | Parsetree.Pprover_array (t1, t2) ->
+      Fs.t_obj
+  | Parsetree.Pprover_fun ts ->
+      Fs.t_func 0 (List.map fsort_of_dprover_t ts)
+  | Parsetree.Pprover_abs ("int") ->
+      Fs.t_int
+  | Parsetree.Pprover_abs ("bool") ->
+      Fs.t_bool
+  | Parsetree.Pprover_abs s ->
+      Fs.t_obj
+
+let rec dprover_t_of_fsort sort = 
+  if Fs.is_bool sort then
+    Parsetree.Pprover_abs("bool")
+  else if Fs.t_int = sort then
+    Parsetree.Pprover_abs("int")
+  else if Fs.t_obj = sort then
+    Parsetree.Pprover_abs("unint")
+  else
+    match Fs.func_of_t sort with
+    | Some (ts, t) -> Parsetree.Pprover_fun (List.map dprover_t_of_fsort (ts @ [t]))
+    | None -> assert false (* somehow we have encountered a pointer sort *)
+
+(*****************************************************************************)
+(**************************** Ops and RelsSorts ******************************)
+(*****************************************************************************)
+
+let f_of_dbop = function
+  | P.Plus -> Ast.Plus
+  | P.Minus -> Ast.Minus
+  | P.Times -> Ast.Times
+  | P.Div -> Ast.Div
+
+let d_of_fbop = function
+  | Ast.Plus -> P.Plus
+  | Ast.Minus -> P.Minus
+  | Ast.Times -> P.Times
+  | Ast.Div -> P.Div
+
+let f_of_dbrel = function
+  | P.Eq -> Ast.Eq
+  | P.Ne -> Ast.Ne
+  | P.Gt -> Ast.Gt
+  | P.Ge -> Ast.Ge
+  | P.Lt -> Ast.Lt
+  | P.Le -> Ast.Le
+
+let d_of_fbrel = function
+  | Ast.Eq -> P.Eq
+  | Ast.Ne -> P.Ne
+  | Ast.Gt -> P.Gt
+  | Ast.Ge -> P.Ge
+  | Ast.Lt -> P.Lt
+  | Ast.Le -> P.Le
+
+(*****************************************************************************)
+(************************ Expressions and Predicates *************************)
+(*****************************************************************************)
+
+let rec f_of_dexpr = function
+  | P.PInt i            -> Ast.eCon (Ast.Constant.Int i) 
+  | P.Var p             -> Ast.eVar (sy_of_path p)
+  | P.FunApp (p, es)    -> Ast.eApp (sy_of_path p, List.map f_of_dexpr es)
+  | P.Binop (p1, b, p2) -> Ast.eBin (f_of_dexpr p1, f_of_dbop b, f_of_dexpr p2)
+  | P.Field (p, e)      -> Ast.eFld (sy_of_path p, f_of_dexpr e)
+  | P.Ite (b, e1, e2)   -> Ast.eIte (f_of_dpred b, f_of_dexpr e1, f_of_dexpr e2)
+
+and f_of_dpred = function
+  | P.True                -> Ast.pTrue
+  | P.Atom (p1, r, p2)    -> Ast.pAtom (f_of_dexpr p1, f_of_dbrel r, f_of_dexpr p2)
+  | P.Not p               -> Ast.pNot (f_of_dpred p)
+  | P.And (p1, p2)        -> Ast.pAnd [f_of_dpred p1; f_of_dpred p2] 
+  | P.Or (p1, p2)         -> Ast.pOr  [f_of_dpred p1; f_of_dpred p2]
+  | P.Implies (p1, p2)    -> Ast.pImp (f_of_dpred p1, f_of_dpred p2) 
+  | P.Boolexp p           -> Ast.pBexp (f_of_dexpr p)
+  | P.Exists (vs, p)      ->
+      let vs =
+        List.map (fun (p, t) -> (Sy.of_string (str_of_path p), fsort_of_dprover_t t)) vs in
+      Ast.pNot (Ast.pForall (vs, Ast.pNot (f_of_dpred p)))
+  | P.Forall (vs, p)     ->
+      let vs =
+        List.map (fun (p, t) -> (Sy.of_string (str_of_path p), fsort_of_dprover_t t)) vs in
+      Ast.pForall (vs, f_of_dpred p)
+  | P.Iff (p1, p2) ->
+      let p1, p2 = f_of_dpred p1, f_of_dpred p2 in 
+      Ast.pAnd [Ast.pImp (p1, p2); Ast.pImp (p2, p1)]
+
+let rec d_of_fexpr e =
+  match Ast.Expression.unwrap e with  
+  | Ast.Con (Ast.Constant.Int i) -> P.PInt i
+  | Ast.Var v                  -> P.Var (path_of_sy v)
+  | Ast.App (fn, rgs)          -> P.FunApp (path_of_sy fn, List.map d_of_fexpr rgs)
+  | Ast.Bin (e1, bop, e2)      -> P.Binop (d_of_fexpr e1, d_of_fbop bop, d_of_fexpr e2)
+  | Ast.Ite (p, e1, e2)        -> P.Ite (d_of_fpred p, d_of_fexpr e1, d_of_fexpr e2)
+  | Ast.Fld (fn, e)            -> P.Field (path_of_sy fn, d_of_fexpr e)
+  | _                        -> assert false
+
+and d_of_fpred p =
+  match Ast.Predicate.unwrap p with
+  | Ast.True                   -> P.True
+  | Ast.False                  -> P.Not (P.True)
+  | Ast.And []                 -> P.True
+  | Ast.And [p]                -> d_of_fpred p
+  | Ast.And (p :: ps)          ->
+      List.fold_left (fun a p -> P.And (d_of_fpred p, a)) (d_of_fpred p) ps
+  | Ast.Or []                  -> P.Not (P.True)
+  | Ast.Or [p]                 -> d_of_fpred p
+  | Ast.Or (p :: ps)           ->
+      List.fold_left (fun a p -> P.Or (d_of_fpred p, a)) (d_of_fpred p) ps
+  | Ast.Not p                  -> P.Not (d_of_fpred p)
+  | Ast.Imp (p1, p2)           -> P.Implies (d_of_fpred p1, d_of_fpred p2)
+  | Ast.Bexp e                 -> P.Boolexp (d_of_fexpr e)
+  | Ast.Atom (e1, rel, e2)     ->
+      P.Atom (d_of_fexpr e1, d_of_fbrel rel, d_of_fexpr e2)
+  | Ast.Forall (ss, p)         ->
+      let ss = List.map (fun (s, st) -> (path_of_sy s, dprover_t_of_fsort st)) ss in 
+      P.Forall (ss, d_of_fpred p)
+
 
 (*****************************************************************************)
 (******************************** Builtins ***********************************)
