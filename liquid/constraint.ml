@@ -41,104 +41,12 @@ module Le  = Liqenv
 module QSet = Set.Make(Q)
 module NSet = Set.Make(String)
 
-
 open Format
 open Wellformed
 open Misc.Ops
 open Consdef
 
 module SIM = Map.Make(struct type t = subref_id let compare = compare end)
-(*
-(**************************************************************)
-(**************** Type definitions: Constraints ***************) 
-(**************************************************************)
-
-type fc_id = int option 
-type subref_id = int 
-
-module SIM = Map.Make(struct type t = subref_id let compare = compare end)
-
-type guard_t = (Path.t * bool) list
-
-type frame_constraint =
-  | SubFrame of F.t Le.t * guard_t * F.t * F.t
-  | WFFrame of F.t Le.t * F.t
-
-type labeled_constraint = {
-  lc_cstr: frame_constraint;
-  lc_tenv: Env.t;
-  lc_orig: origin;
-  lc_id: fc_id;
-}
-
-and origin =
-  | Loc of Location.t 
-  | Assert of Location.t 
-  | Cstr of labeled_constraint
-
-type refinement_constraint =
-  | FixRef of FixConstraint.t
-(*| FixWF  of FixConstraint.wf  *)
-  | SubRef of F.refinement Le.t * guard_t * F.refinement * F.simple_refinement * (subref_id option)
-  | WFRef of F.t Le.t * F.simple_refinement * (subref_id option)
-
-(**************************************************************)
-(***************** Misc. Constants / Accessors ****************)
-(**************************************************************)
-
-let fresh_fc_id = 
-  let r = ref 0 in
-  fun () -> incr r; Some (!r)
-
-(* Unique variable to qualify when testing sat, applicability of qualifiers...
- * this is passed into the solver *)
-let qual_test_var = Co.qual_test_var(*Path.mk_ident "AA"*)
-let qual_test_expr = P.Var qual_test_var
-
-let is_simple_constraint c = match c with 
-  | SubRef (_, _, r1, ([], F.Qvar _), _) ->
-      List.for_all (function ([], ([], _)) -> true | _ -> false) r1
-  | _ -> false
-
-let is_simple_constraint2 = function 
-  | SubRef (_, _, [([], ([], [k1]))], ([], F.Qvar k2), _) -> true
-  | _ -> false
-
-let is_subref_constraint = function 
-  SubRef _ -> true | _ -> false
-
-let is_wfref_constraint = function 
-  WFRef _ -> true | _ -> false
-
-let is_subframe_constraint = function
-  SubFrame _ -> true | _ -> false
-
-let is_wfframe_constraint = function
-  WFFrame _ -> true | _ -> false
-
-let solution_map s k = 
-  Misc.do_catch 
-    (Printf.sprintf "ERROR: solution_map couldn't find: k%d" k)
-    (Sol.find s) k  
-
-let sref_map f r =
-  let (qconsts, qvars) = F.ref_to_simples r in 
-  List.map f (qconsts @ qvars)
-
-let guard_predicate () g = 
-  g |> List.map (fun (v,b) -> (P.(?.) (P.Var v), b))
-    |> List.map (fun (p,b) -> if b then p else P.Not p)
-    |> P.big_and
-
-let refinement_preds sm qexpr r =
-  F.refinement_conjuncts sm qexpr r
-
-let environment_preds sm env = 
-  List.flatten (Le.maplist (fun v r -> refinement_preds sm (P.Var v) r) env)
-
-let sol_of_solmap (soln: Qualifier.t list IM.t) =
-  Sol.create 108 >> (fun s -> IM.iter (fun k qs -> Sol.replace s k qs) soln)
-*)
 
 (**************************************************************)
 (**************************** Stats ***************************)
@@ -184,7 +92,7 @@ let pprint_renv_pred f so ppf env =
 let pprint ppf = function
   | SubFrame (e,g,f1,f2) ->
       if C.ck_olev C.ol_verb_constrs then fprintf ppf "@[(Env)@.%a@]@." pprint_fenv e;
-      if C.ck_olev C.ol_verb_constrs then fprintf ppf "@[(Guard)@.%a@]@.@." P.pprint (guard_predicate () g);
+      if C.ck_olev C.ol_verb_constrs then fprintf ppf "@[(Guard)@.%a@]@.@." P.pprint (guard_predicate g);
       fprintf ppf "@[%a@ <:@;<1 2>%a@]" F.pprint f1 F.pprint f2
   | WFFrame (e,f) ->
       if C.ck_olev C.ol_dump_wfs then begin
@@ -201,7 +109,7 @@ let pprint_ref so ppf = function
       let renv = F.prune_background renv in
       fprintf ppf "@[%a@ Env:@ @[%a@];@;<1 2>Guard:@ %a@\n|-@;<1 2>%a@;<1 2><:@;<1 2>%a@]"
       pprint_io io (pprint_renv_pred F.pprint_refinement so) renv 
-      P.pprint (guard_predicate () g) 
+      P.pprint (guard_predicate g) 
       F.pprint_refinement r1 F.pprint_refinement (F.ref_of_simple sr2)
   | WFRef (env,sr,io) ->
       let env = F.prune_background env in
@@ -276,7 +184,7 @@ let split_sub_ref fr c env g r1 r2 =
   let c = set_constraint_env c env in
   let v = match c.lc_cstr with SubFrame(_ , _, f, _) -> f | _ -> assert false in
   if !Clflags.use_fixpoint then 
-    sref_map (fun sr -> (v, c, FixRef (FixInterface.make_t env g fr r1 sr))) r2
+    sref_map (fun sr -> (v, c, FixRef (FixInterface.make_t env (guard_predicate g) fr r1 sr))) r2
   else
     sref_map (fun sr -> (v, c, SubRef(refenv_of_env env, g, r1, sr, None))) r2
 
@@ -610,7 +518,7 @@ let qual_wf sm env subs q =
   (refinement_well_formed env sm (F.mk_refinement subs [q] [])) qual_test_expr
 
 let lhs_preds sm env g r1 =
-  let gp    = guard_predicate () g in
+  let gp    = guard_predicate g in
   let envps = environment_preds sm env in
   let r1ps  = refinement_preds  sm qual_test_expr r1 in
   envps @ (gp :: r1ps) 

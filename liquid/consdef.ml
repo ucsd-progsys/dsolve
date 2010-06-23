@@ -111,7 +111,7 @@ let sref_map f r =
   let (qconsts, qvars) = F.ref_to_simples r in 
   List.map f (qconsts @ qvars)
 
-let guard_predicate () g = 
+let guard_predicate g = 
   g |> List.map (fun (v,b) -> (P.(?.) (P.Var v), b))
     |> List.map (fun (p,b) -> if b then p else P.Not p)
     |> P.big_and

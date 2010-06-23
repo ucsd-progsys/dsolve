@@ -1,3 +1,26 @@
+(*
+ * Copyright © 2008 The Regents of the University of California. All rights reserved.
+ *
+ * Permission is hereby granted, without written agreement and without
+ * license or royalty fees, to use, copy, modify, and distribute this
+ * software and its documentation for any purpose, provided that the
+ * above copyright notice and the following two paragraphs appear in
+ * all copies of this software.
+ *
+ * IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY
+ * FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES
+ * ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN
+ * IF THE UNIVERSITY OF CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY
+ * OF SUCH DAMAGE.
+ *
+ * THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS
+ * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION
+ * TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+ *
+ *)
+
 
 module IM = Misc.IntMap
 module Le = Liqenv
@@ -50,25 +73,25 @@ let sy_of_persistent p = Sy.of_string (Path.name p)
 
 let rec fsort_of_dprover_t = function
   | Parsetree.Pprover_array (t1, t2) ->
-      Fs.t_obj
+      So.t_obj
   | Parsetree.Pprover_fun ts ->
-      Fs.t_func 0 (List.map fsort_of_dprover_t ts)
+      So.t_func 0 (List.map fsort_of_dprover_t ts)
   | Parsetree.Pprover_abs ("int") ->
-      Fs.t_int
+      So.t_int
   | Parsetree.Pprover_abs ("bool") ->
-      Fs.t_bool
+      So.t_bool
   | Parsetree.Pprover_abs s ->
-      Fs.t_obj
+      So.t_obj
 
 let rec dprover_t_of_fsort sort = 
-  if Fs.is_bool sort then
+  if So.is_bool sort then
     Parsetree.Pprover_abs("bool")
-  else if Fs.t_int = sort then
+  else if So.t_int = sort then
     Parsetree.Pprover_abs("int")
-  else if Fs.t_obj = sort then
+  else if So.t_obj = sort then
     Parsetree.Pprover_abs("unint")
   else
-    match Fs.func_of_t sort with
+    match So.func_of_t sort with
     | Some (ts, t) -> Parsetree.Pprover_fun (List.map dprover_t_of_fsort (ts @ [t]))
     | None -> assert false (* somehow we have encountered a pointer sort *)
 
@@ -174,11 +197,11 @@ and d_of_fpred p =
 
 let so_tag   = So.t_func 0 [So.t_int; So.t_int]
 let vv_tag   = Sy.value_variable so_tag
-let envt0    = [Pg.sy_of_path P.tag_function, Cf.make_reft vv_tag so_tag []]
+let envt0    = [sy_of_path P.tag_function, Cf.make_reft vv_tag so_tag []]
                |> List.fold_left (fun env (n, r) -> SM.add n r env) SM.empty
 
 let dvv      = Common.qual_test_var
-let vv       = Pg.sy_of_path dvv
+let vv       = sy_of_path dvv
 
 
 (*****************************************************************************)
@@ -223,20 +246,20 @@ let unify_dreft = List.map unify_drefexpr
 (******************************** Refinements ********************************)
 (*****************************************************************************)
 
-let fpred_of_dqual = fun s -> thd3 <+> P.apply_substs s <+> Pg.f_of_dpred 
+let fpred_of_dqual = fun s -> thd3 <+> P.apply_substs s <+> f_of_dpred 
 
 let sub_of_dsubs =
-  List.rev_map (fun (p, e) -> (Pg.sy_of_path p, Pg.f_of_dexpr e)) <+> Su.of_list
+  List.rev_map (fun (p, e) -> (sy_of_path p, f_of_dexpr e)) <+> Su.of_list
 
 let refas_of_single_refinement (s, q) =
   [match q with
   | F.Qconst q -> Cf.Conc (fpred_of_dqual s q)
-  | F.Qvar k -> Cf.Kvar (sub_of_dsubs s, Pg.sy_of_qvar k)]
+  | F.Qvar k -> Cf.Kvar (sub_of_dsubs s, sy_of_qvar k)]
 
 let refas_of_refinement r =
   let p  = r |> Cd.refinement_preds (fun _ -> []) (P.Var dvv) 
-             |> (P.big_and <+> Pg.f_of_dpred) in
-  let ks = r |> List.map  (fun (s, (_,ks)) -> (sub_of_dsubs s, List.map Pg.sy_of_qvar ks))
+             |> (P.big_and <+> f_of_dpred) in
+  let ks = r |> List.map  (fun (s, (_,ks)) -> (sub_of_dsubs s, List.map sy_of_qvar ks))
              |> Misc.flap (fun (s, ks) -> List.map (fun k -> Cf.Kvar (s, k)) ks) in
   (Cf.Conc p) :: ks
 
@@ -261,7 +284,7 @@ let reft_of_frame fr =
 
 let envt_of_denv env = 
   Liqenv.fold begin fun p fr e ->
-    let x = Pg.sy_of_path p  in
+    let x = sy_of_path p  in
     let r = reft_of_frame fr in
     SM.add x r e
   end env envt0
@@ -269,7 +292,7 @@ let envt_of_denv env =
 let true_envt_of_denv env =
   Liqenv.fold begin fun p fr env -> 
     (* let p = if Path.same p Common.qual_test_var then dvv else p in *)
-    let x  = Pg.sy_of_path p  in
+    let x  = sy_of_path p  in
     let so = sort_of_frame fr in 
     let r  = Cf.make_reft (Sy.value_variable so) so [] in
     SM.add x r env
@@ -280,9 +303,9 @@ let true_envt_of_denv env =
 (*****************************************************************************)
 
 (* API *)
-let make_t env g fr r1 sr: FixConstraint.t = 
+let make_t env g fr r1 sr = 
   let env' = envt_of_denv env in
-  let g'   = Pg.f_of_dpred (Cd.guard_predicate () g) in
+  let g'   = f_of_dpred g in
   let t'   = sort_of_frame fr in
   let r1'  = reft_of_refinement t' r1 in
   let r2'  = reft_of_single_refinement t' sr in
@@ -336,7 +359,7 @@ let wf_of_dwfcon = function
 let f_of_dsoln soln =
   Cd.Sol.fold begin fun k qs s ->
     qs |> List.map (unify_dqual <+> fpred_of_dqual [])
-       |> Cf.sol_add s (Pg.sy_of_qvar k)
+       |> Cf.sol_add s (sy_of_qvar k)
        |> snd
   end soln SM.empty
 
@@ -344,8 +367,8 @@ let f_of_dsoln soln =
 let d_of_fsoln soln =
   IM.empty
   |> SM.fold begin fun k ps s -> 
-      ps |> List.map (fun p -> (Path.mk_ident "pred", dvv, Pg.d_of_fpred p))
-         |> Misc.flip (IM.add (Pg.qvar_of_sy k)) s
+      ps |> List.map (fun p -> (Path.mk_ident "pred", dvv, d_of_fpred p))
+         |> Misc.flip (IM.add (qvar_of_sy k)) s
      end soln
   |> Cd.sol_of_solmap
 

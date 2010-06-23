@@ -53,7 +53,7 @@ and origin =
 val fresh_fc_id : unit -> fc_id 
 val sol_of_solmap: Qualifier.t list Misc.IntMap.t -> Qualifier.t list Sol.t
 val solution_map: 'a Sol.t -> Frame.qvar -> 'a 
-val guard_predicate: unit -> guard_t -> Predicate.t
+val guard_predicate: guard_t -> Predicate.t
 val environment_preds: (Frame.qvar -> Qualifier.t list) -> Frame.refinement Liqenv.t -> Predicate.t list
 val refinement_preds: (Frame.qvar -> Qualifier.t list) -> Predicate.pexpr -> Frame.refinement -> Predicate.t list
 val sref_map: (Frame.simple_refinement -> 'a) -> Frame.refinement -> 'a list
