@@ -1,12 +1,12 @@
 
-
 module IM = Misc.IntMap
-
 module Le = Liqenv
-module Cl = Constraint
+
+module Cd = Consdef
+
 module Pg = Predglue
 module P  = Predicate
-module Fr = Frame
+module F  = Frame
 
 module Cf = FixConstraint
 module So = Ast.Sort
@@ -35,29 +35,29 @@ let ftag  = (dsyvv, tagSt, [])
 let inject_tag env = SM.add tagSy ftag env
 
 let rec string_of_frame = function
-  | Fr.Fsum (p, _, _)
-  | Fr.Finductive (p, _, _, _, _)
-  | Fr.Frec (p, _, _, _) 
-  | Fr.Fabstract (p, _, _, _) ->
+  | F.Fsum (p, _, _)
+  | F.Finductive (p, _, _, _, _)
+  | F.Frec (p, _, _, _) 
+  | F.Fabstract (p, _, _, _) ->
       if Path.same Predef.path_bool p then "bool" else
       if Path.same Predef.path_int p then "int" else untStr
-  | Fr.Farrow (_, f1, f2) -> (string_of_frame f1) ^ "->" ^ (string_of_frame f2)
-  | Fr.Fvar (_, _, _, _) -> untStr
+  | F.Farrow (_, f1, f2) -> (string_of_frame f1) ^ "->" ^ (string_of_frame f2)
+  | F.Fvar (_, _, _, _) -> untStr
 
 let rec fsort_of_dframe = function
-  | Fr.Fsum (p, _, _) | Fr.Finductive (p, _, _, _, _) | Fr.Frec (p, _, _, _) | Fr.Fabstract (p, _, _, _) ->
+  | F.Fsum (p, _, _) | F.Finductive (p, _, _, _, _) | F.Frec (p, _, _, _) | F.Fabstract (p, _, _, _) ->
       if Path.same Predef.path_bool p then 
         So.t_bool 
       else if Path.same Predef.path_int p then 
         So.t_int 
       else So.t_obj
-  | Fr.Farrow (_, _, _) as fr ->
+  | F.Farrow (_, _, _) as fr ->
       fr |> collapse |> So.t_func 0
-  | Fr.Fvar (_, _, _, _) -> 
+  | F.Fvar (_, _, _, _) -> 
       So.t_obj
 
 and collapse = function
-  | Fr.Farrow (_, f1, f2) -> 
+  | F.Farrow (_, f1, f2) -> 
       fsort_of_dframe f1 :: collapse f2
   | s -> [fsort_of_dframe s]
 
@@ -78,8 +78,8 @@ let unify_dqual (x, v, p) =
 
 let unify_dsreft ((subs, q) as sreft) =
   match q with
-  | Fr.Qconst q -> (subs, Fr.Qconst (unify_dqual q))
-  | Fr.Qvar _ -> sreft
+  | F.Qconst q -> (subs, F.Qconst (unify_dqual q))
+  | F.Qvar _ -> sreft
 
 let unify_drefexpr (subs, (cs, ks)) =
   (subs, (List.map (fun q -> unify_dqual q) cs, ks))
@@ -94,15 +94,15 @@ let dqual_of_fpred p =
 
 let frefas_of_dsreft (subs, q) =
   [match q with
-  | Fr.Qconst q -> Cf.Conc (fpred_of_dqual subs q)
-  | Fr.Qvar k -> Cf.Kvar (f_of_dsubs subs, Pg.sy_of_qvar k)]
+  | F.Qconst q -> Cf.Conc (fpred_of_dqual subs q)
+  | F.Qvar k -> Cf.Kvar (f_of_dsubs subs, Pg.sy_of_qvar k)]
 
 let frefas_of_drefexpr (subs, (_, ks)) =
   List.map (fun k -> Cf.Kvar (f_of_dsubs subs, Pg.sy_of_qvar k)) ks
 
 let frefas_of_dreft reft =
   let consts =
-    Pg.f_of_dpred (P.big_and (Cl.refinement_preds empty_sol (P.Var dvv) reft)) in
+    Pg.f_of_dpred (P.big_and (Cd.refinement_preds empty_sol (P.Var dvv) reft)) in
   (Cf.Conc consts) :: Misc.flap frefas_of_drefexpr reft
 
 let freft_of_dsreft vvt sreft =
@@ -145,17 +145,18 @@ let f_of_denvt env =
 (************************** CONSTRAINTS ****************************)
 
 let f_of_dsubcon vvt fmax_envt = function
-  | Cl.SubRef (renvt, gd, r1, r2, id) -> 
-    let gd = Pg.f_of_dpred (Cl.guard_predicate () gd) in
+  | Cd.SubRef (renvt, gd, r1, r2, id) -> 
+    let gd = Pg.f_of_dpred (Cd.guard_predicate () gd) in
     let (r1, r2) = (f_of_dreft vvt r1, freft_of_dsreft vvt r2) in
     Some (Cf.make_t (f_of_drenvt renvt fmax_envt) gd r1 r2 id [])
   | _ -> None
 
-let f_of_dsubcons fmax_envt cons =
-  Misc.maybe_list (List.map (fun (vvt, _, con) -> f_of_dsubcon vvt fmax_envt con) cons)
+let f_of_dsubcons fmax_envt cs =
+  cs |> List.map (fun (vvt, _, c) -> f_of_dsubcon vvt fmax_envt c)
+     |> Misc.maybe_list
 
 let f_of_dwfcon vvt = function
-  | Cl.WFRef  (envt, r, id) -> 
+  | Cd.WFRef  (envt, r, id) -> 
     let reft = freft_of_dsreft vvt r in
     Some (Cf.make_wf (f_of_denvt envt) reft id)
   | _ -> None
@@ -167,7 +168,7 @@ let f_of_dwfcons cons =
 
 let f_of_dsoln soln =
   let p q = fpred_of_dqual [] (unify_dqual q) in
-  Cl.Sol.fold (fun k qs s ->
+  Cd.Sol.fold (fun k qs s ->
     snd (Cf.sol_add s (Pg.sy_of_qvar k) (List.map p qs))) soln SM.empty
 
 (* translates fixsoln into dsolve-land lazily: assuming that all value variables are dvv *)
@@ -176,15 +177,17 @@ let d_of_fsoln soln =
   let rv = 
     SM.fold (fun k ps s ->
       IM.add (Pg.qvar_of_sy k) (List.map q ps) s) soln IM.empty in
-  Cl.sol_of_solmap rv
+  Cd.sol_of_solmap rv
 
 (****************************************************************)
 
+
 let solver fname max_env cs soln =
   (* translate to fixpoint *)
-  let fmax_env = inject_tag (f_of_denvt max_env) in
-  let fsort_max_env = Sy.SMap.map fsort_of_reft fmax_env in
-  let fcs = f_of_dsubcons fmax_env cs in
+  (* let fmax_env     = inject_tag (f_of_denvt max_env) in *)
+  let fsort_max_env = max_env |> f_of_denvt |> inject_tag |> Sy.SMap.map fsort_of_reft in
+  (* let fcs  = f_of_dsubcons fmax_env cs in *)
+  let fcs  = List.map (function (_,_,Cd.FixRef c) -> c | _ ->assertf "Cg.solver") cs in
   let fwfs = f_of_dwfcons cs in
   let soln = f_of_dsoln soln in
   let _ = Format.printf "@[InitSoln:@\n%a@]" FixConstraint.print_soln soln in
