@@ -10,7 +10,3 @@ let test2 l2_1 =
         assert (0 = (mlength l2_1) * (mlength l2_1))
     | h :: t -> ()
 
-(* Uncomment this and it passes...?!
-  let _ = test2 []
-*)
-
