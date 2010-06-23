@@ -276,7 +276,7 @@ let split_sub_ref fr c env g r1 r2 =
   let c = set_constraint_env c env in
   let v = match c.lc_cstr with SubFrame(_ , _, f, _) -> f | _ -> assert false in
   if !Clflags.use_fixpoint then 
-    sref_map (fun sr -> (v, c, FixRef (Consglue.make_t env g fr r1 sr))) r2
+    sref_map (fun sr -> (v, c, FixRef (FixInterface.make_t env g fr r1 sr))) r2
   else
     sref_map (fun sr -> (v, c, SubRef(refenv_of_env env, g, r1, sr, None))) r2
 
@@ -981,6 +981,6 @@ let solve sourcefile env consts qs cs =
   let _ = C.cprintf C.ol_solve "@[AFTER@ WF@]@." in
   let _ = dump_solving sri s 1 in
   let _ = dump_solution s in
-  let s = if !Clflags.use_fixpoint then Consglue.solver sourcefile cs s else dsolver max_env cs s in
+  let s = if !Clflags.use_fixpoint then FixInterface.solver sourcefile cs s else dsolver max_env cs s in
   let _ = dump_solving sri s 2 in
   test_sol sri s
