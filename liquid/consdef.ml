@@ -42,8 +42,6 @@ open Misc.Ops
 
 type fc_id = int option 
 type subref_id = int 
-
-
 type guard_t = (Path.t * bool) list
 
 type frame_constraint =

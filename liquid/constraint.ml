@@ -220,13 +220,12 @@ let pprint_orig ppf = function
 (************* Constraint Simplification & Splitting **********) 
 (**************************************************************)
 
-let env_to_refenv env =
-  Le.fold 
-    (fun x f acc -> 
+let refenv_of_env env =
+  Le.fold begin fun x f acc -> 
       match F.get_refinement f with 
-      | None -> acc 
-      | Some r -> Le.add x r acc) 
-    env Le.empty
+      | Some r -> Le.add x r acc
+      | None   -> acc 
+  end env Le.empty
 
 let env_to_empty_refenv env =
   Le.fold (fun x f acc -> Le.add x [] acc) env Le.empty
@@ -270,16 +269,14 @@ let set_constraint_env c env =
   let c' = match c.lc_cstr with SubFrame(_,g,f,f') -> SubFrame(env, g, f, f') | x -> x in
   {c with lc_cstr = c'}
 
-(* HEREHEREHEREHERE: convert to FixConstraint.t *)
-let make_t env g r1 sr : FixConstraint.t = failwith "TBD make_t"
 
-let split_sub_ref c env g r1 r2 =
+let split_sub_ref fr c env g r1 r2 =
   let c = set_constraint_env c env in
   let v = match c.lc_cstr with SubFrame(_ , _, f, _) -> f | _ -> assert false in
   if !Clflags.use_fixpoint then 
-    sref_map (fun sr -> (v, c, FixRef (make_t env g r1 sr))) r2
+    sref_map (fun sr -> (v, c, FixRef (make_t env g fr r1 sr))) r2
   else
-    sref_map (fun sr -> (v, c, SubRef(env_to_refenv env, g, r1, sr, None))) r2
+    sref_map (fun sr -> (v, c, SubRef(refenv_of_env env, g, r1, sr, None))) r2
 
 
 let params_apply_substitutions subs ps =
@@ -321,12 +318,12 @@ let split_arrow env g c (x1, f1, f1') (x2, f2, f2') =
   let env' = Le.add (Co.i2p x2) f2 env in
   (lequate_cs env g c F.Covariant f2 f1 @ lequate_cs env' g c F.Covariant f1' f2', [])
 
-let split_sum env tenv g c f1 (cs1, r1) (cs2, r2) = 
+let split_sum f1 env tenv g c (cs1, r1) (cs2, r2) = 
   let penv, tag = bind_tags None f1 cs1 r1 env in
   let subs      = sum_subs tag (cs1, cs2) in
   let ps1, ps2  = Misc.map_pair (List.map F.constr_params) (cs1, cs2) in
   let cs        = Misc.flap2 (split_sub_params c tenv env g) ps1 ps2 in
-  let rs        = List.map (F.refexpr_apply_subs subs) r2 |> split_sub_ref c penv g r1 in
+  let rs        = List.map (F.refexpr_apply_subs subs) r2 |> split_sub_ref f1 c penv g r1 in
   cs, rs
 
 let split_inductive env g c = 
@@ -340,7 +337,7 @@ let split_abstract env tenv g c (f1, f2) (id1, id2) =
   match f1, f2 with 
   | F.Fabstract (_,ps1,id1,r1), F.Fabstract (_,ps2,_,r2) ->
     (split_sub_params c tenv (Le.add (Path.Pident id1) f1 env) g ps1 ps2, 
-     split_sub_ref c env g r1 r2)
+     split_sub_ref f1 c env g r1 r2)
   | _ -> assertf "split_abstract" 
 
 let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubFrame (env,g,f1,f2); lc_tenv = tenv} as c ->
@@ -354,9 +351,9 @@ let split_sub = function {lc_cstr = WFFrame _} -> assert false | {lc_cstr = SubF
   | (F.Farrow (x1, f1, f1'), F.Farrow (x2, f2, f2')) ->
       split_arrow env g c (x1, f1, f1') (x2, f2, f2')
   | (F.Fvar (_, _, s, r1), F.Fvar (_, _, s', r2)) ->
-      ([], split_sub_ref c env g r1 r2)
+      ([], split_sub_ref f1 c env g r1 r2)
   | (F.Fsum (_, cs1, r1), F.Fsum (_, cs2, r2)) ->
-     split_sum env tenv g c f1 (cs1, r1) (cs2, r2)
+     split_sum f1 env tenv g c (cs1, r1) (cs2, r2)
   | (F.Finductive (_, _, _, _, _), F.Finductive (_, _, _, _, _)) ->
       split_inductive env g c (f1, f2)
   | (F.Fabstract(_,_,id1,_), F.Fabstract (_,_,id2,_)) ->
