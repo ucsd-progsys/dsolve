@@ -380,7 +380,7 @@ and constrain_guard (env, guard, f) form e =
   let testvar     = Path.mk_ident "test_predicate" in
   let env'        = Le.add testvar af env in
   let witness     = B.mk_unit [(Path.mk_ident "", Path.mk_ident "", P.Boolexp (P.Var testvar))] in
-    (B.uUnit,
+    (f,
       (WFFrame (env', f) :: SubFrame (env', guard, witness, f) ::
          match form with
            | Texp_assume _ -> []
