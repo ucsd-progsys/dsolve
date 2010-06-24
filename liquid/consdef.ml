@@ -26,15 +26,33 @@ module P   = Predicate
 module F   = Frame
 module Le  = Liqenv
 module IM  = Misc.IntMap
-module Sol = Hashtbl.Make(struct
-                            type t    = F.qvar
-                            let hash  = Hashtbl.hash
-                            let equal = (=)
-                          end)
-
+module C   = Constants
+module Q   = Qualifier
 open Format
 open Wellformed
 open Misc.Ops
+
+module Sol = struct
+  include Hashtbl.Make(struct
+                         type t    = F.qvar
+                         let hash  = Hashtbl.hash
+                         let equal = (=)
+                       end)
+
+  type s = Qualifier.t list t
+
+  let size s =
+    fold (fun _ qs x -> (+) x (List.length qs)) s 0
+
+  let dump s =
+    if C.ck_olev C.ol_solve then
+      let bs = fold (fun p r l -> (p, r) :: l) s [] in
+      let bs = List.sort (fun (p, _) (p', _) -> compare p p') bs in
+      List.iter (fun (p, r) -> C.cprintf C.ol_solve "@[k%d: %a@]@."
+                p (Oprint.print_list Q.pprint Co.space) r) bs
+    else ()
+end
+
 
 (**************************************************************)
 (**************** Type definitions: Constraints ***************) 

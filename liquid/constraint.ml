@@ -32,6 +32,7 @@ module B = Builtins
 module Q = Qualifier
 module IM = Misc.IntMap
 module Cf = Clflags
+module S  = Consdef.Sol
 
 module Co  = Common
 module P   = Predicate
@@ -821,14 +822,6 @@ let dump_solving cs s step =
      dump_solution_stats s;
      flush stdout)
 
-let dump_solution s =
-  if C.ck_olev C.ol_solve then
-    let bs = Sol.fold (fun p r l -> (p, r) :: l) s [] in
-    let bs = List.sort (fun (p, _) (p', _) -> compare p p') bs in
-    List.iter (fun (p, r) -> C.cprintf C.ol_solve "@[k%d: %a@]@."
-              p (Oprint.print_list Q.pprint Co.space) r) bs
-  else ()
-
 let dump_qualifiers cqs =
   if C.ck_olev C.ol_insane then
     (printf "Raw@ generated@ qualifiers:@.";
@@ -847,7 +840,7 @@ let rec solve_sub s (sri, w) =
     let (r,b,fci) = get_ref_rank sri c in
     let _ = C.cprintf C.ol_refine "@.@[Refining@ %d@ at iter@ %d in@ scc@ (%d,%b,%s):@]@."
             (get_ref_id c) !stat_refines r b (Co.io_to_string fci) in
-    let _ = if C.ck_olev C.ol_insane then dump_solution s in
+    let _ = if C.ck_olev C.ol_insane then S.dump s in
     let o = get_ref_orig sri c in 
     let w' = if BS.time "refine" (refine_sub s o) c 
              then push_worklist sri w' (get_ref_deps sri c) else w' in
@@ -863,7 +856,7 @@ let print_unsats = function
   | cs -> C.cprintf C.ol_solve_error "Unsatisfied Constraints\n%a" (Misc.pprint_many true "\n" (pprint_ref None)) cs
 
 let test_sol cs s = 
-  s >> dump_solution
+  s >> S.dump 
     |> BS.time "testing solution" (unsat_constraints cs)
     >> (fun xs -> try xs |> List.map fst |> print_unsats with _ -> ()) 
     |> List.map snd
@@ -916,11 +909,12 @@ let solve sourcefile env consts qs cs =
           dump_qualifiers (List.combine (List.map thd3 cs) qs) in
   let s = BS.time "make initial sol" make_initial_solution (List.combine (List.map thd3 cs) qs) in
   let _ = dump_solving cs s 0 in
-  let _ = dump_solution s in
+  let _ = S.dump s in
   let _ = BS.time "solving wfs" (solve_wf s) cs in
   let _ = C.cprintf C.ol_solve "@[AFTER@ WF@]@." in
   let _ = dump_solving cs s 1 in
-  let _ = dump_solution s in
+  let _ = S.dump s in
   let s = if !Clflags.use_fixpoint then FixInterface.solver sourcefile cs s else dsolver cs s in
   let _ = dump_solving cs s 2 in
   test_sol cs s
+

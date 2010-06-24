@@ -1,0 +1,23 @@
+(* for the output type of mlength *)
+qualif MLENGTH1(v): v = mlength l
+
+(* for output type of mlength, added to show that the number of cons'es in [ins]
+is at most |l1| + 1 *)
+qualif MLENGTH2(v): 0 <= mlength l
+
+(* added to show that the number of cons'es in [ins] is at most |l1| + 1 *)
+qualif INS1(v): v <= y1 + 1 + mlength l1
+
+
+(* added to show that the number of cons'es in [sort] is at most 
+   |l| * (|l| + 1) / 2 *)
+qualif SORT1(v): v <= y2 + ((mlength l2) * (mlength l2 + 1) / 2)
+
+(* the input and output lists of [sort] are of the same length *)
+qualif SORT2(v): mlength v = mlength l2
+
+(* the output list of [ins] is one unit larger than the input *)
+qualif INS2(v): mlength v = 1 + mlength l1
+
+
+qualif SORT3(v): v <= y2 + (mlength l2) * (mlength l2)

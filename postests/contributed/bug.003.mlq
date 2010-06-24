@@ -1,0 +1,3 @@
+measure mlength =
+    | [] -> 0
+    | _ :: t -> 1 + mlength t

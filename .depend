@@ -315,9 +315,9 @@ liquid/consdef.cmi: liquid/qualifier.cmi typing/predicate.cmi typing/path.cmi \
     external/fixpoint/_build/fixConstraint.cmi typing/env.cmi 
 liquid/constraint.cmi: liquid/qualifier.cmi parsing/parsetree.cmi \
     liquid/liqenv.cmo liquid/frame.cmi typing/env.cmi liquid/consdef.cmi 
-liquid/fixInterface.cmi: liquid/qualifier.cmi liquid/liqenv.cmo \
-    liquid/frame.cmi external/fixpoint/_build/fixConstraint.cmi \
-    liquid/consdef.cmi 
+liquid/fixInterface.cmi: liquid/qualifier.cmi typing/predicate.cmi \
+    liquid/liqenv.cmo liquid/frame.cmi \
+    external/fixpoint/_build/fixConstraint.cmi liquid/consdef.cmi 
 liquid/frame.cmi: typing/types.cmi typing/typedtree.cmi liquid/qualifier.cmi \
     typing/predicate.cmi typing/path.cmi liquid/liqenv.cmo typing/ident.cmi \
     typing/env.cmi parsing/asttypes.cmi 
@@ -339,30 +339,32 @@ liquid/builtins.cmo: typing/types.cmi typing/predicate.cmi typing/predef.cmi \
 liquid/builtins.cmx: typing/types.cmx typing/predicate.cmx typing/predef.cmx \
     typing/path.cmx typing/ident.cmx liquid/frame.cmx typing/common.cmx 
 liquid/consdef.cmo: liquid/wellformed.cmi liquid/qualifier.cmi \
-    typing/predicate.cmi typing/path.cmi utils/misc.cmi parsing/location.cmi \
-    liquid/liqenv.cmo liquid/frame.cmi \
+    typing/predicate.cmi typing/path.cmi typing/oprint.cmi utils/misc.cmi \
+    parsing/location.cmi liquid/liqenv.cmo liquid/frame.cmi \
     external/fixpoint/_build/fixConstraint.cmi typing/env.cmi \
-    typing/common.cmo liquid/consdef.cmi 
+    external/misc/_build/constants.cmo typing/common.cmo liquid/consdef.cmi 
 liquid/consdef.cmx: liquid/wellformed.cmx liquid/qualifier.cmx \
-    typing/predicate.cmx typing/path.cmx utils/misc.cmi parsing/location.cmx \
-    liquid/liqenv.cmx liquid/frame.cmx \
+    typing/predicate.cmx typing/path.cmx typing/oprint.cmx utils/misc.cmi \
+    parsing/location.cmx liquid/liqenv.cmx liquid/frame.cmx \
     external/fixpoint/_build/fixConstraint.cmx typing/env.cmx \
-    typing/common.cmx liquid/consdef.cmi 
+    external/misc/_build/constants.cmx typing/common.cmx liquid/consdef.cmi 
 liquid/constraint.cmo: liquid/wellformed.cmi typing/types.cmi \
     typing/typedtree.cmi utils/trie.cmo liquid/theoremProver.cmo \
     liquid/qualifier.cmi liquid/qualdecl.cmo typing/predicate.cmi \
-    liquid/pattern.cmi typing/path.cmi typing/oprint.cmi utils/mystats.cmo \
-    utils/misc.cmi parsing/location.cmi liquid/liqenv.cmo typing/ident.cmi \
-    utils/heap.cmi liquid/frame.cmi liquid/fixInterface.cmi \
+    liquid/pattern.cmi typing/path.cmi utils/mystats.cmo utils/misc.cmi \
+    parsing/location.cmi liquid/liqenv.cmo typing/ident.cmi utils/heap.cmi \
+    liquid/frame.cmi liquid/fixInterface.cmi \
+    external/fixpoint/_build/fixConstraint.cmi \
     external/misc/_build/constants.cmo liquid/consdef.cmi typing/common.cmo \
     utils/clflags.cmi liquid/builtins.cmo utils/bstats.cmi \
     liquid/constraint.cmi 
 liquid/constraint.cmx: liquid/wellformed.cmx typing/types.cmx \
     typing/typedtree.cmx utils/trie.cmx liquid/theoremProver.cmx \
     liquid/qualifier.cmx liquid/qualdecl.cmx typing/predicate.cmx \
-    liquid/pattern.cmx typing/path.cmx typing/oprint.cmx utils/mystats.cmx \
-    utils/misc.cmi parsing/location.cmx liquid/liqenv.cmx typing/ident.cmx \
-    utils/heap.cmx liquid/frame.cmx liquid/fixInterface.cmx \
+    liquid/pattern.cmx typing/path.cmx utils/mystats.cmx utils/misc.cmi \
+    parsing/location.cmx liquid/liqenv.cmx typing/ident.cmx utils/heap.cmx \
+    liquid/frame.cmx liquid/fixInterface.cmx \
+    external/fixpoint/_build/fixConstraint.cmx \
     external/misc/_build/constants.cmx liquid/consdef.cmx typing/common.cmx \
     utils/clflags.cmx liquid/builtins.cmx utils/bstats.cmx \
     liquid/constraint.cmi 
