@@ -106,7 +106,7 @@ let pprint_io ppf = function
   | None    -> fprintf ppf "()"
 
 let pprint_ref so ppf = function
-  | SubRef (renv,g,r1,sr2,io) ->
+  | SubRef (_,renv,g,r1,sr2,io) ->
       let renv = F.prune_background renv in
       fprintf ppf "@[%a@ Env:@ @[%a@];@;<1 2>Guard:@ %a@\n|-@;<1 2>%a@;<1 2><:@;<1 2>%a@]"
       pprint_io io (pprint_renv_pred F.pprint_refinement so) renv 
@@ -117,8 +117,6 @@ let pprint_ref so ppf = function
       C.fcprintf ppf C.ol_dump_wfs "@[%a@ Env:@ @[%a@];@\n|-@;<1 2>%a@;<1 2>@]"
       pprint_io io (pprint_fenv_pred so) env 
       F.pprint_refinement (F.ref_of_simple sr)
-  | FixRef c ->
-      fprintf ppf "@[FIXC: %a@]" (FixConstraint.print_t None) c
 
 let pprint_orig ppf = function
   | Loc l -> fprintf ppf "Loc@ %a" Location.print l
@@ -180,15 +178,13 @@ let set_constraint_env c env =
   let c' = match c.lc_cstr with SubFrame(_,g,f,f') -> SubFrame(env, g, f, f') | x -> x in
   {c with lc_cstr = c'}
 
-
 let split_sub_ref fr c env g r1 r2 =
   let c = set_constraint_env c env in
   let v = match c.lc_cstr with SubFrame(_ , _, f, _) -> f | _ -> assert false in
-  if !Clflags.use_fixpoint then 
-    sref_map (fun sr -> (v, c, FixRef (FixInterface.make_t env (guard_predicate g) fr r1 sr))) r2
-  else
-    sref_map (fun sr -> (v, c, SubRef(refenv_of_env env, g, r1, sr, None))) r2
-
+  sref_map begin fun sr -> 
+    let fc = FixInterface.make_t env (guard_predicate g) fr r1 sr in
+    (v, c, SubRef(fc, refenv_of_env env, g, r1, sr, None))
+  end r2
 
 let params_apply_substitutions subs ps =
   List.map (fun (i, f, v) -> (i, F.apply_subs subs f, v)) ps
@@ -333,7 +329,7 @@ type ref_index =
   }
 
 let get_ref_id = 
-  function WFRef (_,_,Some i) | SubRef (_,_,_,_,Some i) -> i | _ -> assert false
+  function WFRef (_,_,Some i) | SubRef (_,_,_,_,_,Some i) -> i | _ -> assert false
 
 let get_ref_rank sri c = 
   try SIM.find (get_ref_id c) sri.rank with Not_found ->
@@ -344,12 +340,12 @@ let get_ref_constraint sri i =
   Misc.do_catch "ERROR: get_constraint" (SIM.find i) sri.cnst
 
 let lhs_ks = function 
-  | SubRef (env,_,r,_,_) -> 
+  | SubRef (_,env,_,r,_,_) -> 
       Le.fold (fun _ f l -> F.refinement_qvars f @ l) env (F.refinement_qvars r)
   | _ -> assertf "lhs_ks"  
 
 let rhs_k = function
-  | SubRef (_,_,_,(_, F.Qvar k),_) -> Some k
+  | SubRef (_,_,_,_,(_, F.Qvar k),_) -> Some k
   | _ -> None
 
 let wf_k = function
@@ -363,8 +359,8 @@ let ref_k c =
   | _ -> None
 
 let ref_id = function
-  | WFRef (_, (_, _), Some id)
-  | SubRef (_,_,_,(_, _), Some id) -> id
+  | WFRef (_, _, Some id)
+  | SubRef (_,_,_,_,_, Some id) -> id
   | _ -> -1
 
 let print_scc_edge rm (u,v) = 
@@ -412,7 +408,7 @@ let fresh_refc =
     let i' = incr i; !i in
     match c with  
     | WFRef (env,r,None) -> WFRef (env,r,Some i')
-    | SubRef (env,g,r1,r2,None) -> SubRef (env,g,r1,r2,Some i')
+    | SubRef (x,env,g,r1,r2,None) -> SubRef (x,env,g,r1,r2,Some i')
     | _ -> assert false
 
 (* API *)
@@ -570,47 +566,16 @@ let refine_tp senv s env g r1 sub2s k2 =
       match x2 with [] -> x1 | _ -> x1 @ (check_tp senv lhs_ps x2) in
   refine_sol_update s k2 rhs_qps (List.map fst rhs_qps') 
 
-
-(*
-let refine_stat = function
-  | SubRef _ -> incr stat_sub_refines 
-  | WFRef _  -> incr stat_wf_refines
-  | _        -> assertf "refine_stat"
-
-let refine sri s c =
- let _  = incr stat_refines; refine_stat c in
- let sm = solution_map s in
-  match c with
-  | SubRef (_, _, r1, ([], F.Qvar k2), _)
-    when is_simple_constraint c && not (!Cf.no_simple || !Cf.verify_simple) ->
-      incr stat_simple_refines; 
-      refine_simple s r1 k2
-  | SubRef (_, _, _, (_, F.Qvar k2), _) when (sm k2) = [] ->
-      false
-  | SubRef (env,g,r1, (sub2s, F.Qvar k2), _)  ->
-      refine_tp (get_ref_fenv sri c) s env g r1 sub2s k2 
-  | WFRef (env, (subs, F.Qvar k), Some id) ->
-      let qs  = solution_map s k in
-      let _   = if C.ck_olev C.ol_dump_wfs then printf "@.@.@[WF: k%d@]@." k in
-      let _   = if C.ck_olev C.ol_dump_wfs then printf "@[(Env)@ %a@]@." pprint_fenv_shp env in 
-      let qs' = BS.time "filter wf" (List.filter (qual_wf sm env subs)) qs in
-      let _   = if C.ck_olev C.ol_dump_wfs then List.iter (fun q -> printf "%a" Qualifier.pprint q) qs in
-      let _   = if C.ck_olev C.ol_dump_wfs then printf "@.@." in
-      let _   = if C.ck_olev C.ol_dump_wfs then List.iter (fun q -> printf "%a" Qualifier.pprint q) qs' in
-      refine_sol_update s k qs qs'
-  | _ -> false
-*)
-
 let refine_sub s orig c = 
   let _  = incr stat_refines; incr stat_sub_refines in
   match c with
-  | SubRef (_, _, r1, ([], F.Qvar k2), _)
+  | SubRef (_,_, _, r1, ([], F.Qvar k2), _)
     when is_simple_constraint c && not (!Cf.no_simple || !Cf.verify_simple) ->
       incr stat_simple_refines; 
       refine_simple s r1 k2
-  | SubRef (_, _, _, (_, F.Qvar k2), _) when (solution_map s k2) = [] ->
+  | SubRef (_,_, _, _, (_, F.Qvar k2), _) when (solution_map s k2) = [] ->
       false
-  | SubRef (env,g,r1, (sub2s, F.Qvar k2), _)  ->
+  | SubRef (_,env,g,r1, (sub2s, F.Qvar k2), _)  ->
       refine_tp (get_ref_fenv orig c) s env g r1 sub2s k2 
   | _ -> 
       false
@@ -637,9 +602,9 @@ let refine_wf s = function
 (**************************************************************)
 
 let sat s orig = function 
-  | SubRef (env,g,r1, (sub2s, F.Qvar k2), _)  ->
+  | SubRef (_,env,g,r1, (sub2s, F.Qvar k2), _)  ->
       true
-  | SubRef (env, g, r1, sr2, _) as c ->
+  | SubRef (_,env, g, r1, sr2, _) as c ->
       let sm     = solution_map s in
       let lhs_ps = lhs_preds sm env g r1 in
       let rhs    = F.refinement_predicate sm qual_test_expr (F.ref_of_simple sr2) in
@@ -711,7 +676,7 @@ let is_formal q = List.mem q !formals
 let formals_addn qs = formals := qs ++ !formals
 
 let filter_wfs cs = List.filter (fun (r, _) -> match r with WFRef(_, _, _) -> true | _ -> false) cs
-let filter_subs cs = List.filter (fun (r, _) -> match r with SubRef(_, _, _, _, _) -> true | _ -> false) cs
+let filter_subs cs = List.filter (fun (r, _) -> match r with SubRef(_,_, _, _, _, _) -> true | _ -> false) cs
 type solmode = WFS | LHS | RHS
 
 let app_sol s s' l k qs = 
@@ -728,12 +693,11 @@ let make_initial_solution cs =
   let s' = Sol.create 100 in
   let l = ref [] in
   let _ = List.iter begin function 
-          | SubRef (_, _, _, (_, F.Qvar k), _), qs ->
-              Hashtbl.replace srhs k (); 
-              Sol.replace s k qs
+          | SubRef (_,_, _, _, (_, F.Qvar k), _), qs ->
+              Hashtbl.replace srhs k (); Sol.replace s k qs
           | _ -> () end cs in
   let _ = List.iter begin function 
-          | SubRef (_, _, r1, _, _), qs ->
+          | SubRef (_,_, _, r1, _, _), qs ->
               List.iter (fun k -> Hashtbl.replace slhs k ();
                                   if not !Cf.minsol && is_formal k && not (Hashtbl.mem srhs k) 
                                   then Sol.replace s k [] 
@@ -822,13 +786,12 @@ let dump_solving cs s step =
      dump_solution_stats s;
      flush stdout)
 
-let dump_qualifiers cqs =
-  if C.ck_olev C.ol_insane then
-    (printf "Raw@ generated@ qualifiers:@.";
-    List.iter (fun (c, qs) -> (*printf "%a: " (pprint_ref None) c;*)
-                              List.iter (fun q -> printf "%a@." Qualifier.pprint q) qs;
-                              (match qs with | [] -> () | _ -> printf "@.")) cqs;
-     printf "done.@.")
+let dump_qualifiers qs =
+  if C.ck_olev C.ol_insane then begin 
+    printf "Raw generated qualifiers:@.";
+    List.iter (printf "%a@.@." (Misc.pprint_many false "," Qualifier.pprint)) qs;
+    printf "done.@."
+  end
 
 (**************************************************************)
 (******************** Iterative - Refinement  *****************)
@@ -840,7 +803,7 @@ let rec solve_sub s (sri, w) =
     let (r,b,fci) = get_ref_rank sri c in
     let _ = C.cprintf C.ol_refine "@.@[Refining@ %d@ at iter@ %d in@ scc@ (%d,%b,%s):@]@."
             (get_ref_id c) !stat_refines r b (Co.io_to_string fci) in
-    let _ = if C.ck_olev C.ol_insane then S.dump s in
+    let _ = if C.ck_olev C.ol_insane then S.dump "solve_sub" s in
     let o = get_ref_orig sri c in 
     let w' = if BS.time "refine" (refine_sub s o) c 
              then push_worklist sri w' (get_ref_deps sri c) else w' in
@@ -856,7 +819,7 @@ let print_unsats = function
   | cs -> C.cprintf C.ol_solve_error "Unsatisfied Constraints\n%a" (Misc.pprint_many true "\n" (pprint_ref None)) cs
 
 let test_sol cs s = 
-  s >> S.dump 
+  s >> S.dump "test_sol" 
     |> BS.time "testing solution" (unsat_constraints cs)
     >> (fun xs -> try xs |> List.map fst |> print_unsats with _ -> ()) 
     |> List.map snd
@@ -905,15 +868,14 @@ let solve sourcefile env consts qs cs =
           C.cprintf C.ol_solve "@[%i@ instantiation@ queries@ %i@ misses@]@." (List.length cs) !tr_misses in
   let _ = if C.ck_olev C.ol_solve then
           C.cprintf C.ol_solve_stats "@[%i@ qualifiers@ generated@]@." (List.length (List.flatten qs)) in
-  let _ = if C.ck_olev C.ol_insane then
-          dump_qualifiers (List.combine (List.map thd3 cs) qs) in
+  let _ = if C.ck_olev C.ol_insane then dump_qualifiers qs in
   let s = BS.time "make initial sol" make_initial_solution (List.combine (List.map thd3 cs) qs) in
   let _ = dump_solving cs s 0 in
-  let _ = S.dump s in
+  let _ = S.dump "initial sol" s in
   let _ = BS.time "solving wfs" (solve_wf s) cs in
   let _ = C.cprintf C.ol_solve "@[AFTER@ WF@]@." in
   let _ = dump_solving cs s 1 in
-  let _ = S.dump s in
+  let _ = S.dump "after WF" s in
   let s = if !Clflags.use_fixpoint then FixInterface.solver sourcefile cs s else dsolver cs s in
   let _ = dump_solving cs s 2 in
   test_sol cs s

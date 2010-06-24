@@ -302,6 +302,8 @@ let true_envt_of_denv env =
 (******************************* Constraints *********************************)
 (*****************************************************************************)
 
+let refinement_constraint_of_t c = failwith "TBD"
+
 (* API *)
 let make_t env g fr r1 sr = 
   let env' = envt_of_denv env in
@@ -379,9 +381,9 @@ let d_of_fsoln soln =
 (* API *)
 let solver fname cs s =
   (* translate to fixpoint *)
-  let fcs  = cs |> Misc.map_partial (function (_, _, Cd.FixRef c) -> Some c | _ -> None) in
+  let fcs  = cs |> Misc.map_partial (function (_, _, Cd.SubRef (c,_,_,_,_,_)) -> Some c | _ -> None) in
   let fwfs = cs |> Misc.map_partial (function (fr, _, Cd.WFRef (env,r,id)) -> Some (make_wf env fr r id) | _ -> None) in
-  let s    = f_of_dsoln s in
+  let s    = s >> Consdef.Sol.dump "fixInterface.solver" |> f_of_dsoln in
   let _    = Format.printf "@[InitSoln:@\n%a@]" FixConstraint.print_soln s in
   (* solve with fixpoint *)
   let me,_ = Solve.create [] SM.empty [] 0 [] fcs fwfs [] in

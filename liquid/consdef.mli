@@ -25,9 +25,8 @@ module Sol : sig
   include Hashtbl.S with type key = Frame.qvar
 
   type s = Qualifier.t list t
-
   val size : s -> int
-  val dump : s -> unit
+  val dump : string -> s -> unit
 end
 
 type fc_id = int option
@@ -41,8 +40,7 @@ type frame_constraint =
   | WFFrame of Frame.t Liqenv.t * Frame.t
 
 type refinement_constraint =
-  | FixRef of FixConstraint.t
-  | SubRef of Frame.refinement Liqenv.t * guard_t * Frame.refinement * Frame.simple_refinement * (subref_id option)
+  | SubRef of FixConstraint.t * Frame.refinement Liqenv.t * guard_t * Frame.refinement * Frame.simple_refinement * (subref_id option) 
   | WFRef  of Frame.t Liqenv.t * Frame.simple_refinement * (subref_id option)
 
 type labeled_constraint = {
