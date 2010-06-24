@@ -21,7 +21,14 @@
  *
  *)
 
-module Sol : Hashtbl.S with type key = Frame.qvar
+module Sol : sig
+  include Hashtbl.S with type key = Frame.qvar
+
+  type s = Qualifier.t list t
+
+  val size : s -> int
+  val dump : s -> unit
+end
 
 type fc_id = int option
 
