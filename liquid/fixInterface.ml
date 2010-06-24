@@ -379,7 +379,7 @@ let d_of_fsoln soln =
 (* API *)
 let solver fname cs s =
   (* translate to fixpoint *)
-  let fcs  = cs |> List.map (function (_,_,Cd.FixRef c) -> c | _ -> assertf "Cg.solver") in
+  let fcs  = cs |> Misc.map_partial (function (_, _, Cd.FixRef c) -> Some c | _ -> None) in
   let fwfs = cs |> Misc.map_partial (function (fr, _, Cd.WFRef (env,r,id)) -> Some (make_wf env fr r id) | _ -> None) in
   let s    = f_of_dsoln s in
   let _    = Format.printf "@[InitSoln:@\n%a@]" FixConstraint.print_soln s in
