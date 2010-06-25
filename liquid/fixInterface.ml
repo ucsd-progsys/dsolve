@@ -304,14 +304,22 @@ let true_envt_of_denv env =
 
 let refinement_constraint_of_t c = failwith "TBD"
 
+let dummy_t = let t  = So.t_int in 
+              let vv = Sy.value_variable t in
+              let r  = vv,t,[] in
+              Cf.make_t envt0 Ast.pTrue r r None [] 
+
 (* API *)
 let make_t env g fr r1 sr = 
-  let env' = envt_of_denv env in
-  let g'   = f_of_dpred g in
-  let t'   = sort_of_frame fr in
-  let r1'  = reft_of_refinement t' r1 in
-  let r2'  = reft_of_single_refinement t' sr in
-  Cf.make_t env' g' r1' r2' None []
+  if !Clflags.use_fixpoint then
+    let env' = envt_of_denv env in
+    let g'   = f_of_dpred g in
+    let t'   = sort_of_frame fr in
+    let r1'  = reft_of_refinement t' r1 in
+    let r2'  = reft_of_single_refinement t' sr in
+    Cf.make_t env' g' r1' r2' None []
+  else
+    dummy_t
 
 let make_wf env fr r id =
   let env' = true_envt_of_denv env          in
