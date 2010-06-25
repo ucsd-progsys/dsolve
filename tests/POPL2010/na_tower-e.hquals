@@ -1,7 +1,3 @@
 qualif I(v) : v { <, <=, >, >= } ^
-qualif Int_rel_array_id(v) : Array.length v { >,>= } ^
 qualif Id_rel_id_int(v): v { >, >= } _
-qualif Id_rel_array_idd(v)(A:'a array) : v { <, <= } Array.length ~A
-qualif Av_rel_a(_V)(A:'a array) : Array.length _V = Array.length ~A
-
 qualif SUM(v): _ + ~A <= ~B

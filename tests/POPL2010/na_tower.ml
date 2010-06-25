@@ -5,14 +5,14 @@ let print_string _ = ()
 
 let play sz =
   
-  let leftPost = Array.make sz 0 in
-  let middlePost = Array.make sz 0 in
-  let rightPost = Array.make sz 0 in
+  let leftPost = Junkarray2.make sz 0 in
+  let middlePost = Junkarray2.make sz 0 in
+  let rightPost = Junkarray2.make sz 0 in
   let sz_minus = sz - 1 in
 
   let initialize post =
     for i = 0 to sz - 1 do
-        Array.set post i (i+1)
+        Junkarray2.set post i (i+1)
     done;
   in
 
@@ -23,11 +23,11 @@ let play sz =
 
   let showposts _ =
     for i = 0 to sz - 1 do 
-      showpiece (Array.get leftPost i);
+      showpiece (Junkarray2.get leftPost i);
       print_string ();
-      showpiece (Array.get middlePost i);
+      showpiece (Junkarray2.get middlePost i);
       print_string ();
-      showpiece (Array.get rightPost i);
+      showpiece (Junkarray2.get rightPost i);
       print_newline ();
     done;
   in
@@ -36,13 +36,13 @@ let play sz =
   
   let rec move n source s post p post' p' =
     if n = 1 then begin
-      Array.set post (p-1) (Array.get source s); 
-      Array.set source s 0; 
+      Junkarray2.set post (p-1) (Junkarray2.get source s); 
+      Junkarray2.set source s 0; 
       showposts () 
     end else begin
       move (n-1) source s post' p' post p;
-      Array.set post (p-1) (Array.get source (s + n - 1)); 
-      Array.set source (s + n-1) 0;
+      Junkarray2.set post (p-1) (Junkarray2.get source (s + n - 1)); 
+      Junkarray2.set source (s + n-1) 0;
       (showposts ());
       move (n-1) post' (p' - (n-1)) post (p-1) source (s+n)
     end
