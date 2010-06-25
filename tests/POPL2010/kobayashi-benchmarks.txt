@@ -1,0 +1,155 @@
+(************************ MAX ********************************)
+
+
+let max3 f x y z = f (f x y) z
+let max2 x y = if x >= y then x else y
+
+let x = read_int ()
+let y = read_int ()
+let z = read_int ()
+
+let m = max3 max2 x y z
+let _ = assert ((max2 x m) = m)
+
+(********************* REPEAT ********************************)
+
+qualif EQZ(v): v = 0
+qualif EQ(v):  v = _
+qualif INC(v): v = (_ + 1)
+
+let rec repeat (f: int -> int) n s = 
+  if n = 0 then s else f (repeat f (n-1) s)
+
+let succ x = x + 1
+let n = read_int ()
+let _ = assert (repeat succ n 0 = n)
+
+(*****************INTRO-1-2-3 ********************************)
+
+qualif GEZ(v): v {>,>=} 0
+qualif GEZ(v): v {>,>=} _ 
+
+let f x g = g (x+1) 
+let h y = assert (y>0)
+
+(* INTRO 1 *)
+let n1  = read_int () 
+let _   = if n1 > 0 then f n1 h else ()
+
+(* INTRO 2 *)
+let n2 = read_int ()
+let _  = if n2 >= 0 then f n2 h else ()
+
+(* INTRO 3 *)
+let hz z y = assert (y>z)
+let n3 = read_int () 
+let _ = if n3 >= 0 then f n (hz n) else ()
+
+(********************** MC91 *********************************)
+
+qualif EQZ(v)(A:int): v = ((~A > 100) ? (~A - 10) : 91)
+
+let rec m x =
+  if x > 100
+  then x - 10
+  else m (m (x + 11))
+
+let n = read_int ()
+
+let _ = if n <= 101 then assert (m n = 91) else ()
+
+(****************** LOCK ************************************)
+
+(* boolean reasoning *)
+qualif L(v): ((?v) iff (0 { <, >= } _))
+qualif T(v): (?v)
+qualif F(v): (not (?v))
+
+
+let lock st = assert (not st); true 
+
+let unlock st = assert st; false 
+
+let f n st = if n > 0 then lock st else st 
+
+let g n st = if n > 0 then unlock st else st
+
+let n = read_int ()
+
+let _ = assert (not (g n (f n false)))
+
+(********************** excep ******************************)
+
+qualif EQZ(v): v = 0
+
+let f n k = if n >= 0 then () else k 0 
+let g n = assert (n = 0) 
+let n = read_int ()
+let _ = f n g
+
+(********************* intro1-e ****************************)
+
+let f x g = g(x+1) in
+let h y = assert (y>2) in
+  if n>0 then f n h else ()
+
+(******************************* intro2-e ********************)
+
+let f x g = g(x+1) in
+let h y = assert (y>1) in
+  if n>=0 then f n h else ()
+
+(******************* intro3-e ********************************)
+
+let f x g = g(x+1) in
+let h z y = assert (y>z+1) in
+  if n>=0 then f n (h n) else ()
+
+(***************** max-e *************************************)
+
+let max max2 x y z =
+  max2 (max2 x y) y
+in
+let f x y =
+  if x >= y
+  then x
+  else y
+in
+let m = max f x y z in
+  assert (f x m = m && f y m = m && f z m = m)
+
+(******************* mc91-e *********************)
+
+let rec m x =
+  if x > 100
+  then x - 10
+  else m (m (x + 11))
+in
+  if n <= 102
+  then assert (m n = 91)
+  else ()
+
+
+(******************* repeat-e *********************)
+
+let rec repeat f n s =
+  if n = 0
+  then s
+  else f (repeat f (n-1) s)
+in
+let succ x = x + 1 in
+  assert (repeat succ n 0 > n)
+
+(******************* lock-e *********************)
+
+let lock st = assert (not st); true in
+let unlock st = assert st; false in
+let f n st = if n > 0 then lock(st) else st in
+let g n st = if n >= 0 then unlock(st) else st in
+  assert (not (g n (f n false)))
+
+(****************** excep-e **********************)
+
+let f n k = if n >= 0 then () else k 0 in
+let g n = assert (n = 1) in
+  f n g

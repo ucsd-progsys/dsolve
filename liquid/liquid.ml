@@ -38,6 +38,7 @@ module C   = Common
 module Le  = Liqenv
 module P   = Predicate
 module Nm  = Normalize
+module Co = Constants
 
 let usage = "Usage: liquid <options> [source-files]\noptions are:"
 
@@ -85,15 +86,15 @@ let load_qualfile ppf qualfile =
 let load_dep_mlqfiles bname deps env fenv mlqenv =
   let pathnames = !Config.load_path in 
   let inames = List.map (fun s -> ((String.lowercase s) ^ ".mlq", s)) deps in
-  let inames = C.sort_and_compact inames in
+  let inames = Misc.sort_and_compact inames in
   let f (s, d) pns =
     let p = try Some (List.find (fun p -> Sys.file_exists (p ^ "/" ^ s)) pns)
-      with Not_found -> C.cprintf C.ol_warn_mlqs "@[WARNING:@ could@ not@ find@ %s@.@]" s; None in
+      with Not_found -> Co.cprintf Co.ol_warn_mlqs "@[WARNING:@ could@ not@ find@ %s@.@]" s; None in
       match p with
       | Some p -> Some (Pparse.file std_formatter (p ^ "/" ^ s) Parse.liquid_interface Config.ast_impl_magic_number, d)
       | None -> None in
   let mlqs = List.rev_map (fun xd -> f xd pathnames) inames in 
-  let mlqs = C.maybe_list mlqs in
+  let mlqs = Misc.maybe_list mlqs in
     MLQ.load_dep_sigs env fenv mlqs
 
 let dump_summary bname (str, env, menv, ifenv, fenv) qname = 
@@ -114,20 +115,24 @@ let load_valfile ppf env fenv fname =
     let kvl = tag :: (List.map f kvl) in
       (env, Liqenv.addn kvl fenv)
   with Not_found -> failwith (Printf.sprintf "builtins: val %s does not correspond to library value" fname)
-    
+   
+let norm_sourcefile x = 
+  if !Clflags.no_anormal && !Clflags.summarize = None then x else
+    try Nm.normalize_structure x with Nm.NormalizationFailure (e, t, m) ->
+      (Format.printf "@[Normalization failed at %a(%s) %a@.@]"
+       Location.print t m Qdebug.pprint_expression e; assert false)
+
 let load_sourcefile ppf env fenv sourcefile =
-  Pparse.file ppf sourcefile Parse.implementation ast_impl_magic_number |>
-  Nm.desugar_forloops |>
-  Nm.eliminate_anys |>
-  (fun x ->
-    if !Clflags.no_anormal && !Clflags.summarize = None then x else
-      try Nm.normalize_structure x with
-       Nm.NormalizationFailure (e, t, m) ->
-         Format.printf "@[Normalization failed at %a(%s) %a@.@]"
-         Location.print t m Qdebug.pprint_expression e; assert false) |>
-  print_if ppf Clflags.dump_parsetree Printast.implementation |>
-  (fun x -> let (str, _, env) = type_implementation env x in
-    (str, env, fenv))
+  Pparse.file ppf sourcefile Parse.implementation ast_impl_magic_number 
+  |> Nm.desugar_forloops 
+  |> Nm.eliminate_anys 
+  |> (fun x -> if !Clflags.no_anormal && !Clflags.summarize = None then x else
+        try Nm.normalize_structure x with Nm.NormalizationFailure (e, t, m) ->
+          Format.printf "@[Normalization failed at %a(%s) %a@.@]"
+          Location.print t m Qdebug.pprint_expression e; assert false) 
+  |> print_if ppf Clflags.dump_parsetree Printast.implementation
+  |> type_implementation env
+  |> (fun (str, _, env) -> (str, env, fenv))
 
 let dump_env env = printf "(Pruned background env)@.%a@." Constraint.pprint_fenv env
 
@@ -149,14 +154,14 @@ let process_sourcefile env fenv fname =
     let (str, env, fenv)      = load_sourcefile std_formatter env fenv fname in
     let fenv                  = List.fold_left (add_uninterpreted_constructors env) fenv (Env.types env) in
     let (env, menv, fenv, mlqenv) = MLQ.load_local_sig env fenv vals in
-      if C.maybe_bool !summarize then
-        dump_summary bname (str, env, menv, mlqenv, fenv) (C.maybe !summarize)
+      if Misc.maybe_bool !summarize then
+        dump_summary bname (str, env, menv, mlqenv, fenv) (Misc.maybe !summarize)
       else
         let (deps, consts, tyquals)  = load_qualfile std_formatter qname in
         let (env, menv', fenv, _)    = load_dep_mlqfiles bname deps env fenv mlqenv in
         let (fenv, mlqenv, tyquals)  = M.proc_premeas env (List.rev_append menv menv') fenv mlqenv tyquals in
         let fenv = MLQ.scrub_and_push_axioms fenv in
-        let _ = if C.ck_olev C.ol_dump_env then (dump_env fenv; dump_env mlqenv) else () in
+        let _ = if Co.ck_olev Co.ol_dump_env then (dump_env fenv; dump_env mlqenv) else () in
           analyze std_formatter fname (str, consts, tyquals, env, fenv, mlqenv)
    with x ->
      report_error std_formatter x; exit 1
@@ -229,7 +234,12 @@ let main () =
      "-check-mlq", Arg.Set ck_mlq, "warn about possible errors in the local mlq";
      "-summarize", Arg.String (fun s -> summarize := Some s), "dump a summary of source to filename";
      "-dsmeasures", Arg.Set dsmeasures, "don't strip measure names";
-     "-fix", Arg.Set use_fixpoint, "use fixpoint solver instead of dsolve to solve constraints";
+     
+     "-fix", Arg.Set use_fixpoint, "use fixpoint solver to solve constraints";
+     "-print-nontriv", Arg.Set Constants.print_nontriv, "print non-trivial bindings in each environment [false] (use with -fix)";
+     "-no-simplify-t", Arg.Clear Constants.simplify_t, "do not simplify constraints (use with -fix)";
+     "-check-dupenv", Arg.Set Clflags.check_dupenv, "check for duplicate bindings in envs (use with -fix)";
+     
      "-dontminemlq", Arg.Set dont_mine_mlq_preds, "don't mine qualifiers from mlq files";
      "-dontgenmlq", Arg.Set dont_gen_mlq_preds, "don't generalize qualifiers mined from mlq files";
      "-no-timing", Arg.Unit Bstats.dont_time, "don't do any profiling";

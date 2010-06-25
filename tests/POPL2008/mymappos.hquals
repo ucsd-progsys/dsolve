@@ -1,0 +1,6 @@
+qualif A(v): v = ~A + 1
+qualif B(v): v > ~A
+qualif B(v): v > e0
+qualif C(v): v <= 100
+qualif D(v): v { * * } [5, 0]
+qualif D(v): v >= 1

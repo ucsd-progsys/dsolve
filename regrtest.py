@@ -22,8 +22,6 @@
 import optparse, dsolve, socket, time
 import external.misc.rtest as rtest
 
-testdirs = [("postests", 0), ("negtests", 1)]
-
 class Config (rtest.TestConfig):
   def __init__ (self, dargs, testdirs, logfile, threadcount):
     rtest.TestConfig.__init__ (self, testdirs, logfile, threadcount)
@@ -39,9 +37,15 @@ class Config (rtest.TestConfig):
     return file.endswith (".ml")
 
 parser = optparse.OptionParser()
-parser.add_option("-p", "--parallel", dest="threadcount", default=1, type=int, help="spawn n threads")
+parser.add_option("-t", "--threads", dest="threadcount", default=1, type=int, help="spawn n threads")
 parser.add_option("-o", "--opts", dest="opts", default="", type=str, help="additional arguments to dsolve")
+parser.add_option("-p", "--posdir", dest="postests", default =[], action="append", help="postest directory")
+parser.add_option("-n", "--negdir", dest="negtests", default=[], action="append", help="negtest directory")
 options, args = parser.parse_args()
+testdirs  = [(x, 0) for x in options.postests] 
+testdirs += [(x, 1) for x in options.negtests]
+testdirs += [("postests", 0), ("negtests", 1)] if testdirs == [] else []
+
 
 now     = (time.asctime(time.localtime(time.time()))).replace(" ","_")
 logfile = "testlogs/results_%s_%s" % (socket.gethostname (), now)

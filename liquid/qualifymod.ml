@@ -26,10 +26,11 @@ open Typedtree
 open Parsetree
 open Btype
 open Types
-open Constraint
+open Consdef
 open Longident
 open Location
 open Format
+open Misc.Ops
 
 module P        = Predicate
 module C        = Common
@@ -286,8 +287,7 @@ and pat_var pat =
 and constrain_function (env, guard, f) pat e' =
   match f with
     | F.Farrow (_, f, unlabelled_f') ->
-        let _ = F.refinement_iter 
-          (fun r -> Constraint.formals_addn (F.refinement_qvars r)) f in
+        let _    = F.refinement_iter (F.refinement_qvars <+> Constraint.formals_addn) f in
         let env' = F.env_bind env pat.pat_desc f in
         let x    = pat_var pat in
         begin match e'.exp_desc with
@@ -317,7 +317,7 @@ and constrain_base_identifier (env, _, f) id e =
   let refn =
     if Le.mem id env then B.equality_refinement (expression_to_pexpr e) else F.empty_refinement in
   let f, wfs = instantiate_id id f env e.exp_env in
-    (F.apply_refinement refn f, WFFrame (env, f) :: wfs, [])
+    (F.apply_refinement refn f, wfs, [])
 
 and constrain_identifier (env, _, f) id tenv =
   let f, wfs = instantiate_id id f env tenv in
@@ -449,56 +449,71 @@ let constrain_structure tenv initfenv str =
 (***************************** Qualifying modules *****************************)
 (******************************************************************************)
 
-let pre_solve sourcefile =
-  C.cprintf C.ol_solve_master "@[##solve %s##@\n@]" sourcefile; Bstats.reset ()
+let pre_solve sourcefile _ =
+  C.cprintf C.ol_solve_master "@[##solve %s##@\n@]" sourcefile; 
+  Bstats.reset ()
 
-let post_solve () = 
-  if C.ck_olev C.ol_timing then
-    (Printf.printf "##time##\n"; Bstats.print stdout "\nTime to solve constraints:\n";
-    Printf.printf "##endtime##\n"; (*TheoremProver.dump_simple_stats ()*))
+let post_solve sourcefile s = 
+  (if C.ck_olev C.ol_timing then Bstats.print stdout "\nTime to solve constraints:\n");
+  !flog 
+  |> ((not !Clflags.raw_frames) <?> framemap_apply_solution s)
+  |> dump_frames sourcefile
 
 let lbl_dummy_cstr env c =
   { lc_cstr = c; lc_tenv = env; lc_orig = Loc (Location.none); lc_id = fresh_fc_id () }
 
 let maybe_cstr_from_unlabel_frame fenv p f = 
-  if Le.mem p fenv
-  then
+  if Le.mem p fenv then
     let f' = Le.find p fenv in
-    try Some (SubFrame (fenv, [], f', F.label_like f f'))
-      with
-        | Failure s -> printf "@[Failure@ %s:@ %a@ <>@ %a@]@." s F.pprint f F.pprint f'; assert false
-        | F.LabelLikeFailure (sf, sf') ->
-            printf "@[Type Mismatch Error:@.MLQ Contains:\n\t%a@.Type is:\n\t%a.@.Subtype\t%a does not match %a.@.@]"
-            F.pprint f F.pprint f' F.pprint sf F.pprint sf'; assert false
-  else
-    None 
+    try Some (SubFrame (fenv, [], f', F.label_like f f')) with
+      | Failure s -> printf "@[Failure@ %s:@ %a@ <>@ %a@]@." s F.pprint f F.pprint f'; assert false
+      | F.LabelLikeFailure (sf, sf') ->
+         printf "@[Type Mismatch Error:@.MLQ Contains:\n\t%a@.Type is:\n\t%a.@.Subtype\t%a does not match %a.@.@]"
+         F.pprint f F.pprint f' F.pprint sf F.pprint sf'; assert false
+  else None 
 
 let nrframes = 
   let n = ref [] in
-  ((fun i -> n := i :: !n), (fun () -> !n)) 
-let add_nrframe = fst nrframes 
-let get_nrcstrs env fenv = List.rev_map (fun f -> lbl_dummy_cstr env (WFFrame (fenv, f))) ((snd nrframes) ())
+  ((fun i -> n := i :: !n), (fun () -> !n))
 
-let warn_invalid_mlq env p f = 
-  let s = (fun _ -> []) in     
-  let env = Le.add C.qual_test_var f env in
-  let aa = P.Var C.qual_test_var in
-  F.refinement_iter (fun r -> if not (WF.refinement_well_formed env s r aa) then
-          eprintf "@[Warning:@ %s@ ::@ [...]@ %a@ [...]@ may@ not@ be@ wf@]@." (Path.name p) F.pprint_refinement r) f
+let add_nrframe = fst nrframes 
+
+let get_nr_cstrs env fenv = 
+  snd nrframes () 
+  |> List.rev_map (fun f -> lbl_dummy_cstr env (WFFrame (fenv, f)))
+
+let get_unlabel_cstrs env fenv ifenv = 
+  ifenv
+  |> Le.maplistfilter (maybe_cstr_from_unlabel_frame fenv)
+  |> List.map (lbl_dummy_cstr env) 
+
+let warn_invalid_mlq env p fr = 
+  let s   = fun _ -> [] in     
+  let env = Le.add C.qual_test_var fr env in
+  let aa  = P.Var C.qual_test_var in
+  F.refinement_iter begin fun r -> 
+    if not (WF.refinement_well_formed env s r aa) then
+      eprintf "@[Warning:@ %s@ ::@ [...]@ %a@ [...]@ not@ wf@]@." 
+      (Path.name p) F.pprint_refinement r
+  end fr
      
+let warn_errors = function 
+  | (s, (_::_ as cs)) -> 
+      cs >> (List.length <+> Printf.printf "%d type checking errors \n\n")
+         >> (fun _ -> flush stdout)
+         |> List.map (make_frame_error s) 
+         |> (fun x -> raise (Errors x))
+  | (_, []) -> () 
+ 
 let qualify_implementation sourcefile fenv' ifenv env qs consts str =
-  let _          = if !Clflags.ck_mlq then Le.iter (warn_invalid_mlq fenv') ifenv in
-  let _          = reset_framelog () in
-  let (fenv, cs) = constrain_structure env fenv' str in
-  let nrcs       = get_nrcstrs env fenv in
-  let cs         = List.rev_append nrcs cs in
-  let cs         = (List.map (lbl_dummy_cstr env) (Le.maplistfilter (maybe_cstr_from_unlabel_frame fenv) ifenv)) @ cs in
-  let _          = pre_solve sourcefile in
-  let solver     = if !Clflags.use_fixpoint then Fixsolve.solver sourcefile else dsolver in
-  let (s, cs)    = solve_with_solver qs env consts cs solver in
-  let _          = post_solve () in
-  let flog       = if !Clflags.raw_frames then !flog else framemap_apply_solution s !flog in
-  let _          = dump_frames sourcefile flog in
-    match cs with [] -> () | _ ->
-      (Printf.printf "Errors encountered during type checking:\n\n";
-       flush stdout; raise (Errors(List.map (make_frame_error s) cs)))
+  let _ = Le.iter (warn_invalid_mlq fenv') ifenv in
+  let _ = reset_framelog () in
+  constrain_structure env fenv' str
+  |> (fun (fenv, cs) -> [cs; get_nr_cstrs env fenv; get_unlabel_cstrs env fenv ifenv])
+  |> Misc.flatten 
+  >> pre_solve sourcefile
+  |> Constraint.solve sourcefile env consts qs
+  >> (fst <+> post_solve sourcefile)
+  |> warn_errors 
+  
+ 

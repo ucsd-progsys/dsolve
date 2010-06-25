@@ -145,12 +145,9 @@ val iter_labels    : (Ident.t -> unit) -> t -> unit
 
 val empty_refinement     : refinement
 val const_refinement     : Qualifier.t list -> refinement
-
 val mk_refinement        : substitution list -> Qualifier.t list -> qvar list -> refinement
-val refinement_conjuncts :
-  (qvar -> Qualifier.t list) -> Predicate.pexpr -> refinement -> Predicate.t list
-val refinement_predicate :
-  (qvar -> Qualifier.t list) -> Predicate.pexpr -> refinement -> Predicate.t
+val refinement_conjuncts : (qvar -> Qualifier.t list) -> Predicate.pexpr -> refinement -> Predicate.t list
+val refinement_predicate : (qvar -> Qualifier.t list) -> Predicate.pexpr -> refinement -> Predicate.t
 val apply_solution       : (qvar -> Qualifier.t list) -> t -> t
 val refinement_qvars     : refinement -> qvar list
 val refexpr_apply_subs   : substitution list -> refexpr -> refexpr
@@ -165,8 +162,7 @@ val ref_to_simples       : refinement -> (simple_refinement list * simple_refine
 val ref_of_simple        : simple_refinement -> refinement
 val refinement_fold      : (refinement -> 'a -> 'a) -> 'a -> t -> 'a
 val refinement_iter      : (refinement -> unit) -> t -> unit
-val conjuncts            :
-  (qvar -> Qualifier.t list) -> Predicate.pexpr -> t -> Predicate.t list
+val conjuncts            : (qvar -> Qualifier.t list) -> Predicate.pexpr -> t -> Predicate.t list
 
 (******************************************************************************)
 (*********************************** Binders **********************************)

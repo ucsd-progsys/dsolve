@@ -187,4 +187,4 @@ let all_modules sstr =
   let f p = 
     let s = (Path.name p) in
     if ismod s then Some (cut s) else None in
-  C.sort_and_compact (C.maybe_list (List.map f (all_ids sstr)))
+  C.sort_and_compact (Misc.maybe_list (List.map f (all_ids sstr)))

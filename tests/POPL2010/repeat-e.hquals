@@ -1,0 +1,3 @@
+qualif EQZ(v): v = 0
+qualif EQ(v):  v = _
+qualif INC(v): v = (_ + 1) 

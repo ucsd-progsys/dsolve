@@ -1,0 +1,5 @@
+qualif APP(v): ? Myset.eq (Myset.of_list v)  (Myset.cup (Myset.of_list ~A) (Myset.of_list ~B))
+qualif TRE(v): v = (of_tree ~A)
+qualif TRE(v): ? Myset.eq (Myset.of_list ~A) (of_tree v)
+qualif TRE(v): ? Myset.eq (Myset.of_list v) (of_tree  ~A)
+qualif EQT(v): ? Myset.eq (of_tree v) (of_tree  ~A)

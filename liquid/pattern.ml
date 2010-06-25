@@ -53,7 +53,7 @@ let _bind_vars = function
       (List.combine (pattern_descs p1s) (pattern_descs p2s), [])
   | (p, _) -> ([], skolemize_pattern p)
 
-let bind_vars p1 p2 = C.expand _bind_vars [(p1, p2)] []
+let bind_vars p1 p2 = Misc.expand _bind_vars [(p1, p2)] []
 
 let substitution p1 p2 =
   let vars = bind_vars p1 p2 in
@@ -110,4 +110,4 @@ let constructor_patterns_aux (vo, pat) = match pat.pat_desc with
       ([], [])
 
 let constructor_patterns expvar pat =
-  C.expand constructor_patterns_aux [(Some expvar, pat)] []
+  Misc.expand constructor_patterns_aux [(Some expvar, pat)] []

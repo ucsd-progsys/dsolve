@@ -1,0 +1,2 @@
+qualif CMP(v): _ { <=, >=, <, > } v
+qualif LEQ(v): (v <= _) || (v <= _) || (v <= _) 

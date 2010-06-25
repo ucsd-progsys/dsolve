@@ -296,8 +296,7 @@ let normalize exp =
      | e -> raise (NormalizationFailure (exp, loc, "norm_out"))
 
  and norm_case pels (p, e) =
-   let p, e = (elim_anys p, norm_out e) in
-     (p |> expand_or_pats |>: fun p -> (p, e)) :: pels
+   (p |> expand_or_pats |>: fun p -> (p, norm_out e)) :: pels
 
   and norm_in exp = 
     let rw_expr desc = {pexp_desc = desc; pexp_loc = exp.pexp_loc} in

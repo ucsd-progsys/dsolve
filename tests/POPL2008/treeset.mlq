@@ -1,0 +1,8 @@
+measure of_tree  =
+  | Leaf  	-> Myset.empty 
+  | Node (x,l,r)-> Myset.cup (Myset.sng x) (Myset.cup (of_tree l) (of_tree r))
+
+val of_tree:	  t: 'a tree -> {v: Myset.set| v = of_tree t}
+val list_of_tree: t: 'a tree -> {v: 'a list  | ? Myset.eq (Myset.of_list v) (of_tree t)}
+val tree_of_list: x: 'a list -> {v: 'a tree  | ? Myset.eq (Myset.of_list x) (of_tree v)}
+val tree_flip:    t: 'a tree -> {v: 'a tree  | ? Myset.eq (of_tree v) (of_tree t)}

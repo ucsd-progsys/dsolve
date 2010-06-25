@@ -51,8 +51,7 @@ let filterkeylist f env =
 let mapfilter f env =
   M.fold (fun k v r -> match f k v with Some x -> x::r | None -> r) env []
 
-let add a m =
-  M.add a m
+let add = M.add
 
 let filter f env =
   M.fold (fun p fr m -> if f p fr then add p fr m else m) env M.empty
@@ -95,8 +94,8 @@ let fold f m b =
 let all m =
   mapfilter (fun v r -> if not(C.tmpstring (Path.name v)) then Some v else None) m
 
-let combine e1 e2 =
-  fold (fun p f e -> add p f e) e1 e2
+let combine e1 e2 = fold add e1 e2
+
 
 let domain env = maplist (fun k _ -> k) env
 
