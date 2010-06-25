@@ -4,7 +4,7 @@ let bsearch key vec =
       if lo < hi_minus  then
         let hl = hi + lo in
         let m = hl / 2  in
-        let x = Junkarray.get vec m in
+        let x = Junkarray2.get vec m in
         let diff = key - x in
         let m_plus = m + 1 in
         let m_minus = m - 1 in
@@ -13,7 +13,7 @@ let bsearch key vec =
            else if key = x then m else -1)
       else -1
   in
-  let sv = Junkarray.length vec in
+  let sv = Junkarray2.length vec in
   let sv_minus = sv - 1 in 
     look 0 sv_minus
 
@@ -21,5 +21,5 @@ let driver =
   let _  = Random.init 555 in
   let sz = Random.int 10 in
   let sz_plus = sz + 2 in
-  let ar = Junkarray.make sz_plus 0 in
+  let ar = Junkarray2.make sz_plus 0 in
   bsearch 5 ar
