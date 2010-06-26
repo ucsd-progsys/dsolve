@@ -60,12 +60,16 @@ let print_array	data i j =
 
 let driver =
   let maxx = 16 in
-  let data = Array.make maxx 0 in
+  let data = Array.make maxx 0.0 in
   for i = 0 to maxx - 1 do 
     let isq  = i * i in
     let i_16 = 16 * i in 
     let diff = i_16 - isq in
-    let _    = Array.set data i diff in
+    Array.set data i (float_of_int diff) 
   done; 
+  print_string "before: "; 
+  print_array data 0 maxx;
   heapsort maxx 0 data; 
-  print_array data 0 maxx
+  print_string "\nafter: "; 
+  print_array data 0 maxx;
+  print_string "\n"
