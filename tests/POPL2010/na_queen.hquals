@@ -1,3 +1,3 @@
-qualif I(_V) : _V { * * } ^
-qualif Id_rel_array_idd(_V)(A:'a array) : _V { * * } Array.length ~A
+qualif I(v) : v { * * } ^
+qualif Id_rel_array_idd(v): v { * * } _ 
 qualif FALSE(_V): 1 = 0

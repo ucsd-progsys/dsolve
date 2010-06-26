@@ -2,7 +2,7 @@
 
 let abs x = if x < 0 then (-x) else x 
 
-let assign a i j = Array.set a i j 
+let assign a i j = Junkarray2.set a i j 
 
 let rec dotsPrint n = 
   if n = 0 then () else begin 
@@ -13,17 +13,17 @@ let rec dotsPrint n =
 let queenPrint queenArray sz =
   let rec aux row = 
     if row = sz then () else
-      let n = Array.get queenArray row in 
+      let n = Junkarray2.get queenArray row in 
       dotsPrint (n - 1); 
       dotsPrint (sz - n); 
       aux (row + 1) 
   in aux 0
 
 let test queenArray j =
-  let q2j = Array.get queenArray j  in
+  let q2j = Junkarray2.get queenArray j  in
   let rec aux i =
     if i < j then
-      let q2i = Array.get queenArray i in
+      let q2i = Junkarray2.get queenArray i in
       let absqdiff = abs (q2j - q2i) in
       if q2i = q2j then false else 
         if absqdiff = j - i then false else 
@@ -32,9 +32,9 @@ let test queenArray j =
   in aux 0  
 
 let queen sz =
-  let queenArray = Array.make sz 0 in
+  let queenArray = Junkarray2.make sz 0 in
   let rec loop row =
-    let next = (Array.get queenArray row) + 1 in
+    let next = (Junkarray2.get queenArray row) + 1 in
     if sz < next then begin 
       assign queenArray row 0; 
       if row = 0 then () else loop (row - 1) 
