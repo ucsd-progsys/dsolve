@@ -1,0 +1,3 @@
+qualif I(v) : v { <, <=, >, >= } ^
+qualif Id_rel_id_int(v): v { >, >= } _
+qualif SUM(v): _ + ~A <= ~B
