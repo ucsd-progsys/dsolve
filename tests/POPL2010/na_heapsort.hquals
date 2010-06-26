@@ -1,3 +1,7 @@
 qualif I(_V) : _V { <,<=,>,>= } ^
+qualif Id_rel_array_idd(v): v { * * } _ 
+
+(*
 qualif Id_rel_array_id(v): _ { <=,>= } Array.length v 
 qualif Id_rel_array_idd(_V)(A:'a array) : _V { * * } Array.length ~A
+*)

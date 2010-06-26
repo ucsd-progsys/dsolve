@@ -1,5 +1,3 @@
-(* DSOLVE -dontminemlq *)
-
 let rec heapify size data i =
   let left  = 2 * i in
   let right = 2 * i in
@@ -50,7 +48,7 @@ let heapsort maxx size data =
 
 let print_array	data i j =
   let rec loop k =
-    if k < j then
+    if k <= j then
       let sdk = Junkarray2.get data k in
       let _   = print_float sdk in
       loop (k+1) 
