@@ -1,3 +1,5 @@
+(* DSOLVE -dontminemlq *)
+
 (*
 ** by: Dave Edelblute, edelblut@cod.nosc.mil, 05 Jan 1993
 ** Modified: R. Mayer to work with hist benchmark routines.
