@@ -396,10 +396,19 @@ and constrain_and_bind guard (env, cstrs) (pat, e) =
 and bind_all bindings fs tenv env guard =
   List.fold_right2 (fun (p, e, px) f env -> bind env guard p f px) bindings fs env
 
+and assert_letrec_binds_funs pes =
+  List.iter begin function
+    | (_, {exp_desc = Texp_function _}) -> ()
+    | (_, {exp_loc = l}) ->
+        Format.printf "%aError: let rec cannot bind non-function values@." Location.print l;
+        exit 1
+  end pes
+
 and constrain_bindings env guard recflag bindings =
   match recflag with
   | Default | Nonrecursive -> List.fold_left (constrain_and_bind guard) (env, []) bindings
   | Recursive ->
+    let _          = assert_letrec_binds_funs bindings in
     let tenv       = (snd (List.hd bindings)).exp_env in
     let (_, exprs) = List.split bindings in
     let bindings   = List.map (fun (p, e) -> (p, e, expression_to_pexpr e)) bindings in
