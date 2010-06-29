@@ -1,7 +1,5 @@
-let r_1 = 0
+let rec (f, r_2) = (fun x -> x), 0
 
-let rec (f, r_2) = (fun x r_4 -> x, r_4), r_1
+let a = f 3
+let _ = assert (f 3 = 10000)
 
-let f_assert1 x_a1_1 resources_a1_1 = 
-  let (_, resources_a1_2) = f x_a1_1 resources_a1_1 in
-    assert(resources_a1_2 = resources_a1_1);;
