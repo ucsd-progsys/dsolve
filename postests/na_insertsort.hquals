@@ -1,0 +1,2 @@
+qualif CMP(v):  v { * * } _ 
+qualif CMPZ(v): v { * * } 0 

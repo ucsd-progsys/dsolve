@@ -1,0 +1,3 @@
+qualif I(v) : v { * * } ^
+qualif Id_rel_array_idd(v): v { * * } _ 
+qualif FALSE(_V): 1 = 0

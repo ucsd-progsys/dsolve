@@ -1054,7 +1054,7 @@ let apply_solution s f =
 
 let refexpr_conjuncts s qual_expr ((subs, qexprs) as r) =
   let (_, (quals, _)) = refexpr_apply_solution s r in
-    List.rev_map ((P.apply_substs subs) <.> (Qualifier.apply qual_expr)) quals
+  List.rev_map ((P.apply_substs subs) <.> (Qualifier.apply qual_expr)) quals
 
 let refinement_conjuncts s qexpr res =
   Misc.flap (refexpr_conjuncts s qexpr) res

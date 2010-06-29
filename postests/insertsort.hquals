@@ -1,0 +1,2 @@
+qualif CMP(v):   v { * * } ^
+qualif LEN(v)(A:'a array) : v { * * } Array.length ~A

@@ -44,12 +44,12 @@ module Sol = struct
   let size s =
     fold (fun _ qs x -> (+) x (List.length qs)) s 0
 
-  let dump s =
+  let dump msg s =
     if C.ck_olev C.ol_solve then
-      let bs = fold (fun p r l -> (p, r) :: l) s [] in
-      let bs = List.sort (fun (p, _) (p', _) -> compare p p') bs in
-      List.iter (fun (p, r) -> C.cprintf C.ol_solve "@[k%d: %a@]@."
-                p (Oprint.print_list Q.pprint Co.space) r) bs
+      let _ = Format.printf "Solution Dump (%s) \n" msg in
+      fold (fun p r l -> (p, r) :: l) s [] 
+      |> List.sort (fun (p, _) (p', _) -> compare p p')
+      |> List.iter (fun (p, r) -> Format.printf "@[k%d: %a@]@." p (Oprint.print_list Q.pprint Co.space) r)
     else ()
 end
 
@@ -60,8 +60,6 @@ end
 
 type fc_id = int option 
 type subref_id = int 
-
-
 type guard_t = (Path.t * bool) list
 
 type frame_constraint =
@@ -81,9 +79,7 @@ and origin =
   | Cstr of labeled_constraint
 
 type refinement_constraint =
-  | FixRef of FixConstraint.t
-(*| FixWF  of FixConstraint.wf  *)
-  | SubRef of F.refinement Le.t * guard_t * F.refinement * F.simple_refinement * (subref_id option)
+  | SubRef of FixConstraint.t * Frame.refinement Liqenv.t * guard_t * Frame.refinement * Frame.simple_refinement * (subref_id option) 
   | WFRef of F.t Le.t * F.simple_refinement * (subref_id option)
 
 (**************************************************************)
@@ -102,12 +98,12 @@ let qual_test_var = Co.qual_test_var(*Path.mk_ident "AA"*)
 let qual_test_expr = P.Var qual_test_var
 
 let is_simple_constraint c = match c with 
-  | SubRef (_, _, r1, ([], F.Qvar _), _) ->
+  | SubRef (_,_, _, r1, ([], F.Qvar _), _) ->
       List.for_all (function ([], ([], _)) -> true | _ -> false) r1
   | _ -> false
 
 let is_simple_constraint2 = function 
-  | SubRef (_, _, [([], ([], [k1]))], ([], F.Qvar k2), _) -> true
+  | SubRef (_,_, _, [([], ([], [k1]))], ([], F.Qvar k2), _) -> true
   | _ -> false
 
 let is_subref_constraint = function 
@@ -131,7 +127,7 @@ let sref_map f r =
   let (qconsts, qvars) = F.ref_to_simples r in 
   List.map f (qconsts @ qvars)
 
-let guard_predicate () g = 
+let guard_predicate g = 
   g |> List.map (fun (v,b) -> (P.(?.) (P.Var v), b))
     |> List.map (fun (p,b) -> if b then p else P.Not p)
     |> P.big_and
