@@ -1,24 +1,24 @@
-(* val init: l: {v: int | v >= 0} -> ({v:int| (0 <= v) && (v < l)} -> 'a) -> {v: 'a array | Array.length v = l} *)
-(* val make_matrix : sx: {v: int | v >= 0} -> sy: {v: int | v >= 0} -> 'a -> {v: {v: 'a array | Array.length v = sy} array | Array.length v = sx} *)
-(* val create_matrix: sx: {v: int | v >= 0} -> sy: {v: int | v >= 0} -> 'a -> {v: {v: 'a array | Array.length v = sy} array | Array.length v = sx} *)
-(* val copy : a: 'a array -> {v: 'a array | Array.length v = Array.length a} *)
-(* val append : a1: {a1: 'a array | Array.length a1 >= 0} -> a2: {a2: 'a array | Array.length a2 >= 0} -> {v: 'a array | Array.length v = Array.length a1 + Array.length a2} *)
-(* (\* how to say something meaningful about concat? do we need a witness? *\) *)
-(* val concat : al: 'a array list -> 'a array *)
-(* val sub : a: 'a array -> ofs: {v: int | v >= 0} -> len: {v: int | v >= 0 && ofs <= Array.length a - v} -> {v: 'a array | Array.length v = len} *)
-(* val fill : a: 'a array -> ofs: {v: int | v > 0} -> len: {v: int | v > 0 && ofs <= Array.length a - v} -> x: 'a -> unit *)
+val init: l: {v: int | v >= 0} -> ({v:int| (0 <= v) && (v < l)} -> 'a) -> {v: 'a array | Array.length v = l}
+val make_matrix : sx: {v: int | v >= 0} -> sy: {v: int | v >= 0} -> 'a -> {v: {v: 'a array | Array.length v = sy} array | Array.length v = sx}
+val create_matrix: sx: {v: int | v >= 0} -> sy: {v: int | v >= 0} -> 'a -> {v: {v: 'a array | Array.length v = sy} array | Array.length v = sx}
+val copy : a: 'a array -> {v: 'a array | Array.length v = Array.length a}
+val append : a1: {a1: 'a array | Array.length a1 >= 0} -> a2: {a2: 'a array | Array.length a2 >= 0} -> {v: 'a array | Array.length v = Array.length a1 + Array.length a2}
+(* how to say something meaningful about concat? do we need a witness? *)
+val concat : al: 'a array list -> 'a array
+val sub : a: 'a array -> ofs: {v: int | v >= 0} -> len: {v: int | v >= 0 && ofs <= Array.length a - v} -> {v: 'a array | Array.length v = len}
+val fill : a: 'a array -> ofs: {v: int | v > 0} -> len: {v: int | v > 0 && ofs <= Array.length a - v} -> x: 'a -> unit
 val blit : a1: 'a array -> ofs1: {v: int | v >= 0} -> a2: 'a array -> ofs2: {v: int | v >= 0} -> len: {v: int | v >= 0 && ofs1 <= Array.length a1 - v && ofs2 <= Array.length a2 - v} -> unit
-(* val iter : f: ('a -> unit) -> a: 'a array -> unit *)
-(* val map : f: ('a -> 'b) -> a: 'a array -> {v: 'b array | Array.length v = Array.length a} *)
-(* val iteri : a: 'a array -> f: ({v: int | v >= 0 && v < Array.length a} -> 'a -> unit) -> unit *)
-(* val mapi : a: 'a array -> f: ({v: int | v >= 0 && v < Array.length a} -> 'a -> 'b) -> {v: 'b array | Array.length v = Array.length a} *)
+val iter : f: ('a -> unit) -> a: 'a array -> unit
+val map : f: ('a -> 'b) -> a: 'a array -> {v: 'b array | Array.length v = Array.length a}
+val iteri : a: 'a array -> f: ({v: int | v >= 0 && v < Array.length a} -> 'a -> unit) -> unit
+val mapi : a: 'a array -> f: ({v: int | v >= 0 && v < Array.length a} -> 'a -> 'b) -> {v: 'b array | Array.length v = Array.length a}
 
-(* measure len = [] -> 0 | h::t -> 1+len t *)
+measure len = [] -> 0 | h::t -> 1+len t
 
-(* val to_list : a: {v: 'a array | Array.length v >= 0} -> {v: 'a list | len v = Array.length a} *)
-(* (\* val of_list : a: 'a list -> {v: 'a array | Array.length v = len a} *\) *)
+val to_list : a: {v: 'a array | Array.length v >= 0} -> {v: 'a list | len v = Array.length a}
+(* val of_list : a: 'a list -> {v: 'a array | Array.length v = len a} *)
 
-(* val fold_left : f: ('a -> 'b -> 'a) -> x: 'a -> a: 'b array -> 'a *)
-(* val fold_right : f: ('b -> 'a -> 'a) -> a: 'b array -> x: 'a -> 'a *)
+val fold_left : f: ('a -> 'b -> 'a) -> x: 'a -> a: 'b array -> 'a
+val fold_right : f: ('b -> 'a -> 'a) -> a: 'b array -> x: 'a -> 'a
 
 val stable_sort : cmp: ('a -> 'a -> int) -> a: {v: 'a array | Array.length v >= 0} -> unit
