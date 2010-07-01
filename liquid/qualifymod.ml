@@ -521,7 +521,7 @@ let qualify_implementation sourcefile fenv' ifenv env qs consts str =
   |> (fun (fenv, cs) -> [cs; get_nr_cstrs env fenv; get_unlabel_cstrs env fenv ifenv])
   |> Misc.flatten 
   >> pre_solve sourcefile
-  |> Constraint.solve sourcefile env consts qs
+  |> Constraint.solve sourcefile id env consts qs
   >> (fst <+> post_solve sourcefile)
   |> warn_errors 
   

@@ -760,7 +760,7 @@ let dump_unsplit cs =
   let (wf, sub) = (cc is_wfframe_constraint, cc is_subframe_constraint) in
   C.cprintf C.ol_solve_stats "@.@[unsplit@ constraints:@ %d@ total@ %d@ wf@ %d@ sub@]@.@." (List.length cs) wf sub
 
-let dump_solving cs s step =
+let dump_solving step (cs, s) =
   let cs = List.map thd3 cs in
   if step = 0 then 
     let kn   = Sol.length s in
@@ -818,7 +818,7 @@ let print_unsats = function
   | [] -> ()
   | cs -> C.cprintf C.ol_solve_error "Unsatisfied Constraints\n%a" (Misc.pprint_many true "\n" (pprint_ref None)) cs
 
-let test_sol cs s = 
+let test_sol (cs, s) =
   s >> S.dump "test_sol" 
     |> BS.time "testing solution" (unsat_constraints cs)
     >> (fun xs -> try xs |> List.map fst |> print_unsats with _ -> ()) 
@@ -854,11 +854,7 @@ let env_of_cs cs =
   cs >> (if !Cf.check_dupenv then checkenv_of_cs else ignore)
      |> List.fold_left (fun env (v, c, _) -> Le.combine (frame_env c.lc_cstr) env) Le.empty
 
-let solve sourcefile env consts qs cs = 
-  let cs = if !Cf.simpguard then List.map simplify_fc cs else cs in
-  let _  = dump_constraints cs in
-  let _  = dump_unsplit cs in
-  let cs = BS.time "splitting constraints" split cs in
+let solve_wfs env consts qs cs =
   let max_env = env_of_cs cs in
   let _ = C.cprintf C.ol_insane "===@.Maximum@ Environment@.@.%a@.@." (pprint_raw_fenv true) max_env in
   let cs = List.map (fun (fr, c, cstr) -> (fr, set_constraint_env c (Le.add qual_test_var fr max_env), cstr)) cs in
@@ -870,13 +866,24 @@ let solve sourcefile env consts qs cs =
           C.cprintf C.ol_solve_stats "@[%i@ qualifiers@ generated@]@." (List.length (List.flatten qs)) in
   let _ = if C.ck_olev C.ol_insane then dump_qualifiers qs in
   let s = BS.time "make initial sol" make_initial_solution (List.combine (List.map thd3 cs) qs) in
-  let _ = dump_solving cs s 0 in
+  let _ = dump_solving 0 (cs, s) in
   let _ = S.dump "initial sol" s in
   let _ = BS.time "solving wfs" (solve_wf s) cs in
   let _ = C.cprintf C.ol_solve "@[AFTER@ WF@]@." in
-  let _ = dump_solving cs s 1 in
+  let _ = dump_solving 1 (cs, s) in
   let _ = S.dump "after WF" s in
-  let s = if !Clflags.use_fixpoint then FixInterface.solver sourcefile cs s else dsolver cs s in
-  let _ = dump_solving cs s 2 in
-  test_sol cs s
+    (cs, s)
 
+let solve_subs sourcefile (cs, s) =
+  (cs, if !Clflags.use_fixpoint then FixInterface.solver sourcefile cs s else dsolver cs s)
+
+let solve sourcefile after_wf env consts qs cs =
+     (if !Cf.simpguard then List.map simplify_fc cs else cs)
+  >> dump_constraints
+  >> dump_unsplit
+  |> BS.time "splitting constraints" split
+  |> solve_wfs env consts qs
+  |> Misc.app_snd after_wf
+  |> solve_subs sourcefile
+  >> dump_solving 2
+  |> test_sol
