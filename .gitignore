@@ -5,6 +5,7 @@
 **.quals
 **.pyc
 **.scratch
+**.swp
 **~
 _build
 config.make
