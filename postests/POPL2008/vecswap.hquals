@@ -8,3 +8,5 @@ qualif LEASIZE(n) : n + a <= Array.length arr
 qualif LTASIZE(n) : n + a < Array.length arr
 qualif LE_P1SIZE(n) : n <= 1 + Array.length arr
 qualif LT_P1SIZE(n) : n < 1 + Array.length arr
+qualif Zero(_V)     : _V { * * } 0
+qualif Id_rel_array_idd(_V)(A:'a array) : _V { * * } Array.length ~A
