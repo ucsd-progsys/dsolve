@@ -6,7 +6,7 @@ val formals_addn: Frame.qvar list -> unit
 
 val solve: 
   string ->
-  (Consdef.Sol.s -> Consdef.Sol.s) ->
+  (Consdef.Sol.s -> unit) ->
   Env.t ->
   int list -> 
   Parsetree.qualifier_declaration list -> 

@@ -883,7 +883,7 @@ let solve sourcefile after_wf env consts qs cs =
   >> dump_unsplit
   |> BS.time "splitting constraints" split
   |> solve_wfs env consts qs
-  |> Misc.app_snd after_wf
+  >> Misc.iter_snd after_wf
   |> solve_subs sourcefile
   >> dump_solving 2
   |> test_sol
