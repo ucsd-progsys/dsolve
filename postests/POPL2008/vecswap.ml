@@ -1,7 +1,5 @@
 (* DSOLVE -bare -dontminemlq *)
 
-let min a b = if a < b then a else b 
-
 let sortRange arr start n =
   let item i = Array.get arr i in
   let swap i j =
