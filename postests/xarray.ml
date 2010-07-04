@@ -1,4 +1,4 @@
-(* DSOLVE -bare *)
+(* DSOLVE -bare -dontgenmlq *)
 
 let init l f =
   if l = 0 then [||] else
@@ -166,6 +166,7 @@ let fold_right f a x =
   done;
   !r
 
+(*
 type 'a fakebottom = Bottom of int | Ok of 'a
 
 let sort cmp a =
@@ -219,8 +220,8 @@ let sort cmp a =
   done;
   if l > 1 then (let e = (Array.get a 1) in Array.set a 1 (Array.get a 0); Array.set a 0 e);
 ;;
+*)
 
-(*
 let cutoff = 5;;
 let stable_sort cmp a =
   let merge src1ofs src1len src2 src2ofs src2len dst dstofs =
@@ -281,4 +282,3 @@ let stable_sort cmp a =
 ;;
 
 (* let fast_sort = stable_sort;; *)
-*)
