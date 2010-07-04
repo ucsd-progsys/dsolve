@@ -21,4 +21,7 @@ val to_list : a: {v: 'a array | Array.length v >= 0} -> {v: 'a list | len v = Ar
 val fold_left : f: ('a -> 'b -> 'a) -> x: 'a -> a: 'b array -> 'a
 val fold_right : f: ('b -> 'a -> 'a) -> a: 'b array -> x: 'a -> 'a
 
+val sort        : cmp: ('a -> 'a -> int) -> a: {v: 'a array | Array.length v >= 0} -> unit
+(*
 val stable_sort : cmp: ('a -> 'a -> int) -> a: {v: 'a array | Array.length v >= 0} -> unit
+*)
