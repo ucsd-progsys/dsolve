@@ -3,9 +3,9 @@ qualif T(v): _ + (len v) {* *} (Array.length _)
 qualif T(v): v >= [-1]
 qualif A(v): Array.length v > 0
 
+qualif C(v): v {* *} _
 qualif T(v): v {* *} (Array.length _)
 qualif T(v): v {* *} (Array.length _) - 1
 qualif T(v): v {* *} (Array.length _) - _
-qualif T(v): v {* *} (Array.length _) - _ - _
-qualif T(v): Array.length v {* *} (Array.length _) - _ - _
-qualif T(v): v {* *} _ - _
+qualif T(v): v {* *} (Array.length dst) - src1len - src2len
+qualif E(v): v - dstofs = (i1 - src1ofs) + (i2 - src2ofs)

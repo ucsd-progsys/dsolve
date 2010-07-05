@@ -228,7 +228,6 @@ let stable_sort cmp a =
     let src1r = src1ofs + src1len and src2r = src2ofs + src2len in
     (* note d - dstofs = (i1 - src1ofs) + (i2 - src2ofs) *)
     let rec loop i1 s1 i2 s2 d =
-      let _ = show d in
       if cmp s1 s2 <= 0 then begin
         Array.unsafe_set dst d s1;
         let i1 = i1 + 1 in
