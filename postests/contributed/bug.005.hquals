@@ -1,0 +1,2 @@
+qualif ASSOC1(v): v <= ~A + mlength ~B
+
