@@ -858,9 +858,17 @@ let fresh_refinementvar =
 let fresh_fvar level r =
   Fvar (Ident.create "a", level, [], r)
 
-let mk_constr_recref r cstrs =
+let mk_param_recref r pmap t =
+  try
+    match List.assoc (repr t) pmap with
+      | _, Farrow _, _ -> DontRefine
+      | _              -> r
+  with Not_found ->
+    r
+
+let mk_constr_recref r pmap cstrs =
   let r = if !Clflags.no_recrefs then DontRefine else r in
-    List.map (fun (_, params) -> List.map (fun _ -> r) params) cstrs
+    List.map (fun (_, params) -> List.map (mk_param_recref r pmap) params) cstrs
 
 let mk_record_recref fields =
   [List.map (fun _ -> Refine) fields]
@@ -920,7 +928,9 @@ let translate_type env t =
                   begin match ty_decl.type_kind with
                     | Type_abstract              -> abstract_of_params p fs fvs r
                     | Type_record (fields, _, _) -> transl_record vstack r p fields fps
-                    | Type_variant (cdecls, _)   -> transl_variant vstack r p cdecls fps formals
+                    | Type_variant (cdecls, _)   ->
+                        let pmap = List.combine (List.map repr ty_decl.type_params) fps in
+                          transl_variant vstack r p cdecls pmap fps formals
                   end
             | Some t -> transl vstack Refine t
 
@@ -932,11 +942,11 @@ let translate_type env t =
   and transl_field vstack (name, muta, t) =
     (Ident.create name, transl vstack DontRefine t, mutable_variance muta)
 
-  and transl_variant vstack r p cdecls fps fs =
+  and transl_variant vstack r p cdecls pmap fps fs =
     let names, _ = List.split cdecls in
     let _, cds   = List.split (Env.constructors_of_type p (Env.find_type p env)) in
-    let rr       = mk_constr_recref DontRefine cdecls in
-    let recrr    = mk_constr_recref Refine cdecls in
+    let rr       = mk_constr_recref DontRefine pmap cdecls in
+    let recrr    = mk_constr_recref Refine pmap cdecls in
     let cs       = List.map2 (transl_constructor ((p, recrr) :: vstack) fs) names cds in
       Finductive (p, fps, rr, cs, r)
 
