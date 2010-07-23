@@ -1,0 +1,5 @@
+measure is_nnf =
+  | Lit l        -> true
+  | And (f1, f2) -> (? (is_nnf f1)) && (? (is_nnf f2))
+  | Or (f1, f2)  -> (? (is_nnf f1)) && (? (is_nnf f2))
+  | Not _        -> false
