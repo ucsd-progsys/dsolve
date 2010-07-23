@@ -59,12 +59,9 @@ let rec is_cnf = function
 let rec dist_or f1 f2 =
   match f1, f2 with
     | Or (f1, f2), Or (f3, f4)   -> Or (Or (f1, f2), Or (f3, f4))
-    | And (f1, f2), And (f3, f4) -> And (And (dist_or f1 f3, dist_or f1 f4), And (dist_or f2 f3, dist_or f2 f4))
-    | And (f1, f2), Lit l        -> And (dist_or f1 (Lit l), dist_or f2 (Lit l))
-    | Lit l, And (f1, f2)        -> And (dist_or f1 (Lit l), dist_or f2 (Lit l))
+    | And (f1, f2), f3           -> And (dist_or f1 f3, dist_or f2 f3)
+    | f1, And (f2, f3)           -> And (dist_or f1 f2, dist_or f1 f3)
     | Lit l1, Lit l2             -> Or (Lit l1, Lit l2)
-    | And (f1, f2), Or (f3, f4)  -> And (dist_or f1 (dist_or f3 f4), dist_or f2 (dist_or f3 f4))
-    | Or (f3, f4), And (f1, f2)  -> And (dist_or f1 (dist_or f3 f4), dist_or f2 (dist_or f3 f4))
     | Or (f1, f2), Lit l         -> Or (Or (f1, f2), Lit l)
     | Lit l, Or (f1, f2)         -> Or (Or (f1, f2), Lit l)
     | Not _, _                   -> assert (0 = 1); assert false
