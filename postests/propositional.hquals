@@ -1,1 +1,3 @@
 qualif NNF(_V): (? (is_nnf _V))
+qualif DISJ(_V): (? (is_disjunction _V))
+qualif CNF(_V): (? (is_cnf _V))

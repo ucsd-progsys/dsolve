@@ -3,3 +3,15 @@ measure is_nnf =
   | And (f1, f2) -> (? (is_nnf f1)) && (? (is_nnf f2))
   | Or (f1, f2)  -> (? (is_nnf f1)) && (? (is_nnf f2))
   | Not _        -> false
+
+measure is_disjunction =
+  | Or (f1, f2) -> true
+  | Lit l       -> true
+  | And (f1, f2) -> false
+  | Not f        -> false
+
+measure is_cnf =
+  | And (f1, f2) -> (? (is_cnf f1)) && (? (is_cnf f2))
+  | Or (f1, f2)  -> (? (is_disjunction f1)) && (? (is_disjunction f2))
+  | Lit l        -> true
+  | Not f        -> false
