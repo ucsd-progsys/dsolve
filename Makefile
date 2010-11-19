@@ -77,8 +77,8 @@ tests:
 	./regrtest.py
 
 .PHONY: theories
-theories:
-	ocamlc theories/*.mli
+theories: coldstart
+	
 
 depend: beforedepend
 	(for d in utils parsing typing liquid; \
