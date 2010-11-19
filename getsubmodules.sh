@@ -2,9 +2,9 @@
 
 if $1
 then
-  prefix="meatwad.ucsd.edu:/git/"
+  prefix="goto.ucsd.edu:/home/git/"
 else
-  prefix=$1"@meatwad.ucsd.edu:/git/"
+  prefix=$1"@goto.ucsd.edu:/home/git/"
 fi
 
 z3=$prefix"external/z3"
