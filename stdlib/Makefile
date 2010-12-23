@@ -15,7 +15,7 @@
 
 include ../config/Makefile
 
-RUNTIME=../boot/ocamlrun
+RUNTIME=ocamlrun
 COMPILER=../ocamlc
 CAMLC=$(RUNTIME) $(COMPILER)
 COMPFLAGS=-g -warn-error A -nostdlib
