@@ -12,8 +12,6 @@ config.make
 config/Makefile
 config/m.h
 config/s.h
-external/*
-!external/__init__.py
 boot/ocamlrun
 byterun/jumptbl.h
 byterun/ld.conf

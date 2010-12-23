@@ -1,0 +1,12 @@
+[submodule "external/fixpoint"]
+	path = external/fixpoint
+	url = goto.ucsd.edu:/git/fixpoint.git
+[submodule "external/ocamlgraph"]
+	path = external/ocamlgraph
+	url = goto.ucsd.edu:/git/ocamlgraph.git
+[submodule "external/misc"]
+	path = external/misc
+	url = goto.ucsd.edu:/git/misc.git
+[submodule "external/z3"]
+	path = external/z3
+	url = goto.ucsd.edu:/git/z3.git
