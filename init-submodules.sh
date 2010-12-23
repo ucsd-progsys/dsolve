@@ -13,4 +13,5 @@ checkout_master () {
 git submodule init
 if [ "$1" = "$LFLG" ]; then sed -e "s/goto\.ucsd\.edu\:/\/home/g" -i .git/config; fi
 git submodule update
-do_submodules checkout_master
+# To fix: we don't compile against master branches!
+# do_submodules checkout_master
