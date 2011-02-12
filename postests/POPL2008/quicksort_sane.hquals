@@ -1,1 +1,6 @@
 qualif STARTSIZE(k) : k + [start, i, j, a] <= Array.length arr
+
+qualif I(_V) : _V { * * } ^
+qualif Id_rel_id_int(_V)(A:int) : _V { * * } ~A
+qualif Id_rel_array_idd(_V)(A:'a array) : _V { * * } Array.length ~A
+
