@@ -307,7 +307,7 @@ let refinement_constraint_of_t c = failwith "TBD"
 let dummy_t = let t  = So.t_int in 
               let vv = Sy.value_variable t in
               let r  = vv,t,[] in
-              Cf.make_t envt0 Ast.pTrue r r None [] 
+              Cf.make_t envt0 Ast.pTrue r r None ([], "") 
 
 (* API *)
 let make_t env g fr r1 sr = 
@@ -317,7 +317,7 @@ let make_t env g fr r1 sr =
     let t'   = sort_of_frame fr in
     let r1'  = reft_of_refinement t' r1 in
     let r2'  = reft_of_single_refinement t' sr in
-    Cf.make_t env' g' r1' r2' None []
+    Cf.make_t env' g' r1' r2' None ([], "")
   else
     dummy_t
 
@@ -366,20 +366,26 @@ let wf_of_dwfcon = function
 (********************************* Solutions *********************************)
 (*****************************************************************************)
 
+(* TODO: Update with new qualifier/solution definition 
 let f_of_dsoln soln =
   Cd.Sol.fold begin fun k qs s ->
     qs |> List.map (unify_dqual <+> fpred_of_dqual [])
-       |> Cf.sol_add s (sy_of_qvar k)
+       |> (fun _ -> assertf "Cf.sol_add") (* Cf.sol_add s (sy_of_qvar k) *)
        |> snd
   end soln SM.empty
+*)
+
+let f_of_dsoln _ = FixSolution.empty
 
 (* translates fixsoln into dsolve-land lazily: assuming that all value variables are dvv *)
 let d_of_fsoln soln =
   IM.empty
+  (* TODO: Update with new qualifier/solution definition
   |> SM.fold begin fun k ps s -> 
       ps |> List.map (fun p -> (Path.mk_ident "pred", dvv, d_of_fpred p))
          |> Misc.flip (IM.add (qvar_of_sy k)) s
      end soln
+  *) 
   |> Cd.sol_of_solmap
 
 (****************************************************************************)
@@ -392,13 +398,13 @@ let solver fname cs s =
   let fcs  = cs |> Misc.map_partial (function (_, _, Cd.SubRef (c,_,_,_,_,_)) -> Some c | _ -> None) in
   let fwfs = cs |> Misc.map_partial (function (fr, _, Cd.WFRef (env,r,id)) -> Some (make_wf env fr r id) | _ -> None) in
   let s    = s >> Consdef.Sol.dump "fixInterface.solver" |> f_of_dsoln in
-  let _    = Format.printf "@[InitSoln:@\n%a@]" FixConstraint.print_soln s in
+  let _    = Format.printf "@[InitSoln:@\n%a@]" FixSolution.print s in
   (* solve with fixpoint *)
-  let me,_ = Solve.create [] SM.empty [] 0 [] fcs fwfs [] in
+  let me,_ = Solve.create [] SM.empty [] 0 [] [] fcs fwfs [] [] in
   let bn   = Miscutil.chop_extension_if_any fname in
   let _    = Solve.save (bn ^ ".ml.in.fq") me s in
   let s,_  = Solve.solve me s in
-  let _    = Format.printf "@[FinSoln:@\n%a@]" FixConstraint.print_soln s in
+  let _    = Format.printf "@[FinSoln:@\n%a@]" FixSolution.print s in
   let _    = Solve.save (bn ^ ".ml.out.fq") me s in
   (* translate to dsolve *)
   d_of_fsoln s
