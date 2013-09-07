@@ -3,7 +3,7 @@ Checking Out dsolve
 
 To check out dsolve from git:
 
-1. git clone meatwad.ucsd.edu:/git/dsolve
+1. git clone goto.ucsd.edu:/git/dsolve
 2. cd dsolve
 3. ./init-submodules.sh
 

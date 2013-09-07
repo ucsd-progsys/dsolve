@@ -36,6 +36,10 @@ module Q  = Ast.Qualifier
 module SM = Ast.Symbol.SMap
 module Su = Ast.Subst
 
+module PA  = PredAbs
+module SPA = Solve.Make (PA)
+
+
 open Misc.Ops
 
 (*****************************************************************************)
@@ -211,8 +215,9 @@ let vv       = sy_of_path dvv
 let rec sort_of_frame = function
   | F.Fsum (p, _, _) | F.Finductive (p, _, _, _, _) | F.Frec (p, _, _, _) | F.Fabstract (p, _, _, _) ->
       if Path.same Predef.path_bool p then So.t_bool 
-      else So.t_int (* if Path.same Predef.path_int p then So.t_int 
-      else (So.t_ptr (So.Loc (Path.unique_name p))) *) (* So.t_obj *) 
+      else (* CAUSES QUALINST BLOWUP:So.t_int *) 
+      if Path.same Predef.path_int p then So.t_int 
+      else (So.t_ptr (So.Loc (Path.unique_name p))) (* So.t_obj *) 
   | F.Farrow (_, _, _) as fr ->
       fr |> collapse |> So.t_func 0
   | F.Fvar (id, _, _, _) ->
@@ -375,7 +380,8 @@ let f_of_dsoln soln =
   end soln SM.empty
 *)
 
-let f_of_dsoln _ = FixSolution.empty
+let empty_soln   = PA.read PA.empty
+let f_of_dsoln _ = empty_soln
 
 (* translates fixsoln into dsolve-land lazily: assuming that all value variables are dvv *)
 let d_of_fsoln soln =
@@ -396,15 +402,16 @@ let d_of_fsoln soln =
 let solver fname cs s =
   (* translate to fixpoint *)
   let fcs  = cs |> Misc.map_partial (function (_, _, Cd.SubRef (c,_,_,_,_,_)) -> Some c | _ -> None) in
-  let fwfs = cs |> Misc.map_partial (function (fr, _, Cd.WFRef (env,r,id)) -> Some (make_wf env fr r id) | _ -> None) in
+  let fwfs = cs |> Misc.map_partial (function (fr, _, Cd.WFRef (env,r,id)) ->
+    Some (make_wf env fr r id) | _ -> None) |> Cf.add_wf_ids in
   let s    = s >> Consdef.Sol.dump "fixInterface.solver" |> f_of_dsoln in
-  let _    = Format.printf "@[InitSoln:@\n%a@]" FixSolution.print s in
+  (* let _    = Format.printf "@[InitSoln:@\n%a@]" FixSolution.print s in *)
   (* solve with fixpoint *)
-  let me,_ = Solve.create [] SM.empty [] 0 [] [] fcs fwfs [] [] in
+  let me,s = SPA.create (FixConfig.create_raw [] SM.empty [] 0 [] fcs fwfs [] empty_soln) (Some s) in
   let bn   = Miscutil.chop_extension_if_any fname in
-  let _    = Solve.save (bn ^ ".ml.in.fq") me s in
-  let s,_  = Solve.solve me s in
-  let _    = Format.printf "@[FinSoln:@\n%a@]" FixSolution.print s in
-  let _    = Solve.save (bn ^ ".ml.out.fq") me s in
+  let _    = SPA.save (bn ^ ".ml.in.fq") me s in
+  let s,_  = SPA.solve me s in
+  (* let _    = Format.printf "@[FinSoln:@\n%a@]" FixSolution.print s in *)
+  let _    = SPA.save (bn ^ ".ml.out.fq") me s in
   (* translate to dsolve *)
   d_of_fsoln s

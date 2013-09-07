@@ -55,11 +55,11 @@ module Prover : PROVER =
     
     type z3_instance = { 
       c                 : Z3.context;
-      tint              : Z3.type_ast;
-      tbool             : Z3.type_ast;
+      tint              : Z3.sort;
+      tbool             : Z3.sort;
       vart              : (decl, var_ast) Hashtbl.t;
-      funt              : (decl, Z3.const_decl_ast) Hashtbl.t;
-      tydeclt           : (sort, Z3.type_ast) Hashtbl.t;
+      funt              : (decl, Z3.func_decl) Hashtbl.t;
+      tydeclt           : (sort, Z3.sort) Hashtbl.t;
       mutable vars      : decl list ;
       mutable count     : int;
       mutable bnd       : int;
@@ -112,11 +112,10 @@ module Prover : PROVER =
       t_rec t
 
     let ast_type_to_string me a =
-      Z3.ast_to_string me.c (Z3.type_ast_to_ast me.c a)
+      Z3.sort_to_string me.c (Z3.get_sort me.c a)
 
     let dump_ast_type me a =
-      printf "@[z3%s@]@." 
-            (Z3.ast_to_string me.c (Z3.type_ast_to_ast me.c (Z3.get_type me.c a)))
+      printf "@[z3%s@]@." (ast_type_to_string me a)
 
     let dump_ast me a =
       printf "@[%s@]@." (Z3.ast_to_string me.c a)
@@ -231,8 +230,8 @@ module Prover : PROVER =
 
     and z3Cast env me = function
       | (a :: sa, f :: fs) -> 
-        let (t, t') = (Z3.get_type me.c a, z3VarType me f) in
-        let (st, st') = Misc.map_pair (ast_type_to_string me) (t, t') in
+        let (t, t') = (Z3.get_sort me.c a, z3VarType me f) in
+        let (st, st') = Misc.map_pair (Z3.sort_to_string me.c) (t, t') in
         let t = if st = st' then a else (cast env me a (st, st')) in
           t :: (z3Cast env me (sa, fs))
       | ([], x :: []) -> []
@@ -312,8 +311,7 @@ module Prover : PROVER =
       | P.Boolexp e -> 
           (* shady hack *)
           let a = z3Exp env me e in
-          let t = Z3.get_type me.c a in
-          let t = ast_type_to_string me t in
+          let t = ast_type_to_string me a in
           if t = "int" then cast env me a ("int", "bool") else a
      with Failure s -> printf "%s: %a@." s P.pprint p; raise (Failure s)
 
@@ -381,10 +379,10 @@ module Prover : PROVER =
         rv
 
     let me = 
-      let c = Z3.mk_context_x [|("MODEL", "false"); ("PARTIAL_MODELS", "true")|] in
+      let c = Z3.mk_context_x [|("MODEL", "false"); ("MODEL_PARTIAL", "true")|] in
       (* types *)
-      let tint = Z3.mk_int_type c in
-      let tbool = Z3.mk_bool_type c in
+      let tint = Z3.mk_int_sort c in
+      let tbool = Z3.mk_bool_sort c in
       (* memo tables *)
       let vart = Hashtbl.create 37 in
       let funt = Hashtbl.create 37 in

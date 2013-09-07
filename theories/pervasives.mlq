@@ -7,11 +7,13 @@ val (/): x: int -> y: int -> {v: int | v = x / y}
 val succ: x: int -> {v: int | v = x + 1}
 val pred: x: int -> {v: int | v = x - 1}
 
+(* COMMENTING OUT FOR DEMO
 val (mod): x: int -> y: {y: int | y != 0} -> {v: int |
                                                   (x >= 0 => v >= 0)
                                               && (((x >= 0 && y >= 0) => v >= 0)
                                               && ((y > 0 => v < y)
                                               && v = x - (y * (x / y))))}
+*)
 
 val abs: int -> {v: int | v >= 0}
 
@@ -33,6 +35,7 @@ val not: x: bool -> {v: bool | ((? v) iff (not (? x)))}
 
 (* Bitwise operators *)
 val (lsr): x: int -> y: int -> {v: int | 0 <= v}
+(* COMMENTING OUT FOR DEMO
 val (land): x: int -> y: int -> {v: int | ((x >= 0) && (y >= 0)) => (v >= 0 && (v <= x && v <= y))}
-
+*)
 val ignore: 'a -> unit

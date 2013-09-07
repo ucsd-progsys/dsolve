@@ -72,6 +72,12 @@ liquid.byte: $(LIQOBJS)
 liquid.opt: $(LIQOBJS:.cmo=.cmx) fix.cmxa
 	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt $(LIBDIR)/libcamlidl.a str.cmxa unix.cmxa nums.cmxa z3.cmxa graph.cmxa fix.cmxa $(LIQOBJS:.cmo=.cmx)
 
+
+##liquid.opt: $(LIQOBJS:.cmo=.cmx)
+##	$(CAMLOPT) $(LINKFLAGS) -o liquid.opt $(LIBDIR)/libcamlidl.a str.cmxa unix.cmxa nums.cmxa z3.cmxa graph.cmxa $(LIQOBJS:.cmo=.cmx)
+
+
+
 .PHONY: tests
 tests:
 	./regrtest.py
